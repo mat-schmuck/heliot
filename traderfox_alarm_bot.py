@@ -91,9 +91,13 @@ SELEKTOREN = {
         ("css", "#login-ico"),
         ("css", ".login-holder .login"),
     ],
+    # Der Dialog gilt nur als offen, wenn man wirklich tippen kann.
+    # '.login-popup' steckt dauerhaft im DOM und galt zeitweise als sichtbar,
+    # obwohl keine Felder da waren - dann hielt der Bot sich faelschlich fuer
+    # ausgeloggt, obwohl die gespeicherte Sitzung laengst griff.
     "login_dialog": [
-        ("css", ".login-popup"),
-        ("text", r"Zugangsdaten eingeben"),
+        ("css", "#password01"),
+        ("css", ".login-popup input[type='password']"),
     ],
     "login_email": [
         ("css", "#email02"),
@@ -415,9 +419,11 @@ def login(page, user: str, pw: str) -> bool:
 
     page.wait_for_timeout(4000)
 
-    # Bereits eingeloggt? Suchfeld da und kein Login-Dialog/-Button.
-    if finde(page, "suchfeld") is not None and finde(page, "login_dialog") is None \
-            and finde(page, "login_oeffnen") is None:
+    # Bereits eingeloggt? Entscheidend ist: Das Desk ist da und es gibt kein
+    # Passwortfeld zum Ausfuellen. Frueher wurde zusaetzlich verlangt, dass
+    # kein Login-Knopf existiert - der steckt aber dauerhaft im DOM, weshalb
+    # der Bot sich mit gueltiger Sitzung faelschlich fuer ausgeloggt hielt.
+    if finde(page, "suchfeld") is not None and finde(page, "login_dialog") is None:
         print("Bereits eingeloggt (Session wiederverwendet).")
         return True
 
@@ -425,11 +431,8 @@ def login(page, user: str, pw: str) -> bool:
     if finde(page, "login_dialog") is None:
         opener = finde(page, "login_oeffnen")
         if opener is not None:
-            try:
-                opener.click()
-                page.wait_for_timeout(2000)
-            except Exception:
-                pass
+            klick(opener, "Login öffnen")
+            page.wait_for_timeout(2000)
 
     if warte_auf(page, "login_dialog", 12) is None:
         diagnose(page, "login_dialog_fehlt", "Login-Dialog nicht auffindbar")
@@ -450,7 +453,7 @@ def login(page, user: str, pw: str) -> bool:
     if btn is None:
         diagnose(page, "login_button_fehlt", "Button 'JETZT EINLOGGEN' nicht gefunden")
         return False
-    btn.click()
+    klick(btn, "JETZT EINLOGGEN")
     page.wait_for_timeout(6000)
 
     # Erfolg: Dialog weg UND Suchfeld da
