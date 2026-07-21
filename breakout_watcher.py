@@ -220,7 +220,12 @@ def format_treffer(t: dict) -> str:
 # Push
 # ---------------------------------------------------------------------------
 
-def push(topic: str, treffer: list[dict]):
+def push(topic: str, treffer: list[dict]) -> bool:
+    """Schickt die Meldung und sagt ehrlich, ob sie angekommen ist.
+
+    Der Rueckgabewert ist wichtig: Frueher wurde der Zustand auch dann als
+    'gemeldet' gespeichert, wenn der Push fehlschlug - der Treffer waere
+    danach NIE wieder gemeldet worden."""
     bestaetigt = [t for t in treffer if t["vol_ok"] is True]
     rest = [t for t in treffer if t["vol_ok"] is not True]
     body = "\n\n".join([format_treffer(t) for t in bestaetigt + rest])
@@ -232,9 +237,38 @@ def push(topic: str, treffer: list[dict]):
                                    "Priority": "high" if bestaetigt else "default",
                                    "Tags": "chart_with_upwards_trend"},
                           timeout=20)
-        print(f"Push gesendet an ntfy.sh/{topic} (HTTP {r.status_code})")
     except Exception as e:
-        print(f"Push fehlgeschlagen: {e}")
+        print(f"⚠ Push fehlgeschlagen: {e}")
+        return False
+    if r.status_code >= 400:
+        print(f"⚠ Push abgelehnt: HTTP {r.status_code} — {r.text[:200]}")
+        return False
+    print(f"Push gesendet an ntfy.sh/{topic} (HTTP {r.status_code})")
+    return True
+
+
+def testpush(topic: str) -> int:
+    """Schickt eine einzelne Testnachricht, damit die Push-Kette einmal
+    nachweislich geprueft ist. Ohne Kursdaten, ohne Zustandsaenderung."""
+    text = ("Testnachricht vom Breakout-Wächter.\n\n"
+            "Wenn diese Meldung am Handy ankommt, funktioniert die "
+            "Benachrichtigungskette.\n"
+            f"Gesendet: {datetime.now():%d.%m.%Y %H:%M:%S}")
+    try:
+        r = requests.post(f"https://ntfy.sh/{topic}", data=text.encode("utf-8"),
+                          headers={"Title": "Test: Breakout-Wächter".encode("utf-8"),
+                                   "Priority": "default",
+                                   "Tags": "white_check_mark"},
+                          timeout=20)
+    except Exception as e:
+        print(f"⚠ Testnachricht fehlgeschlagen: {e}")
+        return 1
+    if r.status_code >= 400:
+        print(f"⚠ Testnachricht abgelehnt: HTTP {r.status_code} — {r.text[:200]}")
+        return 1
+    print(f"✓ Testnachricht gesendet (HTTP {r.status_code}).")
+    print("  Kommt sie am Handy an, ist die Push-Kette in Ordnung.")
+    return 0
 
 
 # ---------------------------------------------------------------------------
@@ -243,7 +277,7 @@ def push(topic: str, treffer: list[dict]):
 
 def main():
     ap = argparse.ArgumentParser(description="Live-Wächter für Kaufpunkt-Breakouts")
-    ap.add_argument("xlsx", help="kaufpunkte.xlsx vom Pattern-Scanner")
+    ap.add_argument("xlsx", nargs="?", help="kaufpunkte.xlsx vom Pattern-Scanner")
     ap.add_argument("--alle", action="store_true",
                     help="Auch Fallback-Level überwachen (Standard: nur Muster-Treffer)")
     ap.add_argument("--dry-run", action="store_true", help="Nur anzeigen, kein Push")
@@ -252,14 +286,25 @@ def main():
                          "aber klar gekennzeichnet)")
     ap.add_argument("--nur-bestaetigt", action="store_true",
                     help="Nur Breakouts MIT Volumen-Bestätigung pushen")
+    ap.add_argument("--testpush", action="store_true",
+                    help="Nur eine Testnachricht senden (ohne Kursdaten)")
     args = ap.parse_args()
+
+    topic = os.environ.get("NTFY_TOPIC")
+
+    # Testnachricht braucht weder API-Schluessel noch Kaufpunkte.
+    if args.testpush:
+        if not topic:
+            sys.exit("Bitte NTFY_TOPIC setzen — ohne Topic kein Push möglich.")
+        sys.exit(testpush(topic))
 
     api_key = os.environ.get("TWELVE_DATA_API_KEY")
     if not api_key:
         sys.exit("Bitte TWELVE_DATA_API_KEY als Umgebungsvariable setzen.")
-    topic = os.environ.get("NTFY_TOPIC")
     if not topic and not args.dry_run:
         sys.exit("Bitte NTFY_TOPIC setzen (oder --dry-run benutzen).")
+    if not args.xlsx:
+        sys.exit("Bitte kaufpunkte.xlsx angeben (oder --testpush benutzen).")
 
     items = load_watchlist(args.xlsx, nur_muster=not args.alle)
     if not items:
@@ -284,11 +329,12 @@ def main():
         res = pruefe_breakout(item, q)
         if not res:
             continue
+        # Kennung am Treffer mitfuehren. Vorgemerkt wird ERST nach einem
+        # erfolgreichen Push - siehe unten.
+        res["key"] = f"{item['ticker']}|{item['nr']}|{item['kaufpunkt']:.2f}"
         treffer.append(res)
-        key = f"{item['ticker']}|{item['nr']}|{item['kaufpunkt']:.2f}"
-        if key not in schon_gemeldet:
+        if res["key"] not in schon_gemeldet:
             neu.append(res)
-            schon_gemeldet.add(key)
 
     print(f"\n{len(treffer)} Kaufpunkte aktuell gerissen, davon {len(neu)} neu seit "
           f"dem letzten Lauf.")
@@ -297,14 +343,26 @@ def main():
         neu_marker = " [NEU]" if t in neu else ""
         print(f"  {marker} {format_treffer(t)}{neu_marker}\n")
 
+    # Erst filtern, dann vormerken. Frueher galten auch Treffer als gemeldet,
+    # die wegen --nur-bestaetigt gar nicht gepusht wurden - bekamen sie spaeter
+    # die Volumenbestaetigung, wurden sie nie mehr gemeldet.
+    zu_melden = neu
     if args.nur_bestaetigt:
-        neu = [t for t in neu if t["vol_ok"] is True]
+        zu_melden = [t for t in neu if t["vol_ok"] is True]
+        uebersprungen = len(neu) - len(zu_melden)
+        if uebersprungen:
+            print(f"{uebersprungen} Treffer ohne Volumenbestätigung — bleiben "
+                  "offen und werden weiter beobachtet.")
 
-    if neu and not args.dry_run:
-        push(topic, neu)
-        state["gemeldet"] = sorted(schon_gemeldet)
-        save_state(state)
-    elif not neu:
+    if zu_melden and not args.dry_run:
+        if push(topic, zu_melden):
+            for t in zu_melden:
+                schon_gemeldet.add(t["key"])
+            state["gemeldet"] = sorted(schon_gemeldet)
+            save_state(state)
+        else:
+            print("⚠ Zustand NICHT gespeichert — der nächste Lauf versucht es erneut.")
+    elif not zu_melden:
         print("Nichts Neues zu melden.")
     else:
         print("(Dry-Run — kein Push gesendet, Zustand nicht gespeichert)")

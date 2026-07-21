@@ -11,6 +11,7 @@ on:
         options:
           - selbsttest        # prüft nur, ob TraderFox noch wie erwartet aussieht
           - testalarm         # EIN Testalarm: anlegen, prüfen, wieder löschen
+          - testpush          # nur eine ntfy-Testnachricht aufs Handy
           - test_2_aktien     # Scanner + Alarme für 2 Aktien
           - vollstaendig      # Scanner + Alarme für alle Treffer
       alle_level:
@@ -60,6 +61,13 @@ jobs:
           TRADERFOX_USER: ${{ secrets.TRADERFOX_USER }}
           TRADERFOX_PASS: ${{ secrets.TRADERFOX_PASS }}
         run: python traderfox_alarm_bot.py --testalarm
+
+      # --- ntfy-Testnachricht: prueft nur die Push-Kette aufs Handy ---
+      - name: "Push-Testnachricht (ntfy)"
+        if: ${{ github.event.inputs.modus == 'testpush' }}
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: python breakout_watcher.py --testpush
 
       # --- Scanner: Kaufpunkte berechnen ---
       # Nur fuer die echten Laeufe. Der Scanner dauert 20-40 Minuten, daher
