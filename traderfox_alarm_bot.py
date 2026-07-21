@@ -387,6 +387,34 @@ def load_buypoints(xlsx_path: str, nur_muster: bool) -> list[dict]:
 # Browser-Schritte
 # ===========================================================================
 
+def ist_eingeloggt(page) -> bool:
+    """Sind wir bei TraderFox angemeldet?
+
+    ACHTUNG, hier bin ich zweimal in dieselbe Falle getappt: Das Element
+    #login-ico existiert IMMER. Ausgeloggt zeigt es 'Login / Registrieren',
+    eingeloggt den Benutzernamen. Seine blosse Existenz taugt also NICHT als
+    Merkmal — weder als Beweis fuers Eingeloggtsein noch dagegen.
+
+    Entscheidend ist der TEXT. Steht dort 'Registrieren', sind wir draussen.
+
+    Warum das wichtig ist: Ohne Anmeldung fehlt im Kontextmenue der Eintrag
+    'Alarm hinzufuegen'. Der Bot laeuft dann scheinbar normal und findet
+    nur nichts — ein Fehler, der ohne Screenshot kaum zu erkennen ist."""
+    if finde(page, "suchfeld") is None:
+        return False
+    if finde(page, "login_dialog") is not None:
+        return False          # Passwortfeld sichtbar = Anmeldemaske offen
+    try:
+        el = page.locator("#login-ico").first
+        if el.count():
+            text = (el.inner_text() or "").strip().lower()
+            if "registrieren" in text:
+                return False
+    except Exception:
+        pass
+    return True
+
+
 def cookie_hinweis_behandeln(page) -> bool:
     """TraderFox leitet Sitzungen ohne Cookie-Einwilligung auf eine ganzseitige
     Abfrage um (desk.traderfox.com/cookie/). Dahinter ist kein Bedienelement
@@ -419,24 +447,7 @@ def login(page, user: str, pw: str) -> bool:
 
     page.wait_for_timeout(4000)
 
-    # Bereits eingeloggt? Drei Bedingungen, und alle drei sind noetig:
-    #   - Das Desk ist geladen (Suchfeld da)
-    #   - Kein Passwortfeld zum Ausfuellen
-    #   - KEIN sichtbarer Login-Knopf
-    #
-    # Die dritte hatte ich zwischenzeitlich entfernt, weil ich sie fuer die
-    # Ursache eines anderen Fehlers hielt. Das war falsch und hatte Folgen:
-    # Laeuft die gespeicherte Sitzung ab, ist das Suchfeld trotzdem da und
-    # das Passwortfeld versteckt - der Bot hielt sich also fuer angemeldet,
-    # war es aber nicht. Ohne Anmeldung fehlt im Kontextmenue der Eintrag
-    # 'Alarm hinzufuegen', und der Aufraeumlauf lief ins Leere, ohne dass
-    # jemand den Grund sah.
-    #
-    # Der eigentliche Fehler von damals lag beim Merkmal fuer den Dialog
-    # ('.login-popup' statt '#password01') und ist dort behoben.
-    if (finde(page, "suchfeld") is not None
-            and finde(page, "login_dialog") is None
-            and finde(page, "login_oeffnen") is None):
+    if ist_eingeloggt(page):
         print("Bereits eingeloggt (Session wiederverwendet).")
         return True
 
@@ -478,13 +489,12 @@ def login(page, user: str, pw: str) -> bool:
         diagnose(page, "desk_nicht_geladen", "Nach Login kein Suchfeld")
         return False
 
-    # Gegenprobe: Ist der Login-Knopf wirklich verschwunden? Solange er da
-    # ist, sind wir NICHT angemeldet - und ohne Anmeldung fehlt im
-    # Kontextmenue 'Alarm hinzufuegen', ohne dass der Grund erkennbar waere.
-    if finde(page, "login_oeffnen") is not None:
+    # Gegenprobe ueber den Text der Kopfzeile, nicht ueber die Existenz des
+    # Elements — siehe ist_eingeloggt().
+    if not ist_eingeloggt(page):
         diagnose(page, "login_scheinbar_ok",
-                 "Suchfeld da, aber Login-Knopf weiterhin sichtbar")
-        print("✗ Login nicht wirksam — Anmeldeknopf ist noch da.")
+                 "Suchfeld da, aber Kopfzeile zeigt weiterhin 'Registrieren'")
+        print("✗ Login nicht wirksam — Kopfzeile zeigt weiterhin Anmeldung an.")
         return False
 
     print("Login OK.")
