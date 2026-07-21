@@ -531,10 +531,14 @@ def alarm_dialog_oeffnen(page, ticker: str, firma: str) -> bool:
 
 
 def bestehende_alarme(page) -> set:
-    """Liest die bereits im Dialog eingetragenen Alarmpreise, um Doppelte zu vermeiden."""
+    """Liest die bereits eingetragenen Alarmpreise, um Doppelte zu vermeiden.
+
+    Nur input.price-alert: Das Desk ist voller anderer Eingabefelder
+    (Suche, Hebel, Laufzeit). 'input:visible' lieferte hier Zufallswerte
+    und machte die Verifikation wertlos."""
     preise = set()
     try:
-        for el in page.locator("input:visible").all()[:15]:
+        for el in page.locator("input.price-alert:visible").all()[:40]:
             wert = (el.input_value() or "").strip().replace(",", ".")
             if wert:
                 try:
@@ -551,7 +555,13 @@ def alarm_setzen(page, ticker: str, preis: float, strategie: str, langsam: bool)
     preis_str = f"{preis:.2f}"
 
     def versuch():
-        # Eingabefeld direkt hinter '+ Neuer Alarm', sonst letztes sichtbares Input
+        # Eingabefeld direkt hinter '+ Neuer Alarm'.
+        #
+        # NIEMALS auf "irgendein sichtbares Feld" ausweichen: Frueher wurde
+        # hier notfalls das letzte sichtbare input der Seite genommen, geleert
+        # und ueberschrieben. Auf dem Desk sind das im Zweifel die
+        # price-alert-Felder bereits bestehender Alarme des Nutzers.
+        # Lieber sauber scheitern als fremde Alarme zerstoeren.
         feld = None
         label = finde(page, "neuer_alarm_label")
         if label is not None:
@@ -562,13 +572,23 @@ def alarm_setzen(page, ticker: str, preis: float, strategie: str, langsam: bool)
             except Exception:
                 feld = None
         if feld is None:
-            sichtbar = page.locator("input:visible")
-            if sichtbar.count() == 0:
-                return False
-            feld = sichtbar.last
+            diagnose(page, f"neues_alarmfeld_fehlt_{ticker}",
+                     "Feld hinter '+ Neuer Alarm' nicht gefunden — "
+                     "abgebrochen, um keine bestehenden Alarme zu ueberschreiben")
+            return False
+
+        # Sicherheitsnetz: Ein Feld, in dem schon ein Preis steht, gehoert zu
+        # einem bestehenden Alarm und wird nicht angefasst.
+        try:
+            vorhandener_wert = (feld.input_value() or "").strip()
+        except Exception:
+            vorhandener_wert = ""
+        if vorhandener_wert:
+            diagnose(page, f"alarmfeld_belegt_{ticker}",
+                     f"Feld war bereits mit {vorhandener_wert!r} belegt — nicht ueberschrieben")
+            return False
 
         feld.click()
-        feld.fill("")
         feld.type(preis_str, delay=70 if langsam else 40)
         menschliche_pause(langsam)
 
@@ -835,6 +855,24 @@ def selbsttest(page, user: str, pw: str) -> int:
     if ok_dialog:
         ergebnis["Feld '+ Neuer Alarm'"] = finde(page, "neuer_alarm_label") is not None
         ergebnis["Button 'Save'"] = finde(page, "alarm_speichern") is not None
+
+        # Struktur des offenen Dialogs festhalten: Hier wird spaeter wirklich
+        # geschrieben, darum vorher genau anschauen. Insbesondere, ob das Feld
+        # hinter '+ Neuer Alarm' leer ist und wie viele price-alert-Felder
+        # bereits belegt sind (= bestehende Alarme des Nutzers).
+        diagnose(page, "alarmdialog_offen", "Alarm-Dialog geoeffnet (nichts eingetragen)")
+        try:
+            belegt = bestehende_alarme(page)
+            print(f"    Bereits belegte Alarmpreise in diesem Dialog: {sorted(belegt)}")
+            label = finde(page, "neuer_alarm_label")
+            if label is not None:
+                k = label.locator("xpath=following::input[1]")
+                if k.count():
+                    print(f"    Feld hinter '+ Neuer Alarm' enthaelt: "
+                          f"{(k.first.input_value() or '')!r}")
+        except Exception as e:
+            print(f"    (Dialog-Analyse fehlgeschlagen: {e})")
+
         dialog_schliessen(page)
 
     print("\n--- Ergebnis ---")
