@@ -1,0 +1,8 @@
+# Für das Streamlit-Webtool (Streamlit Community Cloud liest diese Datei automatisch)
+streamlit>=1.32
+pandas>=2.0
+numpy>=1.24
+scipy>=1.10
+plotly>=5.18
+requests>=2.31
+openpyxl>=3.1
