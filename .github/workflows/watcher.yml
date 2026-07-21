@@ -1,40 +1,28 @@
-name: Breakout-Wächter (alle 45 Min)
+name: Breakout-Wächter (alle 10 Min)
 
 on:
   schedule:
-    # Alle 45 Minuten während der US-Handelszeiten (13:00-20:45 UTC = 15:00-22:45 Wien)
+    # Alle 10 Minuten während der US-Handelszeiten (13:00-20:50 UTC = 15:00-22:50 Wien)
     #
-    # Der Takt ist durch zwei Grenzen bestimmt:
+    # Warum 10 und nicht weniger — gemessen, nicht geschätzt:
     #
-    # 1. Twelve Data Free-Tier: 8 Abfragen je Minute, und JEDES Symbol zählt
-    #    einzeln. 31 Aktien brauchen daher 4 Blöcke mit je gut 60 Sekunden
-    #    Pause — ein Lauf dauert rund 5 Minuten statt einer.
-    # 2. GitHub Actions: 2000 Freiminuten im Monat, jeder Job wird auf volle
-    #    Minuten aufgerundet.
+    # Seit der Umstellung auf den Yahoo-Sammelabruf dauert ein Lauf 33
+    # Sekunden statt 216. GitHub rundet aber jeden Job auf volle Minuten auf,
+    # ein Lauf kostet also 1 Minute vom Freikontingent (2000 im Monat).
     #
-    # Damit ergibt sich: 30 Min Takt = ~2018 Min/Monat (zu viel),
-    # 45 Min = ~1367, 60 Min = ~1150. Plus rund 282 Minuten für den täglichen
-    # Scanner. (Entscheidung von Mathias, 21.07.2026.)
+    # Daraus: 5 Min Takt = 96 Läufe/Tag = ~2127 Min/Monat, also ZU VIEL.
+    #         10 Min Takt = 48 Läufe/Tag = ~1085 Min/Monat, passt.
+    #         (jeweils inklusive rund 43 Minuten für den täglichen Scanner)
     #
-    # Für Daytrading ist das eigentlich zu langsam. Schneller ginge es mit
-    # einer Kursquelle ohne so enges Minutenlimit und mit zwischengespeicherten
-    # pip-Paketen — siehe Notizen im Projekt.
+    # 5 Minuten wäre ohnehin der Mindestabstand bei GitHub, und kurze
+    # Intervalle werden bei hoher Last häufiger verzögert oder ganz
+    # übersprungen. 10 Minuten ist damit das kleinstmögliche Raster, das
+    # verlässlich ins Freikontingent passt.
     #
-    # ACHTUNG: "*/45" waere FALSCH. Cron liest das als "Minute 0 und 45 jeder
-    # Stunde", die Abstaende waeren also abwechselnd 45 und 15 Minuten - 16
-    # Laeufe am Tag statt 10. 45 ist kein Teiler von 60, deshalb muessen die
-    # Zeitpunkte einzeln stehen. Ergibt 11 Laeufe: 13:00 bis 20:30 UTC.
-    - cron: "0 13 * * 1-5"
-    - cron: "45 13 * * 1-5"
-    - cron: "30 14 * * 1-5"
-    - cron: "15 15 * * 1-5"
-    - cron: "0 16 * * 1-5"
-    - cron: "45 16 * * 1-5"
-    - cron: "30 17 * * 1-5"
-    - cron: "15 18 * * 1-5"
-    - cron: "0 19 * * 1-5"
-    - cron: "45 19 * * 1-5"
-    - cron: "30 20 * * 1-5"
+    # "*/10" ist hier korrekt, weil 10 ein Teiler von 60 ist — anders als
+    # beim früheren Versuch mit "*/45", wo Cron daraus Abstände von
+    # abwechselnd 45 und 15 Minuten gemacht hätte.
+    - cron: "*/10 13-20 * * 1-5"
   workflow_dispatch: {}
 
 # Verhindert, dass sich zwei Läufe überschneiden
