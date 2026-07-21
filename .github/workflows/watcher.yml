@@ -1,28 +1,32 @@
-name: Breakout-Wächter (alle 10 Min)
+name: Breakout-Wächter (alle 6 Min)
 
 on:
   schedule:
-    # Alle 10 Minuten während der US-Handelszeiten (13:00-20:50 UTC = 15:00-22:50 Wien)
+    # Alle 6 Minuten, genau während der US-Handelszeit:
+    # 13:30-20:00 UTC = 15:30-22:00 Wiener Zeit. Ergibt 66 Läufe am Tag.
     #
-    # Warum 10 und nicht weniger — gemessen, nicht geschätzt:
+    # Warum genau dieses Fenster: Vorher lief der Wächter 13:00-20:50 UTC
+    # und damit acht Mal täglich ausserhalb der Handelszeit — dort bewegt
+    # sich kein Kurs, die Läufe kosteten nur Kontingent.
     #
-    # Seit der Umstellung auf den Yahoo-Sammelabruf dauert ein Lauf 33
-    # Sekunden statt 216. GitHub rundet aber jeden Job auf volle Minuten auf,
-    # ein Lauf kostet also 1 Minute vom Freikontingent (2000 im Monat).
+    # Warum 6 und nicht weniger — gemessen, nicht geschätzt:
+    # Seit dem Yahoo-Sammelabruf dauert ein Lauf 33 Sekunden statt 216.
+    # GitHub rundet jeden Job auf volle Minuten auf, ein Lauf kostet also
+    # 1 Minute vom Freikontingent (2000 im Monat).
+    #   5 Min Takt = 79 Läufe/Tag = ~1757 Min/Monat, Puffer nur 243
+    #   6 Min Takt = 66 Läufe/Tag = ~1475 Min/Monat, Puffer 525
+    # 5 Minuten ist zudem GitHubs Mindestabstand, und genau dort werden
+    # Läufe bei hoher Last am häufigsten verzögert oder übersprungen.
     #
-    # Daraus: 5 Min Takt = 96 Läufe/Tag = ~2127 Min/Monat, also ZU VIEL.
-    #         10 Min Takt = 48 Läufe/Tag = ~1085 Min/Monat, passt.
-    #         (jeweils inklusive rund 43 Minuten für den täglichen Scanner)
+    # 6 ist ein Teiler von 60, daher gleichmäßige Abstände. Bei 7, 8 oder 9
+    # müsste jeder Zeitpunkt einzeln stehen (siehe frühere Fassung mit 45).
     #
-    # 5 Minuten wäre ohnehin der Mindestabstand bei GitHub, und kurze
-    # Intervalle werden bei hoher Last häufiger verzögert oder ganz
-    # übersprungen. 10 Minuten ist damit das kleinstmögliche Raster, das
-    # verlässlich ins Freikontingent passt.
-    #
-    # "*/10" ist hier korrekt, weil 10 ein Teiler von 60 ist — anders als
-    # beim früheren Versuch mit "*/45", wo Cron daraus Abstände von
-    # abwechselnd 45 und 15 Minuten gemacht hätte.
-    - cron: "*/10 13-20 * * 1-5"
+    # ACHTUNG Zeitumstellung: Diese Zeiten gelten für die US-Sommerzeit.
+    # Ab Anfang November handelt New York 14:30-21:00 UTC — dann müssen die
+    # Stundenangaben um eins nach hinten.
+    - cron: "30,36,42,48,54 13 * * 1-5"
+    - cron: "*/6 14-19 * * 1-5"
+    - cron: "0 20 * * 1-5"
   workflow_dispatch: {}
 
 # Verhindert, dass sich zwei Läufe überschneiden
