@@ -35,12 +35,14 @@ st.set_page_config(page_title="Chart-Screening-Tool", page_icon="📈", layout="
 # ---------------------------------------------------------------------------
 
 def get_api_key() -> str | None:
+    """Twelve-Data-Schlüssel — seit der Umstellung auf Yahoo nur noch die
+    Rückfallebene. Ohne Schlüssel läuft die App normal weiter."""
     try:
         if "TWELVE_DATA_API_KEY" in st.secrets:
             return st.secrets["TWELVE_DATA_API_KEY"]
     except Exception:
         pass
-    return os.environ.get("TWELVE_DATA_API_KEY")
+    return os.environ.get("TWELVE_DATA_API_KEY") or ""
 
 
 @st.cache_data(ttl=900, show_spinner=False)
@@ -177,11 +179,15 @@ st.title("📈 Chart-Screening-Tool")
 st.caption("Darvas Box · Minervini Trend Template · VCP · Cup & Handle · "
            "Rectangle Top · High & Tight Flag")
 
+# Kursdaten kommen seit der Umstellung von Yahoo und brauchen keinen
+# Schlüssel. Twelve Data ist nur noch Rückfallebene — die App startet
+# deshalb auch ohne. Früher stand hier st.stop(), was den Start ganz
+# verhindert hätte.
 api_key = get_api_key()
 if not api_key:
-    st.error("Kein API-Key gefunden. Lokal: `export TWELVE_DATA_API_KEY=...` — "
-             "in der Streamlit Cloud: unter Settings → Secrets eintragen.")
-    st.stop()
+    st.caption("Datenquelle: Yahoo (kein Schlüssel nötig). "
+               "Für eine Rückfallebene könnte TWELVE_DATA_API_KEY "
+               "unter Settings → Secrets hinterlegt werden.")
 
 tab_einzel, tab_liste, tab_info = st.tabs(["🔍 Einzelabfrage", "📋 Liste / CSV", "ℹ️ Regelwerk"])
 

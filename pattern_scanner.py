@@ -172,6 +172,40 @@ def lade_yahoo_sammelabruf(tickers: list[str]) -> int:
     return len(_YAHOO_DATEN)
 
 
+def yahoo_einzeln(ticker: str) -> pd.DataFrame | None:
+    """Einen einzelnen Ticker von Yahoo holen.
+
+    Fuer Aufrufer, die keinen Sammelabruf machen — vor allem die
+    Streamlit-App, die immer nur eine Aktie auf einmal anzeigt."""
+    try:
+        import yfinance as yf
+    except ImportError:
+        return None
+    try:
+        df = yf.download(ticker, period="2y", interval="1d",
+                         progress=False, auto_adjust=False)
+    except Exception:
+        return None
+    if df is None or df.empty:
+        return None
+    # Bei einzelnem Ticker liefert yfinance je nach Fassung mehrstufige Spalten
+    if hasattr(df.columns, "levels"):
+        df.columns = df.columns.droplevel(1)
+    df = df.dropna(subset=["Open", "High", "Low", "Close", "Volume"]).reset_index()
+    df = df.rename(columns={"Date": "datetime", "Datetime": "datetime",
+                            "Open": "open", "High": "high", "Low": "low",
+                            "Close": "close", "Volume": "volume"})
+    try:
+        df["datetime"] = pd.to_datetime(df["datetime"]).dt.tz_localize(None)
+    except Exception:
+        df["datetime"] = pd.to_datetime(df["datetime"])
+    for spalte in ("open", "high", "low", "close", "volume"):
+        df[spalte] = pd.to_numeric(df[spalte], errors="coerce")
+    df = df[["datetime", "open", "high", "low", "close", "volume"]]
+    df = df.dropna().sort_values("datetime").reset_index(drop=True)
+    return df if len(df) >= 60 else None
+
+
 def fetch_history(ticker: str, api_key: str, limiter: RateLimiter) -> pd.DataFrame | None:
     """Tageskurse (OHLCV) holen — mit Tages-Cache, damit Reruns gratis sind.
 
@@ -184,6 +218,13 @@ def fetch_history(ticker: str, api_key: str, limiter: RateLimiter) -> pd.DataFra
     # Aus dem Sammelabruf bedienen, falls vorhanden
     if ticker in _YAHOO_DATEN:
         df = _YAHOO_DATEN[ticker]
+        df.to_csv(cache_file, index=False)
+        return df
+
+    # Kein Sammelabruf gelaufen — etwa in der Streamlit-App, die immer nur
+    # eine einzelne Aktie anzeigt. Dann diesen einen Ticker von Yahoo holen.
+    df = yahoo_einzeln(ticker)
+    if df is not None:
         df.to_csv(cache_file, index=False)
         return df
 
