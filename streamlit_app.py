@@ -175,6 +175,52 @@ def zeige_ergebnis(ticker: str, df: pd.DataFrame, res: dict, mit_chart: bool = T
 # Oberfläche
 # ---------------------------------------------------------------------------
 
+def zugang_pruefen() -> bool:
+    """Einfacher Zugangsschutz per Kennwort.
+
+    Damit kann die App öffentlich gehostet werden, ohne dass Fremde sie
+    benutzen können — das Repository darf dann sogar offen sein, weil das
+    Kennwort NICHT im Code steht, sondern in den Secrets.
+
+    Ist kein Kennwort hinterlegt (etwa beim lokalen Start), bleibt die App
+    offen. So muss man daheim nichts eintippen."""
+    erwartet = None
+    try:
+        if "APP_KENNWORT" in st.secrets:
+            erwartet = st.secrets["APP_KENNWORT"]
+    except Exception:
+        pass
+    erwartet = erwartet or os.environ.get("APP_KENNWORT")
+    if not erwartet:
+        return True
+    if st.session_state.get("zugang_frei"):
+        return True
+
+    # In einen Platzhalter zeichnen, damit die Anmeldemaske nach dem Erfolg
+    # spurlos verschwindet — sonst stünde der Titel zweimal auf der Seite,
+    # was mit einem Screenreader verwirrend ist.
+    maske = st.empty()
+    with maske.container():
+        st.title("📈 Chart-Screening-Tool")
+        st.write("Bitte das Kennwort eingeben.")
+        eingabe = st.text_input("Kennwort", type="password",
+                                key="kennwort_eingabe",
+                                help="Wird nicht gespeichert und nicht angezeigt.")
+        if eingabe and eingabe != erwartet:
+            st.error("Kennwort falsch. Bitte noch einmal versuchen.")
+
+    if eingabe == erwartet:
+        # Kein st.rerun() — das lief in eine Schleife und liess niemanden
+        # durch. Platzhalter leeren und freigeben ist einfacher.
+        maske.empty()
+        st.session_state["zugang_frei"] = True
+        return True
+    return False
+
+
+if not zugang_pruefen():
+    st.stop()
+
 st.title("📈 Chart-Screening-Tool")
 st.caption("Darvas Box · Minervini Trend Template · VCP · Cup & Handle · "
            "Rectangle Top · High & Tight Flag")

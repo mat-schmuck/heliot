@@ -1,0 +1,26 @@
+# Zugangsdaten — NIEMALS ins Repository!
+# Hier landet das Kennwort der App beim lokalen Betrieb.
+.streamlit/secrets.toml
+*.env
+.env
+
+# Zwischenspeicher des Scanners (Kursdaten, wird täglich neu geholt)
+.cache/
+
+# Zustand des Wächters und Anmeldedaten des Alarm-Bots
+session.json
+fortschritt.json
+watcher_state.json
+
+# Diagnosematerial des Alarm-Bots (Screenshots, HTML-Auszüge)
+debug/
+
+# Ergebnisse
+kaufpunkte.xlsx
+
+# Python-Krempel
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
