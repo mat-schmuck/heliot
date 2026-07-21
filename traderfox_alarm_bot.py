@@ -582,6 +582,38 @@ JS_ALARM_INVENTUR = """
 """
 
 
+JS_FENSTER_SCHLIESSEN = """
+(suchtext) => {
+  const alle = [...document.querySelectorAll('*')];
+  const titel = alle.find(e => {
+    const t = e.getAttribute('title') || '';
+    return t.includes(suchtext) && e.children.length === 0;
+  });
+  if (!titel) return false;
+  const box = titel.closest('.container');
+  if (!box) return false;
+  const zu = box.querySelector('.close, .fa-times, [data-action="close"]');
+  if (!zu) return false;
+  zu.click();
+  return true;
+}
+"""
+
+
+def fenster_schliessen(page, suchtext: str) -> bool:
+    """Schliesst das Fenster mit diesem Titel. Noetig, weil offene Fenster im
+    Desk andere ueberdecken - der Alerts manager legte sich sonst ueber die
+    Kursliste, und der Rechtsklick dort ging ins Leere."""
+    try:
+        ok = page.evaluate(JS_FENSTER_SCHLIESSEN, suchtext)
+        page.wait_for_timeout(1200)
+        print(f"    Fenster '{suchtext}' geschlossen: {ok}")
+        return bool(ok)
+    except Exception as e:
+        print(f"    Fenster '{suchtext}' nicht schliessbar: {str(e)[:60]}")
+        return False
+
+
 def alarme_inventur(page, name: str = "bestand") -> list:
     """Liest alle bestehenden Alarme aus dem Alerts manager und legt sie als
     Datei ab. Reines Lesen. Nuetzlich, um Doppelte zu vermeiden und um nach
@@ -647,7 +679,8 @@ def alarm_loeschen(page, preis: float) -> bool:
     return False
 
 
-def testalarm_lauf(page, user: str, pw: str, ticker: str = "AAPL") -> int:
+def testalarm_lauf(page, user: str, pw: str, ticker: str = "AAPL",
+                   firma: str = "Apple") -> int:
     """Legt EINEN Testalarm an, prueft ihn und raeumt ihn wieder weg.
 
     Der Preis liegt bewusst weit ueber dem Kurs, damit der Alarm nicht
@@ -664,6 +697,8 @@ def testalarm_lauf(page, user: str, pw: str, ticker: str = "AAPL") -> int:
     print("\n[1/6] Bestandsaufnahme vorher")
     vorher = alarme_inventur(page, "01_vorher")
     anzahl_vorher = sum(len(e["preise"]) for e in vorher)
+    # Der Manager wuerde sonst die Kursliste verdecken.
+    fenster_schliessen(page, "Alerts manager")
 
     print(f"\n[2/6] {ticker} suchen")
     if not aktie_suchen(page, ticker, langsam=True):
@@ -671,7 +706,9 @@ def testalarm_lauf(page, user: str, pw: str, ticker: str = "AAPL") -> int:
         return 1
 
     print("\n[3/6] Alarm-Dialog oeffnen")
-    if not alarm_dialog_oeffnen(page, ticker, ""):
+    # Firmenname ist wichtig: In der Kursliste steht 'Apple Inc.', das
+    # Kuerzel AAPL kommt dort gar nicht vor.
+    if not alarm_dialog_oeffnen(page, ticker, firma):
         print("✗ Alarm-Dialog ging nicht auf.")
         return 1
 
