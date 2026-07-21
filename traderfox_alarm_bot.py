@@ -547,6 +547,27 @@ def alarm_dialog_oeffnen(page, ticker: str, firma: str) -> bool:
     return True
 
 
+def preis_formatieren(preis: float) -> str:
+    """Preis so schreiben, wie TraderFox ihn erwartet: deutsches Format mit
+    KOMMA. Mit Punkt getippt liest TraderFox ihn als Tausendertrennzeichen —
+    aus 999.99 wurde so 99.999,00."""
+    return f"{preis:.2f}".replace(".", ",")
+
+
+def preis_parsen(text: str):
+    """Deutsches Zahlenformat einlesen: '99.999,00' -> 99999.0,
+    '78,000' -> 78.0. Liefert None, wenn nichts Sinnvolles drinsteht."""
+    t = (text or "").strip()
+    if not t:
+        return None
+    t = t.replace(" ", "").replace("$", "").replace("€", "")
+    t = t.replace(".", "").replace(",", ".")
+    try:
+        return float(t)
+    except ValueError:
+        return None
+
+
 def bestehende_alarme(page) -> set:
     """Liest die bereits eingetragenen Alarmpreise, um Doppelte zu vermeiden.
 
@@ -555,13 +576,10 @@ def bestehende_alarme(page) -> set:
     und machte die Verifikation wertlos."""
     preise = set()
     try:
-        for el in page.locator("input.price-alert:visible").all()[:40]:
-            wert = (el.input_value() or "").strip().replace(",", ".")
-            if wert:
-                try:
-                    preise.add(round(float(wert), 2))
-                except ValueError:
-                    continue
+        for el in page.locator("input.price-alert:visible").all()[:60]:
+            wert = preis_parsen(el.input_value() or "")
+            if wert is not None:
+                preise.add(round(wert, 2))
     except Exception:
         pass
     return preise
@@ -645,38 +663,45 @@ def alarme_inventur(page, name: str = "bestand") -> list:
     return eintraege
 
 
-def alarm_loeschen(page, preis: float) -> bool:
-    """Loescht GENAU den Alarm mit diesem Preis.
+def alarm_loeschen(page, preis: float, maximal: int = 5) -> int:
+    """Loescht alle Alarme mit GENAU diesem Preis. Liefert die Anzahl.
 
     Sicherheitsprinzip: Es wird das Preisfeld gesucht, dessen Wert exakt
     passt, und nur in dessen Zeile auf 'Löschen' geklickt. Niemals blind den
-    ersten remove-alert-Knopf — dort haengen die Alarme des Nutzers."""
-    felder = page.locator("input.price-alert:visible")
-    n = felder.count()
-    for i in range(min(n, 60)):
-        el = felder.nth(i)
+    ersten remove-alert-Knopf — dort haengen die Alarme des Nutzers.
+
+    Mehrfach, weil ein fehlgeschlagener Wiederholungsversuch beim Setzen
+    Duplikate hinterlassen kann. Nach jedem Loeschen baut TraderFox die
+    Liste neu auf, darum jedes Mal von vorn suchen."""
+    geloescht = 0
+    for _ in range(maximal):
+        treffer = None
+        felder = page.locator("input.price-alert:visible")
+        for i in range(min(felder.count(), 60)):
+            el = felder.nth(i)
+            wert = preis_parsen(el.input_value() or "")
+            if wert is not None and abs(wert - preis) < 0.005:
+                treffer = el
+                break
+        if treffer is None:
+            break
         try:
-            wert = (el.input_value() or "").strip().replace(",", ".")
-            if not wert or abs(float(wert) - preis) > 0.005:
-                continue
-        except Exception:
-            continue
-        try:
-            zeile = el.locator("xpath=ancestor::tr[1]")
+            zeile = treffer.locator("xpath=ancestor::tr[1]")
             knopf = zeile.locator("a.remove-alert").first
             if knopf.count() == 0:
                 print(f"    Kein Löschen-Knopf in der Zeile zu {preis}")
-                return False
+                break
             if not klick(knopf, f"Löschen {preis}"):
-                return False
+                break
             page.wait_for_timeout(2000)
-            print(f"    Löschen angeklickt für {preis}")
-            return True
+            geloescht += 1
+            print(f"    Gelöscht: {preis} (insgesamt {geloescht})")
         except Exception as e:
             print(f"    Löschen fehlgeschlagen: {str(e)[:70]}")
-            return False
-    print(f"    Kein Alarm mit Preis {preis} gefunden (nichts geloescht)")
-    return False
+            break
+    if geloescht == 0:
+        print(f"    Kein Alarm mit Preis {preis} gefunden (nichts geloescht)")
+    return geloescht
 
 
 def testalarm_lauf(page, user: str, pw: str, ticker: str = "AAPL",
@@ -712,6 +737,14 @@ def testalarm_lauf(page, user: str, pw: str, ticker: str = "AAPL",
         print("✗ Alarm-Dialog ging nicht auf.")
         return 1
 
+    # Reste aus frueheren Testlaeufen zuerst wegraeumen. 99999 stammt aus dem
+    # Lauf, in dem '999.99' mit Punkt getippt und als 99.999,00 gelesen wurde.
+    print("\n[3b] Alte Testalarme entfernen")
+    aufgeraeumt = 0
+    for altpreis in (TESTPREIS, 99999.0):
+        aufgeraeumt += alarm_loeschen(page, altpreis)
+    print(f"    Aufgeraeumt: {aufgeraeumt}")
+
     print(f"\n[4/6] Testalarm zu {TESTPREIS} setzen")
     gesetzt = alarm_setzen(page, ticker, TESTPREIS, "Testalarm", langsam=True)
     diagnose(page, "testalarm_nach_setzen", f"Nach dem Setzen von {TESTPREIS}")
@@ -721,7 +754,7 @@ def testalarm_lauf(page, user: str, pw: str, ticker: str = "AAPL",
     print("    ✓ Alarm gesetzt und verifiziert")
 
     print(f"\n[5/6] Testalarm zu {TESTPREIS} wieder loeschen")
-    geloescht = alarm_loeschen(page, TESTPREIS)
+    geloescht = alarm_loeschen(page, TESTPREIS) > 0
     diagnose(page, "testalarm_nach_loeschen", f"Nach dem Loeschen von {TESTPREIS}")
     if not geloescht:
         print(f"⚠ ACHTUNG: Der Testalarm zu {TESTPREIS} $ auf {ticker} konnte")
@@ -748,9 +781,19 @@ def testalarm_lauf(page, user: str, pw: str, ticker: str = "AAPL",
 
 def alarm_setzen(page, ticker: str, preis: float, strategie: str, langsam: bool) -> bool:
     """Einen Preis-Alarm eintragen und verifizieren, dass er wirklich drin steht."""
-    preis_str = f"{preis:.2f}"
+    # KOMMA, nicht Punkt: TraderFox rechnet deutsch. Mit '999.99' wurde der
+    # Punkt als Tausendertrennzeichen gelesen und daraus 99.999,00 - der
+    # Alarm landete also auf einem voellig anderen Kurs.
+    preis_str = preis_formatieren(preis)
 
     def versuch():
+        # Steht der Preis schon drin, nicht noch einmal setzen. Sonst
+        # erzeugt jeder Wiederholungsversuch ein weiteres Duplikat - genau
+        # so entstanden drei Alarme statt einem.
+        if round(preis, 2) in bestehende_alarme(page):
+            print(f"    {ticker}: {preis_str} steht bereits — nicht doppelt gesetzt")
+            return True
+
         # Eingabefeld direkt hinter '+ Neuer Alarm'.
         #
         # NIEMALS auf "irgendein sichtbares Feld" ausweichen: Frueher wurde
