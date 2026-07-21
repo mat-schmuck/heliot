@@ -118,8 +118,17 @@ def load_watchlist(xlsx_path: str, nur_muster: bool) -> list[dict]:
 # ---------------------------------------------------------------------------
 
 def fetch_quotes(tickers: list[str], api_key: str, batch_size: int = 8,
-                 pause: float = 8.0) -> dict:
-    """Holt Quotes in Batches. Rückgabe: {ticker: {close, volume, avg_volume, ...}}"""
+                 pause: float = 62.0) -> dict:
+    """Holt Quotes in Batches. Rückgabe: {ticker: {close, volume, avg_volume, ...}}
+
+    ACHTUNG Rate-Limit: Twelve Data zaehlt JEDES Symbol als eigenen Credit,
+    nicht jeden Aufruf. Beim Free-Tier sind das 8 Credits pro Minute. Ein
+    Block mit 8 Symbolen schoepft das Minutenkontingent also komplett aus.
+
+    Die urspruengliche Pause von 8 Sekunden war viel zu kurz: Der zweite
+    Block lief in derselben Minute und wurde mit HTTP 429 abgewiesen - von
+    31 Aktien kamen nur 16 durch, der Rest wurde stillschweigend nicht
+    geprueft. Darum jetzt gut 60 Sekunden zwischen den Bloecken."""
     out = {}
     unique = sorted(set(tickers))
     for i in range(0, len(unique), batch_size):
@@ -332,10 +341,21 @@ def main():
     print(f"{len(items)} Kaufpunkte über {len(set(tickers))} Aktien werden geprüft "
           f"({datetime.now():%H:%M:%S}).")
 
+    gewuenscht = set(t.upper() for t in tickers)
     quotes = fetch_quotes(tickers, api_key)
-    print(f"{len(quotes)} Quotes erhalten.")
+    print(f"{len(quotes)} von {len(gewuenscht)} Quotes erhalten.")
     if not quotes:
         sys.exit("Keine Kursdaten erhalten — Abbruch.")
+
+    # Unvollstaendige Abfragen NICHT stillschweigend hinnehmen: Fuer die
+    # fehlenden Aktien kann kein Breakout erkannt werden, und ohne Hinweis
+    # sieht der Lauf trotzdem erfolgreich aus.
+    fehlend = sorted(gewuenscht - set(quotes))
+    if fehlend:
+        print(f"\n⚠ ACHTUNG: {len(fehlend)} Aktien konnten NICHT geprüft werden:")
+        print("  " + ", ".join(fehlend))
+        print("  Für diese Werte wird in diesem Lauf kein Ausbruch erkannt.")
+        print("  Meist Rate-Limit der Kursdaten-Schnittstelle (8 Abfragen/Minute).\n")
 
     state = load_state()
     schon_gemeldet = set(state["gemeldet"])
