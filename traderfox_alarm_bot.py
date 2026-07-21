@@ -83,29 +83,29 @@ SELEKTOREN = {
         ("text", r"^\s*Nur Notwendige\s*$"),
         ("css", "[id$='-reject-all']"),
     ],
+    # ACHTUNG: Das Desk enthaelt mehrere Elemente mit dem blossen Text "Login"
+    # (Broker-Balken, comdirect, finanzen.net zero, CAPTRADER). Die oeffnen den
+    # Broker-Verknuepfungsdialog, NICHT den Benutzer-Login. Darum ausschliesslich
+    # die eindeutigen IDs verwenden und keine breiten Text-Fallbacks.
     "login_oeffnen": [
-        ("text", r"^\s*Login\s*$"),
-        ("text", r"Anmelden"),
-        ("css", "[class*='login' i]:not(input)"),
+        ("css", "#login-ico"),
+        ("css", ".login-holder .login"),
     ],
     "login_dialog": [
-        ("text", r"Benutzer\s*Login"),
+        ("css", ".login-popup"),
         ("text", r"Zugangsdaten eingeben"),
     ],
     "login_email": [
-        ("css", "input[type='email']"),
-        ("placeholder", r"E-?Mail"),
-        ("css", "input[name*='mail' i], input[id*='mail' i], input[name*='user' i]"),
-        ("css", "input[type='text']"),
+        ("css", "#email02"),
+        ("css", ".login-popup input[type='email']"),
     ],
     "login_passwort": [
-        ("css", "input[type='password']"),
-        ("placeholder", r"Passwort|Password"),
+        ("css", "#password01"),
+        ("css", ".login-popup input[type='password']"),
     ],
     "login_absenden": [
-        ("text", r"Jetzt\s*einloggen"),
-        ("role", r"einloggen|anmelden|login"),
-        ("css", "button[type='submit'], input[type='submit']"),
+        ("css", "#login-button"),
+        ("css", ".login-popup button[type='submit']"),
     ],
     "suchfeld": [
         ("placeholder", r"Suchbegriff"),
