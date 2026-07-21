@@ -180,6 +180,29 @@ def finde(page, key: str, timeout_ms: int = 4000, alle: bool = False):
     return [] if alle else None
 
 
+def klick(el, name: str = "", timeout_ms: int = 5000) -> bool:
+    """Klickt moeglichst robust.
+
+    Das Desk ordnet seine Fenster nach dem gespeicherten Layout des Nutzers
+    an; einzelne ragen aus dem Sichtfeld. Der normale Klick laeuft dann in
+    Timeout, obwohl das Element existiert und sichtbar ist. Zweiter Versuch
+    per JS-Klick, der Position und Ueberdeckung ignoriert."""
+    try:
+        el.click(timeout=timeout_ms)
+        return True
+    except Exception:
+        pass
+    try:
+        el.evaluate("e => e.click()")
+        if name:
+            print(f"    ({name}: JS-Klick noetig)")
+        return True
+    except Exception as e:
+        if name:
+            print(f"    Klick auf {name} fehlgeschlagen: {str(e)[:60]}")
+        return False
+
+
 def warte_auf(page, key: str, timeout_s: float = 15.0):
     """Wartet, bis ein Selektor sichtbar wird (Polling über alle Varianten)."""
     ende = time.time() + timeout_s
@@ -735,11 +758,11 @@ def erkunde_alarmweg(page, ticker: str):
     for reiter in ("ticker", "list", "stock"):
         try:
             el = page.locator(f"a[name='{reiter}']").first
-            if el.count() and el.is_visible():
-                el.click(timeout=5000)
+            if el.count() and klick(el, f"Reiter {reiter}"):
                 page.wait_for_timeout(2000)
                 print(f"    Reiter '{reiter}' geoeffnet")
                 fenster_html_sichern(page, "Alerts manager", f"reiter_{reiter}")
+                diagnose(page, f"reiter_{reiter}", f"Manager-Reiter '{reiter}'")
         except Exception as e:
             print(f"    Reiter '{reiter}' nicht erreichbar: {str(e)[:80]}")
 
@@ -838,7 +861,12 @@ def main():
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=not args.sichtbar,
                                     args=["--disable-blink-features=AutomationControlled"])
-        kontext_args = {"viewport": {"width": 1680, "height": 950},
+        # 1680x950 war zu klein: Das Desk positioniert seine Fenster frei nach
+        # dem gespeicherten Layout des Nutzers, dabei landete der Alerts
+        # manager teilweise links ausserhalb (x = -183). Playwright kann
+        # nichts anklicken, was ausserhalb des Sichtfelds liegt - alle Klicks
+        # dort liefen in Timeout.
+        kontext_args = {"viewport": {"width": 2560, "height": 1440},
                         "locale": "de-AT"}
         if SESSION_FILE.exists() and not args.selbsttest:
             try:
