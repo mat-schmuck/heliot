@@ -78,6 +78,11 @@ FORTSCHRITT_FILE = Path("fortschritt.json")
 # ===========================================================================
 
 SELEKTOREN = {
+    "cookie_ablehnen": [
+        ("css", "#maintfcookie-reject-all"),
+        ("text", r"^\s*Nur Notwendige\s*$"),
+        ("css", "[id$='-reject-all']"),
+    ],
     "login_oeffnen": [
         ("text", r"^\s*Login\s*$"),
         ("text", r"Anmelden"),
@@ -323,10 +328,36 @@ def load_buypoints(xlsx_path: str, nur_muster: bool) -> list[dict]:
 # Browser-Schritte
 # ===========================================================================
 
+def cookie_hinweis_behandeln(page) -> bool:
+    """TraderFox leitet Sitzungen ohne Cookie-Einwilligung auf eine ganzseitige
+    Abfrage um (desk.traderfox.com/cookie/). Dahinter ist kein Bedienelement
+    erreichbar, der Login scheiterte deshalb mit 'login_dialog_fehlt'.
+
+    Wir wählen bewusst 'Nur Notwendige': Der Bot braucht ausschliesslich die
+    technisch notwendigen Cookies. Tracking- und Werbedienste bleiben aus."""
+    btn = finde(page, "cookie_ablehnen", timeout_ms=3000)
+    if btn is None:
+        return False
+    try:
+        btn.click()
+        page.wait_for_timeout(2000)
+        print("Cookie-Hinweis mit 'Nur Notwendige' beantwortet.")
+        return True
+    except Exception:
+        diagnose(page, "cookie_klick_fehlt", "'Nur Notwendige' nicht klickbar")
+        return False
+
+
 def login(page, user: str, pw: str) -> bool:
     """Login laut Screenshot: 'Login' → Dialog 'Benutzer Login' → Felder →
     'JETZT EINLOGGEN'. Erkennt eine bestehende Session und überspringt dann."""
     page.goto(DESK_URL, wait_until="domcontentloaded")
+    page.wait_for_timeout(2000)
+
+    # Cookie-Abfrage kommt vor allem anderen — sonst ist die Seite leer.
+    if cookie_hinweis_behandeln(page):
+        page.goto(DESK_URL, wait_until="domcontentloaded")
+
     page.wait_for_timeout(4000)
 
     # Bereits eingeloggt? Suchfeld da und kein Login-Dialog/-Button.
