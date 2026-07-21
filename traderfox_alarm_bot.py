@@ -419,11 +419,24 @@ def login(page, user: str, pw: str) -> bool:
 
     page.wait_for_timeout(4000)
 
-    # Bereits eingeloggt? Entscheidend ist: Das Desk ist da und es gibt kein
-    # Passwortfeld zum Ausfuellen. Frueher wurde zusaetzlich verlangt, dass
-    # kein Login-Knopf existiert - der steckt aber dauerhaft im DOM, weshalb
-    # der Bot sich mit gueltiger Sitzung faelschlich fuer ausgeloggt hielt.
-    if finde(page, "suchfeld") is not None and finde(page, "login_dialog") is None:
+    # Bereits eingeloggt? Drei Bedingungen, und alle drei sind noetig:
+    #   - Das Desk ist geladen (Suchfeld da)
+    #   - Kein Passwortfeld zum Ausfuellen
+    #   - KEIN sichtbarer Login-Knopf
+    #
+    # Die dritte hatte ich zwischenzeitlich entfernt, weil ich sie fuer die
+    # Ursache eines anderen Fehlers hielt. Das war falsch und hatte Folgen:
+    # Laeuft die gespeicherte Sitzung ab, ist das Suchfeld trotzdem da und
+    # das Passwortfeld versteckt - der Bot hielt sich also fuer angemeldet,
+    # war es aber nicht. Ohne Anmeldung fehlt im Kontextmenue der Eintrag
+    # 'Alarm hinzufuegen', und der Aufraeumlauf lief ins Leere, ohne dass
+    # jemand den Grund sah.
+    #
+    # Der eigentliche Fehler von damals lag beim Merkmal fuer den Dialog
+    # ('.login-popup' statt '#password01') und ist dort behoben.
+    if (finde(page, "suchfeld") is not None
+            and finde(page, "login_dialog") is None
+            and finde(page, "login_oeffnen") is None):
         print("Bereits eingeloggt (Session wiederverwendet).")
         return True
 
@@ -463,6 +476,15 @@ def login(page, user: str, pw: str) -> bool:
         return False
     if warte_auf(page, "suchfeld", 20) is None:
         diagnose(page, "desk_nicht_geladen", "Nach Login kein Suchfeld")
+        return False
+
+    # Gegenprobe: Ist der Login-Knopf wirklich verschwunden? Solange er da
+    # ist, sind wir NICHT angemeldet - und ohne Anmeldung fehlt im
+    # Kontextmenue 'Alarm hinzufuegen', ohne dass der Grund erkennbar waere.
+    if finde(page, "login_oeffnen") is not None:
+        diagnose(page, "login_scheinbar_ok",
+                 "Suchfeld da, aber Login-Knopf weiterhin sichtbar")
+        print("✗ Login nicht wirksam — Anmeldeknopf ist noch da.")
         return False
 
     print("Login OK.")
