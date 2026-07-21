@@ -63,6 +63,60 @@ VOL_FAKTOR_FALLBACK = 1.0
 # Zustand (was wurde schon gemeldet)
 # ---------------------------------------------------------------------------
 
+# Wie sich das Handelsvolumen ueber den Boersentag verteilt.
+# Gemessen an acht Aktien ueber 168 Aktien-Tage (30-Minuten-Kerzen,
+# nur regulaerer Handel). Schluessel: Minuten seit Mitternacht New Yorker
+# Zeit am ENDE der jeweiligen Halbstunde; Wert: bis dahin gehandelter
+# Anteil am Tagesvolumen.
+#
+# Wichtig: Die Verteilung ist NICHT gleichmaessig. Allein die erste halbe
+# Stunde macht 21 % aus, linear waeren es 7,7 %. Wer linear hochrechnet,
+# ueberschaetzt den Vormittag um ein Vielfaches und erzeugt Fehlsignale.
+VOLUMENKURVE = [
+    (570, 0.000),   # 09:30 NY — Eroeffnung, noch nichts gehandelt
+    (600, 0.213),   # 10:00
+    (630, 0.314),   # 10:30
+    (660, 0.396),   # 11:00
+    (690, 0.465),   # 11:30
+    (720, 0.523),   # 12:00
+    (750, 0.581),   # 12:30
+    (780, 0.630),   # 13:00
+    (810, 0.676),   # 13:30
+    (840, 0.721),   # 14:00
+    (870, 0.764),   # 14:30
+    (900, 0.810),   # 15:00
+    (930, 0.867),   # 15:30
+    (960, 1.000),   # 16:00 — Handelsschluss
+]
+
+
+def tagesanteil(jetzt=None) -> float:
+    """Welcher Anteil des Tagesvolumens ist zu dieser Uhrzeit ueblicherweise
+    schon gehandelt? Zwischen den Stuetzstellen wird linear interpoliert.
+
+    Vor Handelsbeginn und nach Schluss: 1.0 (voller Tag), damit die
+    Hochrechnung dann nichts mehr veraendert."""
+    try:
+        from zoneinfo import ZoneInfo
+        ny = ZoneInfo("America/New_York")
+    except Exception:
+        return 1.0
+    jetzt = (jetzt or datetime.now(ny)).astimezone(ny)
+    minuten = jetzt.hour * 60 + jetzt.minute
+    if minuten <= VOLUMENKURVE[0][0]:
+        return 1.0                      # vor Eroeffnung
+    if minuten >= VOLUMENKURVE[-1][0]:
+        return 1.0                      # nach Schluss: Tag ist komplett
+    for i in range(1, len(VOLUMENKURVE)):
+        m0, a0 = VOLUMENKURVE[i - 1]
+        m1, a1 = VOLUMENKURVE[i]
+        if minuten <= m1:
+            spanne = m1 - m0
+            anteil = a0 + (a1 - a0) * ((minuten - m0) / spanne) if spanne else a1
+            return max(anteil, 0.01)    # nie durch (fast) null teilen
+    return 1.0
+
+
 def markt_offen(jetzt=None) -> tuple:
     """Handelt die US-Börse gerade? Liefert (offen, Begruendung).
 
@@ -268,8 +322,21 @@ def pruefe_breakout(item: dict, quote: dict) -> dict | None:
 
     faktor = VOL_FAKTOR.get(item["strategie"], VOL_FAKTOR_FALLBACK)
     vol, avg = quote["volume"], quote["avg_volume"]
+
+    # RELATIVES VOLUMEN, auf den ganzen Tag hochgerechnet.
+    #
+    # Ohne Hochrechnung waere die Volumenbestaetigung vormittags nie
+    # erfuellbar: Um 16:00 Wiener Zeit sind erst rund 31 % eines normalen
+    # Tagesvolumens gehandelt — ein Ausbruch muesste also das Dreifache des
+    # Ueblichen ziehen, nur um die 100-%-Schwelle zu erreichen.
+    #
+    # Mit Hochrechnung lautet die Frage richtig: Ist das Volumen FUER DIESE
+    # UHRZEIT ungewoehnlich hoch? Ergebnis kann 180 %, 640 % oder 3200 %
+    # sein — je staerker der Andrang, desto hoeher.
+    anteil = tagesanteil()
+    vol_hochgerechnet = vol / anteil if anteil > 0 else vol
     if avg > 0:
-        vol_ratio = vol / avg
+        vol_ratio = vol_hochgerechnet / avg
         vol_ok = vol_ratio >= faktor
     else:
         vol_ratio = None
@@ -282,15 +349,23 @@ def pruefe_breakout(item: dict, quote: dict) -> dict | None:
         "vol_ratio": vol_ratio,
         "vol_noetig": faktor,
         "vol_ok": vol_ok,
+        "vol_roh": vol,
+        "vol_anteil": anteil,
     }
 
 
 def format_treffer(t: dict) -> str:
+    # Bei laufendem Handel dazuschreiben, dass hochgerechnet wurde — sonst
+    # wundert man sich ueber 3200 %, wenn erst eine Stunde gehandelt wurde.
+    anteil = t.get("vol_anteil", 1.0)
+    zusatz = ""
+    if anteil < 0.99:
+        zusatz = f" (hochgerechnet, erst {anteil*100:.0f}% des Tages)"
     if t["vol_ok"] is True:
-        vol_txt = f"Vol {t['vol_ratio']*100:.0f}% vom Ø — BESTÄTIGT"
+        vol_txt = f"Vol {t['vol_ratio']*100:.0f}% vom Ø — BESTÄTIGT{zusatz}"
     elif t["vol_ok"] is False:
         vol_txt = (f"Vol nur {t['vol_ratio']*100:.0f}% vom Ø "
-                   f"(nötig: {t['vol_noetig']*100:.0f}%) — NICHT bestätigt")
+                   f"(nötig: {t['vol_noetig']*100:.0f}%) — NICHT bestätigt{zusatz}")
     else:
         vol_txt = "Volumen unbekannt — selbst prüfen"
     zeilen = [
