@@ -692,6 +692,33 @@ def alarme_inventur(page, name: str = "bestand") -> list:
     return eintraege
 
 
+JS_MAUSFOLGE = (
+    "e => { for (const t of ['mouseover','mousedown','mouseup','click']) "
+    "e.dispatchEvent(new MouseEvent(t, "
+    "{bubbles:true, cancelable:true, view:window})); }"
+)
+
+
+def maus_klick(el, name: str = "") -> bool:
+    """Klickt per vollstaendiger Maus-Ereignisfolge.
+
+    Bei den Alarm-Knoepfen von TraderFox der einzige Weg, der wirkt. Gemessen
+    im Testlauf: Der Knopf ist 21x21 gross und sichtbar, trotzdem laeuft ein
+    normaler Playwright-Klick in Timeout, ein erzwungener bewirkt nichts, und
+    ein blosses e.click() ebenfalls nicht. Erst mouseover/mousedown/mouseup/
+    click nacheinander loesen den Handler aus.
+
+    ACHTUNG: Liefert True, sobald die Ereignisse abgesetzt wurden - das ist
+    KEIN Nachweis, dass etwas passiert ist. Immer das Ergebnis nachpruefen."""
+    try:
+        el.evaluate(JS_MAUSFOLGE)
+        return True
+    except Exception as e:
+        if name:
+            print(f"    Maus-Ereignisfolge auf {name} fehlgeschlagen: {str(e)[:60]}")
+        return False
+
+
 def zaehle_preis(page, preis: float) -> int:
     """Wie oft steht dieser Preis gerade in einem sichtbaren Alarmfeld?"""
     felder = page.locator("input.price-alert:visible")
@@ -805,7 +832,9 @@ def alarm_loeschen(page, preis: float, maximal: int = 5) -> int:
             vorher = sum(1 for i in range(min(felder.count(), 60))
                          if (lambda w: w is not None and abs(w - preis) < 0.005)(
                              preis_parsen(felder.nth(i).input_value() or "")))
-            if not klick(knopf, f"Löschen {preis}"):
+            # Maus-Ereignisfolge statt klick(): siehe maus_klick(). Normale
+            # und erzwungene Klicks bleiben bei diesen Knoepfen wirkungslos.
+            if not maus_klick(knopf, f"Löschen {preis}"):
                 break
             page.wait_for_timeout(2500)
 
