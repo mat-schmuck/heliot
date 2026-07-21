@@ -570,6 +570,126 @@ def dialog_schliessen(page):
 # Selbsttest — prüft die Bedienelemente, ohne etwas zu verändern
 # ===========================================================================
 
+JS_ALARM_ELEMENTE = """
+() => {
+  const out = [];
+  for (const el of document.querySelectorAll('*')) {
+    const titel = el.getAttribute('title') || '';
+    const cls = (typeof el.className === 'string') ? el.className : '';
+    const id = el.id || '';
+    const txt = (el.children.length === 0) ? (el.textContent || '').trim().slice(0, 50) : '';
+    const blob = (titel + ' ' + cls + ' ' + id + ' ' + txt).toLowerCase();
+    if (!/alarm|alert/.test(blob)) continue;
+    const r = el.getBoundingClientRect();
+    out.push({
+      tag: el.tagName.toLowerCase(), id: id, cls: cls.slice(0, 55),
+      titel: titel, text: txt,
+      sichtbar: !!(r.width && r.height), x: Math.round(r.x), y: Math.round(r.y)
+    });
+  }
+  return out.slice(0, 70);
+}
+"""
+
+
+def alarm_elemente_auflisten(page, name: str):
+    """Schreibt alle Elemente, die nach Alarm aussehen, samt Sichtbarkeit und
+    Position in eine Datei. Reines Lesen — klickt nichts an."""
+    DEBUG_DIR.mkdir(exist_ok=True)
+    stempel = datetime.now().strftime("%H%M%S")
+    ziel = DEBUG_DIR / f"{stempel}_alarmelemente_{name}.txt"
+    try:
+        treffer = page.evaluate(JS_ALARM_ELEMENTE)
+    except Exception as e:
+        treffer = []
+        print(f"    (Elementliste nicht lesbar: {e})")
+    zeilen = [f"# Alarm-verdaechtige Elemente: {name}",
+              f"Zeit: {datetime.now():%Y-%m-%d %H:%M:%S}",
+              f"URL: {page.url}", f"Anzahl: {len(treffer)}", ""]
+    for t in treffer:
+        sicht = "SICHTBAR" if t["sichtbar"] else "versteckt"
+        zeilen.append(
+            f"  [{sicht:9}] <{t['tag']}> id={t['id']!r} class={t['cls']!r} "
+            f"title={t['titel']!r} text={t['text']!r} @({t['x']},{t['y']})")
+    ziel.write_text("\n".join(zeilen), encoding="utf-8")
+    print(f"    → Elementliste abgelegt: debug/{ziel.name} ({len(treffer)} Treffer)")
+
+
+def erkunde_alarmweg(page, ticker: str):
+    """Erkundet, wie auf dem DESKTOP ein Preisalarm angelegt wird.
+
+    Hintergrund: Der erwartete Menueintrag 'Alarm hinzufuegen' existiert im
+    Desktop-HTML nicht — die Vorlage dafuer stammte offenbar aus der
+    iPhone-App. Diese Funktion klickt sich vorsichtig an die Kandidaten heran
+    und legt nach jedem Schritt Diagnosematerial ab.
+
+    WICHTIG: Sie setzt KEINEN Alarm. Es wird nichts gespeichert und nichts
+    bestaetigt — nur geoeffnet und angeschaut."""
+    print("\n--- Erkundung: Wo legt die Desktop-Oberflaeche Alarme an? ---")
+    print("    (setzt nichts, speichert nichts)")
+
+    alarm_elemente_auflisten(page, "01_ausgangslage")
+
+    # Schritt 1: Chart auf den Ticker stellen — ein Kursalarm haengt am Chart.
+    try:
+        chartsuche = page.locator("input.search[placeholder*='Aktie suchen' i]")
+        gesetzt = False
+        for i in range(min(chartsuche.count(), 4)):
+            el = chartsuche.nth(i)
+            if not el.is_visible():
+                continue
+            el.click()
+            el.fill(ticker)
+            page.wait_for_timeout(2500)
+            page.keyboard.press("Enter")
+            page.wait_for_timeout(3000)
+            gesetzt = True
+            break
+        print(f"    Chart auf {ticker} gestellt: {gesetzt}")
+    except Exception as e:
+        print(f"    Chart-Suche fehlgeschlagen: {e}")
+
+    diagnose(page, "erkundung_chart", f"Chart nach Suche nach {ticker}")
+
+    # Schritt 2: Das Alarm-Werkzeug in der Chart-Symbolleiste anklicken.
+    try:
+        werkzeug = page.locator("a.alert_icon")
+        print(f"    a.alert_icon im DOM: {werkzeug.count()}x")
+        geklickt = False
+        for i in range(min(werkzeug.count(), 4)):
+            el = werkzeug.nth(i)
+            if not el.is_visible():
+                continue
+            el.click()
+            page.wait_for_timeout(2500)
+            geklickt = True
+            break
+        print(f"    Alarm-Werkzeug angeklickt: {geklickt}")
+    except Exception as e:
+        print(f"    Alarm-Werkzeug nicht klickbar: {e}")
+
+    diagnose(page, "erkundung_alarmwerkzeug", "Nach Klick auf a.alert_icon")
+    alarm_elemente_auflisten(page, "02_nach_werkzeug")
+
+    # Schritt 3: Seitenleisten-Eintrag 'Nutzer-Alarme' anschauen.
+    try:
+        seitenleiste = page.locator("li[title*='Alarm' i]")
+        print(f"    li[title*=Alarm] im DOM: {seitenleiste.count()}x")
+        for i in range(min(seitenleiste.count(), 3)):
+            el = seitenleiste.nth(i)
+            if not el.is_visible():
+                continue
+            el.click()
+            page.wait_for_timeout(2500)
+            break
+    except Exception as e:
+        print(f"    Seitenleiste nicht klickbar: {e}")
+
+    diagnose(page, "erkundung_seitenleiste", "Nach Klick auf 'Nutzer-Alarme'")
+    alarm_elemente_auflisten(page, "03_nach_seitenleiste")
+    print("--- Erkundung beendet ---\n")
+
+
 def selbsttest(page, user: str, pw: str) -> int:
     print("\n=== SELBSTTEST: prüft nur, ob alles gefunden wird — setzt KEINE Alarme ===\n")
     ergebnis = {}
@@ -589,7 +709,11 @@ def selbsttest(page, user: str, pw: str) -> int:
     ok_dialog = False
     if ok_suche:
         ok_dialog = alarm_dialog_oeffnen(page, test_ticker, "Apple")
-        ergebnis["Rechtsklick → Alarm hinzufügen"] = ok_dialog
+        ergebnis["Alarm-Dialog öffnen"] = ok_dialog
+        if not ok_dialog:
+            # Der bisherige Weg (Rechtsklick) stammt aus der iPhone-App und
+            # existiert auf dem Desktop nicht. Material sammeln statt raten.
+            erkunde_alarmweg(page, test_ticker)
 
     if ok_dialog:
         ergebnis["Feld '+ Neuer Alarm'"] = finde(page, "neuer_alarm_label") is not None
