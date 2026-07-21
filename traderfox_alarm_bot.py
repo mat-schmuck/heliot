@@ -990,14 +990,20 @@ def aufraeum_lauf(page, user: str, pw: str, auftraege: list) -> int:
         print("✗ Login fehlgeschlagen.")
         return 1
 
-    print("\n[1/3] Bestandsaufnahme vorher")
-    vorher = alarme_inventur(page, "01_vorher")
-    anzahl_vorher = sum(len(e["preise"]) for e in vorher)
-    fenster_schliessen(page, "Alerts manager")
+    # BEWUSST KEINE Bestandsaufnahme vorweg.
+    #
+    # Sie oeffnet den Alerts manager, und der laedt nicht immer zuverlaessig.
+    # Ein halb geladenes, leeres Fenster laesst sich weder auslesen noch
+    # schliessen — es liegt danach ueber der Kursliste und verschluckt den
+    # Rechtsklick. Genau daran ist der zweite Aufraeumlauf gescheitert.
+    #
+    # Fuer das Loeschen wird sie nicht gebraucht: alarm_loeschen() zaehlt
+    # ohnehin vor und nach jedem Klick nach und meldet, was wirklich
+    # verschwunden ist.
 
     entfernt, probleme = 0, []
     for i, (ticker, firma, preis) in enumerate(auftraege, 1):
-        print(f"\n[2/3] ({i}/{len(auftraege)}) {ticker} — {preis} entfernen")
+        print(f"\n[{i}/{len(auftraege)}] {ticker} — {preis} entfernen")
         dialog_schliessen(page)
         if not aktie_suchen(page, ticker, langsam=True, firma=firma):
             probleme.append(f"{ticker} (Suche)")
@@ -1012,21 +1018,16 @@ def aufraeum_lauf(page, user: str, pw: str, auftraege: list) -> int:
             probleme.append(f"{ticker} @ {preis} (nicht gefunden oder nicht löschbar)")
 
     dialog_schliessen(page)
-    print("\n[3/3] Bestandsaufnahme nachher")
-    nachher = alarme_inventur(page, "02_nachher")
-    anzahl_nachher = sum(len(e["preise"]) for e in nachher)
 
     print("\n--- Ergebnis ---")
-    print(f"  Alarme vorher:  {anzahl_vorher}")
-    print(f"  Entfernt:       {entfernt}")
-    print(f"  Alarme nachher: {anzahl_nachher}")
+    print(f"  Aufträge:  {len(auftraege)}")
+    print(f"  Entfernt:  {entfernt}")
     if probleme:
         print(f"\n⚠ {len(probleme)} Problem(e): {', '.join(probleme)}")
         return 1
-    erwartet = anzahl_vorher - entfernt
-    if anzahl_nachher != erwartet:
-        print(f"\n⚠ Erwartet waren {erwartet}, gezählt {anzahl_nachher}.")
-        print("  Ausgelöste Alarme entfernt TraderFox selbst — kann daher kommen.")
+    if entfernt == 0:
+        print("\n⚠ Nichts entfernt — standen die Alarme überhaupt noch?")
+        return 1
     print("\n✓ Aufräumen abgeschlossen.")
     return 0
 
