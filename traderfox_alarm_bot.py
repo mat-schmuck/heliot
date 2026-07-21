@@ -728,6 +728,35 @@ def erkunde_alarmweg(page, ticker: str):
     alarm_elemente_auflisten(page, "03_nach_seitenleiste")
     # Genau das ist das interessante Fenster — gezielt sichern.
     fenster_html_sichern(page, "Alerts manager", "alertsmanager")
+
+    # Schritt 4: Der Manager hat drei Reiter (Einzelaktien / Kurslisten /
+    # Alerts ticker) und KEINEN sichtbaren Knopf zum Neuanlegen. Vielleicht
+    # steckt der in einem der anderen Reiter. Nur umschalten, sonst nichts.
+    for reiter in ("ticker", "list", "stock"):
+        try:
+            el = page.locator(f"a[name='{reiter}']").first
+            if el.count() and el.is_visible():
+                el.click(timeout=5000)
+                page.wait_for_timeout(2000)
+                print(f"    Reiter '{reiter}' geoeffnet")
+                fenster_html_sichern(page, "Alerts manager", f"reiter_{reiter}")
+        except Exception as e:
+            print(f"    Reiter '{reiter}' nicht erreichbar: {str(e)[:80]}")
+
+    # Schritt 5: Das Chart-Werkzeug liess sich normal nicht anklicken
+    # (Timeout trotz Sichtbarkeit) — vermutlich ueberdeckt. Zweiter Versuch
+    # per JS-Klick, der Ueberdeckungen ignoriert.
+    try:
+        el = page.locator("a.alert_icon").first
+        if el.count():
+            el.evaluate("e => e.click()")
+            page.wait_for_timeout(2500)
+            print("    Alarm-Werkzeug per JS angeklickt")
+            diagnose(page, "erkundung_werkzeug_js", "a.alert_icon per JS geklickt")
+            alarm_elemente_auflisten(page, "04_nach_werkzeug_js")
+    except Exception as e:
+        print(f"    JS-Klick fehlgeschlagen: {str(e)[:80]}")
+
     print("--- Erkundung beendet ---\n")
 
 
