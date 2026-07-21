@@ -1,16 +1,40 @@
-name: Breakout-Wächter (alle 30 Min)
+name: Breakout-Wächter (alle 45 Min)
 
 on:
   schedule:
-    # Alle 30 Minuten während der US-Handelszeiten (13:00-20:45 UTC = 15:00-22:45 Wien)
+    # Alle 45 Minuten während der US-Handelszeiten (13:00-20:45 UTC = 15:00-22:45 Wien)
     #
-    # Warum 30 und nicht 15 Minuten: Bei 15 Minuten sind es 694 Läufe im Monat.
-    # GitHub rechnet je Job auf volle Minuten auf, mit Setup und pip install
-    # sind das rund 2,5 Minuten pro Lauf — zusammen mit dem täglichen Scanner
-    # ergibt das etwa 2018 Minuten und liegt damit ÜBER dem Freikontingent von
-    # 2000 Minuten. Mit 30 Minuten sind es rund 1150 Minuten, also gut die
-    # Hälfte, mit Luft für Testläufe. (Entscheidung von Mathias, 21.07.2026.)
-    - cron: "*/30 13-20 * * 1-5"
+    # Der Takt ist durch zwei Grenzen bestimmt:
+    #
+    # 1. Twelve Data Free-Tier: 8 Abfragen je Minute, und JEDES Symbol zählt
+    #    einzeln. 31 Aktien brauchen daher 4 Blöcke mit je gut 60 Sekunden
+    #    Pause — ein Lauf dauert rund 5 Minuten statt einer.
+    # 2. GitHub Actions: 2000 Freiminuten im Monat, jeder Job wird auf volle
+    #    Minuten aufgerundet.
+    #
+    # Damit ergibt sich: 30 Min Takt = ~2018 Min/Monat (zu viel),
+    # 45 Min = ~1367, 60 Min = ~1150. Plus rund 282 Minuten für den täglichen
+    # Scanner. (Entscheidung von Mathias, 21.07.2026.)
+    #
+    # Für Daytrading ist das eigentlich zu langsam. Schneller ginge es mit
+    # einer Kursquelle ohne so enges Minutenlimit und mit zwischengespeicherten
+    # pip-Paketen — siehe Notizen im Projekt.
+    #
+    # ACHTUNG: "*/45" waere FALSCH. Cron liest das als "Minute 0 und 45 jeder
+    # Stunde", die Abstaende waeren also abwechselnd 45 und 15 Minuten - 16
+    # Laeufe am Tag statt 10. 45 ist kein Teiler von 60, deshalb muessen die
+    # Zeitpunkte einzeln stehen. Ergibt 11 Laeufe: 13:00 bis 20:30 UTC.
+    - cron: "0 13 * * 1-5"
+    - cron: "45 13 * * 1-5"
+    - cron: "30 14 * * 1-5"
+    - cron: "15 15 * * 1-5"
+    - cron: "0 16 * * 1-5"
+    - cron: "45 16 * * 1-5"
+    - cron: "30 17 * * 1-5"
+    - cron: "15 18 * * 1-5"
+    - cron: "0 19 * * 1-5"
+    - cron: "45 19 * * 1-5"
+    - cron: "30 20 * * 1-5"
   workflow_dispatch: {}
 
 # Verhindert, dass sich zwei Läufe überschneiden
