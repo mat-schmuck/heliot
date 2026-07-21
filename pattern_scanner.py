@@ -84,6 +84,7 @@ CFG = {
     "handle_max_len": 20,
     "handle_min_len": 4,
     "handle_max_retrace": 1 / 3,     # max 1/3 der Cup-Höhe
+    "cup_min_score": 80,             # Muster muss zu mind. 80 % erfüllt sein
     # Rectangle
     "rect_lookback": 65,
     "rect_band": 0.02,               # Cluster-Toleranz ±2 %
@@ -551,18 +552,49 @@ def detect_cup_handle(df: pd.DataFrame) -> dict | None:
         in_upper_third = h_low >= bottom + (left_high - bottom) * (2 / 3)
         if retrace > CFG["handle_max_retrace"] or not in_upper_third:
             continue
+
+        # VOLUMENVERLAUF — laut Regelwerk Pflichtbestandteil des Musters:
+        # "Volumen fällt tendenziell im Verlauf des Cups (besonders am Boden)
+        #  und steigt wieder Richtung rechtem Rand."
+        # "Volumen sollte während des Handles niedrig/rückläufig sein."
+        # Das wurde bisher gar nicht geprüft.
+        cup_vol = sub["volume"].iloc[left:right + 1].values
+        drittel = max(1, len(cup_vol) // 3)
+        vol_links = float(cup_vol[:drittel].mean())
+        vol_boden = float(cup_vol[drittel:2 * drittel].mean()) if len(cup_vol) > drittel else vol_links
+        vol_rechts = float(cup_vol[-drittel:].mean())
+        # Am Boden soll weniger gehandelt werden als am linken Rand
+        vol_trocknet = vol_boden < vol_links
+        # Richtung rechtem Rand soll es wieder anziehen
+        vol_zieht_an = vol_rechts > vol_boden
+        # Im Handle soll es ruhig sein — gemessen am Cup-Durchschnitt
+        vol_handle = float(handle["volume"].mean())
+        vol_cup_schnitt = float(cup_vol.mean()) or 1.0
+        handle_ruhig = vol_handle < vol_cup_schnitt
+
+        # Score: 100 Punkte, davon 25 für den Volumenverlauf. Ein Muster ohne
+        # passendes Volumen ist nach Regelwerk kein sauberes Cup & Handle.
+        vol_punkte = (10 * (1 if vol_trocknet else 0)
+                      + 8 * (1 if vol_zieht_an else 0)
+                      + 7 * (1 if handle_ruhig else 0))
         score = (
-            40 * min(1.0, r2 / 0.85)
-            + 20 * (1 - abs(sym - 0.5) * 2)
-            + 20 * (1 - retrace / CFG["handle_max_retrace"])
-            + 20 * (1 if u_ok else 0.3)
+            30 * min(1.0, r2 / 0.85)
+            + 15 * (1 - abs(sym - 0.5) * 2)
+            + 15 * (1 - retrace / CFG["handle_max_retrace"])
+            + 15 * (1 if u_ok else 0.3)
+            + vol_punkte
         )
         cand = {"left_high": left_high, "bottom": bottom, "h_high": h_high,
-                "depth": depth, "score": score, "cup_len": cup_len}
+                "depth": depth, "score": score, "cup_len": cup_len,
+                "vol_trocknet": vol_trocknet, "vol_zieht_an": vol_zieht_an,
+                "handle_ruhig": handle_ruhig}
         if best is None or cand["score"] > best["score"]:
             best = cand
 
-    if best is None or best["score"] < 55:
+    # Schwelle 80 von 100 (Vorgabe Mathias, 21.07.2026). Vorher stand hier
+    # 55 — damit galten auch Formationen als Cup & Handle, die das Muster
+    # nur knapp zur Hälfte erfüllten.
+    if best is None or best["score"] < CFG["cup_min_score"]:
         return None
     kp = round(best["h_high"] + 0.01, 2)
     ziel = round(kp + (best["left_high"] - best["bottom"]), 2)
@@ -572,8 +604,11 @@ def detect_cup_handle(df: pd.DataFrame) -> dict | None:
         "stop": round(best["bottom"] + (best["left_high"] - best["bottom"]) * (2 / 3), 2),
         "ziel": ziel,
         "status": f"Score {best['score']:.0f}/100",
-        "notiz": f"Cup-Tiefe {best['depth']*100:.0f} %, Länge {best['cup_len']} Tage; "
-                 f"Ziel = Breakout + Cup-Höhe",
+        "notiz": (f"Cup-Tiefe {best['depth']*100:.0f} %, Länge {best['cup_len']} Tage; "
+                  f"Volumen: {'trocknet am Boden' if best['vol_trocknet'] else 'trocknet NICHT'}, "
+                  f"{'zieht rechts an' if best['vol_zieht_an'] else 'zieht rechts nicht an'}, "
+                  f"Handle {'ruhig' if best['handle_ruhig'] else 'unruhig'}; "
+                  f"Ziel = Breakout + Cup-Höhe"),
     }
 
 
