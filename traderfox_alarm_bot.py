@@ -240,7 +240,9 @@ def diagnose(page, name: str, notiz: str = ""):
 
     try:
         html = page.content()
-        (DEBUG_DIR / f"{basis.name}.html").write_text(html[:400000], encoding="utf-8")
+        # 400k reichten nicht: Der Alerts manager steht weit hinten im DOM und
+        # wurde abgeschnitten. Das Desk-HTML ist gross, darum grosszuegig.
+        (DEBUG_DIR / f"{basis.name}.html").write_text(html[:1500000], encoding="utf-8")
     except Exception:
         pass
 
@@ -592,6 +594,43 @@ JS_ALARM_ELEMENTE = """
 """
 
 
+JS_FENSTER_HTML = """
+(suchtext) => {
+  const alle = [...document.querySelectorAll('*')];
+  const treffer = alle.find(e => {
+    const t = e.getAttribute('title') || '';
+    return t.includes(suchtext) && e.children.length === 0;
+  });
+  if (!treffer) return null;
+  let box = treffer.closest('.container');
+  if (!box) {
+    box = treffer;
+    for (let i = 0; i < 5 && box.parentElement; i++) box = box.parentElement;
+  }
+  return box.outerHTML;
+}
+"""
+
+
+def fenster_html_sichern(page, suchtext: str, name: str):
+    """Speichert gezielt das Fenster, dessen Titel 'suchtext' enthaelt.
+    Noetig, weil das komplette Desk-HTML riesig ist und das Interessante
+    sonst der Kappung zum Opfer faellt."""
+    DEBUG_DIR.mkdir(exist_ok=True)
+    stempel = datetime.now().strftime("%H%M%S")
+    ziel = DEBUG_DIR / f"{stempel}_fenster_{name}.html"
+    try:
+        html = page.evaluate(JS_FENSTER_HTML, suchtext)
+    except Exception as e:
+        print(f"    (Fenster '{suchtext}' nicht lesbar: {e})")
+        return
+    if not html:
+        print(f"    (Fenster '{suchtext}' nicht gefunden)")
+        return
+    ziel.write_text(html, encoding="utf-8")
+    print(f"    → Fenster-HTML abgelegt: debug/{ziel.name} ({len(html)} Zeichen)")
+
+
 def alarm_elemente_auflisten(page, name: str):
     """Schreibt alle Elemente, die nach Alarm aussehen, samt Sichtbarkeit und
     Position in eine Datei. Reines Lesen — klickt nichts an."""
@@ -687,6 +726,8 @@ def erkunde_alarmweg(page, ticker: str):
 
     diagnose(page, "erkundung_seitenleiste", "Nach Klick auf 'Nutzer-Alarme'")
     alarm_elemente_auflisten(page, "03_nach_seitenleiste")
+    # Genau das ist das interessante Fenster — gezielt sichern.
+    fenster_html_sichern(page, "Alerts manager", "alertsmanager")
     print("--- Erkundung beendet ---\n")
 
 
