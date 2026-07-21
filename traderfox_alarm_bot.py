@@ -557,6 +557,26 @@ def alarm_dialog_oeffnen(page, ticker: str, firma: str) -> bool:
     if warte_auf(page, "alarm_dialog", 10) is None:
         diagnose(page, f"alarm_dialog_{ticker}", "Alarm-Dialog öffnete sich nicht")
         return False
+
+    # SICHERHEITSPRUEFUNG: Zeigt der Dialog wirklich die gemeinte Aktie?
+    # Bei Laeufen ueber mehrere Werte koennte ein nicht geschlossener Dialog
+    # der vorigen Aktie stehenbleiben - die Alarme landeten dann beim
+    # falschen Wert, ohne dass es jemand merkt.
+    try:
+        kopf = page.locator(".alert-configurator-header")
+        if kopf.count():
+            titel = (kopf.first.inner_text() or "").strip()
+            erwartet = (firma or ticker).strip()
+            kern = erwartet.split()[0][:8].lower() if erwartet else ""
+            if kern and kern not in titel.lower():
+                diagnose(page, f"falsche_aktie_{ticker}",
+                         f"Dialog zeigt {titel!r}, erwartet wurde {erwartet!r}")
+                print(f"    ✗ Dialog zeigt {titel!r}, erwartet {erwartet!r} — abgebrochen")
+                return False
+            print(f"    Dialog bestätigt für: {titel[:60]!r}")
+    except Exception as e:
+        print(f"    (Dialog-Titel nicht prüfbar: {e})")
+
     return True
 
 
@@ -1030,20 +1050,41 @@ def alarm_setzen(page, ticker: str, preis: float, strategie: str, langsam: bool)
     return False
 
 
-def dialog_schliessen(page):
-    el = finde(page, "dialog_schliessen")
-    if el is not None:
-        try:
-            el.click()
-            page.wait_for_timeout(700)
-            return
-        except Exception:
-            pass
+def alarmdialog_offen(page) -> bool:
+    """Ist gerade ein Alarm-Dialog offen?"""
+    try:
+        return page.locator(".contextmenu-element.alert-config:visible").count() > 0
+    except Exception:
+        return False
+
+
+def dialog_schliessen(page) -> bool:
+    """Schliesst gezielt den Alarm-Dialog und prueft nach.
+
+    Frueher wurde ueber [class*='close' i] das erste beliebige Element mit
+    'close' im Klassennamen angeklickt. Im Desk gibt es davon viele - damit
+    haette der Bot Fenster aus dem gespeicherten Layout des Nutzers zumachen
+    koennen. Jetzt der eindeutige Knopf des Alarm-Dialogs.
+
+    Wichtig fuer Laeufe ueber mehrere Aktien: Bleibt der Dialog offen, zeigt
+    er weiter die vorige Aktie - Alarme koennten beim falschen Wert landen."""
+    if not alarmdialog_offen(page):
+        return True
+    zu = page.locator(".alert-configurator-close-icon")
+    if zu.count():
+        maus_klick(zu.first, "Alarm-Dialog schliessen")
+        page.wait_for_timeout(900)
+    if not alarmdialog_offen(page):
+        return True
     try:
         page.keyboard.press("Escape")
         page.wait_for_timeout(700)
     except Exception:
         pass
+    if alarmdialog_offen(page):
+        print("    ⚠ Alarm-Dialog liess sich nicht schliessen")
+        return False
+    return True
 
 
 # ===========================================================================
@@ -1396,6 +1437,10 @@ def main():
                              versuche=3, pause=2, name=f"Suche {t}"):
                 probleme.append(f"{t} (Suche)")
                 continue
+            # Vor jeder Aktie sicherstellen, dass kein Dialog der vorigen
+            # offen ist — sonst landen Alarme womoeglich beim falschen Wert.
+            dialog_schliessen(page)
+
             if not mit_retry(lambda: alarm_dialog_oeffnen(page, t, job["firma"]),
                              versuche=3, pause=2, name=f"Dialog {t}"):
                 probleme.append(f"{t} (Dialog)")
