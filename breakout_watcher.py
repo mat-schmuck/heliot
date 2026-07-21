@@ -63,6 +63,43 @@ VOL_FAKTOR_FALLBACK = 1.0
 # Zustand (was wurde schon gemeldet)
 # ---------------------------------------------------------------------------
 
+def markt_offen(jetzt=None) -> tuple:
+    """Handelt die US-Börse gerade? Liefert (offen, Begruendung).
+
+    Richtet sich selbsttaetig nach amerikanischer Sommer- und Winterzeit:
+    Python kennt die Umstellungstermine ueber die Zeitzone America/New_York,
+    die sich von den europaeischen unterscheiden (USA: zweiter Sonntag im
+    Maerz bis erster Sonntag im November; EU: letzter Sonntag im Maerz bis
+    letzter Sonntag im Oktober). In den Wochen dazwischen verschiebt sich
+    der Handel gegenueber Wiener Zeit um eine Stunde.
+
+    Der Zeitplan im Workflow deckt deshalb den groesseren Bereich ab, und
+    diese Pruefung entscheidet, ob wirklich gehandelt wird. So ist immer der
+    volle Boersenhandel abgedeckt, ohne dass jemand zweimal im Jahr
+    Zeitangaben nachziehen muss.
+
+    Boersenfeiertage kennt diese Pruefung NICHT - an solchen Tagen laeuft
+    der Waechter, findet aber unveraenderte Kurse und meldet nichts."""
+    try:
+        from zoneinfo import ZoneInfo
+        ny = ZoneInfo("America/New_York")
+    except Exception:
+        return True, "Zeitzone nicht verfügbar — Prüfung übersprungen"
+
+    jetzt = (jetzt or datetime.now(ny)).astimezone(ny)
+    if jetzt.weekday() >= 5:
+        return False, f"Wochenende in New York ({jetzt:%A})"
+
+    beginn = jetzt.replace(hour=9, minute=30, second=0, microsecond=0)
+    ende = jetzt.replace(hour=16, minute=0, second=0, microsecond=0)
+    zone = "Sommerzeit" if jetzt.dst() else "Winterzeit"
+    if jetzt < beginn:
+        return False, f"vor Handelsbeginn ({jetzt:%H:%M} New York, {zone})"
+    if jetzt > ende:
+        return False, f"nach Handelsschluss ({jetzt:%H:%M} New York, {zone})"
+    return True, f"{jetzt:%H:%M} New York ({zone})"
+
+
 def load_state() -> dict:
     if STATE_FILE.exists():
         try:
@@ -361,6 +398,9 @@ def main():
                     help="Nur Breakouts MIT Volumen-Bestätigung pushen")
     ap.add_argument("--testpush", action="store_true",
                     help="Nur eine Testnachricht senden (ohne Kursdaten)")
+    ap.add_argument("--ignoriere-handelszeit", action="store_true",
+                    dest="ignoriere_handelszeit",
+                    help="Auch ausserhalb der US-Handelszeit prüfen (zum Testen)")
     args = ap.parse_args()
 
     topic = os.environ.get("NTFY_TOPIC")
@@ -380,6 +420,15 @@ def main():
         sys.exit("Bitte NTFY_TOPIC setzen (oder --dry-run benutzen).")
     if not args.xlsx:
         sys.exit("Bitte kaufpunkte.xlsx angeben (oder --testpush benutzen).")
+
+    # Ausserhalb der Handelszeit gar nicht erst Kurse abrufen. Der Zeitplan
+    # im Workflow deckt Sommer- UND Winterzeit ab; welche gerade gilt,
+    # entscheidet sich hier.
+    offen, grund = markt_offen()
+    print(f"Börsenstatus: {'offen' if offen else 'geschlossen'} — {grund}")
+    if not offen and not args.ignoriere_handelszeit:
+        print("Nichts zu tun. (Mit --ignoriere-handelszeit trotzdem prüfen.)")
+        sys.exit(0)
 
     items = load_watchlist(args.xlsx, nur_muster=not args.alle)
     if not items:

@@ -88,6 +88,10 @@ CFG = {
     "rect_lookback": 65,
     "rect_band": 0.02,               # Cluster-Toleranz ±2 %
     "rect_min_touches": 2,
+    # Umsatzwachstum (Regelwerk: "Fundamentaldaten-Filter")
+    # CAN SLIM (O'Neil) verlangt mindestens 25 % Wachstum im jüngsten Quartal
+    # gegenüber dem Vorjahr; Minervini nennt ähnliche Größenordnungen.
+    "umsatz_min_wachstum": 0.25,
     # High & Tight Flag
     "htf_min_rise": 0.90,
     "htf_max_pole_days": 42,
@@ -170,6 +174,44 @@ def lade_yahoo_sammelabruf(tickers: list[str]) -> int:
     print(f"  Yahoo lieferte {len(_YAHOO_DATEN)} von {len(tickers)} Aktien "
           f"in {time.time() - t0:.1f} Sekunden.")
     return len(_YAHOO_DATEN)
+
+
+def hole_fundamentals(tickers: list[str]) -> dict:
+    """Holt Umsatz- und Gewinnwachstum je Aktie.
+
+    Das Regelwerk sieht einen Fundamentaldaten-Filter vor ("Umsatzwachstum")
+    und nennt dafuer Finnhub. Dessen Gratistarif liefert fuer US-Aktien aber
+    keine brauchbaren Fundamentaldaten mehr, waehrend Yahoo sie mitliefert -
+    ohne Schluessel und ohne zweiten Anbieter. Geprueft an sechs Aktien:
+    alle mit Umsatzwachstum.
+
+    Rueckgabe: {ticker: {"umsatzwachstum": float|None,
+                         "gewinnwachstum": float|None}}
+    Faellt der Abruf aus, bleibt der Wert None - dann wird nicht gefiltert,
+    statt Aktien faelschlich auszuschliessen."""
+    try:
+        import yfinance as yf
+    except ImportError:
+        print("  yfinance fehlt — Umsatzfilter übersprungen.")
+        return {}
+
+    out = {}
+    t0 = time.time()
+    for ticker in tickers:
+        try:
+            info = yf.Ticker(ticker).info
+            out[ticker] = {
+                "umsatzwachstum": info.get("revenueGrowth"),
+                "gewinnwachstum": (info.get("earningsGrowth")
+                                   or info.get("earningsQuarterlyGrowth")),
+            }
+        except Exception:
+            out[ticker] = {"umsatzwachstum": None, "gewinnwachstum": None}
+
+    mit_daten = sum(1 for v in out.values() if v["umsatzwachstum"] is not None)
+    print(f"  Fundamentaldaten: {mit_daten} von {len(tickers)} Aktien "
+          f"in {time.time() - t0:.1f} Sekunden.")
+    return out
 
 
 def yahoo_einzeln(ticker: str) -> pd.DataFrame | None:
@@ -764,7 +806,7 @@ def write_excel(rows: list[dict], out_path: str):
     ws = wb.active
     ws.title = "Kaufpunkte"
     headers = ["Ticker", "Firma", "Kurs", "52W-Hoch", "52W-Tief", "Abst. 52W-Hoch",
-               "RS-Rank", "Trend Template",
+               "RS-Rank", "Trend Template", "Umsatzwachstum", "Gewinnwachstum",
                "KP1 Strategie", "KP1 Preis", "KP1 Abst.", "KP1 Stop", "KP1 Ziel", "KP1 Status",
                "KP2 Strategie", "KP2 Preis", "KP2 Abst.", "KP2 Stop", "KP2 Ziel", "KP2 Status",
                "KP3 Strategie", "KP3 Preis", "KP3 Abst.", "KP3 Stop", "KP3 Ziel", "KP3 Status",
@@ -789,6 +831,21 @@ def write_excel(rows: list[dict], out_path: str):
                 f"{(r['close'] / r['hi52'] - 1) * 100:+.1f}%",
                 round(r["rs"]) if r["rs"] is not None else "n/a",
                 f"✓ 8/8" if r["tt_pass"] else f"✗ {r['tt_count']}/8"]
+
+        # Fundamentaldaten laut Regelwerk. Fehlt der Wert, steht "n/a" —
+        # das ist etwas anderes als "Wachstum zu gering" und darf nicht
+        # verwechselt werden.
+        fund = row.get("fundamentals") or {}
+        for schluessel, grenze in (("umsatzwachstum", CFG["umsatz_min_wachstum"]),
+                                   ("gewinnwachstum", None)):
+            wert = fund.get(schluessel)
+            if wert is None:
+                line.append("n/a")
+            else:
+                marke = ""
+                if grenze is not None:
+                    marke = "✓ " if wert >= grenze else "✗ "
+                line.append(f"{marke}{wert * 100:+.0f}%")
         notes = []
         for i in range(3):
             if i < len(r["points"]):
@@ -808,7 +865,7 @@ def write_excel(rows: list[dict], out_path: str):
             c.fill = fill
             c.border = thin
 
-    widths = [8, 26, 9, 10, 10, 12, 8, 12] + [18, 9, 9, 9, 9, 30] * 3 + [60]
+    widths = [8, 26, 9, 10, 10, 12, 8, 12, 15, 15] + [18, 9, 9, 9, 9, 30] * 3 + [60]
     for i, w in enumerate(widths, 1):
         ws.column_dimensions[ws.cell(row=1, column=i).column_letter].width = w
     ws.freeze_panes = "C2"
@@ -930,11 +987,15 @@ def main():
         ser = pd.Series(raw_rs)
         rs_pct = (ser.rank(pct=True) * 100).to_dict()
 
+    # Fundamentaldaten laut Regelwerk (Umsatzwachstum-Filter)
+    fundamentals = hole_fundamentals(list(loaded.keys()))
+
     # 2. Durchlauf: Muster analysieren
     rows = []
     for ticker, (df, company) in loaded.items():
         res = analyze(df, rs_pct.get(ticker))
-        rows.append({"ticker": ticker, "company": company, "res": res})
+        rows.append({"ticker": ticker, "company": company, "res": res,
+                     "fundamentals": fundamentals.get(ticker, {})})
         tag = "🟢" if res["pattern_count"] else ("🟡" if res["tt_pass"] else "⚪")
         pats = ", ".join(p["strategie"] for p in res["points"] if not p["strategie"].startswith("Fallback"))
         print(f"  {tag} {ticker}: {res['pattern_count']} Muster"
