@@ -1,0 +1,314 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+BREAKOUT-WÄCHTER
+================
+Prüft die Kaufpunkte aus kaufpunkte.xlsx gegen die aktuellen Kurse und meldet
+per ntfy-Push, sobald ein Kaufpunkt gerissen wurde — MIT Volumen-Bestätigung,
+so wie das Regelwerk es verlangt.
+
+Das schließt die Lücke des Scanners: der liefert die Trigger-Level, dieser
+Wächter prüft, ob ein Ausbruch wirklich stattfindet und ob er gültig ist.
+
+Volumen-Regeln je Strategie (aus dem Regelwerk):
+  Darvas Box        Volumen > Ø20-Tage-Volumen
+  VCP               Volumen ≥ 140 % vom Ø20-Tage-Volumen (Minervini: 40-50 % über Ø)
+  Cup & Handle      Volumen > Ø20-Tage-Volumen (O'Neil: Volumen-Bestätigung)
+  Rectangle Top     Volumen > Ø20d UND Kurs > SMA21 (Bulkowskis bestes Setup)
+  High & Tight Flag Volumen > Ø20-Tage-Volumen
+  Fallback-Level    Volumen > Ø20-Tage-Volumen
+
+Aufruf:
+  export TWELVE_DATA_API_KEY="dein_key"
+  export NTFY_TOPIC="dein-topic"
+  python breakout_watcher.py kaufpunkte.xlsx
+  python breakout_watcher.py kaufpunkte.xlsx --alle       # auch Fallback-Level überwachen
+  python breakout_watcher.py kaufpunkte.xlsx --dry-run    # nur anzeigen, kein Push
+
+Zustandsdatei:
+  ./watcher_state.json merkt sich, was schon gemeldet wurde — du bekommst
+  jeden Treffer genau EINMAL pro Handelstag, nicht alle 15 Minuten aufs Neue.
+"""
+
+import argparse
+import json
+import os
+import sys
+import time
+from datetime import date, datetime
+from pathlib import Path
+
+import pandas as pd
+
+try:
+    import requests
+except ImportError:
+    sys.exit("Bitte installieren: pip install requests pandas openpyxl")
+
+QUOTE_URL = "https://api.twelvedata.com/quote"
+STATE_FILE = Path("watcher_state.json")
+
+# Volumen-Faktor je Strategie (Vielfaches des Ø20-Tage-Volumens)
+VOL_FAKTOR = {
+    "Darvas Box": 1.0,
+    "VCP": 1.4,
+    "Cup & Handle": 1.0,
+    "Rectangle Top": 1.0,
+    "High & Tight Flag": 1.0,
+}
+VOL_FAKTOR_FALLBACK = 1.0
+
+
+# ---------------------------------------------------------------------------
+# Zustand (was wurde schon gemeldet)
+# ---------------------------------------------------------------------------
+
+def load_state() -> dict:
+    if STATE_FILE.exists():
+        try:
+            data = json.loads(STATE_FILE.read_text())
+            # Zustand gilt nur für den heutigen Handelstag
+            if data.get("tag") == date.today().isoformat():
+                return data
+        except Exception:
+            pass
+    return {"tag": date.today().isoformat(), "gemeldet": []}
+
+
+def save_state(state: dict):
+    try:
+        STATE_FILE.write_text(json.dumps(state, indent=2))
+    except Exception as e:
+        print(f"Zustand konnte nicht gespeichert werden: {e}")
+
+
+# ---------------------------------------------------------------------------
+# Kaufpunkte aus der Excel
+# ---------------------------------------------------------------------------
+
+def load_watchlist(xlsx_path: str, nur_muster: bool) -> list[dict]:
+    """Liest alle Kaufpunkte + die für die Prüfung nötigen Kontextwerte."""
+    df = pd.read_excel(xlsx_path, sheet_name="Kaufpunkte")
+    items = []
+    for _, row in df.iterrows():
+        ticker = str(row["Ticker"]).strip()
+        for i in (1, 2, 3):
+            strat = str(row.get(f"KP{i} Strategie", "") or "").strip()
+            preis = row.get(f"KP{i} Preis")
+            if not strat or pd.isna(preis):
+                continue
+            if nur_muster and strat.startswith("Fallback"):
+                continue
+            stop = row.get(f"KP{i} Stop")
+            ziel = row.get(f"KP{i} Ziel")
+            items.append({
+                "ticker": ticker,
+                "firma": str(row.get("Firma", "")),
+                "nr": i,
+                "strategie": strat,
+                "kaufpunkt": float(preis),
+                "stop": None if pd.isna(stop) else float(stop),
+                "ziel": None if (ziel is None or pd.isna(ziel) or ziel == "") else float(ziel),
+            })
+    return items
+
+
+# ---------------------------------------------------------------------------
+# Live-Kurse holen (Batch: Twelve Data kann mehrere Symbole pro Call)
+# ---------------------------------------------------------------------------
+
+def fetch_quotes(tickers: list[str], api_key: str, batch_size: int = 8,
+                 pause: float = 8.0) -> dict:
+    """Holt Quotes in Batches. Rückgabe: {ticker: {close, volume, avg_volume, ...}}"""
+    out = {}
+    unique = sorted(set(tickers))
+    for i in range(0, len(unique), batch_size):
+        chunk = unique[i: i + batch_size]
+        params = {"symbol": ",".join(chunk), "apikey": api_key}
+        try:
+            r = requests.get(QUOTE_URL, params=params, timeout=30)
+            data = r.json()
+        except Exception as e:
+            print(f"  Quote-Abruf fehlgeschlagen für {chunk}: {e}")
+            continue
+
+        # Bei einem einzelnen Symbol liefert die API das Objekt direkt,
+        # bei mehreren ein Dict {symbol: objekt}
+        if isinstance(data, dict) and "symbol" in data:
+            data = {data["symbol"]: data}
+        if not isinstance(data, dict):
+            continue
+
+        for sym, q in data.items():
+            if not isinstance(q, dict) or q.get("status") == "error":
+                print(f"  [{sym}] keine Quote: {q.get('message', 'unbekannt') if isinstance(q, dict) else q}")
+                continue
+            try:
+                out[sym.upper()] = {
+                    "close": float(q["close"]),
+                    "volume": float(q.get("volume") or 0),
+                    "avg_volume": float(q.get("average_volume") or 0),
+                    "is_open": bool(q.get("is_market_open", False)),
+                    "name": q.get("name", ""),
+                }
+            except (KeyError, TypeError, ValueError):
+                continue
+
+        if i + batch_size < len(unique):
+            time.sleep(pause)  # Free-Tier-Rate-Limit respektieren
+    return out
+
+
+# ---------------------------------------------------------------------------
+# Breakout-Prüfung
+# ---------------------------------------------------------------------------
+
+def pruefe_breakout(item: dict, quote: dict) -> dict | None:
+    """Prüft, ob der Kaufpunkt gerissen wurde. Gibt Treffer-Info zurück oder None."""
+    kurs = quote["close"]
+    kp = item["kaufpunkt"]
+    if kurs < kp:
+        return None  # Kaufpunkt noch nicht erreicht
+
+    # Zu weit drüber? Dann ist der Zug abgefahren (kein sauberer Einstieg mehr)
+    ueber = kurs / kp - 1
+    if ueber > 0.05:
+        return None
+
+    faktor = VOL_FAKTOR.get(item["strategie"], VOL_FAKTOR_FALLBACK)
+    vol, avg = quote["volume"], quote["avg_volume"]
+    if avg > 0:
+        vol_ratio = vol / avg
+        vol_ok = vol_ratio >= faktor
+    else:
+        vol_ratio = None
+        vol_ok = None  # unbekannt — wir melden trotzdem, aber gekennzeichnet
+
+    return {
+        **item,
+        "kurs": kurs,
+        "ueber_pct": ueber * 100,
+        "vol_ratio": vol_ratio,
+        "vol_noetig": faktor,
+        "vol_ok": vol_ok,
+    }
+
+
+def format_treffer(t: dict) -> str:
+    if t["vol_ok"] is True:
+        vol_txt = f"Vol {t['vol_ratio']*100:.0f}% vom Ø — BESTÄTIGT"
+    elif t["vol_ok"] is False:
+        vol_txt = (f"Vol nur {t['vol_ratio']*100:.0f}% vom Ø "
+                   f"(nötig: {t['vol_noetig']*100:.0f}%) — NICHT bestätigt")
+    else:
+        vol_txt = "Volumen unbekannt — selbst prüfen"
+    zeilen = [
+        f"{t['ticker']} — {t['strategie']}",
+        f"Kaufpunkt {t['kaufpunkt']:.2f} | Kurs {t['kurs']:.2f} (+{t['ueber_pct']:.1f}%)",
+        vol_txt,
+    ]
+    if t["stop"] is not None:
+        risiko = (t["kurs"] / t["stop"] - 1) * 100
+        zeilen.append(f"Stop {t['stop']:.2f} (Risiko {risiko:.1f}%)")
+    if t["ziel"] is not None:
+        chance = (t["ziel"] / t["kurs"] - 1) * 100
+        zeilen.append(f"Ziel {t['ziel']:.2f} (+{chance:.1f}%)")
+    return "\n".join(zeilen)
+
+
+# ---------------------------------------------------------------------------
+# Push
+# ---------------------------------------------------------------------------
+
+def push(topic: str, treffer: list[dict]):
+    bestaetigt = [t for t in treffer if t["vol_ok"] is True]
+    rest = [t for t in treffer if t["vol_ok"] is not True]
+    body = "\n\n".join([format_treffer(t) for t in bestaetigt + rest])
+    titel = (f"🚀 {len(bestaetigt)} bestätigt"
+             + (f", {len(rest)} ohne Vol-Bestätigung" if rest else ""))
+    try:
+        r = requests.post(f"https://ntfy.sh/{topic}", data=body.encode("utf-8"),
+                          headers={"Title": titel.encode("utf-8"),
+                                   "Priority": "high" if bestaetigt else "default",
+                                   "Tags": "chart_with_upwards_trend"},
+                          timeout=20)
+        print(f"Push gesendet an ntfy.sh/{topic} (HTTP {r.status_code})")
+    except Exception as e:
+        print(f"Push fehlgeschlagen: {e}")
+
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
+
+def main():
+    ap = argparse.ArgumentParser(description="Live-Wächter für Kaufpunkt-Breakouts")
+    ap.add_argument("xlsx", help="kaufpunkte.xlsx vom Pattern-Scanner")
+    ap.add_argument("--alle", action="store_true",
+                    help="Auch Fallback-Level überwachen (Standard: nur Muster-Treffer)")
+    ap.add_argument("--dry-run", action="store_true", help="Nur anzeigen, kein Push")
+    ap.add_argument("--auch-unbestaetigt", action="store_true",
+                    help="Auch Breakouts ohne Volumen-Bestätigung pushen (Standard: ja, "
+                         "aber klar gekennzeichnet)")
+    ap.add_argument("--nur-bestaetigt", action="store_true",
+                    help="Nur Breakouts MIT Volumen-Bestätigung pushen")
+    args = ap.parse_args()
+
+    api_key = os.environ.get("TWELVE_DATA_API_KEY")
+    if not api_key:
+        sys.exit("Bitte TWELVE_DATA_API_KEY als Umgebungsvariable setzen.")
+    topic = os.environ.get("NTFY_TOPIC")
+    if not topic and not args.dry_run:
+        sys.exit("Bitte NTFY_TOPIC setzen (oder --dry-run benutzen).")
+
+    items = load_watchlist(args.xlsx, nur_muster=not args.alle)
+    if not items:
+        sys.exit("Keine Kaufpunkte zum Überwachen gefunden.")
+    tickers = [i["ticker"] for i in items]
+    print(f"{len(items)} Kaufpunkte über {len(set(tickers))} Aktien werden geprüft "
+          f"({datetime.now():%H:%M:%S}).")
+
+    quotes = fetch_quotes(tickers, api_key)
+    print(f"{len(quotes)} Quotes erhalten.")
+    if not quotes:
+        sys.exit("Keine Kursdaten erhalten — Abbruch.")
+
+    state = load_state()
+    schon_gemeldet = set(state["gemeldet"])
+
+    treffer, neu = [], []
+    for item in items:
+        q = quotes.get(item["ticker"].upper())
+        if not q:
+            continue
+        res = pruefe_breakout(item, q)
+        if not res:
+            continue
+        treffer.append(res)
+        key = f"{item['ticker']}|{item['nr']}|{item['kaufpunkt']:.2f}"
+        if key not in schon_gemeldet:
+            neu.append(res)
+            schon_gemeldet.add(key)
+
+    print(f"\n{len(treffer)} Kaufpunkte aktuell gerissen, davon {len(neu)} neu seit "
+          f"dem letzten Lauf.")
+    for t in treffer:
+        marker = "🟢" if t["vol_ok"] is True else ("🟡" if t["vol_ok"] is False else "⚪")
+        neu_marker = " [NEU]" if t in neu else ""
+        print(f"  {marker} {format_treffer(t)}{neu_marker}\n")
+
+    if args.nur_bestaetigt:
+        neu = [t for t in neu if t["vol_ok"] is True]
+
+    if neu and not args.dry_run:
+        push(topic, neu)
+        state["gemeldet"] = sorted(schon_gemeldet)
+        save_state(state)
+    elif not neu:
+        print("Nichts Neues zu melden.")
+    else:
+        print("(Dry-Run — kein Push gesendet, Zustand nicht gespeichert)")
+
+
+if __name__ == "__main__":
+    main()

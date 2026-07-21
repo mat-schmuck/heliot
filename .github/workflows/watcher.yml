@@ -1,0 +1,54 @@
+name: Breakout-Wächter (alle 15 Min)
+
+on:
+  schedule:
+    # Alle 15 Minuten während der US-Handelszeiten (13:30-20:00 UTC = 15:30-22:00 Wien)
+    - cron: "*/15 13-20 * * 1-5"
+  workflow_dispatch: {}
+
+# Verhindert, dass sich zwei Läufe überschneiden
+concurrency:
+  group: breakout-watcher
+  cancel-in-progress: false
+
+jobs:
+  wachen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Abhängigkeiten
+        run: pip install requests pandas openpyxl
+
+      # Die kaufpunkte.xlsx vom letzten Scanner-Lauf holen
+      - name: Kaufpunkte vom letzten Scan laden
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: scanner.yml
+          name: kaufpunkte
+          path: .
+          if_no_artifact_found: warn
+
+      # Zustand (was wurde heute schon gemeldet) über Läufe hinweg merken
+      - name: Zustand laden
+        uses: actions/cache@v4
+        with:
+          path: watcher_state.json
+          key: watcher-state-${{ github.run_id }}
+          restore-keys: watcher-state-
+
+      - name: Breakouts prüfen
+        env:
+          TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: |
+          if [ ! -f kaufpunkte.xlsx ]; then
+            echo "Keine kaufpunkte.xlsx gefunden — erst den Scanner laufen lassen."
+            exit 0
+          fi
+          python breakout_watcher.py kaufpunkte.xlsx

@@ -1,0 +1,37 @@
+name: Pattern-Scanner (Kaufpunkte)
+
+on:
+  schedule:
+    # Werktags 21:15 UTC = nach US-Börsenschluss (22:00 ET Sommer → 20:00 UTC Close)
+    - cron: "15 21 * * 1-5"
+  workflow_dispatch: {}        # manueller Start jederzeit möglich
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 200        # 87 Ticker @ 8 Calls/min brauchen Luft
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Abhängigkeiten
+        run: pip install requests pandas numpy scipy openpyxl
+
+      - name: Scanner ausführen
+        env:
+          TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
+        run: |
+          python pattern_scanner.py finviz_3.csv \
+            --out kaufpunkte.xlsx \
+            --rate 8 \
+            --ntfy ${{ secrets.NTFY_TOPIC || 'dummy-kein-push' }}
+
+      - name: Excel als Artifact hochladen
+        uses: actions/upload-artifact@v4
+        with:
+          name: kaufpunkte
+          path: kaufpunkte.xlsx
+          retention-days: 30

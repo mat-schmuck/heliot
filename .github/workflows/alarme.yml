@@ -1,0 +1,83 @@
+name: Scanner + TraderFox-Alarme
+
+on:
+  workflow_dispatch:
+    inputs:
+      modus:
+        description: "Was soll laufen?"
+        required: true
+        default: "selbsttest"
+        type: choice
+        options:
+          - selbsttest        # prüft nur, ob TraderFox noch wie erwartet aussieht
+          - test_2_aktien     # Scanner + Alarme für 2 Aktien
+          - vollstaendig      # Scanner + Alarme für alle Treffer
+      alle_level:
+        description: "Auch Fallback-Level alarmieren? (true/false)"
+        required: false
+        default: "false"
+
+jobs:
+  lauf:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Abhängigkeiten
+        run: |
+          pip install requests pandas numpy scipy openpyxl playwright
+          playwright install chromium --with-deps
+
+      # Session und Fortschritt über Läufe hinweg behalten
+      - name: Session/Fortschritt laden
+        uses: actions/cache@v4
+        with:
+          path: |
+            session.json
+            fortschritt.json
+          key: traderfox-state-${{ github.run_id }}
+          restore-keys: traderfox-state-
+
+      # --- Selbsttest: ändert nichts, prüft nur die Bedienelemente ---
+      - name: "Selbsttest (TraderFox-Oberfläche prüfen)"
+        if: ${{ github.event.inputs.modus == 'selbsttest' }}
+        env:
+          TRADERFOX_USER: ${{ secrets.TRADERFOX_USER }}
+          TRADERFOX_PASS: ${{ secrets.TRADERFOX_PASS }}
+        run: python traderfox_alarm_bot.py --selbsttest
+
+      # --- Scanner: Kaufpunkte berechnen ---
+      - name: "Schritt 1: Kaufpunkte berechnen"
+        if: ${{ github.event.inputs.modus != 'selbsttest' }}
+        env:
+          TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
+        run: python pattern_scanner.py finviz_3.csv --out kaufpunkte.xlsx --rate 8
+
+      # --- Alarm-Bot ---
+      - name: "Schritt 2: Alarme in TraderFox setzen"
+        if: ${{ github.event.inputs.modus != 'selbsttest' }}
+        env:
+          TRADERFOX_USER: ${{ secrets.TRADERFOX_USER }}
+          TRADERFOX_PASS: ${{ secrets.TRADERFOX_PASS }}
+        run: |
+          EXTRA=""
+          if [ "${{ github.event.inputs.modus }}" = "test_2_aktien" ]; then EXTRA="$EXTRA --limit 2"; fi
+          if [ "${{ github.event.inputs.alle_level }}" = "true" ]; then EXTRA="$EXTRA --alle"; fi
+          python traderfox_alarm_bot.py kaufpunkte.xlsx $EXTRA
+
+      # Immer hochladen — gerade im Fehlerfall ist das Debug-Material entscheidend
+      - name: Ergebnis + Diagnose hochladen
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ergebnis
+          path: |
+            kaufpunkte.xlsx
+            debug/
+          retention-days: 14
+          if-no-files-found: ignore
