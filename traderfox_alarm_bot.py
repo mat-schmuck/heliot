@@ -209,10 +209,23 @@ def klick(el, name: str = "", timeout_ms: int = 5000) -> bool:
         return True
     except Exception:
         pass
+    # Zweite Stufe: ins Sichtfeld holen und erzwungen klicken. Das erzeugt
+    # weiterhin echte Mausereignisse - im Gegensatz zum JS-Klick, der bei
+    # jQuery-Handlern oft wirkungslos verpufft.
+    try:
+        el.scroll_into_view_if_needed(timeout=3000)
+        el.click(force=True, timeout=timeout_ms)
+        if name:
+            print(f"    ({name}: erzwungener Klick noetig)")
+        return True
+    except Exception:
+        pass
+    # Letzte Stufe: JS. ACHTUNG - liefert True, ohne dass etwas passiert sein
+    # muss. Wer damit etwas veraendert, MUSS das Ergebnis nachpruefen.
     try:
         el.evaluate("e => e.click()")
         if name:
-            print(f"    ({name}: JS-Klick noetig)")
+            print(f"    ({name}: JS-Klick noetig — Wirkung ungeprueft!)")
         return True
     except Exception as e:
         if name:
@@ -587,13 +600,29 @@ def bestehende_alarme(page) -> set:
 
 JS_ALARM_INVENTUR = """
 () => {
+  // Nur Abschnitte INNERHALB des Alerts manager, und jeden nur einmal.
+  // Vorher wurden alle .alert-section im ganzen Dokument gezaehlt - dabei
+  // kamen die Abschnitte des offenen Alarm-Dialogs (Preis-/Signal-/
+  // News-Alarm) dazu, und bei zweimal geoeffnetem Manager alles doppelt.
+  const titel = [...document.querySelectorAll('*')].find(e => {
+    const t = e.getAttribute('title') || '';
+    return t.includes('Alerts manager') && e.children.length === 0;
+  });
+  const wurzel = titel ? titel.closest('.container') : null;
+  if (!wurzel) return [];
+
+  const gesehen = new Set();
   const out = [];
-  for (const sec of document.querySelectorAll('.alert-section')) {
+  for (const sec of wurzel.querySelectorAll('.alert-section')) {
     const titelEl = sec.querySelector('.title');
-    let titel = titelEl ? (titelEl.textContent || '').trim() : '';
-    titel = titel.replace(/\\s+/g, ' ');
+    let name = titelEl ? (titelEl.textContent || '').trim() : '';
+    name = name.replace(/\\s+/g, ' ');
     const preise = [...sec.querySelectorAll('input.price-alert')].map(i => i.value);
-    if (titel || preise.length) out.push({titel: titel, preise: preise});
+    if (!name && !preise.length) continue;
+    const schluessel = name + '|' + preise.join(';');
+    if (gesehen.has(schluessel)) continue;
+    gesehen.add(schluessel);
+    out.push({titel: name, preise: preise});
   }
   return out;
 }
@@ -691,11 +720,26 @@ def alarm_loeschen(page, preis: float, maximal: int = 5) -> int:
             if knopf.count() == 0:
                 print(f"    Kein Löschen-Knopf in der Zeile zu {preis}")
                 break
+            vorher = sum(1 for i in range(min(felder.count(), 60))
+                         if (lambda w: w is not None and abs(w - preis) < 0.005)(
+                             preis_parsen(felder.nth(i).input_value() or "")))
             if not klick(knopf, f"Löschen {preis}"):
                 break
-            page.wait_for_timeout(2000)
+            page.wait_for_timeout(2500)
+
+            # NACHPRUEFEN. Der Klick meldet Erfolg, auch wenn nichts geschah -
+            # so wurden fuenfmal dieselben Alarme "geloescht", die danach immer
+            # noch dastanden. Sinkt die Anzahl nicht, hat es nicht funktioniert.
+            felder_neu = page.locator("input.price-alert:visible")
+            nachher = sum(1 for i in range(min(felder_neu.count(), 60))
+                          if (lambda w: w is not None and abs(w - preis) < 0.005)(
+                              preis_parsen(felder_neu.nth(i).input_value() or "")))
+            if nachher >= vorher:
+                print(f"    ⚠ Löschen wirkungslos: {preis} ist immer noch "
+                      f"{nachher}x da (vorher {vorher}x) — abgebrochen")
+                break
             geloescht += 1
-            print(f"    Gelöscht: {preis} (insgesamt {geloescht})")
+            print(f"    Gelöscht: {preis} (bestätigt, noch {nachher}x vorhanden)")
         except Exception as e:
             print(f"    Löschen fehlgeschlagen: {str(e)[:70]}")
             break
