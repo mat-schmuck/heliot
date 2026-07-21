@@ -134,6 +134,23 @@ SELEKTOREN = {
         ("css", "[class*='close' i]"),
         ("text", r"^[✕✖×xX]$"),
     ],
+    # Verwaltung bestehender Alarme. ACHTUNG: Diese beiden wirken auf die
+    # echten Alarme des Nutzers. Nie blind den ersten Treffer anklicken —
+    # immer ueber die Zeile gehen, deren Preis wirklich gemeint ist
+    # (siehe alarm_loeschen()).
+    "alarm_loeschen": [
+        ("css", "a.remove-alert"),
+    ],
+    "alarm_bearbeiten": [
+        ("css", "a.edit-alert"),
+    ],
+    "alarm_preisfeld": [
+        ("css", "input.price-alert"),
+    ],
+    "nutzer_alarme_oeffnen": [
+        ("css", "li[title*='Alarm' i]"),
+        ("css", ".alerts-link"),
+    ],
 }
 
 
@@ -550,6 +567,148 @@ def bestehende_alarme(page) -> set:
     return preise
 
 
+JS_ALARM_INVENTUR = """
+() => {
+  const out = [];
+  for (const sec of document.querySelectorAll('.alert-section')) {
+    const titelEl = sec.querySelector('.title');
+    let titel = titelEl ? (titelEl.textContent || '').trim() : '';
+    titel = titel.replace(/\\s+/g, ' ');
+    const preise = [...sec.querySelectorAll('input.price-alert')].map(i => i.value);
+    if (titel || preise.length) out.push({titel: titel, preise: preise});
+  }
+  return out;
+}
+"""
+
+
+def alarme_inventur(page, name: str = "bestand") -> list:
+    """Liest alle bestehenden Alarme aus dem Alerts manager und legt sie als
+    Datei ab. Reines Lesen. Nuetzlich, um Doppelte zu vermeiden und um nach
+    einem Lauf nachweisen zu koennen, dass nichts verlorenging."""
+    eintraege = []
+    try:
+        oeffner = finde(page, "nutzer_alarme_oeffnen")
+        if oeffner is not None:
+            klick(oeffner, "Nutzer-Alarme")
+            page.wait_for_timeout(3000)
+        eintraege = page.evaluate(JS_ALARM_INVENTUR)
+    except Exception as e:
+        print(f"    (Inventur fehlgeschlagen: {e})")
+        return []
+
+    DEBUG_DIR.mkdir(exist_ok=True)
+    stempel = datetime.now().strftime("%H%M%S")
+    ziel = DEBUG_DIR / f"{stempel}_alarmbestand_{name}.txt"
+    gesamt = sum(len(e["preise"]) for e in eintraege)
+    zeilen = [f"# Alarm-Bestand: {name}",
+              f"Zeit: {datetime.now():%Y-%m-%d %H:%M:%S}",
+              f"Werte: {len(eintraege)}   Alarme gesamt: {gesamt}", ""]
+    for e in eintraege:
+        zeilen.append(f"  {e['titel']}")
+        zeilen.append(f"      {', '.join(e['preise'])}")
+    ziel.write_text("\n".join(zeilen), encoding="utf-8")
+    print(f"    → Alarm-Bestand: {len(eintraege)} Werte, {gesamt} Alarme "
+          f"→ debug/{ziel.name}")
+    return eintraege
+
+
+def alarm_loeschen(page, preis: float) -> bool:
+    """Loescht GENAU den Alarm mit diesem Preis.
+
+    Sicherheitsprinzip: Es wird das Preisfeld gesucht, dessen Wert exakt
+    passt, und nur in dessen Zeile auf 'Löschen' geklickt. Niemals blind den
+    ersten remove-alert-Knopf — dort haengen die Alarme des Nutzers."""
+    felder = page.locator("input.price-alert:visible")
+    n = felder.count()
+    for i in range(min(n, 60)):
+        el = felder.nth(i)
+        try:
+            wert = (el.input_value() or "").strip().replace(",", ".")
+            if not wert or abs(float(wert) - preis) > 0.005:
+                continue
+        except Exception:
+            continue
+        try:
+            zeile = el.locator("xpath=ancestor::tr[1]")
+            knopf = zeile.locator("a.remove-alert").first
+            if knopf.count() == 0:
+                print(f"    Kein Löschen-Knopf in der Zeile zu {preis}")
+                return False
+            if not klick(knopf, f"Löschen {preis}"):
+                return False
+            page.wait_for_timeout(2000)
+            print(f"    Löschen angeklickt für {preis}")
+            return True
+        except Exception as e:
+            print(f"    Löschen fehlgeschlagen: {str(e)[:70]}")
+            return False
+    print(f"    Kein Alarm mit Preis {preis} gefunden (nichts geloescht)")
+    return False
+
+
+def testalarm_lauf(page, user: str, pw: str, ticker: str = "AAPL") -> int:
+    """Legt EINEN Testalarm an, prueft ihn und raeumt ihn wieder weg.
+
+    Der Preis liegt bewusst weit ueber dem Kurs, damit der Alarm nicht
+    ausloest und keine Benachrichtigung erzeugt."""
+    TESTPREIS = 999.99
+    print(f"\n=== TESTALARM auf {ticker} zu {TESTPREIS} $ ===")
+    print("    Preis bewusst weit ueber dem Kurs — loest nicht aus.")
+    print("    Der Alarm wird am Ende wieder geloescht.\n")
+
+    if not login(page, user, pw):
+        print("✗ Login fehlgeschlagen.")
+        return 1
+
+    print("\n[1/6] Bestandsaufnahme vorher")
+    vorher = alarme_inventur(page, "01_vorher")
+    anzahl_vorher = sum(len(e["preise"]) for e in vorher)
+
+    print(f"\n[2/6] {ticker} suchen")
+    if not aktie_suchen(page, ticker, langsam=True):
+        print("✗ Suche fehlgeschlagen.")
+        return 1
+
+    print("\n[3/6] Alarm-Dialog oeffnen")
+    if not alarm_dialog_oeffnen(page, ticker, ""):
+        print("✗ Alarm-Dialog ging nicht auf.")
+        return 1
+
+    print(f"\n[4/6] Testalarm zu {TESTPREIS} setzen")
+    gesetzt = alarm_setzen(page, ticker, TESTPREIS, "Testalarm", langsam=True)
+    diagnose(page, "testalarm_nach_setzen", f"Nach dem Setzen von {TESTPREIS}")
+    if not gesetzt:
+        print("✗ Alarm konnte nicht gesetzt werden.")
+        return 1
+    print("    ✓ Alarm gesetzt und verifiziert")
+
+    print(f"\n[5/6] Testalarm zu {TESTPREIS} wieder loeschen")
+    geloescht = alarm_loeschen(page, TESTPREIS)
+    diagnose(page, "testalarm_nach_loeschen", f"Nach dem Loeschen von {TESTPREIS}")
+    if not geloescht:
+        print(f"⚠ ACHTUNG: Der Testalarm zu {TESTPREIS} $ auf {ticker} konnte")
+        print("  nicht geloescht werden und steht noch im Konto!")
+        print("  Bitte von Hand entfernen (App oder Alerts manager).")
+
+    print("\n[6/6] Bestandsaufnahme nachher")
+    nachher = alarme_inventur(page, "02_nachher")
+    anzahl_nachher = sum(len(e["preise"]) for e in nachher)
+
+    print("\n--- Ergebnis ---")
+    print(f"  Alarme vorher:  {anzahl_vorher}")
+    print(f"  Alarme nachher: {anzahl_nachher}")
+    print(f"  Setzen:   {'OK' if gesetzt else 'FEHLGESCHLAGEN'}")
+    print(f"  Loeschen: {'OK' if geloescht else 'FEHLGESCHLAGEN'}")
+    if anzahl_nachher == anzahl_vorher and gesetzt and geloescht:
+        print("\n✓ Anlegen und Loeschen funktionieren, Bestand unveraendert.")
+        return 0
+    if anzahl_nachher != anzahl_vorher:
+        print(f"\n⚠ Bestand hat sich um {anzahl_nachher - anzahl_vorher} geaendert "
+              "— bitte pruefen.")
+    return 1
+
+
 def alarm_setzen(page, ticker: str, preis: float, strategie: str, langsam: bool) -> bool:
     """Einen Preis-Alarm eintragen und verifizieren, dass er wirklich drin steht."""
     preis_str = f"{preis:.2f}"
@@ -902,17 +1061,20 @@ def main():
     ap.add_argument("--langsam", action="store_true", help="Gemächlicher tippen und klicken")
     ap.add_argument("--selbsttest", action="store_true",
                     help="Nur prüfen, ob alle Bedienelemente gefunden werden")
+    ap.add_argument("--testalarm", action="store_true",
+                    help="Einen Testalarm anlegen, prüfen und wieder löschen")
     args = ap.parse_args()
 
     user = os.environ.get("TRADERFOX_USER")
     pw = os.environ.get("TRADERFOX_PASS")
     if not user or not pw:
         sys.exit("Bitte TRADERFOX_USER und TRADERFOX_PASS als Umgebungsvariablen setzen.")
-    if not args.selbsttest and not args.xlsx:
-        sys.exit("Bitte kaufpunkte.xlsx angeben (oder --selbsttest benutzen).")
+    nur_pruefen = args.selbsttest or args.testalarm
+    if not nur_pruefen and not args.xlsx:
+        sys.exit("Bitte kaufpunkte.xlsx angeben (oder --selbsttest / --testalarm benutzen).")
 
     jobs = []
-    if not args.selbsttest:
+    if not nur_pruefen:
         jobs = load_buypoints(args.xlsx, nur_muster=not args.alle)
         if args.limit:
             jobs = jobs[: args.limit]
@@ -930,7 +1092,7 @@ def main():
         # dort liefen in Timeout.
         kontext_args = {"viewport": {"width": 2560, "height": 1440},
                         "locale": "de-AT"}
-        if SESSION_FILE.exists() and not args.selbsttest:
+        if SESSION_FILE.exists() and not nur_pruefen:
             try:
                 kontext_args["storage_state"] = str(SESSION_FILE)
             except Exception:
@@ -941,6 +1103,11 @@ def main():
 
         if args.selbsttest:
             code = selbsttest(page, user, pw)
+            browser.close()
+            sys.exit(code)
+
+        if args.testalarm:
+            code = testalarm_lauf(page, user, pw)
             browser.close()
             sys.exit(code)
 

@@ -10,6 +10,7 @@ on:
         type: choice
         options:
           - selbsttest        # prüft nur, ob TraderFox noch wie erwartet aussieht
+          - testalarm         # EIN Testalarm: anlegen, prüfen, wieder löschen
           - test_2_aktien     # Scanner + Alarme für 2 Aktien
           - vollstaendig      # Scanner + Alarme für alle Treffer
       alle_level:
@@ -51,16 +52,27 @@ jobs:
           TRADERFOX_PASS: ${{ secrets.TRADERFOX_PASS }}
         run: python traderfox_alarm_bot.py --selbsttest
 
+      # --- Testalarm: legt EINEN Alarm an und loescht ihn wieder ---
+      # Braucht den Scanner nicht, laeuft daher in wenigen Minuten.
+      - name: "Testalarm (anlegen, prüfen, löschen)"
+        if: ${{ github.event.inputs.modus == 'testalarm' }}
+        env:
+          TRADERFOX_USER: ${{ secrets.TRADERFOX_USER }}
+          TRADERFOX_PASS: ${{ secrets.TRADERFOX_PASS }}
+        run: python traderfox_alarm_bot.py --testalarm
+
       # --- Scanner: Kaufpunkte berechnen ---
+      # Nur fuer die echten Laeufe. Der Scanner dauert 20-40 Minuten, daher
+      # muessen selbsttest UND testalarm hier ausgenommen sein.
       - name: "Schritt 1: Kaufpunkte berechnen"
-        if: ${{ github.event.inputs.modus != 'selbsttest' }}
+        if: ${{ github.event.inputs.modus == 'test_2_aktien' || github.event.inputs.modus == 'vollstaendig' }}
         env:
           TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
         run: python pattern_scanner.py finviz_3.csv --out kaufpunkte.xlsx --rate 8
 
       # --- Alarm-Bot ---
       - name: "Schritt 2: Alarme in TraderFox setzen"
-        if: ${{ github.event.inputs.modus != 'selbsttest' }}
+        if: ${{ github.event.inputs.modus == 'test_2_aktien' || github.event.inputs.modus == 'vollstaendig' }}
         env:
           TRADERFOX_USER: ${{ secrets.TRADERFOX_USER }}
           TRADERFOX_PASS: ${{ secrets.TRADERFOX_PASS }}
