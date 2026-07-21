@@ -53,6 +53,7 @@ jobs:
         env:
           TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          NTFY_EMAIL: ${{ secrets.NTFY_EMAIL }}
         run: |
           if [ ! -f kaufpunkte.xlsx ]; then
             echo "Keine kaufpunkte.xlsx gefunden — erst den Scanner laufen lassen."

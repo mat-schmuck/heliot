@@ -220,6 +220,19 @@ def format_treffer(t: dict) -> str:
 # Push
 # ---------------------------------------------------------------------------
 
+def email_kopf() -> dict:
+    """Zusatz-Kopfzeile, damit ntfy die Meldung auch als E-Mail zustellt.
+
+    Hintergrund: Die ntfy-App fuer iOS ist laut eigener Dokumentation
+    fehlerhaft und verlangte beim Abonnieren ein Kennwort, das es fuer
+    oeffentliche Topics gar nicht gibt. Der E-Mail-Weg braucht weder App noch
+    Konto - und eine Mail laesst sich mit einem Screenreader problemlos lesen.
+
+    Ist NTFY_EMAIL nicht gesetzt, aendert sich nichts."""
+    adresse = (os.environ.get("NTFY_EMAIL") or "").strip()
+    return {"Email": adresse} if adresse else {}
+
+
 def push(topic: str, treffer: list[dict]) -> bool:
     """Schickt die Meldung und sagt ehrlich, ob sie angekommen ist.
 
@@ -231,12 +244,13 @@ def push(topic: str, treffer: list[dict]) -> bool:
     body = "\n\n".join([format_treffer(t) for t in bestaetigt + rest])
     titel = (f"🚀 {len(bestaetigt)} bestätigt"
              + (f", {len(rest)} ohne Vol-Bestätigung" if rest else ""))
+    kopf = {"Title": titel.encode("utf-8"),
+            "Priority": "high" if bestaetigt else "default",
+            "Tags": "chart_with_upwards_trend"}
+    kopf.update(email_kopf())
     try:
         r = requests.post(f"https://ntfy.sh/{topic}", data=body.encode("utf-8"),
-                          headers={"Title": titel.encode("utf-8"),
-                                   "Priority": "high" if bestaetigt else "default",
-                                   "Tags": "chart_with_upwards_trend"},
-                          timeout=20)
+                          headers=kopf, timeout=20)
     except Exception as e:
         print(f"⚠ Push fehlgeschlagen: {e}")
         return False
@@ -250,16 +264,21 @@ def push(topic: str, treffer: list[dict]) -> bool:
 def testpush(topic: str) -> int:
     """Schickt eine einzelne Testnachricht, damit die Push-Kette einmal
     nachweislich geprueft ist. Ohne Kursdaten, ohne Zustandsaenderung."""
+    adresse = (os.environ.get("NTFY_EMAIL") or "").strip()
+    weg = f"E-Mail an {adresse}" if adresse else "ntfy-App / Browser"
     text = ("Testnachricht vom Breakout-Wächter.\n\n"
-            "Wenn diese Meldung am Handy ankommt, funktioniert die "
+            "Wenn diese Meldung ankommt, funktioniert die "
             "Benachrichtigungskette.\n"
+            f"Zustellweg: {weg}\n"
             f"Gesendet: {datetime.now():%d.%m.%Y %H:%M:%S}")
+    kopf = {"Title": "Test: Breakout-Wächter".encode("utf-8"),
+            "Priority": "default",
+            "Tags": "white_check_mark"}
+    kopf.update(email_kopf())
+    print(f"    Zustellweg: {weg}")
     try:
         r = requests.post(f"https://ntfy.sh/{topic}", data=text.encode("utf-8"),
-                          headers={"Title": "Test: Breakout-Wächter".encode("utf-8"),
-                                   "Priority": "default",
-                                   "Tags": "white_check_mark"},
-                          timeout=20)
+                          headers=kopf, timeout=20)
     except Exception as e:
         print(f"⚠ Testnachricht fehlgeschlagen: {e}")
         return 1

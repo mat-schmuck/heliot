@@ -67,6 +67,7 @@ jobs:
         if: ${{ github.event.inputs.modus == 'testpush' }}
         env:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          NTFY_EMAIL: ${{ secrets.NTFY_EMAIL }}
         run: python breakout_watcher.py --testpush
 
       # --- Scanner: Kaufpunkte berechnen ---
