@@ -1,9 +1,16 @@
-name: Breakout-Wächter (alle 15 Min)
+name: Breakout-Wächter (alle 30 Min)
 
 on:
   schedule:
-    # Alle 15 Minuten während der US-Handelszeiten (13:30-20:00 UTC = 15:30-22:00 Wien)
-    - cron: "*/15 13-20 * * 1-5"
+    # Alle 30 Minuten während der US-Handelszeiten (13:00-20:45 UTC = 15:00-22:45 Wien)
+    #
+    # Warum 30 und nicht 15 Minuten: Bei 15 Minuten sind es 694 Läufe im Monat.
+    # GitHub rechnet je Job auf volle Minuten auf, mit Setup und pip install
+    # sind das rund 2,5 Minuten pro Lauf — zusammen mit dem täglichen Scanner
+    # ergibt das etwa 2018 Minuten und liegt damit ÜBER dem Freikontingent von
+    # 2000 Minuten. Mit 30 Minuten sind es rund 1150 Minuten, also gut die
+    # Hälfte, mit Luft für Testläufe. (Entscheidung von Mathias, 21.07.2026.)
+    - cron: "*/30 13-20 * * 1-5"
   workflow_dispatch: {}
 
 # Verhindert, dass sich zwei Läufe überschneiden
