@@ -14,15 +14,28 @@ on:
           - testpush          # nur eine ntfy-Testnachricht aufs Handy
           - test_2_aktien     # Scanner + Alarme für 2 Aktien
           - vollstaendig      # Scanner + Alarme für alle Treffer
+          - aufraeumen        # gezielt einzelne Alarme entfernen
       alle_level:
         description: "Auch Fallback-Level alarmieren? (true/false)"
         required: false
         default: "false"
+      loeschen:
+        description: "Nur für 'aufraeumen': z. B. BIOA:21.28,CRNX:83.64"
+        required: false
+        default: ""
 
 jobs:
   lauf:
     runs-on: ubuntu-latest
     timeout-minutes: 300
+    # actions: read wird gebraucht, um im Modus 'aufraeumen' die
+    # kaufpunkte.xlsx aus dem Scanner-Workflow zu holen (Firmennamen).
+    # Ohne diese Berechtigung scheitert der Download mit
+    # "Resource not accessible by integration" — daran ist der Wächter
+    # bei seinem ersten Lauf gescheitert.
+    permissions:
+      contents: read
+      actions: read
     steps:
       - uses: actions/checkout@v4
 
@@ -69,6 +82,31 @@ jobs:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
           NTFY_EMAIL: ${{ secrets.NTFY_EMAIL }}
         run: python breakout_watcher.py --testpush
+
+      # --- Aufraeumen: einzelne Alarme gezielt entfernen ---
+      # Holt die aktuellen Kaufpunkte nur, um Firmennamen nachzuschlagen.
+      - name: "Kaufpunkte für Firmennamen laden"
+        if: ${{ github.event.inputs.modus == 'aufraeumen' }}
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: scanner.yml
+          name: kaufpunkte
+          path: .
+          if_no_artifact_found: warn
+
+      - name: "Alarme entfernen"
+        if: ${{ github.event.inputs.modus == 'aufraeumen' }}
+        env:
+          TRADERFOX_USER: ${{ secrets.TRADERFOX_USER }}
+          TRADERFOX_PASS: ${{ secrets.TRADERFOX_PASS }}
+        run: |
+          if [ -z "${{ github.event.inputs.loeschen }}" ]; then
+            echo "Bitte im Feld 'loeschen' angeben, was entfernt werden soll."
+            exit 1
+          fi
+          ARGS=""
+          if [ -f kaufpunkte.xlsx ]; then ARGS="kaufpunkte.xlsx"; fi
+          python traderfox_alarm_bot.py $ARGS --loesche "${{ github.event.inputs.loeschen }}"
 
       # --- Scanner: Kaufpunkte berechnen ---
       # Nur fuer die echten Laeufe. Der Scanner dauert 20-40 Minuten, daher

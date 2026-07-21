@@ -931,6 +931,65 @@ def alarm_loeschen(page, preis: float, maximal: int = 5) -> int:
     return geloescht
 
 
+def aufraeum_lauf(page, user: str, pw: str, auftraege: list) -> int:
+    """Loescht gezielt einzelne Alarme.
+
+    auftraege: Liste von (ticker, firma, preis). Es wird ausschliesslich der
+    Alarm mit genau diesem Preis entfernt — alle anderen bleiben unangetastet.
+
+    Gebraucht, wenn Kaufpunkte veralten: Aendert sich das Regelwerk oder
+    liefert ein neuer Scan andere Level, stehen die alten Marken sonst
+    weiter im Konto und melden sich zu Kursen, die niemand mehr will."""
+    print(f"\n=== AUFRÄUMEN: {len(auftraege)} Alarm(e) entfernen ===\n")
+    for ticker, firma, preis in auftraege:
+        print(f"    {ticker} ({firma}): {preis}")
+    print()
+
+    if not login(page, user, pw):
+        print("✗ Login fehlgeschlagen.")
+        return 1
+
+    print("\n[1/3] Bestandsaufnahme vorher")
+    vorher = alarme_inventur(page, "01_vorher")
+    anzahl_vorher = sum(len(e["preise"]) for e in vorher)
+    fenster_schliessen(page, "Alerts manager")
+
+    entfernt, probleme = 0, []
+    for i, (ticker, firma, preis) in enumerate(auftraege, 1):
+        print(f"\n[2/3] ({i}/{len(auftraege)}) {ticker} — {preis} entfernen")
+        dialog_schliessen(page)
+        if not aktie_suchen(page, ticker, langsam=True, firma=firma):
+            probleme.append(f"{ticker} (Suche)")
+            continue
+        if not alarm_dialog_oeffnen(page, ticker, firma):
+            probleme.append(f"{ticker} (Dialog)")
+            continue
+        anzahl = alarm_loeschen(page, preis)
+        if anzahl:
+            entfernt += anzahl
+        else:
+            probleme.append(f"{ticker} @ {preis} (nicht gefunden oder nicht löschbar)")
+
+    dialog_schliessen(page)
+    print("\n[3/3] Bestandsaufnahme nachher")
+    nachher = alarme_inventur(page, "02_nachher")
+    anzahl_nachher = sum(len(e["preise"]) for e in nachher)
+
+    print("\n--- Ergebnis ---")
+    print(f"  Alarme vorher:  {anzahl_vorher}")
+    print(f"  Entfernt:       {entfernt}")
+    print(f"  Alarme nachher: {anzahl_nachher}")
+    if probleme:
+        print(f"\n⚠ {len(probleme)} Problem(e): {', '.join(probleme)}")
+        return 1
+    erwartet = anzahl_vorher - entfernt
+    if anzahl_nachher != erwartet:
+        print(f"\n⚠ Erwartet waren {erwartet}, gezählt {anzahl_nachher}.")
+        print("  Ausgelöste Alarme entfernt TraderFox selbst — kann daher kommen.")
+    print("\n✓ Aufräumen abgeschlossen.")
+    return 0
+
+
 def testalarm_lauf(page, user: str, pw: str, ticker: str = "AAPL",
                    firma: str = "Apple") -> int:
     """Legt EINEN Testalarm an, prueft ihn und raeumt ihn wieder weg.
@@ -1426,15 +1485,43 @@ def main():
                     help="Nur prüfen, ob alle Bedienelemente gefunden werden")
     ap.add_argument("--testalarm", action="store_true",
                     help="Einen Testalarm anlegen, prüfen und wieder löschen")
+    ap.add_argument("--loesche", metavar="TICKER:PREIS[,...]",
+                    help="Gezielt einzelne Alarme entfernen, z. B. "
+                         "'BIOA:21.28,CRNX:83.64'. Firmennamen werden aus der "
+                         "angegebenen kaufpunkte.xlsx nachgeschlagen.")
     args = ap.parse_args()
 
     user = os.environ.get("TRADERFOX_USER")
     pw = os.environ.get("TRADERFOX_PASS")
     if not user or not pw:
         sys.exit("Bitte TRADERFOX_USER und TRADERFOX_PASS als Umgebungsvariablen setzen.")
-    nur_pruefen = args.selbsttest or args.testalarm
+    nur_pruefen = args.selbsttest or args.testalarm or bool(args.loesche)
     if not nur_pruefen and not args.xlsx:
         sys.exit("Bitte kaufpunkte.xlsx angeben (oder --selbsttest / --testalarm benutzen).")
+
+    # Loeschauftraege einlesen und Firmennamen ergaenzen
+    loesch_auftraege = []
+    if args.loesche:
+        firmen = {}
+        if args.xlsx:
+            try:
+                d = pd.read_excel(args.xlsx, sheet_name="Kaufpunkte")
+                for _, zeile in d.iterrows():
+                    firmen[str(zeile["Ticker"]).strip()] = str(zeile.get("Firma", "")).strip()
+            except Exception as e:
+                print(f"⚠ Firmennamen nicht lesbar ({e}) — suche nur nach Kürzel.")
+        for teil in args.loesche.split(","):
+            teil = teil.strip()
+            if not teil or ":" not in teil:
+                continue
+            ticker, preis = teil.split(":", 1)
+            ticker = ticker.strip().upper()
+            try:
+                loesch_auftraege.append((ticker, firmen.get(ticker, ""), float(preis)))
+            except ValueError:
+                sys.exit(f"Preis nicht lesbar in {teil!r} — erwartet z. B. 'BIOA:21.28'")
+        if not loesch_auftraege:
+            sys.exit("Keine gültigen Löschaufträge erkannt.")
 
     jobs = []
     if not nur_pruefen:
@@ -1471,6 +1558,11 @@ def main():
 
         if args.testalarm:
             code = testalarm_lauf(page, user, pw)
+            browser.close()
+            sys.exit(code)
+
+        if loesch_auftraege:
+            code = aufraeum_lauf(page, user, pw, loesch_auftraege)
             browser.close()
             sys.exit(code)
 
