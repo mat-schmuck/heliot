@@ -61,7 +61,7 @@ jobs:
           python-version: "3.12"
 
       - name: Abhängigkeiten
-        run: pip install requests pandas openpyxl
+        run: pip install requests pandas openpyxl yfinance
 
       # Die kaufpunkte.xlsx vom letzten Scanner-Lauf holen
       - name: Kaufpunkte vom letzten Scan laden

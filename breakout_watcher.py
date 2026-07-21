@@ -117,6 +117,51 @@ def load_watchlist(xlsx_path: str, nur_muster: bool) -> list[dict]:
 # Live-Kurse holen (Batch: Twelve Data kann mehrere Symbole pro Call)
 # ---------------------------------------------------------------------------
 
+def fetch_quotes_yahoo(tickers: list[str]) -> dict:
+    """Holt Kurs, Tagesvolumen und Ø20-Volumen fuer ALLE Ticker in einem Abruf.
+
+    Vorteil gegenueber Twelve Data: kein Minutenlimit, kein Tageslimit, und
+    31 Aktien sind in rund drei Sekunden da statt in vier Minuten.
+
+    Das Ø20-Volumen wird hier SELBST aus den Tagesdaten berechnet. Bei Twelve
+    Data kam es als Feld 'average_volume', dessen Mittelungszeitraum nirgends
+    dokumentiert ist — das Regelwerk verlangt aber ausdruecklich 20 Tage."""
+    try:
+        import yfinance as yf
+    except ImportError:
+        print("  yfinance nicht verfügbar — weiche auf Twelve Data aus.")
+        return {}
+
+    unique = sorted(set(t.upper() for t in tickers))
+    try:
+        roh = yf.download(" ".join(unique), period="3mo", interval="1d",
+                          group_by="ticker", progress=False,
+                          auto_adjust=False, threads=True)
+    except Exception as e:
+        print(f"  Yahoo-Abruf fehlgeschlagen ({str(e)[:60]}) — Twelve Data übernimmt.")
+        return {}
+
+    out = {}
+    for t in unique:
+        try:
+            df = roh[t] if len(unique) > 1 else roh
+            df = df.dropna(subset=["Close", "Volume"])
+            if df.empty:
+                continue
+            letzte = df.iloc[-1]
+            vol20 = float(df["Volume"].tail(20).mean())
+            out[t] = {
+                "close": float(letzte["Close"]),
+                "volume": float(letzte["Volume"]),
+                "avg_volume": vol20,
+                "is_open": False,
+                "name": "",
+            }
+        except Exception:
+            continue
+    return out
+
+
 def fetch_quotes(tickers: list[str], api_key: str, batch_size: int = 8,
                  pause: float = 62.0) -> dict:
     """Holt Quotes in Batches. Rückgabe: {ticker: {close, volume, avg_volume, ...}}
@@ -326,9 +371,11 @@ def main():
             sys.exit("Bitte NTFY_TOPIC setzen — ohne Topic kein Push möglich.")
         sys.exit(testpush(topic))
 
+    # Nur noch fuer die Rueckfallebene noetig — Hauptquelle ist Yahoo.
     api_key = os.environ.get("TWELVE_DATA_API_KEY")
     if not api_key:
-        sys.exit("Bitte TWELVE_DATA_API_KEY als Umgebungsvariable setzen.")
+        print("⚠ Kein TWELVE_DATA_API_KEY gesetzt — keine Rückfallebene, "
+              "falls Yahoo ausfällt.")
     if not topic and not args.dry_run:
         sys.exit("Bitte NTFY_TOPIC setzen (oder --dry-run benutzen).")
     if not args.xlsx:
@@ -342,7 +389,19 @@ def main():
           f"({datetime.now():%H:%M:%S}).")
 
     gewuenscht = set(t.upper() for t in tickers)
-    quotes = fetch_quotes(tickers, api_key)
+
+    # Hauptquelle Yahoo (ein Abruf, kein Limit), Twelve Data als Rueckfall.
+    quotes = fetch_quotes_yahoo(tickers)
+    if len(quotes) < len(gewuenscht):
+        fehlend_yahoo = sorted(gewuenscht - set(quotes))
+        if quotes:
+            print(f"  Yahoo lieferte {len(quotes)} von {len(gewuenscht)} — "
+                  f"hole {len(fehlend_yahoo)} über Twelve Data nach.")
+        if api_key:
+            quotes.update(fetch_quotes(fehlend_yahoo, api_key))
+        elif not quotes:
+            sys.exit("Yahoo lieferte nichts und kein TWELVE_DATA_API_KEY gesetzt.")
+
     print(f"{len(quotes)} von {len(gewuenscht)} Quotes erhalten.")
     if not quotes:
         sys.exit("Keine Kursdaten erhalten — Abbruch.")

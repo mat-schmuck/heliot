@@ -113,13 +113,83 @@ class RateLimiter:
         self._last = time.time()
 
 
+# Ergebnis des Yahoo-Sammelabrufs. Yahoo liefert ALLE Ticker in einem
+# einzigen Aufruf (87 Aktien in rund 3 Sekunden), waehrend Twelve Data im
+# Gratistarif nur 8 Abfragen je Minute erlaubt und damit rund 11 Minuten
+# braucht. Twelve Data bleibt als Rueckfallebene erhalten.
+_YAHOO_DATEN: dict = {}
+_YAHOO_GELAUFEN = False
+
+
+def lade_yahoo_sammelabruf(tickers: list[str]) -> int:
+    """Holt die Historien aller Ticker in EINEM Abruf von Yahoo.
+
+    Liefert die Anzahl erfolgreich geholter Aktien. Schlaegt der Abruf fehl
+    oder fehlt yfinance, bleibt der Speicher leer und jeder Ticker geht
+    einzeln ueber Twelve Data — das System laeuft dann langsamer weiter,
+    aber es laeuft."""
+    global _YAHOO_GELAUFEN
+    _YAHOO_GELAUFEN = True
+    try:
+        import yfinance as yf
+    except ImportError:
+        print("  yfinance nicht verfügbar — weiche auf Twelve Data aus.")
+        return 0
+
+    print(f"  Sammelabruf über Yahoo für {len(tickers)} Aktien …")
+    t0 = time.time()
+    try:
+        roh = yf.download(" ".join(tickers), period="2y", interval="1d",
+                          group_by="ticker", progress=False,
+                          auto_adjust=False, threads=True)
+    except Exception as e:
+        print(f"  Yahoo-Sammelabruf fehlgeschlagen ({str(e)[:60]}) — Twelve Data übernimmt.")
+        return 0
+
+    for t in tickers:
+        try:
+            df = roh[t] if len(tickers) > 1 else roh
+            df = df.dropna(subset=["Open", "High", "Low", "Close", "Volume"]).copy()
+            if df.empty:
+                continue
+            df = df.reset_index()
+            # Auf das Format bringen, das der Rest des Programms erwartet
+            df = df.rename(columns={"Date": "datetime", "Datetime": "datetime",
+                                    "Open": "open", "High": "high", "Low": "low",
+                                    "Close": "close", "Volume": "volume"})
+            df["datetime"] = pd.to_datetime(df["datetime"]).dt.tz_localize(None)
+            for spalte in ("open", "high", "low", "close", "volume"):
+                df[spalte] = pd.to_numeric(df[spalte], errors="coerce")
+            df = df[["datetime", "open", "high", "low", "close", "volume"]]
+            df = df.dropna().sort_values("datetime").reset_index(drop=True)
+            if len(df) >= 60:
+                _YAHOO_DATEN[t] = df
+        except Exception:
+            continue
+
+    print(f"  Yahoo lieferte {len(_YAHOO_DATEN)} von {len(tickers)} Aktien "
+          f"in {time.time() - t0:.1f} Sekunden.")
+    return len(_YAHOO_DATEN)
+
+
 def fetch_history(ticker: str, api_key: str, limiter: RateLimiter) -> pd.DataFrame | None:
-    """Tageskurse (OHLCV) holen — mit Tages-Cache, damit Reruns gratis sind."""
+    """Tageskurse (OHLCV) holen — mit Tages-Cache, damit Reruns gratis sind.
+
+    Reihenfolge: Tages-Cache, dann Yahoo-Sammelabruf, dann Twelve Data."""
     CACHE_DIR.mkdir(exist_ok=True)
     cache_file = CACHE_DIR / f"{ticker}_{date.today().isoformat()}.csv"
     if cache_file.exists():
         c = pd.read_csv(cache_file); c["datetime"] = pd.to_datetime(c["datetime"]); return c
 
+    # Aus dem Sammelabruf bedienen, falls vorhanden
+    if ticker in _YAHOO_DATEN:
+        df = _YAHOO_DATEN[ticker]
+        df.to_csv(cache_file, index=False)
+        return df
+
+    # Rueckfallebene: einzeln ueber Twelve Data
+    if not api_key:
+        return None
     limiter.wait()
     params = {
         "symbol": ticker,
@@ -768,9 +838,13 @@ def main():
     ap.add_argument("--limit", type=int, default=None, help="Nur die ersten N Ticker (zum Testen)")
     args = ap.parse_args()
 
+    # Der Schluessel ist nur noch fuer die Rueckfallebene noetig: Hauptquelle
+    # ist der Yahoo-Sammelabruf. Ohne Schluessel laeuft alles weiter, solange
+    # Yahoo antwortet — faellt Yahoo aus, fehlen dann allerdings die Daten.
     api_key = os.environ.get("TWELVE_DATA_API_KEY")
     if not api_key:
-        sys.exit("Bitte TWELVE_DATA_API_KEY als Umgebungsvariable setzen.")
+        print("⚠ Kein TWELVE_DATA_API_KEY gesetzt — es gibt dann keine "
+              "Rückfallebene, falls Yahoo ausfällt.")
 
     tickers = load_tickers(args.csv)
     if args.limit:
@@ -790,6 +864,12 @@ def main():
               f"über {dauer:.0f} liegen (Maximum bei GitHub: 360).")
 
     limiter = RateLimiter(args.rate)
+
+    # Zuerst der Sammelabruf: holt alles auf einmal und macht die Schleife
+    # unten praktisch kostenlos. Faellt er aus, geht jeder Ticker einzeln
+    # ueber Twelve Data — langsamer, aber es laeuft.
+    alle_ticker = [t for t, _ in tickers] + [BENCHMARK]
+    lade_yahoo_sammelabruf(alle_ticker)
 
     # 1. Durchlauf: Daten holen + RS-Rohscore
     loaded, raw_rs = {}, {}
