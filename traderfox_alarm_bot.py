@@ -466,8 +466,14 @@ def login(page, user: str, pw: str) -> bool:
     return True
 
 
-def aktie_suchen(page, ticker: str, langsam: bool) -> bool:
-    """Ticker ins Suchfeld tippen und den US-Treffer wählen."""
+def aktie_suchen(page, ticker: str, langsam: bool, firma: str = "") -> bool:
+    """Ticker ins Suchfeld tippen und den RICHTIGEN Treffer waehlen.
+
+    Wichtig: Ein Kuerzel ist nicht eindeutig. 'BIOA' liefert sowohl
+    BioArctic AB (Stockholm) als auch BioAge Labs Inc (USA). Frueher wurde
+    einfach der erste sichtbare Treffer genommen - im Testlauf landete der
+    Bot damit bei der falschen Firma. Darum wird jetzt gegen den Firmennamen
+    abgeglichen und im Zweifel lieber abgebrochen."""
     such = finde(page, "suchfeld")
     if such is None:
         diagnose(page, f"suchfeld_weg_{ticker}", "Suchfeld nicht gefunden")
@@ -475,25 +481,68 @@ def aktie_suchen(page, ticker: str, langsam: bool) -> bool:
     such.click()
     such.fill("")
     such.type(ticker, delay=90 if langsam else 55)
-    page.wait_for_timeout(2600)
+    page.wait_for_timeout(2800)
 
-    # Bevorzugt der US-Treffer (Dollar/NASDAQ), sonst irgendein Treffer mit dem Ticker
-    for muster in (rf"\$\s*{re.escape(ticker)}\b",
-                   rf"\b{re.escape(ticker)}\b.*(USD|NASDAQ|NYSE|\$)",
-                   rf"\b{re.escape(ticker)}\b"):
-        try:
-            loc = page.get_by_text(re.compile(muster, re.I))
-            for i in range(min(loc.count(), 8)):
-                el = loc.nth(i)
-                if el.is_visible():
-                    el.click()
-                    page.wait_for_timeout(2200)
-                    return True
-        except Exception:
-            continue
+    # Vorschlagsliste einsammeln
+    kandidaten = []
+    try:
+        eintraege = page.locator("ul.ui-autocomplete li.ui-menu-item")
+        for i in range(min(eintraege.count(), 15)):
+            el = eintraege.nth(i)
+            try:
+                if not el.is_visible():
+                    continue
+                text = " ".join((el.inner_text() or "").split())
+                if text:
+                    kandidaten.append((el, text))
+            except Exception:
+                continue
+    except Exception:
+        pass
 
-    diagnose(page, f"kein_suchtreffer_{ticker}", f"Kein Treffer für {ticker} im Dropdown")
-    return False
+    if not kandidaten:
+        diagnose(page, f"kein_suchtreffer_{ticker}", f"Kein Treffer für {ticker} im Dropdown")
+        return False
+
+    print(f"    {len(kandidaten)} Treffer für '{ticker}':")
+    for _, text in kandidaten[:8]:
+        print(f"      · {text[:75]}")
+
+    def bewerte(text: str) -> int:
+        """Je hoeher, desto besser. Der Firmenname zaehlt am meisten."""
+        t = text.lower()
+        punkte = 0
+        if firma:
+            worte = [w for w in re.split(r"[^A-Za-zÄÖÜäöüß]+", firma) if len(w) > 2]
+            treffer = sum(1 for w in worte[:3] if w.lower() in t)
+            punkte += treffer * 10
+            if worte and worte[0].lower() in t:
+                punkte += 5
+        if re.search(rf"\b{re.escape(ticker)}\b", text, re.I):
+            punkte += 3
+        if re.search(r"USD|NASDAQ|NYSE|\$", text, re.I):
+            punkte += 2
+        return punkte
+
+    bewertet = sorted(((bewerte(t), el, t) for el, t in kandidaten),
+                      key=lambda x: x[0], reverse=True)
+    punkte, el, text = bewertet[0]
+
+    # Ohne Firmennamen-Treffer nicht raten: lieber sauber scheitern, als
+    # Kaufpunkte bei der falschen Aktie einzutragen.
+    if firma and punkte < 10:
+        diagnose(page, f"kein_passender_treffer_{ticker}",
+                 f"Kein Treffer passt zu {firma!r}; bester war {text!r}")
+        print(f"    ✗ Kein Treffer passt zu '{firma}' — bester war '{text[:60]}'")
+        return False
+
+    print(f"    → gewählt: {text[:70]}")
+    try:
+        el.click()
+    except Exception:
+        maus_klick(el, "Suchtreffer")
+    page.wait_for_timeout(2200)
+    return True
 
 
 def alarm_dialog_oeffnen(page, ticker: str, firma: str) -> bool:
@@ -901,7 +950,7 @@ def testalarm_lauf(page, user: str, pw: str, ticker: str = "AAPL",
     fenster_schliessen(page, "Alerts manager")
 
     print(f"\n[2/6] {ticker} suchen")
-    if not aktie_suchen(page, ticker, langsam=True):
+    if not aktie_suchen(page, ticker, langsam=True, firma=firma):
         print("✗ Suche fehlgeschlagen.")
         return 1
 
@@ -1070,15 +1119,33 @@ def dialog_schliessen(page) -> bool:
     er weiter die vorige Aktie - Alarme koennten beim falschen Wert landen."""
     if not alarmdialog_offen(page):
         return True
-    zu = page.locator(".alert-configurator-close-icon")
-    if zu.count():
+
+    # Es koennen mehrere Dialoge uebereinanderliegen — alle zumachen.
+    for _ in range(4):
+        zu = page.locator(".alert-configurator-close-icon:visible")
+        if zu.count() == 0:
+            break
         maus_klick(zu.first, "Alarm-Dialog schliessen")
         page.wait_for_timeout(900)
-    if not alarmdialog_offen(page):
-        return True
+        if not alarmdialog_offen(page):
+            return True
+
     try:
         page.keyboard.press("Escape")
         page.wait_for_timeout(700)
+    except Exception:
+        pass
+    if not alarmdialog_offen(page):
+        return True
+
+    # Letzter Ausweg: den Container direkt aus dem Weg raeumen. Das aendert
+    # nichts an gespeicherten Daten, macht aber die Kursliste wieder frei.
+    try:
+        page.evaluate(
+            "() => { for (const e of document.querySelectorAll("
+            "'.context_menu_wrapper, .contextmenu-element.alert-config')) "
+            "e.style.display = 'none'; }")
+        page.wait_for_timeout(500)
     except Exception:
         pass
     if alarmdialog_offen(page):
@@ -1292,7 +1359,7 @@ def selbsttest(page, user: str, pw: str) -> int:
     ergebnis["Suchfeld"] = finde(page, "suchfeld") is not None
 
     test_ticker = "AAPL"  # existiert garantiert, wird nur gesucht
-    ok_suche = aktie_suchen(page, test_ticker, langsam=True)
+    ok_suche = aktie_suchen(page, test_ticker, langsam=True, firma="Apple")
     ergebnis[f"Suche ({test_ticker})"] = ok_suche
 
     ok_dialog = False
@@ -1433,7 +1500,7 @@ def main():
             t = job["ticker"]
             print(f"[{i}/{len(jobs)}] {t} — {len(offene_punkte)} offene(r) Alarm(e)")
 
-            if not mit_retry(lambda: aktie_suchen(page, t, args.langsam),
+            if not mit_retry(lambda: aktie_suchen(page, t, args.langsam, job["firma"]),
                              versuche=3, pause=2, name=f"Suche {t}"):
                 probleme.append(f"{t} (Suche)")
                 continue
