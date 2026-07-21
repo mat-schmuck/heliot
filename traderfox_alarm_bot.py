@@ -692,6 +692,88 @@ def alarme_inventur(page, name: str = "bestand") -> list:
     return eintraege
 
 
+def zaehle_preis(page, preis: float) -> int:
+    """Wie oft steht dieser Preis gerade in einem sichtbaren Alarmfeld?"""
+    felder = page.locator("input.price-alert:visible")
+    n = 0
+    for i in range(min(felder.count(), 60)):
+        w = preis_parsen(felder.nth(i).input_value() or "")
+        if w is not None and abs(w - preis) < 0.005:
+            n += 1
+    return n
+
+
+def erkunde_loeschweg(page, preis: float) -> bool:
+    """Probiert der Reihe nach verschiedene Wege, einen Alarm zu loeschen,
+    und prueft nach jedem, ob er wirklich verschwunden ist.
+
+    Hintergrund: Die Knoepfe sind leere <a>-Elemente ohne Text und ohne
+    Symbol; ihr Aussehen kommt allein aus CSS. Ist die Box 0x0 gross, laesst
+    sich nicht darauf klicken - dann muss der Klick woanders hin."""
+    print(f"\n--- Erkundung: Wie loescht man den Alarm zu {preis}? ---")
+    felder = page.locator("input.price-alert:visible")
+    ziel = None
+    for i in range(min(felder.count(), 60)):
+        w = preis_parsen(felder.nth(i).input_value() or "")
+        if w is not None and abs(w - preis) < 0.005:
+            ziel = felder.nth(i)
+            break
+    if ziel is None:
+        print(f"    Kein Feld mit {preis} gefunden.")
+        return False
+
+    zeile = ziel.locator("xpath=ancestor::tr[1]")
+    knopf = zeile.locator("a.remove-alert").first
+    if knopf.count() == 0:
+        print("    Kein a.remove-alert in dieser Zeile.")
+        return False
+
+    # Erst einmal ausmessen — das erklaert die Timeouts.
+    try:
+        box = knopf.bounding_box()
+        sichtbar = knopf.is_visible()
+        print(f"    Knopf: sichtbar={sichtbar}  box={box}")
+    except Exception as e:
+        print(f"    Knopf nicht messbar: {e}")
+
+    vorher = zaehle_preis(page, preis)
+    print(f"    Vorhanden vor den Versuchen: {vorher}x")
+
+    versuche = [
+        ("normaler Klick",
+         lambda: knopf.click(timeout=4000)),
+        ("erzwungener Klick",
+         lambda: knopf.click(force=True, timeout=4000)),
+        ("Klick auf die Zelle",
+         lambda: zeile.locator("td").last.click(force=True, timeout=4000)),
+        ("Maus-Ereignisfolge per JS",
+         lambda: knopf.evaluate(
+             "e => { for (const t of ['mouseover','mousedown','mouseup','click']) "
+             "e.dispatchEvent(new MouseEvent(t, {bubbles:true, cancelable:true, view:window})); }")),
+        ("jQuery-Trigger",
+         lambda: knopf.evaluate(
+             "e => { if (window.jQuery) window.jQuery(e).trigger('click'); }")),
+    ]
+
+    for bezeichnung, aktion in versuche:
+        try:
+            aktion()
+        except Exception as e:
+            print(f"    [{bezeichnung}] nicht ausfuehrbar: {str(e)[:60]}")
+            continue
+        page.wait_for_timeout(2500)
+        jetzt = zaehle_preis(page, preis)
+        if jetzt < vorher:
+            print(f"    ✓ [{bezeichnung}] HAT FUNKTIONIERT ({vorher} -> {jetzt})")
+            diagnose(page, "loeschweg_gefunden", f"'{bezeichnung}' loescht Alarme")
+            return True
+        print(f"    ✗ [{bezeichnung}] wirkungslos (weiterhin {jetzt}x)")
+
+    diagnose(page, "loeschweg_unbekannt", f"Kein Weg gefunden, {preis} zu loeschen")
+    print("    Kein Weg hat funktioniert.")
+    return False
+
+
 def alarm_loeschen(page, preis: float, maximal: int = 5) -> int:
     """Loescht alle Alarme mit GENAU diesem Preis. Liefert die Anzahl.
 
@@ -788,6 +870,15 @@ def testalarm_lauf(page, user: str, pw: str, ticker: str = "AAPL",
     for altpreis in (TESTPREIS, 99999.0):
         aufgeraeumt += alarm_loeschen(page, altpreis)
     print(f"    Aufgeraeumt: {aufgeraeumt}")
+
+    # Wenn nichts wegging, obwohl noch etwas dasteht: herausfinden, warum.
+    if aufgeraeumt == 0:
+        for altpreis in (TESTPREIS, 99999.0):
+            if zaehle_preis(page, altpreis) > 0:
+                if erkunde_loeschweg(page, altpreis):
+                    # Weg gefunden — gleich weiter aufraeumen.
+                    aufgeraeumt += alarm_loeschen(page, altpreis)
+                break
 
     print(f"\n[4/6] Testalarm zu {TESTPREIS} setzen")
     gesetzt = alarm_setzen(page, ticker, TESTPREIS, "Testalarm", langsam=True)
