@@ -931,15 +931,23 @@ def testalarm_lauf(page, user: str, pw: str, ticker: str = "AAPL",
 
     print("\n--- Ergebnis ---")
     print(f"  Alarme vorher:  {anzahl_vorher}")
+    print(f"  Aufgeraeumt:    {aufgeraeumt} (Reste frueherer Testlaeufe)")
     print(f"  Alarme nachher: {anzahl_nachher}")
     print(f"  Setzen:   {'OK' if gesetzt else 'FEHLGESCHLAGEN'}")
     print(f"  Loeschen: {'OK' if geloescht else 'FEHLGESCHLAGEN'}")
-    if anzahl_nachher == anzahl_vorher and gesetzt and geloescht:
-        print("\n✓ Anlegen und Loeschen funktionieren, Bestand unveraendert.")
+
+    # Erwartet wird: vorher minus aufgeraeumte Reste. Der Testalarm selbst
+    # wird ja wieder geloescht und darf die Bilanz nicht veraendern.
+    erwartet = anzahl_vorher - aufgeraeumt
+    abweichung = anzahl_nachher - erwartet
+    if gesetzt and geloescht and abweichung == 0:
+        print("\n✓ Anlegen und Loeschen funktionieren. Bestand wie erwartet.")
         return 0
-    if anzahl_nachher != anzahl_vorher:
-        print(f"\n⚠ Bestand hat sich um {anzahl_nachher - anzahl_vorher} geaendert "
-              "— bitte pruefen.")
+    if abweichung != 0:
+        print(f"\n⚠ Erwartet waren {erwartet} Alarme, gezaehlt {anzahl_nachher} "
+              f"(Abweichung {abweichung:+d}).")
+        print("  Achtung: Ausgeloeste Alarme entfernt TraderFox von selbst —")
+        print("  eine Abweichung nach unten kann auch daher kommen.")
     return 1
 
 
