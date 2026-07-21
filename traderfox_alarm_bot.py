@@ -481,7 +481,12 @@ def aktie_suchen(page, ticker: str, langsam: bool, firma: str = "") -> bool:
     if such is None:
         diagnose(page, f"suchfeld_weg_{ticker}", "Suchfeld nicht gefunden")
         return False
-    such.click()
+    # klick() statt .click(): Liegt ein Fenster ueber dem Suchfeld — etwa der
+    # Alerts manager nach einer Bestandsaufnahme — laeuft der einfache Klick
+    # in Timeout. Genau daran ist der erste Aufraeumlauf gescheitert.
+    if not klick(such, "Suchfeld"):
+        diagnose(page, f"suchfeld_klick_{ticker}", "Suchfeld nicht anklickbar")
+        return False
     such.fill("")
     such.type(ticker, delay=90 if langsam else 55)
     page.wait_for_timeout(2800)
@@ -603,7 +608,7 @@ def alarm_dialog_oeffnen(page, ticker: str, firma: str) -> bool:
     if menue is None:
         diagnose(page, f"kontextmenue_{ticker}", "'Alarm hinzufügen' nicht im Kontextmenü")
         return False
-    menue.click()
+    klick(menue, "Alarm hinzufügen")
     page.wait_for_timeout(1600)
 
     if warte_auf(page, "alarm_dialog", 10) is None:
@@ -722,12 +727,36 @@ JS_FENSTER_SCHLIESSEN = """
 def fenster_schliessen(page, suchtext: str) -> bool:
     """Schliesst das Fenster mit diesem Titel. Noetig, weil offene Fenster im
     Desk andere ueberdecken - der Alerts manager legte sich sonst ueber die
-    Kursliste, und der Rechtsklick dort ging ins Leere."""
+    Kursliste, und der Rechtsklick dort ging ins Leere.
+
+    Zweistufig: erst der Schliessknopf des Fensters, dann - falls das nicht
+    greift - der Container ausgeblendet. Beim ersten Aufraeumlauf schlug der
+    Knopf fehl, das Fenster blieb offen und verdeckte das Suchfeld."""
     try:
         ok = page.evaluate(JS_FENSTER_SCHLIESSEN, suchtext)
         page.wait_for_timeout(1200)
-        print(f"    Fenster '{suchtext}' geschlossen: {ok}")
-        return bool(ok)
+        if ok:
+            print(f"    Fenster '{suchtext}' geschlossen.")
+            return True
+    except Exception as e:
+        print(f"    Fenster '{suchtext}': {str(e)[:60]}")
+
+    # Rueckfall: Container ausblenden. Aendert nichts an gespeicherten
+    # Daten, macht aber die darunterliegende Oberflaeche wieder frei.
+    try:
+        weg = page.evaluate(
+            "(suchtext) => {"
+            " const alle = [...document.querySelectorAll('*')];"
+            " const t = alle.find(e => (e.getAttribute('title') || '').includes(suchtext)"
+            "                          && e.children.length === 0);"
+            " if (!t) return false;"
+            " const box = t.closest('.container');"
+            " if (!box) return false;"
+            " box.style.display = 'none';"
+            " return true; }", suchtext)
+        page.wait_for_timeout(500)
+        print(f"    Fenster '{suchtext}' ausgeblendet: {bool(weg)}")
+        return bool(weg)
     except Exception as e:
         print(f"    Fenster '{suchtext}' nicht schliessbar: {str(e)[:60]}")
         return False
@@ -742,11 +771,23 @@ def alarme_inventur(page, name: str = "bestand") -> list:
         oeffner = finde(page, "nutzer_alarme_oeffnen")
         if oeffner is not None:
             klick(oeffner, "Nutzer-Alarme")
-            page.wait_for_timeout(3000)
+            # Warten, bis wirklich Inhalt da ist. Ein fester Wert reichte
+            # nicht: Beim ersten Aufraeumlauf meldete die Inventur null
+            # Alarme, weil das Fenster noch leer war.
+            for _ in range(12):
+                page.wait_for_timeout(1000)
+                try:
+                    if page.locator(".alert-section").count() > 0:
+                        break
+                except Exception:
+                    pass
         eintraege = page.evaluate(JS_ALARM_INVENTUR)
     except Exception as e:
         print(f"    (Inventur fehlgeschlagen: {e})")
         return []
+
+    if not eintraege:
+        print("    ⚠ Keine Alarme gelesen — Fenster vermutlich nicht geladen.")
 
     DEBUG_DIR.mkdir(exist_ok=True)
     stempel = datetime.now().strftime("%H%M%S")
@@ -1130,14 +1171,16 @@ def alarm_setzen(page, ticker: str, preis: float, strategie: str, langsam: bool)
                      f"Feld war bereits mit {vorhandener_wert!r} belegt — nicht ueberschrieben")
             return False
 
-        feld.click()
+        if not klick(feld, "Alarm-Eingabefeld"):
+            return False
         feld.type(preis_str, delay=70 if langsam else 40)
         menschliche_pause(langsam)
 
         speichern = finde(page, "alarm_speichern")
         if speichern is None:
             return False
-        speichern.click()
+        if not klick(speichern, "Save"):
+            return False
         page.wait_for_timeout(1800)
 
         # VERIFIKATION: Steht der Preis jetzt irgendwo im Dialog?
