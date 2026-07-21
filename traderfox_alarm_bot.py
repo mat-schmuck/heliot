@@ -467,31 +467,55 @@ def aktie_suchen(page, ticker: str, langsam: bool) -> bool:
 
 
 def alarm_dialog_oeffnen(page, ticker: str, firma: str) -> bool:
-    """Rechtsklick auf die Aktienzeile → 'Alarm hinzufügen'."""
+    """Rechtsklick auf den Aktiennamen → 'Alarm hinzufügen'.
+
+    Genau so beschreibt es auch die TraderFox-Anleitung:
+    https://traderfox.de/features/preisalarm.html
+
+    Wichtig ist das Ziel des Rechtsklicks: Der Firmenname steht auch in
+    News-Schlagzeilen und im Info-Fenster, und dort gibt es kein
+    Kontextmenue. Darum ausschliesslich Tabellenzellen der Kursliste."""
     zeile = None
     kandidaten = []
     if firma:
         kandidaten.append(re.escape(firma[:14]))
     kandidaten.append(re.escape(ticker))
+
     for muster in kandidaten:
-        try:
-            loc = page.get_by_text(re.compile(muster, re.I))
-            for i in range(min(loc.count(), 6)):
-                el = loc.nth(i)
-                if el.is_visible():
-                    zeile = el
-                    break
-        except Exception:
-            continue
+        for css in ("td", "tr"):
+            try:
+                loc = page.locator(css).filter(has_text=re.compile(muster, re.I))
+                for i in range(min(loc.count(), 8)):
+                    el = loc.nth(i)
+                    if el.is_visible():
+                        zeile = el
+                        break
+            except Exception:
+                continue
+            if zeile is not None:
+                break
         if zeile is not None:
             break
 
     if zeile is None:
-        diagnose(page, f"zeile_fehlt_{ticker}", "Aktienzeile in der Konsole nicht gefunden")
+        diagnose(page, f"zeile_fehlt_{ticker}", "Aktienzeile in der Kursliste nicht gefunden")
         return False
 
-    zeile.click(button="right")
-    page.wait_for_timeout(1200)
+    try:
+        zeile.click(button="right", timeout=6000)
+    except Exception:
+        # Fenster ausserhalb des Sichtfelds o. ae. — per JS nachhelfen.
+        try:
+            zeile.evaluate(
+                "e => e.dispatchEvent(new MouseEvent('contextmenu', "
+                "{bubbles: true, cancelable: true, button: 2}))")
+            print("    (Rechtsklick per JS ausgeloest)")
+        except Exception as e:
+            diagnose(page, f"rechtsklick_{ticker}", f"Rechtsklick nicht moeglich: {e}")
+            return False
+    page.wait_for_timeout(1500)
+    # Das Kontextmenue entsteht erst jetzt per JS — Zustand festhalten.
+    diagnose(page, f"nach_rechtsklick_{ticker}", "Direkt nach dem Rechtsklick")
 
     menue = warte_auf(page, "kontextmenue_alarm", 6)
     if menue is None:
