@@ -1134,6 +1134,39 @@ def aufraeum_lauf(page, user: str, pw: str, auftraege: list) -> int:
     return 0
 
 
+def inventur_lauf(page, user: str, pw: str) -> int:
+    """Bestandsaufnahme ALLER Alarme im Konto — reines Lesen, loescht nichts.
+
+    Vorstufe zum Komplett-Loeschen (Mathias' Auftrag vom 23.07.2026): Bevor
+    irgendetwas entfernt wird, muss eine Sicherung existieren, aus der der
+    Bot notfalls alles wieder eintragen kann. Legt drei Dateien in debug/ ab:
+    die lesbare Bestandsliste, eine maschinenlesbare Sicherung (JSON) und
+    das rohe HTML des Alerts manager (Bauplan fuer den Loesch-Modus)."""
+    print("\n=== INVENTUR: alle Alarme auslesen (nichts wird geloescht) ===\n")
+    if not login(page, user, pw):
+        print("✗ Login fehlgeschlagen.")
+        return 1
+
+    eintraege = alarme_inventur(page, "komplett")
+    fenster_html_sichern(page, "Alerts manager", "inventur")
+    if not eintraege:
+        print("✗ Keine Alarme gelesen — Fenster nicht geladen? Siehe debug/.")
+        return 1
+
+    DEBUG_DIR.mkdir(exist_ok=True)
+    stempel = datetime.now().strftime("%H%M%S")
+    sicherung = DEBUG_DIR / f"{stempel}_alarmsicherung.json"
+    sicherung.write_text(
+        json.dumps(eintraege, ensure_ascii=False, indent=1), encoding="utf-8")
+    gesamt = sum(len(e["preise"]) for e in eintraege)
+    print(f"\n--- Ergebnis ---")
+    print(f"  Werte mit Alarmen: {len(eintraege)}")
+    print(f"  Alarme gesamt:     {gesamt}")
+    print(f"  Sicherung:         debug/{sicherung.name}")
+    print("\n✓ Inventur abgeschlossen — es wurde nichts verändert.")
+    return 0
+
+
 def testalarm_lauf(page, user: str, pw: str, ticker: str = "AAPL",
                    firma: str = "Apple") -> int:
     """Legt EINEN Testalarm an, prueft ihn und raeumt ihn wieder weg.
@@ -1635,13 +1668,17 @@ def main():
                     help="Gezielt einzelne Alarme entfernen, z. B. "
                          "'BIOA:21.28,CRNX:83.64'. Firmennamen werden aus der "
                          "angegebenen kaufpunkte.xlsx nachgeschlagen.")
+    ap.add_argument("--inventur", action="store_true",
+                    help="Alle Alarme auslesen und als Sicherung ablegen — "
+                         "reines Lesen, löscht nichts.")
     args = ap.parse_args()
 
     user = os.environ.get("TRADERFOX_USER")
     pw = os.environ.get("TRADERFOX_PASS")
     if not user or not pw:
         sys.exit("Bitte TRADERFOX_USER und TRADERFOX_PASS als Umgebungsvariablen setzen.")
-    nur_pruefen = args.selbsttest or args.testalarm or bool(args.loesche)
+    nur_pruefen = (args.selbsttest or args.testalarm or bool(args.loesche)
+                   or args.inventur)
     if not nur_pruefen and not args.xlsx:
         sys.exit("Bitte kaufpunkte.xlsx angeben (oder --selbsttest / --testalarm benutzen).")
 
@@ -1704,6 +1741,11 @@ def main():
 
         if args.testalarm:
             code = testalarm_lauf(page, user, pw)
+            browser.close()
+            sys.exit(code)
+
+        if args.inventur:
+            code = inventur_lauf(page, user, pw)
             browser.close()
             sys.exit(code)
 

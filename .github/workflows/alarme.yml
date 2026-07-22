@@ -15,6 +15,7 @@ on:
           - test_2_aktien     # Scanner + Alarme für 2 Aktien
           - vollstaendig      # Scanner + Alarme für alle Treffer
           - aufraeumen        # gezielt einzelne Alarme entfernen
+          - inventur          # alle Alarme auslesen + sichern (löscht nichts)
       alle_level:
         description: "Auch Fallback-Level alarmieren? (true/false)"
         required: false
@@ -74,6 +75,15 @@ jobs:
           TRADERFOX_USER: ${{ secrets.TRADERFOX_USER }}
           TRADERFOX_PASS: ${{ secrets.TRADERFOX_PASS }}
         run: python traderfox_alarm_bot.py --testalarm
+
+      # --- Inventur: alle Alarme auslesen und sichern, loescht NICHTS ---
+      # Vorstufe zum Komplett-Loeschen: erst Sicherung, dann Entscheidung.
+      - name: "Inventur (alle Alarme auslesen und sichern)"
+        if: ${{ github.event.inputs.modus == 'inventur' }}
+        env:
+          TRADERFOX_USER: ${{ secrets.TRADERFOX_USER }}
+          TRADERFOX_PASS: ${{ secrets.TRADERFOX_PASS }}
+        run: python traderfox_alarm_bot.py --inventur
 
       # --- ntfy-Testnachricht: prueft nur die Push-Kette aufs Handy ---
       - name: "Push-Testnachricht (ntfy)"
