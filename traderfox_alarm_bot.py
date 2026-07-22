@@ -1167,6 +1167,131 @@ def inventur_lauf(page, user: str, pw: str) -> int:
     return 0
 
 
+# Zaehlt die Preis-Alarme INNERHALB des Alerts manager (nicht im ganzen
+# Desk — sonst zaehlten offene Alarm-Dialoge mit, der Fehler von frueher).
+JS_MANAGER_ALARMZAHL = """
+() => {
+  const titel = [...document.querySelectorAll('*')].find(e => {
+    const t = e.getAttribute('title') || '';
+    return t.includes('Alerts manager') && e.children.length === 0;
+  });
+  const wurzel = titel ? titel.closest('.container') : null;
+  if (!wurzel) return -1;
+  return wurzel.querySelectorAll('.alert-section input.price-alert').length;
+}
+"""
+
+# Loest den ERSTEN Loeschknopf im Alerts manager aus — mit der vollen
+# Maus-Ereignisfolge, dem einzigen Klickweg, der bei diesen Knoepfen wirkt.
+JS_MANAGER_ERSTEN_LOESCHEN = """
+() => {
+  const titel = [...document.querySelectorAll('*')].find(e => {
+    const t = e.getAttribute('title') || '';
+    return t.includes('Alerts manager') && e.children.length === 0;
+  });
+  const wurzel = titel ? titel.closest('.container') : null;
+  if (!wurzel) return false;
+  const knopf = wurzel.querySelector('.alert-section a.remove-alert');
+  if (!knopf) return false;
+  for (const t of ['mouseover','mousedown','mouseup','click'])
+    knopf.dispatchEvent(new MouseEvent(t, {bubbles:true, cancelable:true, view:window}));
+  return true;
+}
+"""
+
+
+def loesche_alle_lauf(page, user: str, pw: str) -> int:
+    """Loescht SAEMTLICHE Alarme im Konto — auch die handgesetzten.
+
+    Ausdruecklich beauftragt von Mathias am 23.07.2026, mit Gerhards
+    Zustimmung ('In Zukunft wird es ohnehin nur die Alarme des Tools
+    geben'). Die alte Schutzregel 'handgesetzte Alarme sind tabu' ist
+    fuer DIESEN Modus bewusst aufgehoben — fuer alle anderen gilt sie
+    unveraendert weiter.
+
+    Sicherungsnetz in drei Lagen:
+    1. Vor dem ersten Loeschklick wird IMMER eine vollstaendige Inventur
+       als Datei abgelegt (lesbar + JSON) — daraus laesst sich der
+       Bestand notfalls wieder eintragen. Ohne gelungene Inventur wird
+       NICHT geloescht.
+    2. Jeder Loeschklick wird nachgezaehlt: Sinkt die Zahl dreimal in
+       Folge nicht, bricht der Lauf ab, statt blind weiterzuklicken.
+    3. Am Ende zaehlt eine Schlussinventur nach — Erfolg heisst null."""
+    print("\n=== ALLES LÖSCHEN: sämtliche Alarme entfernen ===\n")
+    if not login(page, user, pw):
+        print("✗ Login fehlgeschlagen.")
+        return 1
+
+    print("[1/3] Sicherung anlegen (Pflicht vor dem Löschen)")
+    eintraege = alarme_inventur(page, "vor_komplettloeschung")
+    if not eintraege:
+        print("✗ Sicherung fehlgeschlagen — es wird NICHTS gelöscht.")
+        return 1
+    DEBUG_DIR.mkdir(exist_ok=True)
+    stempel = datetime.now().strftime("%H%M%S")
+    sicherung = DEBUG_DIR / f"{stempel}_alarmsicherung_vor_loeschung.json"
+    sicherung.write_text(
+        json.dumps(eintraege, ensure_ascii=False, indent=1), encoding="utf-8")
+    vorher = sum(len(e["preise"]) for e in eintraege)
+    print(f"    Gesichert: {len(eintraege)} Werte, {vorher} Alarme "
+          f"→ debug/{sicherung.name}")
+
+    print(f"\n[2/3] {vorher} Alarme löschen (einzeln, mit Nachzählen)")
+    entfernt, fehlversuche = 0, 0
+    letzte_meldung = 0
+    while True:
+        try:
+            zahl = page.evaluate(JS_MANAGER_ALARMZAHL)
+        except Exception as e:
+            print(f"    ✗ Zählung fehlgeschlagen: {str(e)[:60]}")
+            break
+        if zahl <= 0:
+            break
+        try:
+            ok = page.evaluate(JS_MANAGER_ERSTEN_LOESCHEN)
+        except Exception:
+            ok = False
+        page.wait_for_timeout(900)
+        try:
+            danach = page.evaluate(JS_MANAGER_ALARMZAHL)
+        except Exception:
+            danach = zahl
+        if ok and danach < zahl:
+            entfernt += zahl - danach
+            fehlversuche = 0
+            if entfernt - letzte_meldung >= 10:
+                print(f"    … {entfernt} von {vorher} entfernt")
+                letzte_meldung = entfernt
+        else:
+            fehlversuche += 1
+            print(f"    ⚠ Klick ohne Wirkung ({fehlversuche}/3) — "
+                  f"Stand {danach} Alarme")
+            page.wait_for_timeout(2500)
+            if fehlversuche >= 3:
+                diagnose(page, "loeschen_stockt",
+                         f"Zahl sinkt nicht mehr: noch {danach} Alarme")
+                break
+        if entfernt > vorher + 20:
+            print("    ⚠ Mehr entfernt als erwartet — Sicherheitsstopp.")
+            break
+
+    print(f"\n[3/3] Schlussinventur")
+    rest = alarme_inventur(page, "nach_komplettloeschung")
+    uebrig = sum(len(e["preise"]) for e in rest)
+    fenster_html_sichern(page, "Alerts manager", "nach_loeschung")
+
+    print("\n--- Ergebnis ---")
+    print(f"  Alarme vorher:  {vorher}")
+    print(f"  Entfernt:       {entfernt}")
+    print(f"  Übrig:          {uebrig}")
+    print(f"  Sicherung:      debug/{sicherung.name}")
+    if uebrig == 0 and entfernt > 0:
+        print("\n✓ Konto ist leer — alle Alarme entfernt und nachgezählt.")
+        return 0
+    print("\n⚠ Es sind noch Alarme übrig — Diagnose siehe debug/.")
+    return 1
+
+
 def testalarm_lauf(page, user: str, pw: str, ticker: str = "AAPL",
                    firma: str = "Apple") -> int:
     """Legt EINEN Testalarm an, prueft ihn und raeumt ihn wieder weg.
@@ -1671,6 +1796,9 @@ def main():
     ap.add_argument("--inventur", action="store_true",
                     help="Alle Alarme auslesen und als Sicherung ablegen — "
                          "reines Lesen, löscht nichts.")
+    ap.add_argument("--loesche-alle", action="store_true",
+                    help="SÄMTLICHE Alarme löschen, auch handgesetzte. "
+                         "Legt vorher zwingend eine Sicherung ab.")
     args = ap.parse_args()
 
     user = os.environ.get("TRADERFOX_USER")
@@ -1678,7 +1806,7 @@ def main():
     if not user or not pw:
         sys.exit("Bitte TRADERFOX_USER und TRADERFOX_PASS als Umgebungsvariablen setzen.")
     nur_pruefen = (args.selbsttest or args.testalarm or bool(args.loesche)
-                   or args.inventur)
+                   or args.inventur or args.loesche_alle)
     if not nur_pruefen and not args.xlsx:
         sys.exit("Bitte kaufpunkte.xlsx angeben (oder --selbsttest / --testalarm benutzen).")
 
@@ -1746,6 +1874,11 @@ def main():
 
         if args.inventur:
             code = inventur_lauf(page, user, pw)
+            browser.close()
+            sys.exit(code)
+
+        if args.loesche_alle:
+            code = loesche_alle_lauf(page, user, pw)
             browser.close()
             sys.exit(code)
 
