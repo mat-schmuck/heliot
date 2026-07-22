@@ -360,24 +360,32 @@ def _dedupe(idx: np.ndarray, min_gap: int = 3) -> list[int]:
 # ---------------------------------------------------------------------------
 
 def detect_darvas(df: pd.DataFrame) -> dict | None:
-    """52W-Hoch → Box-Top aus 3 Folgetagen → Box-Bottom aus 3 Folgetagen →
-    Bestätigung wenn Kurs ≥3 Tage in der Box bleibt.
-    Kaufpunkt: Box-Top + 1 Cent (Volumen-Bestätigung als Hinweis)."""
+    """52W-Hoch → Box-Top aus 3 Tagen (Hoch-Tag + 2 Folgetage) → Box-Bottom
+    aus den 3 Tagen danach → Bestätigung wenn Kurs ≥3 Tage in der Box bleibt.
+    Kaufpunkt: Box-Top + 1 Cent (Volumen-Bestätigung als Hinweis).
+
+    Deckel und Boden umfassen je 3 Tage („3+3") — Gerhards Vorgabe vom
+    22.07.2026; vorher zählte der Deckel versehentlich 4 Tage (Hoch-Tag
+    plus 3), wodurch der Boden einen Tag zu spät begann."""
     n = len(df)
     look = min(n, CFG["darvas_lookback_52w"])
     win = df.iloc[-look:]
     hi_pos = int(win["high"].idxmax())          # Position des 52W-Hochs
     bars_after = n - 1 - hi_pos
-    if bars_after < 2 * CFG["darvas_box_days"]:
-        return None  # Box noch nicht fertig ausgebildet
-    if bars_after > 25:
-        return None  # 52W-Hoch zu alt — Box muss FRISCH nach neuem Hoch entstehen
-
     bd = CFG["darvas_box_days"]
-    # Box-Top: höchstes Hoch von 52W-Hoch-Tag + 3 Folgetagen
-    top_win = df.iloc[hi_pos: hi_pos + 1 + bd]
+    if bars_after < 2 * bd - 1:
+        return None  # Box noch nicht fertig ausgebildet (Deckel 3 + Boden 3,
+                     # der Hoch-Tag selbst zählt zum Deckel)
+    # Frische-Regel: bewusst NICHT im Regelwerk-Dokument, aber von Gerhard
+    # am 22.07.2026 ausdrücklich bestätigt — nur Boxen frisch nach neuem
+    # Hoch melden, keine monatealten toten Formationen.
+    if bars_after > 25:
+        return None  # 52W-Hoch zu alt
+
+    # Box-Top: höchstes Hoch aus Hoch-Tag + 2 Folgetagen (3 Tage)
+    top_win = df.iloc[hi_pos: hi_pos + bd]
     box_top = float(top_win["high"].max())
-    top_end = hi_pos + bd
+    top_end = hi_pos + bd - 1
     # Box-Bottom: tiefstes Tief der 3 Tage nach Box-Top-Fixierung
     bot_win = df.iloc[top_end + 1: top_end + 1 + bd]
     if len(bot_win) < bd:
@@ -705,7 +713,10 @@ def detect_htf(df: pd.DataFrame) -> dict | None:
         "kaufpunkt": kp,
         "stop": round(float(flag["low"].min()) - 0.01, 2),
         "ziel": None,
-        "status": ("HTF komplett" if vol_slope < 0 else "HTF, aber Volumen fällt nicht sauber"),
+        # Gerhards Entscheid 22.07.2026: Volumenverlauf ist bei der HTF KEIN
+        # Pflichtkriterium (sonst fiele das seltenste Muster oft ganz aus),
+        # sondern wird im Status gekennzeichnet.
+        "status": ("HTF komplett" if vol_slope < 0 else "HTF ohne Vol-Bestätigung"),
         "notiz": f"Mast +{best['rise']*100:.0f}% in {j - best['i']} Tagen; "
                  f"Flag {cal_days} Kalendertage, Range {flag_range/pole_h*100:.0f}% der Masthöhe",
     }
