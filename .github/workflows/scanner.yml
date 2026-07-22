@@ -14,6 +14,11 @@ jobs:
   scan:
     runs-on: ubuntu-latest
     timeout-minutes: 200        # 87 Ticker @ 8 Calls/min brauchen Luft
+    # contents: write, damit das Ergebnis als kaufpunkte_aktuell.xlsx ins
+    # Repo gelegt werden kann — davon liest die Registerkarte
+    # "Aktueller Scan" in der Heliot-App (Mathias' Auftrag vom 23.07.2026).
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -39,3 +44,22 @@ jobs:
           name: kaufpunkte
           path: kaufpunkte.xlsx
           retention-days: 30
+
+      # Ergebnis zusaetzlich ins Repo legen: Die Registerkarte
+      # "Aktueller Scan" der Heliot-App liest die Datei ohne Anmeldung ueber
+      # raw.githubusercontent.com — Artefakte waeren nur mit Anmeldung
+      # erreichbar. Der Push loest keine anderen Workflows aus (alle laufen
+      # nur per Zeitplan oder Knopfdruck); Streamlit startet die App kurz neu.
+      - name: Ergebnis für die Heliot-Anzeige veröffentlichen
+        run: |
+          cp kaufpunkte.xlsx kaufpunkte_aktuell.xlsx
+          git config user.name "pattern-scanner"
+          git config user.email "actions@users.noreply.github.com"
+          git add kaufpunkte_aktuell.xlsx
+          if git diff --cached --quiet; then
+            echo "Keine Änderung gegenüber dem letzten Scan."
+          else
+            git commit -m "Nachtscan: kaufpunkte_aktuell.xlsx aktualisiert"
+            git pull --rebase origin main
+            git push origin main
+          fi

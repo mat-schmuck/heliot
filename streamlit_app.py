@@ -200,8 +200,9 @@ if not api_key:
                "Für eine Rückfallebene könnte TWELVE_DATA_API_KEY "
                "unter Settings → Secrets hinterlegt werden.")
 
-tab_einzel, tab_liste, tab_upload, tab_info = st.tabs(
-    ["🔍 Einzelabfrage", "📋 Liste / CSV", "📅 Wochenliste", "ℹ️ Regelwerk"])
+tab_einzel, tab_liste, tab_scan, tab_upload, tab_info = st.tabs(
+    ["🔍 Einzelabfrage", "📋 Liste / CSV", "🌙 Aktueller Scan",
+     "📅 Wochenliste", "ℹ️ Regelwerk"])
 
 # --- Einzelabfrage ---------------------------------------------------------
 with tab_einzel:
@@ -304,6 +305,115 @@ with tab_liste:
             if fehler:
                 st.caption("Keine Daten für: " + ", ".join(fehler))
 
+# --- Aktueller Scan --------------------------------------------------------
+# Fenster auf die Nachtergebnisse (Mathias' Auftrag vom 23.07.2026): Der
+# Scanner legt sein Ergebnis seit demselben Tag als kaufpunkte_aktuell.xlsx
+# ins Repo (scanner.yml, Schritt 'Ergebnis für die Heliot-Anzeige
+# veröffentlichen'). Diese Karte zeigt es gut vorlesbar an — als Liste,
+# nicht als Tabelle (JAWS), die Tabelle gibt es zusätzlich im Ausklapper.
+
+REPO = "mat-schmuck/heliot"
+SCAN_DATEI = "kaufpunkte_aktuell.xlsx"
+
+
+@st.cache_data(ttl=600, show_spinner=False)
+def lade_nachtscan():
+    """Liefert (DataFrame, Standtext, Rohbytes) — oder (None, Hinweis, None)."""
+    import requests
+    try:
+        r = requests.get(
+            f"https://raw.githubusercontent.com/{REPO}/main/{SCAN_DATEI}",
+            timeout=20)
+    except Exception as e:
+        return None, f"Netzwerkfehler beim Laden: {e}", None
+    if r.status_code == 404:
+        return None, ("Noch kein Nachtscan abgelegt — die Datei entsteht beim "
+                      "nächsten Lauf des Scanners und liegt dann jeden Morgen "
+                      "hier bereit."), None
+    if r.status_code != 200:
+        return None, f"GitHub antwortete mit Code {r.status_code}.", None
+    try:
+        df = pd.read_excel(io.BytesIO(r.content), sheet_name="Kaufpunkte")
+    except Exception as e:
+        return None, f"Die Ergebnisdatei ließ sich nicht lesen ({e}).", None
+    stand = ""
+    try:
+        from zoneinfo import ZoneInfo
+        c = requests.get(f"https://api.github.com/repos/{REPO}/commits",
+                         params={"path": SCAN_DATEI, "per_page": 1}, timeout=15)
+        if c.status_code == 200 and c.json():
+            utc = datetime.fromisoformat(
+                c.json()[0]["commit"]["committer"]["date"].replace("Z", "+00:00"))
+            wien = utc.astimezone(ZoneInfo("Europe/Vienna"))
+            stand = f"{wien:%d.%m.%Y um %H:%M} Uhr Wiener Zeit"
+    except Exception:
+        pass
+    return df, stand, r.content
+
+
+def _zahl(wert) -> str:
+    """Excel-Werte lesbar machen: 119.26 → '119.26', NaN/leer → ''."""
+    if wert is None or (isinstance(wert, float) and pd.isna(wert)):
+        return ""
+    if isinstance(wert, float):
+        return f"{wert:.2f}"
+    return str(wert)
+
+
+with tab_scan:
+    df_scan, scan_info, scan_roh = lade_nachtscan()
+    if df_scan is None:
+        st.info(scan_info)
+    else:
+        if scan_info:
+            st.caption(f"Stand: {scan_info}.")
+
+        treffer_zeilen = []
+        for _, z in df_scan.iterrows():
+            muster = []
+            for k in (1, 2, 3):
+                s = z.get(f"KP{k} Strategie")
+                if isinstance(s, str) and s and not s.startswith("Fallback"):
+                    muster.append((k, s))
+            if muster:
+                treffer_zeilen.append((z, muster))
+        anzahl_muster = sum(len(m) for _, m in treffer_zeilen)
+        st.write(f"Geprüft wurden {len(df_scan)} Aktien. {len(treffer_zeilen)} "
+                 f"davon tragen ein echtes Chartmuster, zusammen "
+                 f"{anzahl_muster} Muster-Kaufpunkte — genau diese überwachen "
+                 "die TraderFox-Alarme und der Breakout-Wächter.")
+
+        # Beste zuerst: volle Trend-Template-Punktzahl nach oben
+        def _rang(paar):
+            m = re.search(r"(\d)/8", str(paar[0].get("Trend Template", "")))
+            return -(int(m.group(1)) if m else -1)
+
+        for z, muster in sorted(treffer_zeilen, key=_rang):
+            with st.container(border=True):
+                st.markdown(f"**{z['Ticker']} — {z.get('Firma', '')}**")
+                st.write(f"Kurs {_zahl(z.get('Kurs'))} $; "
+                         f"Trend Template {z.get('Trend Template', '?')}; "
+                         f"Umsatzwachstum {z.get('Umsatzwachstum', '?')}")
+                for k, s in muster:
+                    teile = [f"{s}: Kaufpunkt {_zahl(z.get(f'KP{k} Preis'))} $"]
+                    if _zahl(z.get(f"KP{k} Stop")):
+                        teile.append(f"Stop {_zahl(z.get(f'KP{k} Stop'))}")
+                    if _zahl(z.get(f"KP{k} Ziel")):
+                        teile.append(f"Ziel {_zahl(z.get(f'KP{k} Ziel'))}")
+                    status = z.get(f"KP{k} Status")
+                    if isinstance(status, str) and status:
+                        teile.append(status)
+                    st.write("; ".join(teile))
+
+        if scan_roh:
+            st.download_button("📥 Nachtscan als Excel herunterladen", scan_roh,
+                               file_name=SCAN_DATEI,
+                               mime="application/vnd.openxmlformats-"
+                                    "officedocument.spreadsheetml.sheet")
+        with st.expander("Alle Werte als Tabelle (fürs Auge praktischer)"):
+            st.dataframe(df_scan, use_container_width=True, hide_index=True)
+
+
 # --- Wochenliste -----------------------------------------------------------
 # Gerhard siebt jede Woche den Markt mit seinem Finviz-Screener und liefert
 # eine CSV mit der Spalte 'Ticker' (bestätigt am 22.07.2026: immer CSV, nie
@@ -313,8 +423,7 @@ with tab_liste:
 # UPLOAD_KENNWORT); geschrieben wird über einen GitHub-Token (GITHUB_TOKEN),
 # der NUR auf dieses Repo und NUR auf Dateiinhalte berechtigt ist.
 
-REPO = "mat-schmuck/heliot"
-LISTEN_DATEI = "finviz_3.csv"
+LISTEN_DATEI = "finviz_3.csv"     # REPO ist oben beim Aktuellen Scan definiert
 
 
 def pruefe_wochenliste(rohdaten: bytes) -> tuple[str, list[str]]:
