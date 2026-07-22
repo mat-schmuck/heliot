@@ -1,6 +1,19 @@
 name: Scanner + TraderFox-Alarme
 
 on:
+  schedule:
+    # Freitags-Putz (Mathias, 23.07.2026): Jeden Freitag um 22:02 Wiener
+    # Zeit alle Alarme loeschen — uebers Wochenende laedt Gerhard die neue
+    # Wochenliste hoch, und am Montag wird frisch eingetragen (der Putz
+    # leert auch das Fortschrittsgedaechtnis, Montag braucht daher kein
+    # neu=true).
+    # Cron laeuft in UTC: 20:02 UTC = 22:02 Wien im Sommer, 21:02 UTC =
+    # 22:02 Wien im Winter. Es stehen BEIDE Termine, und der Schritt
+    # prueft selbst, ob in Wien schon 22 Uhr vorbei ist — der jeweils
+    # falsche Zwilling beendet sich wirkungslos, ein doppelter Putz ist
+    # harmlos (der zweite findet ein leeres Konto vor).
+    - cron: "2 20 * * 5"
+    - cron: "2 21 * * 5"
   workflow_dispatch:
     inputs:
       modus:
@@ -86,12 +99,18 @@ jobs:
       # Bewusst ohne Alarm-Sicherung (Mathias, 23.07.2026): die Aktienliste
       # ist das Original, der Scanner erzeugt die Alarme laufend neu.
       - name: "Alles löschen (sämtliche Alarme)"
-        if: ${{ github.event.inputs.modus == 'alles_loeschen' }}
+        if: ${{ github.event.inputs.modus == 'alles_loeschen' || github.event_name == 'schedule' }}
         env:
           TRADERFOX_USER: ${{ secrets.TRADERFOX_USER }}
           TRADERFOX_PASS: ${{ secrets.TRADERFOX_PASS }}
         run: |
-          if [ "${{ github.event.inputs.loeschen }}" != "ALLE" ]; then
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            STUNDE=$(TZ=Europe/Vienna date +%H)
+            if [ "$STUNDE" -lt 22 ]; then
+              echo "Freitags-Putz: In Wien ist es erst ${STUNDE} Uhr — dieser Termin ist der Zwilling für die andere Jahreszeit, nichts zu tun."
+              exit 0
+            fi
+          elif [ "${{ github.event.inputs.loeschen }}" != "ALLE" ]; then
             echo "Verriegelung: Zum Bestätigen muss im Feld 'loeschen' genau ALLE stehen."
             exit 1
           fi

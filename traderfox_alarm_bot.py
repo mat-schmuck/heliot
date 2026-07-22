@@ -1256,6 +1256,18 @@ def loesche_alle_lauf(page, user: str, pw: str) -> int:
     print(f"  Entfernt:       {vorher - uebrig}")
     print(f"  Übrig:          {uebrig}")
     if uebrig == 0:
+        # Fortschrittsgedaechtnis mitleeren: Nach einem Komplett-Putz gilt
+        # kein Alarm mehr als 'bereits gesetzt' — sonst wuerde der naechste
+        # vollstaendig-Lauf (etwa am Montag nach dem Freitags-Putz) die
+        # geloeschten Alarme ueberspringen statt neu eintragen.
+        try:
+            if FORTSCHRITT_FILE.exists():
+                FORTSCHRITT_FILE.unlink()
+                print("  Fortschrittsgedächtnis geleert — der nächste Lauf "
+                      "setzt alles frisch.")
+        except Exception as e:
+            print(f"  ⚠ Fortschrittsdatei nicht löschbar: {e} — beim "
+                  "nächsten Eintragen 'neu=true' verwenden!")
         print("\n✓ Konto ist leer — alle Alarme entfernt und nachgezählt.")
         return 0
     print("\n⚠ Es sind noch Alarme übrig — Diagnose siehe debug/.")
