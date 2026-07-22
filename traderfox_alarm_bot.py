@@ -1233,6 +1233,15 @@ def loesche_alle_lauf(page, user: str, pw: str) -> int:
             danach = page.evaluate(JS_MANAGER_ALARMZAHL)
         except Exception:
             danach = zahl
+        if not (ok and danach < zahl):
+            # TraderFox braucht manchmal laenger als die normale Wartezeit —
+            # in Lauf #29 waren ~20 von 178 Loeschungen solche Spaetzuender.
+            # Erst nachfassen, dann warnen.
+            page.wait_for_timeout(2500)
+            try:
+                danach = page.evaluate(JS_MANAGER_ALARMZAHL)
+            except Exception:
+                pass
         if ok and danach < zahl:
             entfernt += zahl - danach
             fehlversuche = 0
@@ -1243,7 +1252,6 @@ def loesche_alle_lauf(page, user: str, pw: str) -> int:
             fehlversuche += 1
             print(f"    ⚠ Klick ohne Wirkung ({fehlversuche}/3) — "
                   f"Stand {danach} Alarme")
-            page.wait_for_timeout(2500)
             if fehlversuche >= 3:
                 diagnose(page, "loeschen_stockt",
                          f"Zahl sinkt nicht mehr: noch {danach} Alarme")
@@ -1253,14 +1261,13 @@ def loesche_alle_lauf(page, user: str, pw: str) -> int:
             break
 
     print(f"\n[3/3] Schlusszählung")
-    uebrig = page.evaluate(JS_MANAGER_ALARMZAHL)
-    uebrig = max(uebrig, 0)
+    uebrig = max(page.evaluate(JS_MANAGER_ALARMZAHL), 0)
 
     print("\n--- Ergebnis ---")
     print(f"  Alarme vorher:  {vorher}")
-    print(f"  Entfernt:       {entfernt}")
+    print(f"  Entfernt:       {vorher - uebrig}")
     print(f"  Übrig:          {uebrig}")
-    if uebrig == 0 and entfernt > 0:
+    if uebrig == 0:
         print("\n✓ Konto ist leer — alle Alarme entfernt und nachgezählt.")
         return 0
     print("\n⚠ Es sind noch Alarme übrig — Diagnose siehe debug/.")
