@@ -58,6 +58,22 @@ VOL_FAKTOR = {
 }
 VOL_FAKTOR_FALLBACK = 1.0
 
+# --- Gap and Go (Regelwerk Kapitel 7, Power-Gap-Fassung, Juli 2026) --------
+# Alle Kriterien sind PFLICHT; die Fassung ist bewusst streng ("Klasse statt
+# Masse"). Das Fruehvolumen-Kriterium ist laut Regelwerk NUR live pruefbar
+# und gehoert deshalb genau hierher in den Waechter, nicht in den Nachtscan.
+GAP_MIN = 0.07              # Eroeffnung >= 7 % ueber Vortagesschluss
+GAP_VOL_FAKTOR = 5.0        # Tagesvolumen >= 5x Ø10-Tage
+GAP_FRUEH_FAKTOR = 3.0      # erste halbe Stunde: >= 300 % des zeitueblichen
+GAP_SCHLUSS_POS = 0.80      # Schluss im oberen Fuenftel der Tagesspanne
+FLAT_BASE_MAX_SPANNE = 0.35 # "flach" = Spanne < 35 % (Startwert 30-40 %,
+                            # laut Regelwerk per Backtest zu justieren)
+FLAT_BASE_TAGE = (63, 126)  # 3-6 Monate vor dem Gap-Tag
+# Hinweis fuer Gerhard: Das Kapitel verlangt das 10-Tage-Volumenfenster und
+# nennt es "dasselbe wie beim Breakout-Waechter" — die Ausbruchsbestaetigung
+# rechnet aber laut Kapitel 1-6 mit Ø20. Hier gilt fuer Gap and Go die 10,
+# wie im Kriterium ausdruecklich gefordert; die Breakouts bleiben bei Ø20.
+
 
 # ---------------------------------------------------------------------------
 # Zustand (was wurde schon gemeldet)
@@ -245,7 +261,9 @@ def fetch_quotes_yahoo(tickers: list[str]) -> dict:
 
     unique = sorted(set(t.upper() for t in tickers))
     try:
-        roh = yf.download(" ".join(unique), period="3mo", interval="1d",
+        # 8 Monate: Gap and Go braucht bis zu 126 Handelstage Vorgeschichte
+        # fuer die Flat-Base-Pruefung (vorher reichten 3 Monate fuers Ø20).
+        roh = yf.download(" ".join(unique), period="8mo", interval="1d",
                           group_by="ticker", progress=False,
                           auto_adjust=False, threads=True)
     except Exception as e:
@@ -261,13 +279,33 @@ def fetch_quotes_yahoo(tickers: list[str]) -> dict:
                 continue
             letzte = df.iloc[-1]
             vol20 = float(df["Volume"].tail(20).mean())
-            out[t] = {
+            eintrag = {
                 "close": float(letzte["Close"]),
                 "volume": float(letzte["Volume"]),
                 "avg_volume": vol20,
                 "is_open": False,
                 "name": "",
             }
+            # Zusatzfelder fuer Gap and Go (Regelwerk Kapitel 7). Die letzte
+            # Zeile ist waehrend des Handels der HEUTIGE, unfertige Tag —
+            # Durchschnitt und Flat Base rechnen deshalb ohne ihn.
+            if len(df) >= 2:
+                vortage = df.iloc[:-1]
+                eintrag["prev_close"] = float(vortage["Close"].iloc[-1])
+                vol10 = float(vortage["Volume"].tail(10).mean())
+                eintrag["vol10"] = vol10
+                for feld, spalte in (("open", "Open"), ("high", "High"),
+                                     ("low", "Low")):
+                    wert = letzte.get(spalte)
+                    eintrag[feld] = None if pd.isna(wert) else float(wert)
+                fenster = vortage.tail(FLAT_BASE_TAGE[1])
+                if len(fenster) >= FLAT_BASE_TAGE[0]:
+                    tief = float(fenster["Low"].min())
+                    if tief > 0:
+                        spanne = (float(fenster["High"].max()) - tief) / tief
+                        eintrag["flat_base"] = spanne < FLAT_BASE_MAX_SPANNE
+                        eintrag["base_spanne"] = spanne
+            out[t] = eintrag
         except Exception:
             continue
     return out
@@ -383,6 +421,90 @@ def pruefe_breakout(item: dict, quote: dict) -> dict | None:
     }
 
 
+def ny_minuten():
+    """Minuten seit Mitternacht New York — oder None ohne Zeitzone."""
+    try:
+        from zoneinfo import ZoneInfo
+        ny = datetime.now(ZoneInfo("America/New_York"))
+        return ny.hour * 60 + ny.minute
+    except Exception:
+        return None
+
+
+def pruefe_gap_and_go(ticker: str, q: dict):
+    """Regelwerk Kapitel 7 (Power-Gap): Live-Pruefung, alle Kriterien Pflicht.
+
+    1. Eroeffnung >= 7 % ueber Vortagesschluss
+    2. Luecke verteidigt: Tagestief bleibt ueber dem Vortagesschluss
+    3. Flat Base in den 3-6 Monaten davor (Spanne < 35 %)
+    4. Volumen: in der ersten halben Stunde >= 300 % des zeitueblichen
+       Werts (Fruehregel, laut Regelwerk NUR live pruefbar); danach
+       hochgerechnetes Tagesvolumen >= 5x Ø10-Tage
+    5. Zum Handelsende zusaetzlich: Schluss im oberen Fuenftel der
+       Tagesspanne UND rohes Tagesvolumen >= 5x Ø10 -> 'BESTÄTIGT'
+    Kaufpunkt = Tageshoch + 1 Cent (Einstieg am Folgetag), Stop = das
+    engere von Tagestief - 1 Cent und Kaufpunkt x 0,97."""
+    open_, high, low = q.get("open"), q.get("high"), q.get("low")
+    prev, vol10 = q.get("prev_close"), q.get("vol10")
+    kurs, vol = q.get("close"), q.get("volume")
+    if None in (open_, high, low, prev, kurs, vol) or not vol10 or prev <= 0:
+        return None
+    gap = open_ / prev - 1
+    if gap < GAP_MIN:
+        return None
+    if low <= prev:
+        return None                      # Gap-Fill — Luecke nicht verteidigt
+    if q.get("flat_base") is not True:
+        return None                      # Flat Base ist Pflicht; unbekannt = nein
+
+    anteil = tagesanteil()
+    if anteil <= 0:
+        return None
+    frueh_ratio = vol / (vol10 * anteil)
+    tages_ratio = (vol / anteil) / vol10
+
+    minuten = ny_minuten()
+    in_frueh_phase = minuten is not None and minuten < 600     # vor 10:00 NY
+    kurz_vor_schluss = minuten is not None and minuten >= 954  # ab 15:54 NY
+    if in_frueh_phase:
+        if frueh_ratio < GAP_FRUEH_FAKTOR:
+            return None
+    elif tages_ratio < GAP_VOL_FAKTOR:
+        return None
+
+    spanne = high - low
+    pos = (kurs - low) / spanne if spanne > 0 else 1.0
+    kp = round(high + 0.01, 2)
+    stop = round(min(low - 0.01, kp * 0.97), 2)
+    bestaetigt = (kurz_vor_schluss and pos >= GAP_SCHLUSS_POS
+                  and vol / vol10 >= GAP_VOL_FAKTOR)
+    return {"ticker": ticker, "gap": gap, "frueh": in_frueh_phase,
+            "frueh_ratio": frueh_ratio, "tages_ratio": tages_ratio,
+            "roh_ratio": vol / vol10, "pos": pos, "kp": kp, "stop": stop,
+            "bestaetigt": bestaetigt, "base_spanne": q.get("base_spanne"),
+            "kurs": kurs}
+
+
+def format_gapgo(g: dict) -> str:
+    zeilen = [f"{g['ticker']} — Gap and Go "
+              + ("BESTÄTIGT (Schluss im oberen Fünftel)" if g["bestaetigt"]
+                 else "im Aufbau"),
+              f"Eröffnung +{g['gap']*100:.1f}% über Vortagesschluss; "
+              f"Lücke bislang verteidigt",
+              (f"Frühvolumen {g['frueh_ratio']*100:.0f}% des Zeitüblichen "
+               f"(nötig {GAP_FRUEH_FAKTOR*100:.0f}%)") if g["frueh"] else
+              (f"Volumen hochgerechnet {g['tages_ratio']:.1f}× Ø10 "
+               f"(nötig {GAP_VOL_FAKTOR:.0f}×)"),
+              f"Position in der Tagesspanne {g['pos']*100:.0f}%",
+              f"Kaufpunkt (Folgetag) {g['kp']:.2f} | Stop {g['stop']:.2f}"]
+    if g.get("base_spanne") is not None:
+        zeilen.insert(2, f"Flat Base davor, Spanne {g['base_spanne']*100:.0f}%")
+    if not g["bestaetigt"]:
+        zeilen.append("Schlussbestätigung (oberes Fünftel + 5× Volumen) "
+                      "folgt zum Handelsende")
+    return "\n".join(zeilen)
+
+
 def format_treffer(t: dict) -> str:
     # Bei laufendem Handel dazuschreiben, dass hochgerechnet wurde — sonst
     # wundert man sich ueber 3200 %, wenn erst eine Stunde gehandelt wurde.
@@ -437,6 +559,24 @@ def email_kopf() -> dict:
     Ist NTFY_EMAIL nicht gesetzt, aendert sich nichts."""
     adresse = (os.environ.get("NTFY_EMAIL") or "").strip()
     return {"Email": adresse} if adresse else {}
+
+
+def push_text(topic: str, titel: str, body: str) -> bool:
+    """Schickt eine frei formulierte Meldung (fuer Gap and Go)."""
+    kopf = {"Title": titel.encode("utf-8"), "Priority": "high",
+            "Tags": "rocket"}
+    kopf.update(email_kopf())
+    try:
+        r = requests.post(f"https://ntfy.sh/{topic}", data=body.encode("utf-8"),
+                          headers=kopf, timeout=20)
+    except Exception as e:
+        print(f"⚠ Push fehlgeschlagen: {e}")
+        return False
+    if r.status_code >= 400:
+        print(f"⚠ Push abgelehnt: HTTP {r.status_code} — {r.text[:200]}")
+        return False
+    print(f"Push gesendet an ntfy.sh/{topic} (HTTP {r.status_code})")
+    return True
 
 
 def push(topic: str, treffer: list[dict]) -> bool:
@@ -571,6 +711,21 @@ def main():
 
     gewuenscht = set(t.upper() for t in tickers)
 
+    # Gap and Go (Regelwerk Kapitel 7) beobachtet ALLE Aktien der Liste,
+    # nicht nur die mit Muster-Kaufpunkten — eine Kursluecke nach einem
+    # Katalysator kann jede treffen.
+    try:
+        gap_universum = sorted(set(
+            str(t).strip().upper()
+            for t in pd.read_excel(args.xlsx,
+                                   sheet_name="Kaufpunkte")["Ticker"].dropna()
+            if str(t).strip()))
+    except Exception as e:
+        print(f"  (Gap-and-Go-Universum nicht lesbar: {e})")
+        gap_universum = sorted(gewuenscht)
+    print(f"Gap and Go wacht zusätzlich über {len(gap_universum)} Aktien.")
+    abruf_ticker = sorted(gewuenscht | set(gap_universum))
+
     # Dauerwache: EIN Lauf deckt den ganzen Handelstag ab. Hintergrund
     # (22.07.2026): GitHub feuerte die Zeitplaene nach Repo-Umbenennung und
     # Workflow-Aenderungen stundenlang verspaetet — im ersten Boersenfenster
@@ -594,7 +749,7 @@ def main():
             print(f"\n——— Runde {runde} ({datetime.now():%H:%M:%S}) ———")
 
         # Hauptquelle Yahoo (ein Abruf, kein Limit), Twelve Data als Rueckfall.
-        quotes = fetch_quotes_yahoo(tickers)
+        quotes = fetch_quotes_yahoo(abruf_ticker)
         if len(quotes) < len(gewuenscht):
             fehlend_yahoo = sorted(gewuenscht - set(quotes))
             if quotes:
@@ -605,7 +760,8 @@ def main():
             elif not quotes and ende_dauerwache is None:
                 sys.exit("Yahoo lieferte nichts und kein TWELVE_DATA_API_KEY gesetzt.")
 
-        print(f"{len(quotes)} von {len(gewuenscht)} Quotes erhalten.")
+        print(f"{len(gewuenscht & set(quotes))} von {len(gewuenscht)} "
+              f"Kaufpunkt-Quotes erhalten ({len(quotes)} Aktien gesamt).")
         if not quotes:
             # In der Dauerwache ist ein Aussetzer kein Todesurteil — die
             # naechste Runde kommt in 6 Minuten.
@@ -668,6 +824,37 @@ def main():
                 print("Nichts Neues zu melden.")
             else:
                 print("(Dry-Run — kein Push gesendet, Zustand nicht gespeichert)")
+
+            # --- Gap and Go (Regelwerk Kapitel 7) --------------------------
+            # Zwei Meldestufen je Aktie und Tag: 'im Aufbau', sobald alle
+            # live pruefbaren Pflichtkriterien stehen, und 'BESTÄTIGT' zum
+            # Handelsende (Schluss im oberen Fuenftel + 5x Volumen roh).
+            gap_neu = []
+            for gt in gap_universum:
+                q = quotes.get(gt)
+                if not q:
+                    continue
+                g = pruefe_gap_and_go(gt, q)
+                if not g:
+                    continue
+                g["key"] = ("GAPGOFIX|" if g["bestaetigt"] else "GAPGO|") + gt
+                if g["key"] not in schon_gemeldet:
+                    gap_neu.append(g)
+            if gap_neu:
+                print(f"\n🚀 Gap and Go: {len(gap_neu)} Meldung(en)")
+                for g in gap_neu:
+                    print("  " + format_gapgo(g).replace("\n", "\n  ") + "\n")
+                if args.dry_run:
+                    print("(Dry-Run — kein Gap-and-Go-Push)")
+                else:
+                    titel = "🚀 Gap and Go: " + ", ".join(g["ticker"]
+                                                          for g in gap_neu)
+                    body = "\n\n".join(format_gapgo(g) for g in gap_neu)
+                    if push_text(topic, titel, body):
+                        for g in gap_neu:
+                            schon_gemeldet.add(g["key"])
+                        state["gemeldet"] = sorted(schon_gemeldet)
+                        save_state(state)
 
         if ende_dauerwache is None:
             break
