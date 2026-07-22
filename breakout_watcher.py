@@ -154,6 +154,26 @@ def markt_offen(jetzt=None) -> tuple:
     return True, f"{jetzt:%H:%M} New York ({zone})"
 
 
+def sekunden_bis_eroeffnung(jetzt=None):
+    """Sekunden bis zum heutigen Handelsbeginn in New York.
+
+    Liefert None am Wochenende, nach der Eroeffnung oder ohne Zeitzone.
+    Gebraucht fuer die Eroeffnungs-Abdeckung: GitHub feuert Zeitplaene oft
+    5-15 Minuten verspaetet — ein Lauf, der kurz VOR der Glocke startet,
+    wartet damit bis zur Eroeffnung, statt sich schlafen zu legen."""
+    try:
+        from zoneinfo import ZoneInfo
+        ny = ZoneInfo("America/New_York")
+    except Exception:
+        return None
+    jetzt = (jetzt or datetime.now(ny)).astimezone(ny)
+    if jetzt.weekday() >= 5:
+        return None
+    beginn = jetzt.replace(hour=9, minute=30, second=0, microsecond=0)
+    diff = (beginn - jetzt).total_seconds()
+    return diff if diff > 0 else None
+
+
 def load_state() -> dict:
     if STATE_FILE.exists():
         try:
@@ -521,6 +541,18 @@ def main():
     # entscheidet sich hier.
     offen, grund = markt_offen()
     print(f"Börsenstatus: {'offen' if offen else 'geschlossen'} — {grund}")
+    if not offen and not args.ignoriere_handelszeit:
+        # Kurz vor der Eroeffnung? Dann bis zur Glocke warten statt aufgeben.
+        # GitHub feuert Zeitplaene oft 5-15 Minuten verspaetet; die
+        # vorgezogenen Termine im Workflow plus dieses Warten sorgen dafuer,
+        # dass die ersten Boersenminuten trotzdem bewacht sind.
+        warte = sekunden_bis_eroeffnung()
+        if warte is not None and warte <= 20 * 60:
+            print(f"Eröffnung in {int(warte // 60)} Min {int(warte % 60)} s — "
+                  "ich warte bis zum Handelsbeginn.")
+            time.sleep(warte + 20)
+            offen, grund = markt_offen()
+            print(f"Börsenstatus: {'offen' if offen else 'geschlossen'} — {grund}")
     if not offen and not args.ignoriere_handelszeit:
         print("Nichts zu tun. (Mit --ignoriere-handelszeit trotzdem prüfen.)")
         sys.exit(0)

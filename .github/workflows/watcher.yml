@@ -20,11 +20,19 @@ on:
     # und Ende Oktober) — dann beginnt der Handel bei uns eine Stunde
     # frueher bzw. spaeter. Niemand muss zweimal im Jahr Zeiten nachziehen.
     #
-    # Kontingent: 76 Laeufe am Tag, rund 1650 Actions-Minuten im Monat plus
-    # etwa 43 fuer den Scanner — von 2000 Freiminuten.
-    #
     # 6 ist ein Teiler von 60 und ergibt gleichmaessige Abstaende. Bei 7, 8
     # oder 9 muesste jeder Zeitpunkt einzeln stehen.
+    #
+    # WICHTIG, Eroeffnungs-Abdeckung: GitHub feuert Zeitplaene oft 5-15 Min
+    # verspaetet (Mathias' Einwand vom 22.07.2026 — sonst waere die
+    # Eroeffnung unbewacht). Deshalb stehen VOR dem Handelsbeginn zwei
+    # zusaetzliche Termine, und der Waechter wartet bei einem Start kurz vor
+    # der Glocke bis zur Eroeffnung, statt sich schlafen zu legen
+    # (sekunden_bis_eroeffnung in breakout_watcher.py). Die Winter-Eroeffnung
+    # 14:30 UTC deckt derselbe Mechanismus ueber den 14:24-Termin ab.
+    # Actions-Minuten spielen keine Rolle mehr — oeffentliche Repos haben
+    # keine Begrenzung.
+    - cron: "15,22 13 * * 1-5"
     - cron: "30,36,42,48,54 13 * * 1-5"
     - cron: "*/6 14-20 * * 1-5"
     - cron: "0 21 * * 1-5"
