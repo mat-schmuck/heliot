@@ -1250,6 +1250,11 @@ def loesche_alle_lauf(page, user: str, pw: str) -> int:
 
     print(f"\n[3/3] Schlusszählung")
     uebrig = max(page.evaluate(JS_MANAGER_ALARMZAHL), 0)
+    # Fenster wieder schliessen! Das Desk speichert die Fensteranordnung —
+    # ein offen gelassener Alerts manager verdeckte im Folgelauf die
+    # Kursliste, und 11 von 31 Alarmen scheiterten an 'Zeile fehlt'
+    # (Lauf #32 am 23.07.2026). Alte Falle, neu getappt.
+    fenster_schliessen(page, "Alerts manager")
 
     print("\n--- Ergebnis ---")
     print(f"  Alarme vorher:  {vorher}")
@@ -1871,6 +1876,11 @@ def main():
             kontext.storage_state(path=str(SESSION_FILE))
         except Exception:
             pass
+
+        # Sicherheitsgriff vor dem Setzen: Ein aus frueheren Sitzungen offen
+        # gespeicherter Alerts manager verdeckt die Kursliste und laesst
+        # Rechtsklicks ins Leere gehen (Lauf #32: 11 x 'Zeile fehlt').
+        fenster_schliessen(page, "Alerts manager")
 
         erledigt = lade_fortschritt(args.neu)
         gesamt = sum(len(j["points"]) for j in jobs)
