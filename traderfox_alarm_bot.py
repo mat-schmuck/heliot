@@ -501,6 +501,25 @@ def login(page, user: str, pw: str) -> bool:
     return True
 
 
+# Anzeigename des zuletzt gewaehlten Suchtreffers, in TraderFox' EIGENER
+# Schreibweise. alarm_dialog_oeffnen sucht die Kurslisten-Zeile damit.
+# Grund (Lauf #26): Die Excel-Namen passen oft nicht auf die Zeile —
+# 'Cg Oncology Inc' vs. 'CG Oncology', 'nLIGHT Inc' vs. 'nLIGHT', und
+# 'Liquidia Corp' heisst bei TraderFox 'Liquidia Technologies Inc.'.
+# Das US-Kuerzel steht in der Zeile GAR nicht.
+LETZTER_ANZEIGENAME = ""
+
+# Schneidet Boersen-/Waehrungsanhaengsel vom Treffertext ab:
+# 'Bel Fuse Inc. CI A Echtzeit USD $ BELF/A …' → 'Bel Fuse Inc. CI A'
+_VENUE_SCHNITT = re.compile(
+    r"\s+(?:Echtzeit|NASDAQ|NYSE|XNAS|XNYS|B[öo]rse|Tradegate|Gettex|Xetra|"
+    r"Lang\b|Indikation|USD|EUR|SEK|NOK|DKK)\b.*$|\s*[$€].*$", re.I)
+
+
+def _anzeigename(treffertext: str) -> str:
+    return _VENUE_SCHNITT.sub("", treffertext).strip()
+
+
 def aktie_suchen(page, ticker: str, langsam: bool, firma: str = "") -> bool:
     """Ticker ins Suchfeld tippen und den RICHTIGEN Treffer waehlen.
 
@@ -508,40 +527,71 @@ def aktie_suchen(page, ticker: str, langsam: bool, firma: str = "") -> bool:
     BioArctic AB (Stockholm) als auch BioAge Labs Inc (USA). Frueher wurde
     einfach der erste sichtbare Treffer genommen - im Testlauf landete der
     Bot damit bei der falschen Firma. Darum wird jetzt gegen den Firmennamen
-    abgeglichen und im Zweifel lieber abgebrochen."""
+    abgeglichen und im Zweifel lieber abgebrochen.
+
+    Kennt TraderFox das Kuerzel nicht, wird weitergesucht: erst in der
+    Klassen-Schreibweise (BELFA → BELF/A, wie BIOA/B bei BioArctic), dann
+    mit dem Firmennamen. Lauf #26 scheiterte an BELFA/BELFB, weil es nur
+    einen einzigen Versuch mit dem US-Kuerzel gab."""
+    global LETZTER_ANZEIGENAME
+    LETZTER_ANZEIGENAME = ""
     such = finde(page, "suchfeld")
     if such is None:
         diagnose(page, f"suchfeld_weg_{ticker}", "Suchfeld nicht gefunden")
         return False
+    # Haengengebliebene Menues schliessen: In Lauf #26 stand das News-Menue
+    # offen ueber der Kursliste — Escape kostet nichts und raeumt auf.
+    try:
+        page.keyboard.press("Escape")
+        page.wait_for_timeout(250)
+    except Exception:
+        pass
     # klick() statt .click(): Liegt ein Fenster ueber dem Suchfeld — etwa der
     # Alerts manager nach einer Bestandsaufnahme — laeuft der einfache Klick
     # in Timeout. Genau daran ist der erste Aufraeumlauf gescheitert.
     if not klick(such, "Suchfeld"):
         diagnose(page, f"suchfeld_klick_{ticker}", "Suchfeld nicht anklickbar")
         return False
-    such.fill("")
-    such.type(ticker, delay=90 if langsam else 55)
-    page.wait_for_timeout(2800)
 
-    # Vorschlagsliste einsammeln
+    begriffe = [ticker]
+    if len(ticker) == 5 and ticker[-1] in "AB" and ticker[:4].isalpha():
+        begriffe.append(f"{ticker[:4]}/{ticker[-1]}")
+    if firma:
+        begriffe.append(firma[:20])
+
     kandidaten = []
-    try:
-        eintraege = page.locator("ul.ui-autocomplete li.ui-menu-item")
-        for i in range(min(eintraege.count(), 15)):
-            el = eintraege.nth(i)
-            try:
-                if not el.is_visible():
+    benutzter_begriff = ticker
+    for begriff in begriffe:
+        such.fill("")
+        such.type(begriff, delay=90 if langsam else 55)
+        page.wait_for_timeout(2800)
+
+        # Vorschlagsliste einsammeln
+        kandidaten = []
+        try:
+            eintraege = page.locator("ul.ui-autocomplete li.ui-menu-item")
+            for i in range(min(eintraege.count(), 15)):
+                el = eintraege.nth(i)
+                try:
+                    if not el.is_visible():
+                        continue
+                    text = " ".join((el.inner_text() or "").split())
+                    if text:
+                        kandidaten.append((el, text))
+                except Exception:
                     continue
-                text = " ".join((el.inner_text() or "").split())
-                if text:
-                    kandidaten.append((el, text))
-            except Exception:
-                continue
-    except Exception:
-        pass
+        except Exception:
+            pass
+        if kandidaten:
+            benutzter_begriff = begriff
+            break
+        print(f"    Kein Treffer für '{begriff}'"
+              + (f" — versuche nächsten Suchbegriff" if begriff != begriffe[-1] else ""))
 
     if not kandidaten:
-        diagnose(page, f"kein_suchtreffer_{ticker}", f"Kein Treffer für {ticker} im Dropdown")
+        diagnose(page, f"kein_suchtreffer_{ticker}",
+                 f"Kein Treffer für {ticker} im Dropdown (auch nicht als "
+                 f"{', '.join(begriffe[1:]) or 'weitere Schreibweise'})")
         return False
 
     print(f"    {len(kandidaten)} Treffer für '{ticker}':")
@@ -560,6 +610,12 @@ def aktie_suchen(page, ticker: str, langsam: bool, firma: str = "") -> bool:
                 punkte += 5
         if re.search(rf"\b{re.escape(ticker)}\b", text, re.I):
             punkte += 3
+        # Auch den tatsaechlich benutzten Suchbegriff honorieren — bei
+        # Aktienklassen unterscheidet NUR er A von B ('BELF/A' vs 'BELF/B';
+        # der Firmenname ist bei beiden Klassen identisch).
+        if (benutzter_begriff != ticker
+                and re.search(rf"\b{re.escape(benutzter_begriff)}\b", text, re.I)):
+            punkte += 3
         if re.search(r"USD|NASDAQ|NYSE|\$", text, re.I):
             punkte += 2
         return punkte
@@ -577,6 +633,7 @@ def aktie_suchen(page, ticker: str, langsam: bool, firma: str = "") -> bool:
         return False
 
     print(f"    → gewählt: {text[:70]}")
+    LETZTER_ANZEIGENAME = _anzeigename(text)
     try:
         el.click()
     except Exception:
@@ -596,8 +653,21 @@ def alarm_dialog_oeffnen(page, ticker: str, firma: str) -> bool:
     Kontextmenue. Darum ausschliesslich Tabellenzellen der Kursliste."""
     zeile = None
     kandidaten = []
+    # Primaer TraderFox' eigene Schreibweise aus dem Suchtreffer — die
+    # Excel-Namen passen oft nicht auf die Zeile (Lauf #26: 'Cg Oncology
+    # Inc' vs. 'CG Oncology', 'Liquidia Corp' vs. 'Liquidia Technologies
+    # Inc.', 'nLIGHT Inc' vs. 'nLIGHT'), und das US-Kuerzel steht dort gar
+    # nicht. Danach Wort-Muster aus dem Firmennamen statt der frueheren
+    # starren ersten 14 Zeichen.
+    if LETZTER_ANZEIGENAME:
+        kandidaten.append(r"\s+".join(re.escape(w)
+                                      for w in LETZTER_ANZEIGENAME.split()))
     if firma:
-        kandidaten.append(re.escape(firma[:14]))
+        worte = [w for w in re.split(r"[^A-Za-z0-9ÄÖÜäöüß]+", firma) if w]
+        if len(worte) >= 2:
+            kandidaten.append(rf"{re.escape(worte[0])}\s+{re.escape(worte[1])}")
+        if worte and len(worte[0]) >= 4:
+            kandidaten.append(re.escape(worte[0]))
     kandidaten.append(re.escape(ticker))
 
     for muster in kandidaten:
