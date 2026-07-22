@@ -338,9 +338,16 @@ def pruefe_breakout(item: dict, quote: dict) -> dict | None:
     if avg > 0:
         vol_ratio = vol_hochgerechnet / avg
         vol_ok = vol_ratio >= faktor
+        # Alte Rechnung (vor der Hochrechnung): rohes Tagesvolumen gegen Ø20.
+        # Nur fuer Gerhards eintaegigen Vergleich der beiden Verfahren —
+        # wird per VOL_VERGLEICH=1 an die Meldungen angehaengt.
+        vol_ratio_roh = vol / avg
+        vol_ok_roh = vol_ratio_roh >= faktor
     else:
         vol_ratio = None
         vol_ok = None  # unbekannt — wir melden trotzdem, aber gekennzeichnet
+        vol_ratio_roh = None
+        vol_ok_roh = None
 
     return {
         **item,
@@ -351,6 +358,8 @@ def pruefe_breakout(item: dict, quote: dict) -> dict | None:
         "vol_ok": vol_ok,
         "vol_roh": vol,
         "vol_anteil": anteil,
+        "vol_ratio_roh": vol_ratio_roh,
+        "vol_ok_roh": vol_ok_roh,
     }
 
 
@@ -379,6 +388,17 @@ def format_treffer(t: dict) -> str:
     if t["ziel"] is not None:
         chance = (t["ziel"] / t["kurs"] - 1) * 100
         zeilen.append(f"Ziel {t['ziel']:.2f} (+{chance:.1f}%)")
+
+    # Gerhards eintaegiger Vergleich (VOL_VERGLEICH=1 in watcher.yml):
+    # Zusatzzeile mit der ALTEN Rechnung (rohes Volumen ohne Hochrechnung),
+    # damit sich beide Verfahren am selben Treffer vergleichen lassen.
+    # Nach einem vollen Handelstag den Schalter in watcher.yml wieder
+    # entfernen — die Zeile verschwindet dann von selbst.
+    if (os.environ.get("VOL_VERGLEICH", "") == "1"
+            and t.get("vol_ratio_roh") is not None):
+        roh_urteil = "hätte BESTÄTIGT" if t["vol_ok_roh"] else "hätte NICHT bestätigt"
+        zeilen.append(f"Vergleich alte Rechnung: Vol roh {t['vol_ratio_roh']*100:.0f}% "
+                      f"vom Ø (nötig {t['vol_noetig']*100:.0f}%) — {roh_urteil}")
     return "\n".join(zeilen)
 
 
