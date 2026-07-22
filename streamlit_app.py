@@ -46,15 +46,25 @@ def get_api_key() -> str | None:
 
 
 @st.cache_data(ttl=900, show_spinner=False)
-def hole_kurse(ticker: str, api_key: str) -> pd.DataFrame | None:
-    """Kurshistorie holen — 15 Minuten gecacht, spart API-Calls."""
+def hole_kurse(ticker: str, api_key: str) -> pd.DataFrame:
+    """Kurshistorie holen — 15 Minuten gecacht, spart API-Calls.
+
+    Wichtig: Fehlschlaege duerfen NICHT im Zwischenspeicher landen. Frueher
+    wurde auch None gecacht — ein einziger Yahoo-Aussetzer (z. B.
+    YFRateLimitError auf den geteilten Cloud-IPs) sperrte die Aktie dann fuer
+    volle 15 Minuten, obwohl der naechste Versuch laengst klappen wuerde.
+    st.cache_data speichert keine Ausnahmen, deshalb wird hier geworfen."""
     limiter = ps.RateLimiter(60)  # im Web keine künstliche Bremse nötig
-    return ps.fetch_history(ticker, api_key, limiter)
+    df = ps.fetch_history(ticker, api_key, limiter)
+    if df is None:
+        raise LookupError(f"keine Kursdaten für {ticker}")
+    return df
 
 
 def analysiere(ticker: str, api_key: str):
-    df = hole_kurse(ticker, api_key)
-    if df is None:
+    try:
+        df = hole_kurse(ticker, api_key)
+    except LookupError:
         return None, None
     df_ind = ps.add_indicators(df)
     rs_roh = ps.rs_score(df_ind)
@@ -204,8 +214,11 @@ with tab_einzel:
         with st.spinner(f"Hole Kursdaten für {ticker} …"):
             df, res = analysiere(ticker, api_key)
         if df is None:
-            st.error(f"Keine Kursdaten für **{ticker}** gefunden. Ticker-Schreibweise "
-                     "prüfen (US-Symbole ohne Börsenkürzel, z. B. `NVDA`).")
+            st.error(f"Keine Kursdaten für **{ticker}** bekommen. Zwei mögliche "
+                     "Gründe: Schreibweise prüfen (US-Symbole ohne Börsenkürzel, "
+                     "z. B. `NVDA`) — oder die Kursquelle bremst gerade "
+                     "(passiert auf den geteilten Cloud-Servern); dann einfach "
+                     "in ein paar Minuten noch einmal auf Analysieren drücken.")
         else:
             zeige_ergebnis(ticker, df, res)
 
