@@ -1148,21 +1148,24 @@ JS_MANAGER_ALARMZAHL = """
 }
 """
 
-# Loest den ERSTEN Loeschknopf im Alerts manager aus — mit der vollen
+# Loest ALLE Loeschknoepfe im Alerts manager aus — mit der vollen
 # Maus-Ereignisfolge, dem einzigen Klickweg, der bei diesen Knoepfen wirkt.
-JS_MANAGER_ERSTEN_LOESCHEN = """
+# Liefert die Zahl der geklickten Knoepfe.
+JS_MANAGER_ALLE_LOESCHEN = """
 () => {
   const titel = [...document.querySelectorAll('*')].find(e => {
     const t = e.getAttribute('title') || '';
     return t.includes('Alerts manager') && e.children.length === 0;
   });
   const wurzel = titel ? titel.closest('.container') : null;
-  if (!wurzel) return false;
-  const knopf = wurzel.querySelector('.alert-section a.remove-alert');
-  if (!knopf) return false;
-  for (const t of ['mouseover','mousedown','mouseup','click'])
-    knopf.dispatchEvent(new MouseEvent(t, {bubbles:true, cancelable:true, view:window}));
-  return true;
+  if (!wurzel) return -1;
+  let n = 0;
+  for (const knopf of wurzel.querySelectorAll('.alert-section a.remove-alert')) {
+    for (const t of ['mouseover','mousedown','mouseup','click'])
+      knopf.dispatchEvent(new MouseEvent(t, {bubbles:true, cancelable:true, view:window}));
+    n++;
+  }
+  return n;
 }
 """
 
@@ -1179,10 +1182,13 @@ def loesche_alle_lauf(page, user: str, pw: str) -> int:
     BEWUSST OHNE Sicherungsdatei (Mathias, 23.07.2026): Die Aktienliste
     (finviz_3.csv) ist das Original, aus ihr erzeugt der Scanner die
     Alarme laufend neu — ein Alarm-Backup waere totes Gewicht.
-    Fehlerfreiheit stellt das Zaehlen sicher:
-    1. Jeder Loeschklick wird nachgezaehlt; sinkt die Zahl dreimal in
-       Folge nicht, bricht der Lauf ab, statt blind weiterzuklicken.
-    2. Am Ende wird nachgezaehlt — Erfolg heisst exakt null uebrig."""
+
+    Tempo-Umbau (ebenfalls Mathias, 23.07.2026): Nicht mehr nach jedem
+    einzelnen Klick zaehlen — beim Alles-Loeschen gibt es kein 'falschen
+    Alarm erwischt', also klickt eine Runde ALLE Loeschknoepfe durch und
+    zaehlt danach; Reste bekommen weitere Runden. Massgeblich ist allein
+    die Schlusszaehlung: exakt null uebrig, sonst Fehlerstatus. Zwei
+    Runden ohne Wirkung = Abbruch mit Diagnose statt Endlosklickerei."""
     print("\n=== ALLES LÖSCHEN: sämtliche Alarme entfernen ===\n")
     if not login(page, user, pw):
         print("✗ Login fehlgeschlagen.")
@@ -1213,52 +1219,34 @@ def loesche_alle_lauf(page, user: str, pw: str) -> int:
         print("    Konto ist bereits leer — nichts zu tun.")
         return 0
 
-    print(f"\n[2/3] {vorher} Alarme löschen (einzeln, mit Nachzählen)")
-    entfernt, fehlversuche = 0, 0
-    letzte_meldung = 0
-    while True:
+    print(f"\n[2/3] {vorher} Alarme löschen (rundenweise, Kontrolle am Schluss)")
+    stand, fehlrunden, runde = vorher, 0, 0
+    while stand > 0 and runde < 10:
+        runde += 1
         try:
-            zahl = page.evaluate(JS_MANAGER_ALARMZAHL)
+            geklickt = page.evaluate(JS_MANAGER_ALLE_LOESCHEN)
         except Exception as e:
-            print(f"    ✗ Zählung fehlgeschlagen: {str(e)[:60]}")
+            print(f"    ✗ Klickrunde fehlgeschlagen: {str(e)[:60]}")
             break
-        if zahl <= 0:
-            break
+        # TraderFox die Serverseite abarbeiten lassen — je mehr Klicks,
+        # desto laenger (Erfahrungswert aus Lauf #29: einzelne Loeschungen
+        # brauchen bis ~3 s, viele parallel entsprechend Luft).
+        page.wait_for_timeout(min(3000 + 30 * max(geklickt, 0), 10000))
         try:
-            ok = page.evaluate(JS_MANAGER_ERSTEN_LOESCHEN)
+            neu = max(page.evaluate(JS_MANAGER_ALARMZAHL), 0)
         except Exception:
-            ok = False
-        page.wait_for_timeout(900)
-        try:
-            danach = page.evaluate(JS_MANAGER_ALARMZAHL)
-        except Exception:
-            danach = zahl
-        if not (ok and danach < zahl):
-            # TraderFox braucht manchmal laenger als die normale Wartezeit —
-            # in Lauf #29 waren ~20 von 178 Loeschungen solche Spaetzuender.
-            # Erst nachfassen, dann warnen.
-            page.wait_for_timeout(2500)
-            try:
-                danach = page.evaluate(JS_MANAGER_ALARMZAHL)
-            except Exception:
-                pass
-        if ok and danach < zahl:
-            entfernt += zahl - danach
-            fehlversuche = 0
-            if entfernt - letzte_meldung >= 10:
-                print(f"    … {entfernt} von {vorher} entfernt")
-                letzte_meldung = entfernt
-        else:
-            fehlversuche += 1
-            print(f"    ⚠ Klick ohne Wirkung ({fehlversuche}/3) — "
-                  f"Stand {danach} Alarme")
-            if fehlversuche >= 3:
+            neu = stand
+        print(f"    Runde {runde}: {stand} → {neu} Alarme")
+        if neu >= stand:
+            fehlrunden += 1
+            if fehlrunden >= 2:
                 diagnose(page, "loeschen_stockt",
-                         f"Zahl sinkt nicht mehr: noch {danach} Alarme")
+                         f"Zahl sinkt nicht mehr: noch {neu} Alarme")
                 break
-        if entfernt > vorher + 20:
-            print("    ⚠ Mehr entfernt als erwartet — Sicherheitsstopp.")
-            break
+            page.wait_for_timeout(4000)
+        else:
+            fehlrunden = 0
+        stand = neu
 
     print(f"\n[3/3] Schlusszählung")
     uebrig = max(page.evaluate(JS_MANAGER_ALARMZAHL), 0)
