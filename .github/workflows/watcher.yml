@@ -36,7 +36,12 @@ on:
     - cron: "30,36,42,48,54 13 * * 1-5"
     - cron: "*/6 14-20 * * 1-5"
     - cron: "0 21 * * 1-5"
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      dauerwache:
+        description: "Minuten am Stück wachen (0 = einmal prüfen). 390 = ganzer Handelstag."
+        required: false
+        default: "0"
 
 # Verhindert, dass sich zwei Läufe überschneiden
 concurrency:
@@ -46,7 +51,10 @@ concurrency:
 jobs:
   wachen:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    # Hoch genug fuer eine Dauerwache ueber den ganzen Handelstag
+    # (6,5 h Handel + Wartezeit vor der Eroeffnung). Normale Laeufe
+    # beenden sich nach wenigen Minuten von selbst.
+    timeout-minutes: 355
     # actions: read wird gebraucht, um die kaufpunkte.xlsx aus dem Artefakt
     # des Scanner-Workflows zu holen. Ohne diese Berechtigung scheitert der
     # Download mit "Resource not accessible by integration" - das Standard-
@@ -96,4 +104,4 @@ jobs:
             echo "Keine kaufpunkte.xlsx gefunden — erst den Scanner laufen lassen."
             exit 0
           fi
-          python breakout_watcher.py kaufpunkte.xlsx
+          python breakout_watcher.py kaufpunkte.xlsx --dauerwache "${{ github.event.inputs.dauerwache || '0' }}"

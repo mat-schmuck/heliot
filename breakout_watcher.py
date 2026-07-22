@@ -35,7 +35,7 @@ import json
 import os
 import sys
 import time
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
 import pandas as pd
@@ -506,6 +506,11 @@ def main():
     ap.add_argument("--alle", action="store_true",
                     help="Auch Fallback-Level überwachen (Standard: nur Muster-Treffer)")
     ap.add_argument("--dry-run", action="store_true", help="Nur anzeigen, kein Push")
+    ap.add_argument("--dauerwache", type=int, default=0, metavar="MINUTEN",
+                    help="Statt einmal zu prüfen alle 6 Minuten weiterprüfen, "
+                         "bis MINUTEN abgelaufen sind oder die Börse schließt. "
+                         "Macht die Überwachung unabhängig von GitHubs "
+                         "unzuverlässigem Zeitplan.")
     ap.add_argument("--auch-unbestaetigt", action="store_true",
                     help="Auch Breakouts ohne Volumen-Bestätigung pushen (Standard: ja, "
                          "aber klar gekennzeichnet)")
@@ -566,80 +571,114 @@ def main():
 
     gewuenscht = set(t.upper() for t in tickers)
 
-    # Hauptquelle Yahoo (ein Abruf, kein Limit), Twelve Data als Rueckfall.
-    quotes = fetch_quotes_yahoo(tickers)
-    if len(quotes) < len(gewuenscht):
-        fehlend_yahoo = sorted(gewuenscht - set(quotes))
-        if quotes:
-            print(f"  Yahoo lieferte {len(quotes)} von {len(gewuenscht)} — "
-                  f"hole {len(fehlend_yahoo)} über Twelve Data nach.")
-        if api_key:
-            quotes.update(fetch_quotes(fehlend_yahoo, api_key))
-        elif not quotes:
-            sys.exit("Yahoo lieferte nichts und kein TWELVE_DATA_API_KEY gesetzt.")
-
-    print(f"{len(quotes)} von {len(gewuenscht)} Quotes erhalten.")
-    if not quotes:
-        sys.exit("Keine Kursdaten erhalten — Abbruch.")
-
-    # Unvollstaendige Abfragen NICHT stillschweigend hinnehmen: Fuer die
-    # fehlenden Aktien kann kein Breakout erkannt werden, und ohne Hinweis
-    # sieht der Lauf trotzdem erfolgreich aus.
-    fehlend = sorted(gewuenscht - set(quotes))
-    if fehlend:
-        print(f"\n⚠ ACHTUNG: {len(fehlend)} Aktien konnten NICHT geprüft werden:")
-        print("  " + ", ".join(fehlend))
-        print("  Für diese Werte wird in diesem Lauf kein Ausbruch erkannt.")
-        print("  Meist Rate-Limit der Kursdaten-Schnittstelle (8 Abfragen/Minute).\n")
+    # Dauerwache: EIN Lauf deckt den ganzen Handelstag ab. Hintergrund
+    # (22.07.2026): GitHub feuerte die Zeitplaene nach Repo-Umbenennung und
+    # Workflow-Aenderungen stundenlang verspaetet — im ersten Boersenfenster
+    # kam kein einziger geplanter Lauf. Mit --dauerwache haengt die
+    # Ueberwachung nicht mehr am Zeitplan: Der Lauf prueft alle 6 Minuten
+    # selbst weiter, bis die Boerse schliesst oder die Zeit ablaeuft. Die
+    # Zeitplan-Laeufe bleiben als Rueckfallebene bestehen; die
+    # concurrency-Gruppe im Workflow verhindert Doppelmeldungen.
+    ende_dauerwache = None
+    if args.dauerwache > 0:
+        ende_dauerwache = datetime.now() + timedelta(minutes=args.dauerwache)
+        print(f"Dauerwache aktiv: alle 6 Minuten, für bis zu {args.dauerwache} "
+              f"Minuten (spätestens bis {ende_dauerwache:%H:%M} Serverzeit).")
 
     state = load_state()
     schon_gemeldet = set(state["gemeldet"])
+    runde = 0
+    while True:
+        runde += 1
+        if runde > 1:
+            print(f"\n——— Runde {runde} ({datetime.now():%H:%M:%S}) ———")
 
-    treffer, neu = [], []
-    for item in items:
-        q = quotes.get(item["ticker"].upper())
-        if not q:
-            continue
-        res = pruefe_breakout(item, q)
-        if not res:
-            continue
-        # Kennung am Treffer mitfuehren. Vorgemerkt wird ERST nach einem
-        # erfolgreichen Push - siehe unten.
-        res["key"] = f"{item['ticker']}|{item['nr']}|{item['kaufpunkt']:.2f}"
-        treffer.append(res)
-        if res["key"] not in schon_gemeldet:
-            neu.append(res)
+        # Hauptquelle Yahoo (ein Abruf, kein Limit), Twelve Data als Rueckfall.
+        quotes = fetch_quotes_yahoo(tickers)
+        if len(quotes) < len(gewuenscht):
+            fehlend_yahoo = sorted(gewuenscht - set(quotes))
+            if quotes:
+                print(f"  Yahoo lieferte {len(quotes)} von {len(gewuenscht)} — "
+                      f"hole {len(fehlend_yahoo)} über Twelve Data nach.")
+            if api_key:
+                quotes.update(fetch_quotes(fehlend_yahoo, api_key))
+            elif not quotes and ende_dauerwache is None:
+                sys.exit("Yahoo lieferte nichts und kein TWELVE_DATA_API_KEY gesetzt.")
 
-    print(f"\n{len(treffer)} Kaufpunkte aktuell gerissen, davon {len(neu)} neu seit "
-          f"dem letzten Lauf.")
-    for t in treffer:
-        marker = "🟢" if t["vol_ok"] is True else ("🟡" if t["vol_ok"] is False else "⚪")
-        neu_marker = " [NEU]" if t in neu else ""
-        print(f"  {marker} {format_treffer(t)}{neu_marker}\n")
-
-    # Erst filtern, dann vormerken. Frueher galten auch Treffer als gemeldet,
-    # die wegen --nur-bestaetigt gar nicht gepusht wurden - bekamen sie spaeter
-    # die Volumenbestaetigung, wurden sie nie mehr gemeldet.
-    zu_melden = neu
-    if args.nur_bestaetigt:
-        zu_melden = [t for t in neu if t["vol_ok"] is True]
-        uebersprungen = len(neu) - len(zu_melden)
-        if uebersprungen:
-            print(f"{uebersprungen} Treffer ohne Volumenbestätigung — bleiben "
-                  "offen und werden weiter beobachtet.")
-
-    if zu_melden and not args.dry_run:
-        if push(topic, zu_melden):
-            for t in zu_melden:
-                schon_gemeldet.add(t["key"])
-            state["gemeldet"] = sorted(schon_gemeldet)
-            save_state(state)
+        print(f"{len(quotes)} von {len(gewuenscht)} Quotes erhalten.")
+        if not quotes:
+            # In der Dauerwache ist ein Aussetzer kein Todesurteil — die
+            # naechste Runde kommt in 6 Minuten.
+            if ende_dauerwache is None:
+                sys.exit("Keine Kursdaten erhalten — Abbruch.")
+            print("⚠ Keine Kursdaten in dieser Runde — nächster Versuch in 6 Minuten.")
         else:
-            print("⚠ Zustand NICHT gespeichert — der nächste Lauf versucht es erneut.")
-    elif not zu_melden:
-        print("Nichts Neues zu melden.")
-    else:
-        print("(Dry-Run — kein Push gesendet, Zustand nicht gespeichert)")
+            # Unvollstaendige Abfragen NICHT stillschweigend hinnehmen: Fuer die
+            # fehlenden Aktien kann kein Breakout erkannt werden, und ohne
+            # Hinweis sieht der Lauf trotzdem erfolgreich aus.
+            fehlend = sorted(gewuenscht - set(quotes))
+            if fehlend:
+                print(f"\n⚠ ACHTUNG: {len(fehlend)} Aktien konnten NICHT geprüft werden:")
+                print("  " + ", ".join(fehlend))
+                print("  Für diese Werte wird in dieser Runde kein Ausbruch erkannt.")
+
+            treffer, neu = [], []
+            for item in items:
+                q = quotes.get(item["ticker"].upper())
+                if not q:
+                    continue
+                res = pruefe_breakout(item, q)
+                if not res:
+                    continue
+                # Kennung am Treffer mitfuehren. Vorgemerkt wird ERST nach
+                # einem erfolgreichen Push - siehe unten.
+                res["key"] = f"{item['ticker']}|{item['nr']}|{item['kaufpunkt']:.2f}"
+                treffer.append(res)
+                if res["key"] not in schon_gemeldet:
+                    neu.append(res)
+
+            print(f"\n{len(treffer)} Kaufpunkte aktuell gerissen, davon {len(neu)} "
+                  f"neu seit dem letzten Lauf.")
+            for t in treffer:
+                marker = "🟢" if t["vol_ok"] is True else ("🟡" if t["vol_ok"] is False else "⚪")
+                neu_marker = " [NEU]" if t in neu else ""
+                print(f"  {marker} {format_treffer(t)}{neu_marker}\n")
+
+            # Erst filtern, dann vormerken. Frueher galten auch Treffer als
+            # gemeldet, die wegen --nur-bestaetigt gar nicht gepusht wurden -
+            # bekamen sie spaeter die Volumenbestaetigung, wurden sie nie
+            # mehr gemeldet.
+            zu_melden = neu
+            if args.nur_bestaetigt:
+                zu_melden = [t for t in neu if t["vol_ok"] is True]
+                uebersprungen = len(neu) - len(zu_melden)
+                if uebersprungen:
+                    print(f"{uebersprungen} Treffer ohne Volumenbestätigung — bleiben "
+                          "offen und werden weiter beobachtet.")
+
+            if zu_melden and not args.dry_run:
+                if push(topic, zu_melden):
+                    for t in zu_melden:
+                        schon_gemeldet.add(t["key"])
+                    state["gemeldet"] = sorted(schon_gemeldet)
+                    save_state(state)
+                else:
+                    print("⚠ Zustand NICHT gespeichert — der nächste Lauf versucht es erneut.")
+            elif not zu_melden:
+                print("Nichts Neues zu melden.")
+            else:
+                print("(Dry-Run — kein Push gesendet, Zustand nicht gespeichert)")
+
+        if ende_dauerwache is None:
+            break
+        if datetime.now() >= ende_dauerwache:
+            print("Dauerwache: Zeit abgelaufen — Ende.")
+            break
+        offen, grund = markt_offen()
+        if not offen:
+            print(f"Dauerwache: Börse geschlossen ({grund}) — Ende.")
+            break
+        time.sleep(360)
 
 
 if __name__ == "__main__":
