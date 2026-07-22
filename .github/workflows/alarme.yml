@@ -20,6 +20,10 @@ on:
         description: "Auch Fallback-Level alarmieren? (true/false)"
         required: false
         default: "false"
+      neu:
+        description: "Fortschritt ignorieren, alles neu setzen? (true/false) — nötig nach alles_loeschen"
+        required: false
+        default: "false"
       loeschen:
         description: "Für 'aufraeumen': z. B. BIOA:21.28,CRNX:83.64 — für 'alles_loeschen': ALLE"
         required: false
@@ -145,6 +149,7 @@ jobs:
           EXTRA=""
           if [ "${{ github.event.inputs.modus }}" = "test_2_aktien" ]; then EXTRA="$EXTRA --limit 2"; fi
           if [ "${{ github.event.inputs.alle_level }}" = "true" ]; then EXTRA="$EXTRA --alle"; fi
+          if [ "${{ github.event.inputs.neu }}" = "true" ]; then EXTRA="$EXTRA --neu"; fi
           python traderfox_alarm_bot.py kaufpunkte.xlsx $EXTRA
 
       # Immer hochladen — gerade im Fehlerfall ist das Debug-Material entscheidend
