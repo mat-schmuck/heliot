@@ -1134,39 +1134,6 @@ def aufraeum_lauf(page, user: str, pw: str, auftraege: list) -> int:
     return 0
 
 
-def inventur_lauf(page, user: str, pw: str) -> int:
-    """Bestandsaufnahme ALLER Alarme im Konto — reines Lesen, loescht nichts.
-
-    Vorstufe zum Komplett-Loeschen (Mathias' Auftrag vom 23.07.2026): Bevor
-    irgendetwas entfernt wird, muss eine Sicherung existieren, aus der der
-    Bot notfalls alles wieder eintragen kann. Legt drei Dateien in debug/ ab:
-    die lesbare Bestandsliste, eine maschinenlesbare Sicherung (JSON) und
-    das rohe HTML des Alerts manager (Bauplan fuer den Loesch-Modus)."""
-    print("\n=== INVENTUR: alle Alarme auslesen (nichts wird geloescht) ===\n")
-    if not login(page, user, pw):
-        print("✗ Login fehlgeschlagen.")
-        return 1
-
-    eintraege = alarme_inventur(page, "komplett")
-    fenster_html_sichern(page, "Alerts manager", "inventur")
-    if not eintraege:
-        print("✗ Keine Alarme gelesen — Fenster nicht geladen? Siehe debug/.")
-        return 1
-
-    DEBUG_DIR.mkdir(exist_ok=True)
-    stempel = datetime.now().strftime("%H%M%S")
-    sicherung = DEBUG_DIR / f"{stempel}_alarmsicherung.json"
-    sicherung.write_text(
-        json.dumps(eintraege, ensure_ascii=False, indent=1), encoding="utf-8")
-    gesamt = sum(len(e["preise"]) for e in eintraege)
-    print(f"\n--- Ergebnis ---")
-    print(f"  Werte mit Alarmen: {len(eintraege)}")
-    print(f"  Alarme gesamt:     {gesamt}")
-    print(f"  Sicherung:         debug/{sicherung.name}")
-    print("\n✓ Inventur abgeschlossen — es wurde nichts verändert.")
-    return 0
-
-
 # Zaehlt die Preis-Alarme INNERHALB des Alerts manager (nicht im ganzen
 # Desk — sonst zaehlten offene Alarm-Dialoge mit, der Fehler von frueher).
 JS_MANAGER_ALARMZAHL = """
@@ -1209,32 +1176,42 @@ def loesche_alle_lauf(page, user: str, pw: str) -> int:
     fuer DIESEN Modus bewusst aufgehoben — fuer alle anderen gilt sie
     unveraendert weiter.
 
-    Sicherungsnetz in drei Lagen:
-    1. Vor dem ersten Loeschklick wird IMMER eine vollstaendige Inventur
-       als Datei abgelegt (lesbar + JSON) — daraus laesst sich der
-       Bestand notfalls wieder eintragen. Ohne gelungene Inventur wird
-       NICHT geloescht.
-    2. Jeder Loeschklick wird nachgezaehlt: Sinkt die Zahl dreimal in
+    BEWUSST OHNE Sicherungsdatei (Mathias, 23.07.2026): Die Aktienliste
+    (finviz_3.csv) ist das Original, aus ihr erzeugt der Scanner die
+    Alarme laufend neu — ein Alarm-Backup waere totes Gewicht.
+    Fehlerfreiheit stellt das Zaehlen sicher:
+    1. Jeder Loeschklick wird nachgezaehlt; sinkt die Zahl dreimal in
        Folge nicht, bricht der Lauf ab, statt blind weiterzuklicken.
-    3. Am Ende zaehlt eine Schlussinventur nach — Erfolg heisst null."""
+    2. Am Ende wird nachgezaehlt — Erfolg heisst exakt null uebrig."""
     print("\n=== ALLES LÖSCHEN: sämtliche Alarme entfernen ===\n")
     if not login(page, user, pw):
         print("✗ Login fehlgeschlagen.")
         return 1
 
-    print("[1/3] Sicherung anlegen (Pflicht vor dem Löschen)")
-    eintraege = alarme_inventur(page, "vor_komplettloeschung")
-    if not eintraege:
-        print("✗ Sicherung fehlgeschlagen — es wird NICHTS gelöscht.")
+    print("[1/3] Alerts manager öffnen und zählen")
+    oeffner = finde(page, "nutzer_alarme_oeffnen")
+    if oeffner is None:
+        diagnose(page, "loeschen_kein_manager", "Öffner für Nutzer-Alarme fehlt")
+        print("✗ Alarm-Übersicht nicht auffindbar.")
         return 1
-    DEBUG_DIR.mkdir(exist_ok=True)
-    stempel = datetime.now().strftime("%H%M%S")
-    sicherung = DEBUG_DIR / f"{stempel}_alarmsicherung_vor_loeschung.json"
-    sicherung.write_text(
-        json.dumps(eintraege, ensure_ascii=False, indent=1), encoding="utf-8")
-    vorher = sum(len(e["preise"]) for e in eintraege)
-    print(f"    Gesichert: {len(eintraege)} Werte, {vorher} Alarme "
-          f"→ debug/{sicherung.name}")
+    klick(oeffner, "Nutzer-Alarme")
+    # Warten, bis wirklich Inhalt geladen ist — ein halb leeres Fenster
+    # lieferte frueher die Zaehlung null, obwohl Alarme existierten.
+    for _ in range(12):
+        page.wait_for_timeout(1000)
+        try:
+            if page.locator(".alert-section").count() > 0:
+                break
+        except Exception:
+            pass
+    vorher = page.evaluate(JS_MANAGER_ALARMZAHL)
+    if vorher < 0:
+        diagnose(page, "loeschen_manager_leer", "Alerts manager nicht gefunden")
+        print("✗ Alarm-Fenster nicht lesbar — nichts gelöscht.")
+        return 1
+    if vorher == 0:
+        print("    Konto ist bereits leer — nichts zu tun.")
+        return 0
 
     print(f"\n[2/3] {vorher} Alarme löschen (einzeln, mit Nachzählen)")
     entfernt, fehlversuche = 0, 0
@@ -1275,16 +1252,14 @@ def loesche_alle_lauf(page, user: str, pw: str) -> int:
             print("    ⚠ Mehr entfernt als erwartet — Sicherheitsstopp.")
             break
 
-    print(f"\n[3/3] Schlussinventur")
-    rest = alarme_inventur(page, "nach_komplettloeschung")
-    uebrig = sum(len(e["preise"]) for e in rest)
-    fenster_html_sichern(page, "Alerts manager", "nach_loeschung")
+    print(f"\n[3/3] Schlusszählung")
+    uebrig = page.evaluate(JS_MANAGER_ALARMZAHL)
+    uebrig = max(uebrig, 0)
 
     print("\n--- Ergebnis ---")
     print(f"  Alarme vorher:  {vorher}")
     print(f"  Entfernt:       {entfernt}")
     print(f"  Übrig:          {uebrig}")
-    print(f"  Sicherung:      debug/{sicherung.name}")
     if uebrig == 0 and entfernt > 0:
         print("\n✓ Konto ist leer — alle Alarme entfernt und nachgezählt.")
         return 0
@@ -1793,9 +1768,6 @@ def main():
                     help="Gezielt einzelne Alarme entfernen, z. B. "
                          "'BIOA:21.28,CRNX:83.64'. Firmennamen werden aus der "
                          "angegebenen kaufpunkte.xlsx nachgeschlagen.")
-    ap.add_argument("--inventur", action="store_true",
-                    help="Alle Alarme auslesen und als Sicherung ablegen — "
-                         "reines Lesen, löscht nichts.")
     ap.add_argument("--loesche-alle", action="store_true",
                     help="SÄMTLICHE Alarme löschen, auch handgesetzte. "
                          "Legt vorher zwingend eine Sicherung ab.")
@@ -1806,7 +1778,7 @@ def main():
     if not user or not pw:
         sys.exit("Bitte TRADERFOX_USER und TRADERFOX_PASS als Umgebungsvariablen setzen.")
     nur_pruefen = (args.selbsttest or args.testalarm or bool(args.loesche)
-                   or args.inventur or args.loesche_alle)
+                   or args.loesche_alle)
     if not nur_pruefen and not args.xlsx:
         sys.exit("Bitte kaufpunkte.xlsx angeben (oder --selbsttest / --testalarm benutzen).")
 
@@ -1869,11 +1841,6 @@ def main():
 
         if args.testalarm:
             code = testalarm_lauf(page, user, pw)
-            browser.close()
-            sys.exit(code)
-
-        if args.inventur:
-            code = inventur_lauf(page, user, pw)
             browser.close()
             sys.exit(code)
 

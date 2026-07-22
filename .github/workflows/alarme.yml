@@ -15,7 +15,6 @@ on:
           - test_2_aktien     # Scanner + Alarme für 2 Aktien
           - vollstaendig      # Scanner + Alarme für alle Treffer
           - aufraeumen        # gezielt einzelne Alarme entfernen
-          - inventur          # alle Alarme auslesen + sichern (löscht nichts)
           - alles_loeschen    # SÄMTLICHE Alarme löschen (Feld 'loeschen' = ALLE)
       alle_level:
         description: "Auch Fallback-Level alarmieren? (true/false)"
@@ -77,19 +76,11 @@ jobs:
           TRADERFOX_PASS: ${{ secrets.TRADERFOX_PASS }}
         run: python traderfox_alarm_bot.py --testalarm
 
-      # --- Inventur: alle Alarme auslesen und sichern, loescht NICHTS ---
-      # Vorstufe zum Komplett-Loeschen: erst Sicherung, dann Entscheidung.
-      - name: "Inventur (alle Alarme auslesen und sichern)"
-        if: ${{ github.event.inputs.modus == 'inventur' }}
-        env:
-          TRADERFOX_USER: ${{ secrets.TRADERFOX_USER }}
-          TRADERFOX_PASS: ${{ secrets.TRADERFOX_PASS }}
-        run: python traderfox_alarm_bot.py --inventur
-
       # --- Alles loeschen: SAEMTLICHE Alarme entfernen ---
       # Verriegelung: laeuft nur, wenn im Feld 'loeschen' woertlich ALLE
       # steht — ein versehentlicher Klick auf den Modus allein tut nichts.
-      # Der Bot legt vor dem ersten Loeschklick zwingend eine Sicherung ab.
+      # Bewusst ohne Alarm-Sicherung (Mathias, 23.07.2026): die Aktienliste
+      # ist das Original, der Scanner erzeugt die Alarme laufend neu.
       - name: "Alles löschen (sämtliche Alarme)"
         if: ${{ github.event.inputs.modus == 'alles_loeschen' }}
         env:
