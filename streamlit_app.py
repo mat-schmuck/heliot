@@ -19,6 +19,7 @@ Auf Streamlit Community Cloud:
 
 import io
 import os
+import re
 from datetime import datetime
 
 import numpy as np
@@ -199,7 +200,8 @@ if not api_key:
                "Für eine Rückfallebene könnte TWELVE_DATA_API_KEY "
                "unter Settings → Secrets hinterlegt werden.")
 
-tab_einzel, tab_liste, tab_info = st.tabs(["🔍 Einzelabfrage", "📋 Liste / CSV", "ℹ️ Regelwerk"])
+tab_einzel, tab_liste, tab_upload, tab_info = st.tabs(
+    ["🔍 Einzelabfrage", "📋 Liste / CSV", "📅 Wochenliste", "ℹ️ Regelwerk"])
 
 # --- Einzelabfrage ---------------------------------------------------------
 with tab_einzel:
@@ -301,6 +303,128 @@ with tab_liste:
                 st.warning("Keine Treffer" + (" (Filter aktiv?)" if nur_treffer else "") + ".")
             if fehler:
                 st.caption("Keine Daten für: " + ", ".join(fehler))
+
+# --- Wochenliste -----------------------------------------------------------
+# Gerhard siebt jede Woche den Markt mit seinem Finviz-Screener und liefert
+# eine CSV mit der Spalte 'Ticker' (bestätigt am 22.07.2026: immer CSV, nie
+# Excel). Diese Seite legt die Datei kennwortgeschützt als finviz_3.csv ins
+# Repo — ab dem nächsten nächtlichen Scan arbeitet die Automatik damit.
+# Anzeigen darf jeder, Verändern nur mit Kennwort (Streamlit-Secret
+# UPLOAD_KENNWORT); geschrieben wird über einen GitHub-Token (GITHUB_TOKEN),
+# der NUR auf dieses Repo und NUR auf Dateiinhalte berechtigt ist.
+
+REPO = "mat-schmuck/heliot"
+LISTEN_DATEI = "finviz_3.csv"
+
+
+def pruefe_wochenliste(rohdaten: bytes) -> tuple[str, list[str]]:
+    """Prüft die Datei GRÜNDLICH, bevor irgendetwas ins Repo geschrieben
+    wird — ein Tippfehler beim Hochladen darf nicht die nächtliche
+    Scan-Grundlage zerstören. Liefert (Fehlertext, Tickerliste)."""
+    try:
+        df = pd.read_csv(io.BytesIO(rohdaten))
+    except Exception as e:
+        return f"Die Datei ließ sich nicht als CSV lesen ({e}).", []
+    spalte = next((c for c in df.columns if c.strip().lower() == "ticker"), None)
+    if spalte is None:
+        return "Keine Spalte 'Ticker' gefunden — ist das wirklich der Finviz-Export?", []
+    ticker = [str(t).strip().upper() for t in df[spalte].dropna() if str(t).strip()]
+    ticker = list(dict.fromkeys(ticker))
+    if not ticker:
+        return "Die Ticker-Spalte ist leer.", []
+    if len(ticker) > 500:
+        return f"{len(ticker)} Ticker sind verdächtig viele (erwartet: bis 500).", []
+    muster = re.compile(r"^[A-Z0-9.\-]{1,10}$")
+    komisch = [t for t in ticker if not muster.match(t)]
+    if komisch:
+        return "Unplausible Einträge in der Ticker-Spalte: " + ", ".join(komisch[:5]), []
+    return "", ticker
+
+
+def wochenliste_einspielen(rohdaten: bytes, token: str, anzahl: int) -> str:
+    """Ersetzt finviz_3.csv im Repo. Liefert '' bei Erfolg, sonst Fehlertext."""
+    import base64
+    import requests
+    kopf = {"Authorization": f"Bearer {token}",
+            "Accept": "application/vnd.github+json"}
+    url = f"https://api.github.com/repos/{REPO}/contents/{LISTEN_DATEI}"
+    try:
+        alt = requests.get(url, headers=kopf, timeout=20)
+        sha = alt.json().get("sha") if alt.status_code == 200 else None
+        daten = {"message": f"Wochenliste: {anzahl} Aktien (Upload über Heliot)",
+                 "content": base64.b64encode(rohdaten).decode()}
+        if sha:
+            daten["sha"] = sha
+        antwort = requests.put(url, headers=kopf, json=daten, timeout=30)
+        if antwort.status_code in (200, 201):
+            return ""
+        return (f"GitHub antwortete mit Code {antwort.status_code}: "
+                f"{antwort.json().get('message', 'ohne Begründung')}")
+    except Exception as e:
+        return f"Netzwerkfehler beim Hochladen: {e}"
+
+
+@st.cache_data(ttl=300, show_spinner=False)
+def aktuelle_listengroesse() -> int | None:
+    """Wie viele Aktien stehen derzeit im Repo? (öffentlich lesbar)"""
+    import requests
+    try:
+        r = requests.get(f"https://raw.githubusercontent.com/{REPO}/main/{LISTEN_DATEI}",
+                         timeout=15)
+        if r.status_code != 200:
+            return None
+        fehler, ticker = pruefe_wochenliste(r.content)
+        return len(ticker) if not fehler else None
+    except Exception:
+        return None
+
+
+with tab_upload:
+    st.write("Hier lädt Gerhard seine wöchentliche Finviz-Aktienliste hoch "
+             "(CSV mit der Spalte 'Ticker'). Die neue Liste gilt ab dem "
+             "nächsten nächtlichen Scan.")
+
+    try:
+        kennwort_soll = st.secrets.get("UPLOAD_KENNWORT", "")
+        github_token = st.secrets.get("GITHUB_TOKEN", "")
+    except Exception:
+        kennwort_soll = github_token = ""
+
+    anzahl_aktuell = aktuelle_listengroesse()
+    if anzahl_aktuell:
+        st.caption(f"Aktuelle Liste im System: {anzahl_aktuell} Aktien.")
+
+    if not kennwort_soll or not github_token:
+        st.warning("Der Upload ist noch nicht eingerichtet. In den "
+                   "Streamlit-Secrets müssen UPLOAD_KENNWORT und GITHUB_TOKEN "
+                   "hinterlegt sein — bis dahin ist diese Seite nur Anzeige.")
+    else:
+        kennwort = st.text_input("Kennwort", type="password",
+                                 key="upload_kennwort")
+        datei = st.file_uploader("Finviz-CSV (Spalte 'Ticker')", type=["csv"],
+                                 key="upload_datei")
+        if datei is not None and st.button("Wochenliste übernehmen",
+                                           type="primary"):
+            import hmac
+            import time as zeit
+            if not hmac.compare_digest(kennwort.encode(), kennwort_soll.encode()):
+                zeit.sleep(2)  # Bremse gegen Durchprobieren
+                st.error("Kennwort falsch.")
+            else:
+                roh = datei.getvalue()
+                fehler, ticker = pruefe_wochenliste(roh)
+                if fehler:
+                    st.error("NICHT übernommen: " + fehler)
+                else:
+                    fehler = wochenliste_einspielen(roh, github_token, len(ticker))
+                    if fehler:
+                        st.error("Hochladen fehlgeschlagen: " + fehler)
+                    else:
+                        st.success(f"Übernommen: {len(ticker)} Aktien "
+                                   f"(die ersten: {', '.join(ticker[:5])}). "
+                                   "Ab dem nächsten nächtlichen Scan aktiv.")
+                        aktuelle_listengroesse.clear()
+
 
 # --- Regelwerk -------------------------------------------------------------
 with tab_info:
