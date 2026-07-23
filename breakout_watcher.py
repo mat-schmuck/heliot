@@ -494,8 +494,7 @@ def format_gapgo(g: dict) -> str:
     zeilen = [f"{meldungskopf(g['ticker'], g.get('firma', ''))} — Gap and Go "
               + ("BESTÄTIGT (Schluss im oberen Fünftel)" if g["bestaetigt"]
                  else "im Aufbau"),
-              f"Eröffnung +{g['gap']*100:.1f}% über Vortagesschluss; "
-              f"Lücke bislang verteidigt",
+              f"Eröffnung +{g['gap']*100:.1f}% über Vortagesschluss",
               (f"Frühvolumen {g['frueh_ratio']*100:.0f}% des Zeitüblichen "
                f"(nötig {GAP_FRUEH_FAKTOR*100:.0f}%)") if g["frueh"] else
               (f"Volumen hochgerechnet {g['tages_ratio']:.1f}× Ø10 "
@@ -556,10 +555,12 @@ def email_kopf() -> dict:
     return {"Email": adresse} if adresse else {}
 
 
-def push_text(topic: str, titel: str, body: str) -> bool:
-    """Schickt eine frei formulierte Meldung (fuer Gap and Go)."""
-    kopf = {"Title": titel.encode("utf-8"), "Priority": "high",
-            "Tags": "rocket"}
+def push_text(topic: str, body: str) -> bool:
+    """Schickt eine frei formulierte Meldung (fuer Gap and Go).
+
+    Ohne Titel-Kopfzeile: ntfy zeigt Titel nur als vorangestellten Text an,
+    was die Meldung fuer Mathias' Screenreader unnoetig verlaengert."""
+    kopf = {"Priority": "high", "Tags": "rocket"}
     kopf.update(email_kopf())
     try:
         r = requests.post(f"https://ntfy.sh/{topic}", data=body.encode("utf-8"),
@@ -583,10 +584,10 @@ def push(topic: str, treffer: list[dict]) -> bool:
     bestaetigt = [t for t in treffer if t["vol_ok"] is True]
     rest = [t for t in treffer if t["vol_ok"] is not True]
     body = "\n\n".join([format_treffer(t) for t in bestaetigt + rest])
-    titel = (f"🚀 {len(bestaetigt)} bestätigt"
-             + (f", {len(rest)} ohne Vol-Bestätigung" if rest else ""))
-    kopf = {"Title": titel.encode("utf-8"),
-            "Priority": "high" if bestaetigt else "default",
+    # Kein Titel: ntfy stellt ihn nur als zusaetzlichen Text voran
+    # ("Wortgeklingel", Mathias 23.07.2026) — jeder Treffer traegt seine
+    # Einstufung ohnehin selbst in der Volumenzeile.
+    kopf = {"Priority": "high" if bestaetigt else "default",
             "Tags": "chart_with_upwards_trend"}
     kopf.update(email_kopf())
     try:
@@ -612,8 +613,7 @@ def testpush(topic: str) -> int:
             "Benachrichtigungskette.\n"
             f"Zustellweg: {weg}\n"
             f"Gesendet: {datetime.now():%d.%m.%Y %H:%M:%S}")
-    kopf = {"Title": "Test: Breakout-Wächter".encode("utf-8"),
-            "Priority": "default",
+    kopf = {"Priority": "default",
             "Tags": "white_check_mark"}
     kopf.update(email_kopf())
     print(f"    Zustellweg: {weg}")
@@ -852,10 +852,8 @@ def main():
                 if args.dry_run:
                     print("(Dry-Run — kein Gap-and-Go-Push)")
                 else:
-                    titel = "🚀 Gap and Go: " + ", ".join(g["ticker"]
-                                                          for g in gap_neu)
                     body = "\n\n".join(format_gapgo(g) for g in gap_neu)
-                    if push_text(topic, titel, body):
+                    if push_text(topic, body):
                         for g in gap_neu:
                             schon_gemeldet.add(g["key"])
                         state["gemeldet"] = sorted(schon_gemeldet)
