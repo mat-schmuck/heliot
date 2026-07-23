@@ -491,56 +491,70 @@ def pruefe_gap_and_go(ticker: str, q: dict):
 
 
 def format_gapgo(g: dict) -> str:
-    """Kurzfassung fuers unmittelbare Trading (Mathias, 23.07.2026).
-
-    Beide Nutzer lesen die Pushes blind mit iPhone/VoiceOver; ntfy zeigt
-    alles als einen Textblock. Deshalb nur, was fuer die Entscheidung
-    zaehlt: Wer, Status, Luecke, Volumen, Kaufpunkt, Stop. Erfuellte
-    Pflichtkriterien ohne eigenen Zahlenwert (Flat Base, Luecke
-    verteidigt, Position in der Spanne) werden nicht aufgezaehlt, denn
-    ohne sie gaebe es die Meldung gar nicht. Trenner: Strichpunkt
-    zwischen verschiedenen Angaben, Beistrich innerhalb; keine
-    Gedankenstriche, kein senkrechter Strich, kein Malzeichen. Ø ist
-    auf Mathias' Wunsch wieder drin (kuerzer als das ausgeschriebene
-    Wort, auch wenn VoiceOver es sperrig ansagt). Beim Zusammenbau der
-    Push-Nachricht bekommt jede Aktie eine Nummer vorangestellt
-    (nummeriert()), damit hoerbar ist, wo die naechste beginnt."""
+    """Meldungsregeln (Mathias, 23.07.2026, beide Nutzer blind mit
+    iPhone/VoiceOver; ntfy zeigt alles als einen Textblock):
+    - Jede Aktie bekommt beim Zusammenbau eine Nummer vorangestellt
+      (nummeriert()), damit hoerbar ist, wo die naechste beginnt.
+    - Trenner: Strichpunkt zwischen verschiedenen Angaben, Beistrich
+      innerhalb; keine Titel, keine Gedankenstriche, kein senkrechter
+      Strich.
+    - Ø statt "20-Tage-Durchschnitt" (kuerzer); Vielfache mit dem Wort
+      "mal" statt dem Kreuz-Symbol ×.
+    - Fuellwoerter wie "erst"/"nur" weglassen; die immer wahre Zeile
+      "Luecke verteidigt" bleibt draussen.
+    - Sonst alle Angaben drin — radikaleres Kuerzen war Mathias zu viel."""
     kopf = meldungskopf(g["ticker"], g.get("firma", ""))
-    status = "BESTÄTIGT" if g["bestaetigt"] else "im Aufbau"
-    vol = (f"Frühvolumen {g['frueh_ratio']*100:.0f}% des Zeitüblichen"
-           if g["frueh"] else
-           f"Volumen das {g['tages_ratio']:.1f}-Fache vom Ø10")
+    status = ("BESTÄTIGT (Schluss im oberen Fünftel)" if g["bestaetigt"]
+              else "im Aufbau")
+    vol = ((f"Frühvolumen {g['frueh_ratio']*100:.0f}% des Zeitüblichen, "
+            f"nötig {GAP_FRUEH_FAKTOR*100:.0f}%") if g["frueh"] else
+           (f"Volumen hochgerechnet {g['tages_ratio']:.1f} mal Ø10, "
+            f"nötig {GAP_VOL_FAKTOR:.0f} mal"))
+    luecke = f"Lücke +{g['gap']*100:.1f}%"
+    if g.get("base_spanne") is not None:
+        luecke += f"; Flat Base davor, Spanne {g['base_spanne']*100:.0f}%"
     zeilen = [f"{kopf}; Gap and Go {status}",
-              f"Lücke +{g['gap']*100:.1f}%; {vol}",
+              luecke,
+              vol,
+              f"Position in der Tagesspanne {g['pos']*100:.0f}%",
               f"Kaufpunkt (Folgetag) {g['kp']:.2f}, Stop {g['stop']:.2f}"]
     if not g["bestaetigt"]:
-        zeilen.append("Schlussbestätigung folgt zum Handelsende")
+        zeilen.append("Schlussbestätigung (oberes Fünftel + 5 mal Volumen) "
+                      "folgt zum Handelsende")
     return "\n".join(zeilen)
 
 
 def format_treffer(t: dict) -> str:
-    """Kurzfassung fuers unmittelbare Trading (Mathias, 23.07.2026) —
-    Aufbau und Trenner-Regeln siehe format_gapgo. Die Volumen-Prozente
-    sind weiterhin die HOCHRECHNUNG auf den ganzen Tag (siehe
-    pruefe_breakout); der fruehere Erklaer-Zusatz dazu ist gestrichen."""
+    """Trenner-Regeln und Hintergrund siehe format_gapgo. Alle Angaben
+    drin (Mathias, 23.07.2026: erst radikal gekuerzt, dann fehlte zu
+    viel); Fuellwoerter wie "erst"/"nur" bleiben draussen. Die
+    Volumen-Prozente sind die HOCHRECHNUNG auf den ganzen Tag (siehe
+    pruefe_breakout), die Klammer nennt den ueblichen Tagesanteil."""
+    anteil = t.get("vol_anteil", 1.0)
+    zusatz = ""
+    if anteil < 0.99:
+        zusatz = f" (hochgerechnet, {anteil*100:.0f}% des Tages)"
     if t["vol_ok"] is True:
-        vol_txt = f"Volumen BESTÄTIGT, {t['vol_ratio']*100:.0f}% vom Ø"
+        vol_txt = (f"Volumen BESTÄTIGT, {t['vol_ratio']*100:.0f}% vom Ø, "
+                   f"nötig {t['vol_noetig']*100:.0f}%{zusatz}")
     elif t["vol_ok"] is False:
-        vol_txt = (f"Volumen NICHT bestätigt, nur {t['vol_ratio']*100:.0f}% "
-                   f"von nötigen {t['vol_noetig']*100:.0f}%")
+        vol_txt = (f"Volumen NICHT bestätigt, {t['vol_ratio']*100:.0f}% "
+                   f"von nötigen {t['vol_noetig']*100:.0f}%{zusatz}")
     else:
         vol_txt = "Volumen unbekannt, selbst prüfen"
     strategie = STRATEGIE_VOLL.get(t["strategie"], t["strategie"])
     zeilen = [
         f"{meldungskopf(t['ticker'], t.get('firma', ''))}; {strategie}",
-        f"Kaufpunkt {t['kaufpunkt']:.2f}, Kurs {t['kurs']:.2f}; {vol_txt}",
+        f"Kaufpunkt {t['kaufpunkt']:.2f}, Kurs {t['kurs']:.2f} "
+        f"(+{t['ueber_pct']:.1f}%); {vol_txt}",
     ]
     schluss = []
     if t["stop"] is not None:
         risiko = (t["kurs"] / t["stop"] - 1) * 100
         schluss.append(f"Stop {t['stop']:.2f}, Risiko {risiko:.1f}%")
     if t["ziel"] is not None:
-        schluss.append(f"Ziel {t['ziel']:.2f}")
+        chance = (t["ziel"] / t["kurs"] - 1) * 100
+        schluss.append(f"Ziel {t['ziel']:.2f} (+{chance:.1f}%)")
     if schluss:
         zeilen.append("; ".join(schluss))
     return "\n".join(zeilen)
