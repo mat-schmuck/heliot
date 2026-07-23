@@ -497,14 +497,14 @@ def format_gapgo(g: dict) -> str:
               f"Eröffnung +{g['gap']*100:.1f}% über Vortagesschluss",
               (f"Frühvolumen {g['frueh_ratio']*100:.0f}% des Zeitüblichen "
                f"(nötig {GAP_FRUEH_FAKTOR*100:.0f}%)") if g["frueh"] else
-              (f"Volumen hochgerechnet {g['tages_ratio']:.1f}× Ø10 "
-               f"(nötig {GAP_VOL_FAKTOR:.0f}×)"),
+              (f"Volumen hochgerechnet das {g['tages_ratio']:.1f}-Fache des "
+               f"10-Tage-Durchschnitts (nötig das {GAP_VOL_FAKTOR:.0f}-Fache)"),
               f"Position in der Tagesspanne {g['pos']*100:.0f}%",
               f"Kaufpunkt (Folgetag) {g['kp']:.2f} | Stop {g['stop']:.2f}"]
     if g.get("base_spanne") is not None:
         zeilen.insert(2, f"Flat Base davor, Spanne {g['base_spanne']*100:.0f}%")
     if not g["bestaetigt"]:
-        zeilen.append("Schlussbestätigung (oberes Fünftel + 5× Volumen) "
+        zeilen.append("Schlussbestätigung (oberes Fünftel + 5-faches Volumen) "
                       "folgt zum Handelsende")
     return "\n".join(zeilen)
 
@@ -517,9 +517,10 @@ def format_treffer(t: dict) -> str:
     if anteil < 0.99:
         zusatz = f" (hochgerechnet, erst {anteil*100:.0f}% des Tages)"
     if t["vol_ok"] is True:
-        vol_txt = f"Vol {t['vol_ratio']*100:.0f}% vom Ø — BESTÄTIGT{zusatz}"
+        vol_txt = (f"Vol {t['vol_ratio']*100:.0f}% vom 20-Tage-Durchschnitt "
+                   f"— BESTÄTIGT{zusatz}")
     elif t["vol_ok"] is False:
-        vol_txt = (f"Vol nur {t['vol_ratio']*100:.0f}% vom Ø "
+        vol_txt = (f"Vol nur {t['vol_ratio']*100:.0f}% vom 20-Tage-Durchschnitt "
                    f"(nötig: {t['vol_noetig']*100:.0f}%) — NICHT bestätigt{zusatz}")
     else:
         vol_txt = "Volumen unbekannt — selbst prüfen"
