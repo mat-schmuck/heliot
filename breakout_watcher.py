@@ -552,7 +552,11 @@ def format_treffer(t: dict) -> str:
         vol_txt = (f"Volumen NICHT bestätigt, {t['vol_ratio']*100:.0f}% "
                    f"von nötigen {t['vol_noetig']*100:.0f}%{zusatz}")
     else:
-        vol_txt = "Volumen unbekannt, selbst prüfen"
+        # Kommt nur vor, wenn keine Durchschnittsbasis existiert (brandneue
+        # Notierung oder Datenluecke der Kursquelle) — der Waechter rechnet
+        # sonst IMMER selbst. "Selbst pruefen" hiess frueher missverstaendlich,
+        # man muesse rechnen; gemeint ist: Signal ohne Volumenurteil.
+        vol_txt = "Volumen nicht bewertbar, zu wenig Kurshistorie"
     strategie = STRATEGIE_VOLL.get(t["strategie"], t["strategie"])
     zeilen = [
         f"{meldungskopf(t['ticker'], t.get('firma', ''))}; {strategie}",
