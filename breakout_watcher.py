@@ -58,6 +58,18 @@ VOL_FAKTOR = {
 }
 VOL_FAKTOR_FALLBACK = 1.0
 
+# In den Push-Meldungen werden Strategienamen ausgeschrieben (Mathias,
+# 23.07.2026). In Excel und VOL_FAKTOR bleibt die Kurzform bestehen.
+STRATEGIE_VOLL = {
+    "VCP": "Volatility Contraction Pattern",
+}
+
+
+def meldungskopf(ticker: str, firma: str) -> str:
+    """Erste Zeile jeder Meldung: Kürzel zuerst, Firmenname in Klammern."""
+    firma = (firma or "").strip()
+    return f"{ticker} ({firma})" if firma else ticker
+
 # --- Gap and Go (Regelwerk Kapitel 7, Power-Gap-Fassung, Juli 2026) --------
 # Alle Kriterien sind PFLICHT; die Fassung ist bewusst streng ("Klasse statt
 # Masse"). Das Fruehvolumen-Kriterium ist laut Regelwerk NUR live pruefbar
@@ -219,6 +231,8 @@ def load_watchlist(xlsx_path: str, nur_muster: bool) -> list[dict]:
     items = []
     for _, row in df.iterrows():
         ticker = str(row["Ticker"]).strip()
+        firma_roh = row.get("Firma", "")
+        firma = "" if pd.isna(firma_roh) else str(firma_roh).strip()
         for i in (1, 2, 3):
             strat = str(row.get(f"KP{i} Strategie", "") or "").strip()
             preis = row.get(f"KP{i} Preis")
@@ -230,7 +244,7 @@ def load_watchlist(xlsx_path: str, nur_muster: bool) -> list[dict]:
             ziel = row.get(f"KP{i} Ziel")
             items.append({
                 "ticker": ticker,
-                "firma": str(row.get("Firma", "")),
+                "firma": firma,
                 "nr": i,
                 "strategie": strat,
                 "kaufpunkt": float(preis),
@@ -396,16 +410,9 @@ def pruefe_breakout(item: dict, quote: dict) -> dict | None:
     if avg > 0:
         vol_ratio = vol_hochgerechnet / avg
         vol_ok = vol_ratio >= faktor
-        # Alte Rechnung (vor der Hochrechnung): rohes Tagesvolumen gegen Ø20.
-        # Nur fuer Gerhards eintaegigen Vergleich der beiden Verfahren —
-        # wird per VOL_VERGLEICH=1 an die Meldungen angehaengt.
-        vol_ratio_roh = vol / avg
-        vol_ok_roh = vol_ratio_roh >= faktor
     else:
         vol_ratio = None
         vol_ok = None  # unbekannt — wir melden trotzdem, aber gekennzeichnet
-        vol_ratio_roh = None
-        vol_ok_roh = None
 
     return {
         **item,
@@ -416,8 +423,6 @@ def pruefe_breakout(item: dict, quote: dict) -> dict | None:
         "vol_ok": vol_ok,
         "vol_roh": vol,
         "vol_anteil": anteil,
-        "vol_ratio_roh": vol_ratio_roh,
-        "vol_ok_roh": vol_ok_roh,
     }
 
 
@@ -486,7 +491,7 @@ def pruefe_gap_and_go(ticker: str, q: dict):
 
 
 def format_gapgo(g: dict) -> str:
-    zeilen = [f"{g['ticker']} — Gap and Go "
+    zeilen = [f"{meldungskopf(g['ticker'], g.get('firma', ''))} — Gap and Go "
               + ("BESTÄTIGT (Schluss im oberen Fünftel)" if g["bestaetigt"]
                  else "im Aufbau"),
               f"Eröffnung +{g['gap']*100:.1f}% über Vortagesschluss; "
@@ -519,8 +524,9 @@ def format_treffer(t: dict) -> str:
                    f"(nötig: {t['vol_noetig']*100:.0f}%) — NICHT bestätigt{zusatz}")
     else:
         vol_txt = "Volumen unbekannt — selbst prüfen"
+    strategie = STRATEGIE_VOLL.get(t["strategie"], t["strategie"])
     zeilen = [
-        f"{t['ticker']} — {t['strategie']}",
+        f"{meldungskopf(t['ticker'], t.get('firma', ''))} — {strategie}",
         f"Kaufpunkt {t['kaufpunkt']:.2f} | Kurs {t['kurs']:.2f} (+{t['ueber_pct']:.1f}%)",
         vol_txt,
     ]
@@ -530,17 +536,6 @@ def format_treffer(t: dict) -> str:
     if t["ziel"] is not None:
         chance = (t["ziel"] / t["kurs"] - 1) * 100
         zeilen.append(f"Ziel {t['ziel']:.2f} (+{chance:.1f}%)")
-
-    # Gerhards eintaegiger Vergleich (VOL_VERGLEICH=1 in watcher.yml):
-    # Zusatzzeile mit der ALTEN Rechnung (rohes Volumen ohne Hochrechnung),
-    # damit sich beide Verfahren am selben Treffer vergleichen lassen.
-    # Nach einem vollen Handelstag den Schalter in watcher.yml wieder
-    # entfernen — die Zeile verschwindet dann von selbst.
-    if (os.environ.get("VOL_VERGLEICH", "") == "1"
-            and t.get("vol_ratio_roh") is not None):
-        roh_urteil = "hätte BESTÄTIGT" if t["vol_ok_roh"] else "hätte NICHT bestätigt"
-        zeilen.append(f"Vergleich alte Rechnung: Vol roh {t['vol_ratio_roh']*100:.0f}% "
-                      f"vom Ø (nötig {t['vol_noetig']*100:.0f}%) — {roh_urteil}")
     return "\n".join(zeilen)
 
 
@@ -714,12 +709,21 @@ def main():
     # Gap and Go (Regelwerk Kapitel 7) beobachtet ALLE Aktien der Liste,
     # nicht nur die mit Muster-Kaufpunkten — eine Kursluecke nach einem
     # Katalysator kann jede treffen.
+    firmen = {i["ticker"].upper(): i["firma"] for i in items if i.get("firma")}
     try:
+        gap_df = pd.read_excel(args.xlsx, sheet_name="Kaufpunkte")
         gap_universum = sorted(set(
             str(t).strip().upper()
-            for t in pd.read_excel(args.xlsx,
-                                   sheet_name="Kaufpunkte")["Ticker"].dropna()
+            for t in gap_df["Ticker"].dropna()
             if str(t).strip()))
+        # Firmennamen fuer die Meldungskoepfe — auch fuer Aktien ohne
+        # Muster-Kaufpunkt (Gap and Go beobachtet die ganze Liste).
+        if "Firma" in gap_df.columns:
+            for _, r in gap_df.iterrows():
+                tk = str(r["Ticker"]).strip().upper()
+                fi = r.get("Firma", "")
+                if tk and not pd.isna(fi) and str(fi).strip():
+                    firmen.setdefault(tk, str(fi).strip())
     except Exception as e:
         print(f"  (Gap-and-Go-Universum nicht lesbar: {e})")
         gap_universum = sorted(gewuenscht)
@@ -837,6 +841,7 @@ def main():
                 g = pruefe_gap_and_go(gt, q)
                 if not g:
                     continue
+                g["firma"] = firmen.get(gt, "")
                 g["key"] = ("GAPGOFIX|" if g["bestaetigt"] else "GAPGO|") + gt
                 if g["key"] not in schon_gemeldet:
                     gap_neu.append(g)

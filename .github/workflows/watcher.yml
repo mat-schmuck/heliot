@@ -94,11 +94,6 @@ jobs:
           TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
           NTFY_EMAIL: ${{ secrets.NTFY_EMAIL }}
-          # Gerhards Bitte vom 22.07.2026: einen Handelstag lang beide
-          # Volumen-Rechnungen (hochgerechnet UND roh) an jede Meldung
-          # anhaengen, bevor wir uns auf die Schwellen verlassen.
-          # NACH EINEM VOLLEN HANDELSTAG DIESE ZEILE WIEDER ENTFERNEN.
-          VOL_VERGLEICH: "1"
         run: |
           if [ ! -f kaufpunkte.xlsx ]; then
             echo "Keine kaufpunkte.xlsx gefunden — erst den Scanner laufen lassen."
