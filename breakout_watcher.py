@@ -500,12 +500,16 @@ def format_gapgo(g: dict) -> str:
     verteidigt, Position in der Spanne) werden nicht aufgezaehlt, denn
     ohne sie gaebe es die Meldung gar nicht. Trenner: Strichpunkt
     zwischen verschiedenen Angaben, Beistrich innerhalb; keine
-    Gedankenstriche, kein senkrechter Strich, keine Kurzzeichen."""
+    Gedankenstriche, kein senkrechter Strich, kein Malzeichen. Ø ist
+    auf Mathias' Wunsch wieder drin (kuerzer als das ausgeschriebene
+    Wort, auch wenn VoiceOver es sperrig ansagt). Beim Zusammenbau der
+    Push-Nachricht bekommt jede Aktie eine Nummer vorangestellt
+    (nummeriert()), damit hoerbar ist, wo die naechste beginnt."""
     kopf = meldungskopf(g["ticker"], g.get("firma", ""))
     status = "BESTÄTIGT" if g["bestaetigt"] else "im Aufbau"
     vol = (f"Frühvolumen {g['frueh_ratio']*100:.0f}% des Zeitüblichen"
            if g["frueh"] else
-           f"Volumen das {g['tages_ratio']:.1f}-Fache des 10-Tage-Durchschnitts")
+           f"Volumen das {g['tages_ratio']:.1f}-Fache vom Ø10")
     zeilen = [f"{kopf}; Gap and Go {status}",
               f"Lücke +{g['gap']*100:.1f}%; {vol}",
               f"Kaufpunkt (Folgetag) {g['kp']:.2f}, Stop {g['stop']:.2f}"]
@@ -520,8 +524,7 @@ def format_treffer(t: dict) -> str:
     sind weiterhin die HOCHRECHNUNG auf den ganzen Tag (siehe
     pruefe_breakout); der fruehere Erklaer-Zusatz dazu ist gestrichen."""
     if t["vol_ok"] is True:
-        vol_txt = (f"Volumen BESTÄTIGT, {t['vol_ratio']*100:.0f}% "
-                   f"vom 20-Tage-Durchschnitt")
+        vol_txt = f"Volumen BESTÄTIGT, {t['vol_ratio']*100:.0f}% vom Ø"
     elif t["vol_ok"] is False:
         vol_txt = (f"Volumen NICHT bestätigt, nur {t['vol_ratio']*100:.0f}% "
                    f"von nötigen {t['vol_noetig']*100:.0f}%")
@@ -534,7 +537,8 @@ def format_treffer(t: dict) -> str:
     ]
     schluss = []
     if t["stop"] is not None:
-        schluss.append(f"Stop {t['stop']:.2f}")
+        risiko = (t["kurs"] / t["stop"] - 1) * 100
+        schluss.append(f"Stop {t['stop']:.2f}, Risiko {risiko:.1f}%")
     if t["ziel"] is not None:
         schluss.append(f"Ziel {t['ziel']:.2f}")
     if schluss:
@@ -545,6 +549,14 @@ def format_treffer(t: dict) -> str:
 # ---------------------------------------------------------------------------
 # Push
 # ---------------------------------------------------------------------------
+
+def nummeriert(bloecke: list[str]) -> str:
+    """Baut den Nachrichtentext: '1. ' vor der ersten Aktie, '2. ' vor der
+    naechsten usw., Bloecke durch Leerzeilen getrennt. Die Nummer steht
+    ganz vorn vor dem Kuerzel, damit beim Vorlesen sofort klar ist, wo
+    die naechste Aktie beginnt (Mathias, 23.07.2026)."""
+    return "\n\n".join(f"{i}. {block}" for i, block in enumerate(bloecke, 1))
+
 
 def email_kopf() -> dict:
     """Zusatz-Kopfzeile, damit ntfy die Meldung auch als E-Mail zustellt.
@@ -587,7 +599,7 @@ def push(topic: str, treffer: list[dict]) -> bool:
     danach NIE wieder gemeldet worden."""
     bestaetigt = [t for t in treffer if t["vol_ok"] is True]
     rest = [t for t in treffer if t["vol_ok"] is not True]
-    body = "\n\n".join([format_treffer(t) for t in bestaetigt + rest])
+    body = nummeriert([format_treffer(t) for t in bestaetigt + rest])
     # Kein Titel: ntfy stellt ihn nur als zusaetzlichen Text voran
     # ("Wortgeklingel", Mathias 23.07.2026) — jeder Treffer traegt seine
     # Einstufung ohnehin selbst in der Volumenzeile.
@@ -856,7 +868,7 @@ def main():
                 if args.dry_run:
                     print("(Dry-Run — kein Gap-and-Go-Push)")
                 else:
-                    body = "\n\n".join(format_gapgo(g) for g in gap_neu)
+                    body = nummeriert([format_gapgo(g) for g in gap_neu])
                     if push_text(topic, body):
                         for g in gap_neu:
                             schon_gemeldet.add(g["key"])
