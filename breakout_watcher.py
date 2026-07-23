@@ -508,7 +508,7 @@ def format_gapgo(g: dict) -> str:
               else "im Aufbau")
     vol = ((f"Frühvolumen {g['frueh_ratio']*100:.0f}% des Zeitüblichen, "
             f"nötig {GAP_FRUEH_FAKTOR*100:.0f}%") if g["frueh"] else
-           (f"Volumen hochgerechnet {g['tages_ratio']:.1f} mal Ø10, "
+           (f"Volumen hochgerechnet {g['tages_ratio']:.1f} mal vom Ø10, "
             f"nötig {GAP_VOL_FAKTOR:.0f} mal"))
     luecke = f"Lücke +{g['gap']*100:.1f}%"
     if g.get("base_spanne") is not None:
