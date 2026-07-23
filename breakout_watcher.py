@@ -491,51 +491,54 @@ def pruefe_gap_and_go(ticker: str, q: dict):
 
 
 def format_gapgo(g: dict) -> str:
-    zeilen = [f"{meldungskopf(g['ticker'], g.get('firma', ''))} — Gap and Go "
-              + ("BESTÄTIGT (Schluss im oberen Fünftel)" if g["bestaetigt"]
-                 else "im Aufbau"),
-              f"Eröffnung +{g['gap']*100:.1f}% über Vortagesschluss",
-              (f"Frühvolumen {g['frueh_ratio']*100:.0f}% des Zeitüblichen "
-               f"(nötig {GAP_FRUEH_FAKTOR*100:.0f}%)") if g["frueh"] else
-              (f"Volumen hochgerechnet das {g['tages_ratio']:.1f}-Fache des "
-               f"10-Tage-Durchschnitts (nötig das {GAP_VOL_FAKTOR:.0f}-Fache)"),
-              f"Position in der Tagesspanne {g['pos']*100:.0f}%",
-              f"Kaufpunkt (Folgetag) {g['kp']:.2f} | Stop {g['stop']:.2f}"]
-    if g.get("base_spanne") is not None:
-        zeilen.insert(2, f"Flat Base davor, Spanne {g['base_spanne']*100:.0f}%")
+    """Kurzfassung fuers unmittelbare Trading (Mathias, 23.07.2026).
+
+    Beide Nutzer lesen die Pushes blind mit iPhone/VoiceOver; ntfy zeigt
+    alles als einen Textblock. Deshalb nur, was fuer die Entscheidung
+    zaehlt: Wer, Status, Luecke, Volumen, Kaufpunkt, Stop. Erfuellte
+    Pflichtkriterien ohne eigenen Zahlenwert (Flat Base, Luecke
+    verteidigt, Position in der Spanne) werden nicht aufgezaehlt, denn
+    ohne sie gaebe es die Meldung gar nicht. Trenner: Strichpunkt
+    zwischen verschiedenen Angaben, Beistrich innerhalb; keine
+    Gedankenstriche, kein senkrechter Strich, keine Kurzzeichen."""
+    kopf = meldungskopf(g["ticker"], g.get("firma", ""))
+    status = "BESTÄTIGT" if g["bestaetigt"] else "im Aufbau"
+    vol = (f"Frühvolumen {g['frueh_ratio']*100:.0f}% des Zeitüblichen"
+           if g["frueh"] else
+           f"Volumen das {g['tages_ratio']:.1f}-Fache des 10-Tage-Durchschnitts")
+    zeilen = [f"{kopf}; Gap and Go {status}",
+              f"Lücke +{g['gap']*100:.1f}%; {vol}",
+              f"Kaufpunkt (Folgetag) {g['kp']:.2f}, Stop {g['stop']:.2f}"]
     if not g["bestaetigt"]:
-        zeilen.append("Schlussbestätigung (oberes Fünftel + 5-faches Volumen) "
-                      "folgt zum Handelsende")
+        zeilen.append("Schlussbestätigung folgt zum Handelsende")
     return "\n".join(zeilen)
 
 
 def format_treffer(t: dict) -> str:
-    # Bei laufendem Handel dazuschreiben, dass hochgerechnet wurde — sonst
-    # wundert man sich ueber 3200 %, wenn erst eine Stunde gehandelt wurde.
-    anteil = t.get("vol_anteil", 1.0)
-    zusatz = ""
-    if anteil < 0.99:
-        zusatz = f" (hochgerechnet, erst {anteil*100:.0f}% des Tages)"
+    """Kurzfassung fuers unmittelbare Trading (Mathias, 23.07.2026) —
+    Aufbau und Trenner-Regeln siehe format_gapgo. Die Volumen-Prozente
+    sind weiterhin die HOCHRECHNUNG auf den ganzen Tag (siehe
+    pruefe_breakout); der fruehere Erklaer-Zusatz dazu ist gestrichen."""
     if t["vol_ok"] is True:
-        vol_txt = (f"Vol {t['vol_ratio']*100:.0f}% vom 20-Tage-Durchschnitt "
-                   f"— BESTÄTIGT{zusatz}")
+        vol_txt = (f"Volumen BESTÄTIGT, {t['vol_ratio']*100:.0f}% "
+                   f"vom 20-Tage-Durchschnitt")
     elif t["vol_ok"] is False:
-        vol_txt = (f"Vol nur {t['vol_ratio']*100:.0f}% vom 20-Tage-Durchschnitt "
-                   f"(nötig: {t['vol_noetig']*100:.0f}%) — NICHT bestätigt{zusatz}")
+        vol_txt = (f"Volumen NICHT bestätigt, nur {t['vol_ratio']*100:.0f}% "
+                   f"von nötigen {t['vol_noetig']*100:.0f}%")
     else:
-        vol_txt = "Volumen unbekannt — selbst prüfen"
+        vol_txt = "Volumen unbekannt, selbst prüfen"
     strategie = STRATEGIE_VOLL.get(t["strategie"], t["strategie"])
     zeilen = [
-        f"{meldungskopf(t['ticker'], t.get('firma', ''))} — {strategie}",
-        f"Kaufpunkt {t['kaufpunkt']:.2f} | Kurs {t['kurs']:.2f} (+{t['ueber_pct']:.1f}%)",
-        vol_txt,
+        f"{meldungskopf(t['ticker'], t.get('firma', ''))}; {strategie}",
+        f"Kaufpunkt {t['kaufpunkt']:.2f}, Kurs {t['kurs']:.2f}; {vol_txt}",
     ]
+    schluss = []
     if t["stop"] is not None:
-        risiko = (t["kurs"] / t["stop"] - 1) * 100
-        zeilen.append(f"Stop {t['stop']:.2f} (Risiko {risiko:.1f}%)")
+        schluss.append(f"Stop {t['stop']:.2f}")
     if t["ziel"] is not None:
-        chance = (t["ziel"] / t["kurs"] - 1) * 100
-        zeilen.append(f"Ziel {t['ziel']:.2f} (+{chance:.1f}%)")
+        schluss.append(f"Ziel {t['ziel']:.2f}")
+    if schluss:
+        zeilen.append("; ".join(schluss))
     return "\n".join(zeilen)
 
 
