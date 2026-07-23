@@ -292,7 +292,18 @@ def fetch_quotes_yahoo(tickers: list[str]) -> dict:
             if df.empty:
                 continue
             letzte = df.iloc[-1]
-            vol20 = float(df["Volume"].tail(20).mean())
+            # Ø20 OHNE die letzte Zeile: Die ist waehrend des Handels der
+            # heutige, UNFERTIGE Tag (Ø10 und Flat Base rechnen unten schon
+            # immer so). Mit dem unfertigen Tag im Durchschnitt war die
+            # Messlatte an ruhigen Vormittagen zu niedrig (Bestaetigung zu
+            # leicht) und ausgerechnet an starken Ausbruchstagen zu hoch
+            # (Bestaetigung zu schwer) — Gerhards Zweifel vom 23.07.2026.
+            # Der Vergleich "heutiges Volumen gegen Ø20" braucht die 20
+            # Tage DAVOR, sonst steckt der Messwert im Massstab.
+            if len(df) >= 2:
+                vol20 = float(df["Volume"].iloc[:-1].tail(20).mean())
+            else:
+                vol20 = 0.0  # brandneue Notierung: ehrlich als unbekannt melden
             eintrag = {
                 "close": float(letzte["Close"]),
                 "volume": float(letzte["Volume"]),
