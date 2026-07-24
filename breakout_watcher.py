@@ -203,15 +203,30 @@ def sekunden_bis_eroeffnung(jetzt=None):
 
 
 def load_state() -> dict:
+    """Melde-Gedaechtnis, dauerhaft ueber Tage hinweg.
+
+    Frueher galt der Zustand nur fuer den laufenden Handelstag — ein am
+    Dienstag gemeldeter Ausbruch kam am Mittwoch erneut aufs Handy, solange
+    der Kurs ueber dem Kaufpunkt stand (Mathias am 24.07.2026: 'wildes
+    Durcheinander'). Jetzt wird jede Meldung mit Datum gemerkt: Ein
+    Kaufpunkt meldet genau EINMAL. Rechnet der Scanner neue Level, ergibt
+    der neue Preis von selbst einen neuen Schluessel; nach 30 Tagen
+    verfallen alte Eintraege. Gap-and-Go-Schluessel tragen das Datum im
+    Namen und sind damit bewusst je Tag einmalig."""
+    heute = date.today().isoformat()
     if STATE_FILE.exists():
         try:
             data = json.loads(STATE_FILE.read_text())
-            # Zustand gilt nur für den heutigen Handelstag
-            if data.get("tag") == date.today().isoformat():
-                return data
+            gemeldet = data.get("gemeldet", {})
+            if isinstance(gemeldet, list):
+                # Altes Tagesformat einmalig uebernehmen
+                gemeldet = {k: data.get("tag", heute) for k in gemeldet}
+            grenze = (date.today() - timedelta(days=30)).isoformat()
+            return {"gemeldet": {k: d for k, d in gemeldet.items()
+                                 if str(d) >= grenze}}
         except Exception:
             pass
-    return {"tag": date.today().isoformat(), "gemeldet": []}
+    return {"gemeldet": {}}
 
 
 def save_state(state: dict):
@@ -865,7 +880,7 @@ def main():
                 if push(topic, zu_melden):
                     for t in zu_melden:
                         schon_gemeldet.add(t["key"])
-                    state["gemeldet"] = sorted(schon_gemeldet)
+                        state["gemeldet"][t["key"]] = date.today().isoformat()
                     save_state(state)
                 else:
                     print("⚠ Zustand NICHT gespeichert — der nächste Lauf versucht es erneut.")
@@ -887,7 +902,8 @@ def main():
                 if not g:
                     continue
                 g["firma"] = firmen.get(gt, "")
-                g["key"] = ("GAPGOFIX|" if g["bestaetigt"] else "GAPGO|") + gt
+                stufe = "GAPGOFIX|" if g["bestaetigt"] else "GAPGO|"
+                g["key"] = f"{stufe}{gt}|{date.today().isoformat()}"
                 if g["key"] not in schon_gemeldet:
                     gap_neu.append(g)
             if gap_neu:
@@ -901,7 +917,7 @@ def main():
                     if push_text(topic, body):
                         for g in gap_neu:
                             schon_gemeldet.add(g["key"])
-                        state["gemeldet"] = sorted(schon_gemeldet)
+                            state["gemeldet"][g["key"]] = date.today().isoformat()
                         save_state(state)
 
         if ende_dauerwache is None:

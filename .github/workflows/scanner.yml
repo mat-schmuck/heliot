@@ -32,11 +32,15 @@ jobs:
       - name: Scanner ausführen
         env:
           TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
+        # Bewusst OHNE --ntfy (Mathias, 24.07.2026): GitHub verschleppt den
+        # 23:45-Zeitplan regelmaessig in den Morgen (08:43), und die
+        # Treffer-Nachricht des Scanners weckte dann um ~09:00 die Handys.
+        # Die Ergebnisse stehen in der Heliot-Karte 'Aktueller Scan';
+        # Push-Meldungen verschickt allein der Breakout-Waechter.
         run: |
           python pattern_scanner.py finviz_3.csv \
             --out kaufpunkte.xlsx \
-            --rate 8 \
-            --ntfy ${{ secrets.NTFY_TOPIC || 'dummy-kein-push' }}
+            --rate 8
 
       - name: Excel als Artifact hochladen
         uses: actions/upload-artifact@v4
