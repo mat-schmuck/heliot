@@ -1,41 +1,20 @@
 name: Breakout-Wächter (alle 6 Min)
 
 on:
-  schedule:
-    # Alle 6 Minuten, 13:30 bis 21:00 UTC.
-    #
-    # Dieses Fenster deckt die US-Handelszeit in BEIDEN Zeitumstellungen ab:
-    #   US-Sommerzeit  (EDT): 13:30-20:00 UTC
-    #   US-Winterzeit  (EST): 14:30-21:00 UTC
-    #
-    # Cron kennt keine Zeitzonen und rechnet stur in UTC. Deshalb laeuft der
-    # Zeitplan ueber den groesseren Bereich, und das Programm entscheidet
-    # selbst, ob die Boerse gerade offen ist — markt_offen() in
-    # breakout_watcher.py fragt dafuer die Zeitzone America/New_York ab und
-    # kennt damit die amerikanischen Umstellungstermine. Ausserhalb der
-    # Handelszeit bricht der Lauf sofort ab, ohne Kursdaten abzurufen.
-    #
-    # Damit ist immer der volle Boersenhandel abgedeckt, auch in den Wochen,
-    # in denen USA und Europa unterschiedlich umgestellt haben (Ende Maerz
-    # und Ende Oktober) — dann beginnt der Handel bei uns eine Stunde
-    # frueher bzw. spaeter. Niemand muss zweimal im Jahr Zeiten nachziehen.
-    #
-    # 6 ist ein Teiler von 60 und ergibt gleichmaessige Abstaende. Bei 7, 8
-    # oder 9 muesste jeder Zeitpunkt einzeln stehen.
-    #
-    # WICHTIG, Eroeffnungs-Abdeckung: GitHub feuert Zeitplaene oft 5-15 Min
-    # verspaetet (Mathias' Einwand vom 22.07.2026 — sonst waere die
-    # Eroeffnung unbewacht). Deshalb stehen VOR dem Handelsbeginn zwei
-    # zusaetzliche Termine, und der Waechter wartet bei einem Start kurz vor
-    # der Glocke bis zur Eroeffnung, statt sich schlafen zu legen
-    # (sekunden_bis_eroeffnung in breakout_watcher.py). Die Winter-Eroeffnung
-    # 14:30 UTC deckt derselbe Mechanismus ueber den 14:24-Termin ab.
-    # Actions-Minuten spielen keine Rolle mehr — oeffentliche Repos haben
-    # keine Begrenzung.
-    - cron: "15,22 13 * * 1-5"
-    - cron: "30,36,42,48,54 13 * * 1-5"
-    - cron: "*/6 14-20 * * 1-5"
-    - cron: "0 21 * * 1-5"
+  # KEIN GitHub-Zeitplan mehr (Mathias, 24.07.2026): GitHubs cron hinkte
+  # fuer dieses Repo beharrlich Stunden nach (belegt 22.-24.07., z. B.
+  # 23:45-Termin kam um 08:43). Die Zeitsteuerung liegt jetzt komplett bei
+  # cron-job.org (Konto von Mathias, Fehler-E-Mails an ihn):
+  #   - "Heliot" wochentags 09:12 New York -> Dauerwache 390 Min
+  #   - "Heliot Teil 2 (Schlussstunde)" wochentags 15:09 New York
+  #     (haengt sich per concurrency hinter die Tagwache und uebernimmt
+  #     die letzte Stunde, weil 390 Min ab 09:12 um ~15:42 enden)
+  # Beide rufen workflow_dispatch ueber die GitHub-API auf. Die
+  # Warte-bis-zur-Eroeffnung-Logik (sekunden_bis_eroeffnung) bleibt im
+  # Programm: Startet die Tagwache vor 09:30 New York, wartet sie bis zur
+  # Glocke. Zusaetzliches Sicherheitsnetz: die lokale 15:10-Aufgabe
+  # "boersenwaechter-absicherung" auf Mathias' Rechner prueft werktags,
+  # ob wirklich ein Waechter laeuft, und startet sonst selbst einen.
   workflow_dispatch:
     inputs:
       dauerwache:

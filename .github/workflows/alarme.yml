@@ -1,24 +1,13 @@
 name: Scanner + TraderFox-Alarme
 
 on:
-  schedule:
-    # Freitags-Putz (Mathias, 23.07.2026): Jeden Freitag ZWEI MINUTEN NACH
-    # NASDAQ-SCHLUSS (16:02 New York — der Anker ist die Boersenuhr, nicht
-    # die Wiener; Praezisierung vom selben Abend) alle Alarme loeschen.
-    # Uebers Wochenende laedt Gerhard die neue Wochenliste hoch, am Montag
-    # wird frisch eingetragen (der Putz leert auch das
-    # Fortschrittsgedaechtnis, Montag braucht daher kein neu=true).
-    # In normalen Wochen ist 16:02 New York = 22:02 Wien; in den
-    # Umstellungswochen (USA frueher/spaeter als Europa) = 21:02 Wien.
-    # Cron laeuft in UTC: 16:02 New York ist 20:02 UTC (US-Sommerzeit)
-    # bzw. 21:02 UTC (US-Winterzeit). Es stehen BEIDE Termine, und der
-    # Schritt prueft selbst die New Yorker Uhr: Vor 16:02 New York wird
-    # NICHT geloescht (kein Putz in laufenden Handel), danach darf jeder
-    # Zwilling ran — ein doppelter Putz ist harmlos, der zweite findet
-    # ein leeres Konto vor. So ueberlebt der Putz auch GitHubs notorische
-    # Zeitplan-Verspaetungen.
-    - cron: "2 20 * * 5"
-    - cron: "2 21 * * 5"
+  # KEIN GitHub-Zeitplan mehr (Mathias, 24.07.2026) — GitHubs cron war
+  # hoffnungslos unpuenktlich. Den Freitags-Putz (alle Alarme loeschen,
+  # zwei Minuten nach Nasdaq-Schluss) stoesst jetzt cron-job.org an:
+  # Auftrag "Heliot Freitags-Putz", freitags 16:02 America/New_York
+  # (sommerzeitfest, Fehler-E-Mail an Mathias), per workflow_dispatch mit
+  # modus=alles_loeschen und loeschen=ALLE. Der Putz leert auch das
+  # Fortschrittsgedaechtnis — der Montags-Lauf braucht kein neu=true.
   workflow_dispatch:
     inputs:
       modus:
@@ -104,23 +93,12 @@ jobs:
       # Bewusst ohne Alarm-Sicherung (Mathias, 23.07.2026): die Aktienliste
       # ist das Original, der Scanner erzeugt die Alarme laufend neu.
       - name: "Alles löschen (sämtliche Alarme)"
-        if: ${{ github.event.inputs.modus == 'alles_loeschen' || github.event_name == 'schedule' }}
+        if: ${{ github.event.inputs.modus == 'alles_loeschen' }}
         env:
           TRADERFOX_USER: ${{ secrets.TRADERFOX_USER }}
           TRADERFOX_PASS: ${{ secrets.TRADERFOX_PASS }}
         run: |
-          if [ "${{ github.event_name }}" = "schedule" ]; then
-            # Boersenuhr-Waechter: Nie vor 16:02 New York loeschen — sonst
-            # fielen Alarme mitten im Handel weg. Der Zwilling der jeweils
-            # anderen Jahreszeit landet vor Boersenschluss und beendet
-            # sich hier wirkungslos.
-            NY_STUNDE=$(TZ=America/New_York date +%H)
-            NY_MINUTE=$(TZ=America/New_York date +%M)
-            if [ "$NY_STUNDE" -lt 16 ] || { [ "$NY_STUNDE" -eq 16 ] && [ "$NY_MINUTE" -lt 2 ]; }; then
-              echo "Freitags-Putz: In New York ist es erst ${NY_STUNDE}:${NY_MINUTE} — Börse noch offen, dieser Termin ist der Zwilling der anderen Jahreszeit. Nichts zu tun."
-              exit 0
-            fi
-          elif [ "${{ github.event.inputs.loeschen }}" != "ALLE" ]; then
+          if [ "${{ github.event.inputs.loeschen }}" != "ALLE" ]; then
             echo "Verriegelung: Zum Bestätigen muss im Feld 'loeschen' genau ALLE stehen."
             exit 1
           fi

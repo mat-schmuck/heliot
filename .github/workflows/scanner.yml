@@ -1,13 +1,13 @@
 name: Pattern-Scanner (Kaufpunkte)
 
 on:
-  schedule:
-    # Werktags 21:45 UTC — sicher nach US-Börsenschluss in BEIDEN Zeitzonen:
-    #   US-Sommerzeit (EDT): Schluss 20:00 UTC → 105 Minuten Abstand
-    #   US-Winterzeit (EST): Schluss 21:00 UTC →  45 Minuten Abstand
-    # Vorher stand hier 21:15, was im Winter nur 15 Minuten nach Schluss
-    # gewesen wäre — da sind die Tagesdaten oft noch nicht endgültig.
-    - cron: "45 21 * * 1-5"
+  # KEIN GitHub-Zeitplan mehr (Mathias, 24.07.2026): GitHubs cron kam
+  # beharrlich ~9 h zu spaet (23:45-Termin erst um 08:43 frueh). Den
+  # Nachtscan stoesst jetzt cron-job.org an: Auftrag "Heliot Scan",
+  # taeglich 18:00 New York = ca. 00:00 Wien, per workflow_dispatch;
+  # Fehler-E-Mail geht an Mathias. Das Sendefenster fuer die
+  # Treffer-Nachricht (00-01 Uhr Wien, siehe unten) bleibt unveraendert
+  # wirksam, weil es im Schritt selbst geprueft wird.
   workflow_dispatch: {}        # manueller Start jederzeit möglich
 
 jobs:
