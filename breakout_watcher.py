@@ -615,12 +615,15 @@ def email_kopf() -> dict:
     return {"Email": adresse} if adresse else {}
 
 
-def push_text(topic: str, body: str) -> bool:
+def push_text(topic: str, titel: str, body: str) -> bool:
     """Schickt eine frei formulierte Meldung (fuer Gap and Go).
 
-    Ohne Titel-Kopfzeile: ntfy zeigt Titel nur als vorangestellten Text an,
-    was die Meldung fuer Mathias' Screenreader unnoetig verlaengert."""
-    kopf = {"Priority": "high", "Tags": "rocket"}
+    MIT Titel-Kopfzeile: Der Titel war am 23.07. als 'Wortgeklingel'
+    entfernt worden — ohne ihn setzt ntfy aber einen generischen Titel
+    (die Themen-Adresse) ein, was schlimmer ist. Am 24.07. auf Mathias'
+    Wunsch wiederhergestellt."""
+    kopf = {"Title": titel.encode("utf-8"), "Priority": "high",
+            "Tags": "rocket"}
     kopf.update(email_kopf())
     try:
         r = requests.post(f"https://ntfy.sh/{topic}", data=body.encode("utf-8"),
@@ -644,10 +647,13 @@ def push(topic: str, treffer: list[dict]) -> bool:
     bestaetigt = [t for t in treffer if t["vol_ok"] is True]
     rest = [t for t in treffer if t["vol_ok"] is not True]
     body = nummeriert([format_treffer(t) for t in bestaetigt + rest])
-    # Kein Titel: ntfy stellt ihn nur als zusaetzlichen Text voran
-    # ("Wortgeklingel", Mathias 23.07.2026) — jeder Treffer traegt seine
-    # Einstufung ohnehin selbst in der Volumenzeile.
-    kopf = {"Priority": "high" if bestaetigt else "default",
+    # Titel am 24.07.2026 wiederhergestellt: Ohne Title-Kopfzeile setzt
+    # ntfy einen generischen Titel (die Themen-Adresse) ein — das war
+    # schlimmer als das am 23.07. beanstandete 'Wortgeklingel'.
+    titel = (f"🚀 {len(bestaetigt)} bestätigt"
+             + (f", {len(rest)} ohne Vol-Bestätigung" if rest else ""))
+    kopf = {"Title": titel.encode("utf-8"),
+            "Priority": "high" if bestaetigt else "default",
             "Tags": "chart_with_upwards_trend"}
     kopf.update(email_kopf())
     try:
@@ -673,7 +679,8 @@ def testpush(topic: str) -> int:
             "Benachrichtigungskette.\n"
             f"Zustellweg: {weg}\n"
             f"Gesendet: {datetime.now():%d.%m.%Y %H:%M:%S}")
-    kopf = {"Priority": "default",
+    kopf = {"Title": "✅ Testnachricht Breakout-Wächter".encode("utf-8"),
+            "Priority": "default",
             "Tags": "white_check_mark"}
     kopf.update(email_kopf())
     print(f"    Zustellweg: {weg}")
@@ -914,7 +921,9 @@ def main():
                     print("(Dry-Run — kein Gap-and-Go-Push)")
                 else:
                     body = nummeriert([format_gapgo(g) for g in gap_neu])
-                    if push_text(topic, body):
+                    titel = "🚀 Gap and Go: " + ", ".join(g["ticker"]
+                                                          for g in gap_neu)
+                    if push_text(topic, titel, body):
                         for g in gap_neu:
                             schon_gemeldet.add(g["key"])
                             state["gemeldet"][g["key"]] = date.today().isoformat()
