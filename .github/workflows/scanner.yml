@@ -32,15 +32,24 @@ jobs:
       - name: Scanner ausführen
         env:
           TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
-        # Bewusst OHNE --ntfy (Mathias, 24.07.2026): GitHub verschleppt den
-        # 23:45-Zeitplan regelmaessig in den Morgen (08:43), und die
-        # Treffer-Nachricht des Scanners weckte dann um ~09:00 die Handys.
-        # Die Ergebnisse stehen in der Heliot-Karte 'Aktueller Scan';
-        # Push-Meldungen verschickt allein der Breakout-Waechter.
+        # Sendefenster 00:00-01:59 Wiener Zeit (Mathias, 24.07.2026):
+        # Der GEWOLLTE Push ist der des Mitternachtslaufs, den cron-job.org
+        # um 18:00 New York anstoesst (in der Parallel-Sitzung vom 23.07.
+        # eingerichtet, mit Fehler-E-Mail an Mathias). GitHubs eigener
+        # 23:45-Zeitplan hinkt derzeit ~9 h nach, kam um 08:43 an und
+        # weckte mit der WIEDERHOLUNG desselben Scans um ~09:00 die
+        # Handys. Nachzuegler ausserhalb des Fensters scannen deshalb
+        # weiter (frische Daten fuer Heliot und den Waechter-Artefakt),
+        # senden aber nichts.
         run: |
+          NTFY_ARG=""
+          STUNDE=$(TZ=Europe/Vienna date +%H)
+          if [ "$STUNDE" = "00" ] || [ "$STUNDE" = "01" ]; then
+            NTFY_ARG="--ntfy ${{ secrets.NTFY_TOPIC || 'dummy-kein-push' }}"
+          fi
           python pattern_scanner.py finviz_3.csv \
             --out kaufpunkte.xlsx \
-            --rate 8
+            --rate 8 $NTFY_ARG
 
       - name: Excel als Artifact hochladen
         uses: actions/upload-artifact@v4
