@@ -626,6 +626,11 @@ def aktie_suchen(page, ticker: str, langsam: bool, firma: str = "") -> bool:
             punkte += 3
         if re.search(r"USD|NASDAQ|NYSE|\$", text, re.I):
             punkte += 2
+        # Bei Punktegleichheit die ECHTE US-Boerse vor 'Echtzeit USD':
+        # MSI/SUI/WFC waehlten die boersenlose Echtzeit-Zeile (stand im
+        # Dropdown zuerst) und liefen dann in 'Zeile fehlt'.
+        if re.search(r"\b(NASDAQ|NYSE)\b", text, re.I):
+            punkte += 1
         return punkte
 
     bewertet = sorted(((bewerte(t), el, t) for el, t in kandidaten),
