@@ -700,10 +700,23 @@ def alarm_dialog_oeffnen(page, ticker: str, firma: str) -> bool:
     # der Rechtsklick landete dann auf einer voellig fremden Aktie.
     kandidaten.append(rf"\b{re.escape(ticker)}\b")
 
+    # Nur in der SUCHKONSOLE suchen, wenn sie sich markieren laesst: Der
+    # Firmenname steht auch in News-Schlagzeilen und anderen Fenstern, und
+    # dort gibt es kein Alarm-Kontextmenue (JLL: Zeile gefunden, Rechtsklick
+    # sass, aber 'Alarm hinzufügen' fehlte — es war die falsche Zelle).
+    # Markiert wird ueber denselben Container-Griff wie beim Leeren.
+    wurzel = page
+    try:
+        markiert = page.evaluate(JS_SUCHKONSOLE_MARKIEREN)
+        if markiert and page.locator("[data-bot-suchkonsole]").count():
+            wurzel = page.locator("[data-bot-suchkonsole]").first
+    except Exception:
+        pass
+
     for muster in kandidaten:
         for css in ("td", "tr"):
             try:
-                loc = page.locator(css).filter(has_text=re.compile(muster, re.I))
+                loc = wurzel.locator(css).filter(has_text=re.compile(muster, re.I))
                 for i in range(min(loc.count(), 8)):
                     el = loc.nth(i)
                     if el.is_visible():
@@ -864,6 +877,23 @@ JS_FENSTER_SCHLIESSEN = """
 }
 """
 
+
+JS_SUCHKONSOLE_MARKIEREN = """
+() => {
+  document.querySelectorAll('[data-bot-suchkonsole]')
+      .forEach(e => e.removeAttribute('data-bot-suchkonsole'));
+  const alle = [...document.querySelectorAll('*')];
+  const titel = alle.find(e => {
+    const t = e.getAttribute('title') || '';
+    return t.includes('Suchkonsole') && e.children.length === 0;
+  });
+  if (!titel) return false;
+  const box = titel.closest('.container');
+  if (!box) return false;
+  box.setAttribute('data-bot-suchkonsole', '1');
+  return true;
+}
+"""
 
 JS_SUCHKONSOLE_LEEREN = """
 () => {
