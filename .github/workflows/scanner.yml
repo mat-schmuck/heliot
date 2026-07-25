@@ -27,7 +27,22 @@ jobs:
           python-version: "3.12"
 
       - name: Abhängigkeiten
-        run: pip install requests pandas numpy scipy openpyxl yfinance
+        run: |
+          pip install requests pandas numpy scipy openpyxl yfinance playwright
+          playwright install chromium --with-deps
+
+      # Session und Fortschritt mit dem Alarm-Workflow teilen: gleicher
+      # Cache-Schluessel wie in alarme.yml. So kennt das automatische
+      # Eintragen unten die bereits gesetzten Alarme, und der
+      # Freitags-Putz (leert fortschritt.json) wirkt auch hierher.
+      - name: Session/Fortschritt laden
+        uses: actions/cache@v4
+        with:
+          path: |
+            session.json
+            fortschritt.json
+          key: traderfox-state-${{ github.run_id }}
+          restore-keys: traderfox-state-
 
       - name: Scanner ausführen
         env:
@@ -76,3 +91,27 @@ jobs:
             git pull --rebase origin main
             git push origin main
           fi
+
+      # Automatisches Eintragen (Mathias, 25.07.2026): Sobald die KOMPLETTE
+      # Liste durchgerechnet ist, traegt der Bot alle Muster-Alarme in
+      # TraderFox ein — der fruehere Montags-Knopfdruck entfaellt.
+      # (Ersetzt Gerhards 'noch nicht automatisch' vom 22.07. nach einer
+      # Woche fehlerfreier Botlaeufe.) Nur echte Muster-Treffer, keine
+      # Fallback-Level; das geteilte Fortschrittsgedaechtnis verhindert
+      # Doppelarbeit, die Vorab-Pruefung im Dialog verhindert Doppel-
+      # Alarme; nach dem Freitags-Putz beginnt die Woche leer.
+      - name: "Alarme automatisch eintragen"
+        env:
+          TRADERFOX_USER: ${{ secrets.TRADERFOX_USER }}
+          TRADERFOX_PASS: ${{ secrets.TRADERFOX_PASS }}
+        run: python traderfox_alarm_bot.py kaufpunkte.xlsx
+
+      # Diagnose des Bots immer mitnehmen — gerade im Fehlerfall wichtig
+      - name: Bot-Diagnose hochladen
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: scanner-bot-diagnose
+          path: debug/
+          retention-days: 14
+          if-no-files-found: ignore

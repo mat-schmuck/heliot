@@ -441,8 +441,10 @@ def pruefe_wochenliste(rohdaten: bytes) -> tuple[str, list[str]]:
     ticker = list(dict.fromkeys(ticker))
     if not ticker:
         return "Die Ticker-Spalte ist leer.", []
-    if len(ticker) > 500:
-        return f"{len(ticker)} Ticker sind verdächtig viele (erwartet: bis 500).", []
+    if len(ticker) > 1500:
+        # Grenze am 25.07.2026 von 500 auf 1500 erhoeht: Gerhards
+        # Wochenexport umfasst inzwischen ~780 Aktien.
+        return f"{len(ticker)} Ticker sind verdächtig viele (erwartet: bis 1500).", []
     muster = re.compile(r"^[A-Z0-9.\-]{1,10}$")
     komisch = [t for t in ticker if not muster.match(t)]
     if komisch:
