@@ -546,6 +546,13 @@ def aktie_suchen(page, ticker: str, langsam: bool, firma: str = "") -> bool:
         page.wait_for_timeout(250)
     except Exception:
         pass
+    # Suchkonsole IMMER frisch starten: Jede Suche haengt die Aktie an das
+    # Fenster 'Suchkonsole: Nicht gespeicherte Kursliste' an. Bei Laeufen
+    # ueber hunderte Werte (778er-Liste, Lauf #8: 378x 'Zeile fehlt')
+    # waechst die Liste, Zeilen fallen aus dem sichtbaren Bereich bzw. DOM,
+    # und der Rechtsklick geht ins Leere. Vor jeder Suche geschlossen
+    # enthaelt die Konsole genau eine Aktie — die Zeile ist immer da.
+    fenster_schliessen(page, "Suchkonsole")
     # klick() statt .click(): Liegt ein Fenster ueber dem Suchfeld — etwa der
     # Alerts manager nach einer Bestandsaufnahme — laeuft der einfache Klick
     # in Timeout. Genau daran ist der erste Aufraeumlauf gescheitert.
