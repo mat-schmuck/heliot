@@ -202,17 +202,35 @@ def sekunden_bis_eroeffnung(jetzt=None):
     return diff if diff > 0 else None
 
 
-def load_state() -> dict:
-    """Melde-Gedaechtnis, dauerhaft ueber Tage hinweg.
+def letzter_putz() -> str:
+    """ISO-Datum des juengsten Freitags-Putzes (Freitag 16:02 New York),
+    der bereits VORBEI ist. Steht der heutige Putz noch aus, zaehlt der
+    der Vorwoche."""
+    try:
+        from zoneinfo import ZoneInfo
+        jetzt = datetime.now(ZoneInfo("America/New_York"))
+    except Exception:
+        jetzt = datetime.now()
+    d = jetzt.date()
+    rueck = (d.weekday() - 4) % 7          # Montag=0 … Freitag=4
+    freitag = d - timedelta(days=rueck)
+    if rueck == 0 and jetzt.hour * 60 + jetzt.minute < 16 * 60 + 2:
+        freitag -= timedelta(days=7)
+    return freitag.isoformat()
 
-    Frueher galt der Zustand nur fuer den laufenden Handelstag — ein am
-    Dienstag gemeldeter Ausbruch kam am Mittwoch erneut aufs Handy, solange
-    der Kurs ueber dem Kaufpunkt stand (Mathias am 24.07.2026: 'wildes
-    Durcheinander'). Jetzt wird jede Meldung mit Datum gemerkt: Ein
-    Kaufpunkt meldet genau EINMAL. Rechnet der Scanner neue Level, ergibt
-    der neue Preis von selbst einen neuen Schluessel; nach 30 Tagen
-    verfallen alte Eintraege. Gap-and-Go-Schluessel tragen das Datum im
-    Namen und sind damit bewusst je Tag einmalig."""
+
+def load_state() -> dict:
+    """Melde-Gedaechtnis im Wochen-Rhythmus des Freitags-Putzes.
+
+    Ein Kaufpunkt meldet genau EINMAL — nicht jeden Tag erneut, solange
+    der Kurs darueber steht (das war Mathias' 'wildes Durcheinander' vom
+    24.07.). Die Gueltigkeit endet analog zu den TraderFox-Alarmen mit
+    dem Freitags-Putz (Freitag 16:02 New York, Mathias am 25.07.2026):
+    Alles, was am oder vor dem juengsten Putz-Freitag gemeldet wurde,
+    verfaellt — jede Meldung gilt damit hoechstens eine Woche, und die
+    neue Woche beginnt mit leerem Gedaechtnis, passend zur frisch
+    eingetragenen Alarm-Liste. Gap-and-Go-Schluessel tragen zusaetzlich
+    das Datum im Namen und sind je Tag einmalig."""
     heute = date.today().isoformat()
     if STATE_FILE.exists():
         try:
@@ -221,9 +239,9 @@ def load_state() -> dict:
             if isinstance(gemeldet, list):
                 # Altes Tagesformat einmalig uebernehmen
                 gemeldet = {k: data.get("tag", heute) for k in gemeldet}
-            grenze = (date.today() - timedelta(days=30)).isoformat()
+            grenze = letzter_putz()
             return {"gemeldet": {k: d for k, d in gemeldet.items()
-                                 if str(d) >= grenze}}
+                                 if str(d) > grenze}}
         except Exception:
             pass
     return {"gemeldet": {}}
