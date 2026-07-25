@@ -546,13 +546,14 @@ def aktie_suchen(page, ticker: str, langsam: bool, firma: str = "") -> bool:
         page.wait_for_timeout(250)
     except Exception:
         pass
-    # Suchkonsole IMMER frisch starten: Jede Suche haengt die Aktie an das
-    # Fenster 'Suchkonsole: Nicht gespeicherte Kursliste' an. Bei Laeufen
-    # ueber hunderte Werte (778er-Liste, Lauf #8: 378x 'Zeile fehlt')
-    # waechst die Liste, Zeilen fallen aus dem sichtbaren Bereich bzw. DOM,
-    # und der Rechtsklick geht ins Leere. Vor jeder Suche geschlossen
-    # enthaelt die Konsole genau eine Aktie — die Zeile ist immer da.
-    fenster_schliessen(page, "Suchkonsole")
+    # Suchkonsole IMMER leer starten: Jede Suche haengt die Aktie an die
+    # 'Nicht gespeicherte Kursliste' der Suchkonsole an. Die Liste lebt
+    # SERVERSEITIG — das Fenster zu schliessen (Fix aus Lauf #8) genuegt
+    # nicht: Beim naechsten Treffer-Klick oeffnet es sich wieder MIT allen
+    # alten Eintraegen (Lauf #9: 269 Zeilen, die neue Aktie einsortiert
+    # ausserhalb des Sichtbereichs -> 'Zeile fehlt'). Darum die Liste ueber
+    # ihren eigenen 'Liste zuruecksetzen'-Knopf wirklich leeren.
+    suchkonsole_leeren(page)
     # klick() statt .click(): Liegt ein Fenster ueber dem Suchfeld — etwa der
     # Alerts manager nach einer Bestandsaufnahme — laeuft der einfache Klick
     # in Timeout. Genau daran ist der erste Aufraeumlauf gescheitert.
@@ -641,10 +642,23 @@ def aktie_suchen(page, ticker: str, langsam: bool, firma: str = "") -> bool:
 
     print(f"    → gewählt: {text[:70]}")
     LETZTER_ANZEIGENAME = _anzeigename(text)
+    # Den Treffer ueber seinen TEXT neu ansteuern, nicht ueber die
+    # Listenposition: Die Vorschlagsliste baut sich nach dem Einlesen noch
+    # um (Ergebnisse stroemen nach), und nth(i) zeigt beim Klick auf das,
+    # was DANN an Position i steht. Lauf #9: 'Garrett Motion' gewaehlt,
+    # 'Gentex Corp.' (erster Eintrag) angeklickt -> Alarme unsetzbar.
+    ziel = el
     try:
-        el.click()
+        per_text = page.locator("ul.ui-autocomplete li.ui-menu-item").filter(
+            has_text=text)
+        if per_text.count():
+            ziel = per_text.first
     except Exception:
-        maus_klick(el, "Suchtreffer")
+        pass
+    try:
+        ziel.click()
+    except Exception:
+        maus_klick(ziel, "Suchtreffer")
     page.wait_for_timeout(2200)
     return True
 
@@ -831,6 +845,52 @@ JS_FENSTER_SCHLIESSEN = """
   return true;
 }
 """
+
+
+JS_SUCHKONSOLE_LEEREN = """
+() => {
+  const alle = [...document.querySelectorAll('*')];
+  const titel = alle.find(e => {
+    const t = e.getAttribute('title') || '';
+    return t.includes('Suchkonsole') && e.children.length === 0;
+  });
+  if (!titel) return 'kein_fenster';
+  const box = titel.closest('.container');
+  if (!box) return 'kein_container';
+  const knopf = [...box.querySelectorAll('div[title]')].find(e =>
+      (e.getAttribute('title') || '').startsWith('Liste zur'));
+  if (!knopf) return 'kein_knopf';
+  knopf.click();
+  return 'ok';
+}
+"""
+
+
+def suchkonsole_leeren(page) -> bool:
+    """Leert die 'Nicht gespeicherte Kursliste' der Suchkonsole ueber deren
+    'Liste zuruecksetzen'-Knopf.
+
+    WICHTIG: Der Knopf wird ausschliesslich INNERHALB des Suchkonsolen-
+    Containers gesucht — die Marktuebersicht hat einen gleichnamigen Knopf
+    fuer die gespeicherte Liste des Nutzers ('Standard 2026'), und die darf
+    der Bot niemals anfassen.
+
+    Ist das Fenster gerade zu, gibt es nichts zu klicken — die Liste taucht
+    dann samt Altbestand beim naechsten Treffer-Klick wieder auf. Das faengt
+    der kombinierte Such+Dialog-Retry ab: Beim zweiten Anlauf ist das
+    Fenster offen und wird hier geleert."""
+    try:
+        ergebnis = page.evaluate(JS_SUCHKONSOLE_LEEREN)
+    except Exception as e:
+        ergebnis = f"fehler: {str(e)[:60]}"
+    if ergebnis == "ok":
+        page.wait_for_timeout(900)
+        print("    Suchkonsole geleert (Liste zurückgesetzt).")
+        return True
+    if ergebnis == "kein_fenster":
+        return True
+    print(f"    Suchkonsole nicht geleert ({ergebnis}) — Rückfall: Fenster schließen.")
+    return fenster_schliessen(page, "Suchkonsole")
 
 
 def fenster_schliessen(page, suchtext: str) -> bool:
@@ -1888,6 +1948,10 @@ def main():
         # gespeicherter Alerts manager verdeckt die Kursliste und laesst
         # Rechtsklicks ins Leere gehen (Lauf #32: 11 x 'Zeile fehlt').
         fenster_schliessen(page, "Alerts manager")
+        # Altlasten der Suchkonsole sofort raeumen: Das Desk merkt sich die
+        # 'Nicht gespeicherte Kursliste' serverseitig — nach Lauf #9 lagen
+        # dort ~270 Aktien, und jede neue landete unsichtbar mittendrin.
+        suchkonsole_leeren(page)
 
         erledigt = lade_fortschritt(args.neu)
         gesamt = sum(len(j["points"]) for j in jobs)
@@ -1907,17 +1971,21 @@ def main():
             t = job["ticker"]
             print(f"[{i}/{len(jobs)}] {t} — {len(offene_punkte)} offene(r) Alarm(e)")
 
-            if not mit_retry(lambda: aktie_suchen(page, t, args.langsam, job["firma"]),
-                             versuche=3, pause=2, name=f"Suche {t}"):
-                probleme.append(f"{t} (Suche)")
-                continue
-            # Vor jeder Aktie sicherstellen, dass kein Dialog der vorigen
-            # offen ist — sonst landen Alarme womoeglich beim falschen Wert.
-            dialog_schliessen(page)
+            # Suche und Dialog in EINEM Retry-Block: Landet der Klick auf dem
+            # falschen Treffer oder fehlt die Zeile (Lauf #9), muss der
+            # naechste Versuch auch die SUCHE wiederholen — nur den Dialog
+            # erneut zu versuchen konnte nie gelingen, weil die falsche bzw.
+            # fehlende Zeile unveraendert blieb.
+            def vorbereiten():
+                if not aktie_suchen(page, t, args.langsam, job["firma"]):
+                    return False
+                # Kein Dialog der vorigen Aktie darf offen sein — sonst
+                # landen Alarme womoeglich beim falschen Wert.
+                dialog_schliessen(page)
+                return alarm_dialog_oeffnen(page, t, job["firma"])
 
-            if not mit_retry(lambda: alarm_dialog_oeffnen(page, t, job["firma"]),
-                             versuche=3, pause=2, name=f"Dialog {t}"):
-                probleme.append(f"{t} (Dialog)")
+            if not mit_retry(vorbereiten, versuche=3, pause=2, name=f"Eintrag {t}"):
+                probleme.append(f"{t} (Suche/Dialog)")
                 continue
 
             schon_drin = bestehende_alarme(page)
