@@ -30,10 +30,12 @@ concurrency:
 jobs:
   wachen:
     runs-on: ubuntu-latest
-    # Hoch genug fuer eine Dauerwache ueber den ganzen Handelstag
-    # (6,5 h Handel + Wartezeit vor der Eroeffnung). Normale Laeufe
-    # beenden sich nach wenigen Minuten von selbst.
-    timeout-minutes: 355
+    # Hoch genug fuer die volle 390-Minuten-Dauerwache samt Wartezeit vor
+    # der Eroeffnung und Rundenueberhang. 355 war ZU KNAPP: Die Tagwache
+    # vom 24.07. (Lauf #23) wurde um 21:07 Wien vom Zeitlimit abgewuergt
+    # ('cancelled'), zwei Minuten bevor die Schlussstunden-Wache
+    # uebernahm. Normale Laeufe beenden sich weiterhin von selbst.
+    timeout-minutes: 420
     # actions: read wird gebraucht, um die kaufpunkte.xlsx aus dem Artefakt
     # des Scanner-Workflows zu holen. Ohne diese Berechtigung scheitert der
     # Download mit "Resource not accessible by integration" - das Standard-
