@@ -35,6 +35,14 @@ on:
         description: "Für 'aufraeumen': z. B. BIOA:21.28,CRNX:83.64 — für 'alles_loeschen': ALLE"
         required: false
         default: ""
+      quelle:
+        description: "Kaufpunkte-Quelle: neu_rechnen oder repo_datei (nimmt kaufpunkte_aktuell.xlsx vom letzten Nachtscan — gefeit gegen Yahoo-Datenaussetzer)"
+        required: false
+        default: "neu_rechnen"
+        type: choice
+        options:
+          - neu_rechnen
+          - repo_datei
 
 jobs:
   lauf:
@@ -141,10 +149,20 @@ jobs:
       # Nur fuer die echten Laeufe. Der Scanner dauert 20-40 Minuten, daher
       # muessen selbsttest UND testalarm hier ausgenommen sein.
       - name: "Schritt 1: Kaufpunkte berechnen"
-        if: ${{ github.event.inputs.modus == 'test_2_aktien' || github.event.inputs.modus == 'vollstaendig' }}
+        if: ${{ (github.event.inputs.modus == 'test_2_aktien' || github.event.inputs.modus == 'vollstaendig') && github.event.inputs.quelle != 'repo_datei' }}
         env:
           TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
         run: python pattern_scanner.py finviz_3.csv --out kaufpunkte.xlsx --rate 8
+
+      # Alternative: den bereits veroeffentlichten Nachtscan-Stand verwenden.
+      # Grund (26.07.2026, 01:30): Ein frischer Yahoo-Abruf lieferte binnen
+      # Minuten dreimal verschiedene Kursreihen (472/467/449 Alarme) — der
+      # dritte Lauf setzte ~90 Alarme auf falschen Niveaus. Die im Repo
+      # eingecheckte kaufpunkte_aktuell.xlsx ist der verbuergte Stand des
+      # letzten Nachtscans und aendert sich zwischen den Laeufen nicht.
+      - name: "Schritt 1 (Alternative): Kaufpunkte aus dem Repo übernehmen"
+        if: ${{ (github.event.inputs.modus == 'test_2_aktien' || github.event.inputs.modus == 'vollstaendig') && github.event.inputs.quelle == 'repo_datei' }}
+        run: cp kaufpunkte_aktuell.xlsx kaufpunkte.xlsx
 
       # --- Alarm-Bot ---
       - name: "Schritt 2: Alarme in TraderFox setzen"
