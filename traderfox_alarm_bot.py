@@ -689,7 +689,11 @@ def alarm_dialog_oeffnen(page, ticker: str, firma: str) -> bool:
             kandidaten.append(rf"{re.escape(worte[0])}\s+{re.escape(worte[1])}")
         if worte and len(worte[0]) >= 4:
             kandidaten.append(re.escape(worte[0]))
-    kandidaten.append(re.escape(ticker))
+    # Ticker nur als GANZES Wort: Als blosser Teilstring traf 'IR' die Zeile
+    # 'FirstSun Capital Bancorp' und 'NEE' die 'Siemens Healthineers' in
+    # Mathias' Marktuebersicht (Lauf mit Fix ab7ec3a, 8 solcher Faelle) —
+    # der Rechtsklick landete dann auf einer voellig fremden Aktie.
+    kandidaten.append(rf"\b{re.escape(ticker)}\b")
 
     for muster in kandidaten:
         for css in ("td", "tr"):
@@ -747,8 +751,17 @@ def alarm_dialog_oeffnen(page, ticker: str, firma: str) -> bool:
         if kopf.count():
             titel = (kopf.first.inner_text() or "").strip()
             erwartet = (firma or ticker).strip()
-            kern = erwartet.split()[0][:8].lower() if erwartet else ""
-            if kern and kern not in titel.lower():
+            # Beim Vergleich alle Satzzeichen entfernen: Finviz und TraderFox
+            # schreiben denselben Namen verschieden — "Carters"/"Carter's",
+            # "CTS"/"C.T.S.", "Lilly(Eli) & Co"/"Eli Lilly & Co." — und die
+            # sture 8-Zeichen-Probe warf 6 voellig richtige Dialoge weg.
+            # Kern = erstes echtes Wort (>= 3 Buchstaben) des erwarteten
+            # Namens, gesucht im entzeichenten Dialogtitel.
+            titel_norm = re.sub(r"[^a-z0-9]", "", titel.lower())
+            woerter = [w.lower() for w in re.split(r"[^A-Za-z0-9]+", erwartet)
+                       if len(w) >= 3]
+            kern = woerter[0] if woerter else erwartet[:8].lower()
+            if kern and kern not in titel_norm:
                 diagnose(page, f"falsche_aktie_{ticker}",
                          f"Dialog zeigt {titel!r}, erwartet wurde {erwartet!r}")
                 print(f"    ✗ Dialog zeigt {titel!r}, erwartet {erwartet!r} — abgebrochen")
