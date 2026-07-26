@@ -32,7 +32,7 @@ on:
         required: false
         default: "false"
       loeschen:
-        description: "Für 'aufraeumen': z. B. BIOA:21.28,CRNX:83.64 — für 'alles_loeschen': ALLE"
+        description: "Für 'aufraeumen': BIOA:21.28 löscht nur diesen Preis, BIOA ohne Preis alle Alarme der Aktie (mischbar, Beistrich-getrennt) — für 'alles_loeschen': ALLE"
         required: false
         default: ""
       quelle:

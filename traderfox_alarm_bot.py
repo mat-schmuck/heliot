@@ -1220,7 +1220,8 @@ def aufraeum_lauf(page, user: str, pw: str, auftraege: list) -> int:
 
     entfernt, probleme = 0, []
     for i, (ticker, firma, preis) in enumerate(auftraege, 1):
-        print(f"\n[{i}/{len(auftraege)}] {ticker} — {preis} entfernen")
+        ziel = "ALLE Alarme" if preis is None else str(preis)
+        print(f"\n[{i}/{len(auftraege)}] {ticker} — {ziel} entfernen")
         dialog_schliessen(page)
         if not aktie_suchen(page, ticker, langsam=True, firma=firma):
             probleme.append(f"{ticker} (Suche)")
@@ -1228,11 +1229,27 @@ def aufraeum_lauf(page, user: str, pw: str, auftraege: list) -> int:
         if not alarm_dialog_oeffnen(page, ticker, firma):
             probleme.append(f"{ticker} (Dialog)")
             continue
-        anzahl = alarm_loeschen(page, preis)
+        if preis is None:
+            # Ohne Preisangabe: der Reihe nach jeden im Dialog stehenden
+            # Alarm dieser Aktie loeschen, bis keiner mehr da ist.
+            anzahl = 0
+            for _ in range(20):
+                felder = page.locator("input.price-alert:visible")
+                if not felder.count():
+                    break
+                wert = preis_parsen(felder.first.input_value() or "")
+                if wert is None:
+                    break
+                n = alarm_loeschen(page, wert)
+                if not n:
+                    break
+                anzahl += n
+        else:
+            anzahl = alarm_loeschen(page, preis)
         if anzahl:
             entfernt += anzahl
         else:
-            probleme.append(f"{ticker} @ {preis} (nicht gefunden oder nicht löschbar)")
+            probleme.append(f"{ticker} @ {ziel} (nicht gefunden oder nicht löschbar)")
 
     dialog_schliessen(page)
 
@@ -1891,10 +1908,11 @@ def main():
                     help="Nur prüfen, ob alle Bedienelemente gefunden werden")
     ap.add_argument("--testalarm", action="store_true",
                     help="Einen Testalarm anlegen, prüfen und wieder löschen")
-    ap.add_argument("--loesche", metavar="TICKER:PREIS[,...]",
-                    help="Gezielt einzelne Alarme entfernen, z. B. "
-                         "'BIOA:21.28,CRNX:83.64'. Firmennamen werden aus der "
-                         "angegebenen kaufpunkte.xlsx nachgeschlagen.")
+    ap.add_argument("--loesche", metavar="TICKER[:PREIS][,...]",
+                    help="Gezielt Alarme entfernen: 'BIOA:21.28' loescht nur "
+                         "diesen Preis, 'BIOA' ohne Preis ALLE Alarme der "
+                         "Aktie. Mischbar: 'BIOA:21.28,CRNX'. Firmennamen "
+                         "werden aus der kaufpunkte.xlsx nachgeschlagen.")
     ap.add_argument("--loesche-alle", action="store_true",
                     help="SÄMTLICHE Alarme löschen, auch handgesetzte. "
                          "Legt vorher zwingend eine Sicherung ab.")
@@ -1922,7 +1940,13 @@ def main():
                 print(f"⚠ Firmennamen nicht lesbar ({e}) — suche nur nach Kürzel.")
         for teil in args.loesche.split(","):
             teil = teil.strip()
-            if not teil or ":" not in teil:
+            if not teil:
+                continue
+            if ":" not in teil:
+                # Nur ein Kuerzel: ALLE Alarme dieser Aktie entfernen
+                # (Mathias, 26.07.2026 — gezieltes Loeschen je Aktie).
+                ticker = teil.upper()
+                loesch_auftraege.append((ticker, firmen.get(ticker, ""), None))
                 continue
             ticker, preis = teil.split(":", 1)
             ticker = ticker.strip().upper()
