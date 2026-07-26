@@ -914,6 +914,21 @@ JS_SUCHKONSOLE_LEEREN = """
 """
 
 
+JS_SUCHKONSOLE_ZEILEN = """
+() => {
+  const alle = [...document.querySelectorAll('*')];
+  const titel = alle.find(e => {
+    const t = e.getAttribute('title') || '';
+    return t.includes('Suchkonsole') && e.children.length === 0;
+  });
+  if (!titel) return -1;
+  const box = titel.closest('.container');
+  if (!box) return -1;
+  return box.querySelectorAll('tbody tr').length;
+}
+"""
+
+
 def suchkonsole_leeren(page) -> bool:
     """Leert die 'Nicht gespeicherte Kursliste' der Suchkonsole ueber deren
     'Liste zuruecksetzen'-Knopf.
@@ -923,21 +938,39 @@ def suchkonsole_leeren(page) -> bool:
     fuer die gespeicherte Liste des Nutzers ('Standard 2026'), und die darf
     der Bot niemals anfassen.
 
+    Der Klick wird NACHGEPRUEFT: Beim Aufraeumlauf am 26.07. meldete der
+    Knopf brav 'ok', die Liste fuellte sich aber trotzdem wieder (14
+    Eintraege, Zeile ausserhalb des Sichtbereichs, 117 Fehlschlaege in
+    Serie). Bleiben nach zwei Klickversuchen Zeilen uebrig, wird das
+    Fenster als Rueckfall geschlossen — der naechste Treffer-Klick oeffnet
+    es frisch.
+
     Ist das Fenster gerade zu, gibt es nichts zu klicken — die Liste taucht
     dann samt Altbestand beim naechsten Treffer-Klick wieder auf. Das faengt
     der kombinierte Such+Dialog-Retry ab: Beim zweiten Anlauf ist das
     Fenster offen und wird hier geleert."""
-    try:
-        ergebnis = page.evaluate(JS_SUCHKONSOLE_LEEREN)
-    except Exception as e:
-        ergebnis = f"fehler: {str(e)[:60]}"
-    if ergebnis == "ok":
+    for versuch in (1, 2):
+        try:
+            ergebnis = page.evaluate(JS_SUCHKONSOLE_LEEREN)
+        except Exception as e:
+            ergebnis = f"fehler: {str(e)[:60]}"
+        if ergebnis == "kein_fenster":
+            return True
+        if ergebnis != "ok":
+            print(f"    Suchkonsole nicht geleert ({ergebnis}) — Rückfall: Fenster schließen.")
+            return fenster_schliessen(page, "Suchkonsole")
         page.wait_for_timeout(900)
-        print("    Suchkonsole geleert (Liste zurückgesetzt).")
-        return True
-    if ergebnis == "kein_fenster":
-        return True
-    print(f"    Suchkonsole nicht geleert ({ergebnis}) — Rückfall: Fenster schließen.")
+        try:
+            uebrig = page.evaluate(JS_SUCHKONSOLE_ZEILEN)
+        except Exception:
+            uebrig = -1
+        # Bis zu 3 Restzeilen sind unschaedlich (alle sichtbar, die
+        # Zeilensuche findet ihr Ziel) — erst das Vollstauen ist das Problem.
+        if uebrig <= 3:
+            print("    Suchkonsole geleert (Liste zurückgesetzt).")
+            return True
+        print(f"    Suchkonsole nach Zurücksetzen NICHT leer ({uebrig} Zeilen)"
+              + (" — zweiter Versuch." if versuch == 1 else " — Rückfall: Fenster schließen."))
     return fenster_schliessen(page, "Suchkonsole")
 
 
@@ -1222,12 +1255,18 @@ def aufraeum_lauf(page, user: str, pw: str, auftraege: list) -> int:
     for i, (ticker, firma, preis) in enumerate(auftraege, 1):
         ziel = "ALLE Alarme" if preis is None else str(preis)
         print(f"\n[{i}/{len(auftraege)}] {ticker} — {ziel} entfernen")
-        dialog_schliessen(page)
-        if not aktie_suchen(page, ticker, langsam=True, firma=firma):
-            probleme.append(f"{ticker} (Suche)")
-            continue
-        if not alarm_dialog_oeffnen(page, ticker, firma):
-            probleme.append(f"{ticker} (Dialog)")
+
+        # Suche und Dialog mit Retry wie beim Setzen: Der Aufraeumlauf vom
+        # 26.07. hatte KEINEN Wiederholungsversuch — ein einziger Aussetzer
+        # der Suchkonsole liess 117 Auftraege in Serie scheitern.
+        def vorbereiten():
+            if not aktie_suchen(page, ticker, langsam=True, firma=firma):
+                return False
+            dialog_schliessen(page)
+            return alarm_dialog_oeffnen(page, ticker, firma)
+
+        if not mit_retry(vorbereiten, versuche=3, pause=2, name=f"Aufräumen {ticker}"):
+            probleme.append(f"{ticker} (Suche/Dialog)")
             continue
         if preis is None:
             # Ohne Preisangabe: der Reihe nach jeden im Dialog stehenden
