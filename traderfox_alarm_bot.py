@@ -1945,6 +1945,27 @@ def selbsttest(page, user: str, pw: str) -> int:
         except Exception as e:
             print(f"    (Dialog-Analyse fehlgeschlagen: {e})")
 
+        # Schaufenster (Mathias, 27.07.): Was verbirgt sich hinter dem
+        # Zahnrad 'Einstellungen' des Alarmdialogs? Hintergrund: Die
+        # EU-Fruehhandelskurse (Tradegate/L&S ab 08:00 Wien) feuerten die
+        # Alarme schon VOR der US-Eroeffnung — gesucht ist eine Option,
+        # das auf US-Handelszeiten oder einen Boersenplatz zu begrenzen.
+        # NUR ANSEHEN und als Diagnose ablegen — nichts wird umgestellt.
+        try:
+            zahnrad = page.locator(".alert-configurator-settings-icon").first
+            if zahnrad.count() and zahnrad.is_visible():
+                maus_klick(zahnrad, "Alarm-Einstellungen (Zahnrad)")
+                page.wait_for_timeout(1500)
+                diagnose(page, "alarm_einstellungen",
+                         "Einstellungen des Alarmdialogs — nur angesehen, "
+                         "nichts verändert")
+                page.keyboard.press("Escape")
+                page.wait_for_timeout(500)
+            else:
+                print("    (Zahnrad 'Einstellungen' nicht sichtbar)")
+        except Exception as e:
+            print(f"    (Zahnrad nicht erkundbar: {e})")
+
         dialog_schliessen(page)
 
     print("\n--- Ergebnis ---")
