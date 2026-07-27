@@ -908,7 +908,13 @@ JS_SUCHKONSOLE_LEEREN = """
   const knopf = [...box.querySelectorAll('div[title]')].find(e =>
       (e.getAttribute('title') || '').startsWith('Liste zur'));
   if (!knopf) return 'kein_knopf';
-  knopf.click();
+  // Volle Maus-Ereignisfolge statt click(): Der Knopf ignorierte ab dem
+  // 26.07. abends den einfachen Klick (Liste blieb bei 11 Zeilen) — wie
+  // schon die remove-alert-Knoepfe, siehe maus_klick().
+  for (const typ of ['mouseover', 'mousedown', 'mouseup', 'click']) {
+    knopf.dispatchEvent(new MouseEvent(typ,
+        {bubbles: true, cancelable: true, view: window}));
+  }
   return 'ok';
 }
 """
