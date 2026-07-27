@@ -92,48 +92,15 @@ jobs:
             git push origin main
           fi
 
-      # Automatisches Eintragen (Mathias, 25.07.2026): Sobald die KOMPLETTE
-      # Liste durchgerechnet ist, traegt der Bot alle Muster-Alarme in
-      # TraderFox ein — der fruehere Montags-Knopfdruck entfaellt.
-      # (Ersetzt Gerhards 'noch nicht automatisch' vom 22.07. nach einer
-      # Woche fehlerfreier Botlaeufe.) Nur echte Muster-Treffer, keine
-      # Fallback-Level; das geteilte Fortschrittsgedaechtnis verhindert
-      # Doppelarbeit, die Vorab-Pruefung im Dialog verhindert Doppel-
-      # Alarme; nach dem Freitags-Putz beginnt die Woche leer.
-      - name: "Alarme automatisch eintragen"
-        env:
-          TRADERFOX_USER: ${{ secrets.TRADERFOX_USER }}
-          TRADERFOX_PASS: ${{ secrets.TRADERFOX_PASS }}
-        # Zwei Durchgaenge (Mathias, 27.07.): Nachzuegler SOFORT nachtragen,
-        # nicht auf den naechsten Lauf warten. Durchgang 2 ueberspringt dank
-        # Fortschritt alles Erledigte und kostet nur wenige Minuten.
-        run: |
-          python traderfox_alarm_bot.py kaufpunkte.xlsx
-          python traderfox_alarm_bot.py kaufpunkte.xlsx
-
-      # Gesetzt-Gedaechtnis ins Repo sichern — uebersteht jeden Cache-
-      # Verlust; einmal gesetzte (womoeglich schon ausgeloeste) Alarme
-      # werden so nie erneut eingetragen.
-      - name: Fortschritt sichern
-        if: always()
-        run: |
-          git config user.name "pattern-scanner"
-          git config user.email "actions@users.noreply.github.com"
-          git add -A fortschritt.json
-          if git diff --cached --quiet; then
-            echo "Fortschritt unverändert."
-          else
-            git commit -m "Gesetzt-Gedächtnis aktualisiert (fortschritt.json)"
-            git pull --rebase origin main
-            git push origin main
-          fi
-
-      # Diagnose des Bots immer mitnehmen — gerade im Fehlerfall wichtig
-      - name: Bot-Diagnose hochladen
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: scanner-bot-diagnose
-          path: debug/
-          retention-days: 14
-          if-no-files-found: ignore
+      # KEIN automatisches Eintragen mehr im Nachtscan (Mathias, 27.07.2026):
+      # Um ~00:30 Wien eingetragene Alarme feuerten ab 08:00 auf den
+      # EU-Fruehhandelskursen — vor der US-Eroeffnung, also unhandelbar.
+      # Saemtliche TraderFox-Eintragungen stoesst jetzt cron-job.org
+      # "Heliot Alarme (08:00 New York)" an: Mo-Fr 08:00 New York
+      # (14:00 Wien, 1,5 h vor der Glocke) per workflow_dispatch von
+      # alarme.yml mit modus=vollstaendig und quelle=repo_datei — also
+      # GENAU aus der hier veroeffentlichten kaufpunkte_aktuell.xlsx,
+      # deckungsgleich mit dem ntfy-Waechter. Der Scan selbst (Rechnen,
+      # Veroeffentlichen, Mitternachts-Push) bleibt um 18:00 New York;
+      # zusaetzlich scannt Sonntag 18:00 New York die frisch hochgeladene
+      # Wochenliste, damit sie Montag 08:00 New York bereitliegt.
