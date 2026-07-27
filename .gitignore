@@ -8,8 +8,11 @@
 .cache/
 
 # Zustand des Wächters und Anmeldedaten des Alarm-Bots
+# (session.json enthält Sitzungs-Cookies — NIEMALS einchecken!
+#  fortschritt.json dagegen ist seit 27.07.2026 BEWUSST im Repo:
+#  nur Ticker|Nr|Preis-Schlüssel, keine Geheimnisse — das
+#  Gesetzt-Gedächtnis muss Cache-Verluste überleben.)
 session.json
-fortschritt.json
 watcher_state.json
 
 # Diagnosematerial des Alarm-Bots (Screenshots, HTML-Auszüge)
