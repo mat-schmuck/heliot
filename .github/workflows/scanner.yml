@@ -84,7 +84,9 @@ jobs:
           git config user.name "pattern-scanner"
           git config user.email "actions@users.noreply.github.com"
           git add kaufpunkte_aktuell.xlsx
-          git add -A ntfy_ids.json    # Kennung des Mitternachts-Pushes merken
+          # Fehlertolerant, siehe alarme.yml: fehlt die Datei, bricht
+          # 'git add' mit Code 128 ab und faerbt den Lauf grundlos rot.
+          git add -A -- ntfy_ids.json 2>/dev/null || true
           if git diff --cached --quiet; then
             echo "Keine Änderung gegenüber dem letzten Scan."
           else

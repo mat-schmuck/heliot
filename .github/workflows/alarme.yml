@@ -249,7 +249,13 @@ jobs:
             cp kaufpunkte.xlsx kaufpunkte_aktuell.xlsx
             git add kaufpunkte_aktuell.xlsx
           fi
-          git add -A fortschritt.json ntfy_ids.json
+          # Jede Datei einzeln und fehlertolerant: 'git add' bricht mit
+          # Code 128 ab, wenn eine davon (noch) gar nicht existiert — der
+          # ganze Lauf wurde dadurch rot gemeldet, obwohl alles geklappt
+          # hatte (Inventur vom 27.07.). Ein rotes Kreuz ohne echten
+          # Fehler ist gefaehrlich: Es verdeckt die echten.
+          git add -A -- fortschritt.json 2>/dev/null || true
+          git add -A -- ntfy_ids.json 2>/dev/null || true
           if git diff --cached --quiet; then
             echo "Fortschritt und Kaufpunkte unverändert."
           else
