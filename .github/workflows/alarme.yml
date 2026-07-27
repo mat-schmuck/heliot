@@ -24,6 +24,7 @@ on:
           - aufraeumen        # gezielt einzelne Alarme entfernen
           - alles_loeschen    # SÄMTLICHE Alarme löschen (Feld 'loeschen' = ALLE)
           - datenvergleich    # Yahoo gegen FMP prüfen (ändert nichts)
+          - ntfyputz          # nur die ntfy-Meldungen löschen (nach Handelsschluss)
       alle_level:
         description: "Auch Fallback-Level alarmieren? (true/false)"
         required: false
@@ -121,6 +122,18 @@ jobs:
       # Meldungen sind das groessere Risiko.
       - name: "Alte ntfy-Meldungen löschen"
         if: ${{ always() && github.event.inputs.modus == 'alles_loeschen' && github.event.inputs.loeschen == 'ALLE' }}
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: python ntfy_verlauf.py --putz "$NTFY_TOPIC"
+
+      # --- Nur die ntfy-Meldungen raeumen (taeglich nach Handelsschluss) ---
+      # Mathias, 27.07.2026: "Traderfox-Alarme sind, einmal ausgeloest,
+      # geloescht. So haette ich es am liebsten bei ntfy — ich brauche das
+      # nur zum Traden, nicht zum Nachlesen; Altes stiftet nur Verwirrung."
+      # Laeuft darum werktags kurz nach der Schlussglocke: waehrend der
+      # Sitzung steht alles zur Verfuegung, danach ist die Liste leer.
+      - name: "ntfy-Meldungen löschen"
+        if: ${{ github.event.inputs.modus == 'ntfyputz' }}
         env:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
         run: python ntfy_verlauf.py --putz "$NTFY_TOPIC"

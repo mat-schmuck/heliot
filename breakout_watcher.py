@@ -635,15 +635,37 @@ def email_kopf() -> dict:
     return {"Email": adresse} if adresse else {}
 
 
-def push_text(topic: str, titel: str, body: str) -> bool:
-    """Schickt eine frei formulierte Meldung (fuer Gap and Go).
+# ntfy macht aus jeder Nachricht ueber 4096 Zeichen eine ANGEHAENGTE
+# Textdatei ("You received a file: attachment.txt"), die erst
+# heruntergeladen werden muss. Am 27.07.2026 an einem Wegwerf-Thema
+# nachgemessen: 3900 Zeichen kommen normal an, 4100 werden zur Datei.
+# Genau das ist Mathias an diesem Tag passiert, als viele Treffer auf
+# einmal kamen — und kostete ihn im Handel wertvolle Zeit. Darum wird
+# nie mehr als eine Portion auf einmal verschickt; die Grenze liegt mit
+# Sicherheitsabstand deutlich darunter.
+NTFY_GRENZE = 3000
 
-    MIT Titel-Kopfzeile: Der Titel war am 23.07. als 'Wortgeklingel'
-    entfernt worden — ohne ihn setzt ntfy aber einen generischen Titel
-    (die Themen-Adresse) ein, was schlimmer ist. Am 24.07. auf Mathias'
-    Wunsch wiederhergestellt."""
-    kopf = {"Title": titel.encode("utf-8"), "Priority": "high",
-            "Tags": "rocket"}
+
+def _portionen(absaetze: list[str], grenze: int = NTFY_GRENZE) -> list[list[str]]:
+    """Teilt die Absaetze so auf, dass keine Nachricht die Grenze reisst.
+    Getrennt wird NUR zwischen Aktien, nie mitten in einer Meldung."""
+    portionen, aktuell, laenge = [], [], 0
+    for absatz in absaetze:
+        if len(absatz.encode("utf-8")) > grenze:      # Notbremse
+            absatz = absatz.encode("utf-8")[:grenze - 20].decode("utf-8", "ignore") + " …"
+        gr = len(absatz.encode("utf-8")) + 2
+        if aktuell and laenge + gr > grenze:
+            portionen.append(aktuell)
+            aktuell, laenge = [], 0
+        aktuell.append(absatz)
+        laenge += gr
+    if aktuell:
+        portionen.append(aktuell)
+    return portionen
+
+
+def _sende_eine(topic: str, titel: str, body: str, prio: str, tag: str) -> bool:
+    kopf = {"Title": titel.encode("utf-8"), "Priority": prio, "Tags": tag}
     kopf.update(email_kopf())
     try:
         r = requests.post(f"https://ntfy.sh/{topic}", data=body.encode("utf-8"),
@@ -655,8 +677,32 @@ def push_text(topic: str, titel: str, body: str) -> bool:
         print(f"⚠ Push abgelehnt: HTTP {r.status_code} — {r.text[:200]}")
         return False
     ntfy_verlauf.merke_antwort(r)
-    print(f"Push gesendet an ntfy.sh/{topic} (HTTP {r.status_code})")
+    print(f"Push gesendet an ntfy.sh/{topic} ({len(body)} Zeichen, "
+          f"HTTP {r.status_code})")
     return True
+
+
+def sende(topic: str, titel: str, absaetze: list[str], prio: str, tag: str) -> bool:
+    """Verschickt die Absaetze in so vielen Nachrichten wie noetig."""
+    if not absaetze:
+        return False
+    portionen = _portionen(absaetze)
+    alle_ok = True
+    for nr, teil in enumerate(portionen, 1):
+        kopf = titel if len(portionen) == 1 else f"{titel} ({nr} von {len(portionen)})"
+        if not _sende_eine(topic, kopf, "\n\n".join(teil), prio, tag):
+            alle_ok = False
+    return alle_ok
+
+
+def push_text(topic: str, titel: str, body: str) -> bool:
+    """Schickt eine frei formulierte Meldung (fuer Gap and Go).
+
+    MIT Titel-Kopfzeile: Der Titel war am 23.07. als 'Wortgeklingel'
+    entfernt worden — ohne ihn setzt ntfy aber einen generischen Titel
+    (die Themen-Adresse) ein, was schlimmer ist. Am 24.07. auf Mathias'
+    Wunsch wiederhergestellt."""
+    return sende(topic, titel, body.split("\n\n"), "high", "rocket")
 
 
 def push(topic: str, treffer: list[dict]) -> bool:
@@ -667,28 +713,18 @@ def push(topic: str, treffer: list[dict]) -> bool:
     danach NIE wieder gemeldet worden."""
     bestaetigt = [t for t in treffer if t["vol_ok"] is True]
     rest = [t for t in treffer if t["vol_ok"] is not True]
-    body = nummeriert([format_treffer(t) for t in bestaetigt + rest])
+    # Durchlaufende Nummern ueber alle Portionen hinweg — beim Vorlesen
+    # soll die zweite Nachricht mit '6.' weitergehen, nicht wieder mit '1.'.
+    absaetze = [f"{i}. {block}" for i, block in
+                enumerate([format_treffer(t) for t in bestaetigt + rest], 1)]
     # Titel am 24.07.2026 wiederhergestellt: Ohne Title-Kopfzeile setzt
     # ntfy einen generischen Titel (die Themen-Adresse) ein — das war
     # schlimmer als das am 23.07. beanstandete 'Wortgeklingel'.
     titel = (f"🚀 {len(bestaetigt)} bestätigt"
              + (f", {len(rest)} ohne Vol-Bestätigung" if rest else ""))
-    kopf = {"Title": titel.encode("utf-8"),
-            "Priority": "high" if bestaetigt else "default",
-            "Tags": "chart_with_upwards_trend"}
-    kopf.update(email_kopf())
-    try:
-        r = requests.post(f"https://ntfy.sh/{topic}", data=body.encode("utf-8"),
-                          headers=kopf, timeout=20)
-    except Exception as e:
-        print(f"⚠ Push fehlgeschlagen: {e}")
-        return False
-    if r.status_code >= 400:
-        print(f"⚠ Push abgelehnt: HTTP {r.status_code} — {r.text[:200]}")
-        return False
-    ntfy_verlauf.merke_antwort(r)
-    print(f"Push gesendet an ntfy.sh/{topic} (HTTP {r.status_code})")
-    return True
+    return sende(topic, titel, absaetze,
+                 "high" if bestaetigt else "default",
+                 "chart_with_upwards_trend")
 
 
 def testpush(topic: str) -> int:
