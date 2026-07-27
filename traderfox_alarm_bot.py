@@ -1378,6 +1378,56 @@ JS_MANAGER_ALLE_LOESCHEN = """
 """
 
 
+def inventur_lauf(page, user: str, pw: str) -> int:
+    """NUR LESEN: Was steht gerade im Konto, und was fehlt gegenueber dem,
+    was wir gesetzt haben?
+
+    Mathias' Frage vom 27.07.2026: Loest TraderFox einen Alarm wirklich nur
+    EINMAL aus und entfernt ihn danach? Das laesst sich so nachmessen —
+    fehlen genau die Marken, die heute ueberschritten wurden, entfernt
+    TraderFox sie beim Ausloesen. Stehen sie noch da, kann derselbe Alarm
+    erneut feuern."""
+    print("\n=== INVENTUR: nur lesen, es wird nichts verändert ===\n")
+    if not login(page, user, pw):
+        print("✗ Login fehlgeschlagen.")
+        return 1
+
+    eintraege = alarme_inventur(page, "messung")
+    zahl = page.evaluate(JS_MANAGER_ALARMZAHL)
+    gesamt = sum(len(e["preise"]) for e in eintraege)
+    print(f"\nIm Konto: {len(eintraege)} Werte, {gesamt} Alarme "
+          f"(Gegenzaehlung im Fenster: {zahl}).")
+
+    # Gegenprobe mit dem Gesetzt-Gedaechtnis: Was wir gesetzt haben, aber
+    # nicht mehr dasteht, muss ausgeloest (und entfernt) worden sein.
+    gesetzt = lade_fortschritt(False)
+    if gesetzt:
+        vorhanden = set()
+        for e in eintraege:
+            for p in e["preise"]:
+                wert = preis_parsen(p)
+                if wert is not None:
+                    vorhanden.add(round(wert, 2))
+        fehlen = []
+        for schluessel in sorted(gesetzt):
+            try:
+                t, _nr, preis = schluessel.split("|")
+            except ValueError:
+                continue
+            if round(float(preis), 2) not in vorhanden:
+                fehlen.append(f"{t} {preis}")
+        print(f"\nGesetzt laut Gedächtnis: {len(gesetzt)}")
+        print(f"Davon NICHT mehr im Konto: {len(fehlen)}")
+        if fehlen:
+            print("  " + ", ".join(fehlen[:60])
+                  + (" …" if len(fehlen) > 60 else ""))
+        print("\nDeutung: Fehlende Marken wurden ausgelöst und von TraderFox "
+              "entfernt. Sind es genau die heute überschrittenen, löst "
+              "TraderFox jeden Alarm nur ein einziges Mal aus.")
+    fenster_schliessen(page, "Alerts manager")
+    return 0
+
+
 def loesche_alle_lauf(page, user: str, pw: str) -> int:
     """Loescht SAEMTLICHE Alarme im Konto — auch die handgesetzten.
 
@@ -2026,6 +2076,9 @@ def main():
     ap.add_argument("--loesche-alle", action="store_true",
                     help="SÄMTLICHE Alarme löschen, auch handgesetzte. "
                          "Legt vorher zwingend eine Sicherung ab.")
+    ap.add_argument("--inventur", action="store_true",
+                    help="NUR LESEN: Alarmbestand zählen und mit dem "
+                         "Gesetzt-Gedächtnis vergleichen (ändert nichts).")
     ap.add_argument("--abgleich", action="store_true",
                     help="Vor dem Eintragen aufräumen: Alarme entfernen, deren "
                          "Kaufpunkt sich verschoben hat oder deren Muster "
@@ -2037,7 +2090,7 @@ def main():
     if not user or not pw:
         sys.exit("Bitte TRADERFOX_USER und TRADERFOX_PASS als Umgebungsvariablen setzen.")
     nur_pruefen = (args.selbsttest or args.testalarm or bool(args.loesche)
-                   or args.loesche_alle)
+                   or args.loesche_alle or args.inventur)
     if not nur_pruefen and not args.xlsx:
         sys.exit("Bitte kaufpunkte.xlsx angeben (oder --selbsttest / --testalarm benutzen).")
 
@@ -2106,6 +2159,11 @@ def main():
 
         if args.testalarm:
             code = testalarm_lauf(page, user, pw)
+            browser.close()
+            sys.exit(code)
+
+        if args.inventur:
+            code = inventur_lauf(page, user, pw)
             browser.close()
             sys.exit(code)
 
