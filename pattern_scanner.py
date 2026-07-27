@@ -48,6 +48,8 @@ except ImportError:
 from scipy.signal import argrelextrema
 from scipy.stats import linregress
 
+import ntfy_verlauf   # merkt sich jede verschickte Meldung fuer den Freitags-Putz
+
 # ---------------------------------------------------------------------------
 # Konfiguration
 # ---------------------------------------------------------------------------
@@ -947,8 +949,11 @@ def push_ntfy(topic: str, rows: list[dict]):
         lines.append(f"{r['ticker']}: {p['strategie']} — KP {p['kaufpunkt']}")
     body = "\n".join(lines)
     try:
-        requests.post(f"https://ntfy.sh/{topic}", data=body.encode("utf-8"),
-                      headers={"Title": f"Pattern-Scanner: {len(hot)} Treffer"}, timeout=15)
+        r = requests.post(f"https://ntfy.sh/{topic}", data=body.encode("utf-8"),
+                          headers={"Title": f"Pattern-Scanner: {len(hot)} Treffer"}, timeout=15)
+        # Kennung merken, damit der Freitags-Putz auch diese Meldung
+        # wieder wegraeumen kann (siehe ntfy_verlauf.py).
+        ntfy_verlauf.merke_antwort(r)
         print(f"Push an ntfy.sh/{topic} gesendet ({len(hot)} Treffer).")
     except Exception as e:
         print(f"ntfy-Fehler: {e}")

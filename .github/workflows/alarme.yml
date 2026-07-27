@@ -113,6 +113,17 @@ jobs:
           fi
           python traderfox_alarm_bot.py --loesche-alle
 
+      # Der Putz raeumt auch die MELDUNGEN weg (Mathias, 27.07.2026): Er
+      # hatte alte Signale der Vorwoche in der ntfy-App vorgefunden und
+      # danach versehentlich gehandelt. Laeuft nach dem Alarm-Loeschen und
+      # auch dann, wenn dort etwas schiefging — stehengebliebene alte
+      # Meldungen sind das groessere Risiko.
+      - name: "Alte ntfy-Meldungen löschen"
+        if: ${{ always() && github.event.inputs.modus == 'alles_loeschen' && github.event.inputs.loeschen == 'ALLE' }}
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: python ntfy_verlauf.py --putz "$NTFY_TOPIC"
+
       # --- ntfy-Testnachricht: prueft nur die Push-Kette aufs Handy ---
       - name: "Push-Testnachricht (ntfy)"
         if: ${{ github.event.inputs.modus == 'testpush' }}
@@ -200,7 +211,7 @@ jobs:
             cp kaufpunkte.xlsx kaufpunkte_aktuell.xlsx
             git add kaufpunkte_aktuell.xlsx
           fi
-          git add -A fortschritt.json
+          git add -A fortschritt.json ntfy_ids.json
           if git diff --cached --quiet; then
             echo "Fortschritt und Kaufpunkte unverändert."
           else

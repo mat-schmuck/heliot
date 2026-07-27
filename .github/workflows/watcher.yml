@@ -36,8 +36,11 @@ jobs:
     # ('cancelled'), zwei Minuten bevor die Schlussstunden-Wache
     # uebernahm. Normale Laeufe beenden sich weiterhin von selbst.
     timeout-minutes: 420
+    # contents: write, damit die Kennungen der verschickten Meldungen
+    # (ntfy_ids.json) eingecheckt werden koennen — der Freitags-Putz
+    # braucht sie, um die Woche in der ntfy-App wieder aufzuraeumen.
     permissions:
-      contents: read
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -78,3 +81,21 @@ jobs:
             exit 0
           fi
           python breakout_watcher.py kaufpunkte.xlsx --dauerwache "${{ github.event.inputs.dauerwache || '0' }}"
+
+      # Kennungen der verschickten Meldungen sichern. Ohne sie kann der
+      # Freitags-Putz die Woche in der ntfy-App nicht wegraeumen — und
+      # genau daran hat sich Mathias am 27.07. verbrannt (alte Signale
+      # gelesen, versehentlich gehandelt). Auch bei Abbruch sichern.
+      - name: ntfy-Verlauf sichern
+        if: always()
+        run: |
+          git config user.name "pattern-scanner"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A ntfy_ids.json
+          if git diff --cached --quiet; then
+            echo "Keine neuen Meldungen zu merken."
+          else
+            git commit -m "ntfy-Verlauf: Kennungen der verschickten Meldungen"
+            git pull --rebase origin main
+            git push origin main
+          fi

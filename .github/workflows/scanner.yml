@@ -84,6 +84,7 @@ jobs:
           git config user.name "pattern-scanner"
           git config user.email "actions@users.noreply.github.com"
           git add kaufpunkte_aktuell.xlsx
+          git add -A ntfy_ids.json    # Kennung des Mitternachts-Pushes merken
           if git diff --cached --quiet; then
             echo "Keine Änderung gegenüber dem letzten Scan."
           else

@@ -45,6 +45,8 @@ try:
 except ImportError:
     sys.exit("Bitte installieren: pip install requests pandas openpyxl")
 
+import ntfy_verlauf   # merkt sich jede verschickte Meldung fuer den Freitags-Putz
+
 QUOTE_URL = "https://api.twelvedata.com/quote"
 STATE_FILE = Path("watcher_state.json")
 
@@ -652,6 +654,7 @@ def push_text(topic: str, titel: str, body: str) -> bool:
     if r.status_code >= 400:
         print(f"⚠ Push abgelehnt: HTTP {r.status_code} — {r.text[:200]}")
         return False
+    ntfy_verlauf.merke_antwort(r)
     print(f"Push gesendet an ntfy.sh/{topic} (HTTP {r.status_code})")
     return True
 
@@ -683,6 +686,7 @@ def push(topic: str, treffer: list[dict]) -> bool:
     if r.status_code >= 400:
         print(f"⚠ Push abgelehnt: HTTP {r.status_code} — {r.text[:200]}")
         return False
+    ntfy_verlauf.merke_antwort(r)
     print(f"Push gesendet an ntfy.sh/{topic} (HTTP {r.status_code})")
     return True
 
@@ -711,6 +715,7 @@ def testpush(topic: str) -> int:
     if r.status_code >= 400:
         print(f"⚠ Testnachricht abgelehnt: HTTP {r.status_code} — {r.text[:200]}")
         return 1
+    ntfy_verlauf.merke_antwort(r)
     print(f"✓ Testnachricht gesendet (HTTP {r.status_code}).")
     print("  Kommt sie am Handy an, ist die Push-Kette in Ordnung.")
     return 0
