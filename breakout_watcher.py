@@ -682,10 +682,37 @@ def _sende_eine(topic: str, titel: str, body: str, prio: str, tag: str) -> bool:
     return True
 
 
+# Notbremse fuer die Handelszeit. Wird in main() aus
+# --ignoriere-handelszeit gesetzt und gilt NUR fuer Testlaeufe von Hand.
+HANDELSZEIT_EGAL = False
+
+
 def sende(topic: str, titel: str, absaetze: list[str], prio: str, tag: str) -> bool:
-    """Verschickt die Absaetze in so vielen Nachrichten wie noetig."""
+    """Verschickt die Absaetze in so vielen Nachrichten wie noetig.
+
+    HIER sitzt die Handelszeit-Sperre (Mathias, 27.07.2026: 'Der Wächter
+    darf keinesfalls außerhalb der Börsenzeiten melden'). Bewusst an
+    dieser einen Stelle, weil jede automatische Meldung durch sie
+    hindurchmuss — Breakouts wie Gap and Go.
+
+    Die Luecke, die es vorher gab: Die Boersenpruefung lief VOR der
+    Sechs-Minuten-Pause. Stand sie um 15:59 New Yorker Zeit auf 'offen',
+    schlief der Waechter sechs Minuten und meldete um 16:05 — nach dem
+    Schlussgong. Auch das Holen der Kurse und das Rechnen brauchen Zeit,
+    eine Runde kann also ueber den Schluss hinauslaufen. Darum wird
+    unmittelbar vor dem Senden noch einmal auf die Uhr gesehen.
+
+    Wird hier abgelehnt, gilt der Treffer NICHT als gemeldet — er wird
+    also zum naechsten Handelsbeginn ganz normal gemeldet."""
     if not absaetze:
         return False
+    if not HANDELSZEIT_EGAL:
+        offen, grund = markt_offen()
+        if not offen:
+            print(f"⛔ NICHT gesendet — Börse geschlossen ({grund}). "
+                  f"Der Treffer bleibt offen und wird zum nächsten "
+                  f"Handelsbeginn gemeldet.")
+            return False
     portionen = _portionen(absaetze)
     alle_ok = True
     for nr, teil in enumerate(portionen, 1):
@@ -802,6 +829,10 @@ def main():
     if not args.xlsx:
         sys.exit("Bitte kaufpunkte.xlsx angeben (oder --testpush benutzen).")
 
+    # Die Sperre in sende() ueber die Ausnahme fuer Handlaeufe informieren.
+    global HANDELSZEIT_EGAL
+    HANDELSZEIT_EGAL = bool(args.ignoriere_handelszeit)
+
     # Ausserhalb der Handelszeit gar nicht erst Kurse abrufen. Der Zeitplan
     # im Workflow deckt Sommer- UND Winterzeit ab; welche gerade gilt,
     # entscheidet sich hier.
@@ -877,6 +908,13 @@ def main():
         runde += 1
         if runde > 1:
             print(f"\n——— Runde {runde} ({datetime.now():%H:%M:%S}) ———")
+            # Auch zu RUNDENBEGINN auf die Uhr sehen. Die Pruefung am
+            # Rundenende liegt vor der Sechs-Minuten-Pause und kann den
+            # Schlussgong daher nicht abfangen (Mathias, 27.07.2026).
+            offen, grund = markt_offen()
+            if not offen and not args.ignoriere_handelszeit:
+                print(f"Börse geschlossen ({grund}) — Wache beendet.")
+                break
 
         # Hauptquelle Yahoo (ein Abruf, kein Limit), Twelve Data als Rueckfall.
         quotes = fetch_quotes_yahoo(abruf_ticker)
