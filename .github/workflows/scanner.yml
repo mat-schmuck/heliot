@@ -31,16 +31,16 @@ jobs:
           pip install requests pandas numpy scipy openpyxl yfinance playwright
           playwright install chromium --with-deps
 
-      # Session und Fortschritt mit dem Alarm-Workflow teilen: gleicher
-      # Cache-Schluessel wie in alarme.yml. So kennt das automatische
-      # Eintragen unten die bereits gesetzten Alarme, und der
-      # Freitags-Putz (leert fortschritt.json) wirkt auch hierher.
-      - name: Session/Fortschritt laden
+      # Nur die SESSION kommt aus dem Cache. Das Gesetzt-Gedaechtnis
+      # (fortschritt.json) liegt seit 27.07.2026 IM REPO (kommt mit dem
+      # Checkout): Der Cache verlor es de facto taeglich (Tagesfrist in
+      # lade_fortschritt, inzwischen Wochenfrist) — der Bot setzte dann
+      # morgens Alarme neu, die im Fruehhandel schon ausgeloest hatten,
+      # und Mathias bekam Doppelsignale.
+      - name: Session laden
         uses: actions/cache@v4
         with:
-          path: |
-            session.json
-            fortschritt.json
+          path: session.json
           key: traderfox-state-${{ github.run_id }}
           restore-keys: traderfox-state-
 
@@ -110,6 +110,23 @@ jobs:
         run: |
           python traderfox_alarm_bot.py kaufpunkte.xlsx
           python traderfox_alarm_bot.py kaufpunkte.xlsx
+
+      # Gesetzt-Gedaechtnis ins Repo sichern — uebersteht jeden Cache-
+      # Verlust; einmal gesetzte (womoeglich schon ausgeloeste) Alarme
+      # werden so nie erneut eingetragen.
+      - name: Fortschritt sichern
+        if: always()
+        run: |
+          git config user.name "pattern-scanner"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A fortschritt.json
+          if git diff --cached --quiet; then
+            echo "Fortschritt unverändert."
+          else
+            git commit -m "Gesetzt-Gedächtnis aktualisiert (fortschritt.json)"
+            git pull --rebase origin main
+            git push origin main
+          fi
 
       # Diagnose des Bots immer mitnehmen — gerade im Fehlerfall wichtig
       - name: Bot-Diagnose hochladen

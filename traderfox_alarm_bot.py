@@ -53,7 +53,8 @@ import random
 import re
 import sys
 import time
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
+from zoneinfo import ZoneInfo
 from pathlib import Path
 
 import pandas as pd
@@ -339,12 +340,34 @@ def menschliche_pause(langsam: bool = False):
 # Fortschritt (Wiederaufnahme nach Abbruch)
 # ===========================================================================
 
+def letzter_putz_tag() -> str:
+    """ISO-Datum des letzten vergangenen Freitag-16:02-New-York.
+
+    Dieselbe Wochengrenze wie beim Freitags-Putz und beim Waechter:
+    Alarme gelten eine Woche, das Gesetzt-Gedaechtnis genauso."""
+    jetzt = datetime.now(ZoneInfo("America/New_York"))
+    d = jetzt.date()
+    rueck = (d.weekday() - 4) % 7
+    freitag = d - timedelta(days=rueck)
+    if rueck == 0 and jetzt.hour * 60 + jetzt.minute < 16 * 60 + 2:
+        freitag -= timedelta(days=7)
+    return freitag.isoformat()
+
+
 def lade_fortschritt(neu: bool) -> set:
     if neu or not FORTSCHRITT_FILE.exists():
         return set()
     try:
         data = json.loads(FORTSCHRITT_FILE.read_text())
-        if data.get("tag") == date.today().isoformat():
+        # WOCHEN-Gueltigkeit statt Tagesfrist (27.07.2026): Die alte
+        # Nur-heute-Regel liess das Gedaechtnis jeden Morgen verfallen.
+        # Folge am Montag: Vollpruefung, und Alarme, die im Fruehhandel
+        # bereits AUSGELOEST hatten (und darum nicht mehr in der Liste
+        # standen), wurden als 'fehlend' NEU gesetzt und feuerten erneut —
+        # Mathias' Handy bekam die Signale doppelt. Ein einmal gesetzter
+        # Alarm bleibt bis zum Freitags-Putz erledigt, ob er nun steht
+        # oder schon gefeuert hat.
+        if data.get("tag", "") >= letzter_putz_tag():
             return set(data.get("erledigt", []))
     except Exception:
         pass
