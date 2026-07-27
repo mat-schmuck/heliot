@@ -1959,6 +1959,19 @@ def selbsttest(page, user: str, pw: str) -> int:
                 diagnose(page, "alarm_einstellungen",
                          "Einstellungen des Alarmdialogs — nur angesehen, "
                          "nichts verändert")
+                # Die Reiter laden ihren Inhalt erst beim Anklicken — der
+                # Benachrichtigungen-Reiter interessiert (Kanäle, evtl.
+                # Ruhezeiten). Anklicken ist reines Ansehen.
+                try:
+                    reiter = page.locator("a.stab").filter(
+                        has_text="Benachrichtigungen").first
+                    if reiter.count() and reiter.is_visible():
+                        maus_klick(reiter, "Reiter Benachrichtigungen")
+                        page.wait_for_timeout(1500)
+                        diagnose(page, "alarm_benachrichtigungen",
+                                 "Reiter Benachrichtigungen — nur angesehen")
+                except Exception as e:
+                    print(f"    (Benachrichtigungen-Reiter: {e})")
                 page.keyboard.press("Escape")
                 page.wait_for_timeout(500)
             else:
