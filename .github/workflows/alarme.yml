@@ -23,6 +23,7 @@ on:
           - vollstaendig      # Scanner + Alarme für alle Treffer
           - aufraeumen        # gezielt einzelne Alarme entfernen
           - alles_loeschen    # SÄMTLICHE Alarme löschen (Feld 'loeschen' = ALLE)
+          - datenvergleich    # Yahoo gegen FMP prüfen (ändert nichts)
       alle_level:
         description: "Auch Fallback-Level alarmieren? (true/false)"
         required: false
@@ -123,6 +124,15 @@ jobs:
         env:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
         run: python ntfy_verlauf.py --putz "$NTFY_TOPIC"
+
+      # --- Datenvergleich: Yahoo gegen FMP, aendert nichts ---
+      # Muss hier laufen, weil der FMP-Schluessel als Secret bei GitHub
+      # liegt — Claude bekommt den Wert nie zu sehen.
+      - name: "Daten vergleichen (Yahoo gegen FMP)"
+        if: ${{ github.event.inputs.modus == 'datenvergleich' }}
+        env:
+          FMP_API_KEY: ${{ secrets.FMP_API_KEY }}
+        run: python datenvergleich.py ${{ github.event.inputs.loeschen }}
 
       # --- ntfy-Testnachricht: prueft nur die Push-Kette aufs Handy ---
       - name: "Push-Testnachricht (ntfy)"
