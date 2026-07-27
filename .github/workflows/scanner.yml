@@ -56,15 +56,15 @@ jobs:
         # Handys. Nachzuegler ausserhalb des Fensters scannen deshalb
         # weiter (frische Daten fuer Heliot und den Waechter-Artefakt),
         # senden aber nichts.
+        # KEIN Push mehr (Mathias, 27.07.2026): Der Scan rechnet nur noch
+        # die neue Liste; gemeldet wird ausschliesslich vom Waechter, und
+        # zwar erst ab der New Yorker Eroeffnung. Die frueheren
+        # Mitternachtsnachrichten waren Treffer, die zu diesem Zeitpunkt
+        # ohnehin niemand handeln konnte.
         run: |
-          NTFY_ARG=""
-          STUNDE=$(TZ=Europe/Vienna date +%H)
-          if [ "$STUNDE" = "00" ] || [ "$STUNDE" = "01" ]; then
-            NTFY_ARG="--ntfy ${{ secrets.NTFY_TOPIC || 'dummy-kein-push' }}"
-          fi
           python pattern_scanner.py finviz_3.csv \
             --out kaufpunkte.xlsx \
-            --rate 8 $NTFY_ARG
+            --rate 8
 
       - name: Excel als Artifact hochladen
         uses: actions/upload-artifact@v4

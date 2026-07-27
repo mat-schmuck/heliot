@@ -882,7 +882,14 @@ def main():
                     continue
                 # Kennung am Treffer mitfuehren. Vorgemerkt wird ERST nach
                 # einem erfolgreichen Push - siehe unten.
-                res["key"] = f"{item['ticker']}|{item['nr']}|{item['kaufpunkt']:.2f}"
+                # OHNE Preis (Mathias, 27.07.2026): Der Kaufpunkt wandert
+                # taeglich mit dem Musterdeckel nach oben. Steckte er im
+                # Schluessel, galt derselbe Ausbruch am naechsten Tag als
+                # neu und wurde erneut gemeldet — genau das 'wilde
+                # Durcheinander', das abgestellt werden sollte. Aktie plus
+                # Kaufpunkt-Nummer genuegen: einmal gemeldet ist gemeldet,
+                # bis der Freitags-Putz das Gedaechtnis leert.
+                res["key"] = f"{item['ticker']}|{item['nr']}"
                 treffer.append(res)
                 if res["key"] not in schon_gemeldet:
                     neu.append(res)

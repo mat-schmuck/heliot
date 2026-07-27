@@ -1251,6 +1251,41 @@ def alarm_loeschen(page, preis: float, maximal: int = 5) -> int:
     return geloescht
 
 
+def alarm_entfernen(page, ticker: str, firma: str, preis) -> int:
+    """Entfernt EINEN Alarm (oder mit preis=None alle einer Aktie).
+
+    Ausgelagert, weil sowohl das Aufraeumen von Hand als auch der taegliche
+    Abgleich (Mathias, 27.07.2026) genau diesen Handgriff brauchen."""
+    # Suche und Dialog mit Retry wie beim Setzen: Der Aufraeumlauf vom
+    # 26.07. hatte KEINEN Wiederholungsversuch — ein einziger Aussetzer
+    # der Suchkonsole liess 117 Auftraege in Serie scheitern.
+    def vorbereiten():
+        if not aktie_suchen(page, ticker, langsam=True, firma=firma):
+            return False
+        dialog_schliessen(page)
+        return alarm_dialog_oeffnen(page, ticker, firma)
+
+    if not mit_retry(vorbereiten, versuche=3, pause=2, name=f"Aufräumen {ticker}"):
+        return -1          # -1 = Aktie gar nicht erreichbar
+    if preis is None:
+        # Ohne Preisangabe: der Reihe nach jeden im Dialog stehenden
+        # Alarm dieser Aktie loeschen, bis keiner mehr da ist.
+        anzahl = 0
+        for _ in range(20):
+            felder = page.locator("input.price-alert:visible")
+            if not felder.count():
+                break
+            wert = preis_parsen(felder.first.input_value() or "")
+            if wert is None:
+                break
+            n = alarm_loeschen(page, wert)
+            if not n:
+                break
+            anzahl += n
+        return anzahl
+    return alarm_loeschen(page, preis)
+
+
 def aufraeum_lauf(page, user: str, pw: str, auftraege: list) -> int:
     """Loescht gezielt einzelne Alarme.
 
@@ -1284,37 +1319,10 @@ def aufraeum_lauf(page, user: str, pw: str, auftraege: list) -> int:
     for i, (ticker, firma, preis) in enumerate(auftraege, 1):
         ziel = "ALLE Alarme" if preis is None else str(preis)
         print(f"\n[{i}/{len(auftraege)}] {ticker} — {ziel} entfernen")
-
-        # Suche und Dialog mit Retry wie beim Setzen: Der Aufraeumlauf vom
-        # 26.07. hatte KEINEN Wiederholungsversuch — ein einziger Aussetzer
-        # der Suchkonsole liess 117 Auftraege in Serie scheitern.
-        def vorbereiten():
-            if not aktie_suchen(page, ticker, langsam=True, firma=firma):
-                return False
-            dialog_schliessen(page)
-            return alarm_dialog_oeffnen(page, ticker, firma)
-
-        if not mit_retry(vorbereiten, versuche=3, pause=2, name=f"Aufräumen {ticker}"):
+        anzahl = alarm_entfernen(page, ticker, firma, preis)
+        if anzahl < 0:
             probleme.append(f"{ticker} (Suche/Dialog)")
-            continue
-        if preis is None:
-            # Ohne Preisangabe: der Reihe nach jeden im Dialog stehenden
-            # Alarm dieser Aktie loeschen, bis keiner mehr da ist.
-            anzahl = 0
-            for _ in range(20):
-                felder = page.locator("input.price-alert:visible")
-                if not felder.count():
-                    break
-                wert = preis_parsen(felder.first.input_value() or "")
-                if wert is None:
-                    break
-                n = alarm_loeschen(page, wert)
-                if not n:
-                    break
-                anzahl += n
-        else:
-            anzahl = alarm_loeschen(page, preis)
-        if anzahl:
+        elif anzahl:
             entfernt += anzahl
         else:
             probleme.append(f"{ticker} @ {ziel} (nicht gefunden oder nicht löschbar)")
@@ -2018,6 +2026,10 @@ def main():
     ap.add_argument("--loesche-alle", action="store_true",
                     help="SÄMTLICHE Alarme löschen, auch handgesetzte. "
                          "Legt vorher zwingend eine Sicherung ab.")
+    ap.add_argument("--abgleich", action="store_true",
+                    help="Vor dem Eintragen aufräumen: Alarme entfernen, deren "
+                         "Kaufpunkt sich verschoben hat oder deren Muster "
+                         "weggefallen ist (täglicher Abgleich).")
     args = ap.parse_args()
 
     user = os.environ.get("TRADERFOX_USER")
@@ -2128,6 +2140,48 @@ def main():
         suchkonsole_leeren(page)
 
         erledigt = lade_fortschritt(args.neu)
+
+        # --- Taeglicher Abgleich (Mathias, 27.07.2026) -------------------
+        # Statt jeden Abend alles zu loeschen und morgens alles neu zu
+        # setzen (rund 85 Minuten in einem 90-Minuten-Fenster) wird nur die
+        # Differenz angefasst. Was das Regelwerk heute nicht mehr nennt,
+        # fliegt raus: verschobene Kaufpunkte (der Deckel einer Box wandert
+        # nach oben, gemessen 0,6-4,8 % in zwei Tagen) und weggefallene
+        # Muster. Ohne das haeuften sich beide Fassungen im Konto —
+        # daher die 573 Alarme am 26.07. statt der vorgesehenen 466.
+        if args.abgleich:
+            soll = {f"{j['ticker']}|{p['nr']}|{p['preis']:.2f}"
+                    for j in jobs for p in j["points"]}
+            firmen = {j["ticker"]: j["firma"] for j in jobs}
+            veraltet = sorted(erledigt - soll)
+            print(f"\n=== ABGLEICH: {len(soll)} Alarme laut heutiger Liste, "
+                  f"{len(erledigt)} stehen, {len(veraltet)} veraltet ===")
+            weg, abgleich_probleme = 0, []
+            for i, schluessel in enumerate(veraltet, 1):
+                try:
+                    t, _nr, p = schluessel.split("|")
+                    preis = float(p)
+                except ValueError:
+                    continue
+                print(f"\n[Abgleich {i}/{len(veraltet)}] {t} — {preis:.2f} ist überholt")
+                anzahl = alarm_entfernen(page, t, firmen.get(t, ""), preis)
+                if anzahl > 0:
+                    weg += anzahl
+                    erledigt.discard(schluessel)
+                    speichere_fortschritt(erledigt)
+                elif anzahl == 0:
+                    # Stand ohnehin nicht mehr im Konto (z. B. ausgeloest
+                    # und von TraderFox entfernt) — Gedaechtnis aufraeumen.
+                    erledigt.discard(schluessel)
+                    speichere_fortschritt(erledigt)
+                    print(f"    {t}: stand nicht mehr im Konto — nur vermerkt.")
+                else:
+                    abgleich_probleme.append(t)
+            print(f"\n=== Abgleich fertig: {weg} überholte Alarme entfernt ===")
+            if abgleich_probleme:
+                print(f"⚠ nicht erreichbar: {', '.join(abgleich_probleme[:20])}")
+            dialog_schliessen(page)
+
         gesamt = sum(len(j["points"]) for j in jobs)
         offen = [(j, p) for j in jobs for p in j["points"]
                  if f"{j['ticker']}|{p['nr']}|{p['preis']:.2f}" not in erledigt]

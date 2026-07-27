@@ -195,13 +195,16 @@ jobs:
         # Zwei Durchgaenge (Mathias, 27.07.): Nachzuegler SOFORT nachtragen.
         # Durchgang 2 ueberspringt Erledigtes; --neu gilt nur im ersten,
         # sonst wuerde der zweite alles noch einmal anfassen.
+        # --abgleich im ersten Durchgang (Mathias, 27.07.2026): erst die
+        # ueberholten Alarme raeumen, dann die neuen setzen. Der zweite
+        # Durchgang holt nur noch Nachzuegler und braucht keinen Abgleich.
         run: |
           EXTRA=""
           if [ "${{ github.event.inputs.modus }}" = "test_2_aktien" ]; then EXTRA="$EXTRA --limit 2"; fi
           if [ "${{ github.event.inputs.alle_level }}" = "true" ]; then EXTRA="$EXTRA --alle"; fi
           NEU=""
           if [ "${{ github.event.inputs.neu }}" = "true" ]; then NEU="--neu"; fi
-          python traderfox_alarm_bot.py kaufpunkte.xlsx $EXTRA $NEU
+          python traderfox_alarm_bot.py kaufpunkte.xlsx $EXTRA $NEU --abgleich
           python traderfox_alarm_bot.py kaufpunkte.xlsx $EXTRA
 
       # Gesetzt-Gedaechtnis ins Repo sichern (auch die LEERUNG durch den
