@@ -186,17 +186,25 @@ jobs:
       # Gesetzt-Gedaechtnis ins Repo sichern (auch die LEERUNG durch den
       # Freitags-Putz/alles_loeschen — der loescht die Datei, und genau
       # diese Loeschung muss eingecheckt werden, damit die neue Woche
-      # wirklich leer beginnt).
-      - name: Fortschritt sichern
+      # wirklich leer beginnt). ZUSAETZLICH Gleichstand mit dem Waechter
+      # (Mathias, 27.07.): Hat dieser Lauf Alarme aus einer frisch
+      # gerechneten kaufpunkte.xlsx eingetragen, wird GENAU diese Datei
+      # als kaufpunkte_aktuell.xlsx veroeffentlicht — der Waechter liest
+      # sie und ueberwacht damit exakt die eingetragenen Alarme.
+      - name: Fortschritt sichern + Wächter-Gleichstand
         if: always()
         run: |
           git config user.name "pattern-scanner"
           git config user.email "actions@users.noreply.github.com"
+          if [ -f kaufpunkte.xlsx ]; then
+            cp kaufpunkte.xlsx kaufpunkte_aktuell.xlsx
+            git add kaufpunkte_aktuell.xlsx
+          fi
           git add -A fortschritt.json
           if git diff --cached --quiet; then
-            echo "Fortschritt unverändert."
+            echo "Fortschritt und Kaufpunkte unverändert."
           else
-            git commit -m "Gesetzt-Gedächtnis aktualisiert (fortschritt.json)"
+            git commit -m "Gesetzt-Gedächtnis/Kaufpunkte aktualisiert (Wächter-Gleichstand)"
             git pull --rebase origin main
             git push origin main
           fi
