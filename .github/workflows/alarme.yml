@@ -170,11 +170,16 @@ jobs:
         env:
           TRADERFOX_USER: ${{ secrets.TRADERFOX_USER }}
           TRADERFOX_PASS: ${{ secrets.TRADERFOX_PASS }}
+        # Zwei Durchgaenge (Mathias, 27.07.): Nachzuegler SOFORT nachtragen.
+        # Durchgang 2 ueberspringt Erledigtes; --neu gilt nur im ersten,
+        # sonst wuerde der zweite alles noch einmal anfassen.
         run: |
           EXTRA=""
           if [ "${{ github.event.inputs.modus }}" = "test_2_aktien" ]; then EXTRA="$EXTRA --limit 2"; fi
           if [ "${{ github.event.inputs.alle_level }}" = "true" ]; then EXTRA="$EXTRA --alle"; fi
-          if [ "${{ github.event.inputs.neu }}" = "true" ]; then EXTRA="$EXTRA --neu"; fi
+          NEU=""
+          if [ "${{ github.event.inputs.neu }}" = "true" ]; then NEU="--neu"; fi
+          python traderfox_alarm_bot.py kaufpunkte.xlsx $EXTRA $NEU
           python traderfox_alarm_bot.py kaufpunkte.xlsx $EXTRA
 
       # Immer hochladen — gerade im Fehlerfall ist das Debug-Material entscheidend

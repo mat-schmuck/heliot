@@ -36,13 +36,8 @@ jobs:
     # ('cancelled'), zwei Minuten bevor die Schlussstunden-Wache
     # uebernahm. Normale Laeufe beenden sich weiterhin von selbst.
     timeout-minutes: 420
-    # actions: read wird gebraucht, um die kaufpunkte.xlsx aus dem Artefakt
-    # des Scanner-Workflows zu holen. Ohne diese Berechtigung scheitert der
-    # Download mit "Resource not accessible by integration" - das Standard-
-    # Token darf nur contents lesen.
     permissions:
       contents: read
-      actions: read
     steps:
       - uses: actions/checkout@v4
 
@@ -53,14 +48,16 @@ jobs:
       - name: Abhängigkeiten
         run: pip install requests pandas openpyxl yfinance
 
-      # Die kaufpunkte.xlsx vom letzten Scanner-Lauf holen
-      - name: Kaufpunkte vom letzten Scan laden
-        uses: dawidd6/action-download-artifact@v6
-        with:
-          workflow: scanner.yml
-          name: kaufpunkte
-          path: .
-          if_no_artifact_found: warn
+      # EINE Wahrheit fuer Alarme UND Waechter: die im Repo eingecheckte
+      # kaufpunkte_aktuell.xlsx (naechtlich vom Scanner aktualisiert, bei
+      # Listenwechseln von Hand geprueft eingecheckt). Der fruehere
+      # Artefakt-Download vom letzten Scanner-Lauf hing nach einem
+      # Listenwechsel hinterher (26.07.: neue 265er-Liste ueber alarme.yml
+      # eingetragen, das Artefakt zeigte noch die alte 778er) — der
+      # Waechter haette veraltete Alarme ueberwacht (Mathias' Vorgabe:
+      # immer synchron, nur die jeweils aktuellen Alarme).
+      - name: Kaufpunkte aus dem Repo übernehmen
+        run: cp kaufpunkte_aktuell.xlsx kaufpunkte.xlsx
 
       # Zustand (was wurde heute schon gemeldet) über Läufe hinweg merken
       - name: Zustand laden

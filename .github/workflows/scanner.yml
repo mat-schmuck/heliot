@@ -104,7 +104,12 @@ jobs:
         env:
           TRADERFOX_USER: ${{ secrets.TRADERFOX_USER }}
           TRADERFOX_PASS: ${{ secrets.TRADERFOX_PASS }}
-        run: python traderfox_alarm_bot.py kaufpunkte.xlsx
+        # Zwei Durchgaenge (Mathias, 27.07.): Nachzuegler SOFORT nachtragen,
+        # nicht auf den naechsten Lauf warten. Durchgang 2 ueberspringt dank
+        # Fortschritt alles Erledigte und kostet nur wenige Minuten.
+        run: |
+          python traderfox_alarm_bot.py kaufpunkte.xlsx
+          python traderfox_alarm_bot.py kaufpunkte.xlsx
 
       # Diagnose des Bots immer mitnehmen — gerade im Fehlerfall wichtig
       - name: Bot-Diagnose hochladen
