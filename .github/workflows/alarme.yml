@@ -50,6 +50,10 @@ on:
         options:
           - neu_rechnen
           - repo_datei
+      trotz_waechter:
+        description: "Finnhub-Messung starten, obwohl der Wächter läuft? (true/false) — nur nach bewusster Entscheidung"
+        required: false
+        default: "false"
 
 jobs:
   lauf:
@@ -71,6 +75,32 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+
+      # --- Sperre: nur EINE Finnhub-Verbindung gleichzeitig ---
+      # Die Doku sagt woertlich: "1 API key can only open 1 connection at a
+      # time." Wer misst, waehrend die Dauerwache laeuft, streitet mit ihr um
+      # dieselbe Verbindung — sie wird geworfen, verbindet sich neu, wird
+      # wieder geworfen. Genau das ist am 28.07.2026 passiert: Die
+      # Feed-Pruefung lief mitten in der laufenden Wache. Gefaehrlich ist das
+      # weniger fuer die Messung als fuer die Wache, die dann minutenlang
+      # ohne Ticks dasteht (Alarme kommen weiter, aber nur im
+      # Sechs-Minuten-Takt von Yahoo).
+      # Deshalb: harter Stopp, ausser jemand entscheidet sich bewusst dagegen.
+      - name: "Sperre gegen doppelte Finnhub-Verbindung"
+        if: ${{ contains('websocketmessung,liquiditaet,feedpruefung,staffeltest', github.event.inputs.modus) && github.event.inputs.trotz_waechter != 'true' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          offen=0
+          for zustand in in_progress queued; do
+            n=$(gh api "repos/${{ github.repository }}/actions/workflows/watcher.yml/runs?status=$zustand" --jq '.total_count' 2>/dev/null || echo 0)
+            offen=$((offen + n))
+          done
+          if [ "$offen" -gt 0 ]; then
+            echo "::error::Der Wächter läuft gerade ($offen Lauf/Läufe). Finnhub erlaubt nur EINE Verbindung je Schlüssel — eine Messung würde ihm die Ticks wegnehmen. Entweder den Wächter zuerst abbrechen, oder den Lauf mit trotz_waechter=true bewusst erzwingen."
+            exit 1
+          fi
+          echo "Kein Wächter aktiv — die Finnhub-Verbindung ist frei."
 
       - name: Abhängigkeiten
         run: |
