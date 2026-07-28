@@ -27,3 +27,5 @@ __pycache__/
 *.egg-info/
 .venv/
 venv/
+# PowerShell legt bei "> `$null" versehentlich eine Datei dieses Namens an
+$null
