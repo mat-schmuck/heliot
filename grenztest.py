@@ -115,10 +115,59 @@ def bericht(z, symbole, dauer, ueberschrift):
     return aktiv, still
 
 
+def nachpruefung(schluessel, tickers, dauer=180):
+    """NUR Abschnitt A, mit frei gewaehlten Verdaechtigen.
+
+    Gebraucht, weil der erste Durchgang am 28.07.2026 eine Frage offen
+    liess: Bei 50 abonnierten Schwergewichten schwieg Lowe's als einziges.
+    Das koennte an der Grenze liegen — oder schlicht daran, dass das
+    Ende des Feldes duenn war (Home Depot brachte in drei Minuten ganze
+    zwei Ticks). Die einzige saubere Antwort ist, denselben Wert OHNE
+    Grenzennaehe zu messen. Genau dafuer ist dieser Modus da."""
+    liste = [t.upper() for t in tickers] + KONTROLLE
+    try:
+        ws = websocket.create_connection("wss://ws.finnhub.io?token="
+                                         + schluessel, timeout=15)
+    except Exception as e:
+        sys.exit(f"Verbindung fehlgeschlagen ({type(e).__name__}).")
+    z = Zaehler(ws)
+    print(f"\n=== NACHPRUEFUNG: {len(liste)} Symbole, {dauer} Sekunden ===")
+    print(f"    Geprueft werden {', '.join(tickers)} — weit weg von jeder "
+          f"Grenze, mit Kontrollgruppe.")
+    z.an(liste)
+    z.hoere(dauer)
+    aktiv, still = bericht(z, liste, dauer, "Ergebnis:")
+    try:
+        ws.close()
+    except Exception:
+        pass
+
+    if not all(k in aktiv for k in KONTROLLE):
+        print("\nDie Kontrollgruppe schwieg — Leitung gestoert, nicht "
+              "verwertbar.")
+        return
+    verdaechtig_still = [t for t in tickers if t.upper() in still]
+    print("\nURTEIL")
+    if verdaechtig_still:
+        print(f"  {', '.join(verdaechtig_still)} schweigen auch bei nur "
+              f"{len(liste)} Symbolen.")
+        print("  -> Abdeckungsluecke, NICHT die Grenze. Ein Puffer haette "
+              "daran nichts geaendert.")
+    else:
+        print(f"  {', '.join(tickers)} liefern hier Ticks, schwiegen aber bei "
+              f"50 abonnierten Werten.")
+        print("  -> Dann geht punktgenau an der Grenze sehr wohl etwas "
+              "verloren, und der Puffer ist die richtige Massnahme.")
+
+
 def main():
     schluessel = os.environ.get("FINNHUB_API_KEY", "").strip()
     if not schluessel:
         sys.exit("Kein FINNHUB_API_KEY gesetzt.")
+
+    if len(sys.argv) > 2 and sys.argv[1].lower() == "nachpruefung":
+        nachpruefung(schluessel, sys.argv[2:])
+        return
 
     try:
         ws = websocket.create_connection("wss://ws.finnhub.io?token="

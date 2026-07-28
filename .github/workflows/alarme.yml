@@ -198,7 +198,7 @@ jobs:
           FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
         run: |
           pip install websocket-client
-          python grenztest.py
+          python grenztest.py ${{ github.event.inputs.loeschen }}
 
       # --- Waechter mit Live-Staffelung im Trockenlauf ---
       # Prueft die fertige Verdrahtung am offenen Markt, OHNE zu senden und
