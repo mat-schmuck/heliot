@@ -40,16 +40,11 @@ def merke(msg_id: str):
     """Kennung einer gerade verschickten Nachricht aufheben."""
     if not msg_id:
         return
-    try:
-        ids = json.loads(VERLAUF_DATEI.read_text()) if VERLAUF_DATEI.exists() else []
-        if not isinstance(ids, list):
-            ids = []
-    except Exception:
-        ids = []
+    ids = _lies(VERLAUF_DATEI)
     if msg_id not in ids:
         ids.append(msg_id)
     try:
-        VERLAUF_DATEI.write_text(json.dumps(ids, indent=2))
+        VERLAUF_DATEI.write_text(json.dumps(ids, indent=2), encoding="utf-8")
     except Exception as e:
         print(f"    ntfy-Verlauf nicht speicherbar: {e}")
 
@@ -69,10 +64,7 @@ def putz(topic: str) -> int:
     if not topic:
         print("⚠ Kein ntfy-Thema angegeben — nichts zu räumen.")
         return 0
-    try:
-        ids = json.loads(VERLAUF_DATEI.read_text()) if VERLAUF_DATEI.exists() else []
-    except Exception:
-        ids = []
+    ids = _lies(VERLAUF_DATEI)
 
     weg, fehler = 0, 0
     for msg_id in ids:
@@ -103,13 +95,67 @@ def putz(topic: str) -> int:
     return weg
 
 
+def _lies(pfad) -> list:
+    # utf-8-sig statt der Standardkodierung: Auf Windows schreiben viele
+    # Werkzeuge eine Byte-Reihenfolge-Marke an den Anfang, und json.loads
+    # scheitert daran wortlos — die Liste waere dann still leer, und die
+    # Kennungen des Laufs verschwaenden unbemerkt. Aufgefallen beim Test
+    # der Vereinigung am 28.07.2026.
+    try:
+        daten = json.loads(Path(pfad).read_text(encoding="utf-8-sig"))
+        return daten if isinstance(daten, list) else []
+    except Exception:
+        return []
+
+
+def vereine(sicherung) -> int:
+    """Kennungen aus einer Sicherung mit der Datei im Repo VEREINEN.
+
+    Gebaut nach dem Ausfall vom 28.07.2026: Die Abendwache hatte ihre
+    Meldungen sauber verschickt, scheiterte am Ende aber beim
+    Zurueckschreiben — 'git pull --rebase' fand einen Konflikt in
+    ntfy_ids.json, weil waehrend des Laufs von anderer Stelle ins Repo
+    geschrieben worden war. Der ganze Lauf wurde rot gemeldet, und die
+    Kennungen des Abends waren weg. Folge: Der Freitags-Putz haette
+    genau diese Meldungen NICHT vom Handy raeumen koennen — und alte
+    Signale in der App sind kein Schoenheitsfehler, sondern das, wonach
+    Mathias am 27.07. versehentlich gehandelt hat.
+
+    Ein Konflikt ist hier ohnehin unsinnig: Die Datei ist eine LISTE von
+    Kennungen. Beide Seiten haben angehaengt, also gehoeren beide Seiten
+    hinein. Genau das macht diese Funktion, und der Workflow braucht
+    danach kein Rebase mehr."""
+    im_repo = _lies(VERLAUF_DATEI)
+    meine = _lies(sicherung)
+    zusammen = list(im_repo)
+    neu = 0
+    for kennung in meine:
+        if kennung not in zusammen:
+            zusammen.append(kennung)
+            neu += 1
+    try:
+        VERLAUF_DATEI.write_text(json.dumps(zusammen, indent=2))
+    except Exception as e:
+        print(f"⚠ ntfy-Verlauf nicht schreibbar: {e}")
+        return 0
+    print(f"ntfy-Verlauf vereint: {len(im_repo)} im Repo, {len(meine)} aus "
+          f"diesem Lauf, {neu} davon neu, jetzt {len(zusammen)} gesamt.")
+    return neu
+
+
 def main():
     ap = argparse.ArgumentParser(description="ntfy-Meldungen der Woche wegräumen")
     ap.add_argument("--putz", metavar="THEMA", default=None,
                     help="Alle gemerkten Meldungen dieses Themas löschen")
+    ap.add_argument("--vereinen", metavar="DATEI", default=None,
+                    help="Kennungen aus dieser Sicherung mit ntfy_ids.json "
+                         "vereinen (konfliktfreies Zurückschreiben)")
     args = ap.parse_args()
+    if args.vereinen:
+        vereine(args.vereinen)
+        return
     if not args.putz:
-        sys.exit("Bitte --putz <thema> angeben.")
+        sys.exit("Bitte --putz <thema> oder --vereinen <datei> angeben.")
     putz(args.putz)
 
 

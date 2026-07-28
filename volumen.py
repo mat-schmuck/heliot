@@ -296,6 +296,30 @@ def text(v_bisher, v50, minute=None):
     return f"{p:+.0f} % gegenüber dem 50-Tage-Schnitt"
 
 
+# --- Schreibweise fuer Meldungen ------------------------------------------
+# Am 28.07.2026 stand in einer echten Meldung "nötig +0 %". Rechnerisch
+# richtig — die Huerde der meisten Muster ist der Faktor 1,0, also null
+# Prozent UEBER dem Schnitt — aber es liest sich wie "keine Anforderung"
+# oder wie ein Fehler. Mathias hat es sofort bemerkt. Deshalb wird der
+# Faktor 1,0 ausgeschrieben statt als Prozentzahl dargestellt, und die
+# Lage der Aktie in Worten statt mit Vorzeichen.
+
+def huerde_text(faktor):
+    """Was verlangt wird, in lesbarer Form."""
+    if faktor <= 1.0:
+        return "nötig wäre mindestens der Schnitt"
+    return f"nötig {(faktor - 1) * 100:.0f} % darüber"
+
+
+def lage_text(pct, fenster=50):
+    """Wo die Aktie steht, ohne Vorzeichen-Rätsel."""
+    if pct is None:
+        return "Volumen nicht bewertbar"
+    if pct >= 0:
+        return f"{pct:.0f} % über Ø{fenster}"
+    return f"{abs(pct):.0f} % unter Ø{fenster}"
+
+
 # ---------------------------------------------------------------------------
 # Selbsttest — ohne Netzwerk
 # ---------------------------------------------------------------------------

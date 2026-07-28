@@ -792,8 +792,9 @@ def format_gapgo(g: dict) -> str:
     status = ("BESTÄTIGT (Schluss im oberen Fünftel)" if g["bestaetigt"]
               else "im Aufbau")
     noetig = GAP_FRUEH_FAKTOR if g["frueh"] else GAP_VOL_FAKTOR
-    vol = (f"Volumen {(g['tages_ratio']-1)*100:+.0f}% gegenüber Ø{VOL_FENSTER}, "
-           f"nötig {(noetig-1)*100:+.0f}%")
+    vol = ("Volumen "
+           + volumen.lage_text((g["tages_ratio"] - 1) * 100, VOL_FENSTER)
+           + ", " + volumen.huerde_text(noetig))
     luecke = f"Lücke +{g['gap']*100:.1f}%"
     if g.get("base_spanne") is not None:
         luecke += f"; Flat Base davor, Spanne {g['base_spanne']*100:.0f}%"
@@ -819,14 +820,12 @@ def format_treffer(t: dict) -> str:
     zusatz = ""
     if anteil < 0.99:
         zusatz = f" (hochgerechnet, {anteil*100:.0f}% des Tages)"
-    pct = t.get("vol_pct")
-    noetig_pct = (t["vol_noetig"] - 1) * 100
+    lage = volumen.lage_text(t.get("vol_pct"), VOL_FENSTER)
+    huerde = volumen.huerde_text(t["vol_noetig"])
     if t["vol_ok"] is True:
-        vol_txt = (f"Volumen BESTÄTIGT, {pct:+.0f}% gegenüber Ø{VOL_FENSTER}, "
-                   f"nötig {noetig_pct:+.0f}%{zusatz}")
+        vol_txt = f"Volumen BESTÄTIGT, {lage}, {huerde}{zusatz}"
     elif t["vol_ok"] is False:
-        vol_txt = (f"Volumen NICHT bestätigt, {pct:+.0f}% gegenüber "
-                   f"Ø{VOL_FENSTER}, nötig {noetig_pct:+.0f}%{zusatz}")
+        vol_txt = f"Volumen NICHT bestätigt, {lage}, {huerde}{zusatz}"
     else:
         # Kommt nur vor, wenn keine Durchschnittsbasis existiert (brandneue
         # Notierung oder Datenluecke der Kursquelle) — der Waechter rechnet

@@ -100,13 +100,33 @@ jobs:
         run: |
           git config user.name "pattern-scanner"
           git config user.email "actions@users.noreply.github.com"
-          # Fehlertolerant: existiert die Datei noch nicht, bricht 'git add'
-          # mit Code 128 ab und faerbt den ganzen Lauf rot (siehe alarme.yml).
-          git add -A -- ntfy_ids.json 2>/dev/null || true
-          if git diff --cached --quiet; then
-            echo "Keine neuen Meldungen zu merken."
-          else
-            git commit -m "ntfy-Verlauf: Kennungen der verschickten Meldungen"
-            git pull --rebase origin main
-            git push origin main
-          fi
+          # KONFLIKTFREI ZURUECKSCHREIBEN (Ausfall vom 28.07.2026).
+          # Vorher wurde committet und dann rebased. Schrieb waehrend des
+          # Laufs jemand anderer ins Repo, fand das Rebase einen Konflikt
+          # in ntfy_ids.json, brach ab, und die Kennungen des ganzen
+          # Abends waren verloren — der Freitags-Putz haette genau diese
+          # Meldungen nicht mehr vom Handy raeumen koennen.
+          # Ein Konflikt ist hier ohnehin sinnlos: Die Datei ist eine
+          # Liste, beide Seiten haben angehaengt, also gehoeren beide
+          # Seiten hinein. Deshalb: eigenen Stand beiseitelegen, hart auf
+          # den Serverstand gehen (dann KANN kein Konflikt entstehen),
+          # vereinen, hochladen. Bis zu drei Anlaeufe, falls jemand genau
+          # dazwischenfunkt.
+          SICHERUNG=/tmp/ntfy_meine.json
+          cp ntfy_ids.json "$SICHERUNG" 2>/dev/null || echo '[]' > "$SICHERUNG"
+          for versuch in 1 2 3; do
+            git fetch --quiet origin main
+            git reset --hard --quiet FETCH_HEAD
+            python ntfy_verlauf.py --vereinen "$SICHERUNG"
+            git add -A -- ntfy_ids.json 2>/dev/null || true
+            if git diff --cached --quiet; then
+              echo "Keine neuen Meldungen zu merken."
+              break
+            fi
+            git commit -q -m "ntfy-Verlauf: Kennungen der verschickten Meldungen"
+            if git push --quiet origin main; then
+              echo "ntfy-Kennungen gesichert."
+              break
+            fi
+            echo "Jemand war schneller (Versuch $versuch von 3) — noch einmal."
+          done
