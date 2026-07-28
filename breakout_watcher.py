@@ -68,10 +68,10 @@ def merke_kurse(quotes: dict, quelle: str):
     jetzt = time.time()
     for t, q in quotes.items():
         try:
-            KURSE._store[t.upper()] = Kurswert(
+            KURSE.setze(Kurswert(
                 ticker=t.upper(), preis=float(q.get("close") or 0.0),
                 zeit=jetzt, volumen=float(q.get("volume") or 0.0),
-                quelle=quelle, vortagesschluss=q.get("prev_close"))
+                quelle=quelle, vortagesschluss=q.get("prev_close")))
         except Exception:
             continue
 

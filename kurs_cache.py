@@ -102,6 +102,15 @@ class KursCache:
                         ergebnis[t.upper()] = wert
         return ergebnis
 
+    def setze(self, kurswert):
+        """Legt einen Kurs direkt ab — ohne Abruf.
+
+        Gebraucht von Quellen, die von sich aus liefern (der
+        Finnhub-WebSocket schiebt Ticks herein, statt gefragt zu werden)
+        und vom Waechter, der ohnehin im Sammelabruf holt."""
+        with self._lock:
+            self._store[kurswert.ticker.upper()] = kurswert
+
     def schwelle_fuer(self, quelle):
         """Wie alt darf ein Kurs DIESER Quelle werden?"""
         return self.stale_pro_quelle.get(quelle or "", self.stale_max)
