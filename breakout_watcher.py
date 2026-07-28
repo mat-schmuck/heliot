@@ -54,16 +54,16 @@ import ntfy_verlauf   # merkt sich jede verschickte Meldung fuer den Freitags-Pu
 import volumen        # IBD Volume % Change — die EINZIGE Volumenrechnung
 from config import CFG, pruefe_config
 from kurs_cache import KursCache, Kurswert
-from staffelung import Staffelung, abstand_zum_kaufpunkt
-from finnhub_ws import FinnhubWebSocket
+from yahoo_ws import YahooWebSocket
 
 pruefe_config()       # faengt widerspruechliche Schwellwerte sofort ab
 
 # Gemeinsamer Kursspeicher (Gerhards Aufraeumschritt 3). Er haelt fest,
 # WOHER jeder Kurs stammt und WANN er geholt wurde — Grundlage fuer die
-# Erkennung haengender Quellen. Sein voller Nutzen kommt mit dem
-# Finnhub-WebSocket: Der schreibt seine Ticks in denselben Speicher, und
-# dann greift auch die strenge Zwei-Minuten-Schwelle.
+# Erkennung haengender Quellen. Yahoos Live-Strom schreibt seine
+# Meldungen in denselben Speicher, und fuer ihn gilt die strenge
+# Schwelle: Bleibt eine Aktie zu lange still, zaehlt wieder der Wert aus
+# den Tagesdaten statt eines eingefrorenen Kurses.
 KURSE = KursCache(
     ttl_sekunden=60,
     stale_max_sekunden=CFG["betrieb"]["stale_max_sekunden"],
@@ -71,29 +71,44 @@ KURSE = KursCache(
 )
 
 
-def ws_kurse_einblenden(quotes: dict) -> int:
-    """Ersetzt in den Yahoo-Quotes den Kurs durch den FRISCHEN Tick-Kurs,
-    wo der WebSocket einen hat. Liefert die Zahl der ersetzten Werte.
+def ws_kurse_einblenden(quotes: dict) -> tuple:
+    """Legt die LIVE-Werte aus Yahoos Strom ueber die Tagesdaten.
+    Liefert (ersetzte Kurse, ersetzte Volumina).
 
-    Nur der KURS wird ersetzt, nichts sonst. Volumen, Durchschnitte,
-    Vortagesschluss und die Tageswerte fuer Gap and Go stammen weiter aus
-    den Tagesdaten — ein einzelner Tick weiss davon nichts (siehe den
-    Warnhinweis in finnhub_ws.py).
+    KURS UND TAGESVOLUMEN, aber sonst nichts. Der Unterschied zum
+    frueheren Finnhub-Strom ist wesentlich und nachgemessen: Finnhub
+    schickte die Stueckzahl EINES Geschaefts — als Tagesvolumen gelesen
+    waere die um Groessenordnungen falsch gewesen, deshalb stand dort
+    bewusst 0,0. Yahoo schickt den aufgelaufenen TAGESUMSATZ, und der
+    stimmt: Gegenprobe am 28.07.2026 ueber 60 Aktien, mittlere
+    Abweichung zur Tageskerze 0,00 %, groesste 0,05 % (volumenprobe.py).
+
+    Damit wird die Volumenbestaetigung live statt im Abruftakt — genau
+    das, was bei Ausbruechen zaehlt.
+
+    Durchschnitte, Vortagesschluss und die Tageswerte fuer Gap and Go
+    bleiben aus den Tagesdaten; davon weiss eine Kursmeldung nichts.
 
     'Frisch' entscheidet der Kursspeicher mit der Schwelle FUER DIESE
-    QUELLE: zwei Minuten. Haengt die Leitung, faellt der Wert automatisch
-    auf den Yahoo-Kurs zurueck, statt einzufrieren."""
-    ersetzt = 0
+    QUELLE. Haengt die Leitung, faellt der Wert automatisch auf die
+    Tagesdaten zurueck, statt einzufrieren."""
+    kurse = volumina = 0
     for t, q in quotes.items():
         gross = t.upper()
         wert = KURSE._store.get(gross)
-        if (wert is None or wert.quelle != "finnhub_ws"
+        if (wert is None or wert.quelle != "yahoo_ws"
                 or not wert.preis or KURSE.ist_stale(gross)):
             continue
         q["close"] = float(wert.preis)
-        q["kursquelle"] = "finnhub_ws"
-        ersetzt += 1
-    return ersetzt
+        q["kursquelle"] = "yahoo_ws"
+        kurse += 1
+        # Das Tagesvolumen nur ANHEBEN, nie senken: Beide Quellen zaehlen
+        # denselben Tag, und der hoehere Wert ist der juengere Stand. Ein
+        # Ruecksetzer waere immer ein Fehler.
+        if wert.volumen and wert.volumen > (q.get("volume") or 0):
+            q["volume"] = float(wert.volumen)
+            volumina += 1
+    return kurse, volumina
 
 
 def merke_kurse(quotes: dict, quelle: str):
@@ -114,11 +129,11 @@ def merke_kurse(quotes: dict, quelle: str):
     jetzt = time.time()
     for t, q in quotes.items():
         gross = t.upper()
-        if quelle != "finnhub_ws":
+        if quelle != "yahoo_ws":
             vorhanden = KURSE._store.get(gross)
-            if (vorhanden is not None and vorhanden.quelle == "finnhub_ws"
+            if (vorhanden is not None and vorhanden.quelle == "yahoo_ws"
                     and not KURSE.ist_stale(gross)):
-                continue      # frischer Tick schlaegt verzoegerten Tageskurs
+                continue      # frische Meldung schlaegt verzoegerten Tageskurs
         try:
             KURSE.setze(Kurswert(
                 ticker=gross, preis=float(q.get("close") or 0.0),
@@ -150,6 +165,27 @@ VOL_FAKTOR_FALLBACK = _VOL["breakout_faktor"]
 # gegen Ø10 rechnete — genau die stille Uneinheitlichkeit, die config.py
 # beseitigt.
 VOL_FENSTER = _VOL["fenster_tage"]
+
+# TAKT DES TAGESDATEN-ABRUFS. War 360 Sekunden — eine Zahl aus Vorsicht,
+# nicht aus Technik (Mathias, 28.07.2026: "miss bitte nach, bevor wir uns
+# selbst limitieren"). Nachgemessen mit yahootakt.py: EIN Abruf ueber alle
+# 265 Aktien mit acht Monaten Tagesdaten dauert 5 bis 7 Sekunden und
+# liefert jedes Mal alle 265. Auch zehn Abrufe unmittelbar hintereinander
+# liefen sauber durch — von GitHub kommt die Grenze ohnehin nicht, dort
+# ist nur die GESAMTLAUFZEIT auf sechs Stunden begrenzt.
+#
+# Trotzdem bleibt es bei einer Minute statt bei fuenf Sekunden, und zwar
+# aus einem Grund, den die Messung NICHT abdeckt: Sie umfasste zehn
+# Abrufe. Ein Takt von fuenf Sekunden waere ueber den Handelstag etwa
+# 4700 Abrufe statt heute 65 — das Zweiundsiebzigfache. Ob Yahoo das
+# dauerhaft mitmacht, ist damit nicht gemessen, und an Yahoo haengt die
+# ganze Wache.
+#
+# Wichtiger noch: Es bringt nichts mehr. Kurs UND Tagesvolumen kommen
+# jetzt sekundenfrisch aus dem Live-Strom. Der Abruf liefert nur noch,
+# was sich einmal am Tag aendert (Vortagesschluss, Ø50, Flat Base) und
+# die Tagesspanne fuer Gap and Go. Eine Minute ist dafuer reichlich.
+TAKT = CFG["betrieb"].get("takt_sekunden", 60)
 
 # In den Push-Meldungen werden Strategienamen ausgeschrieben (Mathias,
 # 23.07.2026). In Excel und VOL_FAKTOR bleibt die Kurzform bestehen.
@@ -1049,45 +1085,8 @@ def main():
 
     gewuenscht = set(t.upper() for t in tickers)
 
-    # --- Live-Staffelung (Gerhards Teil 3) ------------------------------
-    # Die Zuteilung entsteht in jeder Runde neu aus den Abstaenden zum
-    # Kaufpunkt; die naechsten Werte wandern auf den WebSocket und werden
-    # ab da tickweise versorgt.
-    #
-    # BEWUSSTE ABWEICHUNG vom Papier: Dort sollte der restliche Vorraum
-    # alle zwei Minuten per REST nachgeladen werden. Das ist nicht
-    # gratis machbar — Twelve Data erlaubt 800 Abrufe pro TAG, Finnhub 60
-    # pro Minute, gebraucht wuerden rund 300 pro Minute (nachgerechnet am
-    # 28.07.2026). yfinance koennte die Menge, aber dreimal haeufiger
-    # abzufragen riskiert Drosselung. Der restliche Vorraum laeuft daher
-    # im bewaehrten Sechs-Minuten-Takt mit — er ist 2 bis 4 % vom
-    # Kaufpunkt entfernt, also nicht eilig. Die eiligen 50 haengen am
-    # WebSocket, und genau darauf kam es an.
-    #
-    # Zu Gerhards Punkt 3 ("bei Eröffnung komplett neu rechnen"): Ein
-    # eigener Aufruf von staffel.neu_aufbauen() wäre hier wirkungslos —
-    # dieser Programmlauf beginnt ohnehin ERST nach der Glocke (weiter
-    # oben wird bis zur Eröffnung gewartet), die Zuteilung startet also
-    # von selbst bei null. Und ein Lauf kann keine zweite Eröffnung
-    # erleben: GitHub bricht nach 6 Stunden ab, deshalb die zweiteilige
-    # Wache. Die Methode bleibt trotzdem, weil der Selbsttest sie braucht.
-    staffel = Staffelung()
-    ws = FinnhubWebSocket(KURSE,
-                          max_symbole=CFG["staffelung"]["websocket_max_werte"])
-    ws_laeuft = ws.start()
-    if ws_laeuft:
-        print(f"Live-Staffelung aktiv: bis zu "
-              f"{CFG['staffelung']['stufe1_max_werte']} Werte tickweise, "
-              f"dazu der obere Vorraum bis zusammen "
-              f"{CFG['staffelung']['websocket_max_werte']}.")
-    else:
-        print("Live-Staffelung NICHT aktiv (kein Schlüssel oder keine "
-              "Verbindung) — alles läuft wie bisher über Yahoo.")
-
-    # Kaufpunkte je Aktie, fuer die Abstandsrechnung
-    kaufpunkte_je_aktie = {}
-    for i in items:
-        kaufpunkte_je_aktie.setdefault(i["ticker"].upper(), []).append(i["kaufpunkt"])
+    # (Die Abstandsrechnung je Aktie ist mit der Staffelung entfallen —
+    # es gibt keine knappen Plätze mehr zu vergeben.)
 
     # Gap and Go (Regelwerk Kapitel 7) beobachtet ALLE Aktien der Liste,
     # nicht nur die mit Muster-Kaufpunkten — eine Kursluecke nach einem
@@ -1112,6 +1111,25 @@ def main():
         gap_universum = sorted(gewuenscht)
     print(f"Gap and Go wacht zusätzlich über {len(gap_universum)} Aktien.")
     abruf_ticker = sorted(gewuenscht | set(gap_universum))
+
+    # --- Yahoos Live-Strom fuer ALLE Aktien -----------------------------
+    # Loest die dreistufige Staffelung ab (Mathias, 28.07.2026). Die war
+    # nur noetig, weil Finnhubs Gratis-Zugang genau 51 Symbole auf EINER
+    # Verbindung traegt — bei 265 Aktien mussten sie um Plaetze
+    # konkurrieren, nach Naehe zum Kaufpunkt sortiert, mit Hysterese
+    # gegen Flattern und Nachbesetzung freier Plaetze.
+    #
+    # Yahoos Strom braucht keinen Schluessel, traegt rund 100 Symbole je
+    # Verbindung und erlaubt beliebig viele Verbindungen. Zweimal
+    # nachgemessen, von hier und vom GitHub-Server: 265 von 265 gemeldet,
+    # keine einzige stumm, jede Meldung mit Tagesvolumen. Damit gibt es
+    # nichts mehr zu verteilen — jede Aktie ist live. Die Staffelung ist
+    # ersatzlos entfallen, staffelung.py bleibt nur als Beleg liegen.
+    ws = YahooWebSocket(KURSE)
+    ws_laeuft = ws.start(abruf_ticker)
+    if not ws_laeuft:
+        print("Live-Strom NICHT verfügbar — alles läuft über die Tagesdaten, "
+              "genau wie vor dem Umbau.")
 
     # Dauerwache: EIN Lauf deckt den ganzen Handelstag ab. Hintergrund
     # (22.07.2026): GitHub feuerte die Zeitplaene nach Repo-Umbenennung und
@@ -1180,9 +1198,9 @@ def main():
                 print("Seit über 45 Minuten keine heutigen Kurse — "
                       "Börsenfeiertag oder Quellenausfall. Wache beendet.")
                 break
-            print("Möglicherweise hinkt die Kursquelle nach der Eröffnung "
-                  "nach — nächster Versuch in 6 Minuten.")
-            time.sleep(360)
+            print(f"Möglicherweise hinkt die Kursquelle nach der Eröffnung "
+                  f"nach — nächster Versuch in {TAKT} Sekunden.")
+            time.sleep(TAKT)
             continue
         if veraltete_quotes:
             namen = sorted(veraltete_quotes)
@@ -1190,53 +1208,26 @@ def main():
                   f"übersprungen (keine Meldung auf veralteten Daten): "
                   + ", ".join(namen[:15]) + (" …" if len(namen) > 15 else ""))
 
-        # Tickkurse ueber die Tagesdaten legen — NUR der Kurs, nichts sonst.
+        # Live-Werte ueber die Tagesdaten legen: Kurs UND Tagesvolumen.
         if ws_laeuft:
-            ersetzt = ws_kurse_einblenden(quotes)
-            if ersetzt:
-                print(f"  {ersetzt} Kurse kommen tickfrisch vom WebSocket.")
-
-        # Zuteilung neu rechnen und die schnelle Liste nachfuehren.
-        if ws_laeuft:
-            abstaende = {}
-            for t, kps in kaufpunkte_je_aktie.items():
-                q = quotes.get(t)
-                if not q:
-                    continue
-                # Der KLEINSTE Abstand zaehlt: Hat eine Aktie mehrere
-                # Kaufpunkte, entscheidet der naechstgelegene ueber ihre
-                # Dringlichkeit.
-                naechster = min(
-                    (a for a in (abstand_zum_kaufpunkt(q["close"], kp) for kp in kps)
-                     if a is not None), default=None)
-                if naechster is not None:
-                    abstaende[t] = naechster
-            # Wer seit dem Abo keinen einzigen Tick geschickt hat, wird
-            # NUR MITGESCHRIEBEN, nicht abgemeldet. Nachgemessen am
-            # 28.07.2026 (feedpruefung.py): Der Gratis-Strom traegt nicht
-            # jede Aktie — Vodafone und Ovintiv wurden nachweislich
-            # gehandelt und kamen mit null Ticks an. Die Regel, sie
-            # hinauszuwerfen, ist auf Mathias' Ansage wieder entfernt
-            # worden (im normalen Handel ist die noetige Frist zu lang);
-            # abgefedert wird das jetzt durch den Puffer von zehn freien
-            # Plaetzen. Die Zahl bleibt trotzdem im Protokoll — sie ist die
-            # Grundlage fuer die naechste Entscheidung.
-            ohne = ws.ohne_tick(360)          # eine volle Runde abonniert
-            zuteilung = staffel.aktualisiere(abstaende)
-            ws.setze_symbole(zuteilung["websocket"])
-            print(f"  Staffelung: {len(zuteilung['stufe1'])} nah (≤2 %), "
-                  f"{len(zuteilung['stufe2'])} Vorraum, "
-                  f"{len(zuteilung['stufe3'])} langsam — "
-                  f"{len(zuteilung['websocket'])} am WebSocket.")
-            if ohne:
-                print(f"  Hinweis: {len(ohne)} abonnierte Werte haben noch "
-                      f"keinen einzigen Tick geliefert (sie laufen über "
-                      f"Yahoo weiter): " + ", ".join(ohne[:12])
-                      + (" …" if len(ohne) > 12 else ""))
+            kurse_live, volumina_live = ws_kurse_einblenden(quotes)
             st = ws.statistik()
-            if not st["verbunden"]:
-                print("  ⚠ WebSocket getrennt — die betroffenen Werte laufen "
-                      "solange über Yahoo weiter.")
+            print(f"  Live-Strom: {kurse_live} Kurse und {volumina_live} "
+                  f"Tagesvolumina sekundenfrisch "
+                  f"({st['verbindungen']} Verbindungen, {st['meldungen']} "
+                  f"Meldungen bisher).")
+            if st["verbindungen"] == 0:
+                print("  ⚠ Keine Verbindung zum Live-Strom — es zählen "
+                      "solange die Tagesdaten.")
+            if st["neustarts"]:
+                print(f"  ({st['neustarts']} Verbindungsabrisse bisher, "
+                      f"jeweils selbsttätig neu aufgebaut.)")
+            ohne = ws.ohne_meldung()
+            if ohne:
+                print(f"  Hinweis: {len(ohne)} Aktien haben noch gar nichts "
+                      f"geschickt (sie laufen über die Tagesdaten): "
+                      + ", ".join(ohne[:12])
+                      + (" …" if len(ohne) > 12 else ""))
 
         # Haengt eine Quelle? Der Speicher weiss, wann jeder Kurs zuletzt
         # frisch war — je Quelle mit eigener Schwelle.
@@ -1363,11 +1354,9 @@ def main():
             print(f"Dauerwache: Börse geschlossen ({grund}) — Ende.")
             ws.stop()
             break
-        time.sleep(360)
+        time.sleep(TAKT)
 
-    # Verbindung sauber schliessen. Wichtig, weil EIN Schluessel laut
-    # Finnhub-Doku nur EINE offene Verbindung erlaubt: Bliebe sie haengen,
-    # koennte die Schlussstunden-Wache sich nicht mehr verbinden.
+    # Verbindungen sauber schliessen, damit kein Faden offen bleibt.
     ws.stop()
 
 

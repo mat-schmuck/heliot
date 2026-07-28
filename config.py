@@ -63,6 +63,12 @@ CFG = {
     },
 
     # --- Trigger-Nähe / Live-Kurs-Staffelung (dreistufig) ---
+    # AUSSER BETRIEB seit 28.07.2026. Die Staffelung war nur nötig, solange
+    # Finnhubs Gratis-Zugang genau 51 Symbole auf EINER Verbindung trug —
+    # dann müssen 265 Aktien um Plätze konkurrieren. Yahoos Live-Strom
+    # trägt alle 265 gleichzeitig, also gibt es nichts mehr zu verteilen.
+    # Der Block bleibt samt Messwerten stehen, falls jemals wieder eine
+    # Quelle mit harter Symbolgrenze dazukommt.
     "staffelung": {
         "stufe1_max_pct": 0.02,      # bis 2 % → schnelle Liste (WebSocket)
         "stufe1_raus_pct": 0.025,    # Hysterese: erst bei 2,5 % zurückstufen
@@ -188,11 +194,26 @@ CFG = {
         # hängt". yfinance liefert verzögert und wird nur alle sechs
         # Minuten abgefragt; mit 2 Minuten wäre dort STÄNDIG alles stale.
         "stale_pro_quelle": {
+            # Yahoos Live-Strom. NICHT so streng wie beim früheren
+            # Finnhub-Strom (2 Minuten): Gemessen am 28.07.2026 lag der
+            # letzte Kurs im Mittel 36 Sekunden zurück, drei Viertel unter
+            # 102 Sekunden — aber der schlechteste Wert bei 22 Minuten,
+            # schlicht weil manche Aktien so selten gehandelt werden. Mit
+            # 2 Minuten würde genau dieser Bodensatz ständig als "hängend"
+            # verworfen, obwohl der Kurs stimmt. 15 Minuten trennen
+            # sauber: Eine echte Störung fällt auf, eine ruhige Aktie nicht.
+            "yahoo_ws": 900,
             "finnhub_ws": 120,       # tickweise: 2 Min Stille = Leitung hängt
             "finnhub": 300,
             "twelvedata": 600,
-            "yfinance": 1200,        # verzögert, 6-Minuten-Takt: 20 Minuten
+            "yfinance": 1200,        # verzögert, Minutentakt: 20 Minuten
         },
+        # Takt des schweren Tagesdaten-Abrufs. Begründung ausführlich in
+        # breakout_watcher.py bei TAKT — kurz: nachgemessen, ein Abruf
+        # dauert 5 bis 7 Sekunden, zehn hintereinander liefen sauber, und
+        # seit Kurs und Volumen live kommen, muss dieser Abruf gar nicht
+        # mehr schnell sein.
+        "takt_sekunden": 60,
         "min_historie_tage": 60,     # weniger Historie → Aktie überspringen
         # HINWEIS: Das 2000-Minuten-Limit gilt für PRIVATE Repos. heliot ist
         # öffentlich, dort sind die Actions-Minuten unbegrenzt und kostenlos

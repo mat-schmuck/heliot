@@ -49,9 +49,12 @@ jobs:
           python-version: "3.12"
 
       - name: Abhängigkeiten
-        # websocket-client seit 28.07.2026: Der Waechter versorgt die
-        # Aktien nahe am Kaufpunkt tickweise ueber den Finnhub-WebSocket.
-        run: pip install requests pandas openpyxl yfinance websocket-client
+        # yfinance MINDESTENS 1.5 (28.07.2026): Erst ab dieser Fassung gibt
+        # es yf.WebSocket, also Yahoos eigenen Live-Strom. Über ihn kommen
+        # Kurs UND Tagesvolumen für alle 265 Aktien gleichzeitig. Er hat den
+        # Finnhub-Strom abgelöst, der nur 51 Symbole trug und drei Aktien
+        # der Liste überhaupt nicht (Vodafone, Ovintiv, Lowe's).
+        run: pip install requests pandas openpyxl "yfinance>=1.5"
 
       # EINE Wahrheit fuer Alarme UND Waechter: die im Repo eingecheckte
       # kaufpunkte_aktuell.xlsx (naechtlich vom Scanner aktualisiert, bei
@@ -75,7 +78,10 @@ jobs:
       - name: Breakouts prüfen
         env:
           TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
-          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
+          # FINNHUB_API_KEY wird seit 28.07.2026 nicht mehr gebraucht —
+          # Yahoos Strom braucht keinen Schlüssel. Das Secret bleibt im
+          # Konto liegen, falls wir je zurückwollen; hier ist es raus,
+          # damit niemand glaubt, der Wächter hinge noch daran.
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
           NTFY_EMAIL: ${{ secrets.NTFY_EMAIL }}
         run: |
