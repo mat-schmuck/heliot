@@ -29,6 +29,7 @@ on:
           - websocketmessung  # Finnhub-WebSocket ausmessen (ändert nichts)
           - staffeltest       # Wächter mit Live-Staffelung, OHNE zu senden
           - liquiditaet       # Welche eurer Aktien sind echtzeit-tauglich?
+          - feedpruefung      # Deckt der Gratis-Strom alle Aktien ab?
       alle_level:
         description: "Auch Fallback-Level alarmieren? (true/false)"
         required: false
@@ -140,6 +141,20 @@ jobs:
         run: |
           pip install websocket-client
           python liquiditaet.py ${{ github.event.inputs.loeschen || '180' }}
+
+      # --- Deckt der Gratis-Strom ueberhaupt alle Aktien ab? ---
+      # Vodafone setzt 4,68 Millionen Stueck am Tag um und lieferte in ZWEI
+      # Messungen null Ticks — das kann nicht an der Aktie liegen. Hier
+      # stehen drei Quellen fuer dasselbe Zeitfenster nebeneinander:
+      # Finnhubs eigener Kursabruf, der Strom und Yahoos Minutenumsatz.
+      # Faellt eine Aktie nur im Strom aus, ist die Teilabdeckung belegt.
+      - name: "Abdeckung des Gratis-Stroms pruefen"
+        if: ${{ github.event.inputs.modus == 'feedpruefung' }}
+        env:
+          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
+        run: |
+          pip install websocket-client
+          python feedpruefung.py ${{ github.event.inputs.loeschen || '300' }}
 
       # --- Waechter mit Live-Staffelung im Trockenlauf ---
       # Prueft die fertige Verdrahtung am offenen Markt, OHNE zu senden und
