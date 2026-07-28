@@ -1077,6 +1077,14 @@ def main():
     # im bewaehrten Sechs-Minuten-Takt mit — er ist 2 bis 4 % vom
     # Kaufpunkt entfernt, also nicht eilig. Die eiligen 50 haengen am
     # WebSocket, und genau darauf kam es an.
+    #
+    # Zu Gerhards Punkt 3 ("bei Eröffnung komplett neu rechnen"): Ein
+    # eigener Aufruf von staffel.neu_aufbauen() wäre hier wirkungslos —
+    # dieser Programmlauf beginnt ohnehin ERST nach der Glocke (weiter
+    # oben wird bis zur Eröffnung gewartet), die Zuteilung startet also
+    # von selbst bei null. Und ein Lauf kann keine zweite Eröffnung
+    # erleben: GitHub bricht nach 6 Stunden ab, deshalb die zweiteilige
+    # Wache. Die Methode bleibt trotzdem, weil der Selbsttest sie braucht.
     staffel = Staffelung()
     ws = FinnhubWebSocket(KURSE,
                           max_symbole=CFG["staffelung"]["websocket_max_werte"])
@@ -1217,12 +1225,27 @@ def main():
                      if a is not None), default=None)
                 if naechster is not None:
                     abstaende[t] = naechster
+            # ZUERST die Stummen aussortieren, DANN neu zuteilen: Sonst
+            # wuerde der frei werdende Platz erst eine Runde spaeter
+            # nachbesetzt. Gemessen am 28.07.2026 (feedpruefung.py): Der
+            # Gratis-Strom traegt nicht jede Aktie — Vodafone und Ovintiv
+            # wurden nachweislich gehandelt und kamen mit null Ticks an.
+            # Ohne diese Regel blockierten sie ihren Platz den ganzen Tag.
+            grenze = CFG["staffelung"].get("stumm_nach_minuten", 12) * 60
+            neu_stumm = staffel.merke_stumm(ws.stumme(grenze))
+            if neu_stumm:
+                print(f"  {len(neu_stumm)} Werte liefern trotz Abo keinen "
+                      f"Tick und geben ihren Platz ab: "
+                      + ", ".join(neu_stumm[:12])
+                      + " — sie bleiben in ihrer Stufe und laufen über Yahoo.")
             zuteilung = staffel.aktualisiere(abstaende)
             ws.setze_symbole(zuteilung["websocket"])
             print(f"  Staffelung: {len(zuteilung['stufe1'])} nah (≤2 %), "
                   f"{len(zuteilung['stufe2'])} Vorraum, "
                   f"{len(zuteilung['stufe3'])} langsam — "
-                  f"{len(zuteilung['websocket'])} am WebSocket.")
+                  f"{len(zuteilung['websocket'])} am WebSocket"
+                  + (f", {len(zuteilung['stumm'])} stumm"
+                     if zuteilung["stumm"] else "") + ".")
             st = ws.statistik()
             if not st["verbunden"]:
                 print("  ⚠ WebSocket getrennt — die betroffenen Werte laufen "

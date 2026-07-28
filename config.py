@@ -82,6 +82,20 @@ CFG = {
         # und erst dann an — sonst wären die neuen Symbole kurzzeitig die
         # 51., 52. … und würden abgewiesen.
         "websocket_max_werte": 50,
+        # STUMME WERTE GEBEN IHREN PLATZ AB (nachgemessen 28.07.2026 mit
+        # feedpruefung.py). Der Gratis-Strom deckt NICHT jede Aktie ab:
+        # Vodafone und Ovintiv wurden im Messfenster nachweislich gehandelt
+        # (23.351 bzw. 45.219 Stück laut Yahoo), kamen im Strom aber mit
+        # null Ticks an — während Finnhubs eigener Kursabruf für beide einen
+        # frischen Preis lieferte. Die Daten sind also da, nur nicht im
+        # Strom. Ein solcher Wert würde seinen Platz für immer blockieren.
+        # Die Regel muss die Ursache gar nicht kennen: Wer über zwei volle
+        # Runden (2 × 6 Minuten) keinen einzigen Tick schickt, ist am
+        # WebSocket wertlos — yfinance liefert ihm ohnehin alle 6 Minuten
+        # einen Kurs. Er fliegt raus, sein Platz geht an den nächsten
+        # Anwärter. Bei Börsenöffnung wird die Liste geleert, damit sich
+        # nichts über Nacht festfrisst.
+        "stumm_nach_minuten": 12,
         "stufe2_takt_sek": 120,      # restlicher Vorraum: REST alle 2 Min
         "stufe3_takt_sek": 600,      # über 4 %: yfinance alle 10 Min
     },

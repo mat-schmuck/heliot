@@ -40,6 +40,15 @@ Fallen, die beim Bau auffielen):
    Stufe. Dieses Modul bekommt deshalb FERTIGE Abstaende uebergeben; der
    Aufrufer ist dafuer verantwortlich, sie je Aktie immer aus derselben
    Quelle zu bestimmen (config: datenquellen.abstand_fuehrungsquelle).
+
+5. STUMME WERTE GEBEN IHREN PLATZ AB. Nachgemessen am 28.07.2026
+   (feedpruefung.py): Der Gratis-Strom deckt nicht jede Aktie ab.
+   Vodafone und Ovintiv wurden im Messfenster nachweislich gehandelt und
+   kamen trotzdem mit null Ticks an. Wer schweigt, blockiert sonst einen
+   der nur 50 Plaetze fuer immer. Die STUFE aendert sich dadurch NICHT —
+   eine stumme Aktie bleibt in Stufe 1 und wird genauso ueberwacht, sie
+   bekommt ihre Kurse nur von yfinance statt tickweise. Es geht allein um
+   die Platzvergabe.
 """
 
 from config import CFG
@@ -58,6 +67,7 @@ class Staffelung:
         self.max2 = c["stufe2_max_werte"]
         self.max_ws = c.get("websocket_max_werte", 50)
         self._stufe = {}          # ticker -> zuletzt zugeteilte Stufe
+        self._stumm = set()       # liefern keine Ticks (siehe Punkt 5)
 
     # -- Innereien -------------------------------------------------------
 
@@ -81,8 +91,22 @@ class Staffelung:
 
     def neu_aufbauen(self):
         """Hysterese-Gedaechtnis verwerfen — bei Boersenoeffnung Pflicht
-        (siehe Punkt 3 im Modulkopf)."""
+        (siehe Punkt 3 im Modulkopf). Auch die Stummliste wird geleert:
+        Abdeckung kann sich aendern, und ein Wert, der gestern schwieg,
+        soll heute wieder eine Gelegenheit bekommen. Der Irrtum kostet
+        hoechstens zwei Runden."""
         self._stufe = {}
+        self._stumm = set()
+
+    def merke_stumm(self, ticker_liste):
+        """Diese Werte liefern trotz Abo keine Ticks — Platz freigeben."""
+        neu = {t.upper() for t in ticker_liste} - self._stumm
+        self._stumm |= neu
+        return sorted(neu)
+
+    @property
+    def stumme(self):
+        return sorted(self._stumm)
 
     def aktualisiere(self, abstaende: dict) -> dict:
         """abstaende: {ticker: relativer Abstand zum Kaufpunkt}, wobei
@@ -113,19 +137,27 @@ class Staffelung:
             (stufe1 if s == 1 else stufe2 if s == 2 else stufe3).append(ticker)
         self._stufe = neu
 
-        # Die freien WebSocket-Plaetze bekommt der OBERE Vorraum: die
-        # Werte knapp ueber 2 %, die am ehesten gleich hochkommen.
-        frei = max(0, self.max_ws - len(stufe1))
-        oberer_vorraum = stufe2[:frei]
-        rest_vorraum = stufe2[frei:]
+        # Stumme Werte bekommen keinen Platz am Strom (Punkt 5). Sie
+        # BLEIBEN in ihrer Stufe — nur die Abo-Liste laesst sie aus, und
+        # der frei gewordene Platz geht an den naechsten Anwaerter.
+        ws_kandidaten = [t for t in stufe1 if t not in self._stumm]
+        frei = max(0, self.max_ws - len(ws_kandidaten))
+        vorraum_frei = [t for t in stufe2 if t not in self._stumm]
+        oberer_vorraum = vorraum_frei[:frei]
+        # Der 'rest_vorraum' ist die REST-Liste: Alles aus Stufe 2, das
+        # nicht am Strom haengt — die Stummen ausdruecklich eingeschlossen,
+        # sonst fielen sie zwischen die Quellen.
+        mit_strom = set(oberer_vorraum)
+        rest_vorraum = [t for t in stufe2 if t not in mit_strom]
 
         return {
             "stufe1": stufe1,
             "stufe2": stufe2,
             "stufe3": stufe3,
-            "websocket": stufe1 + oberer_vorraum,
+            "websocket": ws_kandidaten + oberer_vorraum,
             "rest_vorraum": rest_vorraum,
             "langsam": stufe3,
+            "stumm": sorted(self._stumm & set(stufe1 + stufe2)),
         }
 
     def stufe_von(self, ticker):
@@ -199,5 +231,39 @@ if __name__ == "__main__":
     assert abs(abstand_zum_kaufpunkt(98.0, 100.0) - 0.02) < 1e-9
     assert abstand_zum_kaufpunkt(105.0, 100.0) == 0.0
     print("✓ Abstand: Kurs 98 zu Kaufpunkt 100 sind 2 %; schon darüber → 0 %")
+
+    # 8) Stumme Werte geben ihren Platz ab — der Fall Vodafone/Ovintiv.
+    # Gemessen am 28.07.2026: beide wurden gehandelt, kamen im Gratis-Strom
+    # aber mit null Ticks an. Ihr Platz muss an den nächsten gehen, ihre
+    # ÜBERWACHUNG darf sich dadurch nicht ändern.
+    st.neu_aufbauen()
+    voll = {f"T{i:03d}": 0.0004 * i for i in range(1, 46)}
+    voll.update({f"V{i:03d}": 0.02 + 0.001 * i for i in range(1, 31)})
+    vorher = st.aktualisiere(voll)
+    belegt = len(vorher["websocket"])
+    assert "T001" in vorher["websocket"]
+
+    st.merke_stumm(["T001", "T002"])
+    nachher = st.aktualisiere(voll)
+    assert "T001" not in nachher["websocket"], "Stumme dürfen keinen Platz belegen"
+    assert "T001" in nachher["stufe1"], \
+        "die Stufe darf sich NICHT ändern — nur die Kursquelle"
+    assert len(nachher["websocket"]) == belegt, \
+        "die frei gewordenen Plätze müssen nachbesetzt werden"
+    assert nachher["stumm"] == ["T001", "T002"]
+    print(f"✓ Stumme Werte: 2 verlieren den Platz, bleiben aber in Stufe 1 — "
+          f"die Liste ist weiter voll ({belegt} Plätze)")
+
+    # Ein stummer Wert aus dem Vorraum darf nicht zwischen die Quellen
+    # fallen: kein Strom, also gehört er in die REST-Liste.
+    st.merke_stumm(["V001"])
+    d = st.aktualisiere(voll)
+    assert "V001" not in d["websocket"] and "V001" in d["rest_vorraum"], \
+        "ein stummer Vorraum-Wert muss über REST versorgt werden"
+    print("✓ Ein stummer Vorraum-Wert fällt nicht zwischen die Quellen")
+
+    st.neu_aufbauen()
+    assert st.stumme == [], "bei Eröffnung bekommt jeder wieder eine Chance"
+    print("✓ Bei Eröffnung wird die Stummliste geleert")
 
     print("\nAlle Staffelungs-Tests bestanden (ohne Netzwerk, ohne Börse).")

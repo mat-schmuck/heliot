@@ -68,6 +68,8 @@ class FinnhubWebSocket:
         self._ws = None
         self._thread = None
         self._aktiv = set()          # aktuell abonnierte Symbole
+        self._abo_seit = {}          # Symbol -> wann abonniert
+        self._tick_je = {}           # Symbol -> letzter Tick
         self._lock = threading.RLock()
         self._laeuft = False
         self.verbunden = False
@@ -125,6 +127,7 @@ class FinnhubWebSocket:
                     volumen=0.0, quelle="finnhub_ws"))
                 self.ticks += 1
                 self.letzter_tick = jetzt
+                self._tick_je[symbol.upper()] = jetzt
         elif art == "error":
             meldung = str(nachricht.get("msg"))[:150]
             self.fehler.append(meldung)
@@ -211,10 +214,18 @@ class FinnhubWebSocket:
             gewuenscht = set(sorted(gewuenscht)[:self.max_symbole])
             self._sag(f"Auf {self.max_symbole} Symbole gekappt "
                       f"(Grenze aus config.py).")
+        jetzt = time.time()
         with self._lock:
             dazu = gewuenscht - self._aktiv
             weg = self._aktiv - gewuenscht
             self._aktiv = gewuenscht
+            # Die Abo-Uhr laeuft je Symbol: Nur wer LANGE genug abonniert
+            # ist und trotzdem schweigt, gilt als stumm. Wer eben erst
+            # dazukam, hatte noch keine Gelegenheit.
+            for s in dazu:
+                self._abo_seit[s] = jetzt
+            for s in weg:
+                self._abo_seit.pop(s, None)
         for s in sorted(weg):
             self._senden("unsubscribe", s)
         for s in sorted(dazu):
@@ -228,6 +239,42 @@ class FinnhubWebSocket:
     def aktive_symbole(self):
         with self._lock:
             return sorted(self._aktiv)
+
+    def stumme(self, grenze_sekunden):
+        """Welche abonnierten Symbole schweigen laenger als erlaubt?
+
+        Nachgemessen am 28.07.2026 (feedpruefung.py): Der Gratis-Strom
+        traegt nicht jede Aktie. Vodafone und Ovintiv wurden im Messfenster
+        nachweislich gehandelt und kamen trotzdem mit null Ticks an. Solche
+        Werte wuerden ihren Platz dauerhaft blockieren.
+
+        Gesucht ist ABDECKUNG, nicht Lebhaftigkeit: Stumm heisst hier, dass
+        seit dem Abo KEIN EINZIGER Tick kam. Wer auch nur einen geschickt
+        hat, ist nachweislich im Strom enthalten und behaelt seinen Platz,
+        auch wenn er langsam handelt. Die schaerfere Lesart ("laenger als X
+        nichts mehr") wuerde in der Mittagsflaute lebendige Werte
+        hinauswerfen, und zurueck kaemen sie nie — abgemeldet kann kein Tick
+        mehr eintreffen, der sie rehabilitiert.
+
+        Gezaehlt wird ab dem ABO, nicht ab Programmstart, und nur solange
+        die Verbindung wirklich steht. Nach einem Abriss waere sonst
+        schlagartig die halbe Liste 'stumm', obwohl nur die Leitung weg
+        war."""
+        if not self.verbunden:
+            return []
+        jetzt = time.time()
+        with self._lock:
+            symbole = sorted(self._aktiv)
+            seit = dict(self._abo_seit)
+        stumm = []
+        for s in symbole:
+            start = seit.get(s)
+            if start is None or jetzt - start < grenze_sekunden:
+                continue
+            letzter = self._tick_je.get(s)
+            if letzter is None or letzter < start:
+                stumm.append(s)
+        return stumm
 
     def statistik(self):
         return {
@@ -276,5 +323,25 @@ if __name__ == "__main__":
     ws._bei_nachricht(None, json.dumps({"type": "error", "msg": "Testfehler"}))
     assert ws.fehler and "Testfehler" in ws.fehler[-1]
     print("✓ Serverfehler werden festgehalten")
+
+    # Stumme Werte erkennen — der Fall Vodafone/Ovintiv vom 28.07.2026.
+    # Ohne stehende Verbindung darf NIEMAND als stumm gelten (sonst wäre
+    # nach jedem Leitungsabriss die halbe Liste weg).
+    ws2 = FinnhubWebSocket(cache, max_symbole=5, schluessel="nur-test", leise=True)
+    ws2.setze_symbole(["LAUT", "STUMM"])
+    ws2._abo_seit = {"LAUT": time.time() - 3600, "STUMM": time.time() - 3600}
+    assert ws2.stumme(60) == [], "ohne Verbindung darf nichts als stumm gelten"
+    ws2.verbunden = True
+    assert ws2.stumme(60) == ["LAUT", "STUMM"]
+    ws2._bei_nachricht(None, json.dumps(
+        {"type": "trade", "data": [{"s": "LAUT", "p": 10.0, "v": 5}]}))
+    assert ws2.stumme(60) == ["STUMM"], \
+        "wer einen Tick geschickt hat, ist im Strom enthalten und bleibt"
+    print("✓ Stumme erkannt: ein einziger Tick genügt als Nachweis der Abdeckung")
+
+    # Frisch abonniert heißt: noch keine Gelegenheit gehabt.
+    ws2.setze_symbole(["LAUT", "STUMM", "NEU"])
+    assert "NEU" not in ws2.stumme(60), "frische Abos brauchen erst ihre Frist"
+    print("✓ Frisch abonnierte Werte werden nicht vorschnell verurteilt")
     print(f"\nStatistik: {ws.statistik()}")
     print("\nAlle WebSocket-Tests bestanden (ohne Netzwerk).")
