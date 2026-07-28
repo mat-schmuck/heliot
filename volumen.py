@@ -305,7 +305,17 @@ def text(v_bisher, v50, minute=None):
 # Lage der Aktie in Worten statt mit Vorzeichen.
 
 # ---------------------------------------------------------------------------
-# WEITERE IBD-VOLUMENMASSE (recherchiert am 28.07.2026)
+# WEITERE IBD-VOLUMENMASSE — RECHERCHIERT, ABER STILLGELEGT
+# ---------------------------------------------------------------------------
+# ACHTUNG: Diese beiden Funktionen sind am 28.07.2026 recherchiert, gebaut
+# und geprueft worden, waren kurz in den Meldungen sichtbar und sind auf
+# Mathias' Ansage wieder abgeklemmt. Der Waechter ruft sie NICHT auf.
+# Sie stehen hier, damit die Recherche nicht verlorengeht — einschalten
+# ist jeweils eine Zeile in breakout_watcher.py.
+#
+# Wichtig zur Einordnung: Sie haben den FILTER nie beeinflusst. Beide
+# liefern nur Zusatzinformation; ueber "Volumen bestaetigt" entschied
+# und entscheidet allein das Verhaeltnis gegen die Huerde.
 # ---------------------------------------------------------------------------
 # IBDs eigene Seite (investors.com) ist fuer uns gesperrt. Belegt sind die
 # folgenden Regeln aber aus IBD-Artikeln, die Yahoo Finance und Nasdaq im
