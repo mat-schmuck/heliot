@@ -72,9 +72,22 @@ def main():
         except Exception:
             continue
     bewertet.sort()
-    messliste = bewertet[:GRENZE]
-    print(f"Gemessen werden die {len(messliste)} Aktien mit dem kleinsten "
-          f"Abstand zum Kaufpunkt, {dauer} Sekunden lang.\n")
+
+    # KONTROLLGRUPPE (28.07.2026): Der erste Durchgang ergab, dass 46 von
+    # 50 Werten fast keine Ticks lieferten — darunter Vodafone und
+    # Ovintiv mit ueber vier Millionen Stueck Tagesumsatz. Bei dem Umsatz
+    # sind null Geschaefte in drei Minuten rechnerisch unmoeglich. Also
+    # laufen jetzt drei Schwergewichte MIT: Bleiben auch die stumm, liegt
+    # es an der Leitung oder am Tarif, nicht an den Aktien. Nur wenn die
+    # Kontrolle sprudelt und die eigenen Werte schweigen, ist das Ergebnis
+    # echte Liquiditaet.
+    KONTROLLE = ["AAPL", "MSFT", "NVDA"]
+    messliste = bewertet[:GRENZE - len(KONTROLLE)]
+    for k in KONTROLLE:
+        messliste.append((-1.0, k, 0.0, 0.0))     # Abstand -1 = Kontrolle
+    print(f"Gemessen werden {len(messliste)} Werte, {dauer} Sekunden lang: "
+          f"{len(messliste) - len(KONTROLLE)} eigene Kandidaten plus die "
+          f"Kontrollgruppe {', '.join(KONTROLLE)}.\n")
 
     try:
         ws = websocket.create_connection("wss://ws.finnhub.io?token="
@@ -116,11 +129,27 @@ def main():
         zeilen.append((pro_min, t, abstand, kurs, vol))
     zeilen.sort(reverse=True)
     for pro_min, t, abstand, kurs, vol in zeilen:
+        if abstand < 0:
+            print(f"  {t:6s} {pro_min:7.1f} Ticks/Min | *** KONTROLLE ***")
+            continue
         urteil = ("ECHTZEIT lohnt" if pro_min >= 10 else
                   "grenzwertig" if pro_min >= 2 else "zu ruhig")
         print(f"  {t:6s} {pro_min:7.1f} Ticks/Min | Abstand {abstand*100:4.1f} % "
               f"| Ø-Volumen {vol:12,.0f} | {urteil}")
 
+    kontrolle = [z for z in zeilen if z[2] < 0]
+    eigene = [z for z in zeilen if z[2] >= 0]
+    k_summe = sum(z[0] for z in kontrolle)
+    print(f"\nKontrollgruppe zusammen: {k_summe:.1f} Ticks/Min")
+    if k_summe < 20:
+        print("  ⚠ ACHTUNG: Auch die Schwergewichte liefern kaum etwas. Dann "
+              "liegt es NICHT an euren Aktien, sondern an der Leitung oder am "
+              "Tarif — das Ergebnis unten ist dann NICHT verwertbar.")
+    else:
+        print("  ✓ Die Kontrolle sprudelt — die Leitung ist in Ordnung, das "
+              "Ergebnis unten misst echte Liquidität.")
+
+    zeilen = eigene
     lohnt = [z for z in zeilen if z[0] >= 10]
     grenz = [z for z in zeilen if 2 <= z[0] < 10]
     ruhig = [z for z in zeilen if z[0] < 2]
