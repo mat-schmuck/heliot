@@ -30,6 +30,7 @@ on:
           - staffeltest       # Wächter mit Live-Staffelung, OHNE zu senden
           - liquiditaet       # Welche eurer Aktien sind echtzeit-tauglich?
           - feedpruefung      # Deckt der Gratis-Strom alle Aktien ab?
+          - grenztest        # Grenze oder Abdeckung: zwei Dinge oder eines?
       alle_level:
         description: "Auch Fallback-Level alarmieren? (true/false)"
         required: false
@@ -87,7 +88,7 @@ jobs:
       # Sechs-Minuten-Takt von Yahoo).
       # Deshalb: harter Stopp, ausser jemand entscheidet sich bewusst dagegen.
       - name: "Sperre gegen doppelte Finnhub-Verbindung"
-        if: ${{ contains('websocketmessung,liquiditaet,feedpruefung,staffeltest', github.event.inputs.modus) && github.event.inputs.trotz_waechter != 'true' }}
+        if: ${{ contains('websocketmessung,liquiditaet,feedpruefung,grenztest,staffeltest', github.event.inputs.modus) && github.event.inputs.trotz_waechter != 'true' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -185,6 +186,19 @@ jobs:
         run: |
           pip install websocket-client
           python feedpruefung.py ${{ github.event.inputs.loeschen || '300' }}
+
+      # --- Grenze oder Abdeckung? ---
+      # Mathias' Frage vom 28.07.2026: Beide bisherigen Messungen liefen mit
+      # GENAU 50 Symbolen, also punktgenau an der harten Grenze. Arbeitet
+      # der Zugang dort unsauber, waere das eine ganz andere Ursache als
+      # eine Abdeckungsluecke — und die Gegenmassnahme eine andere.
+      - name: "Grenze gegen Abdeckung messen"
+        if: ${{ github.event.inputs.modus == 'grenztest' }}
+        env:
+          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
+        run: |
+          pip install websocket-client
+          python grenztest.py
 
       # --- Waechter mit Live-Staffelung im Trockenlauf ---
       # Prueft die fertige Verdrahtung am offenen Markt, OHNE zu senden und
