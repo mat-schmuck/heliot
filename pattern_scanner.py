@@ -323,7 +323,12 @@ def add_indicators(df: pd.DataFrame) -> pd.DataFrame:
     df["ma50"] = c.rolling(50).mean()
     df["ma150"] = c.rolling(150).mean()
     df["ma200"] = c.rolling(200).mean()
-    df["vol20"] = df["volume"].rolling(20).mean()
+    # WAR fest auf 20 verdrahtet, obwohl config.py laengst ein anderes
+    # Fenster vorgab — die Zahl wanderte von hier in die Box-Notiz und
+    # widersprach damit dem, wogegen der Waechter tatsaechlich prueft.
+    # Seit Gerhards Umbau vom 28.07.2026 zieht auch diese Stelle ihren
+    # Massstab aus config.py (derzeit 50 Tage, IBD-Standard).
+    df["vol_schnitt"] = df["volume"].rolling(CFG["darvas_vol_avg"]).mean()
     df["hi52"] = df["high"].rolling(CFG["darvas_lookback_52w"], min_periods=60).max()
     df["lo52"] = df["low"].rolling(CFG["darvas_lookback_52w"], min_periods=60).min()
     return df
@@ -422,8 +427,9 @@ def detect_darvas(df: pd.DataFrame) -> dict | None:
         "stop": round(box_bottom - 0.01, 2),
         "ziel": None,
         "status": "Box bestätigt — auf Breakout mit Volumen warten",
-        "notiz": f"Box {box_bottom:.2f}–{box_top:.2f}; Breakout nur mit Vol > Ø20d "
-                 f"({last['vol20']:,.0f}) gültig",
+        "notiz": f"Box {box_bottom:.2f}–{box_top:.2f}; Breakout nur mit Volumen "
+                 f"über Ø{CFG['darvas_vol_avg']}d "
+                 f"({last['vol_schnitt']:,.0f}) gültig",
     }
 
 

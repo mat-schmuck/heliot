@@ -30,8 +30,16 @@ import os
 CFG = {
 
     # --- Volumen (gilt EINHEITLICH für Scanner UND Wächter!) ---
+    # GERECHNET WIRD AUSSCHLIESSLICH IN volumen.py — IBD "Volume % Change"
+    # mit Hochrechnung über die Fünf-Minuten-Referenzkurve. Hier stehen nur
+    # noch die Schwellen.
     "volumen": {
-        "fenster_tage": 10,          # Durchschnittsvolumen über N Handelstage
+        # 50 STATT 10 TAGE (Gerhard, 28.07.2026 nachmittags). IBD-Standard.
+        # ACHTUNG für die Akten: Das widerruft seine eigene Festlegung vom
+        # Vormittag desselben Tages ("einheitlich 10 Tage für Scanner UND
+        # Wächter"). Er hat den Wechsel im Übergabepapier ausdrücklich als
+        # eigene, bewusste Entscheidung neben der Formelkorrektur benannt.
+        "fenster_tage": 50,          # Durchschnittsvolumen über N Handelstage
         "breakout_faktor": 1.0,      # Standard: Volumen > Ø
         "breakout_faktor_vcp": 1.4,  # VCP strenger: ≥ 140 % vom Ø
         "gap_and_go_faktor": 5.0,    # Gap-and-Go: ≥ 5× Ø am Gap-Tag

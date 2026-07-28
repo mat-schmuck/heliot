@@ -74,8 +74,12 @@ def kennzahlen(schluss: pd.Series, volumen: pd.Series) -> dict:
     return {
         "schluss": float(schluss.iloc[-1]),
         "volumen": float(volumen.iloc[-1]),
+        # Seit Gerhards Umbau vom 28.07.2026 ist der 50-Tage-Schnitt der
+        # Massstab (IBD-Standard). Die kuerzeren Fenster bleiben zum
+        # Vergleich stehen: Sie zeigen, ob eine Quelle nur am langen Rand
+        # abweicht oder ueberall.
         "vol10": float(ohne_letzten.tail(10).mean()),
-        "vol20": float(ohne_letzten.tail(20).mean()),
+        "vol50": float(ohne_letzten.tail(50).mean()),
     }
 
 
@@ -122,7 +126,7 @@ def main():
         print(f"    {len(gemeinsam)} gemeinsame Handelstage, letzter: {gemeinsam[-1]}")
 
         for feld, beschriftung in (("schluss", "Schlusskurs"), ("volumen", "Tagesvolumen"),
-                                   ("vol10", "Ø10 Volumen"), ("vol20", "Ø20 Volumen")):
+                                   ("vol10", "Ø10 Volumen"), ("vol50", "Ø50 Volumen")):
             ab = abweichung(yk[feld], fk[feld])
             marke = "  <-- ABWEICHUNG" if ab > 1.0 else ""
             print(f"    {beschriftung:14s} Yahoo {yk[feld]:>15,.2f}   "

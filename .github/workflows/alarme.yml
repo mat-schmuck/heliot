@@ -32,6 +32,7 @@ on:
           - feedpruefung      # Deckt der Gratis-Strom alle Aktien ab?
           - grenztest        # Grenze oder Abdeckung: zwei Dinge oder eines?
           - yahoostrom       # Trägt Yahoos eigener Live-Strom die ganze Liste?
+          - volumenkurve     # Referenzkurve F(t) neu aus Kursdaten bauen
       alle_level:
         description: "Auch Fallback-Level alarmieren? (true/false)"
         required: false
@@ -187,6 +188,18 @@ jobs:
         run: |
           pip install websocket-client
           python feedpruefung.py ${{ github.event.inputs.loeschen || '300' }}
+
+      # --- Referenzkurve F(t) neu bauen ---
+      # Die Kurve sagt, welcher Anteil des Tagesvolumens zu einer Uhrzeit
+      # üblicherweise schon gehandelt ist. Sie ändert sich nur langsam
+      # (Handelsgewohnheiten), muss also nicht laufend neu gebaut werden —
+      # aber sie darf nicht veralten. Ergebnis wird ins Repo gelegt, damit
+      # Scanner und Wächter sie ohne eigenen Abruf haben.
+      - name: "Volumen-Referenzkurve bauen"
+        if: ${{ github.event.inputs.modus == 'volumenkurve' }}
+        run: |
+          python volumen.py --bauen
+          python volumen.py
 
       # --- Yahoos eigener Live-Strom ---
       # Braucht KEINEN Schlüssel, kollidiert also nicht mit dem Wächter und
@@ -370,6 +383,9 @@ jobs:
           # Fehler ist gefaehrlich: Es verdeckt die echten.
           git add -A -- fortschritt.json 2>/dev/null || true
           git add -A -- ntfy_ids.json 2>/dev/null || true
+          # Die neu gebaute Volumenkurve muss ins Repo zurück, sonst hätte
+          # der Lauf sie nur für sich selbst gebaut.
+          git add -A -- volumenkurve.json 2>/dev/null || true
           if git diff --cached --quiet; then
             echo "Fortschritt und Kaufpunkte unverändert."
           else

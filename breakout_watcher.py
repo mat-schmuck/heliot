@@ -10,13 +10,18 @@ so wie das Regelwerk es verlangt.
 Das schließt die Lücke des Scanners: der liefert die Trigger-Level, dieser
 Wächter prüft, ob ein Ausbruch wirklich stattfindet und ob er gültig ist.
 
-Volumen-Regeln je Strategie (aus dem Regelwerk):
-  Darvas Box        Volumen > Ø20-Tage-Volumen
-  VCP               Volumen ≥ 140 % vom Ø20-Tage-Volumen (Minervini: 40-50 % über Ø)
-  Cup & Handle      Volumen > Ø20-Tage-Volumen (O'Neil: Volumen-Bestätigung)
-  Rectangle Top     Volumen > Ø20d UND Kurs > SMA21 (Bulkowskis bestes Setup)
-  High & Tight Flag Volumen > Ø20-Tage-Volumen
-  Fallback-Level    Volumen > Ø20-Tage-Volumen
+Volumen: GERECHNET WIRD AUSSCHLIESSLICH IN volumen.py (Gerhard,
+28.07.2026) — IBD "Volume % Change" mit Hochrechnung über die
+Fünf-Minuten-Referenzkurve, Maßstab ist der 50-Tage-Schnitt. Die
+Schwellen je Strategie (als Prozent gegenüber dem Üblichen FÜR DIESE
+UHRZEIT):
+  Darvas Box          0 % (Volumen über dem Schnitt)
+  VCP                +40 % (Minervini: 40 bis 50 % über Ø)
+  Cup & Handle        0 % (O'Neil: Volumen-Bestätigung)
+  Rectangle Top       0 % UND Kurs > SMA21 (Bulkowskis bestes Setup)
+  High & Tight Flag   0 %
+  Fallback-Level      0 %
+  Gap and Go       +400 %, vor 10:00 New Yorker Zeit +200 %
 
 Aufruf:
   export TWELVE_DATA_API_KEY="dein_key"
@@ -46,6 +51,7 @@ except ImportError:
     sys.exit("Bitte installieren: pip install requests pandas openpyxl")
 
 import ntfy_verlauf   # merkt sich jede verschickte Meldung fuer den Freitags-Putz
+import volumen        # IBD Volume % Change — die EINZIGE Volumenrechnung
 from config import CFG, pruefe_config
 from kurs_cache import KursCache, Kurswert
 from staffelung import Staffelung, abstand_zum_kaufpunkt
@@ -182,58 +188,24 @@ FLAT_BASE_MA = (10, CFG["ma"]["kurz"])               # MA10 und MA21
 # Zustand (was wurde schon gemeldet)
 # ---------------------------------------------------------------------------
 
-# Wie sich das Handelsvolumen ueber den Boersentag verteilt.
-# Gemessen an acht Aktien ueber 168 Aktien-Tage (30-Minuten-Kerzen,
-# nur regulaerer Handel). Schluessel: Minuten seit Mitternacht New Yorker
-# Zeit am ENDE der jeweiligen Halbstunde; Wert: bis dahin gehandelter
-# Anteil am Tagesvolumen.
-#
-# Wichtig: Die Verteilung ist NICHT gleichmaessig. Allein die erste halbe
-# Stunde macht 21 % aus, linear waeren es 7,7 %. Wer linear hochrechnet,
-# ueberschaetzt den Vormittag um ein Vielfaches und erzeugt Fehlsignale.
-VOLUMENKURVE = [
-    (570, 0.000),   # 09:30 NY — Eroeffnung, noch nichts gehandelt
-    (600, 0.213),   # 10:00
-    (630, 0.314),   # 10:30
-    (660, 0.396),   # 11:00
-    (690, 0.465),   # 11:30
-    (720, 0.523),   # 12:00
-    (750, 0.581),   # 12:30
-    (780, 0.630),   # 13:00
-    (810, 0.676),   # 13:30
-    (840, 0.721),   # 14:00
-    (870, 0.764),   # 14:30
-    (900, 0.810),   # 15:00
-    (930, 0.867),   # 15:30
-    (960, 1.000),   # 16:00 — Handelsschluss
-]
+# Die Volumenrechnung liegt seit 28.07.2026 GESCHLOSSEN in volumen.py
+# (Gerhards Vorgabe: ein Modul fuer Scanner, Waechter und Gap-and-Go,
+# damit nie wieder zwei Stellen mit verschiedenen Fenstern rechnen).
+# Diese beiden Huellen bleiben nur, weil der uebrige Waechter sie an
+# vielen Stellen aufruft.
 
 
 def tagesanteil(jetzt=None) -> float:
     """Welcher Anteil des Tagesvolumens ist zu dieser Uhrzeit ueblicherweise
-    schon gehandelt? Zwischen den Stuetzstellen wird linear interpoliert.
-
-    Vor Handelsbeginn und nach Schluss: 1.0 (voller Tag), damit die
+    schon gehandelt? Vor Handelsbeginn und nach Schluss 1,0, damit die
     Hochrechnung dann nichts mehr veraendert."""
-    try:
-        from zoneinfo import ZoneInfo
-        ny = ZoneInfo("America/New_York")
-    except Exception:
-        return 1.0
-    jetzt = (jetzt or datetime.now(ny)).astimezone(ny)
-    minuten = jetzt.hour * 60 + jetzt.minute
-    if minuten <= VOLUMENKURVE[0][0]:
-        return 1.0                      # vor Eroeffnung
-    if minuten >= VOLUMENKURVE[-1][0]:
-        return 1.0                      # nach Schluss: Tag ist komplett
-    for i in range(1, len(VOLUMENKURVE)):
-        m0, a0 = VOLUMENKURVE[i - 1]
-        m1, a1 = VOLUMENKURVE[i]
-        if minuten <= m1:
-            spanne = m1 - m0
-            anteil = a0 + (a1 - a0) * ((minuten - m0) / spanne) if spanne else a1
-            return max(anteil, 0.01)    # nie durch (fast) null teilen
-    return 1.0
+    return volumen.tagesanteil(volumen.minute_seit_eroeffnung(jetzt))
+
+
+def vol_verhaeltnis(vol, avg, jetzt=None):
+    """Das Vielfache des fuer DIESE UHRZEIT ueblichen Volumens.
+    None, wenn kein Massstab vorliegt."""
+    return volumen.verhaeltnis(vol, avg, volumen.minute_seit_eroeffnung(jetzt))
 
 
 def markt_offen(jetzt=None) -> tuple:
@@ -490,8 +462,13 @@ def fetch_quotes_yahoo(tickers: list[str]) -> dict:
             if len(df) >= 2:
                 vortage = df.iloc[:-1]
                 eintrag["prev_close"] = float(vortage["Close"].iloc[-1])
-                vol10 = float(vortage["Volume"].tail(10).mean())
-                eintrag["vol10"] = vol10
+                # WAR fest auf 10 verdrahtet, waehrend der Ausbruch schon
+                # gegen ein anderes Fenster rechnete. Genau solche stillen
+                # Uneinheitlichkeiten sollte Gerhards Umbau vom 28.07.2026
+                # beenden — jetzt zieht auch Gap and Go seinen Massstab aus
+                # config.py.
+                eintrag["vol10"] = float(
+                    vortage["Volume"].tail(VOL_FENSTER).mean())
                 for feld, spalte in (("open", "Open"), ("high", "High"),
                                      ("low", "Low")):
                     wert = letzte.get(spalte)
@@ -595,30 +572,28 @@ def pruefe_breakout(item: dict, quote: dict) -> dict | None:
     faktor = VOL_FAKTOR.get(item["strategie"], VOL_FAKTOR_FALLBACK)
     vol, avg = quote["volume"], quote["avg_volume"]
 
-    # RELATIVES VOLUMEN, auf den ganzen Tag hochgerechnet.
+    # RELATIVES VOLUMEN, auf den ganzen Tag hochgerechnet (volumen.py).
     #
     # Ohne Hochrechnung waere die Volumenbestaetigung vormittags nie
-    # erfuellbar: Um 16:00 Wiener Zeit sind erst rund 31 % eines normalen
-    # Tagesvolumens gehandelt — ein Ausbruch muesste also das Dreifache des
-    # Ueblichen ziehen, nur um die 100-%-Schwelle zu erreichen.
+    # erfuellbar: Um 16:00 Wiener Zeit sind erst rund 27 % eines normalen
+    # Tagesvolumens gehandelt — ein Ausbruch muesste also fast das
+    # Vierfache des Ueblichen ziehen, nur um die 100-%-Schwelle zu
+    # erreichen.
     #
     # Mit Hochrechnung lautet die Frage richtig: Ist das Volumen FUER DIESE
-    # UHRZEIT ungewoehnlich hoch? Ergebnis kann 180 %, 640 % oder 3200 %
-    # sein — je staerker der Andrang, desto hoeher.
+    # UHRZEIT ungewoehnlich hoch? Verglichen wird das Verhaeltnis, gemeldet
+    # wird Gerhards IBD-Prozentzahl — dieselbe Groesse, nur so
+    # geschrieben, dass sie sich direkt gegen IBD halten laesst.
     anteil = tagesanteil()
-    vol_hochgerechnet = vol / anteil if anteil > 0 else vol
-    if avg > 0:
-        vol_ratio = vol_hochgerechnet / avg
-        vol_ok = vol_ratio >= faktor
-    else:
-        vol_ratio = None
-        vol_ok = None  # unbekannt — wir melden trotzdem, aber gekennzeichnet
+    vol_ratio = vol_verhaeltnis(vol, avg)
+    vol_ok = None if vol_ratio is None else vol_ratio >= faktor
 
     return {
         **item,
         "kurs": kurs,
         "ueber_pct": ueber * 100,
         "vol_ratio": vol_ratio,
+        "vol_pct": None if vol_ratio is None else (vol_ratio - 1) * 100,
         "vol_noetig": faktor,
         "vol_ok": vol_ok,
         "vol_roh": vol,
@@ -706,8 +681,17 @@ def pruefe_gap_and_go(ticker: str, q: dict):
     anteil = tagesanteil()
     if anteil <= 0:
         return None
-    frueh_ratio = vol / (vol10 * anteil)
-    tages_ratio = (vol / anteil) / vol10
+    # BEIDE Zahlen sind rechnerisch dieselbe Groesse — v/(Ø×F) und
+    # (v/F)/Ø. Aufgefallen beim Aufschreiben der Formel fuer Gerhard am
+    # 28.07.2026; sie stehen hier getrennt, weil das Regelwerk zwei
+    # verschiedene SCHWELLEN kennt (drei- statt fuenffach vor 10:00 NY),
+    # nicht zwei verschiedene Messgroessen. Bis Gerhard das klaert, bleibt
+    # es so, wie es das Regelwerk beschreibt.
+    tages_ratio = volumen.verhaeltnis(vol, vol10,
+                                      volumen.minute_seit_eroeffnung())
+    if tages_ratio is None:
+        return None
+    frueh_ratio = tages_ratio
 
     minuten = ny_minuten()
     in_frueh_phase = minuten is not None and minuten < 600     # vor 10:00 NY
@@ -747,10 +731,9 @@ def format_gapgo(g: dict) -> str:
     kopf = meldungskopf(g["ticker"], g.get("firma", ""))
     status = ("BESTÄTIGT (Schluss im oberen Fünftel)" if g["bestaetigt"]
               else "im Aufbau")
-    vol = ((f"Frühvolumen {g['frueh_ratio']*100:.0f}% des Zeitüblichen, "
-            f"nötig {GAP_FRUEH_FAKTOR*100:.0f}%") if g["frueh"] else
-           (f"Volumen hochgerechnet {g['tages_ratio']:.1f} mal Ø10, "
-            f"nötig {GAP_VOL_FAKTOR:.0f} mal"))
+    noetig = GAP_FRUEH_FAKTOR if g["frueh"] else GAP_VOL_FAKTOR
+    vol = (f"Volumen {(g['tages_ratio']-1)*100:+.0f}% gegenüber Ø{VOL_FENSTER}, "
+           f"nötig {(noetig-1)*100:+.0f}%")
     luecke = f"Lücke +{g['gap']*100:.1f}%"
     if g.get("base_spanne") is not None:
         luecke += f"; Flat Base davor, Spanne {g['base_spanne']*100:.0f}%"
@@ -769,18 +752,21 @@ def format_treffer(t: dict) -> str:
     """Trenner-Regeln und Hintergrund siehe format_gapgo. Alle Angaben
     drin (Mathias, 23.07.2026: erst radikal gekuerzt, dann fehlte zu
     viel); Fuellwoerter wie "erst"/"nur" bleiben draussen. Die
-    Volumen-Prozente sind die HOCHRECHNUNG auf den ganzen Tag (siehe
-    pruefe_breakout), die Klammer nennt den ueblichen Tagesanteil."""
+    Volumen-Prozente sind seit 28.07.2026 Gerhards IBD-Zahl: +2025 % heisst
+    das 21-fache des Ueblichen FUER DIESE UHRZEIT, 0 % heisst voellig
+    normal. Die Klammer nennt den ueblichen Tagesanteil."""
     anteil = t.get("vol_anteil", 1.0)
     zusatz = ""
     if anteil < 0.99:
         zusatz = f" (hochgerechnet, {anteil*100:.0f}% des Tages)"
+    pct = t.get("vol_pct")
+    noetig_pct = (t["vol_noetig"] - 1) * 100
     if t["vol_ok"] is True:
-        vol_txt = (f"Volumen BESTÄTIGT, {t['vol_ratio']*100:.0f}% von Ø, "
-                   f"nötig {t['vol_noetig']*100:.0f}%{zusatz}")
+        vol_txt = (f"Volumen BESTÄTIGT, {pct:+.0f}% gegenüber Ø{VOL_FENSTER}, "
+                   f"nötig {noetig_pct:+.0f}%{zusatz}")
     elif t["vol_ok"] is False:
-        vol_txt = (f"Volumen NICHT bestätigt, {t['vol_ratio']*100:.0f}% "
-                   f"von nötigen {t['vol_noetig']*100:.0f}%{zusatz}")
+        vol_txt = (f"Volumen NICHT bestätigt, {pct:+.0f}% gegenüber "
+                   f"Ø{VOL_FENSTER}, nötig {noetig_pct:+.0f}%{zusatz}")
     else:
         # Kommt nur vor, wenn keine Durchschnittsbasis existiert (brandneue
         # Notierung oder Datenluecke der Kursquelle) — der Waechter rechnet
