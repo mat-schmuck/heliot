@@ -71,7 +71,7 @@ KURSE = KursCache(
 )
 
 
-def ws_kurse_einblenden(quotes: dict) -> tuple:
+def ws_kurse_einblenden(quotes: dict, ws=None) -> tuple:
     """Legt die LIVE-Werte aus Yahoos Strom ueber die Tagesdaten.
     Liefert (ersetzte Kurse, ersetzte Volumina).
 
@@ -92,7 +92,7 @@ def ws_kurse_einblenden(quotes: dict) -> tuple:
     'Frisch' entscheidet der Kursspeicher mit der Schwelle FUER DIESE
     QUELLE. Haengt die Leitung, faellt der Wert automatisch auf die
     Tagesdaten zurueck, statt einzufrieren."""
-    kurse = volumina = 0
+    kurse = volumina = spannen = 0
     for t, q in quotes.items():
         gross = t.upper()
         wert = KURSE._store.get(gross)
@@ -108,7 +108,25 @@ def ws_kurse_einblenden(quotes: dict) -> tuple:
         if wert.volumen and wert.volumen > (q.get("volume") or 0):
             q["volume"] = float(wert.volumen)
             volumina += 1
-    return kurse, volumina
+        # TAGESSPANNE: immer der AEUSSERE Wert aus Tageskerze und Strom.
+        # Hoch kann nur steigen, Tief nur fallen — die Vereinigung beider
+        # Quellen ist deshalb immer mindestens so genau wie jede allein,
+        # nie schlechter. Der Strom ist sekundenfrisch, die Tageskerze
+        # holt nach, was zwischen zwei Meldungen durchgerutscht ist.
+        if ws is not None:
+            hoch, tief = ws.spanne(gross)
+            geweitet = False
+            if hoch is not None and (q.get("high") is None
+                                     or hoch > q["high"]):
+                q["high"] = float(hoch)
+                geweitet = True
+            if tief is not None and (q.get("low") is None
+                                     or tief < q["low"]):
+                q["low"] = float(tief)
+                geweitet = True
+            if geweitet:
+                spannen += 1
+    return kurse, volumina, spannen
 
 
 def merke_kurse(quotes: dict, quelle: str):
@@ -186,6 +204,12 @@ VOL_FENSTER = _VOL["fenster_tage"]
 # was sich einmal am Tag aendert (Vortagesschluss, Ø50, Flat Base) und
 # die Tagesspanne fuer Gap and Go. Eine Minute ist dafuer reichlich.
 TAKT = CFG["betrieb"].get("takt_sekunden", 60)
+
+# PRUEFTAKT: So oft wird auf gerissene Kaufpunkte geprueft. Getrennt vom
+# Datentakt, weil Kurs, Tagesvolumen und Tagesspanne laufend aus dem Strom
+# kommen — die Pruefung muss also nicht auf den naechsten schweren Abruf
+# warten. Ausfuehrliche Begruendung in der Hauptschleife.
+PRUEF_TAKT = CFG["betrieb"].get("pruef_takt_sekunden", 2)
 
 # In den Push-Meldungen werden Strategienamen ausgeschrieben (Mathias,
 # 23.07.2026). In Excel und VOL_FAKTOR bleibt die Kurzform bestehen.
@@ -1060,19 +1084,19 @@ def main():
     # entscheidet sich hier.
     offen, grund = markt_offen()
     print(f"Börsenstatus: {'offen' if offen else 'geschlossen'} — {grund}")
+    vorlauf = None
     if not offen and not args.ignoriere_handelszeit:
         # Kurz vor der Eroeffnung? Dann bis zur Glocke warten statt aufgeben.
         # GitHub feuert Zeitplaene oft 5-15 Minuten verspaetet; die
         # vorgezogenen Termine im Workflow plus dieses Warten sorgen dafuer,
         # dass die ersten Boersenminuten trotzdem bewacht sind.
-        warte = sekunden_bis_eroeffnung()
-        if warte is not None and warte <= 20 * 60:
-            print(f"Eröffnung in {int(warte // 60)} Min {int(warte % 60)} s — "
-                  "ich warte bis zum Handelsbeginn.")
-            time.sleep(warte + 20)
-            offen, grund = markt_offen()
-            print(f"Börsenstatus: {'offen' if offen else 'geschlossen'} — {grund}")
-    if not offen and not args.ignoriere_handelszeit:
+        vorlauf = sekunden_bis_eroeffnung()
+        if vorlauf is not None and vorlauf <= 20 * 60:
+            print(f"Eröffnung in {int(vorlauf // 60)} Min "
+                  f"{int(vorlauf % 60)} s.")
+        else:
+            vorlauf = None
+    if vorlauf is None and not offen and not args.ignoriere_handelszeit:
         print("Nichts zu tun. (Mit --ignoriere-handelszeit trotzdem prüfen.)")
         sys.exit(0)
 
@@ -1131,6 +1155,30 @@ def main():
         print("Live-Strom NICHT verfügbar — alles läuft über die Tagesdaten, "
               "genau wie vor dem Umbau.")
 
+    # GONG-VORLAUF (Mathias, 28.07.2026). Erst JETZT wird auf die Glocke
+    # gewartet — die Verbindungen stehen also schon, wenn sie laeutet.
+    # Vorher wurde umgekehrt gewartet und danach verbunden; die
+    # Anlaufphase fiel damit in die ersten Handelsminuten, also
+    # ausgerechnet in die wichtigsten des Tages. Gemessen am 28.07. am
+    # ruhigen Nachmittag: dreieinhalb Minuten, bis alle 265 Aktien im
+    # Strom waren, weil eine Aktie erst auftaucht, wenn sie zum ersten
+    # Mal handelt.
+    # Vorboersliche Geschaefte werden dabei verworfen (yahoo_ws.py), sonst
+    # stuenden Kurs und Tagesspanne schon vor Handelsbeginn falsch.
+    if vorlauf is not None:
+        print(f"Warte bis zum Handelsbeginn — die {len(abruf_ticker)} "
+              f"Abos stehen bereits.")
+        time.sleep(vorlauf + 20)
+        offen, grund = markt_offen()
+        print(f"Börsenstatus: {'offen' if offen else 'geschlossen'} — {grund}")
+        st = ws.statistik()
+        if st["ausserhalb"]:
+            print(f"  ({st['ausserhalb']} vorbörsliche Meldungen verworfen — "
+                  f"sie gehören nicht in die Tagesspanne.)")
+        if not offen and not args.ignoriere_handelszeit:
+            ws.stop()
+            sys.exit("Börse öffnete nicht wie erwartet — Ende.")
+
     # Dauerwache: EIN Lauf deckt den ganzen Handelstag ab. Hintergrund
     # (22.07.2026): GitHub feuerte die Zeitplaene nach Repo-Umbenennung und
     # Workflow-Aenderungen stundenlang verspaetet — im ersten Boersenfenster
@@ -1147,114 +1195,169 @@ def main():
 
     state = load_state()
     schon_gemeldet = set(state["gemeldet"])
+
+    # ZWEI TAKTE STATT EINEM (Mathias, 28.07.2026: "Stelle auf Echtzeit um").
+    #
+    # Bis jetzt lief beides im selben Takt: Daten holen und pruefen. Damit
+    # war die Meldung immer so langsam wie der Abruf — zuerst sechs
+    # Minuten, dann eine. Das ist unnoetig, weil die beiden Dinge voellig
+    # verschiedene Fristen haben:
+    #
+    #   DATENTAKT (TAKT, 60 s): der schwere Abruf ueber alle 265 Aktien.
+    #     Er liefert nur noch, was sich einmal am Tag aendert —
+    #     Vortagesschluss, Ø50, Flat Base, Eroeffnung, Datum der Kurszeile.
+    #   PRUEFTAKT (2 s): Kurs, Tagesvolumen und Tagesspanne kommen laufend
+    #     aus dem Strom. Geprueft wird auf diesem frischen Stand.
+    #
+    # Bewusst NICHT bei jeder einzelnen Kursmeldung geprueft: Der Strom
+    # schickt rund 3600 Meldungen je Minute (nachgemessen), das waeren
+    # 3600 vollstaendige Durchlaeufe ueber alle Kaufpunkte fuer einen
+    # Gewinn von Sekundenbruchteilen. Zwei Sekunden sind gegenueber den
+    # bisherigen sechs Minuten der Faktor 180 — und der Rest waere
+    # Rechenarbeit ohne Nutzen.
+    basis = {}                       # letzter Tagesdaten-Stand
+    naechster_abruf = 0.0
+    sperre_bis = 0.0                 # nach Sendefehler kurz nicht erneut
     runde = 0
     while True:
-        runde += 1
-        if runde > 1:
-            print(f"\n——— Runde {runde} ({datetime.now():%H:%M:%S}) ———")
-            # Auch zu RUNDENBEGINN auf die Uhr sehen. Die Pruefung am
-            # Rundenende liegt vor der Sechs-Minuten-Pause und kann den
-            # Schlussgong daher nicht abfangen (Mathias, 27.07.2026).
-            offen, grund = markt_offen()
-            if not offen and not args.ignoriere_handelszeit:
-                print(f"Börse geschlossen ({grund}) — Wache beendet.")
-                break
+        jetzt_s = time.time()
+        # Auf die Uhr sehen, BEVOR geprueft wird — sonst koennte der
+        # Schlussgong zwischen zwei Durchlaeufen durchrutschen
+        # (Mathias, 27.07.2026).
+        offen, grund = markt_offen()
+        if runde and not offen and not args.ignoriere_handelszeit:
+            print(f"Börse geschlossen ({grund}) — Wache beendet.")
+            break
+
+        laut = jetzt_s >= naechster_abruf
+        if not laut:
+            if not basis:
+                time.sleep(PRUEF_TAKT)
+                continue
+            # Zwischen zwei Abrufen: auf dem letzten Tagesstand arbeiten,
+            # aber mit frischen Kursen aus dem Strom. Je Durchlauf eine
+            # eigene Kopie, weil die Einblendung sie veraendert.
+            quotes = {t: dict(q) for t, q in basis.items()}
+            veraltete_quotes = {}
+        else:
+            runde += 1
+            naechster_abruf = jetzt_s + TAKT
+            if runde > 1:
+                print(f"\n——— Datenabruf {runde} "
+                      f"({datetime.now():%H:%M:%S}) ———")
 
         # Hauptquelle Yahoo (ein Abruf, kein Limit), Twelve Data als Rueckfall.
-        quotes = fetch_quotes_yahoo(abruf_ticker)
-        merke_kurse(quotes, "yfinance")
-        if len(quotes) < len(gewuenscht):
-            fehlend_yahoo = sorted(gewuenscht - set(quotes))
-            if quotes:
-                print(f"  Yahoo lieferte {len(quotes)} von {len(gewuenscht)} — "
-                      f"hole {len(fehlend_yahoo)} über Twelve Data nach.")
-            if api_key:
-                nachgeholt = fetch_quotes(fehlend_yahoo, api_key)
-                merke_kurse(nachgeholt, "twelvedata")
-                quotes.update(nachgeholt)
-            elif not quotes and ende_dauerwache is None:
-                sys.exit("Yahoo lieferte nichts und kein TWELVE_DATA_API_KEY gesetzt.")
+        if laut:
+            quotes = fetch_quotes_yahoo(abruf_ticker)
+            merke_kurse(quotes, "yfinance")
+            if len(quotes) < len(gewuenscht):
+                fehlend_yahoo = sorted(gewuenscht - set(quotes))
+                if quotes:
+                    print(f"  Yahoo lieferte {len(quotes)} von "
+                          f"{len(gewuenscht)} — hole {len(fehlend_yahoo)} "
+                          f"über Twelve Data nach.")
+                if api_key:
+                    nachgeholt = fetch_quotes(fehlend_yahoo, api_key)
+                    merke_kurse(nachgeholt, "twelvedata")
+                    quotes.update(nachgeholt)
+                elif not quotes and ende_dauerwache is None:
+                    sys.exit("Yahoo lieferte nichts und kein "
+                             "TWELVE_DATA_API_KEY gesetzt.")
 
-        # Stammen die Kurse ueberhaupt von HEUTE? An Feiertagen und bei
-        # haengenden Quellen liefert Yahoo die Zeile des Vortags — deren
-        # volles Tagesvolumen wuerde hochgerechnet fast jede
-        # Volumenbestaetigung erschleichen (Fehlerdurchlauf 28.07.2026).
-        quotes, veraltete_quotes = pruefe_handelstag(quotes)
-        if veraltete_quotes and not quotes:
-            datum = next(iter(veraltete_quotes.values())).get("bar_datum")
-            print(f"⛔ Keine einzige Kurszeile von heute (jüngste ist vom "
-                  f"{datum}) — es wird nichts geprüft und nichts gemeldet.")
-            # NICHT sofort aufgeben: Direkt nach der Eroeffnung kann Yahoo
-            # ein paar Minuten brauchen, bis die heutige Tageszeile steht.
-            # Wuerde die Wache daraufhin enden, haetten wir uns den
-            # Handelstag selbst abgeschaltet — schlimmer als das Problem.
-            # Erst wenn die Boerse laengst offen ist und immer noch nichts
-            # da ist, ist es wirklich ein Feiertag oder ein Quellenausfall.
-            minuten = ny_minuten()
-            seit_eroeffnung = (minuten - 9 * 60 - 30) if minuten is not None else 0
-            if ende_dauerwache is None:
-                sys.exit(0)
-            if seit_eroeffnung >= 45:
-                print("Seit über 45 Minuten keine heutigen Kurse — "
-                      "Börsenfeiertag oder Quellenausfall. Wache beendet.")
-                break
-            print(f"Möglicherweise hinkt die Kursquelle nach der Eröffnung "
-                  f"nach — nächster Versuch in {TAKT} Sekunden.")
-            time.sleep(TAKT)
-            continue
-        if veraltete_quotes:
-            namen = sorted(veraltete_quotes)
-            print(f"⚠ {len(namen)} Aktien ohne heutige Kurszeile — "
-                  f"übersprungen (keine Meldung auf veralteten Daten): "
-                  + ", ".join(namen[:15]) + (" …" if len(namen) > 15 else ""))
+            # Stammen die Kurse ueberhaupt von HEUTE? An Feiertagen und bei
+            # haengenden Quellen liefert Yahoo die Zeile des Vortags — deren
+            # volles Tagesvolumen wuerde hochgerechnet fast jede
+            # Volumenbestaetigung erschleichen (Fehlerdurchlauf 28.07.2026).
+            quotes, veraltete_quotes = pruefe_handelstag(quotes)
+            if veraltete_quotes and not quotes:
+                datum = next(iter(veraltete_quotes.values())).get("bar_datum")
+                print(f"⛔ Keine einzige Kurszeile von heute (jüngste ist vom "
+                      f"{datum}) — es wird nichts geprüft und nichts gemeldet.")
+                # NICHT sofort aufgeben: Direkt nach der Eroeffnung kann Yahoo
+                # ein paar Minuten brauchen, bis die heutige Tageszeile steht.
+                # Wuerde die Wache daraufhin enden, haetten wir uns den
+                # Handelstag selbst abgeschaltet — schlimmer als das Problem.
+                # Erst wenn die Boerse laengst offen ist und immer noch nichts
+                # da ist, ist es wirklich ein Feiertag oder ein Quellenausfall.
+                minuten = ny_minuten()
+                seit_eroeffnung = ((minuten - 9 * 60 - 30)
+                                   if minuten is not None else 0)
+                if ende_dauerwache is None:
+                    sys.exit(0)
+                if seit_eroeffnung >= 45:
+                    print("Seit über 45 Minuten keine heutigen Kurse — "
+                          "Börsenfeiertag oder Quellenausfall. Wache beendet.")
+                    break
+                print(f"Möglicherweise hinkt die Kursquelle nach der "
+                      f"Eröffnung nach — nächster Versuch in {TAKT} Sekunden.")
+                time.sleep(TAKT)
+                continue
+            if veraltete_quotes:
+                namen = sorted(veraltete_quotes)
+                print(f"⚠ {len(namen)} Aktien ohne heutige Kurszeile — "
+                      f"übersprungen (keine Meldung auf veralteten Daten): "
+                      + ", ".join(namen[:15]) + (" …" if len(namen) > 15 else ""))
+            # Diesen Stand als Grundlage merken. Die Kopie ist wichtig:
+            # Die Einblendung veraendert die Eintraege, und der naechste
+            # Durchlauf muss wieder vom unveraenderten Tagesstand ausgehen.
+            basis = {t: dict(q) for t, q in quotes.items()}
 
-        # Live-Werte ueber die Tagesdaten legen: Kurs UND Tagesvolumen.
+        # Live-Werte ueber die Tagesdaten legen: Kurs, Tagesvolumen UND die
+        # Tagesspanne. Das geschieht in JEDEM Durchlauf, also alle zwei
+        # Sekunden — hier entsteht die Echtzeit.
         if ws_laeuft:
-            kurse_live, volumina_live = ws_kurse_einblenden(quotes)
+            kurse_live, volumina_live, spannen_live = ws_kurse_einblenden(
+                quotes, ws)
             st = ws.statistik()
-            print(f"  Live-Strom: {kurse_live} Kurse und {volumina_live} "
-                  f"Tagesvolumina sekundenfrisch "
-                  f"({st['verbindungen']} Verbindungen, {st['meldungen']} "
-                  f"Meldungen bisher).")
+            if laut:
+                print(f"  Live-Strom: {kurse_live} Kurse, {volumina_live} "
+                      f"Tagesvolumina und {spannen_live} Tagesspannen "
+                      f"sekundenfrisch ({st['verbindungen']} Verbindungen, "
+                      f"{st['meldungen']} Meldungen bisher).")
+                if st["neustarts"]:
+                    print(f"  ({st['neustarts']} Verbindungsabrisse bisher, "
+                          f"jeweils selbsttätig neu aufgebaut.)")
+                ohne = ws.ohne_meldung()
+                if ohne:
+                    print(f"  Hinweis: {len(ohne)} Aktien haben noch gar "
+                          f"nichts geschickt (sie laufen über die "
+                          f"Tagesdaten): " + ", ".join(ohne[:12])
+                          + (" …" if len(ohne) > 12 else ""))
             if st["verbindungen"] == 0:
+                # Das MUSS auffallen, auch zwischen den Abrufen.
                 print("  ⚠ Keine Verbindung zum Live-Strom — es zählen "
                       "solange die Tagesdaten.")
-            if st["neustarts"]:
-                print(f"  ({st['neustarts']} Verbindungsabrisse bisher, "
-                      f"jeweils selbsttätig neu aufgebaut.)")
-            ohne = ws.ohne_meldung()
-            if ohne:
-                print(f"  Hinweis: {len(ohne)} Aktien haben noch gar nichts "
-                      f"geschickt (sie laufen über die Tagesdaten): "
-                      + ", ".join(ohne[:12])
-                      + (" …" if len(ohne) > 12 else ""))
 
         # Haengt eine Quelle? Der Speicher weiss, wann jeder Kurs zuletzt
         # frisch war — je Quelle mit eigener Schwelle.
         haengend = [t for t in KURSE.stale_liste() if t in gewuenscht]
         if haengend:
-            print(f"⚠ {len(haengend)} Kurse gelten als hängend und werden NICHT "
-                  f"für Auslöser verwendet: " + ", ".join(sorted(haengend)[:15]))
+            if laut:
+                print(f"⚠ {len(haengend)} Kurse gelten als hängend und werden "
+                      f"NICHT für Auslöser verwendet: "
+                      + ", ".join(sorted(haengend)[:15]))
             for t in haengend:
                 quotes.pop(t, None)
 
-        print(f"{len(gewuenscht & set(quotes))} von {len(gewuenscht)} "
-              f"Kaufpunkt-Quotes erhalten ({len(quotes)} Aktien gesamt).")
+        if laut:
+            print(f"{len(gewuenscht & set(quotes))} von {len(gewuenscht)} "
+                  f"Kaufpunkt-Quotes erhalten ({len(quotes)} Aktien gesamt).")
         if not quotes:
-            # In der Dauerwache ist ein Aussetzer kein Todesurteil — die
-            # naechste Runde kommt in 6 Minuten.
+            # In der Dauerwache ist ein Aussetzer kein Todesurteil — der
+            # naechste Abruf kommt in einer Minute.
             if ende_dauerwache is None:
                 sys.exit("Keine Kursdaten erhalten — Abbruch.")
-            print("⚠ Keine Kursdaten in dieser Runde — nächster Versuch in 6 Minuten.")
+            if laut:
+                print(f"⚠ Keine Kursdaten — nächster Versuch in {TAKT} Sekunden.")
         else:
             # Unvollstaendige Abfragen NICHT stillschweigend hinnehmen: Fuer die
             # fehlenden Aktien kann kein Breakout erkannt werden, und ohne
             # Hinweis sieht der Lauf trotzdem erfolgreich aus.
             fehlend = sorted(gewuenscht - set(quotes))
-            if fehlend:
+            if fehlend and laut:
                 print(f"\n⚠ ACHTUNG: {len(fehlend)} Aktien konnten NICHT geprüft werden:")
                 print("  " + ", ".join(fehlend))
-                print("  Für diese Werte wird in dieser Runde kein Ausbruch erkannt.")
+                print("  Für diese Werte wird kein Ausbruch erkannt.")
 
             treffer, neu = [], []
             for item in items:
@@ -1278,12 +1381,21 @@ def main():
                 if res["key"] not in schon_gemeldet:
                     neu.append(res)
 
-            print(f"\n{len(treffer)} Kaufpunkte aktuell gerissen, davon {len(neu)} "
-                  f"neu seit dem letzten Lauf.")
-            for t in treffer:
-                marker = "🟢" if t["vol_ok"] is True else ("🟡" if t["vol_ok"] is False else "⚪")
-                neu_marker = " [NEU]" if t in neu else ""
-                print(f"  {marker} {format_treffer(t)}{neu_marker}\n")
+            # Zwischen den Abrufen nur ausgeben, wenn es wirklich etwas
+            # Neues gibt — sonst stuende alle zwei Sekunden dieselbe Liste
+            # im Protokoll und die echten Ereignisse gingen darin unter.
+            if laut or neu:
+                if neu and not laut:
+                    print(f"\n⚡ {datetime.now():%H:%M:%S} — {len(neu)} neue(r) "
+                          f"Kaufpunkt(e) gerissen:")
+                else:
+                    print(f"\n{len(treffer)} Kaufpunkte aktuell gerissen, "
+                          f"davon {len(neu)} neu seit dem letzten Lauf.")
+                for t in (treffer if laut else neu):
+                    marker = ("🟢" if t["vol_ok"] is True
+                              else ("🟡" if t["vol_ok"] is False else "⚪"))
+                    neu_marker = " [NEU]" if t in neu else ""
+                    print(f"  {marker} {format_treffer(t)}{neu_marker}\n")
 
             # Erst filtern, dann vormerken. Frueher galten auch Treffer als
             # gemeldet, die wegen --nur-bestaetigt gar nicht gepusht wurden -
@@ -1297,18 +1409,36 @@ def main():
                     print(f"{uebersprungen} Treffer ohne Volumenbestätigung — bleiben "
                           "offen und werden weiter beobachtet.")
 
-            if zu_melden and not args.dry_run:
+            # SENDESPERRE NACH FEHLSCHLAG. Frueher lag zwischen zwei
+            # Versuchen die volle Runde; jetzt sind es zwei Sekunden. Ohne
+            # Sperre wuerde ein haengender ntfy-Dienst dreissigmal je
+            # Minute angeklopft, statt zweimal je Runde — dem Dienst
+            # gegenueber unfair und fuer uns nutzlos. Nach einem
+            # Fehlschlag also erst beim naechsten Datenabruf wieder.
+            if zu_melden and jetzt_s < sperre_bis:
+                pass
+            elif zu_melden and not args.dry_run:
                 if push(topic, zu_melden):
                     for t in zu_melden:
                         schon_gemeldet.add(t["key"])
                         state["gemeldet"][t["key"]] = date.today().isoformat()
                     save_state(state)
                 else:
-                    print("⚠ Zustand NICHT gespeichert — der nächste Lauf versucht es erneut.")
+                    sperre_bis = jetzt_s + TAKT
+                    print(f"⚠ Zustand NICHT gespeichert — nächster Versuch "
+                          f"in {TAKT} Sekunden.")
             elif not zu_melden:
-                print("Nichts Neues zu melden.")
+                if laut:
+                    print("Nichts Neues zu melden.")
             else:
                 print("(Dry-Run — kein Push gesendet, Zustand nicht gespeichert)")
+                # Auch im Trockenlauf vormerken, SONST meldet der Lauf
+                # dieselben Treffer alle zwei Sekunden erneut. Im Echtlauf
+                # besorgt das der erfolgreiche Push; ohne diese Zeile
+                # verhielte sich der Trockenlauf anders als der Ernstfall
+                # und waere als Probe wertlos (aufgefallen 28.07.2026).
+                for t in zu_melden:
+                    schon_gemeldet.add(t["key"])
 
             # --- Gap and Go (Regelwerk Kapitel 7) --------------------------
             # Zwei Meldestufen je Aktie und Tag: 'im Aufbau', sobald alle
@@ -1333,6 +1463,10 @@ def main():
                     print("  " + format_gapgo(g).replace("\n", "\n  ") + "\n")
                 if args.dry_run:
                     print("(Dry-Run — kein Gap-and-Go-Push)")
+                    for g in gap_neu:       # sonst alle zwei Sekunden erneut
+                        schon_gemeldet.add(g["key"])
+                elif jetzt_s < sperre_bis:
+                    pass                    # Sendesperre nach Fehlschlag
                 else:
                     body = nummeriert([format_gapgo(g) for g in gap_neu])
                     titel = "🚀 Gap and Go: " + ", ".join(g["ticker"]
@@ -1342,6 +1476,8 @@ def main():
                             schon_gemeldet.add(g["key"])
                             state["gemeldet"][g["key"]] = date.today().isoformat()
                         save_state(state)
+                    else:
+                        sperre_bis = jetzt_s + TAKT
 
         if ende_dauerwache is None:
             break
@@ -1349,12 +1485,7 @@ def main():
             print("Dauerwache: Zeit abgelaufen — Ende.")
             ws.stop()
             break
-        offen, grund = markt_offen()
-        if not offen:
-            print(f"Dauerwache: Börse geschlossen ({grund}) — Ende.")
-            ws.stop()
-            break
-        time.sleep(TAKT)
+        time.sleep(PRUEF_TAKT)
 
     # Verbindungen sauber schliessen, damit kein Faden offen bleibt.
     ws.stop()

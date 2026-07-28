@@ -214,6 +214,15 @@ CFG = {
         # seit Kurs und Volumen live kommen, muss dieser Abruf gar nicht
         # mehr schnell sein.
         "takt_sekunden": 60,
+        # Prüftakt: So oft wird auf gerissene Kaufpunkte geprüft. Getrennt
+        # vom Datentakt (Mathias, 28.07.2026: "Stelle auf Echtzeit um").
+        # Kurs, Tagesvolumen und Tagesspanne kommen laufend aus dem Strom,
+        # die Prüfung muss also nicht auf den schweren Abruf warten.
+        # Bewusst 2 Sekunden und nicht "bei jeder Kursmeldung": Der Strom
+        # schickt rund 3600 Meldungen je Minute — das wären 3600 volle
+        # Durchläufe für einen Gewinn von Sekundenbruchteilen. Gegenüber
+        # den ursprünglichen sechs Minuten ist das der Faktor 180.
+        "pruef_takt_sekunden": 2,
         "min_historie_tage": 60,     # weniger Historie → Aktie überspringen
         # HINWEIS: Das 2000-Minuten-Limit gilt für PRIVATE Repos. heliot ist
         # öffentlich, dort sind die Actions-Minuten unbegrenzt und kostenlos

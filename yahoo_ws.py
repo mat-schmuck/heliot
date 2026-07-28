@@ -66,6 +66,9 @@ class YahooWebSocket:
         self.meldungen = 0
         self.letzte_meldung = 0.0
         self._meldung_je = {}
+        self._hoch = {}              # Tageshoch je Aktie, aus dem Strom
+        self._tief = {}              # Tagestief je Aktie, aus dem Strom
+        self.ausserhalb = 0          # verworfene Vor- und Nachboersenmeldungen
         self.fehler = []
         self.neustarts = 0
 
@@ -80,6 +83,22 @@ class YahooWebSocket:
         preis = msg.get("price")
         if not symbol or preis is None:
             return
+        # NUR REGULAERER HANDEL. Seit die Verbindungen schon VOR dem
+        # Eroeffnungsgong stehen, kommen auch vorboersliche Geschaefte
+        # herein. Die gehoeren nicht in die Tagesspanne — die Tageskerze
+        # kennt sie auch nicht — und wuerden Hoch, Tief und Kurs
+        # verfaelschen, bevor der Handel ueberhaupt begonnen hat.
+        # 1 = regulaerer Handel, 0 = vorboerslich, 2 = nachboerslich.
+        # Fehlt das Feld, wird die Meldung angenommen: lieber ein Kurs zu
+        # viel als gar keiner.
+        marktzeit = msg.get("market_hours")
+        if marktzeit is not None:
+            try:
+                if int(marktzeit) != 1:
+                    self.ausserhalb += 1
+                    return
+            except (TypeError, ValueError):
+                pass
         try:
             preis = float(preis)
         except (TypeError, ValueError):
@@ -90,12 +109,27 @@ class YahooWebSocket:
         except (TypeError, ValueError):
             tagesvolumen = 0.0
         jetzt = time.time()
+        gross = symbol.upper()
         self.cache.setze(Kurswert(
-            ticker=symbol.upper(), preis=preis, zeit=jetzt,
+            ticker=gross, preis=preis, zeit=jetzt,
             volumen=tagesvolumen, quelle="yahoo_ws"))
+        # TAGESSPANNE MITFUEHREN (Mathias, 28.07.2026). Hoch und Tief sind
+        # die einzigen Groessen aus dem Tagesdaten-Abruf, die sich waehrend
+        # des Tages wirklich laufend aendern — und sie sind nicht
+        # nebensaechlich: Bei Gap and Go entscheiden sie ueber den
+        # Kaufpunkt (Tageshoch plus ein Cent), ueber den Stop (Tagestief
+        # minus ein Cent) und darueber, ob die Luecke noch verteidigt ist.
+        # Beide koennen sich nur nach aussen bewegen, nie zurueck. Deshalb
+        # wird spaeter der AEUSSERE Wert aus Tageskerze und Strom genommen:
+        # Das ist immer mindestens so genau wie jede Quelle allein.
+        with self._lock:
+            if preis > self._hoch.get(gross, float("-inf")):
+                self._hoch[gross] = preis
+            if preis < self._tief.get(gross, float("inf")):
+                self._tief[gross] = preis
         self.meldungen += 1
         self.letzte_meldung = jetzt
-        self._meldung_je[symbol.upper()] = jetzt
+        self._meldung_je[gross] = jetzt
 
     def _starte_haufen(self, teil, nummer):
         """Eine Verbindung, die sich bei Abriss selbst neu aufbaut."""
@@ -179,6 +213,13 @@ class YahooWebSocket:
             except Exception:
                 pass
 
+    def spanne(self, ticker):
+        """Hoch und Tief dieser Aktie, wie sie der Strom bisher gesehen
+        hat. (None, None), solange noch keine Meldung kam."""
+        gross = ticker.upper()
+        with self._lock:
+            return self._hoch.get(gross), self._tief.get(gross)
+
     def ohne_meldung(self, mindestens_sekunden=0):
         """Welche Aktien haben noch gar nichts geschickt? Reines
         Mitschreiben, ohne Folgen — bei Yahoo war die Antwort in beiden
@@ -199,6 +240,7 @@ class YahooWebSocket:
                 round(time.time() - self.letzte_meldung, 1)
                 if self.letzte_meldung else None),
             "neustarts": self.neustarts,
+            "ausserhalb": self.ausserhalb,
             "fehler": self.fehler[-3:],
         }
 
