@@ -91,12 +91,31 @@ def ws_kurse_einblenden(quotes: dict) -> int:
 
 
 def merke_kurse(quotes: dict, quelle: str):
-    """Legt die Kurse einer Runde im gemeinsamen Speicher ab."""
+    """Legt die Kurse einer Runde im gemeinsamen Speicher ab.
+
+    ACHTUNG, hier lag ein Fehler, den erst der erste Lauf mit echtem
+    WebSocket zeigte (28.07.2026): Der Yahoo-Sammelabruf lief VOR der
+    Einblendung der Tickkurse und ueberschrieb dabei jeden Eintrag. Wenn
+    danach die Einblendung suchte, fand sie nur noch Yahoo-Werte — es
+    wurde KEIN einziger Tickkurs uebernommen, obwohl die Verbindung
+    stand und Ticks flossen. Im Protokoll fiel es nur dadurch auf, dass
+    die Zeile 'tickfrisch vom WebSocket' fehlte.
+
+    Die Regel lautet deshalb: Ein rund 15 Minuten verzoegerter
+    Yahoo-Kurs darf einen sekundenfrischen Tick NICHT verdraengen. Ist
+    der Tick alt genug, um als haengend zu gelten, darf Yahoo
+    uebernehmen — dann ist der verzoegerte Kurs der bessere."""
     jetzt = time.time()
     for t, q in quotes.items():
+        gross = t.upper()
+        if quelle != "finnhub_ws":
+            vorhanden = KURSE._store.get(gross)
+            if (vorhanden is not None and vorhanden.quelle == "finnhub_ws"
+                    and not KURSE.ist_stale(gross)):
+                continue      # frischer Tick schlaegt verzoegerten Tageskurs
         try:
             KURSE.setze(Kurswert(
-                ticker=t.upper(), preis=float(q.get("close") or 0.0),
+                ticker=gross, preis=float(q.get("close") or 0.0),
                 zeit=jetzt, volumen=float(q.get("volume") or 0.0),
                 quelle=quelle, vortagesschluss=q.get("prev_close")))
         except Exception:
