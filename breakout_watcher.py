@@ -46,19 +46,33 @@ except ImportError:
     sys.exit("Bitte installieren: pip install requests pandas openpyxl")
 
 import ntfy_verlauf   # merkt sich jede verschickte Meldung fuer den Freitags-Putz
+from config import CFG, pruefe_config
+
+pruefe_config()       # faengt widerspruechliche Schwellwerte sofort ab
 
 QUOTE_URL = "https://api.twelvedata.com/quote"
 STATE_FILE = Path("watcher_state.json")
 
 # Volumen-Faktor je Strategie (Vielfaches des Ø20-Tage-Volumens)
+# Alle Schwellwerte kommen seit 28.07.2026 aus config.py — der EINEN
+# Quelle der Wahrheit (Gerhards Aufraeumschritt 2). Vorher standen
+# dieselben Zahlen im Scanner UND im Waechter; liefen sie auseinander,
+# rechneten zwei Module unbemerkt verschieden.
+_VOL = CFG["volumen"]
 VOL_FAKTOR = {
-    "Darvas Box": 1.0,
-    "VCP": 1.4,
-    "Cup & Handle": 1.0,
-    "Rectangle Top": 1.0,
-    "High & Tight Flag": 1.0,
+    "Darvas Box": _VOL["breakout_faktor"],
+    "VCP": _VOL["breakout_faktor_vcp"],
+    "Cup & Handle": _VOL["breakout_faktor"],
+    "Rectangle Top": _VOL["breakout_faktor"],
+    "High & Tight Flag": _VOL["breakout_faktor"],
 }
-VOL_FAKTOR_FALLBACK = 1.0
+VOL_FAKTOR_FALLBACK = _VOL["breakout_faktor"]
+
+# Volumenfenster: EINHEITLICH 10 Tage (Gerhard, 28.07.2026). Der Waechter
+# verglich den Ausbruch bisher gegen den Ø20, waehrend Gap and Go schon
+# gegen Ø10 rechnete — genau die stille Uneinheitlichkeit, die config.py
+# beseitigt.
+VOL_FENSTER = _VOL["fenster_tage"]
 
 # In den Push-Meldungen werden Strategienamen ausgeschrieben (Mathias,
 # 23.07.2026). In Excel und VOL_FAKTOR bleibt die Kurzform bestehen.
@@ -76,17 +90,21 @@ def meldungskopf(ticker: str, firma: str) -> str:
 # Alle Kriterien sind PFLICHT; die Fassung ist bewusst streng ("Klasse statt
 # Masse"). Das Fruehvolumen-Kriterium ist laut Regelwerk NUR live pruefbar
 # und gehoert deshalb genau hierher in den Waechter, nicht in den Nachtscan.
-GAP_MIN = 0.07              # Eroeffnung >= 7 % ueber Vortagesschluss
-GAP_VOL_FAKTOR = 5.0        # Tagesvolumen >= 5x Ø10-Tage
+_GAP = CFG["gap_and_go"]
+GAP_MIN = _GAP["gap_min"]                    # Eroeffnung >= 7 % ueber Vortagesschluss
+GAP_VOL_FAKTOR = _VOL["gap_and_go_faktor"]   # Tagesvolumen >= 5x Ø10-Tage
 GAP_FRUEH_FAKTOR = 3.0      # erste halbe Stunde: >= 300 % des zeitueblichen
-GAP_SCHLUSS_POS = 0.80      # Schluss im oberen Fuenftel der Tagesspanne
-FLAT_BASE_MAX_SPANNE = 0.35 # "flach" = Spanne < 35 % (Startwert 30-40 %,
-                            # laut Regelwerk per Backtest zu justieren)
-FLAT_BASE_TAGE = (63, 126)  # 3-6 Monate vor dem Gap-Tag
-# Hinweis fuer Gerhard: Das Kapitel verlangt das 10-Tage-Volumenfenster und
-# nennt es "dasselbe wie beim Breakout-Waechter" — die Ausbruchsbestaetigung
-# rechnet aber laut Kapitel 1-6 mit Ø20. Hier gilt fuer Gap and Go die 10,
-# wie im Kriterium ausdruecklich gefordert; die Breakouts bleiben bei Ø20.
+GAP_SCHLUSS_POS = _GAP["schluss_position_min"]
+
+# FLAT BASE — Fassung A (Gerhard, 28.07.2026, verbindlich).
+# Vorher stand hier der aeltere Entwurf: 63-126 Tage Fenster, Spanne
+# < 35 %. Gerhard hat klargestellt, dass die spaeter recherchierte
+# O'Neil/IBD-Fassung gilt: mindestens 5 Wochen (rund 25 Handelstage),
+# hoechstens 15 % Tiefe, und der Kurs muss ueber MA10 UND MA21 liegen.
+# Der Filter ist damit deutlich strenger und kuerzer als zuvor.
+FLAT_BASE_TAGE = int(_GAP["flat_base_wochen"] * 5)   # 5 Wochen = 25 Handelstage
+FLAT_BASE_MAX_SPANNE = _GAP["flat_base_max_tiefe"]   # 15 %
+FLAT_BASE_MA = (10, CFG["ma"]["kurz"])               # MA10 und MA21
 
 
 # ---------------------------------------------------------------------------
@@ -337,14 +355,16 @@ def _lege_gleiche_preise_zusammen(items: list[dict]) -> list[dict]:
 # ---------------------------------------------------------------------------
 
 def fetch_quotes_yahoo(tickers: list[str]) -> dict:
-    """Holt Kurs, Tagesvolumen und Ø20-Volumen fuer ALLE Ticker in einem Abruf.
+    """Holt Kurs, Tagesvolumen und Durchschnittsvolumen fuer ALLE Ticker in
+    einem Abruf.
 
     Vorteil gegenueber Twelve Data: kein Minutenlimit, kein Tageslimit, und
     31 Aktien sind in rund drei Sekunden da statt in vier Minuten.
 
-    Das Ø20-Volumen wird hier SELBST aus den Tagesdaten berechnet. Bei Twelve
-    Data kam es als Feld 'average_volume', dessen Mittelungszeitraum nirgends
-    dokumentiert ist — das Regelwerk verlangt aber ausdruecklich 20 Tage."""
+    Der Volumenschnitt wird hier SELBST aus den Tagesdaten berechnet, ueber
+    VOL_FENSTER Tage aus config.py (seit 28.07.2026 einheitlich 10). Bei
+    Twelve Data kam er als Feld 'average_volume', dessen Mittelungszeitraum
+    nirgends dokumentiert ist — deshalb rechnen wir selbst."""
     try:
         import yfinance as yf
     except ImportError:
@@ -379,13 +399,13 @@ def fetch_quotes_yahoo(tickers: list[str]) -> dict:
             # Der Vergleich "heutiges Volumen gegen Ø20" braucht die 20
             # Tage DAVOR, sonst steckt der Messwert im Massstab.
             if len(df) >= 2:
-                vol20 = float(df["Volume"].iloc[:-1].tail(20).mean())
+                vol_schnitt = float(df["Volume"].iloc[:-1].tail(VOL_FENSTER).mean())
             else:
-                vol20 = 0.0  # brandneue Notierung: ehrlich als unbekannt melden
+                vol_schnitt = 0.0  # brandneue Notierung: ehrlich als unbekannt melden
             eintrag = {
                 "close": float(letzte["Close"]),
                 "volume": float(letzte["Volume"]),
-                "avg_volume": vol20,
+                "avg_volume": vol_schnitt,
                 "is_open": False,
                 "name": "",
                 # Von WELCHEM Handelstag stammt diese Zeile? Ohne diese
@@ -405,13 +425,29 @@ def fetch_quotes_yahoo(tickers: list[str]) -> dict:
                                      ("low", "Low")):
                     wert = letzte.get(spalte)
                     eintrag[feld] = None if pd.isna(wert) else float(wert)
-                fenster = vortage.tail(FLAT_BASE_TAGE[1])
-                if len(fenster) >= FLAT_BASE_TAGE[0]:
+                # FLAT BASE, Fassung A: die letzten 25 Handelstage (5 Wochen)
+                # vor dem Gap-Tag, Spanne hoechstens 15 %, und der Kurs muss
+                # ueber MA10 UND MA21 liegen (Gerhard, 28.07.2026).
+                fenster = vortage.tail(FLAT_BASE_TAGE)
+                if len(fenster) >= FLAT_BASE_TAGE:
                     tief = float(fenster["Low"].min())
                     if tief > 0:
                         spanne = (float(fenster["High"].max()) - tief) / tief
-                        eintrag["flat_base"] = spanne < FLAT_BASE_MAX_SPANNE
                         eintrag["base_spanne"] = spanne
+                        flach = spanne <= FLAT_BASE_MAX_SPANNE
+                        # Ueber den gleitenden Durchschnitten? Beide werden
+                        # OHNE den heutigen, unfertigen Tag gerechnet.
+                        ueber_ma = True
+                        for tage in FLAT_BASE_MA:
+                            if len(vortage) < tage:
+                                ueber_ma = False
+                                break
+                            ma = float(vortage["Close"].tail(tage).mean())
+                            if float(letzte["Close"]) <= ma:
+                                ueber_ma = False
+                                break
+                        eintrag["ueber_ma"] = ueber_ma
+                        eintrag["flat_base"] = bool(flach and ueber_ma)
             out[t] = eintrag
         except Exception:
             continue
@@ -573,7 +609,9 @@ def pruefe_gap_and_go(ticker: str, q: dict):
 
     1. Eroeffnung >= 7 % ueber Vortagesschluss
     2. Luecke verteidigt: Tagestief bleibt ueber dem Vortagesschluss
-    3. Flat Base in den 3-6 Monaten davor (Spanne < 35 %)
+    3. Flat Base davor, Fassung A (Gerhard, 28.07.2026): mindestens
+       5 Wochen (25 Handelstage), hoechstens 15 % Spanne, Kurs ueber
+       MA10 und MA21
     4. Volumen: in der ersten halben Stunde >= 300 % des zeitueblichen
        Werts (Fruehregel, laut Regelwerk NUR live pruefbar); danach
        hochgerechnetes Tagesvolumen >= 5x Ø10-Tage
