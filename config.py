@@ -77,24 +77,34 @@ CFG = {
         # "Subscribing to too many symbols". Die Grenze liegt also exakt bei
         # 50, nicht ungefähr. Tempo war reichlich: 8552 Ticks in 150
         # Sekunden, rund 3400 pro Minute über 50 Symbole.
-        # BEWUSST 40 STATT 50 (Mathias, 28.07.2026). Die harte Grenze liegt
-        # zwar exakt bei 50, aber 30 + 20 hätte sie punktgenau ausgefüllt —
-        # ohne jeden Puffer. Bei 40 bleiben zehn Plätze Luft: Der
-        # Listenwechsel kann nie an die Grenze stoßen, und ein hängen
-        # gebliebenes Abo (der Server vergisst Abmeldungen nicht immer
-        # sofort) kostet keinen echten Platz mehr.
+        # 40 STATT 50 — Mathias' Vorgabe vom 28.07.2026, als BEWUSSTE
+        # Reserve, NICHT als Fehlerbehebung. Die Unterscheidung ist wichtig,
+        # damit später niemand die Zahl mit einer Messung begründet, die es
+        # nicht gibt. Was tatsächlich gemessen wurde (grenztest.py, im
+        # laufenden Handel):
+        #   - Die harte Grenze liegt bei 51: Beim 52. Symbol antwortet der
+        #     Server "Subscribing to too many symbols".
+        #   - Bei GENAU 50 abonnierten Schwergewichten lieferten 49
+        #     Ticks. Der eine Ausfall (Lowe's) schwieg in der Nachprüfung
+        #     auch bei nur 6 Symbolen — also keine Grenzenwirkung.
+        #   - Der Listenwechsel an der Grenze (10 ab, 10 an) klappte
+        #     vollständig: 10 von 10 Neuen kamen an.
+        # Punktgenau an der Grenze zu fahren ginge also technisch. Die
+        # Reserve von zehn Plätzen ist eine Entscheidung für Sicherheits-
+        # abstand, keine Reparatur. Sie liegt damit zwischen Gerhards
+        # Vorgabe (30 am WebSocket, "genug Sicherheitsabstand", Übergabe
+        # vom 28.07.2026) und den 50, die beim Umbau daraus geworden waren,
+        # weil der Vorraum mangels bezahlbarer REST-Abrufe mit auf den
+        # Strom musste.
         #
-        # Der Zusammenhang zur Abdeckung: Nachgemessen am 28.07.2026 mit
-        # feedpruefung.py trägt der Gratis-Strom NICHT jede Aktie. Vodafone
-        # und Ovintiv wurden im Messfenster nachweislich gehandelt (23.351
-        # bzw. 45.219 Stück laut Yahoo) und kamen trotzdem mit null Ticks
-        # an, während Finnhubs eigener Kursabruf für beide einen frischen
-        # Preis lieferte. Solche Werte belegen einen Platz, ohne etwas zu
-        # liefern. Eine Regel, die sie nach 12 Minuten hinauswirft, wurde
-        # gebaut und wieder entfernt: Im normalen Handel ist das viel zu
-        # lange, um überhaupt zu helfen (Mathias, 28.07.2026). Der Puffer
-        # von zehn Plätzen federt den Verlust stattdessen ab. Wer stumm
-        # bleibt, steht weiter im Protokoll — gehandelt wird danach nicht.
+        # DAVON GETRENNT zu sehen sind die Abdeckungslücken: Der
+        # Gratis-Strom trägt nicht jede Aktie. Vodafone, Ovintiv und Lowe's
+        # wurden nachweislich gehandelt und kamen selbst bei fünf
+        # abonnierten Symbolen mit null Ticks an, während Finnhubs eigener
+        # Kursabruf frische Preise lieferte. Das hat mit der Symbolzahl
+        # nichts zu tun und lässt sich mit keiner Platzgrenze beheben.
+        # Betroffen war rund jeder zwanzigste bis zehnte Wert. Diese Werte
+        # laufen über Yahoo weiter und stehen im Protokoll.
         "websocket_max_werte": 40,
         "stufe2_takt_sek": 120,      # restlicher Vorraum: REST alle 2 Min
         "stufe3_takt_sek": 600,      # über 4 %: yfinance alle 10 Min
