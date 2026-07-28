@@ -26,6 +26,7 @@ on:
           - datenvergleich    # Yahoo gegen FMP prüfen (ändert nichts)
           - ntfyputz          # nur die ntfy-Meldungen löschen (nach Handelsschluss)
           - inventur          # NUR LESEN: Alarmbestand zählen und vergleichen
+          - websocketmessung  # Finnhub-WebSocket ausmessen (ändert nichts)
       alle_level:
         description: "Auch Fallback-Level alarmieren? (true/false)"
         required: false
@@ -126,6 +127,19 @@ jobs:
         env:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
         run: python ntfy_verlauf.py --putz "$NTFY_TOPIC"
+
+      # --- Finnhub-WebSocket ausmessen (reines Lesen) ---
+      # Belegt VOR dem Bau der Staffelung, was der Gratis-Zugang hergibt:
+      # kommen Trades an, wie viele Ticks, und vor allem wie viele Symbole
+      # gleichzeitig. Gerhards ~50 stehen nirgends in der Doku.
+      # Im Feld 'loeschen' laesst sich "Sekunden Symbolzahl" mitgeben.
+      - name: "Finnhub-WebSocket messen"
+        if: ${{ github.event.inputs.modus == 'websocketmessung' }}
+        env:
+          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
+        run: |
+          pip install websocket-client
+          python finnhub_messung.py ${{ github.event.inputs.loeschen || '150' }}
 
       # --- Inventur: reines Lesen, veraendert nichts ---
       # Mathias' Frage vom 27.07.2026: Loest TraderFox jeden Alarm nur
