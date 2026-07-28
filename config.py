@@ -71,7 +71,17 @@ CFG = {
         # restlichen ~20 bekommt der OBERE Vorraum — also die Werte knapp
         # über 2 %, die am ehesten gleich hochkommen. Damit gibt es an der
         # 2-%-Grenze keinen blinden Fleck, und alles bleibt gratis.
-        "websocket_max_werte": 50,   # nachzumessen, steht nirgends in der Doku
+        # NACHGEMESSEN am 28.07.2026 im laufenden Handel (finnhub_messung.py):
+        # 65 sehr liquide Werte abonniert, GENAU 50 lieferten Ticks, die
+        # übrigen 15 blieben stumm — und der Server sagte es ausdrücklich:
+        # "Subscribing to too many symbols". Die Grenze liegt also exakt bei
+        # 50, nicht ungefähr. Tempo war reichlich: 8552 Ticks in 150
+        # Sekunden, rund 3400 pro Minute über 50 Symbole.
+        # ACHTUNG: 30 + 20 füllt die 50 exakt aus, es bleibt KEIN Puffer.
+        # Deshalb meldet finnhub_ws.py beim Listenwechsel immer ZUERST ab
+        # und erst dann an — sonst wären die neuen Symbole kurzzeitig die
+        # 51., 52. … und würden abgewiesen.
+        "websocket_max_werte": 50,
         "stufe2_takt_sek": 120,      # restlicher Vorraum: REST alle 2 Min
         "stufe3_takt_sek": 600,      # über 4 %: yfinance alle 10 Min
     },
