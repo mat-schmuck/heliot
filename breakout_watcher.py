@@ -505,10 +505,20 @@ def fetch_quotes_yahoo(tickers: list[str]) -> dict:
                 vol_schnitt = float(df["Volume"].iloc[:-1].tail(VOL_FENSTER).mean())
             else:
                 vol_schnitt = 0.0  # brandneue Notierung: ehrlich als unbekannt melden
+            # IBDs Up/Down Volume Ratio ueber 50 Handelstage (recherchiert am
+            # 28.07.2026): Volumen an steigenden Tagen gegen Volumen an
+            # fallenden. Bei IBD das Mass fuer institutionelle Nachfrage,
+            # 1,5 gilt als stark. Kostet nichts — die Tagesdaten liegen
+            # ohnehin vor.
+            ohne_heute = df.iloc[:-1]
+            ud = volumen.up_down_verhaeltnis(
+                ohne_heute["Close"].tolist(), ohne_heute["Volume"].tolist(),
+                tage=VOL_FENSTER)
             eintrag = {
                 "close": float(letzte["Close"]),
                 "volume": float(letzte["Volume"]),
                 "avg_volume": vol_schnitt,
+                "ud_ratio": ud,
                 "is_open": False,
                 "name": "",
                 # Von WELCHEM Handelstag stammt diese Zeile? Ohne diese
@@ -658,6 +668,8 @@ def pruefe_breakout(item: dict, quote: dict) -> dict | None:
         "vol_ok": vol_ok,
         "vol_roh": vol,
         "vol_anteil": anteil,
+        "ud_ratio": quote.get("ud_ratio"),
+        "liq_hinweis": volumen.liquiditaet(kurs, avg)[1],
     }
 
 
@@ -843,6 +855,11 @@ def format_treffer(t: dict) -> str:
         f"Kaufpunkt {t['kaufpunkt']:.2f}, Kurs {t['kurs']:.2f} "
         f"(+{t['ueber_pct']:.1f}%); {vol_txt}",
     ]
+    # IBDs zwei Zusatzmasse, sofern sie etwas zu sagen haben (28.07.2026).
+    beiwerk = [x for x in (volumen.ud_text(t.get("ud_ratio")),
+                           t.get("liq_hinweis") or "") if x]
+    if beiwerk:
+        zeilen.append("; ".join(beiwerk))
     schluss = []
     if t["stop"] is not None:
         risiko = (t["kurs"] / t["stop"] - 1) * 100

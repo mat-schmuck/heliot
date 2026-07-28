@@ -304,6 +304,99 @@ def text(v_bisher, v50, minute=None):
 # Faktor 1,0 ausgeschrieben statt als Prozentzahl dargestellt, und die
 # Lage der Aktie in Worten statt mit Vorzeichen.
 
+# ---------------------------------------------------------------------------
+# WEITERE IBD-VOLUMENMASSE (recherchiert am 28.07.2026)
+# ---------------------------------------------------------------------------
+# IBDs eigene Seite (investors.com) ist fuer uns gesperrt. Belegt sind die
+# folgenden Regeln aber aus IBD-Artikeln, die Yahoo Finance und Nasdaq im
+# Original nachveroeffentlichen, sowie aus IBDs Bildungsbeitraegen.
+#
+# WAS IBD VEROEFFENTLICHT:
+#   * Massstab ist der 50-Tage-Durchschnitt des Tagesvolumens.
+#   * Ausbruch: "Trading should swell at least 40% above the stock's
+#     50-day average volume", besser 40 bis 50 Prozent darueber.
+#     Geschrieben wird das als "volume X% above average" — genau die
+#     Groesse, die volume_pct_change() liefert.
+#   * Up/Down Volume Ratio ueber 50 Handelstage: Summe des Volumens an
+#     steigenden Tagen geteilt durch die Summe an fallenden Tagen. 1,0 ist
+#     ausgeglichen, ueber 1,0 heisst Kaufdruck, 1,5 gilt als stark.
+#   * Liquiditaet: unter 400.000 Stueck am Tag (Ø50) gilt als
+#     duenn gehandelt; Dollar-Umsatz (Kurs mal Ø-Tagesvolumen) sollte
+#     mindestens 20 bis 25 Millionen betragen.
+#
+# WAS IBD NICHT VEROEFFENTLICHT:
+#   * Wie die Prozentzahl WAEHREND des Handelstages hochgerechnet wird.
+#     Dazu steht nur, die Plattform berechne sie fortlaufend. Keine
+#     Formel, nirgends. Die bekannteste Nachbildung (TradingView) rechnet
+#     LINEAR nach verstrichener Zeit hoch — das ist nachweislich schlecht:
+#     Um 9:35 waeren erst 1,3 Prozent des Tages verstrichen, tatsaechlich
+#     sind im Schnitt 7,5 Prozent des Volumens gehandelt (nachgemessen an
+#     245 Handelstagen). Eine voellig normale Aktie zeigte damit +480 %.
+#     Deshalb bleibt es bei unserer gemessenen Tageskurve.
+#   * Das Accumulation/Distribution Rating. IBD nennt es selbst
+#     ausdruecklich eine "proprietary formula" — es ist nicht
+#     nachbaubar, nur ratbar. Deshalb ist es hier NICHT eingebaut.
+
+
+def up_down_verhaeltnis(schluss, volumen_reihe, tage=50):
+    """IBDs Up/Down Volume Ratio ueber die letzten 'tage' Handelstage.
+
+    Summe des Volumens an Tagen mit steigendem Schluss, geteilt durch die
+    Summe an Tagen mit fallendem Schluss. Unveraenderte Tage zaehlen bei
+    IBD nicht mit, weil sie weder Kauf- noch Verkaufsdruck zeigen.
+
+    Liefert None, wenn zu wenig Historie da ist oder es gar keine
+    fallenden Tage gab (dann waere das Verhaeltnis unendlich, und eine
+    erfundene Zahl waere schlechter als ein ehrliches 'unbekannt')."""
+    try:
+        s = [float(x) for x in schluss]
+        v = [float(x) for x in volumen_reihe]
+    except (TypeError, ValueError):
+        return None
+    if len(s) != len(v) or len(s) < 3:
+        return None
+    hoch = runter = 0.0
+    for i in range(max(1, len(s) - tage), len(s)):
+        if s[i] > s[i - 1]:
+            hoch += v[i]
+        elif s[i] < s[i - 1]:
+            runter += v[i]
+    if runter <= 0:
+        return None
+    return hoch / runter
+
+
+def ud_text(verhaeltnis):
+    """IBDs Lesart in Worten: 1,0 ausgeglichen, ab 1,5 stark."""
+    if verhaeltnis is None:
+        return ""
+    if verhaeltnis >= 1.5:
+        urteil = "starker Kaufdruck"
+    elif verhaeltnis >= 1.0:
+        urteil = "mehr Kauf als Verkauf"
+    else:
+        urteil = "mehr Verkauf als Kauf"
+    return f"Auf- zu Abwärtsvolumen {verhaeltnis:.2f}, {urteil}"
+
+
+def liquiditaet(kurs, schnitt_volumen):
+    """IBDs Liquiditaetsuntergrenzen. Liefert (in_ordnung, Begruendung).
+
+    Unter 400.000 Stueck am Tag gilt eine Aktie bei IBD als duenn
+    gehandelt; der Dollar-Umsatz sollte mindestens 20 Millionen betragen.
+    Beides ist bei IBD eine WARNUNG, kein Ausschluss — deshalb wird hier
+    auch nichts verworfen, sondern nur gekennzeichnet."""
+    if not kurs or not schnitt_volumen:
+        return True, ""
+    hinweise = []
+    if schnitt_volumen < 400_000:
+        hinweise.append(f"dünn gehandelt, Ø{schnitt_volumen:,.0f} Stück")
+    umsatz = kurs * schnitt_volumen
+    if umsatz < 20_000_000:
+        hinweise.append(f"Tagesumsatz nur {umsatz/1e6:.0f} Mio Dollar")
+    return (not hinweise), "; ".join(hinweise)
+
+
 def huerde_text(faktor):
     """Was verlangt wird, in lesbarer Form."""
     if faktor <= 1.0:
@@ -399,5 +492,32 @@ if __name__ == "__main__":
     assert tagesanteil(390) == 1.0
     print(f"  Halbstundenkurve: nach 30 Minuten {tagesanteil(30)*100:.1f} %, "
           f"am Schluss {tagesanteil(390)*100:.0f} %  ✓")
+
+    print("\n" + "=" * 66)
+    print("TEST 8: IBDs Up/Down Volume Ratio")
+    print("=" * 66)
+    # Drei Auf-Tage mit viel Volumen, zwei Ab-Tage mit wenig.
+    kurse = [10, 11, 12, 11.5, 13, 12.5]
+    vols = [0, 300, 300, 100, 300, 100]
+    v = up_down_verhaeltnis(kurse, vols)
+    assert abs(v - 4.5) < 1e-9, f"erwartet 900/200 = 4,5, war {v}"
+    print(f"  900 Stück an Auf-Tagen, 200 an Ab-Tagen → {v:.2f}  ✓")
+    assert "starker Kaufdruck" in ud_text(v)
+    assert "mehr Verkauf" in ud_text(0.8)
+    print(f"  {ud_text(v)}")
+    print(f"  {ud_text(0.8)}")
+    # Ohne Ab-Tage gibt es kein Verhaeltnis — ehrlich None statt unendlich
+    assert up_down_verhaeltnis([10, 11, 12], [0, 100, 100]) is None
+    print("  ✓ Ohne fallende Tage: 'unbekannt' statt einer erfundenen Zahl")
+
+    print("\n" + "=" * 66)
+    print("TEST 9: IBDs Liquiditätsuntergrenzen")
+    print("=" * 66)
+    ok, grund = liquiditaet(60.0, 400_000)
+    assert ok, f"400.000 Stück mal 60 Dollar sind 24 Mio, das reicht: {grund}"
+    print("  Kurs 60, Ø 400.000 Stück → 24 Mio Umsatz, in Ordnung  ✓")
+    ok, grund = liquiditaet(5.0, 300_000)
+    assert not ok and "dünn" in grund and "Mio" in grund
+    print(f"  Kurs 5, Ø 300.000 Stück → {grund}  ✓")
 
     print("\nAlle Volumen-Tests bestanden (ohne Netzwerk).")
