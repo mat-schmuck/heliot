@@ -27,6 +27,7 @@ on:
           - ntfyputz          # nur die ntfy-Meldungen löschen (nach Handelsschluss)
           - inventur          # NUR LESEN: Alarmbestand zählen und vergleichen
           - websocketmessung  # Finnhub-WebSocket ausmessen (ändert nichts)
+          - staffeltest       # Wächter mit Live-Staffelung, OHNE zu senden
       alle_level:
         description: "Auch Fallback-Level alarmieren? (true/false)"
         required: false
@@ -127,6 +128,22 @@ jobs:
         env:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
         run: python ntfy_verlauf.py --putz "$NTFY_TOPIC"
+
+      # --- Waechter mit Live-Staffelung im Trockenlauf ---
+      # Prueft die fertige Verdrahtung am offenen Markt, OHNE zu senden und
+      # ohne den Zustand zu speichern. Bewusst in alarme.yml und nicht in
+      # watcher.yml: Dort haengt eine Sperre gegen gleichzeitige Laeufe, der
+      # Test wuerde sich hinter die laufende Dauerwache stellen.
+      - name: "Staffelung im Trockenlauf prüfen"
+        if: ${{ github.event.inputs.modus == 'staffeltest' }}
+        env:
+          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
+          TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
+        run: |
+          pip install websocket-client
+          cp kaufpunkte_aktuell.xlsx kaufpunkte.xlsx
+          python breakout_watcher.py kaufpunkte.xlsx --dry-run \
+            --dauerwache ${{ github.event.inputs.loeschen || '8' }}
 
       # --- Finnhub-WebSocket ausmessen (reines Lesen) ---
       # Belegt VOR dem Bau der Staffelung, was der Gratis-Zugang hergibt:

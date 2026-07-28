@@ -49,7 +49,9 @@ jobs:
           python-version: "3.12"
 
       - name: Abhängigkeiten
-        run: pip install requests pandas openpyxl yfinance
+        # websocket-client seit 28.07.2026: Der Waechter versorgt die
+        # Aktien nahe am Kaufpunkt tickweise ueber den Finnhub-WebSocket.
+        run: pip install requests pandas openpyxl yfinance websocket-client
 
       # EINE Wahrheit fuer Alarme UND Waechter: die im Repo eingecheckte
       # kaufpunkte_aktuell.xlsx (naechtlich vom Scanner aktualisiert, bei
@@ -73,6 +75,7 @@ jobs:
       - name: Breakouts prüfen
         env:
           TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
+          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
           NTFY_EMAIL: ${{ secrets.NTFY_EMAIL }}
         run: |

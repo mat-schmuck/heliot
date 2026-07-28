@@ -48,6 +48,8 @@ except ImportError:
 import ntfy_verlauf   # merkt sich jede verschickte Meldung fuer den Freitags-Putz
 from config import CFG, pruefe_config
 from kurs_cache import KursCache, Kurswert
+from staffelung import Staffelung, abstand_zum_kaufpunkt
+from finnhub_ws import FinnhubWebSocket
 
 pruefe_config()       # faengt widerspruechliche Schwellwerte sofort ab
 
@@ -61,6 +63,31 @@ KURSE = KursCache(
     stale_max_sekunden=CFG["betrieb"]["stale_max_sekunden"],
     stale_pro_quelle=CFG["betrieb"]["stale_pro_quelle"],
 )
+
+
+def ws_kurse_einblenden(quotes: dict) -> int:
+    """Ersetzt in den Yahoo-Quotes den Kurs durch den FRISCHEN Tick-Kurs,
+    wo der WebSocket einen hat. Liefert die Zahl der ersetzten Werte.
+
+    Nur der KURS wird ersetzt, nichts sonst. Volumen, Durchschnitte,
+    Vortagesschluss und die Tageswerte fuer Gap and Go stammen weiter aus
+    den Tagesdaten — ein einzelner Tick weiss davon nichts (siehe den
+    Warnhinweis in finnhub_ws.py).
+
+    'Frisch' entscheidet der Kursspeicher mit der Schwelle FUER DIESE
+    QUELLE: zwei Minuten. Haengt die Leitung, faellt der Wert automatisch
+    auf den Yahoo-Kurs zurueck, statt einzufrieren."""
+    ersetzt = 0
+    for t, q in quotes.items():
+        gross = t.upper()
+        wert = KURSE._store.get(gross)
+        if (wert is None or wert.quelle != "finnhub_ws"
+                or not wert.preis or KURSE.ist_stale(gross)):
+            continue
+        q["close"] = float(wert.preis)
+        q["kursquelle"] = "finnhub_ws"
+        ersetzt += 1
+    return ersetzt
 
 
 def merke_kurse(quotes: dict, quelle: str):
@@ -1017,6 +1044,38 @@ def main():
 
     gewuenscht = set(t.upper() for t in tickers)
 
+    # --- Live-Staffelung (Gerhards Teil 3) ------------------------------
+    # Die Zuteilung entsteht in jeder Runde neu aus den Abstaenden zum
+    # Kaufpunkt; die naechsten Werte wandern auf den WebSocket und werden
+    # ab da tickweise versorgt.
+    #
+    # BEWUSSTE ABWEICHUNG vom Papier: Dort sollte der restliche Vorraum
+    # alle zwei Minuten per REST nachgeladen werden. Das ist nicht
+    # gratis machbar — Twelve Data erlaubt 800 Abrufe pro TAG, Finnhub 60
+    # pro Minute, gebraucht wuerden rund 300 pro Minute (nachgerechnet am
+    # 28.07.2026). yfinance koennte die Menge, aber dreimal haeufiger
+    # abzufragen riskiert Drosselung. Der restliche Vorraum laeuft daher
+    # im bewaehrten Sechs-Minuten-Takt mit — er ist 2 bis 4 % vom
+    # Kaufpunkt entfernt, also nicht eilig. Die eiligen 50 haengen am
+    # WebSocket, und genau darauf kam es an.
+    staffel = Staffelung()
+    ws = FinnhubWebSocket(KURSE,
+                          max_symbole=CFG["staffelung"]["websocket_max_werte"])
+    ws_laeuft = ws.start()
+    if ws_laeuft:
+        print(f"Live-Staffelung aktiv: bis zu "
+              f"{CFG['staffelung']['stufe1_max_werte']} Werte tickweise, "
+              f"dazu der obere Vorraum bis zusammen "
+              f"{CFG['staffelung']['websocket_max_werte']}.")
+    else:
+        print("Live-Staffelung NICHT aktiv (kein Schlüssel oder keine "
+              "Verbindung) — alles läuft wie bisher über Yahoo.")
+
+    # Kaufpunkte je Aktie, fuer die Abstandsrechnung
+    kaufpunkte_je_aktie = {}
+    for i in items:
+        kaufpunkte_je_aktie.setdefault(i["ticker"].upper(), []).append(i["kaufpunkt"])
+
     # Gap and Go (Regelwerk Kapitel 7) beobachtet ALLE Aktien der Liste,
     # nicht nur die mit Muster-Kaufpunkten — eine Kursluecke nach einem
     # Katalysator kann jede treffen.
@@ -1117,6 +1176,38 @@ def main():
             print(f"⚠ {len(namen)} Aktien ohne heutige Kurszeile — "
                   f"übersprungen (keine Meldung auf veralteten Daten): "
                   + ", ".join(namen[:15]) + (" …" if len(namen) > 15 else ""))
+
+        # Tickkurse ueber die Tagesdaten legen — NUR der Kurs, nichts sonst.
+        if ws_laeuft:
+            ersetzt = ws_kurse_einblenden(quotes)
+            if ersetzt:
+                print(f"  {ersetzt} Kurse kommen tickfrisch vom WebSocket.")
+
+        # Zuteilung neu rechnen und die schnelle Liste nachfuehren.
+        if ws_laeuft:
+            abstaende = {}
+            for t, kps in kaufpunkte_je_aktie.items():
+                q = quotes.get(t)
+                if not q:
+                    continue
+                # Der KLEINSTE Abstand zaehlt: Hat eine Aktie mehrere
+                # Kaufpunkte, entscheidet der naechstgelegene ueber ihre
+                # Dringlichkeit.
+                naechster = min(
+                    (a for a in (abstand_zum_kaufpunkt(q["close"], kp) for kp in kps)
+                     if a is not None), default=None)
+                if naechster is not None:
+                    abstaende[t] = naechster
+            zuteilung = staffel.aktualisiere(abstaende)
+            ws.setze_symbole(zuteilung["websocket"])
+            print(f"  Staffelung: {len(zuteilung['stufe1'])} nah (≤2 %), "
+                  f"{len(zuteilung['stufe2'])} Vorraum, "
+                  f"{len(zuteilung['stufe3'])} langsam — "
+                  f"{len(zuteilung['websocket'])} am WebSocket.")
+            st = ws.statistik()
+            if not st["verbunden"]:
+                print("  ⚠ WebSocket getrennt — die betroffenen Werte laufen "
+                      "solange über Yahoo weiter.")
 
         # Haengt eine Quelle? Der Speicher weiss, wann jeder Kurs zuletzt
         # frisch war — je Quelle mit eigener Schwelle.
@@ -1236,12 +1327,19 @@ def main():
             break
         if datetime.now() >= ende_dauerwache:
             print("Dauerwache: Zeit abgelaufen — Ende.")
+            ws.stop()
             break
         offen, grund = markt_offen()
         if not offen:
             print(f"Dauerwache: Börse geschlossen ({grund}) — Ende.")
+            ws.stop()
             break
         time.sleep(360)
+
+    # Verbindung sauber schliessen. Wichtig, weil EIN Schluessel laut
+    # Finnhub-Doku nur EINE offene Verbindung erlaubt: Bliebe sie haengen,
+    # koennte die Schlussstunden-Wache sich nicht mehr verbinden.
+    ws.stop()
 
 
 if __name__ == "__main__":
