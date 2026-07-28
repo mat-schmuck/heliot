@@ -47,8 +47,33 @@ except ImportError:
 
 import ntfy_verlauf   # merkt sich jede verschickte Meldung fuer den Freitags-Putz
 from config import CFG, pruefe_config
+from kurs_cache import KursCache, Kurswert
 
 pruefe_config()       # faengt widerspruechliche Schwellwerte sofort ab
+
+# Gemeinsamer Kursspeicher (Gerhards Aufraeumschritt 3). Er haelt fest,
+# WOHER jeder Kurs stammt und WANN er geholt wurde — Grundlage fuer die
+# Erkennung haengender Quellen. Sein voller Nutzen kommt mit dem
+# Finnhub-WebSocket: Der schreibt seine Ticks in denselben Speicher, und
+# dann greift auch die strenge Zwei-Minuten-Schwelle.
+KURSE = KursCache(
+    ttl_sekunden=60,
+    stale_max_sekunden=CFG["betrieb"]["stale_max_sekunden"],
+    stale_pro_quelle=CFG["betrieb"]["stale_pro_quelle"],
+)
+
+
+def merke_kurse(quotes: dict, quelle: str):
+    """Legt die Kurse einer Runde im gemeinsamen Speicher ab."""
+    jetzt = time.time()
+    for t, q in quotes.items():
+        try:
+            KURSE._store[t.upper()] = Kurswert(
+                ticker=t.upper(), preis=float(q.get("close") or 0.0),
+                zeit=jetzt, volumen=float(q.get("volume") or 0.0),
+                quelle=quelle, vortagesschluss=q.get("prev_close"))
+        except Exception:
+            continue
 
 QUOTE_URL = "https://api.twelvedata.com/quote"
 STATE_FILE = Path("watcher_state.json")
@@ -1047,13 +1072,16 @@ def main():
 
         # Hauptquelle Yahoo (ein Abruf, kein Limit), Twelve Data als Rueckfall.
         quotes = fetch_quotes_yahoo(abruf_ticker)
+        merke_kurse(quotes, "yfinance")
         if len(quotes) < len(gewuenscht):
             fehlend_yahoo = sorted(gewuenscht - set(quotes))
             if quotes:
                 print(f"  Yahoo lieferte {len(quotes)} von {len(gewuenscht)} — "
                       f"hole {len(fehlend_yahoo)} über Twelve Data nach.")
             if api_key:
-                quotes.update(fetch_quotes(fehlend_yahoo, api_key))
+                nachgeholt = fetch_quotes(fehlend_yahoo, api_key)
+                merke_kurse(nachgeholt, "twelvedata")
+                quotes.update(nachgeholt)
             elif not quotes and ende_dauerwache is None:
                 sys.exit("Yahoo lieferte nichts und kein TWELVE_DATA_API_KEY gesetzt.")
 
@@ -1089,6 +1117,15 @@ def main():
             print(f"⚠ {len(namen)} Aktien ohne heutige Kurszeile — "
                   f"übersprungen (keine Meldung auf veralteten Daten): "
                   + ", ".join(namen[:15]) + (" …" if len(namen) > 15 else ""))
+
+        # Haengt eine Quelle? Der Speicher weiss, wann jeder Kurs zuletzt
+        # frisch war — je Quelle mit eigener Schwelle.
+        haengend = [t for t in KURSE.stale_liste() if t in gewuenscht]
+        if haengend:
+            print(f"⚠ {len(haengend)} Kurse gelten als hängend und werden NICHT "
+                  f"für Auslöser verwendet: " + ", ".join(sorted(haengend)[:15]))
+            for t in haengend:
+                quotes.pop(t, None)
 
         print(f"{len(gewuenscht & set(quotes))} von {len(gewuenscht)} "
               f"Kaufpunkt-Quotes erhalten ({len(quotes)} Aktien gesamt).")

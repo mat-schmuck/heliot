@@ -37,9 +37,16 @@ class Kurswert:
 class KursCache:
     """Thread-sicherer Kurs-Cache mit TTL und Stale-Erkennung."""
 
-    def __init__(self, ttl_sekunden=60, stale_max_sekunden=120):
+    def __init__(self, ttl_sekunden=60, stale_max_sekunden=120,
+                 stale_pro_quelle=None):
         self.ttl = ttl_sekunden               # so lange gilt ein Wert als "frisch genug"
-        self.stale_max = stale_max_sekunden   # älter → gilt als stale (Quelle hängt)
+        self.stale_max = stale_max_sekunden   # Rückfall für unbekannte Quellen
+        # Schwelle PRO QUELLE (Gerhard, 28.07.2026): Der WebSocket liefert
+        # tickweise — dort sind zwei Minuten Stille ein Alarmzeichen.
+        # yfinance liefert verzögert und wird nur alle sechs Minuten
+        # abgefragt; mit derselben Schwelle wäre dort ständig alles "stale"
+        # und keine einzige Meldung käme je durch.
+        self.stale_pro_quelle = dict(stale_pro_quelle or {})
         self._store: dict[str, Kurswert] = {}
         self._lock = threading.Lock()
         self.treffer = 0                      # Statistik: aus Cache bedient
@@ -95,6 +102,10 @@ class KursCache:
                         ergebnis[t.upper()] = wert
         return ergebnis
 
+    def schwelle_fuer(self, quelle):
+        """Wie alt darf ein Kurs DIESER Quelle werden?"""
+        return self.stale_pro_quelle.get(quelle or "", self.stale_max)
+
     def ist_stale(self, ticker):
         """True, wenn der Kurs zu alt ist (Quelle hängt) — dann NICHT für
         Trigger-Entscheidungen verwenden."""
@@ -102,14 +113,14 @@ class KursCache:
             v = self._store.get(ticker.upper())
         if v is None:
             return True
-        return v.alter_sekunden() > self.stale_max
+        return v.alter_sekunden() > self.schwelle_fuer(v.quelle)
 
     def stale_liste(self):
         """Alle Ticker, deren Kurs gerade als stale gilt (für den Health-Check)."""
         jetzt = time.time()
         with self._lock:
             return [t for t, v in self._store.items()
-                    if v.alter_sekunden(jetzt) > self.stale_max]
+                    if v.alter_sekunden(jetzt) > self.schwelle_fuer(v.quelle)]
 
     def statistik(self):
         gesamt = self.treffer + self.abrufe
@@ -157,5 +168,20 @@ if __name__ == "__main__":
     assert len(res) == 3
     res2 = cache.hole_batch(["MSFT", "NVDA", "AMD"], fake_batch)  # jetzt aus Cache
     print(f"✓ Batch-Abruf: 3 geholt, beim 2. Mal aus Cache. Statistik: {cache.statistik()}")
+
+    # 5) Schwelle PRO QUELLE (Gerhard, 28.07.2026)
+    c2 = KursCache(ttl_sekunden=1, stale_max_sekunden=120,
+                   stale_pro_quelle={"finnhub_ws": 2, "yfinance": 3600})
+    jetzt = time.time()
+    with c2._lock:
+        c2._store["TICK"] = Kurswert("TICK", 10.0, jetzt - 30, quelle="finnhub_ws")
+        c2._store["LANGSAM"] = Kurswert("LANGSAM", 10.0, jetzt - 30, quelle="yfinance")
+        c2._store["UNBEKANNT"] = Kurswert("UNBEKANNT", 10.0, jetzt - 30, quelle="")
+    assert c2.ist_stale("TICK"), "WebSocket: 30 s Stille müssen stale sein"
+    assert not c2.ist_stale("LANGSAM"), "yfinance: 30 s dürfen NICHT stale sein"
+    assert not c2.ist_stale("UNBEKANNT"), "unbekannte Quelle nutzt den Rückfallwert"
+    assert c2.stale_liste() == ["TICK"]
+    print("✓ Schwelle je Quelle: derselbe 30 s alte Kurs ist beim WebSocket "
+          "stale, bei yfinance frisch")
 
     print("\nAlle Cache-Tests bestanden.")

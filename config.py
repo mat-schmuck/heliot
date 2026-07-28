@@ -129,9 +129,26 @@ CFG = {
     # --- Betrieb ---
     "betrieb": {
         "zeitzone_boerse": "America/New_York",  # ALLES in Börsenzeit rechnen
-        "stale_max_sekunden": 120,   # Kurs älter als 2 Min → als "stale" behandeln
+        "stale_max_sekunden": 120,   # Rückfallwert für unbekannte Quellen
+        # Veraltungs-Schwelle PRO QUELLE (Gerhard, 28.07.2026). Eine
+        # einheitliche 2-Minuten-Grenze wäre falsch: Der WebSocket liefert
+        # tickweise — dort heißt zwei Minuten Stille wirklich "Leitung
+        # hängt". yfinance liefert verzögert und wird nur alle sechs
+        # Minuten abgefragt; mit 2 Minuten wäre dort STÄNDIG alles stale.
+        "stale_pro_quelle": {
+            "finnhub_ws": 120,       # tickweise: 2 Min Stille = Leitung hängt
+            "finnhub": 300,
+            "twelvedata": 600,
+            "yfinance": 1200,        # verzögert, 6-Minuten-Takt: 20 Minuten
+        },
         "min_historie_tage": 60,     # weniger Historie → Aktie überspringen
-        "actions_minuten_warnung": 1700,  # Warnung vor dem 2000er-Limit
+        # HINWEIS: Das 2000-Minuten-Limit gilt für PRIVATE Repos. heliot ist
+        # öffentlich, dort sind die Actions-Minuten unbegrenzt und kostenlos
+        # (nachgeprüft 27.07.2026). Die Warnung bleibt für den Fall, dass das
+        # Repo je auf privat gestellt wird. Die Grenze, die wirklich beißt,
+        # ist eine andere: Ein einzelner Auftrag darf höchstens 6 Stunden
+        # laufen — deshalb die Zweiteilung der Wache.
+        "actions_minuten_warnung": 1700,
     },
 }
 
