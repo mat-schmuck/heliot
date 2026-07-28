@@ -286,7 +286,50 @@ def load_watchlist(xlsx_path: str, nur_muster: bool) -> list[dict]:
                 "stop": None if pd.isna(stop) else float(stop),
                 "ziel": None if (ziel is None or pd.isna(ziel) or ziel == "") else float(ziel),
             })
-    return items
+    return _lege_gleiche_preise_zusammen(items)
+
+
+def _lege_gleiche_preise_zusammen(items: list[dict]) -> list[dict]:
+    """Erfuellt eine Aktie zwei Muster auf DEMSELBEN Kurs, ist das EIN
+    Kursereignis und darf nur EINE Meldung ergeben.
+
+    Gefunden im Fehlerdurchlauf am 28.07.2026 (Gerhards Pruefpunkt 4): In
+    der 265er-Liste hatten vier Aktien zwei Muster-Kaufpunkte auf exakt
+    demselben Preis — CareDx und Veracyte, Crinetics, Palo Alto, jeweils
+    'High & Tight Flag' zusammen mit 'Darvas Box' bzw. VCP mit Darvas. Der
+    Waechter haette beim Ueberschreiten zweimal gemeldet. TraderFox setzt
+    dort ohnehin nur einen Alarm (doppelte Preise werden erkannt) — durch
+    das Zusammenlegen laufen beide Systeme wieder gleich.
+
+    Zusammengelegt wird nur bei GLEICHEM Ticker UND gleichem Preis (auf den
+    Cent). Verschiedene Preise bleiben getrennt: das sind zwei echte
+    Ereignisse. Beim Volumen gilt der STRENGERE Faktor — wer VCP und Darvas
+    zugleich erfuellt, muss die VCP-Huerde nehmen."""
+    nach_schluessel: dict[tuple, dict] = {}
+    for it in items:
+        schluessel = (it["ticker"].upper(), round(it["kaufpunkt"], 2))
+        vorhanden = nach_schluessel.get(schluessel)
+        if vorhanden is None:
+            it = dict(it)
+            it["strategien"] = [it["strategie"]]
+            nach_schluessel[schluessel] = it
+            continue
+        if it["strategie"] not in vorhanden["strategien"]:
+            vorhanden["strategien"].append(it["strategie"])
+        # Strengere Volumenhuerde und die engere Absicherung gewinnen
+        if (VOL_FAKTOR.get(it["strategie"], VOL_FAKTOR_FALLBACK)
+                > VOL_FAKTOR.get(vorhanden["strategie"], VOL_FAKTOR_FALLBACK)):
+            vorhanden["strategie"] = it["strategie"]
+        if it.get("stop") is not None:
+            if vorhanden.get("stop") is None or it["stop"] > vorhanden["stop"]:
+                vorhanden["stop"] = it["stop"]
+
+    zusammen = list(nach_schluessel.values())
+    doppelte = len(items) - len(zusammen)
+    if doppelte:
+        print(f"  {doppelte} Kaufpunkt(e) auf gleichem Preis zusammengelegt — "
+              f"ein Kursereignis ergibt eine Meldung.")
+    return zusammen
 
 
 # ---------------------------------------------------------------------------
@@ -345,6 +388,10 @@ def fetch_quotes_yahoo(tickers: list[str]) -> dict:
                 "avg_volume": vol20,
                 "is_open": False,
                 "name": "",
+                # Von WELCHEM Handelstag stammt diese Zeile? Ohne diese
+                # Angabe kann der Waechter einen Feiertag nicht von einem
+                # Handelstag unterscheiden — siehe pruefe_handelstag().
+                "bar_datum": df.index[-1].date(),
             }
             # Zusatzfelder fuer Gap and Go (Regelwerk Kapitel 7). Die letzte
             # Zeile ist waehrend des Handels der HEUTIGE, unfertige Tag —
@@ -472,6 +519,45 @@ def pruefe_breakout(item: dict, quote: dict) -> dict | None:
     }
 
 
+def heute_ny():
+    """Heutiges Datum in New York — oder None ohne Zeitzone."""
+    try:
+        from zoneinfo import ZoneInfo
+        return datetime.now(ZoneInfo("America/New_York")).date()
+    except Exception:
+        return None
+
+
+def pruefe_handelstag(quotes: dict) -> tuple:
+    """Trennt Kurse mit HEUTIGER Tageszeile von veralteten.
+
+    Warum das sein muss (Fehlerdurchlauf 28.07.2026, Gerhards Pruefpunkt 3):
+    Der Waechter kannte keinen Boersenkalender. An einem US-Feiertag laeuft
+    er trotzdem von 15:30 bis 22:00 unserer Zeit — Yahoo liefert dann als
+    'letzte Zeile' den VORTAG. Der Waechter hielt dessen VOLLES Tagesvolumen
+    fuer den heutigen Zwischenstand und rechnete es zusaetzlich auf den
+    ganzen Tag hoch (vormittags Faktor 3 und mehr). Die Volumenbestaetigung
+    war damit an einem Feiertag praktisch immer erfuellt — aus einem frisch
+    berechneten Kaufpunkt konnte so eine falsche BESTAETIGTE Kaufmeldung
+    werden, an einem Tag ohne jeden Handel.
+
+    Statt eines Feiertagskalenders, den jemand pflegen muesste, fragen wir
+    die Daten selbst: Gibt es fuer heute eine Tageszeile? Das erschlaegt
+    Feiertage, unerwartete Boersenschliessungen UND haengende Kursquellen
+    mit einem Griff."""
+    heute = heute_ny()
+    if heute is None:
+        return quotes, {}
+    aktuell, veraltet = {}, {}
+    for t, q in quotes.items():
+        datum = q.get("bar_datum")
+        if datum is None or datum == heute:
+            aktuell[t] = q          # Twelve Data liefert Live-Kurse ohne Datum
+        else:
+            veraltet[t] = q
+    return aktuell, veraltet
+
+
 def ny_minuten():
     """Minuten seit Mitternacht New York — oder None ohne Zeitzone."""
     try:
@@ -592,7 +678,12 @@ def format_treffer(t: dict) -> str:
         # sonst IMMER selbst. "Selbst pruefen" hiess frueher missverstaendlich,
         # man muesse rechnen; gemeint ist: Signal ohne Volumenurteil.
         vol_txt = "Volumen nicht bewertbar, zu wenig Kurshistorie"
-    strategie = STRATEGIE_VOLL.get(t["strategie"], t["strategie"])
+    # Erfuellt die Aktie mehrere Muster auf DEMSELBEN Kaufpunkt, wurden sie
+    # zu einer Meldung zusammengelegt — dann werden auch beide genannt
+    # (Fehlerdurchlauf 28.07.2026). Beistrich innerhalb zusammengehoeriger
+    # Angaben, wie ueberall.
+    namen = t.get("strategien") or [t["strategie"]]
+    strategie = ", ".join(STRATEGIE_VOLL.get(n, n) for n in namen)
     zeilen = [
         f"{meldungskopf(t['ticker'], t.get('firma', ''))}; {strategie}",
         f"Kaufpunkt {t['kaufpunkt']:.2f}, Kurs {t['kurs']:.2f} "
@@ -927,6 +1018,27 @@ def main():
                 quotes.update(fetch_quotes(fehlend_yahoo, api_key))
             elif not quotes and ende_dauerwache is None:
                 sys.exit("Yahoo lieferte nichts und kein TWELVE_DATA_API_KEY gesetzt.")
+
+        # Stammen die Kurse ueberhaupt von HEUTE? An Feiertagen und bei
+        # haengenden Quellen liefert Yahoo die Zeile des Vortags — deren
+        # volles Tagesvolumen wuerde hochgerechnet fast jede
+        # Volumenbestaetigung erschleichen (Fehlerdurchlauf 28.07.2026).
+        quotes, veraltete_quotes = pruefe_handelstag(quotes)
+        if veraltete_quotes and not quotes:
+            datum = next(iter(veraltete_quotes.values())).get("bar_datum")
+            print(f"⛔ Kein Handelstag: Für heute gibt es keine einzige "
+                  f"Kurszeile (jüngste ist vom {datum}). Börsenfeiertag oder "
+                  f"Kursquelle hängt — es wird nichts geprüft und nichts "
+                  f"gemeldet.")
+            if ende_dauerwache is None:
+                sys.exit(0)
+            print("Wache beendet — an einem Tag ohne Handel gibt es nichts zu wachen.")
+            break
+        if veraltete_quotes:
+            namen = sorted(veraltete_quotes)
+            print(f"⚠ {len(namen)} Aktien ohne heutige Kurszeile — "
+                  f"übersprungen (keine Meldung auf veralteten Daten): "
+                  + ", ".join(namen[:15]) + (" …" if len(namen) > 15 else ""))
 
         print(f"{len(gewuenscht & set(quotes))} von {len(gewuenscht)} "
               f"Kaufpunkt-Quotes erhalten ({len(quotes)} Aktien gesamt).")
