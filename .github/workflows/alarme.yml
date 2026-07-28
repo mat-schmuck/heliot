@@ -28,6 +28,7 @@ on:
           - inventur          # NUR LESEN: Alarmbestand zählen und vergleichen
           - websocketmessung  # Finnhub-WebSocket ausmessen (ändert nichts)
           - staffeltest       # Wächter mit Live-Staffelung, OHNE zu senden
+          - liquiditaet       # Welche eurer Aktien sind echtzeit-tauglich?
       alle_level:
         description: "Auch Fallback-Level alarmieren? (true/false)"
         required: false
@@ -128,6 +129,17 @@ jobs:
         env:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
         run: python ntfy_verlauf.py --putz "$NTFY_TOPIC"
+
+      # --- Liquiditaet der eigenen Kandidaten messen ---
+      # Mathias' Frage: Welche Aktien sind gross genug, dass sich
+      # Echtzeit ueberhaupt lohnt? Wird gemessen, nicht geschaetzt.
+      - name: "Echtzeit-Tauglichkeit messen"
+        if: ${{ github.event.inputs.modus == 'liquiditaet' }}
+        env:
+          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
+        run: |
+          pip install websocket-client
+          python liquiditaet.py ${{ github.event.inputs.loeschen || '180' }}
 
       # --- Waechter mit Live-Staffelung im Trockenlauf ---
       # Prueft die fertige Verdrahtung am offenen Markt, OHNE zu senden und
