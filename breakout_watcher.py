@@ -1225,27 +1225,28 @@ def main():
                      if a is not None), default=None)
                 if naechster is not None:
                     abstaende[t] = naechster
-            # ZUERST die Stummen aussortieren, DANN neu zuteilen: Sonst
-            # wuerde der frei werdende Platz erst eine Runde spaeter
-            # nachbesetzt. Gemessen am 28.07.2026 (feedpruefung.py): Der
-            # Gratis-Strom traegt nicht jede Aktie — Vodafone und Ovintiv
-            # wurden nachweislich gehandelt und kamen mit null Ticks an.
-            # Ohne diese Regel blockierten sie ihren Platz den ganzen Tag.
-            grenze = CFG["staffelung"].get("stumm_nach_minuten", 12) * 60
-            neu_stumm = staffel.merke_stumm(ws.stumme(grenze))
-            if neu_stumm:
-                print(f"  {len(neu_stumm)} Werte liefern trotz Abo keinen "
-                      f"Tick und geben ihren Platz ab: "
-                      + ", ".join(neu_stumm[:12])
-                      + " — sie bleiben in ihrer Stufe und laufen über Yahoo.")
+            # Wer seit dem Abo keinen einzigen Tick geschickt hat, wird
+            # NUR MITGESCHRIEBEN, nicht abgemeldet. Nachgemessen am
+            # 28.07.2026 (feedpruefung.py): Der Gratis-Strom traegt nicht
+            # jede Aktie — Vodafone und Ovintiv wurden nachweislich
+            # gehandelt und kamen mit null Ticks an. Die Regel, sie
+            # hinauszuwerfen, ist auf Mathias' Ansage wieder entfernt
+            # worden (im normalen Handel ist die noetige Frist zu lang);
+            # abgefedert wird das jetzt durch den Puffer von zehn freien
+            # Plaetzen. Die Zahl bleibt trotzdem im Protokoll — sie ist die
+            # Grundlage fuer die naechste Entscheidung.
+            ohne = ws.ohne_tick(360)          # eine volle Runde abonniert
             zuteilung = staffel.aktualisiere(abstaende)
             ws.setze_symbole(zuteilung["websocket"])
             print(f"  Staffelung: {len(zuteilung['stufe1'])} nah (≤2 %), "
                   f"{len(zuteilung['stufe2'])} Vorraum, "
                   f"{len(zuteilung['stufe3'])} langsam — "
-                  f"{len(zuteilung['websocket'])} am WebSocket"
-                  + (f", {len(zuteilung['stumm'])} stumm"
-                     if zuteilung["stumm"] else "") + ".")
+                  f"{len(zuteilung['websocket'])} am WebSocket.")
+            if ohne:
+                print(f"  Hinweis: {len(ohne)} abonnierte Werte haben noch "
+                      f"keinen einzigen Tick geliefert (sie laufen über "
+                      f"Yahoo weiter): " + ", ".join(ohne[:12])
+                      + (" …" if len(ohne) > 12 else ""))
             st = ws.statistik()
             if not st["verbunden"]:
                 print("  ⚠ WebSocket getrennt — die betroffenen Werte laufen "

@@ -77,25 +77,25 @@ CFG = {
         # "Subscribing to too many symbols". Die Grenze liegt also exakt bei
         # 50, nicht ungefähr. Tempo war reichlich: 8552 Ticks in 150
         # Sekunden, rund 3400 pro Minute über 50 Symbole.
-        # ACHTUNG: 30 + 20 füllt die 50 exakt aus, es bleibt KEIN Puffer.
-        # Deshalb meldet finnhub_ws.py beim Listenwechsel immer ZUERST ab
-        # und erst dann an — sonst wären die neuen Symbole kurzzeitig die
-        # 51., 52. … und würden abgewiesen.
-        "websocket_max_werte": 50,
-        # STUMME WERTE GEBEN IHREN PLATZ AB (nachgemessen 28.07.2026 mit
-        # feedpruefung.py). Der Gratis-Strom deckt NICHT jede Aktie ab:
-        # Vodafone und Ovintiv wurden im Messfenster nachweislich gehandelt
-        # (23.351 bzw. 45.219 Stück laut Yahoo), kamen im Strom aber mit
-        # null Ticks an — während Finnhubs eigener Kursabruf für beide einen
-        # frischen Preis lieferte. Die Daten sind also da, nur nicht im
-        # Strom. Ein solcher Wert würde seinen Platz für immer blockieren.
-        # Die Regel muss die Ursache gar nicht kennen: Wer über zwei volle
-        # Runden (2 × 6 Minuten) keinen einzigen Tick schickt, ist am
-        # WebSocket wertlos — yfinance liefert ihm ohnehin alle 6 Minuten
-        # einen Kurs. Er fliegt raus, sein Platz geht an den nächsten
-        # Anwärter. Bei Börsenöffnung wird die Liste geleert, damit sich
-        # nichts über Nacht festfrisst.
-        "stumm_nach_minuten": 12,
+        # BEWUSST 40 STATT 50 (Mathias, 28.07.2026). Die harte Grenze liegt
+        # zwar exakt bei 50, aber 30 + 20 hätte sie punktgenau ausgefüllt —
+        # ohne jeden Puffer. Bei 40 bleiben zehn Plätze Luft: Der
+        # Listenwechsel kann nie an die Grenze stoßen, und ein hängen
+        # gebliebenes Abo (der Server vergisst Abmeldungen nicht immer
+        # sofort) kostet keinen echten Platz mehr.
+        #
+        # Der Zusammenhang zur Abdeckung: Nachgemessen am 28.07.2026 mit
+        # feedpruefung.py trägt der Gratis-Strom NICHT jede Aktie. Vodafone
+        # und Ovintiv wurden im Messfenster nachweislich gehandelt (23.351
+        # bzw. 45.219 Stück laut Yahoo) und kamen trotzdem mit null Ticks
+        # an, während Finnhubs eigener Kursabruf für beide einen frischen
+        # Preis lieferte. Solche Werte belegen einen Platz, ohne etwas zu
+        # liefern. Eine Regel, die sie nach 12 Minuten hinauswirft, wurde
+        # gebaut und wieder entfernt: Im normalen Handel ist das viel zu
+        # lange, um überhaupt zu helfen (Mathias, 28.07.2026). Der Puffer
+        # von zehn Plätzen federt den Verlust stattdessen ab. Wer stumm
+        # bleibt, steht weiter im Protokoll — gehandelt wird danach nicht.
+        "websocket_max_werte": 40,
         "stufe2_takt_sek": 120,      # restlicher Vorraum: REST alle 2 Min
         "stufe3_takt_sek": 600,      # über 4 %: yfinance alle 10 Min
     },
@@ -247,7 +247,12 @@ def pruefe_config():
     assert s["stufe1_max_pct"] < s["stufe2_max_pct"], \
         "Stufe 1 muss näher am Trigger liegen als Stufe 2"
     assert s["stufe1_max_werte"] <= 50, \
-        "Finnhub-Gratis-WebSocket verträgt ~50 Symbole — Stufe 1 darf das nicht sprengen"
+        "Finnhub-Gratis-WebSocket verträgt exakt 50 Symbole — Stufe 1 darf das nicht sprengen"
+    assert s["stufe1_max_werte"] <= s["websocket_max_werte"], \
+        ("Stufe 1 passt nicht in die WebSocket-Liste — die überzähligen Werte "
+         "würden stillschweigend gekappt, ausgerechnet die nächsten am Kaufpunkt")
+    assert s["websocket_max_werte"] <= 50, \
+        "über 50 Symbole weist Finnhub ab ('Subscribing to too many symbols')"
     assert abs(sum(CFG["lookback"]["rs_gewichte"]) - 1.0) < 1e-9, \
         "RS-Gewichte müssen in Summe 1,0 ergeben"
     assert len(CFG["lookback"]["rs_quartale"]) == len(CFG["lookback"]["rs_gewichte"]), \

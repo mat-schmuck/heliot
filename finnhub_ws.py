@@ -240,26 +240,26 @@ class FinnhubWebSocket:
         with self._lock:
             return sorted(self._aktiv)
 
-    def stumme(self, grenze_sekunden):
-        """Welche abonnierten Symbole schweigen laenger als erlaubt?
+    def ohne_tick(self, mindestens_sekunden):
+        """NUR ZUM MITSCHREIBEN: Welche abonnierten Symbole haben seit dem
+        Abo keinen EINZIGEN Tick geliefert?
 
-        Nachgemessen am 28.07.2026 (feedpruefung.py): Der Gratis-Strom
-        traegt nicht jede Aktie. Vodafone und Ovintiv wurden im Messfenster
-        nachweislich gehandelt und kamen trotzdem mit null Ticks an. Solche
-        Werte wuerden ihren Platz dauerhaft blockieren.
+        Das Ergebnis wird bewusst NICHT verwertet — es wandert allein ins
+        Protokoll. Eine Regel, die solche Werte hinauswirft und ihren Platz
+        neu vergibt, war am 28.07.2026 kurz gebaut und wurde auf Mathias'
+        Ansage wieder entfernt: Die dafuer noetige Wartefrist ist im
+        normalen Handel viel zu lang, um zu helfen. Stattdessen bleiben
+        zehn der 50 Plaetze frei (config: websocket_max_werte = 40).
 
-        Gesucht ist ABDECKUNG, nicht Lebhaftigkeit: Stumm heisst hier, dass
-        seit dem Abo KEIN EINZIGER Tick kam. Wer auch nur einen geschickt
-        hat, ist nachweislich im Strom enthalten und behaelt seinen Platz,
-        auch wenn er langsam handelt. Die schaerfere Lesart ("laenger als X
-        nichts mehr") wuerde in der Mittagsflaute lebendige Werte
-        hinauswerfen, und zurueck kaemen sie nie — abgemeldet kann kein Tick
-        mehr eintreffen, der sie rehabilitiert.
+        Warum es trotzdem gemessen wird: Nachgemessen mit feedpruefung.py
+        traegt der Gratis-Strom nicht jede Aktie — Vodafone und Ovintiv
+        wurden nachweislich gehandelt und kamen mit null Ticks an. Wie oft
+        das vorkommt, ist die Grundlage fuer die naechste Entscheidung, und
+        die Zahl kostet nichts.
 
         Gezaehlt wird ab dem ABO, nicht ab Programmstart, und nur solange
-        die Verbindung wirklich steht. Nach einem Abriss waere sonst
-        schlagartig die halbe Liste 'stumm', obwohl nur die Leitung weg
-        war."""
+        die Verbindung steht. Nach einem Abriss waere sonst schlagartig die
+        halbe Liste auffaellig, obwohl nur die Leitung weg war."""
         if not self.verbunden:
             return []
         jetzt = time.time()
@@ -269,7 +269,7 @@ class FinnhubWebSocket:
         stumm = []
         for s in symbole:
             start = seit.get(s)
-            if start is None or jetzt - start < grenze_sekunden:
+            if start is None or jetzt - start < mindestens_sekunden:
                 continue
             letzter = self._tick_je.get(s)
             if letzter is None or letzter < start:
@@ -324,24 +324,24 @@ if __name__ == "__main__":
     assert ws.fehler and "Testfehler" in ws.fehler[-1]
     print("✓ Serverfehler werden festgehalten")
 
-    # Stumme Werte erkennen — der Fall Vodafone/Ovintiv vom 28.07.2026.
-    # Ohne stehende Verbindung darf NIEMAND als stumm gelten (sonst wäre
-    # nach jedem Leitungsabriss die halbe Liste weg).
+    # Tickfreie Werte fürs Protokoll erkennen — der Fall Vodafone/Ovintiv
+    # vom 28.07.2026. Ohne stehende Verbindung darf NIEMAND auffallen
+    # (sonst wäre nach jedem Leitungsabriss die halbe Liste verdächtig).
     ws2 = FinnhubWebSocket(cache, max_symbole=5, schluessel="nur-test", leise=True)
     ws2.setze_symbole(["LAUT", "STUMM"])
     ws2._abo_seit = {"LAUT": time.time() - 3600, "STUMM": time.time() - 3600}
-    assert ws2.stumme(60) == [], "ohne Verbindung darf nichts als stumm gelten"
+    assert ws2.ohne_tick(60) == [], "ohne Verbindung darf nichts auffallen"
     ws2.verbunden = True
-    assert ws2.stumme(60) == ["LAUT", "STUMM"]
+    assert ws2.ohne_tick(60) == ["LAUT", "STUMM"]
     ws2._bei_nachricht(None, json.dumps(
         {"type": "trade", "data": [{"s": "LAUT", "p": 10.0, "v": 5}]}))
-    assert ws2.stumme(60) == ["STUMM"], \
-        "wer einen Tick geschickt hat, ist im Strom enthalten und bleibt"
-    print("✓ Stumme erkannt: ein einziger Tick genügt als Nachweis der Abdeckung")
+    assert ws2.ohne_tick(60) == ["STUMM"], \
+        "ein einziger Tick belegt, dass der Strom die Aktie trägt"
+    print("✓ Tickfreie Werte erkannt: ein Tick genügt als Nachweis der Abdeckung")
 
     # Frisch abonniert heißt: noch keine Gelegenheit gehabt.
     ws2.setze_symbole(["LAUT", "STUMM", "NEU"])
-    assert "NEU" not in ws2.stumme(60), "frische Abos brauchen erst ihre Frist"
-    print("✓ Frisch abonnierte Werte werden nicht vorschnell verurteilt")
+    assert "NEU" not in ws2.ohne_tick(60), "frische Abos brauchen erst ihre Frist"
+    print("✓ Frisch abonnierte Werte werden nicht vorschnell gezählt")
     print(f"\nStatistik: {ws.statistik()}")
     print("\nAlle WebSocket-Tests bestanden (ohne Netzwerk).")
