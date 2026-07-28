@@ -62,8 +62,18 @@ CFG = {
         "stufe2_max_pct": 0.04,      # 2–4 % → Vorraum (REST-Batch)
         "stufe2_raus_pct": 0.045,    # Hysterese Vorraum → langsam
         "stufe2_max_werte": 100,
-        "stufe2_takt_sek": 20,       # Vorraum alle 15–30 s
-        "stufe3_takt_sek": 120,      # über 4 % → alle 2 Min (yfinance)
+        # Gerhards überarbeitete Aufteilung vom 28.07.2026. Der erste
+        # Entwurf (100 Werte alle 20 s per REST) sprengt jeden Gratis-Tarif
+        # um Größenordnungen — Twelve Data erlaubt 800 Abrufe pro TAG,
+        # Finnhub 60 pro Minute, gebraucht würden 300 pro Minute. Statt
+        # dessen werden die freien WebSocket-Plätze ausgenutzt: Der Zugang
+        # trägt rund 50 Symbole, die schnelle Liste belegt 30, die
+        # restlichen ~20 bekommt der OBERE Vorraum — also die Werte knapp
+        # über 2 %, die am ehesten gleich hochkommen. Damit gibt es an der
+        # 2-%-Grenze keinen blinden Fleck, und alles bleibt gratis.
+        "websocket_max_werte": 50,   # nachzumessen, steht nirgends in der Doku
+        "stufe2_takt_sek": 120,      # restlicher Vorraum: REST alle 2 Min
+        "stufe3_takt_sek": 600,      # über 4 %: yfinance alle 10 Min
     },
 
     # --- Strategie-Schwellen ---
