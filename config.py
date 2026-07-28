@@ -179,6 +179,29 @@ _aus_env()
 # Selbstprüfung: fängt Widersprüche in der Config ab
 # ---------------------------------------------------------------------------
 
+def letzter_putz_tag():
+    """ISO-Datum des jüngsten Freitags-Putzes (Freitag 16:02 New York),
+    der bereits VORBEI ist. Steht der heutige Putz noch aus, zählt der
+    der Vorwoche.
+
+    Das ist die WOCHENGRENZE des ganzen Systems: Alarme, Melde-Gedächtnis
+    des Wächters und das Gesetzt-Gedächtnis des Bots gelten jeweils bis
+    hierher. Die Berechnung stand vorher dreimal im Code — genau die Art
+    stiller Uneinheitlichkeit, die config.py beseitigen soll."""
+    from datetime import datetime, timedelta
+    try:
+        from zoneinfo import ZoneInfo
+        jetzt = datetime.now(ZoneInfo(CFG["betrieb"]["zeitzone_boerse"]))
+    except Exception:
+        jetzt = datetime.now()
+    d = jetzt.date()
+    rueck = (d.weekday() - 4) % 7          # Montag=0 … Freitag=4
+    freitag = d - timedelta(days=rueck)
+    if rueck == 0 and jetzt.hour * 60 + jetzt.minute < 16 * 60 + 2:
+        freitag -= timedelta(days=7)
+    return freitag.isoformat()
+
+
 def pruefe_config():
     """Wirft AssertionError bei unplausiblen/widersprüchlichen Werten.
     Beim Start jedes Moduls einmal aufrufen — fängt Tippfehler früh."""

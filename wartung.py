@@ -22,8 +22,10 @@ Zwei Aufräum-Aufgaben in einem Modul:
 import json
 import os
 import time
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
+
+from config import CFG, letzter_putz_tag
 
 ZUSTANDSDATEIEN = ["fortschritt.json", "radar_state.json", "watcher_state.json"]
 
@@ -32,9 +34,31 @@ ZUSTANDSDATEIEN = ["fortschritt.json", "radar_state.json", "watcher_state.json"]
 # 1) Zustands-Aufräumer
 # ---------------------------------------------------------------------------
 
-def raeume_zustaende(basis=".", heute=None):
-    """Setzt Zustandsdateien zurück, deren 'tag' nicht der heutige ist.
-    Gibt einen Bericht zurück, was passiert ist."""
+def raeume_zustaende(basis=".", grenze=None, heute=None):
+    """Setzt Zustandsdateien zurück, die ÄLTER sind als der letzte
+    Freitags-Putz. Gibt einen Bericht zurück, was passiert ist.
+
+    ACHTUNG — hier lagen ZWEI Fehler im ausgelieferten Modul, beide am
+    28.07.2026 gefunden und von Gerhard zur Korrektur freigegeben:
+
+    1. FALSCHER TAKT. Ursprünglich wurde jede Datei zurückgesetzt, deren
+       'tag' nicht der heutige war, also TÄGLICH. Für dieses System ist
+       das falsch und richtet echten Schaden an:
+         * fortschritt.json führt die gesetzten TraderFox-Alarme. Täglich
+           geleert, hielte der Bot jeden Morgen alles für unerledigt und
+           setzte sämtliche Alarme neu — auch die bereits ausgelösten.
+           Genau dieser Doppelsignal-Fehler ist am 27.07. passiert.
+         * watcher_state.json führt, was diese WOCHE gemeldet wurde.
+           Täglich geleert, meldete jede Aktie jeden Tag erneut — das
+           'wilde Durcheinander', das ausdrücklich abgestellt wurde.
+       Der Takt ist deshalb WÖCHENTLICH, passend zum Freitags-Putz.
+
+    2. FALSCHER FELDNAME UND BAUART. Zurückgeschrieben wurde immer
+       {'tag':…, 'gemeldet': []}. fortschritt.json heißt sein Feld aber
+       'erledigt', und beim Wächter ist 'gemeldet' ein Verzeichnis, keine
+       Liste. Beides wurde stillschweigend umgeschrieben. Jetzt bleiben
+       Feldname und Bauart erhalten."""
+    grenze = grenze or letzter_putz_tag()
     heute = heute or date.today().isoformat()
     bericht = []
     for name in ZUSTANDSDATEIEN:
@@ -45,18 +69,32 @@ def raeume_zustaende(basis=".", heute=None):
         try:
             data = json.loads(pfad.read_text())
         except Exception as e:
-            bericht.append(f"{name}: unlesbar ({e}) — wird neu angelegt")
-            pfad.write_text(json.dumps({"tag": heute, "gemeldet": []}, indent=2))
+            # NICHT überschreiben: Eine unlesbare Datei kann das Ergebnis
+            # eines abgebrochenen Schreibvorgangs sein — dann ist der Inhalt
+            # womöglich noch zu retten. Lieber melden als vernichten.
+            bericht.append(f"{name}: unlesbar ({e}) — bleibt unangetastet")
+            continue
+        if not isinstance(data, dict):
+            bericht.append(f"{name}: unerwarteter Aufbau — bleibt unangetastet")
             continue
 
-        if data.get("tag") != heute:
-            alt = data.get("tag", "unbekannt")
-            n_alt = len(data.get("gemeldet", data.get("erledigt", [])))
-            pfad.write_text(json.dumps({"tag": heute, "gemeldet": []}, indent=2))
-            bericht.append(f"{name}: zurückgesetzt (war vom {alt}, {n_alt} alte Einträge entfernt)")
-        else:
-            n = len(data.get("gemeldet", data.get("erledigt", [])))
-            bericht.append(f"{name}: aktuell ({n} Einträge von heute, bleibt)")
+        # Welches Feld führt die Einträge, und ist es Liste oder Verzeichnis?
+        feld = "erledigt" if "erledigt" in data else "gemeldet"
+        inhalt = data.get(feld)
+        anzahl = len(inhalt) if isinstance(inhalt, (list, dict)) else 0
+        tag = str(data.get("tag", ""))
+
+        if tag and tag >= grenze:
+            bericht.append(f"{name}: aktuell ({anzahl} Einträge seit dem "
+                           f"Putz vom {grenze}, bleibt)")
+            continue
+
+        data["tag"] = heute
+        data[feld] = {} if isinstance(inhalt, dict) else []
+        pfad.write_text(json.dumps(data, indent=2))
+        bericht.append(f"{name}: zurückgesetzt (war vom {tag or 'unbekannt'}, "
+                       f"älter als der Putz vom {grenze}; {anzahl} alte "
+                       f"Einträge entfernt, Feld '{feld}' erhalten)")
     return bericht
 
 
@@ -141,21 +179,49 @@ if __name__ == "__main__":
     import tempfile, shutil
     tmp = tempfile.mkdtemp()
 
-    # Zustands-Aufräumer testen
+    # --- Zustands-Aufräumer: WÖCHENTLICH, nicht täglich -----------------
+    grenze = letzter_putz_tag()
+    vorwoche = (date.fromisoformat(grenze) - timedelta(days=3)).isoformat()
+    seit_putz = (date.fromisoformat(grenze) + timedelta(days=1)).isoformat()
+
+    # Steinalt -> muss weg
     (Path(tmp) / "radar_state.json").write_text(json.dumps(
-        {"tag": "2020-01-01", "gemeldet": ["A|+", "B|-", "C|+"]}))
+        {"tag": vorwoche, "gemeldet": ["A|+", "B|-", "C|+"]}))
+    # Aus DIESER Woche, aber NICHT von heute -> muss BLEIBEN. Genau hier lag
+    # der Fehler: taeglich waere das geleert worden.
+    (Path(tmp) / "fortschritt.json").write_text(json.dumps(
+        {"tag": seit_putz, "erledigt": ["AAPL|1|100.00", "MSFT|1|400.00"]}))
+    # Waechter fuehrt ein VERZEICHNIS, keine Liste -> Bauart muss bleiben
     (Path(tmp) / "watcher_state.json").write_text(json.dumps(
-        {"tag": date.today().isoformat(), "gemeldet": ["X|1|100"]}))
+        {"tag": vorwoche, "gemeldet": {"X|1": vorwoche, "Y|2": vorwoche}}))
+
     bericht = raeume_zustaende(basis=tmp)
-    print("Zustands-Aufräumer:")
+    print(f"Zustands-Aufräumer (Wochengrenze: Putz vom {grenze}):")
     for z in bericht:
         print("  " + z)
-    # radar (alt) muss zurückgesetzt sein, watcher (heute) muss bleiben
+
     radar = json.loads((Path(tmp) / "radar_state.json").read_text())
+    fortschritt = json.loads((Path(tmp) / "fortschritt.json").read_text())
     watcher = json.loads((Path(tmp) / "watcher_state.json").read_text())
-    assert radar["gemeldet"] == [] and radar["tag"] == date.today().isoformat()
-    assert watcher["gemeldet"] == ["X|1|100"]
-    print("  ✓ Alter Zustand zurückgesetzt, heutiger bleibt erhalten")
+
+    assert radar["gemeldet"] == [], "steinalter Zustand muss geleert werden"
+    assert fortschritt["erledigt"] == ["AAPL|1|100.00", "MSFT|1|400.00"], \
+        "Eintrag aus DIESER Woche darf NICHT geleert werden (der alte Tagestakt)"
+    assert "erledigt" in fortschritt and "gemeldet" not in fortschritt, \
+        "Feldname 'erledigt' muss erhalten bleiben"
+    assert watcher["gemeldet"] == {}, "alter Wächterzustand muss geleert werden"
+    assert isinstance(watcher["gemeldet"], dict), \
+        "Verzeichnis darf nicht zur Liste werden"
+    print("  ✓ Nur ÄLTER als der Freitags-Putz wird geleert")
+    print("  ✓ Gesetzte Alarme dieser Woche bleiben stehen (Doppelsignal-Fehler behoben)")
+    print("  ✓ Feldname 'erledigt' und Bauart Verzeichnis bleiben erhalten")
+
+    # Unlesbare Datei darf NICHT vernichtet werden
+    (Path(tmp) / "radar_state.json").write_text("{kaputt")
+    raeume_zustaende(basis=tmp)
+    assert (Path(tmp) / "radar_state.json").read_text() == "{kaputt", \
+        "unlesbare Datei muss unangetastet bleiben"
+    print("  ✓ Unlesbare Datei bleibt unangetastet, statt überschrieben zu werden")
 
     # Gesundheits-Check testen — Normalfall
     checks = baue_standard_checks(
