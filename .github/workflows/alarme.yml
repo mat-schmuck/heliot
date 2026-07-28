@@ -31,6 +31,7 @@ on:
           - liquiditaet       # Welche eurer Aktien sind echtzeit-tauglich?
           - feedpruefung      # Deckt der Gratis-Strom alle Aktien ab?
           - grenztest        # Grenze oder Abdeckung: zwei Dinge oder eines?
+          - yahoostrom       # Trägt Yahoos eigener Live-Strom die ganze Liste?
       alle_level:
         description: "Auch Fallback-Level alarmieren? (true/false)"
         required: false
@@ -186,6 +187,17 @@ jobs:
         run: |
           pip install websocket-client
           python feedpruefung.py ${{ github.event.inputs.loeschen || '300' }}
+
+      # --- Yahoos eigener Live-Strom ---
+      # Braucht KEINEN Schlüssel, kollidiert also nicht mit dem Wächter und
+      # steht deshalb bewusst nicht in der Finnhub-Sperre oben.
+      # Zu Hause gemessen am 28.07.2026: 265 von 265 Tickern auf vier
+      # Verbindungen, jede Meldung mit Tagesvolumen. Offen war nur, ob
+      # Yahoo die Rechenzentrums-Adresse von GitHub genauso bedient wie
+      # einen Privatanschluss.
+      - name: "Yahoos Live-Strom messen"
+        if: ${{ github.event.inputs.modus == 'yahoostrom' }}
+        run: python yahoo_strom.py ${{ github.event.inputs.loeschen || '180' }}
 
       # --- Grenze oder Abdeckung? ---
       # Mathias' Frage vom 28.07.2026: Beide bisherigen Messungen liefen mit
