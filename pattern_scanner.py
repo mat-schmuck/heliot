@@ -49,6 +49,9 @@ from scipy.signal import argrelextrema
 from scipy.stats import linregress
 
 import ntfy_verlauf   # merkt sich jede verschickte Meldung fuer den Freitags-Putz
+from config import CFG as ZENTRAL, pruefe_config
+
+pruefe_config()       # faengt widerspruechliche Schwellwerte sofort ab
 
 # ---------------------------------------------------------------------------
 # Konfiguration
@@ -59,14 +62,20 @@ OUTPUTSIZE = 420          # ~420 Handelstage: reicht für 252d-Rolling + Puffer
 CACHE_DIR = Path(".cache")
 BENCHMARK = "SPY"
 
-# Regelwerk-Parameter (zentral, damit du sie leicht tunen kannst)
+# Regelwerk-Parameter. Die Werte, die sich der Scanner MIT dem Waechter
+# teilt, kommen seit 28.07.2026 aus config.py — der einen Quelle der
+# Wahrheit (Gerhards Aufraeumschritt 2). Alles, was nur den Scanner
+# betrifft (Cup-Masse, VCP-Swings, Flaggen), bleibt hier stehen.
 CFG = {
     # Darvas
-    "darvas_lookback_52w": 252,
-    "darvas_box_days": 3,
-    "darvas_vol_avg": 20,
+    "darvas_lookback_52w": ZENTRAL["lookback"]["jahr_tage"],
+    "darvas_box_days": ZENTRAL["darvas"]["box_tage"],
+    # WAR 20 — der Waechter rechnete gleichzeitig mit einem anderen
+    # Fenster. Genau diese stille Uneinheitlichkeit sollte weg: jetzt
+    # einheitlich 10 Tage fuer Scanner UND Waechter.
+    "darvas_vol_avg": ZENTRAL["volumen"]["fenster_tage"],
     # Minervini
-    "tt_ma_slope_days": 21,          # MA200[t] vs MA200[t-21]
+    "tt_ma_slope_days": ZENTRAL["ma"]["kurz"],   # MA200[t] vs MA200[t-21]
     "tt_min_above_low": 0.25,        # mind. 25 % über 52W-Tief
     "tt_max_below_high": 0.25,       # max. 25 % unter 52W-Hoch
     "tt_rs_min": 70,                 # RS-Perzentil
@@ -75,7 +84,7 @@ CFG = {
     "vcp_min_contractions": 2,
     "vcp_max_contractions": 6,
     "vcp_max_last_depth": 0.12,      # letzte Kontraktion idealerweise eng
-    "vcp_vol_breakout": 1.4,         # Breakout-Volumen ≥ 140 % vom Schnitt
+    "vcp_vol_breakout": ZENTRAL["volumen"]["breakout_faktor_vcp"],
     "vcp_stop_pct": 0.08,            # Minervini: 7-8 % unter Einstieg
     # Cup & Handle
     "cup_min_len": 25,               # ~5 Wochen
@@ -381,7 +390,7 @@ def detect_darvas(df: pd.DataFrame) -> dict | None:
     # Frische-Regel: bewusst NICHT im Regelwerk-Dokument, aber von Gerhard
     # am 22.07.2026 ausdrücklich bestätigt — nur Boxen frisch nach neuem
     # Hoch melden, keine monatealten toten Formationen.
-    if bars_after > 25:
+    if bars_after > ZENTRAL["darvas"]["frische_max_tage"]:
         return None  # 52W-Hoch zu alt
 
     # Box-Top: höchstes Hoch aus Hoch-Tag + 2 Folgetagen (3 Tage)

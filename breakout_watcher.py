@@ -1064,14 +1064,26 @@ def main():
         quotes, veraltete_quotes = pruefe_handelstag(quotes)
         if veraltete_quotes and not quotes:
             datum = next(iter(veraltete_quotes.values())).get("bar_datum")
-            print(f"⛔ Kein Handelstag: Für heute gibt es keine einzige "
-                  f"Kurszeile (jüngste ist vom {datum}). Börsenfeiertag oder "
-                  f"Kursquelle hängt — es wird nichts geprüft und nichts "
-                  f"gemeldet.")
+            print(f"⛔ Keine einzige Kurszeile von heute (jüngste ist vom "
+                  f"{datum}) — es wird nichts geprüft und nichts gemeldet.")
+            # NICHT sofort aufgeben: Direkt nach der Eroeffnung kann Yahoo
+            # ein paar Minuten brauchen, bis die heutige Tageszeile steht.
+            # Wuerde die Wache daraufhin enden, haetten wir uns den
+            # Handelstag selbst abgeschaltet — schlimmer als das Problem.
+            # Erst wenn die Boerse laengst offen ist und immer noch nichts
+            # da ist, ist es wirklich ein Feiertag oder ein Quellenausfall.
+            minuten = ny_minuten()
+            seit_eroeffnung = (minuten - 9 * 60 - 30) if minuten is not None else 0
             if ende_dauerwache is None:
                 sys.exit(0)
-            print("Wache beendet — an einem Tag ohne Handel gibt es nichts zu wachen.")
-            break
+            if seit_eroeffnung >= 45:
+                print("Seit über 45 Minuten keine heutigen Kurse — "
+                      "Börsenfeiertag oder Quellenausfall. Wache beendet.")
+                break
+            print("Möglicherweise hinkt die Kursquelle nach der Eröffnung "
+                  "nach — nächster Versuch in 6 Minuten.")
+            time.sleep(360)
+            continue
         if veraltete_quotes:
             namen = sorted(veraltete_quotes)
             print(f"⚠ {len(namen)} Aktien ohne heutige Kurszeile — "
