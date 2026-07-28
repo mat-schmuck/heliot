@@ -27,7 +27,7 @@ on:
           - ntfyputz          # nur die ntfy-Meldungen löschen (nach Handelsschluss)
           - inventur          # NUR LESEN: Alarmbestand zählen und vergleichen
           - websocketmessung  # Finnhub-WebSocket ausmessen (ändert nichts)
-          - staffeltest       # Wächter mit Live-Staffelung, OHNE zu senden
+          - livetest          # Wächter mit Live-Strom, OHNE zu senden
           - liquiditaet       # Welche eurer Aktien sind echtzeit-tauglich?
           - feedpruefung      # Deckt der Gratis-Strom alle Aktien ab?
           - grenztest        # Grenze oder Abdeckung: zwei Dinge oder eines?
@@ -90,7 +90,7 @@ jobs:
       # Sechs-Minuten-Takt von Yahoo).
       # Deshalb: harter Stopp, ausser jemand entscheidet sich bewusst dagegen.
       - name: "Sperre gegen doppelte Finnhub-Verbindung"
-        if: ${{ contains('websocketmessung,liquiditaet,feedpruefung,grenztest,staffeltest', github.event.inputs.modus) && github.event.inputs.trotz_waechter != 'true' }}
+        if: ${{ contains('websocketmessung,liquiditaet,feedpruefung,grenztest', github.event.inputs.modus) && github.event.inputs.trotz_waechter != 'true' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -225,18 +225,19 @@ jobs:
           pip install websocket-client
           python grenztest.py ${{ github.event.inputs.loeschen }}
 
-      # --- Waechter mit Live-Staffelung im Trockenlauf ---
+      # --- Waechter mit Live-Strom im Trockenlauf ---
       # Prueft die fertige Verdrahtung am offenen Markt, OHNE zu senden und
       # ohne den Zustand zu speichern. Bewusst in alarme.yml und nicht in
       # watcher.yml: Dort haengt eine Sperre gegen gleichzeitige Laeufe, der
       # Test wuerde sich hinter die laufende Dauerwache stellen.
-      - name: "Staffelung im Trockenlauf prüfen"
-        if: ${{ github.event.inputs.modus == 'staffeltest' }}
+      # Braucht KEINEN Finnhub-Schluessel mehr — Yahoos Strom laeuft ohne,
+      # und mehrere Verbindungen stoeren einander nicht. Deshalb steht
+      # dieser Modus auch nicht mehr in der Sperre oben.
+      - name: "Wächter mit Live-Strom im Trockenlauf"
+        if: ${{ github.event.inputs.modus == 'livetest' }}
         env:
-          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
           TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
         run: |
-          pip install websocket-client
           cp kaufpunkte_aktuell.xlsx kaufpunkte.xlsx
           python breakout_watcher.py kaufpunkte.xlsx --dry-run \
             --dauerwache ${{ github.event.inputs.loeschen || '8' }}
