@@ -50,8 +50,9 @@ def main():
                       group_by="ticker", progress=False, auto_adjust=False,
                       threads=True)
 
-    global KANDIDATEN
+    global KANDIDATEN, SPANNEN
     KANDIDATEN = []
+    SPANNEN = []
     treffer = {"o10_5": [], "o50_5": [], "o50_425": []}
     # Gegenprobe: Wie viele Kandidaten haette die URSPRUENGLICHE Flat-Base
     # aus Kapitel 7 durchgelassen (63 bis 126 Tage, Spanne bis 35 %)?
@@ -59,7 +60,8 @@ def main():
     # ueber MA10 und MA21). Falls das Muster nie ausloest, ist die Frage,
     # ob die neue Fassung zu eng ist.
     alt_flat = 0
-    kreuz = {"vol5_o10": 0, "vol5_o50": 0, "flat_und_vol": 0}
+    kreuz = {"vol5_o10": 0, "vol5_o50": 0, "flat_und_vol": 0,
+             "eng": 0, "eng_und_vol": 0, "ma": 0, "ma_und_vol": 0}
     # Wie weit kommen die Kandidaten? Zeigt, WORAN es scheitert.
     stufen = {"gap": 0, "verteidigt": 0, "flat_base": 0, "schluss": 0,
               "volumen_egal": 0}
@@ -112,10 +114,22 @@ def main():
             if tief <= 0:
                 continue
             spanne = (f_h.max() - tief) / tief
-            if spanne > FLAT_SPANNE:
-                continue
+            eng = spanne <= FLAT_SPANNE
             ueber_ma = all(c[i] > c[i - tage:i].mean() for tage in FLAT_MA)
-            if not ueber_ma:
+            # WELCHER TEIL von Fassung A siebt? Beide Halbkriterien
+            # einzeln zaehlen, jeweils auch zusammen mit dem Volumen.
+            # Fuer die Schwellen-Reihe unten: jeden verteidigten Gap mit
+            # seiner Basis-Spanne festhalten.
+            SPANNEN.append((spanne, ueber_ma, vol5_10))
+            if eng:
+                kreuz["eng"] += 1
+                if vol5_10:
+                    kreuz["eng_und_vol"] += 1
+            if ueber_ma:
+                kreuz["ma"] += 1
+                if vol5_10:
+                    kreuz["ma_und_vol"] += 1
+            if not eng or not ueber_ma:
                 continue
             stufen["flat_base"] += 1
             if vol5_10:
@@ -162,6 +176,23 @@ def main():
           f"{kreuz['vol5_o50']:5,}")
     print(f"  davon mit Flat Base UND Volumen ab 5× Ø10: "
           f"{kreuz['flat_und_vol']:5,}\n")
+
+    print("Fassung A besteht aus ZWEI Bedingungen — einzeln betrachtet:")
+    print(f"  Spanne der 25 Tage höchstens 15 %:         {kreuz['eng']:5,}")
+    print(f"    davon zugleich Volumen ab 5× Ø10:        "
+          f"{kreuz['eng_und_vol']:5,}")
+    print(f"  Kurs über MA10 UND MA21:                   {kreuz['ma']:5,}")
+    print(f"    davon zugleich Volumen ab 5× Ø10:        "
+          f"{kreuz['ma_und_vol']:5,}\n")
+
+    print("WIE VIEL BRINGT EINE WEITERE SPANNE? (25 Tage, mit MA-Bedingung)")
+    print("  Spanne bis   Kandidaten   davon mit Volumen ab 5× Ø10")
+    for grenze in (0.15, 0.20, 0.25, 0.30, 0.35, 0.50):
+        passt = [s for s in SPANNEN if s[0] <= grenze and s[1]]
+        mit_vol = [s for s in passt if s[2]]
+        print(f"    {grenze*100:4.0f} %      {len(passt):6,}            "
+              f"{len(mit_vol):5,}")
+    print()
 
     if KANDIDATEN:
         print("Die Kandidaten, die bis zum Volumen kamen:")
