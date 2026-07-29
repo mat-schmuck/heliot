@@ -345,31 +345,24 @@ def letzter_putz() -> str:
 HTF_MARKE = "HTF|"
 
 
-def montags_grenze() -> str:
-    """Grenze fuer das Wochen-Gedaechtnis der High and Tight Flag.
+def htf_grenze() -> str:
+    """Grenze fuer das TAEGLICHE Gedaechtnis der High and Tight Flag.
 
-    Gerhards Ansage vom 28.07.2026: Die Flagge ist ein seltenes Ereignis
-    und soll deshalb die GANZE Woche gelten, beginnend mit Montag.
+    Gerhard, praezisiert am 29.07.2026: Die Flagge wird JEDEN TAG
+    zurueckgesetzt, alles andere bleibt beim Wochentakt des
+    Freitags-Putzes. (Der erste Anlauf hatte das als Kalenderwoche ab
+    Montag verstanden — ein Missverstaendnis, hier korrigiert.)
 
-    Warum das nicht schon so war: Das uebrige Gedaechtnis haengt am
-    Freitags-Putz (Freitag 16:02 New York), passend zu den
-    TraderFox-Alarmen. Diese Woche laeuft also von Freitag zu Freitag und
-    liegt quer ueber zwei Kalenderwochen. Eine am Donnerstag gemeldete
-    Flagge verfiel damit schon am naechsten Abend und konnte am Montag
-    erneut melden — bei einem seltenen Muster genau das Gegenteil des
-    Gewollten.
+    Zurueckgegeben wird der GESTRIGE Tag, damit der bestehende Vergleich
+    'Datum groesser als Grenze' unveraendert passt: Nur was HEUTE
+    gemeldet wurde, bleibt im Gedaechtnis; ab morgen darf dieselbe Flagge
+    wieder melden.
 
-    Zurueckgegeben wird der SONNTAG vor dem juengsten Montag, damit der
-    bestehende Vergleich 'Datum groesser als Grenze' unveraendert passt:
-    Was ab Montag gemeldet wurde, bleibt; alles davor faellt weg."""
-    try:
-        from zoneinfo import ZoneInfo
-        jetzt = datetime.now(ZoneInfo("America/New_York"))
-    except Exception:
-        jetzt = datetime.now()
-    d = jetzt.date()
-    montag = d - timedelta(days=d.weekday())     # Montag=0
-    return (montag - timedelta(days=1)).isoformat()
+    Bewusst dieselbe Zeitbasis wie beim Speichern (date.today()) und
+    NICHT New Yorker Zeit: Sonst laegen Grenze und gespeichertes Datum an
+    den Tagesraendern um einen Tag auseinander, und die Flagge verstummte
+    einen Tag zu lang oder meldete einen Tag zu frueh."""
+    return (date.today() - timedelta(days=1)).isoformat()
 
 
 def load_state() -> dict:
@@ -393,10 +386,10 @@ def load_state() -> dict:
                 # Altes Tagesformat einmalig uebernehmen
                 gemeldet = {k: data.get("tag", heute) for k in gemeldet}
             grenze = letzter_putz()
-            grenze_htf = montags_grenze()
-            # Zwei Fristen: High and Tight Flag ab Montag (Gerhard,
-            # 28.07.2026 — seltenes Muster, soll die ganze Woche gelten),
-            # alles andere weiter im Takt des Freitags-Putzes.
+            grenze_htf = htf_grenze()
+            # Zwei Fristen: High and Tight Flag TAEGLICH (Gerhard,
+            # 29.07.2026), alles andere unveraendert im Wochentakt des
+            # Freitags-Putzes.
             return {"gemeldet": {
                 k: d for k, d in gemeldet.items()
                 if str(d) > (grenze_htf if str(k).startswith(HTF_MARKE)
@@ -1412,11 +1405,12 @@ def main():
                 # Kaufpunkt-Nummer genuegen: einmal gemeldet ist gemeldet,
                 # bis der Freitags-Putz das Gedaechtnis leert.
                 #
-                # AUSNAHME High and Tight Flag (Gerhard, 28.07.2026): Die
+                # AUSNAHME High and Tight Flag (Gerhard, 29.07.2026): Die
                 # Flagge bekommt ein Vorzeichen im Schluessel, damit
-                # load_state() ihr die laengere, am Montag verankerte
-                # Frist geben kann. Deckt ein Kaufpunkt mehrere Muster ab,
-                # genuegt eines davon — die seltenere Meldung gewinnt.
+                # load_state() ihr die TAEGLICHE Frist geben kann statt
+                # der woechentlichen. Deckt ein Kaufpunkt mehrere Muster
+                # ab, genuegt eines davon — die kuerzere Frist gewinnt,
+                # der Ausbruch darf dann taeglich neu melden.
                 marke = (HTF_MARKE
                          if "High & Tight Flag" in (res.get("strategien")
                                                     or [res["strategie"]])
