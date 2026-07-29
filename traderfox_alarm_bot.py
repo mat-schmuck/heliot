@@ -69,6 +69,14 @@ DEBUG_DIR = Path("debug")
 SESSION_FILE = Path("session.json")
 FORTSCHRITT_FILE = Path("fortschritt.json")
 
+# HAUPTSCHALTER FÜR DAS EINTRAGEN VON ALARMEN.
+# False seit 28.07.2026 (Gerhards Entscheid): Der Wächter meldet dieselben
+# Kaufpunkte per ntfy, sekundenfrisch und mit Volumenurteil — TraderFox
+# daneben wäre nur ein zweites Signal für dasselbe Ereignis.
+# Alles andere am Bot bleibt in Betrieb: Selbsttest, Inventur, Löschen.
+# Zum Wiedereinschalten hier auf True setzen, sonst nichts.
+EINTRAGEN_AKTIV = False
+
 
 # ===========================================================================
 # SELEKTOR-KARTE  —  HIER wird angepasst, wenn TraderFox das Design ändert.
@@ -2093,6 +2101,30 @@ def main():
                    or args.loesche_alle or args.inventur)
     if not nur_pruefen and not args.xlsx:
         sys.exit("Bitte kaufpunkte.xlsx angeben (oder --selbsttest / --testalarm benutzen).")
+
+    # STILLGELEGT (Gerhard, 28.07.2026). Die TraderFox-Alarme sind seit dem
+    # Umbau auf Yahoos Live-Strom redundant: Der Waechter meldet dieselben
+    # Kaufpunkte selbst per ntfy, sekundenfrisch und mit Volumenurteil.
+    # Zwei Systeme, die dasselbe melden, erzeugen nur doppelte Signale auf
+    # dem Handy — und genau daran hat sich Mathias am 27.07. verbrannt.
+    #
+    # Der Bot bleibt vollstaendig erhalten und lauffaehig: Selbsttest,
+    # Inventur und Loeschen gehen weiter, damit sich das Konto pruefen und
+    # raeumen laesst. Gesperrt ist nur das EINTRAGEN. Die Sperre sitzt hier
+    # im Programm und nicht im Workflow, weil die Zeitplaene von aussen
+    # kommen (cron-job.org) — feuert dort einer weiter, passiert trotzdem
+    # nichts.
+    #
+    # Wieder scharfschalten: EINTRAGEN_AKTIV auf True setzen.
+    if not EINTRAGEN_AKTIV and not nur_pruefen:
+        print("Die TraderFox-Alarme sind seit 28.07.2026 stillgelegt "
+              "(Gerhards Entscheid: ntfy ersetzt sie).")
+        print("Es wird KEIN Alarm eingetragen. Der Bot selbst bleibt "
+              "einsatzbereit — Selbsttest, Inventur und Löschen laufen "
+              "weiter.")
+        print("Wieder einschalten: EINTRAGEN_AKTIV in "
+              "traderfox_alarm_bot.py auf True setzen.")
+        return 0
 
     # Loeschauftraege einlesen und Firmennamen ergaenzen
     loesch_auftraege = []
