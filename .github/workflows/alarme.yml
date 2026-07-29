@@ -141,6 +141,16 @@ jobs:
       # steht — ein versehentlicher Klick auf den Modus allein tut nichts.
       # Bewusst ohne Alarm-Sicherung (Mathias, 23.07.2026): die Aktienliste
       # ist das Original, der Scanner erzeugt die Alarme laufend neu.
+      # SEIT 29.07.2026 im Ruhezustand: Sind die Alarme stillgelegt
+      # (EINTRAGEN_AKTIV = False im Bot), entfällt auch das wöchentliche
+      # Löschen — es gibt ja nichts mehr, was sich ansammeln könnte. Der
+      # Freitagstermin bei cron-job.org kann deshalb unverändert weiter
+      # feuern: Dieser Schritt überspringt sich selbst, der ntfy-Putz
+      # darunter läuft weiter. Schaltet jemand die Alarme wieder scharf,
+      # räumt der Freitag automatisch wieder mit auf.
+      # Braucht man doch einmal eine Löschung im Ruhezustand: entweder
+      # den Schalter im Bot kurz umlegen oder gezielt über den Modus
+      # 'aufraeumen', der unverändert funktioniert.
       - name: "Alles löschen (sämtliche Alarme)"
         if: ${{ github.event.inputs.modus == 'alles_loeschen' }}
         env:
@@ -151,7 +161,13 @@ jobs:
             echo "Verriegelung: Zum Bestätigen muss im Feld 'loeschen' genau ALLE stehen."
             exit 1
           fi
-          python traderfox_alarm_bot.py --loesche-alle
+          if grep -q '^EINTRAGEN_AKTIV = True' traderfox_alarm_bot.py; then
+            python traderfox_alarm_bot.py --loesche-alle
+          else
+            echo "Die TraderFox-Alarme sind stillgelegt — es wird keiner"
+            echo "mehr eingetragen, also sammelt sich auch keiner an."
+            echo "Das Löschen entfällt; der ntfy-Putz läuft weiter."
+          fi
 
       # Der Putz raeumt auch die MELDUNGEN weg (Mathias, 27.07.2026): Er
       # hatte alte Signale der Vorwoche in der ntfy-App vorgefunden und
