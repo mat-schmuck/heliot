@@ -342,6 +342,36 @@ def letzter_putz() -> str:
     return freitag.isoformat()
 
 
+HTF_MARKE = "HTF|"
+
+
+def montags_grenze() -> str:
+    """Grenze fuer das Wochen-Gedaechtnis der High and Tight Flag.
+
+    Gerhards Ansage vom 28.07.2026: Die Flagge ist ein seltenes Ereignis
+    und soll deshalb die GANZE Woche gelten, beginnend mit Montag.
+
+    Warum das nicht schon so war: Das uebrige Gedaechtnis haengt am
+    Freitags-Putz (Freitag 16:02 New York), passend zu den
+    TraderFox-Alarmen. Diese Woche laeuft also von Freitag zu Freitag und
+    liegt quer ueber zwei Kalenderwochen. Eine am Donnerstag gemeldete
+    Flagge verfiel damit schon am naechsten Abend und konnte am Montag
+    erneut melden — bei einem seltenen Muster genau das Gegenteil des
+    Gewollten.
+
+    Zurueckgegeben wird der SONNTAG vor dem juengsten Montag, damit der
+    bestehende Vergleich 'Datum groesser als Grenze' unveraendert passt:
+    Was ab Montag gemeldet wurde, bleibt; alles davor faellt weg."""
+    try:
+        from zoneinfo import ZoneInfo
+        jetzt = datetime.now(ZoneInfo("America/New_York"))
+    except Exception:
+        jetzt = datetime.now()
+    d = jetzt.date()
+    montag = d - timedelta(days=d.weekday())     # Montag=0
+    return (montag - timedelta(days=1)).isoformat()
+
+
 def load_state() -> dict:
     """Melde-Gedaechtnis im Wochen-Rhythmus des Freitags-Putzes.
 
@@ -363,8 +393,14 @@ def load_state() -> dict:
                 # Altes Tagesformat einmalig uebernehmen
                 gemeldet = {k: data.get("tag", heute) for k in gemeldet}
             grenze = letzter_putz()
-            return {"gemeldet": {k: d for k, d in gemeldet.items()
-                                 if str(d) > grenze}}
+            grenze_htf = montags_grenze()
+            # Zwei Fristen: High and Tight Flag ab Montag (Gerhard,
+            # 28.07.2026 — seltenes Muster, soll die ganze Woche gelten),
+            # alles andere weiter im Takt des Freitags-Putzes.
+            return {"gemeldet": {
+                k: d for k, d in gemeldet.items()
+                if str(d) > (grenze_htf if str(k).startswith(HTF_MARKE)
+                             else grenze)}}
         except Exception:
             pass
     return {"gemeldet": {}}
@@ -1375,7 +1411,17 @@ def main():
                 # Durcheinander', das abgestellt werden sollte. Aktie plus
                 # Kaufpunkt-Nummer genuegen: einmal gemeldet ist gemeldet,
                 # bis der Freitags-Putz das Gedaechtnis leert.
-                res["key"] = f"{item['ticker']}|{item['nr']}"
+                #
+                # AUSNAHME High and Tight Flag (Gerhard, 28.07.2026): Die
+                # Flagge bekommt ein Vorzeichen im Schluessel, damit
+                # load_state() ihr die laengere, am Montag verankerte
+                # Frist geben kann. Deckt ein Kaufpunkt mehrere Muster ab,
+                # genuegt eines davon — die seltenere Meldung gewinnt.
+                marke = (HTF_MARKE
+                         if "High & Tight Flag" in (res.get("strategien")
+                                                    or [res["strategie"]])
+                         else "")
+                res["key"] = f"{marke}{item['ticker']}|{item['nr']}"
                 treffer.append(res)
                 if res["key"] not in schon_gemeldet:
                     neu.append(res)
