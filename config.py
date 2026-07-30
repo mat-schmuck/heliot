@@ -222,12 +222,18 @@ CFG = {
         # schickt rund 3600 Meldungen je Minute — das wären 3600 volle
         # Durchläufe für einen Gewinn von Sekundenbruchteilen. Gegenüber
         # den ursprünglichen sechs Minuten ist das der Faktor 180.
-        # Nur noch die OBERGRENZE: Seit 30.07.2026 weckt jede eingehende
-        # Kursmeldung die Prüfung sofort (Mathias: "Wir machen
-        # Daytrading"). Dieser Wert greift nur, wenn gar nichts kommt —
-        # Mittagsflaute oder Leitung weg —, damit die Schleife trotzdem
-        # weiterläuft und das bemerkt.
-        "pruef_takt_sekunden": 2,
+        # SEIT 30.07.2026 WIEDER EIN FESTER TAKT von 20 Sekunden
+        # (Mathias): Die Schleife wartet die vollen 20 Sekunden, statt
+        # bei jeder Kursmeldung aufzuwachen. Was sich unterdessen bewegt
+        # hat, sammelt der Strom; gerechnet wird danach nur dafür.
+        #
+        # Der Grund ist NICHT die Last bei Yahoo — der Strom ist eine
+        # stehende Verbindung, die von sich aus sendet, und der schwere
+        # Tagesdatenabruf läuft unabhängig davon im takt_sekunden.
+        # Zwischen 2 und 20 Sekunden ändert sich dort kein einziger
+        # Zugriff. Der Grund ist die Bündelung: Bei zwei Sekunden
+        # zerfällt ein gemeinsamer Ausbruch in viele Einzelmeldungen.
+        "pruef_takt_sekunden": 20,
         # Nach der ersten Meldung kurz nachfassen, damit gleichzeitig
         # gerissene Kaufpunkte in EINER Push-Meldung landen. Ohne das
         # wären es in den ersten Minuten nach der Eröffnung zwanzig
@@ -241,6 +247,16 @@ CFG = {
         # es der Faktor zehn. Wer die absolute Untergrenze will, setzt 0;
         # dann kommt für jeden Ausbruch eine eigene Push-Meldung.
         "sammel_fenster_sekunden": 0.2,
+        # Höchstens so viele Aktien in EINER Push-Meldung (Mathias,
+        # 30.07.2026: "ich will keine 20 Meldungen als eine
+        # Pushmitteilung bekommen"). Was darüber hinausgeht, kommt als
+        # weitere Meldung mit "(2 von 4)" im Titel.
+        #
+        # Die Byte-Grenze allein reichte dafür nicht: Sie greift erst bei
+        # 3000 Zeichen, und ein Eintrag ist rund 150 Zeichen lang — es
+        # hätten also zwanzig in eine Meldung gepasst. Fünf sind mit dem
+        # Screenreader noch am Stück zu überblicken.
+        "max_eintraege_je_push": 5,
         "min_historie_tage": 60,     # weniger Historie → Aktie überspringen
         # HINWEIS: Das 2000-Minuten-Limit gilt für PRIVATE Repos. heliot ist
         # öffentlich, dort sind die Actions-Minuten unbegrenzt und kostenlos

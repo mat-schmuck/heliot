@@ -216,6 +216,8 @@ PRUEF_TAKT = CFG["betrieb"].get("pruef_takt_sekunden", 2)
 # zwanzig einzelnen — das passiert vor allem in den ersten Minuten nach
 # der Eroeffnung. Der Preis dafuer ist genau diese halbe Sekunde.
 SAMMEL_FENSTER = CFG["betrieb"].get("sammel_fenster_sekunden", 0.5)
+# Hoechstens so viele Aktien in EINER Push-Meldung; 0 hebt die Grenze auf.
+MAX_EINTRAEGE = CFG["betrieb"].get("max_eintraege_je_push", 5)
 
 # In den Push-Meldungen werden Strategienamen ausgeschrieben (Mathias,
 # 23.07.2026). In Excel und VOL_FAKTOR bleibt die Kurzform bestehen.
@@ -943,15 +945,23 @@ def email_kopf() -> dict:
 NTFY_GRENZE = 3000
 
 
-def _portionen(absaetze: list[str], grenze: int = NTFY_GRENZE) -> list[list[str]]:
+def _portionen(absaetze: list[str], grenze: int = NTFY_GRENZE,
+               hoechstens: int = MAX_EINTRAEGE) -> list[list[str]]:
     """Teilt die Absaetze so auf, dass keine Nachricht die Grenze reisst.
-    Getrennt wird NUR zwischen Aktien, nie mitten in einer Meldung."""
+    Getrennt wird NUR zwischen Aktien, nie mitten in einer Meldung.
+
+    ZWEI Grenzen (Mathias, 30.07.2026): die Zeichenzahl UND die Anzahl
+    der Aktien. Die Zeichengrenze allein reichte nicht — ein Eintrag ist
+    rund 150 Zeichen lang, in 3000 Zeichen haetten also zwanzig Platz
+    gefunden. "Ich will keine 20 Meldungen als eine Pushmitteilung
+    bekommen." """
     portionen, aktuell, laenge = [], [], 0
     for absatz in absaetze:
         if len(absatz.encode("utf-8")) > grenze:      # Notbremse
             absatz = absatz.encode("utf-8")[:grenze - 20].decode("utf-8", "ignore") + " …"
         gr = len(absatz.encode("utf-8")) + 2
-        if aktuell and laenge + gr > grenze:
+        if aktuell and (laenge + gr > grenze
+                        or (hoechstens and len(aktuell) >= hoechstens)):
             portionen.append(aktuell)
             aktuell, laenge = [], 0
         aktuell.append(absatz)
@@ -1152,7 +1162,8 @@ def main():
                     help="Auch Fallback-Level überwachen (Standard: nur Muster-Treffer)")
     ap.add_argument("--dry-run", action="store_true", help="Nur anzeigen, kein Push")
     ap.add_argument("--dauerwache", type=int, default=0, metavar="MINUTEN",
-                    help="Statt einmal zu prüfen alle 6 Minuten weiterprüfen, "
+                    help=f"Statt einmal zu prüfen alle {PRUEF_TAKT} Sekunden "
+                         f"weiterprüfen, "
                          "bis MINUTEN abgelaufen sind oder die Börse schließt. "
                          "Macht die Überwachung unabhängig von GitHubs "
                          "unzuverlässigem Zeitplan.")
@@ -1660,14 +1671,23 @@ def main():
             ws.stop()
             break
 
-        # ECHTZEIT (Mathias, 30.07.2026: "Wir machen Daytrading"). Statt
-        # blind zwei Sekunden zu schlafen, weckt die naechste Kursmeldung
-        # die Schleife — aus "bis zu zwei Sekunden" werden Millisekunden.
-        # Der Prueftakt bleibt als OBERGRENZE: Kommt gar nichts, weil
-        # Mittagsflaute herrscht oder die Leitung weg ist, laeuft die
-        # Schleife trotzdem weiter und merkt es.
+        # FESTER TAKT (Mathias, 30.07.2026): Die Schleife wartet die
+        # vollen PRUEF_TAKT Sekunden, statt bei der naechsten Kursmeldung
+        # aufzuwachen. Die Weckuhr im Strom laeuft weiter und sammelt
+        # unterdessen, welche Aktien sich bewegt haben — gerechnet wird
+        # danach nur fuer diese, wie bisher.
+        #
+        # Kuerzer zu takten kostet bei Yahoo NICHTS: Der Strom ist eine
+        # stehende Verbindung, die von sich aus sendet, und der schwere
+        # Tagesdatenabruf laeuft unabhaengig davon im TAKT. Der Grund fuer
+        # den laengeren Takt ist ein anderer — bei wenigen Sekunden
+        # zerfaellt ein gemeinsamer Ausbruch in viele Einzelmeldungen.
         if ws_laeuft:
-            geaendert = ws.warte_auf_kurse(PRUEF_TAKT, SAMMEL_FENSTER)
+            time.sleep(PRUEF_TAKT)
+            # Wartezeit schon abgelaufen — hier nur noch abholen, was
+            # sich unterdessen bewegt hat. Das Sammelfenster faengt noch
+            # die Meldungen ab, die genau auf der Grenze eintreffen.
+            geaendert = ws.warte_auf_kurse(0, SAMMEL_FENSTER)
             if not geaendert:
                 geaendert = set(basis)   # nichts gekommen: alles nachsehen
         else:
