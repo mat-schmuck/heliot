@@ -31,14 +31,25 @@ America/New_York, GitHub-Token als Kopfzeile im jeweiligen Auftrag):
 - *Heliot Scan (18:00 New York)* — `0 18 * * 0-5`, scanner.yml,
   Text `{"ref":"main"}`. Sonntag ist bewusst dabei, damit die am
   Wochenende hochgeladene Liste am Montag bereitliegt.
+- *Heliot ntfy-Putz (16:05 New York)* — `5 16 * * 1-5`, alarme.yml,
+  Text `{"ref":"main","inputs":{"modus":"ntfyputz"}}`.
+
+**Am 30.07.2026 GELÖSCHT** (Gerhards Entscheid: ntfy ersetzt die
+TraderFox-Alarme, siehe `EINTRAGEN_AKTIV` in traderfox_alarm_bot.py).
+Falls die Alarme je wieder scharf geschaltet werden, müssen diese zwei
+Aufträge neu angelegt werden:
+
 - *Heliot Alarme (08:00 New York)* — `0 8 * * 1-5`, alarme.yml,
   Text `{"ref":"main","inputs":{"modus":"vollstaendig","quelle":"repo_datei"}}`.
   1,5 Stunden vor der Glocke, damit Alarme nicht im europäischen
   Vorhandel verfeuert werden.
-- *Heliot ntfy-Putz (16:05 New York)* — `5 16 * * 1-5`, alarme.yml,
-  Text `{"ref":"main","inputs":{"modus":"ntfyputz"}}`.
 - *Heliot Freitags-Putz (16:02 New York)* — `2 16 * * 5`, alarme.yml,
   Text `{"ref":"main","inputs":{"modus":"alles_loeschen","loeschen":"ALLE"}}`.
+  ACHTUNG beim Wiederanlegen: Dieser Auftrag erledigte ZWEI Dinge — die
+  Alarme löschen UND die ntfy-Meldungen räumen. Das Zweite läuft
+  unabhängig davon weiter, weil der tägliche ntfy-Putz um 16:05
+  denselben Befehl ausführt und Montag bis Freitag läuft, also auch am
+  Freitag. Genau deshalb war das Löschen dieses Auftrags gefahrlos.
 - *Wächter Tagwache* — `12 9 * * 1-5`, watcher.yml,
   Text `{"ref":"main","inputs":{"dauerwache":"390"}}`.
 - *Heliot Teil 2 (Schlussstunde, 15:09 New York)* — `9 15 * * 1-5`,
