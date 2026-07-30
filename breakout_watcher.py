@@ -392,7 +392,10 @@ def load_state() -> dict:
             # Freitags-Putzes.
             return {"gemeldet": {
                 k: d for k, d in gemeldet.items()
-                if str(d) > (grenze_htf if str(k).startswith(HTF_MARKE)
+                # HTF_MARKE mit 'in' statt 'startswith': Der Nachtrag-
+                # Schluessel lautet 'BEST|HTF|AAPL|1', die Flaggen-Frist
+                # muss auch fuer ihn gelten (29.07.2026).
+                if str(d) > (grenze_htf if HTF_MARKE in str(k)
                              else grenze)}}
         except Exception:
             pass
@@ -839,28 +842,42 @@ def format_gapgo(g: dict) -> str:
 
 
 def format_treffer(t: dict) -> str:
-    """Trenner-Regeln und Hintergrund siehe format_gapgo. Alle Angaben
-    drin (Mathias, 23.07.2026: erst radikal gekuerzt, dann fehlte zu
-    viel); Fuellwoerter wie "erst"/"nur" bleiben draussen. Die
-    Volumen-Prozente sind seit 28.07.2026 Gerhards IBD-Zahl: +2025 % heisst
-    das 21-fache des Ueblichen FUER DIESE UHRZEIT, 0 % heisst voellig
-    normal. Die Klammer nennt den ueblichen Tagesanteil."""
-    anteil = t.get("vol_anteil", 1.0)
-    zusatz = ""
-    if anteil < 0.99:
-        zusatz = f" (hochgerechnet, {anteil*100:.0f}% des Tages)"
+    """Trenner-Regeln und Hintergrund siehe format_gapgo.
+
+    KURZFASSUNG seit 29.07.2026, mit Mathias Zeile fuer Zeile abgestimmt.
+    Weggefallen sind zwei Angaben, die in JEDER Meldung wortgleich
+    standen und zusammen 74 Zeichen kosteten:
+
+    1. "noetig waere mindestens der Schnitt". Fuenf der sechs Muster
+       haben dieselbe Huerde, und ob sie genommen wurde, sagt das Wort
+       BESTAETIGT ohnehin. Nur bei VCP weicht sie ab — dort wird sie
+       weiter genannt, sonst waere unverstaendlich, warum +20 % nicht
+       reichen.
+    2. "(hochgerechnet, 16% des Tages)". Waehrend des Handels ist der
+       Wert IMMER hochgerechnet, die Angabe unterscheidet also nichts.
+       Sie verschluesselte nur, wie belastbar die Zahl ist — und das
+       wurde nachgemessen (volumen_verlaesslichkeit.py): Ein
+       'bestaetigt' um 10:00 New Yorker Zeit ist zu 36 % bis zum
+       Schluss hinfaellig, um 14:00 nur noch zu 5 %. Das ergibt sich
+       aus der Uhrzeit, die Mathias ohnehin kennt.
+
+    "Vol" statt "Volumen" und "Risk" statt "Risiko" auf seinen Wunsch;
+    "Vol" bewusst OHNE Punkt, weil manche Screenreader daraus eine
+    Satzendepause machen."""
     lage = volumen.lage_text(t.get("vol_pct"), VOL_FENSTER)
-    huerde = volumen.huerde_text(t["vol_noetig"])
+    # Die Huerde nur nennen, wo sie vom Ueblichen abweicht (VCP).
+    huerde = ("" if t["vol_noetig"] <= 1.0
+              else ", " + volumen.huerde_text(t["vol_noetig"]))
     if t["vol_ok"] is True:
-        vol_txt = f"Volumen BESTÄTIGT, {lage}, {huerde}{zusatz}"
+        vol_txt = f"Vol BESTÄTIGT, {lage}{huerde}"
     elif t["vol_ok"] is False:
-        vol_txt = f"Volumen NICHT bestätigt, {lage}, {huerde}{zusatz}"
+        vol_txt = f"Vol NICHT bestätigt, {lage}{huerde}"
     else:
         # Kommt nur vor, wenn keine Durchschnittsbasis existiert (brandneue
         # Notierung oder Datenluecke der Kursquelle) — der Waechter rechnet
         # sonst IMMER selbst. "Selbst pruefen" hiess frueher missverstaendlich,
         # man muesse rechnen; gemeint ist: Signal ohne Volumenurteil.
-        vol_txt = "Volumen nicht bewertbar, zu wenig Kurshistorie"
+        vol_txt = "Vol nicht bewertbar, zu wenig Kurshistorie"
     # Erfuellt die Aktie mehrere Muster auf DEMSELBEN Kaufpunkt, wurden sie
     # zu einer Meldung zusammengelegt — dann werden auch beide genannt
     # (Fehlerdurchlauf 28.07.2026). Beistrich innerhalb zusammengehoeriger
@@ -875,7 +892,7 @@ def format_treffer(t: dict) -> str:
     schluss = []
     if t["stop"] is not None:
         risiko = (t["kurs"] / t["stop"] - 1) * 100
-        schluss.append(f"Stop {t['stop']:.2f}, Risiko {risiko:.1f}%")
+        schluss.append(f"Stop {t['stop']:.2f}, Risk {risiko:.1f}%")
     if t["ziel"] is not None:
         chance = (t["ziel"] / t["kurs"] - 1) * 100
         schluss.append(f"Ziel {t['ziel']:.2f} (+{chance:.1f}%)")
@@ -1006,6 +1023,66 @@ def push_text(topic: str, titel: str, body: str) -> bool:
     return sende(topic, titel, body.split("\n\n"), "high", "rocket")
 
 
+NACHTRAG_MARKE = "BEST|"
+
+
+def melde_stufe(res: dict, schon_gemeldet: set) -> str | None:
+    """Welche Meldung ist faellig — und vor allem: welche NICHT?
+
+    Mathias' Sorge vom 29.07.2026, woertlich: "So lange sie da ist, löst
+    sie ja aus, d.h. das könnte mehrere unbestätigte Meldungen geben."
+    Genau das darf nicht passieren, und deshalb steht die Entscheidung
+    hier als eigene, pruefbare Funktion statt verstreut in der Schleife.
+
+    Zwei GETRENNTE Schluessel, wie bei Gap and Go seit jeher:
+      res["key"]      wird beim ERSTEN Melden gesetzt, ob bestaetigt oder
+                      nicht. Der Ausbruch ist damit abgehakt.
+      res["key_best"] wird gesetzt, sobald die Bestaetigung gemeldet
+                      wurde — oder gleich mit, wenn schon die erste
+                      Meldung bestaetigt war.
+
+    Daraus folgt zwingend: hoechstens ZWEI Meldungen je Kaufpunkt und
+    Woche. Ein Schluessel, der erst bei Bestaetigung schliesst, haette
+    bei zwei Sekunden Prueftakt dreissigmal je Minute gemeldet."""
+    if res["key"] not in schon_gemeldet:
+        return "neu"
+    if res["vol_ok"] is True and res["key_best"] not in schon_gemeldet:
+        return "nachtrag"
+    return None
+
+
+def push_nachtrag(topic: str, treffer: list[dict]) -> bool:
+    """Meldet, dass ein zuvor UNBESTAETIGT gemeldeter Ausbruch inzwischen
+    die Volumenbestaetigung bekommen hat.
+
+    Warum es das gibt (nachgemessen 29.07.2026,
+    volumen_verlaesslichkeit.py): Ein 'nicht bestaetigt' um 10:00 New
+    Yorker Zeit wird in 14,7 % der Faelle bis zum Handelsschluss doch
+    noch bestaetigt. Bisher erfuhr das niemand — der Kaufpunkt galt nach
+    der ersten Meldung fuer die Woche als erledigt. Rund jeder siebte
+    gemeldete Ausbruch verlor so still seine Bestaetigung.
+
+    Der Nachtrag ist fuer sich allein handelbar: Kurs, Stop und Ziel
+    stehen auf dem AKTUELLEN Stand. Die erste Meldung von vor drei
+    Stunden zurueckzusuchen waere umstaendlich, und ihre Zahlen sind
+    inzwischen ueberholt."""
+    if not treffer:
+        return True
+    if len(treffer) == 1:
+        t = treffer[0]
+        titel = f"{meldungskopf(t['ticker'], t.get('firma', ''))}, " \
+                f"Vol jetzt bestätigt"
+        absaetze = [format_treffer(t)]
+    else:
+        # Bei mehreren passt der Firmenname nicht mehr in den Titel
+        # (Mathias, 29.07.2026) — er steht dann in jedem Eintrag.
+        titel = (", ".join(t["ticker"] for t in treffer)
+                 + ": Vol jetzt bestätigt")
+        absaetze = [f"{i}. {format_treffer(t)}"
+                    for i, t in enumerate(treffer, 1)]
+    return sende(topic, titel, absaetze, "high", "chart_with_upwards_trend")
+
+
 def push(topic: str, treffer: list[dict]) -> bool:
     """Schickt die Meldung und sagt ehrlich, ob sie angekommen ist.
 
@@ -1021,8 +1098,10 @@ def push(topic: str, treffer: list[dict]) -> bool:
     # Titel am 24.07.2026 wiederhergestellt: Ohne Title-Kopfzeile setzt
     # ntfy einen generischen Titel (die Themen-Adresse) ein — das war
     # schlimmer als das am 23.07. beanstandete 'Wortgeklingel'.
-    titel = (f"🚀 {len(bestaetigt)} bestätigt"
-             + (f", {len(rest)} ohne Vol-Bestätigung" if rest else ""))
+    # Seit 29.07. ohne Emoji (Mathias) und kuerzer: Er entscheidet am
+    # Titel, ob sich das Oeffnen ueberhaupt lohnt.
+    titel = (f"{len(bestaetigt)} bestätigt"
+             + (f", {len(rest)} offen" if rest else ""))
     return sende(topic, titel, absaetze,
                  "high" if bestaetigt else "default",
                  "chart_with_upwards_trend")
@@ -1387,7 +1466,7 @@ def main():
                 print("  " + ", ".join(fehlend))
                 print("  Für diese Werte wird kein Ausbruch erkannt.")
 
-            treffer, neu = [], []
+            treffer, neu, nachtrag = [], [], []
             for item in items:
                 q = quotes.get(item["ticker"].upper())
                 if not q:
@@ -1416,9 +1495,27 @@ def main():
                                                     or [res["strategie"]])
                          else "")
                 res["key"] = f"{marke}{item['ticker']}|{item['nr']}"
+                # ZWEITE STUFE (Mathias, 29.07.2026). Zwei GETRENNTE
+                # Schluessel, genau wie Gap and Go es seit jeher macht:
+                #   res["key"]      — beim ersten Melden gesetzt, egal ob
+                #                     bestaetigt. Der Ausbruch ist damit
+                #                     abgehakt und wiederholt sich NICHT.
+                #   res["key_best"] — nur gesetzt, wenn die Bestaetigung
+                #                     gemeldet wurde.
+                # War die erste Meldung schon bestaetigt, werden beide
+                # zusammen gesetzt — dann kann der Nachtrag gar nicht mehr
+                # feuern. Mehr als zwei Meldungen je Kaufpunkt und Woche
+                # sind damit mechanisch unmoeglich. Genau das war Mathias'
+                # Sorge: Ein Schluessel, der erst bei Bestaetigung
+                # schliesst, wuerde bei zwei Sekunden Takt dreissigmal je
+                # Minute melden.
+                res["key_best"] = NACHTRAG_MARKE + res["key"]
                 treffer.append(res)
-                if res["key"] not in schon_gemeldet:
+                stufe = melde_stufe(res, schon_gemeldet)
+                if stufe == "neu":
                     neu.append(res)
+                elif stufe == "nachtrag":
+                    nachtrag.append(res)
 
             # Zwischen den Abrufen nur ausgeben, wenn es wirklich etwas
             # Neues gibt — sonst stuende alle zwei Sekunden dieselbe Liste
@@ -1458,9 +1555,16 @@ def main():
                 pass
             elif zu_melden and not args.dry_run:
                 if push(topic, zu_melden):
+                    heute_s = date.today().isoformat()
                     for t in zu_melden:
                         schon_gemeldet.add(t["key"])
-                        state["gemeldet"][t["key"]] = date.today().isoformat()
+                        state["gemeldet"][t["key"]] = heute_s
+                        # War der Ausbruch schon bei der ersten Meldung
+                        # bestaetigt, ist der Nachtrag gegenstandslos —
+                        # sein Schluessel wird gleich mitgesetzt.
+                        if t["vol_ok"] is True:
+                            schon_gemeldet.add(t["key_best"])
+                            state["gemeldet"][t["key_best"]] = heute_s
                     save_state(state)
                 else:
                     sperre_bis = jetzt_s + TAKT
@@ -1478,6 +1582,27 @@ def main():
                 # und waere als Probe wertlos (aufgefallen 28.07.2026).
                 for t in zu_melden:
                     schon_gemeldet.add(t["key"])
+                    if t["vol_ok"] is True:
+                        schon_gemeldet.add(t["key_best"])
+
+            # --- Nachtrag: Volumen hat nachgezogen ---------------------
+            if nachtrag and jetzt_s >= sperre_bis:
+                print(f"\n{len(nachtrag)} Ausbruch/Ausbrüche haben die "
+                      f"Volumenbestätigung nachgereicht:")
+                for t in nachtrag:
+                    print("  " + format_treffer(t).replace("\n", "\n  ") + "\n")
+                if args.dry_run:
+                    print("(Dry-Run — kein Nachtrag gesendet)")
+                    for t in nachtrag:
+                        schon_gemeldet.add(t["key_best"])
+                elif push_nachtrag(topic, nachtrag):
+                    heute_s = date.today().isoformat()
+                    for t in nachtrag:
+                        schon_gemeldet.add(t["key_best"])
+                        state["gemeldet"][t["key_best"]] = heute_s
+                    save_state(state)
+                else:
+                    sperre_bis = jetzt_s + TAKT
 
             # --- Gap and Go (Regelwerk Kapitel 7) --------------------------
             # Zwei Meldestufen je Aktie und Tag: 'im Aufbau', sobald alle
