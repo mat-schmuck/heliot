@@ -68,6 +68,15 @@ class YahooWebSocket:
         self._meldung_je = {}
         self._hoch = {}              # Tageshoch je Aktie, aus dem Strom
         self._tief = {}              # Tagestief je Aktie, aus dem Strom
+        # WECKER FUER DIE ECHTZEITPRUEFUNG (Mathias, 30.07.2026: "Wir
+        # machen Daytrading"). Statt alle zwei Sekunden blind zu pruefen,
+        # weckt jede eingehende Kursmeldung die Hauptschleife — und die
+        # prueft dann NUR die Aktien, fuer die wirklich etwas kam.
+        # Ohne diese Einschraenkung waere es zu teuer: Bei rund 60
+        # Meldungen je Sekunde und 147 Kaufpunkten muesste sonst
+        # achttausendmal je Sekunde gerechnet werden.
+        self._geaendert = set()
+        self._wecker = threading.Event()
         self.ausserhalb = 0          # verworfene Vor- und Nachboersenmeldungen
         self.fehler = []
         self.neustarts = 0
@@ -130,6 +139,9 @@ class YahooWebSocket:
         self.meldungen += 1
         self.letzte_meldung = jetzt
         self._meldung_je[gross] = jetzt
+        with self._lock:
+            self._geaendert.add(gross)
+        self._wecker.set()
 
     def _starte_haufen(self, teil, nummer):
         """Eine Verbindung, die sich bei Abriss selbst neu aufbaut."""
@@ -212,6 +224,23 @@ class YahooWebSocket:
                 ws.close()
             except Exception:
                 pass
+
+    def warte_auf_kurse(self, hoechstens_sekunden, sammel_sekunden=0.0):
+        """Wartet, bis neue Kurse da sind, und liefert die betroffenen
+        Aktien. Leere Menge, wenn in der Frist nichts kam.
+
+        'sammel_sekunden' ist ein kurzes Nachfassen: Reissen zwei
+        Kaufpunkte im selben Augenblick, sollen sie in EINER Push-Meldung
+        landen statt in zweien. Ohne dieses Fenster waeren es bei der
+        Eroeffnung zwanzig einzelne Meldungen hintereinander."""
+        self._wecker.wait(hoechstens_sekunden)
+        if sammel_sekunden:
+            time.sleep(sammel_sekunden)
+        self._wecker.clear()
+        with self._lock:
+            geaendert = self._geaendert
+            self._geaendert = set()
+        return geaendert
 
     def spanne(self, ticker):
         """Hoch und Tief dieser Aktie, wie sie der Strom bisher gesehen

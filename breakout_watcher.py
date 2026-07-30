@@ -211,6 +211,12 @@ TAKT = CFG["betrieb"].get("takt_sekunden", 60)
 # warten. Ausfuehrliche Begruendung in der Hauptschleife.
 PRUEF_TAKT = CFG["betrieb"].get("pruef_takt_sekunden", 2)
 
+# SAMMELFENSTER. Nach der ersten Kursmeldung wird kurz nachgefasst, damit
+# gleichzeitig gerissene Kaufpunkte in EINER Push-Meldung landen statt in
+# zwanzig einzelnen — das passiert vor allem in den ersten Minuten nach
+# der Eroeffnung. Der Preis dafuer ist genau diese halbe Sekunde.
+SAMMEL_FENSTER = CFG["betrieb"].get("sammel_fenster_sekunden", 0.5)
+
 # In den Push-Meldungen werden Strategienamen ausgeschrieben (Mathias,
 # 23.07.2026). In Excel und VOL_FAKTOR bleibt die Kurzform bestehen.
 STRATEGIE_VOLL = {
@@ -1323,6 +1329,7 @@ def main():
     basis = {}                       # letzter Tagesdaten-Stand
     naechster_abruf = 0.0
     sperre_bis = 0.0                 # nach Sendefehler kurz nicht erneut
+    geaendert = set()                # Aktien mit frischer Kursmeldung
     runde = 0
     while True:
         jetzt_s = time.time()
@@ -1340,9 +1347,13 @@ def main():
                 time.sleep(PRUEF_TAKT)
                 continue
             # Zwischen zwei Abrufen: auf dem letzten Tagesstand arbeiten,
-            # aber mit frischen Kursen aus dem Strom. Je Durchlauf eine
-            # eigene Kopie, weil die Einblendung sie veraendert.
-            quotes = {t: dict(q) for t, q in basis.items()}
+            # aber mit frischen Kursen aus dem Strom. NUR die Aktien, fuer
+            # die wirklich eine Kursmeldung kam — alles andere hat sich
+            # seit dem letzten Durchlauf nicht bewegt und braucht keine
+            # Rechenzeit. Ohne diese Einschraenkung waeren es bei 60
+            # Meldungen je Sekunde und 147 Kaufpunkten achttausend
+            # Rechnungen je Sekunde.
+            quotes = {t: dict(basis[t]) for t in geaendert if t in basis}
             veraltete_quotes = {}
         else:
             runde += 1
@@ -1406,6 +1417,7 @@ def main():
             # Die Einblendung veraendert die Eintraege, und der naechste
             # Durchlauf muss wieder vom unveraenderten Tagesstand ausgehen.
             basis = {t: dict(q) for t, q in quotes.items()}
+            geaendert = set(basis)      # beim Abruf alles einmal durchrechnen
 
         # Live-Werte ueber die Tagesdaten legen: Kurs, Tagesvolumen UND die
         # Tagesspanne. Das geschieht in JEDEM Durchlauf, also alle zwei
@@ -1647,7 +1659,20 @@ def main():
             print("Dauerwache: Zeit abgelaufen — Ende.")
             ws.stop()
             break
-        time.sleep(PRUEF_TAKT)
+
+        # ECHTZEIT (Mathias, 30.07.2026: "Wir machen Daytrading"). Statt
+        # blind zwei Sekunden zu schlafen, weckt die naechste Kursmeldung
+        # die Schleife — aus "bis zu zwei Sekunden" werden Millisekunden.
+        # Der Prueftakt bleibt als OBERGRENZE: Kommt gar nichts, weil
+        # Mittagsflaute herrscht oder die Leitung weg ist, laeuft die
+        # Schleife trotzdem weiter und merkt es.
+        if ws_laeuft:
+            geaendert = ws.warte_auf_kurse(PRUEF_TAKT, SAMMEL_FENSTER)
+            if not geaendert:
+                geaendert = set(basis)   # nichts gekommen: alles nachsehen
+        else:
+            time.sleep(PRUEF_TAKT)
+            geaendert = set(basis)
 
     # Verbindungen sauber schliessen, damit kein Faden offen bleibt.
     ws.stop()

@@ -222,7 +222,25 @@ CFG = {
         # schickt rund 3600 Meldungen je Minute — das wären 3600 volle
         # Durchläufe für einen Gewinn von Sekundenbruchteilen. Gegenüber
         # den ursprünglichen sechs Minuten ist das der Faktor 180.
+        # Nur noch die OBERGRENZE: Seit 30.07.2026 weckt jede eingehende
+        # Kursmeldung die Prüfung sofort (Mathias: "Wir machen
+        # Daytrading"). Dieser Wert greift nur, wenn gar nichts kommt —
+        # Mittagsflaute oder Leitung weg —, damit die Schleife trotzdem
+        # weiterläuft und das bemerkt.
         "pruef_takt_sekunden": 2,
+        # Nach der ersten Meldung kurz nachfassen, damit gleichzeitig
+        # gerissene Kaufpunkte in EINER Push-Meldung landen. Ohne das
+        # wären es in den ersten Minuten nach der Eröffnung zwanzig
+        # einzelne Nachrichten hintereinander.
+        #
+        # ACHTUNG, dieser Wert IST die Reaktionszeit: Der Wecker selbst
+        # löst nach rund 150 Millisekunden aus (nachgemessen), aber
+        # danach wird genau diese Zeit gewartet. 0,2 Sekunden ist der
+        # Kompromiss — zwei Ausbrüche innerhalb von 200 Millisekunden
+        # sind selten genug, und gegenüber den früheren zwei Sekunden ist
+        # es der Faktor zehn. Wer die absolute Untergrenze will, setzt 0;
+        # dann kommt für jeden Ausbruch eine eigene Push-Meldung.
+        "sammel_fenster_sekunden": 0.2,
         "min_historie_tage": 60,     # weniger Historie → Aktie überspringen
         # HINWEIS: Das 2000-Minuten-Limit gilt für PRIVATE Repos. heliot ist
         # öffentlich, dort sind die Actions-Minuten unbegrenzt und kostenlos
