@@ -94,6 +94,7 @@ ANKER = {
     "menue": '[data-name="placeOrderMenuButton"]',
     "formular": '[data-name="orderForm"]',
     "suchfeld": '[data-name="searchInput"]',
+    "wechseln": '[data-name="productChangeButton"]',
     "treffer": '[data-name="productSearchResult"]',
     "abschnitt": '[data-name="productType"]',
     "zeile": '[data-name="productItem"]',
@@ -120,21 +121,18 @@ def zeilen_lesen(seite) -> list:
         if (!wurzel) return [];
         const alle = [...wurzel.querySelectorAll(
             '[data-name="productType"], [data-name="productName"], [data-name="productItem"]')];
-        let abschnitt = '', name = '', isin = '', ergebnis = [];
+        let abschnitt = '', name = '', ergebnis = [];
         for (const e of alle) {
             const dn = e.getAttribute('data-name');
             const t = (e.textContent || '').replace(/\\s+/g, ' ').trim();
             if (dn === 'productType') { abschnitt = t; continue; }
-            if (dn === 'productName') {
-                const teile = t.split('|');
-                name = (teile[0] || '').trim();
-                isin = (teile[1] || '').trim();
-                continue;
-            }
+            // In der Trefferliste steht hier NUR der Firmenname, keine
+            // Kennung — die kommt erst im Auftragskopf (30.07. nachgemessen).
+            if (dn === 'productName') { name = t; continue; }
             // Zeilenform: "NasdaqNVDA | USDKV"
             const m = t.match(/^(.*?)([A-Z0-9.]{1,8})\\s*\\|\\s*([A-Z]{3})KV$/);
             ergebnis.push({
-                abschnitt, name, isin,
+                abschnitt, name,
                 boerse: m ? m[1].trim() : '',
                 kuerzel: m ? m[2] : '',
                 waehrung: m ? m[3] : '',
@@ -288,16 +286,32 @@ def main():
             seite.wait_for_timeout(400)
             seite.get_by_text("Schnell & einfach", exact=False).first.click()
             seite.wait_for_selector(ANKER["suchfeld"], timeout=8000)
+        elif seite.query_selector(ANKER["suchfeld"]) is None:
+            # Das Bedienfeld steht schon offen, aber auf einem ANDEREN Papier.
+            # Dann gibt es kein Suchfeld, sondern nur "Ändern" — ohne diesen
+            # Klick landet die Suche im Nichts (am 30.07. live aufgelaufen).
+            seite.click(ANKER["wechseln"])
+            seite.wait_for_selector(ANKER["suchfeld"], timeout=8000)
+
+        # Das Suchfeld behält nach "Ändern" den alten Text. Ohne Leeren
+        # hängt die neue Eingabe hinten an ("NVIDIA" + "Axogen") und die
+        # Suche findet gar nichts. fill("") allein greift bei diesem
+        # React-Feld nicht verlässlich, darum von Hand markieren.
         feld = seite.query_selector(ANKER["suchfeld"])
-        feld.fill("")
+        feld.click()
+        seite.keyboard.press("Control+A")
+        seite.keyboard.press("Delete")
         feld.type(such, delay=40)
         seite.wait_for_timeout(1200)
 
         zeilen = zeilen_lesen(seite)
+        if not zeilen:                       # Trefferliste manchmal langsam
+            seite.wait_for_timeout(1500)
+            zeilen = zeilen_lesen(seite)
         print(f"{len(zeilen)} Trefferzeile(n) gefunden.")
         ziel = waehle_zeile(zeilen, args.ticker)
-        print(f"Gewählt: {ziel['name']} | {ziel['isin']} | "
-              f"{ziel['boerse']} | {ziel['kuerzel']} | {ziel['waehrung']}")
+        print(f"Gewählt: {ziel['name']} | {ziel['boerse']} | "
+              f"{ziel['kuerzel']} | {ziel['waehrung']}")
 
         # Die K-Schaltfläche GENAU dieser Zeile
         seite.evaluate("""(roh) => {
