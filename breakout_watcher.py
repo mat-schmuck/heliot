@@ -1068,16 +1068,14 @@ def push_nachtrag(topic: str, treffer: list[dict]) -> bool:
     inzwischen ueberholt."""
     if not treffer:
         return True
+    # Nur die KUERZEL in den Titel (Mathias, 30.07.2026). Firmennamen
+    # sind dort zu lang — "Alpine Income Property Trust Inc" allein sind
+    # 31 Zeichen, und die Push-Vorschau schneidet ab. Der Name steht
+    # ohnehin in der ersten Zeile jedes Eintrags.
+    titel = ", ".join(t["ticker"] for t in treffer) + ": Vol jetzt bestätigt"
     if len(treffer) == 1:
-        t = treffer[0]
-        titel = f"{meldungskopf(t['ticker'], t.get('firma', ''))}, " \
-                f"Vol jetzt bestätigt"
-        absaetze = [format_treffer(t)]
+        absaetze = [format_treffer(treffer[0])]
     else:
-        # Bei mehreren passt der Firmenname nicht mehr in den Titel
-        # (Mathias, 29.07.2026) — er steht dann in jedem Eintrag.
-        titel = (", ".join(t["ticker"] for t in treffer)
-                 + ": Vol jetzt bestätigt")
         absaetze = [f"{i}. {format_treffer(t)}"
                     for i, t in enumerate(treffer, 1)]
     return sende(topic, titel, absaetze, "high", "chart_with_upwards_trend")
