@@ -222,41 +222,25 @@ CFG = {
         # schickt rund 3600 Meldungen je Minute — das wären 3600 volle
         # Durchläufe für einen Gewinn von Sekundenbruchteilen. Gegenüber
         # den ursprünglichen sechs Minuten ist das der Faktor 180.
-        # SEIT 30.07.2026 WIEDER EIN FESTER TAKT von 20 Sekunden
-        # (Mathias): Die Schleife wartet die vollen 20 Sekunden, statt
-        # bei jeder Kursmeldung aufzuwachen. Was sich unterdessen bewegt
-        # hat, sammelt der Strom; gerechnet wird danach nur dafür.
+        # FESTER TAKT von 2 Sekunden (Mathias, 30.07.2026 bestätigt):
+        # Die Schleife schläft die vollen zwei Sekunden und rechnet dann
+        # alles durch. Am 30.07. war das kurzzeitig anders — erst weckte
+        # jede Kursmeldung die Prüfung, dann standen 20 Sekunden drin;
+        # beides ist zurückgenommen.
         #
-        # Der Grund ist NICHT die Last bei Yahoo — der Strom ist eine
+        # Die Last bei Yahoo hängt NICHT daran: Der Strom ist eine
         # stehende Verbindung, die von sich aus sendet, und der schwere
         # Tagesdatenabruf läuft unabhängig davon im takt_sekunden.
-        # Zwischen 2 und 20 Sekunden ändert sich dort kein einziger
-        # Zugriff. Der Grund ist die Bündelung: Bei zwei Sekunden
-        # zerfällt ein gemeinsamer Ausbruch in viele Einzelmeldungen.
-        "pruef_takt_sekunden": 20,
-        # Nach der ersten Meldung kurz nachfassen, damit gleichzeitig
-        # gerissene Kaufpunkte in EINER Push-Meldung landen. Ohne das
-        # wären es in den ersten Minuten nach der Eröffnung zwanzig
-        # einzelne Nachrichten hintereinander.
-        #
-        # ACHTUNG, dieser Wert IST die Reaktionszeit: Der Wecker selbst
-        # löst nach rund 150 Millisekunden aus (nachgemessen), aber
-        # danach wird genau diese Zeit gewartet. 0,2 Sekunden ist der
-        # Kompromiss — zwei Ausbrüche innerhalb von 200 Millisekunden
-        # sind selten genug, und gegenüber den früheren zwei Sekunden ist
-        # es der Faktor zehn. Wer die absolute Untergrenze will, setzt 0;
-        # dann kommt für jeden Ausbruch eine eigene Push-Meldung.
-        "sammel_fenster_sekunden": 0.2,
-        # Höchstens so viele Aktien in EINER Push-Meldung (Mathias,
-        # 30.07.2026: "ich will keine 20 Meldungen als eine
-        # Pushmitteilung bekommen"). Was darüber hinausgeht, kommt als
-        # weitere Meldung mit "(2 von 4)" im Titel.
-        #
-        # Die Byte-Grenze allein reichte dafür nicht: Sie greift erst bei
-        # 3000 Zeichen, und ein Eintrag ist rund 150 Zeichen lang — es
-        # hätten also zwanzig in eine Meldung gepasst. Fünf sind mit dem
-        # Screenreader noch am Stück zu überblicken.
-        "max_eintraege_je_push": 5,
+        # Zwischen 2 und 20 Sekunden liegt dort kein einziger Zugriff
+        # Unterschied.
+        "pruef_takt_sekunden": 2,
+        # Weckuhr und Sammelfenster gab es nur am 30.07.2026 für ein paar
+        # Stunden; mit dem festen Zwei-Sekunden-Takt sind sie wieder
+        # heraus. Ebenso die Obergrenze von fünf Aktien je Push: Sie
+        # zerschnitt Meldungen, die zusammengehören (Mathias: "sonst
+        # kommen 2 Nachrichten auf ein Mal, die eig. eine sind").
+        # Geteilt wird ausschließlich nach der Zeichenzahl, siehe
+        # NTFY_GRENZE in breakout_watcher.py.
         "min_historie_tage": 60,     # weniger Historie → Aktie überspringen
         # HINWEIS: Das 2000-Minuten-Limit gilt für PRIVATE Repos. heliot ist
         # öffentlich, dort sind die Actions-Minuten unbegrenzt und kostenlos

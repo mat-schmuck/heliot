@@ -215,9 +215,6 @@ PRUEF_TAKT = CFG["betrieb"].get("pruef_takt_sekunden", 2)
 # gleichzeitig gerissene Kaufpunkte in EINER Push-Meldung landen statt in
 # zwanzig einzelnen — das passiert vor allem in den ersten Minuten nach
 # der Eroeffnung. Der Preis dafuer ist genau diese halbe Sekunde.
-SAMMEL_FENSTER = CFG["betrieb"].get("sammel_fenster_sekunden", 0.5)
-# Hoechstens so viele Aktien in EINER Push-Meldung; 0 hebt die Grenze auf.
-MAX_EINTRAEGE = CFG["betrieb"].get("max_eintraege_je_push", 5)
 
 # In den Push-Meldungen werden Strategienamen ausgeschrieben (Mathias,
 # 23.07.2026). In Excel und VOL_FAKTOR bleibt die Kurzform bestehen.
@@ -940,28 +937,32 @@ def email_kopf() -> dict:
 # nachgemessen: 3900 Zeichen kommen normal an, 4100 werden zur Datei.
 # Genau das ist Mathias an diesem Tag passiert, als viele Treffer auf
 # einmal kamen — und kostete ihn im Handel wertvolle Zeit. Darum wird
-# nie mehr als eine Portion auf einmal verschickt; die Grenze liegt mit
-# Sicherheitsabstand deutlich darunter.
-NTFY_GRENZE = 3000
+# nie mehr als eine Portion auf einmal verschickt.
+#
+# 4000 STATT 3000 (Mathias, 30.07.2026): "lass die Nachrichten wieder
+# unter der Marke von 4096 Zeichen begrenzen, sonst kommen 2 Nachrichten
+# auf ein Mal, die eig. eine sind." Bei 3000 wurde geteilt, was bequem in
+# eine Meldung gepasst haette. 4000 laesst 96 Zeichen Luft bis zur
+# gemessenen Marke — die Messung war eindeutig: 3900 kommt an, 4100 wird
+# zur Datei.
+NTFY_GRENZE = 4000
 
 
-def _portionen(absaetze: list[str], grenze: int = NTFY_GRENZE,
-               hoechstens: int = MAX_EINTRAEGE) -> list[list[str]]:
+def _portionen(absaetze: list[str], grenze: int = NTFY_GRENZE) -> list[list[str]]:
     """Teilt die Absaetze so auf, dass keine Nachricht die Grenze reisst.
     Getrennt wird NUR zwischen Aktien, nie mitten in einer Meldung.
 
-    ZWEI Grenzen (Mathias, 30.07.2026): die Zeichenzahl UND die Anzahl
-    der Aktien. Die Zeichengrenze allein reichte nicht — ein Eintrag ist
-    rund 150 Zeichen lang, in 3000 Zeichen haetten also zwanzig Platz
-    gefunden. "Ich will keine 20 Meldungen als eine Pushmitteilung
-    bekommen." """
+    EINZIGE Grenze ist die Zeichenzahl (Mathias, 30.07.2026). Eine
+    zusaetzliche Obergrenze von fuenf Aktien je Meldung stand am selben
+    Tag kurz drin und ist wieder heraus: Sie zerschnitt Meldungen, die
+    zusammengehoeren — "sonst kommen 2 Nachrichten auf ein Mal, die eig.
+    eine sind"."""
     portionen, aktuell, laenge = [], [], 0
     for absatz in absaetze:
         if len(absatz.encode("utf-8")) > grenze:      # Notbremse
             absatz = absatz.encode("utf-8")[:grenze - 20].decode("utf-8", "ignore") + " …"
         gr = len(absatz.encode("utf-8")) + 2
-        if aktuell and (laenge + gr > grenze
-                        or (hoechstens and len(aktuell) >= hoechstens)):
+        if aktuell and laenge + gr > grenze:
             portionen.append(aktuell)
             aktuell, laenge = [], 0
         aktuell.append(absatz)
@@ -1671,28 +1672,17 @@ def main():
             ws.stop()
             break
 
-        # FESTER TAKT (Mathias, 30.07.2026): Die Schleife wartet die
-        # vollen PRUEF_TAKT Sekunden, statt bei der naechsten Kursmeldung
-        # aufzuwachen. Die Weckuhr im Strom laeuft weiter und sammelt
-        # unterdessen, welche Aktien sich bewegt haben — gerechnet wird
-        # danach nur fuer diese, wie bisher.
+        # FESTER TAKT (Mathias, 30.07.2026 bestaetigt): Die Schleife
+        # schlaeft die vollen PRUEF_TAKT Sekunden und rechnet dann alles
+        # durch. Am 30.07. war das ein paar Stunden lang anders — erst
+        # weckte jede Kursmeldung die Pruefung, dann standen 20 Sekunden
+        # drin; beides ist zurueckgenommen.
         #
         # Kuerzer zu takten kostet bei Yahoo NICHTS: Der Strom ist eine
         # stehende Verbindung, die von sich aus sendet, und der schwere
-        # Tagesdatenabruf laeuft unabhaengig davon im TAKT. Der Grund fuer
-        # den laengeren Takt ist ein anderer — bei wenigen Sekunden
-        # zerfaellt ein gemeinsamer Ausbruch in viele Einzelmeldungen.
-        if ws_laeuft:
-            time.sleep(PRUEF_TAKT)
-            # Wartezeit schon abgelaufen — hier nur noch abholen, was
-            # sich unterdessen bewegt hat. Das Sammelfenster faengt noch
-            # die Meldungen ab, die genau auf der Grenze eintreffen.
-            geaendert = ws.warte_auf_kurse(0, SAMMEL_FENSTER)
-            if not geaendert:
-                geaendert = set(basis)   # nichts gekommen: alles nachsehen
-        else:
-            time.sleep(PRUEF_TAKT)
-            geaendert = set(basis)
+        # Tagesdatenabruf laeuft unabhaengig davon im TAKT.
+        time.sleep(PRUEF_TAKT)
+        geaendert = set(basis)
 
     # Verbindungen sauber schliessen, damit kein Faden offen bleibt.
     ws.stop()
