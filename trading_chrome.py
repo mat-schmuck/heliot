@@ -102,9 +102,24 @@ def offene_seiten() -> list:
         return []
 
 
+def nach_vorne() -> None:
+    """Das schon laufende Fenster hervorholen.
+
+    Chrome ein zweites Mal mit DEMSELBEN Profil aufzurufen startet keinen
+    zweiten Browser: Die laufende Sitzung übernimmt die Adresse, öffnet
+    sie in einer Registerkarte und hebt ihr Fenster nach vorne. Das ist
+    der verlässliche Weg — SetForegroundWindow aus einem
+    Hintergrundprozess blockiert Windows regelmäßig."""
+    subprocess.Popen([chrome_finden(), f"--user-data-dir={PROFIL}",
+                      STARTSEITE], close_fds=True)
+    time.sleep(1.5)
+
+
 def starten() -> int:
     if laeuft():
-        print(f"Chrome mit Debug-Anschluss {ANSCHLUSS} läuft bereits.")
+        print(f"Chrome mit Debug-Anschluss {ANSCHLUSS} läuft bereits — "
+              f"das Fenster wird hervorgeholt.")
+        nach_vorne()
         return status()
 
     exe = chrome_finden()
