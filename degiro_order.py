@@ -7,10 +7,24 @@ Mathias am 30.07.2026: "Ich möchte UNBEDINGT, dass ich nur bestätigen
 muss, alles davor soll das Programm machen."
 
 Genau so ist es gebaut. Das Programm geht den ganzen Weg — Order
-platzieren, suchen, richtige Zeile finden, Kaufdialog öffnen, Ordertyp,
-Limit und Betrag eintragen, auf "Order platzieren" klicken — und HÄLT
-DANN AN, wenn das Bestätigungsfenster offen ist. Es liest vor, was
+platzieren, suchen, richtige Zeile finden, Dialog öffnen, Ordertyp,
+Kurse und Stückzahl eintragen, auf "Order platzieren" klicken — und
+HÄLT DANN AN, wenn der Kontrollbildschirm offen ist. Es liest vor, was
 dort steht. Der letzte Klick gehört Mathias.
+
+DREI STUFEN
+    kauf   Limit-Kauf über einen Eurobetrag; die Stückzahl rechnet
+           DEGIRO selbst aus.
+    stop   Schutzstop auf den Bestand, der nach dem Kauf wirklich im
+           Depot liegt. Ordertyp "Stop Loss", unbefristet.
+    ziel   Verkauf beim Kursziel, Ordertyp "Limit".
+
+    Warum drei Aufrufe und keine verknüpfte Order: DEGIRO kennt keine
+    verbundenen Aufträge. Stop und Ziel wären zwei Verkäufe auf
+    DIESELBEN Stücke; ob der zweite abgelehnt oder als Leerverkauf
+    angenommen wird, ist ungeprüft. Darum geht der Stop in den Markt,
+    und das Ziel überwacht der Chartwächter, der ohnehin in Echtzeit
+    mitläuft. Erreicht die Aktie das Ziel, ruft er Stufe "ziel" auf.
 
 DIE SPERRE
     BESTAETIGEN_GEHOERT_MATHIAS steht als Konstante im Quelltext und
@@ -45,8 +59,21 @@ WAS AM 30.07.2026 IN DER OBERFLÄCHE GEMESSEN WURDE
       input[name="limit"]                 Limit ($)
       input[name="number"]                Anzahl
       input[name="amount"]                Betrag (€)
+      [data-name="orderType"]             Ordertyp
+      [data-name="orderTimeType"]         Orderdauer
+      [data-name="productPositionInfo"]   "Aktuelle Position … (30 St.)"
+      input[name="stopPrice"]             Stop-Preis ($)
       [data-name="orderConfirmation"]     Kontrollbildschirm
       [data-name="orderConfirmationCancel"]  "Abbrechen"
+
+    Ordertyp und Orderdauer sind nachgebaute Auswahlfelder, keine
+    echten. Der gewählte Text landet in einem versteckten Feld:
+      Ordertyp   Limit 0, Stop Limit 1, Stop Loss 3
+      Dauer      Tagesgültig 1, Unbefristet 3
+    Erst dieser Wert beweist, dass die Umstellung angekommen ist —
+    React zeichnet verzögert, ein einmaliges Nachsehen greift zu früh.
+    Stop Loss blendet "stopPrice" ein, Stop Limit "limit" UND
+    "stopPrice", Limit nur "limit".
     Die Schaltfläche "Order platzieren" im Formular trägt kein data-name,
     ist aber die einzige mit type="submit" darin.
     Die Feld-IDs enthalten Zeitstempel und sind NICHT brauchbar; die
@@ -61,20 +88,19 @@ WAS AM 30.07.2026 IN DER OBERFLÄCHE GEMESSEN WURDE
     Euro-Dollar-Kurs entfällt damit — und mit ihm eine Fehlerquelle.
 
 WO ES LÄUFT
-    An Mathias' eigenem Chrome, in dem er bei DEGIRO angemeldet ist.
-    Damit braucht das Programm KEINE Zugangsdaten: kein Passwort, kein
-    TOTP-Schlüssel, nichts zu speichern. Bei einem Depot ist das der
-    entscheidende Unterschied zum TraderFox-Bot, wo es nur um einen
-    Datendienst ging.
-
-    Chrome muss dafür einmalig mit einem Debug-Anschluss gestartet
-    werden:
-        chrome.exe --remote-debugging-port=9222
+    In einem eigenen Chrome-Profil fürs Traden, in dem Mathias selbst
+    bei DEGIRO angemeldet ist (trading_chrome.py). Damit braucht das
+    Programm KEINE Zugangsdaten: kein Passwort, kein TOTP-Schlüssel,
+    nichts zu speichern. Bei einem Depot ist das der entscheidende
+    Unterschied zum TraderFox-Bot, wo es nur um einen Datendienst ging.
 
 Aufruf:
+    python trading_chrome.py                             einmal starten
+
     python degiro_order.py NVDA --firma "NVIDIA Corp"
     python degiro_order.py NVDA --firma "NVIDIA Corp" --betrag 2000
-    python degiro_order.py NVDA --firma "NVIDIA Corp" --limit 195.50
+    python degiro_order.py NVDA --stufe stop --stop 41.20
+    python degiro_order.py NVDA --stufe ziel --limit 48.50
     python degiro_order.py --pruefe          nur die Anker prüfen
 """
 
@@ -98,6 +124,22 @@ ERLAUBTE_BOERSEN = ("Nasdaq", "NYSE", "NYSE Arca", "NYSE American",
                     "NYSE MKT", "Cboe BZX", "BATS")
 ERLAUBTE_WAEHRUNG = "USD"
 
+# Am 30.07.2026 in der Oberfläche abgelesen. Die Auswahl geschieht über
+# den sichtbaren Text; diese Zahlen dienen nur zur Gegenprobe, ob sie
+# auch angekommen ist — DEGIRO schreibt sie in ein verstecktes Feld.
+ORDERTYP_WERTE = {"Limit": "0", "Stop Limit": "1", "Stop Loss": "3"}
+DAUER_WERTE = {"Tagesgültig": "1", "Unbefristet": "3"}
+
+# Der Schutzstop soll auch über Nacht liegen bleiben. Preis dafür: Bei
+# einer Eröffnungslücke wird er tief unter dem Stopkurs ausgeführt.
+# Wer das nicht will, trägt hier "Tagesgültig" ein.
+STOP_DAUER = "Unbefristet"
+
+# Stop Loss und nicht Stop Limit: Ein Stop Limit verkauft nur bis zum
+# Grenzkurs — im schnellen Absturz, wofür der Stop da ist, greift er
+# dann ins Leere. Stop Loss verkauft notfalls billiger, aber er verkauft.
+STOP_ORDERTYP = "Stop Loss"
+
 ANKER = {
     "menue": '[data-name="placeOrderMenuButton"]',
     "formular": '[data-name="orderForm"]',
@@ -107,9 +149,14 @@ ANKER = {
     "abschnitt": '[data-name="productType"]',
     "zeile": '[data-name="productItem"]',
     "kauf": 'input[name="buySellActionField"][value="Kauf"]',
+    "verkauf": 'input[name="buySellActionField"][value="Verkauf"]',
     "limit": 'input[name="limit"]',
+    "stopkurs": 'input[name="stopPrice"]',
     "anzahl": 'input[name="number"]',
     "betrag": 'input[name="amount"]',
+    "ordertyp": '[data-name="orderForm"] [data-name="orderType"]',
+    "dauer": '[data-name="orderForm"] [data-name="orderTimeType"]',
+    "position": '[data-name="productPositionInfo"]',
     # Die Schaltfläche "Order platzieren" IM Formular. Sie trägt kein
     # data-name, ist aber die einzige mit type="submit" darin — oben im
     # Kopf der Seite heißt eine gleich, die öffnet nur das Bedienfeld.
@@ -279,6 +326,63 @@ def vorlesen_kontrolle(kopf: dict, firma: str, zeilen: list) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Auswahlfelder und Bestand
+# ---------------------------------------------------------------------------
+
+def auswahl_setzen(seite, anker: str, wunsch: str, feldname: str,
+                   erwartet: dict) -> None:
+    """Ordertyp oder Orderdauer umstellen — und nachsehen, ob es ankam.
+
+    Das sind keine gewöhnlichen Auswahlfelder, sondern nachgebaute. Der
+    gewählte Text landet in einem versteckten Feld; erst dessen Wert
+    beweist, dass die Umstellung gegriffen hat. React zeichnet verzögert,
+    darum wird bis zu zwei Sekunden nachgesehen statt einmal geraten."""
+    seite.click(anker)
+    seite.wait_for_timeout(250)
+    getroffen = seite.evaluate("""(wunsch) => {
+        const lb = document.querySelector('[role="listbox"]');
+        if (!lb) return false;
+        const z = [...lb.children].find(
+            c => (c.textContent || '').trim() === wunsch);
+        if (!z) return false;
+        z.click();
+        return true;
+    }""", wunsch)
+    if not getroffen:
+        raise SystemExit(f"'{wunsch}' steht nicht zur Auswahl — Abbruch.")
+
+    soll = erwartet[wunsch]
+    for _ in range(20):
+        seite.wait_for_timeout(100)
+        ist = seite.evaluate(
+            """(n) => { const e = document.querySelector(
+                   `[data-name="orderForm"] input[name="${n}"]`);
+                        return e ? e.value : null; }""", feldname)
+        if ist == soll:
+            return
+    raise SystemExit(
+        f"'{wunsch}' wurde angeklickt, ist aber nicht angekommen "
+        f"(erwartet {soll}, steht {ist}) — Abbruch, es wird nichts "
+        f"abgeschickt.")
+
+
+def position_lesen(seite):
+    """Wie viele Stücke liegen wirklich im Depot?
+
+    Steht im Bedienfeld als "Aktuelle Position $ 1.251,60 (30 St.)".
+    Diese Zahl ist die Grundlage jedes Verkaufs — geraten wird nichts,
+    denn ein Kauf kann auch nur teilweise ausgeführt worden sein."""
+    roh = seite.evaluate(
+        """() => { const e = document.querySelector(
+               '[data-name="productPositionInfo"]');
+                   return e ? e.textContent.replace(/\\s+/g, ' ').trim() : ''; }""")
+    m = re.search(r"\((\d+(?:[.\s]\d{3})*)\s*St\.", roh or "")
+    if not m:
+        return None, roh
+    return int(re.sub(r"[.\s]", "", m.group(1))), roh
+
+
+# ---------------------------------------------------------------------------
 # Ablauf
 # ---------------------------------------------------------------------------
 
@@ -296,9 +400,8 @@ def verbinde():
         p.stop()
         sys.exit(
             f"Chrome nicht erreichbar ({type(e).__name__}).\n"
-            f"Chrome muss mit Debug-Anschluss laufen:\n"
-            f"    chrome.exe --remote-debugging-port=9222\n"
-            f"Am einfachsten in die Chrome-Verknüpfung eintragen.")
+            f"Bitte zuerst starten:\n"
+            f"    python trading_chrome.py")
     seiten = [s for ktx in browser.contexts for s in ktx.pages]
     ziel = next((s for s in seiten if "degiro" in (s.url or "")), None)
     if ziel is None:
@@ -308,11 +411,106 @@ def verbinde():
     return p, browser, ziel
 
 
+def papier_oeffnen(seite, ticker: str, firma: str) -> dict:
+    """Bedienfeld öffnen, das richtige Papier suchen, Kaufdialog öffnen.
+
+    Für alle drei Stufen derselbe Weg — auch beim Verkaufen führt DEGIRO
+    nur hier hinein. Zurück kommt die gewählte Trefferzeile."""
+    such = firma or ticker
+    print(f"Suche nach {such!r} …")
+    if seite.query_selector(ANKER["formular"]) is None:
+        seite.click(ANKER["menue"])
+        seite.wait_for_timeout(400)
+        seite.get_by_text("Schnell & einfach", exact=False).first.click()
+        seite.wait_for_selector(ANKER["suchfeld"], timeout=8000)
+    elif seite.query_selector(ANKER["suchfeld"]) is None:
+        # Das Bedienfeld steht schon offen, aber auf einem ANDEREN Papier.
+        # Dann gibt es kein Suchfeld, sondern nur "Ändern" — ohne diesen
+        # Klick landet die Suche im Nichts (am 30.07. live aufgelaufen).
+        seite.click(ANKER["wechseln"])
+        seite.wait_for_selector(ANKER["suchfeld"], timeout=8000)
+
+    # Das Suchfeld behält nach "Ändern" den alten Text. Ohne Leeren
+    # hängt die neue Eingabe hinten an ("NVIDIA" + "Axogen") und die
+    # Suche findet gar nichts. fill("") allein greift bei diesem
+    # React-Feld nicht verlässlich, darum von Hand markieren.
+    feld = seite.query_selector(ANKER["suchfeld"])
+    feld.click()
+    seite.keyboard.press("Control+A")
+    seite.keyboard.press("Delete")
+    feld.type(such, delay=40)
+    seite.wait_for_timeout(1200)
+
+    zeilen = zeilen_lesen(seite)
+    if not zeilen:                       # Trefferliste manchmal langsam
+        seite.wait_for_timeout(1500)
+        zeilen = zeilen_lesen(seite)
+    print(f"{len(zeilen)} Trefferzeile(n) gefunden.")
+    ziel = waehle_zeile(zeilen, ticker)
+    print(f"Gewählt: {ziel['name']} | {ziel['boerse']} | "
+          f"{ziel['kuerzel']} | {ziel['waehrung']}")
+
+    # Die K-Schaltfläche GENAU dieser Zeile
+    seite.evaluate("""(roh) => {
+        const zeilen = [...document.querySelectorAll(
+            '[data-name="productSearchResult"] [data-name="productItem"]')];
+        const z = zeilen.find(e =>
+            (e.textContent||'').replace(/\\s+/g,' ').trim().startsWith(roh));
+        if (!z) throw new Error('Zeile beim Klicken nicht mehr da');
+        const k = [...z.querySelectorAll('button')]
+            .find(b => (b.textContent||'').trim() === 'K');
+        if (!k) throw new Error('K-Schaltflaeche fehlt');
+        k.click();
+    }""", ziel["roh"])
+    seite.wait_for_selector(ANKER["formular"], timeout=8000)
+    seite.wait_for_selector(ANKER["ordertyp"], timeout=8000)
+
+    kopf = kopf_lesen(seite)
+    if kopf.get("kuerzel") != ticker.upper():
+        raise SystemExit(
+            f"Der geöffnete Auftrag zeigt {kopf.get('kuerzel')}, "
+            f"erwartet war {ticker.upper()} — Abbruch, es wird nichts "
+            f"eingetragen.")
+    return ziel
+
+
+def absenden_und_vorlesen(seite, ticker: str, firma: str) -> int:
+    """Der letzte Schritt, den das Programm noch selbst macht.
+
+    "Order platzieren" schickt NICHTS ab, es öffnet nur den
+    Kontrollbildschirm mit "Abbrechen" und "Bestätigen". Erst
+    "Bestätigen" führt aus — und das macht Mathias."""
+    seite.click(ANKER["absenden"])
+    try:
+        seite.wait_for_selector(ANKER["kontrolle"], timeout=10000)
+    except Exception:
+        print("\n⚠ Der Kontrollbildschirm ist nicht aufgegangen. Bitte "
+              "in Chrome nachsehen, bevor du irgendetwas bestätigst.")
+        return 1
+
+    # Noch einmal gegengeprüft, diesmal auf dem Kontrollbildschirm:
+    # Steht dort ein anderes Papier, wird abgebrochen statt gemeldet.
+    pruef = kopf_lesen(seite)
+    if pruef and pruef.get("kuerzel") != ticker.upper():
+        seite.click(ANKER["kontrolle_abbrechen"])
+        raise SystemExit(
+            f"Der Kontrollbildschirm zeigt {pruef.get('kuerzel')} statt "
+            f"{ticker.upper()} — abgebrochen, es wurde nichts ausgeführt.")
+
+    print(vorlesen_kontrolle(pruef, firma, kontrolle_lesen(seite)))
+    return 0
+
+
 def main():
     ap = argparse.ArgumentParser(
-        description="Bereitet eine DEGIRO-Kauforder vor. Bestätigt wird "
+        description="Bereitet eine DEGIRO-Order vor. Bestätigt wird "
                     "von Hand.")
     ap.add_argument("ticker", nargs="?", help="Kürzel, z. B. NVDA")
+    ap.add_argument("--stufe", choices=("kauf", "stop", "ziel"),
+                    default="kauf",
+                    help="kauf: Limit-Kauf über den Betrag. "
+                         "stop: Schutzstop auf den ganzen Bestand. "
+                         "ziel: Verkauf beim Kursziel.")
     ap.add_argument("--firma", default="",
                     help="Voller Firmenname für die Suche — trifft besser "
                          "als das Kürzel")
@@ -320,6 +518,11 @@ def main():
     ap.add_argument("--limit", type=float, default=None,
                     help="Limit in Dollar; ohne Angabe Kurs plus "
                          f"{LIMIT_AUFSCHLAG*100:.1f} Prozent")
+    ap.add_argument("--stop", type=float, default=None,
+                    help="Stopkurs in Dollar (Stufe stop)")
+    ap.add_argument("--anzahl", type=int, default=None,
+                    help="Stückzahl beim Verkaufen; ohne Angabe der "
+                         "gesamte Bestand aus dem Depot")
     ap.add_argument("--pruefe", action="store_true",
                     help="Nur nachsehen, ob alle Anker in der Oberfläche "
                          "noch da sind. Ändert nichts.")
@@ -328,6 +531,10 @@ def main():
     if not args.ticker and not args.pruefe:
         sys.exit("Bitte ein Kürzel angeben, z. B.: "
                  "python degiro_order.py NVDA --firma \"NVIDIA Corp\"")
+    if args.stufe == "stop" and args.stop is None:
+        sys.exit("Stufe 'stop' braucht den Stopkurs: --stop 41.20")
+    if args.stufe == "ziel" and args.limit is None:
+        sys.exit("Stufe 'ziel' braucht das Kursziel: --limit 48.50")
 
     p, browser, seite = verbinde()
     try:
@@ -341,99 +548,72 @@ def main():
                       "Bedienfeld zu ist): " + ", ".join(fehlend))
             return 0
 
-        such = args.firma or args.ticker
-        print(f"Suche nach {such!r} …")
-        if seite.query_selector(ANKER["formular"]) is None:
-            seite.click(ANKER["menue"])
-            seite.wait_for_timeout(400)
-            seite.get_by_text("Schnell & einfach", exact=False).first.click()
-            seite.wait_for_selector(ANKER["suchfeld"], timeout=8000)
-        elif seite.query_selector(ANKER["suchfeld"]) is None:
-            # Das Bedienfeld steht schon offen, aber auf einem ANDEREN Papier.
-            # Dann gibt es kein Suchfeld, sondern nur "Ändern" — ohne diesen
-            # Klick landet die Suche im Nichts (am 30.07. live aufgelaufen).
-            seite.click(ANKER["wechseln"])
-            seite.wait_for_selector(ANKER["suchfeld"], timeout=8000)
+        ziel = papier_oeffnen(seite, args.ticker, args.firma)
+        kopf = kopf_lesen(seite)
 
-        # Das Suchfeld behält nach "Ändern" den alten Text. Ohne Leeren
-        # hängt die neue Eingabe hinten an ("NVIDIA" + "Axogen") und die
-        # Suche findet gar nichts. fill("") allein greift bei diesem
-        # React-Feld nicht verlässlich, darum von Hand markieren.
-        feld = seite.query_selector(ANKER["suchfeld"])
-        feld.click()
-        seite.keyboard.press("Control+A")
-        seite.keyboard.press("Delete")
-        feld.type(such, delay=40)
-        seite.wait_for_timeout(1200)
+        if args.stufe == "kauf":
+            kurs = float(str(kopf["kurs"]).replace(".", "").replace(",", "."))
+            limit = (args.limit if args.limit
+                     else round(kurs * (1 + LIMIT_AUFSCHLAG), 2))
+            seite.fill(ANKER["limit"], f"{limit:.2f}".replace(".", ","))
+            seite.fill(ANKER["betrag"], f"{args.betrag:.0f}")
+            seite.wait_for_timeout(900)      # DEGIRO rechnet die Anzahl aus
 
-        zeilen = zeilen_lesen(seite)
-        if not zeilen:                       # Trefferliste manchmal langsam
-            seite.wait_for_timeout(1500)
-            zeilen = zeilen_lesen(seite)
-        print(f"{len(zeilen)} Trefferzeile(n) gefunden.")
-        ziel = waehle_zeile(zeilen, args.ticker)
-        print(f"Gewählt: {ziel['name']} | {ziel['boerse']} | "
-              f"{ziel['kuerzel']} | {ziel['waehrung']}")
+            kopf = kopf_lesen(seite)
+            print(vorlesen(kopf, ziel["name"]))
+            if not kopf.get("anzahl"):
+                print("\n⚠ Es steht keine Anzahl im Auftrag — es wird "
+                      "nichts abgeschickt. Bitte nachsehen.")
+                return 1
+            return absenden_und_vorlesen(seite, args.ticker, ziel["name"])
 
-        # Die K-Schaltfläche GENAU dieser Zeile
-        seite.evaluate("""(roh) => {
-            const zeilen = [...document.querySelectorAll(
-                '[data-name="productSearchResult"] [data-name="productItem"]')];
-            const z = zeilen.find(e =>
-                (e.textContent||'').replace(/\\s+/g,' ').trim().startsWith(roh));
-            if (!z) throw new Error('Zeile beim Klicken nicht mehr da');
-            const k = [...z.querySelectorAll('button')]
-                .find(b => (b.textContent||'').trim() === 'K');
-            if (!k) throw new Error('K-Schaltflaeche fehlt');
-            k.click();
-        }""", ziel["roh"])
-        seite.wait_for_selector(ANKER["limit"], timeout=8000)
+        # ---- Verkaufsstufen: Schutzstop und Kursziel -------------------
+        # Beide verkaufen etwas, das schon im Depot liegt. Die Stückzahl
+        # kommt daher aus dem Depot und nicht aus einer Annahme — ein
+        # Kauf kann auch nur teilweise ausgeführt worden sein.
+        bestand, roh = position_lesen(seite)
+        if bestand is None:
+            raise SystemExit(
+                f"Der Bestand ist nicht lesbar ({roh!r}) — Abbruch, es "
+                f"wird nichts eingetragen.")
+        anzahl = args.anzahl if args.anzahl else bestand
+        if anzahl > bestand:
+            raise SystemExit(
+                f"{anzahl} Stück verlangt, im Depot liegen aber nur "
+                f"{bestand} — Abbruch. Mehr zu verkaufen als man hat, "
+                f"wäre ein Leerverkauf.")
+        print(f"Im Depot: {bestand} Stück, verkauft werden {anzahl}.")
+
+        seite.click(ANKER["verkauf"])
+        seite.wait_for_timeout(300)
+
+        if args.stufe == "stop":
+            auswahl_setzen(seite, ANKER["ordertyp"], STOP_ORDERTYP,
+                           "orderType", ORDERTYP_WERTE)
+            auswahl_setzen(seite, ANKER["dauer"], STOP_DAUER,
+                           "orderTimeType", DAUER_WERTE)
+            seite.wait_for_selector(ANKER["stopkurs"], timeout=8000)
+            seite.fill(ANKER["stopkurs"],
+                       f"{args.stop:.2f}".replace(".", ","))
+        else:
+            auswahl_setzen(seite, ANKER["ordertyp"], "Limit",
+                           "orderType", ORDERTYP_WERTE)
+            seite.fill(ANKER["limit"],
+                       f"{args.limit:.2f}".replace(".", ","))
+
+        seite.fill(ANKER["anzahl"], str(anzahl))
+        seite.wait_for_timeout(900)
 
         kopf = kopf_lesen(seite)
-        if kopf.get("kuerzel") != args.ticker.upper():
+        if str(kopf.get("anzahl") or "").strip() != str(anzahl):
             raise SystemExit(
-                f"Der geöffnete Auftrag zeigt {kopf.get('kuerzel')}, "
-                f"erwartet war {args.ticker.upper()} — Abbruch, es wird "
-                f"nichts eingetragen.")
-
-        kurs = float(str(kopf["kurs"]).replace(".", "").replace(",", "."))
-        limit = args.limit if args.limit else round(kurs * (1 + LIMIT_AUFSCHLAG), 2)
-
-        seite.fill(ANKER["limit"], f"{limit:.2f}".replace(".", ","))
-        seite.fill(ANKER["betrag"], f"{args.betrag:.0f}")
-        seite.wait_for_timeout(900)      # DEGIRO rechnet die Anzahl aus
-
-        kopf = kopf_lesen(seite)
-        print(vorlesen(kopf, ziel["name"]))
-
-        if not kopf.get("anzahl"):
-            print("\n⚠ Es steht keine Anzahl im Auftrag — es wird nichts "
-                  "abgeschickt. Bitte nachsehen.")
-            return 1
-
-        # Ein Klick weiter: "Order platzieren" schickt NICHTS ab, es
-        # öffnet nur den Kontrollbildschirm mit "Abbrechen" und
-        # "Bestätigen". Erst "Bestätigen" kauft — und das macht Mathias.
-        seite.click(ANKER["absenden"])
-        try:
-            seite.wait_for_selector(ANKER["kontrolle"], timeout=10000)
-        except Exception:
-            print("\n⚠ Der Kontrollbildschirm ist nicht aufgegangen. Bitte "
-                  "in Chrome nachsehen, bevor du irgendetwas bestätigst.")
-            return 1
-
-        # Noch einmal gegengeprüft, diesmal auf dem Kontrollbildschirm:
-        # Steht dort ein anderes Papier, wird abgebrochen statt gemeldet.
-        pruef = kopf_lesen(seite)
-        if pruef and pruef.get("kuerzel") != args.ticker.upper():
-            seite.click(ANKER["kontrolle_abbrechen"])
+                f"Im Auftrag steht die Anzahl {kopf.get('anzahl')!r} "
+                f"statt {anzahl} — Abbruch, es wird nichts abgeschickt.")
+        if kopf.get("kauf_gewaehlt"):
             raise SystemExit(
-                f"Der Kontrollbildschirm zeigt {pruef.get('kuerzel')} statt "
-                f"{args.ticker.upper()} — abgebrochen, nichts gekauft.")
-
-        print(vorlesen_kontrolle(pruef or kopf, ziel["name"],
-                                 kontrolle_lesen(seite)))
-        return 0
+                "Der Auftrag steht auf KAUF, verlangt war ein Verkauf — "
+                "Abbruch.")
+        return absenden_und_vorlesen(seite, args.ticker, ziel["name"])
     finally:
         try:
             p.stop()
