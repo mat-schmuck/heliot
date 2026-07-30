@@ -130,6 +130,11 @@ def starten() -> int:
         [exe,
          f"--remote-debugging-port={ANSCHLUSS}",
          f"--user-data-dir={PROFIL}",
+         # Unter etwa 1200 Punkten Breite schaltet DEGIRO auf die
+         # kompakte Ansicht um: Dann gibt es kein "Order platzieren" im
+         # Kopf mehr, sondern nur einen Menüknopf, und degiro_order.py
+         # findet seine Anker nicht (am 30.07.2026 aufgelaufen).
+         "--window-size=1400,900",
          "--no-first-run",
          "--no-default-browser-check",
          STARTSEITE],

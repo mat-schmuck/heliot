@@ -114,6 +114,7 @@ BESTAETIGEN_GEHOERT_MATHIAS = True
 # ===========================================================================
 
 CHROME_ANSCHLUSS = "http://localhost:9222"
+MINDESTBREITE = 1400          # darunter zeigt DEGIRO die kompakte Ansicht
 STANDARD_BETRAG_EUR = 1000.0
 LIMIT_AUFSCHLAG = 0.003        # Limit knapp über dem Kurs, damit es füllt
 
@@ -148,8 +149,11 @@ ANKER = {
     "treffer": '[data-name="productSearchResult"]',
     "abschnitt": '[data-name="productType"]',
     "zeile": '[data-name="productItem"]',
-    "kauf": 'input[name="buySellActionField"][value="Kauf"]',
-    "verkauf": 'input[name="buySellActionField"][value="Verkauf"]',
+    # Kauf/Verkauf: Der Schalter selbst ist unsichtbar (opacity-0), davor
+    # liegt die Beschriftung und fängt jeden Klick ab. Angeklickt wird
+    # deshalb das Label, nicht das Feld (am 30.07.2026 aufgelaufen).
+    "kauf": 'label[for="buySellActionField-Kauf"]',
+    "verkauf": 'label[for="buySellActionField-Verkauf"]',
     "limit": 'input[name="limit"]',
     "stopkurs": 'input[name="stopPrice"]',
     "anzahl": 'input[name="number"]',
@@ -206,17 +210,48 @@ def zeilen_lesen(seite) -> list:
     }""")
 
 
+def passende_zeilen(zeilen: list, kuerzel: str) -> list:
+    """Alle Zeilen, die alle vier Bedingungen erfüllen."""
+    return [z for z in zeilen
+            if z["abschnitt"].startswith("Aktien")
+            and z["kuerzel"] == kuerzel.upper()
+            and z["waehrung"] == ERLAUBTE_WAEHRUNG
+            and any(z["boerse"].startswith(b) for b in ERLAUBTE_BOERSEN)]
+
+
+def suchbegriffe(ticker: str, firma: str) -> list:
+    """In welcher Reihenfolge gesucht wird.
+
+    Das Kürzel zuerst: Es ist eindeutig, und die Zeilenprüfung verlangt
+    es ohnehin exakt. Der volle Firmenname taugt schlecht als
+    Suchbegriff — "AxoGen Inc" liefert bei DEGIRO NICHTS, "Axogen"
+    dagegen genau eine Zeile (am 30.07.2026 gemessen). Deshalb kommt
+    zuletzt der Name ohne Rechtsform."""
+    begriffe = [ticker.upper()]
+    if firma:
+        begriffe.append(firma)
+        kurz = re.sub(
+            r"[\s,]+(Inc|Inc\.|Corp|Corp\.|Corporation|Co|Co\.|Ltd|Ltd\.|"
+            r"plc|PLC|LLC|N\.V\.|NV|S\.A\.|SA|AG|SE|Group|Holdings?)\.?$",
+            "", firma.strip(), flags=re.IGNORECASE).strip()
+        if kurz and kurz.lower() != firma.strip().lower():
+            begriffe.append(kurz)
+    # Reihenfolge behalten, Doppelte raus
+    gesehen, ergebnis = set(), []
+    for b in begriffe:
+        if b.lower() not in gesehen:
+            gesehen.add(b.lower())
+            ergebnis.append(b)
+    return ergebnis
+
+
 def waehle_zeile(zeilen: list, kuerzel: str) -> dict:
     """Die EINE richtige Zeile — oder ein Abbruch mit Begründung.
 
     Vier Bedingungen zugleich, und am Ende muss genau EIN Treffer
     übrigbleiben. Bleiben mehrere oder keiner, wird nichts angeklickt:
     Bei einer Kauforder ist Abbrechen immer billiger als Raten."""
-    passend = [z for z in zeilen
-               if z["abschnitt"].startswith("Aktien")
-               and z["kuerzel"] == kuerzel.upper()
-               and z["waehrung"] == ERLAUBTE_WAEHRUNG
-               and any(z["boerse"].startswith(b) for b in ERLAUBTE_BOERSEN)]
+    passend = passende_zeilen(zeilen, kuerzel)
     if len(passend) == 1:
         return passend[0]
     if not passend:
@@ -403,12 +438,49 @@ def verbinde():
             f"Bitte zuerst starten:\n"
             f"    python trading_chrome.py")
     seiten = [s for ktx in browser.contexts for s in ktx.pages]
-    ziel = next((s for s in seiten if "degiro" in (s.url or "")), None)
+    # Nach dem Anmelden bleibt die Anmeldeseite oft als zweite
+    # Registerkarte offen. Die erstbeste zu nehmen führte dort hinein —
+    # gesucht ist die Handelsansicht, nicht /login.
+    handel = [s for s in seiten
+              if "/trader/" in (s.url or "") and "/login" not in (s.url or "")]
+    ziel = handel[0] if handel else None
     if ziel is None:
         p.stop()
-        sys.exit("Kein DEGIRO-Tab offen. Bitte trader.degiro.nl öffnen "
-                 "und anmelden.")
+        offen = [s.url for s in seiten if "degiro" in (s.url or "")]
+        sys.exit("Keine angemeldete DEGIRO-Handelsansicht offen"
+                 + (f" (gefunden: {offen})" if offen else "")
+                 + ".\nBitte anmelden: python trading_chrome.py")
+    fenster_breit_genug(ziel)
     return p, browser, ziel
+
+
+def fenster_breit_genug(seite) -> None:
+    """Ein zu schmales Fenster breiter machen.
+
+    Unter etwa 1200 Punkten schaltet DEGIRO auf die kompakte Ansicht um.
+    Dort gibt es kein "Order platzieren" im Kopf mehr, sondern nur einen
+    Menüknopf — sämtliche Anker fehlen dann. Statt daran zu scheitern
+    wird das Fenster einfach breit genug gemacht."""
+    try:
+        cdp = seite.context.new_cdp_session(seite)
+        info = cdp.send("Browser.getWindowForTarget")
+        b = info.get("bounds", {})
+        if b.get("windowState") != "normal":
+            cdp.send("Browser.setWindowBounds",
+                     {"windowId": info["windowId"],
+                      "bounds": {"windowState": "normal"}})
+            b = cdp.send("Browser.getWindowForTarget").get("bounds", {})
+        if b.get("width", 0) < MINDESTBREITE:
+            print(f"Fenster ist {b.get('width')} Punkte breit — DEGIRO "
+                  f"zeigt dann die kompakte Ansicht. Wird verbreitert.")
+            cdp.send("Browser.setWindowBounds",
+                     {"windowId": info["windowId"],
+                      "bounds": {"width": MINDESTBREITE,
+                                 "height": max(b.get("height", 0), 900)}})
+            seite.wait_for_timeout(800)
+    except Exception as e:
+        print(f"Fensterbreite nicht prüfbar ({type(e).__name__}) — "
+              f"falls Anker fehlen, bitte das Fenster breiter ziehen.")
 
 
 def papier_oeffnen(seite, ticker: str, firma: str) -> dict:
@@ -416,8 +488,6 @@ def papier_oeffnen(seite, ticker: str, firma: str) -> dict:
 
     Für alle drei Stufen derselbe Weg — auch beim Verkaufen führt DEGIRO
     nur hier hinein. Zurück kommt die gewählte Trefferzeile."""
-    such = firma or ticker
-    print(f"Suche nach {such!r} …")
     if seite.query_selector(ANKER["formular"]) is None:
         seite.click(ANKER["menue"])
         seite.wait_for_timeout(400)
@@ -430,23 +500,32 @@ def papier_oeffnen(seite, ticker: str, firma: str) -> dict:
         seite.click(ANKER["wechseln"])
         seite.wait_for_selector(ANKER["suchfeld"], timeout=8000)
 
-    # Das Suchfeld behält nach "Ändern" den alten Text. Ohne Leeren
-    # hängt die neue Eingabe hinten an ("NVIDIA" + "Axogen") und die
-    # Suche findet gar nichts. fill("") allein greift bei diesem
-    # React-Feld nicht verlässlich, darum von Hand markieren.
-    feld = seite.query_selector(ANKER["suchfeld"])
-    feld.click()
-    seite.keyboard.press("Control+A")
-    seite.keyboard.press("Delete")
-    feld.type(such, delay=40)
-    seite.wait_for_timeout(1200)
+    zeilen, ziel = [], None
+    for such in suchbegriffe(ticker, firma):
+        print(f"Suche nach {such!r} …")
+        # Das Suchfeld behält nach "Ändern" den alten Text. Ohne Leeren
+        # hängt die neue Eingabe hinten an ("NVIDIA" + "Axogen") und die
+        # Suche findet gar nichts. fill("") allein greift bei diesem
+        # React-Feld nicht verlässlich, darum von Hand markieren.
+        feld = seite.query_selector(ANKER["suchfeld"])
+        feld.click()
+        seite.keyboard.press("Control+A")
+        seite.keyboard.press("Delete")
+        feld.type(such, delay=40)
+        seite.wait_for_timeout(1200)
 
-    zeilen = zeilen_lesen(seite)
-    if not zeilen:                       # Trefferliste manchmal langsam
-        seite.wait_for_timeout(1500)
         zeilen = zeilen_lesen(seite)
-    print(f"{len(zeilen)} Trefferzeile(n) gefunden.")
-    ziel = waehle_zeile(zeilen, ticker)
+        if not zeilen:                   # Trefferliste manchmal langsam
+            seite.wait_for_timeout(1500)
+            zeilen = zeilen_lesen(seite)
+        passend = passende_zeilen(zeilen, ticker)
+        print(f"  {len(zeilen)} Trefferzeile(n), davon {len(passend)} passend.")
+        if len(passend) == 1:
+            ziel = passend[0]
+            break
+
+    if ziel is None:                     # bricht mit voller Begründung ab
+        ziel = waehle_zeile(zeilen, ticker)
     print(f"Gewählt: {ziel['name']} | {ziel['boerse']} | "
           f"{ziel['kuerzel']} | {ziel['waehrung']}")
 
@@ -526,9 +605,12 @@ def main():
     ap.add_argument("--pruefe", action="store_true",
                     help="Nur nachsehen, ob alle Anker in der Oberfläche "
                          "noch da sind. Ändert nichts.")
+    ap.add_argument("--abbrechen", action="store_true",
+                    help="Einen offenen Kontrollbildschirm verwerfen. "
+                         "Klickt 'Abbrechen', nie 'Bestätigen'.")
     args = ap.parse_args()
 
-    if not args.ticker and not args.pruefe:
+    if not args.ticker and not (args.pruefe or args.abbrechen):
         sys.exit("Bitte ein Kürzel angeben, z. B.: "
                  "python degiro_order.py NVDA --firma \"NVIDIA Corp\"")
     if args.stufe == "stop" and args.stop is None:
@@ -547,6 +629,19 @@ def main():
                 print("Nicht gefunden (kann normal sein, solange das "
                       "Bedienfeld zu ist): " + ", ".join(fehlend))
             return 0
+
+        if args.abbrechen:
+            if seite.query_selector(ANKER["kontrolle"]) is None:
+                print("Es steht kein Kontrollbildschirm offen.")
+                return 0
+            seite.click(ANKER["kontrolle_abbrechen"])
+            seite.wait_for_timeout(800)
+            noch_offen = seite.query_selector(ANKER["kontrolle"]) is not None
+            print("Kontrollbildschirm verworfen — es wurde nichts "
+                  "ausgeführt." if not noch_offen else
+                  "⚠ Der Kontrollbildschirm ist noch offen, bitte "
+                  "in Chrome nachsehen.")
+            return 1 if noch_offen else 0
 
         ziel = papier_oeffnen(seite, args.ticker, args.firma)
         kopf = kopf_lesen(seite)
