@@ -1,152 +1,251 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-DEGIRO-ORDER VORBEREITEN — die letzte Auslösung bleibt bei Mathias
-==================================================================
-Mathias am 30.07.2026: "Alles, was mit Degiro zu tun hat, geht auf mein
-Konto, baue daher dieses Tool mit manueller finaler Auslösung."
+DEGIRO-ORDER VORBEREITEN — bestätigt wird von Hand
+===================================================
+Mathias am 30.07.2026: "Ich möchte UNBEDINGT, dass ich nur bestätigen
+muss, alles davor soll das Programm machen."
 
-WAS DIESES PROGRAMM TUT
-  Es meldet sich bei DEGIRO an, sucht die Aktie, oeffnet den Kaufdialog,
-  stellt den Ordertyp, rechnet die Stueckzahl fuer den gewuenschten
-  Gegenwert aus und traegt alles ein. Dann HAELT ES AN und liest den
-  fertigen Auftrag vor.
+Genau so ist es gebaut. Das Programm geht den ganzen Weg — Order
+platzieren, suchen, richtige Zeile finden, Kaufdialog öffnen, Ordertyp,
+Limit und Betrag eintragen, auf "Order platzieren" klicken — und HÄLT
+DANN AN, wenn das Bestätigungsfenster offen ist. Es liest vor, was
+dort steht. Der letzte Klick gehört Mathias.
 
-WAS ES NICHT TUT
-  Es drueckt niemals auf Bestaetigen. Der letzte Klick gehoert Mathias.
-  Die Sperre BESTAETIGEN_GEHOERT_MATHIAS steht bewusst als Konstante im
-  Code und nicht als Aufrufoption — eine Option waere irgendwann
-  versehentlich gesetzt.
+DIE SPERRE
+    BESTAETIGEN_GEHOERT_MATHIAS steht als Konstante im Quelltext und
+    nicht als Aufrufoption. Eine Option wäre irgendwann versehentlich
+    gesetzt. Das Programm kennt die Bestätigen-Schaltfläche nicht einmal
+    — es sucht sie nirgends.
 
 WARUM VORGELESEN WIRD
-  Mathias sieht den Bildschirm nicht. Beim TraderFox-Bot ist genau der
-  Fehler passiert, vor dem hier geschuetzt werden muss: Die Suche traf
-  die falsche Zeile, und der Alarm landete auf der falschen Aktie. Bei
-  einem Alarm ist das aergerlich, bei einer Order kostet es Geld.
-  Deshalb wird VOR dem Anhalten zurueckgelesen, was wirklich im
-  Orderfenster steht — Name, Kennung, Boerse, Ordertyp, Limit,
-  Stueckzahl und Gegenwert. Nicht das, was das Programm eingetragen
-  haben WOLLTE, sondern das, was die Seite hergibt.
+    Mathias sieht den Bildschirm nicht. Am 30.07.2026 habe ich die Suche
+    nach "NVIDIA" in seinem Konto angesehen: Sie liefert eine Aktie und
+    ZEHN weitere handelbare Zeilen — dieselbe Aktie auf Tradegate und
+    Xetra in Euro, dazu 3NVD, NVD3, NVI3, ONVD (Hebelpapiere), NVDI
+    (Optionsschein) und 3SNV sowie NVDD, die auf FALLENDE Kurse setzen.
+    Jede Zeile hat eine eigene K-Schaltfläche.
 
-ZUGANGSDATEN
-  Ausschliesslich aus der Umgebung, nie im Code, nie im Protokoll:
-      DEGIRO_USER, DEGIRO_PASS, DEGIRO_TOTP   (letzteres bei 2FA)
-  Mathias legt sie selbst an. Sie werden nirgends ausgegeben, auch nicht
-  in Fehlermeldungen — deshalb wird bei Ausnahmen nur der TYP gemeldet.
+    Ein Vergreifen um eine Zeile kauft also ein Short-Papier statt der
+    Aktie. Genau dieser Fehler ist dem TraderFox-Bot passiert (falsche
+    Trefferzeile); dort kostete er einen falschen Alarm, hier Geld.
+    Deshalb wird die Zeile mehrfach abgesichert und der fertige Auftrag
+    aus der SEITE zurückgelesen, nicht aus dem, was das Programm
+    eintragen wollte.
 
-  Bewusst LOKAL auf Mathias' Rechner, nicht in GitHub Actions: Bei
-  TraderFox ging es um einen Datendienst, hier um ein Depot.
+WAS AM 30.07.2026 IN DER OBERFLÄCHE GEMESSEN WURDE
+    Verlässliche Anker, alle vorhanden:
+      [data-name="placeOrderMenuButton"]  Menü "Order platzieren"
+      [data-name="orderForm"]             das ganze Bedienfeld
+      [data-name="productSearchResult"]   Trefferliste
+      [data-name="productType"]           Abschnitt: "Aktien" / "ETFs"
+      [data-name="productItem"]           eine Trefferzeile
+      [data-name="productChangeButton"]   "Ändern"
+      input[name="buySellActionField"]    Kauf / Verkauf
+      input[name="limit"]                 Limit ($)
+      input[name="number"]                Anzahl
+      input[name="amount"]                Betrag (€)
+    Die Feld-IDs enthalten Zeitstempel und sind NICHT brauchbar; die
+    name-Attribute schon.
+
+    Wichtiger Fund: Es gibt ein Feld "Betrag (€)". DEGIRO rechnet die
+    Stückzahl daraus selbst aus. Der Umweg über einen eigenen
+    Euro-Dollar-Kurs entfällt damit — und mit ihm eine Fehlerquelle.
+
+WO ES LÄUFT
+    An Mathias' eigenem Chrome, in dem er bei DEGIRO angemeldet ist.
+    Damit braucht das Programm KEINE Zugangsdaten: kein Passwort, kein
+    TOTP-Schlüssel, nichts zu speichern. Bei einem Depot ist das der
+    entscheidende Unterschied zum TraderFox-Bot, wo es nur um einen
+    Datendienst ging.
+
+    Chrome muss dafür einmalig mit einem Debug-Anschluss gestartet
+    werden:
+        chrome.exe --remote-debugging-port=9222
 
 Aufruf:
-    python degiro_order.py NVDA
-    python degiro_order.py NVDA --betrag 2000
-    python degiro_order.py NVDA --limit 45.20
-    python degiro_order.py --pruefe          nur Rechnung und Umrechnung
+    python degiro_order.py NVDA --firma "NVIDIA Corp"
+    python degiro_order.py NVDA --firma "NVIDIA Corp" --betrag 2000
+    python degiro_order.py NVDA --firma "NVIDIA Corp" --limit 195.50
+    python degiro_order.py --pruefe          nur die Anker prüfen
 """
 
 import argparse
-import os
+import re
 import sys
 
 # ===========================================================================
-# HARTE SPERRE. Nicht als Aufrufoption ausgefuehrt, damit sie nicht
-# versehentlich gesetzt werden kann. Wer sie aufhebt, tut das bewusst und
-# im Quelltext.
+# HARTE SPERRE — im Quelltext, nicht als Aufrufoption.
 BESTAETIGEN_GEHOERT_MATHIAS = True
 # ===========================================================================
 
+CHROME_ANSCHLUSS = "http://localhost:9222"
 STANDARD_BETRAG_EUR = 1000.0
-# Aufschlag auf den aktuellen Kurs beim Limit: Die Order soll ausgefuehrt
-# werden, aber nicht zu jedem Preis. 0,3 Prozent ist der Vorschlag —
-# genug Luft fuer den Spread, wenig genug als Deckel.
-LIMIT_AUFSCHLAG = 0.003
+LIMIT_AUFSCHLAG = 0.003        # Limit knapp über dem Kurs, damit es füllt
+
+# Nur diese Börsen kommen in Frage. Die Kaufpunkte stammen aus
+# US-Kursdaten — eine Order auf Tradegate oder Xetra liefe gegen einen
+# anderen Kurs, in anderer Währung und zu anderen Handelszeiten.
+ERLAUBTE_BOERSEN = ("Nasdaq", "NYSE", "NYSE Arca", "NYSE American",
+                    "NYSE MKT", "Cboe BZX", "BATS")
+ERLAUBTE_WAEHRUNG = "USD"
+
+ANKER = {
+    "menue": '[data-name="placeOrderMenuButton"]',
+    "formular": '[data-name="orderForm"]',
+    "suchfeld": '[data-name="searchInput"]',
+    "treffer": '[data-name="productSearchResult"]',
+    "abschnitt": '[data-name="productType"]',
+    "zeile": '[data-name="productItem"]',
+    "kauf": 'input[name="buySellActionField"][value="Kauf"]',
+    "limit": 'input[name="limit"]',
+    "anzahl": 'input[name="number"]',
+    "betrag": 'input[name="amount"]',
+}
 
 
-def eurusd() -> float:
-    """Aktueller Euro-Dollar-Kurs. Ohne ihn stimmt die Stueckzahl nicht:
-    Die Kaufpunkte stehen in Dollar, der Gegenwert soll in Euro
-    stimmen."""
-    import yfinance as yf
-    d = yf.download("EURUSD=X", period="5d", interval="1d",
-                    progress=False, auto_adjust=False)
-    if d is None or d.empty:
-        raise RuntimeError("Euro-Dollar-Kurs nicht abrufbar.")
-    import pandas as pd
-    if isinstance(d.columns, pd.MultiIndex):
-        d.columns = d.columns.get_level_values(0)
-    return float(d["Close"].dropna().iloc[-1])
+# ---------------------------------------------------------------------------
+# Die Trefferzeile finden — hier entscheidet sich alles
+# ---------------------------------------------------------------------------
+
+def zeilen_lesen(seite) -> list:
+    """Alle Trefferzeilen samt Abschnitt, Börse, Kürzel und Währung.
+
+    Der Abschnitt ("Aktien" oder "ETFs") steht NICHT in der Zeile,
+    sondern als eigene Überschrift davor. Er wird deshalb über die
+    Reihenfolge im Dokument zugeordnet — anders ist ein Hebelpapier
+    nicht von der Aktie zu unterscheiden."""
+    return seite.evaluate("""() => {
+        const wurzel = document.querySelector('[data-name="productSearchResult"]');
+        if (!wurzel) return [];
+        const alle = [...wurzel.querySelectorAll(
+            '[data-name="productType"], [data-name="productName"], [data-name="productItem"]')];
+        let abschnitt = '', name = '', isin = '', ergebnis = [];
+        for (const e of alle) {
+            const dn = e.getAttribute('data-name');
+            const t = (e.textContent || '').replace(/\\s+/g, ' ').trim();
+            if (dn === 'productType') { abschnitt = t; continue; }
+            if (dn === 'productName') {
+                const teile = t.split('|');
+                name = (teile[0] || '').trim();
+                isin = (teile[1] || '').trim();
+                continue;
+            }
+            // Zeilenform: "NasdaqNVDA | USDKV"
+            const m = t.match(/^(.*?)([A-Z0-9.]{1,8})\\s*\\|\\s*([A-Z]{3})KV$/);
+            ergebnis.push({
+                abschnitt, name, isin,
+                boerse: m ? m[1].trim() : '',
+                kuerzel: m ? m[2] : '',
+                waehrung: m ? m[3] : '',
+                roh: t.slice(0, 60)
+            });
+        }
+        return ergebnis;
+    }""")
 
 
-def kurs_von(ticker: str) -> float:
-    import yfinance as yf
-    import pandas as pd
-    d = yf.download(ticker, period="5d", interval="1d", progress=False,
-                    auto_adjust=False)
-    if d is None or d.empty:
-        raise RuntimeError(f"Kein Kurs für {ticker}.")
-    if isinstance(d.columns, pd.MultiIndex):
-        d.columns = d.columns.get_level_values(0)
-    return float(d["Close"].dropna().iloc[-1])
+def waehle_zeile(zeilen: list, kuerzel: str) -> dict:
+    """Die EINE richtige Zeile — oder ein Abbruch mit Begründung.
+
+    Vier Bedingungen zugleich, und am Ende muss genau EIN Treffer
+    übrigbleiben. Bleiben mehrere oder keiner, wird nichts angeklickt:
+    Bei einer Kauforder ist Abbrechen immer billiger als Raten."""
+    passend = [z for z in zeilen
+               if z["abschnitt"].startswith("Aktien")
+               and z["kuerzel"] == kuerzel.upper()
+               and z["waehrung"] == ERLAUBTE_WAEHRUNG
+               and any(z["boerse"].startswith(b) for b in ERLAUBTE_BOERSEN)]
+    if len(passend) == 1:
+        return passend[0]
+    if not passend:
+        raise SystemExit(
+            f"Keine passende Zeile für {kuerzel}. Gefunden wurden "
+            f"{len(zeilen)} Zeilen; gesucht war der Abschnitt Aktien, "
+            f"Kürzel {kuerzel}, Währung USD und eine US-Börse.\n"
+            + "\n".join(f"  {z['abschnitt']:8s} {z['boerse']:26s} "
+                        f"{z['kuerzel']:6s} {z['waehrung']}" for z in zeilen[:12]))
+    raise SystemExit(
+        f"{len(passend)} Zeilen passen gleichzeitig auf {kuerzel} — das "
+        f"ist mehrdeutig, es wird nichts angeklickt:\n"
+        + "\n".join(f"  {z['boerse']} {z['kuerzel']} {z['waehrung']}"
+                    for z in passend))
 
 
-def stueckzahl(betrag_eur: float, kurs_usd: float, eur_usd: float) -> dict:
-    """Wie viele Stueck ergeben den gewuenschten Gegenwert?
-
-    ABGERUNDET, nie aufgerundet: Lieber etwas unter dem Wunschbetrag als
-    darueber. Bei einem Kurs ueber dem Betrag kommt null heraus — dann
-    ist die Aktie schlicht zu teuer fuer diese Positionsgroesse, und das
-    muss gesagt werden statt stillschweigend eine Aktie zu kaufen."""
-    if kurs_usd <= 0 or eur_usd <= 0:
-        raise ValueError("Kurs oder Wechselkurs unbrauchbar.")
-    kurs_eur = kurs_usd / eur_usd
-    stueck = int(betrag_eur // kurs_eur)
-    return {
-        "stueck": stueck,
-        "kurs_usd": kurs_usd,
-        "kurs_eur": kurs_eur,
-        "eur_usd": eur_usd,
-        "gegenwert_eur": stueck * kurs_eur,
-        "gegenwert_usd": stueck * kurs_usd,
-        "zu_teuer": stueck == 0,
-    }
-
-
-def limitpreis(kurs_usd: float, aufschlag=LIMIT_AUFSCHLAG) -> float:
-    """Limit knapp ueber dem Kurs: soll ausgefuehrt werden, aber nicht zu
-    jedem Preis. Auf zwei Stellen gerundet wie an der Boerse ueblich."""
-    return round(kurs_usd * (1 + aufschlag), 2)
+def kopf_lesen(seite) -> dict:
+    """Was steht WIRKLICH im geöffneten Auftrag? Aus der Seite gelesen,
+    nicht aus den eigenen Absichten."""
+    return seite.evaluate("""() => {
+        const f = document.querySelector('[data-name="orderForm"]');
+        if (!f) return null;
+        const t = (f.textContent || '').replace(/\\s+/g, ' ');
+        const m = t.match(/([A-Z0-9.]{1,8})\\s*\\|\\s*([A-Z]{2}[A-Z0-9]{9,10})\\s*\\|\\s*([^$]+?)\\s*\\$\\s*([\\d.,]+)/);
+        const wert = (n) => {
+            const e = f.querySelector(`input[name="${n}"]`);
+            return e ? e.value : null;
+        };
+        return {
+            kuerzel: m ? m[1] : null,
+            isin: m ? m[2] : null,
+            boerse: m ? m[3].trim() : null,
+            kurs: m ? m[4] : null,
+            limit: wert('limit'), anzahl: wert('number'), betrag: wert('amount'),
+            kauf_gewaehlt: !!f.querySelector('input[name="buySellActionField"][value="Kauf"]:checked'),
+            text: t.slice(0, 200)
+        };
+    }""")
 
 
-def vorlesen(ticker: str, firma: str, rechnung: dict, limit: float,
-             ordertyp: str = "Limit") -> str:
-    """Der Auftrag in Worten. Wird VOR dem Anhalten ausgegeben."""
+def vorlesen(kopf: dict, firma: str) -> str:
+    """Der fertige Auftrag in Worten — die einzige Kontrolle, die Mathias
+    vor dem Bestätigen hat."""
     zeilen = [
-        f"Kaufauftrag vorbereitet für {ticker}"
+        "",
+        "=" * 62,
+        "AUFTRAG STEHT — bitte prüfen und dann selbst bestätigen",
+        "=" * 62,
+        f"  Aktie      {kopf.get('kuerzel')}"
         + (f", {firma}" if firma else ""),
-        f"Ordertyp {ordertyp}, Limit {limit:.2f} Dollar",
-        f"Stückzahl {rechnung['stueck']}, "
-        f"Gegenwert {rechnung['gegenwert_eur']:.0f} Euro "
-        f"(Kurs {rechnung['kurs_usd']:.2f} Dollar, "
-        f"Euro-Dollar {rechnung['eur_usd']:.4f})",
+        f"  Kennung    {kopf.get('isin')}",
+        f"  Börse      {kopf.get('boerse')}",
+        f"  Richtung   {'KAUF' if kopf.get('kauf_gewaehlt') else '⚠ NICHT als Kauf gewählt'}",
+        f"  Kurs       {kopf.get('kurs')} Dollar",
+        f"  Limit      {kopf.get('limit')}",
+        f"  Anzahl     {kopf.get('anzahl')}",
+        f"  Betrag     {kopf.get('betrag')}",
+        "=" * 62,
     ]
     return "\n".join(zeilen)
 
 
-def zugangsdaten() -> dict:
-    """Aus der Umgebung. Fehlt etwas, wird der NAME genannt, nie ein Wert."""
-    daten = {
-        "user": os.environ.get("DEGIRO_USER", "").strip(),
-        "pass": os.environ.get("DEGIRO_PASS", "").strip(),
-        "totp": os.environ.get("DEGIRO_TOTP", "").strip(),
-    }
-    fehlend = [n for n, s in (("DEGIRO_USER", daten["user"]),
-                              ("DEGIRO_PASS", daten["pass"])) if not s]
-    if fehlend:
-        sys.exit("Bitte setzen: " + ", ".join(fehlend)
-                 + ". Bei aktivierter Zwei-Faktor-Anmeldung zusätzlich "
-                   "DEGIRO_TOTP. Die Werte trägt Mathias selbst ein; sie "
-                   "werden nie ausgegeben.")
-    return daten
+# ---------------------------------------------------------------------------
+# Ablauf
+# ---------------------------------------------------------------------------
+
+def verbinde():
+    """An Mathias' laufenden Chrome anhängen. Kein eigener Browser, keine
+    Zugangsdaten — er ist dort schon angemeldet."""
+    try:
+        from playwright.sync_api import sync_playwright
+    except ImportError:
+        sys.exit("Bitte installieren: pip install playwright")
+    p = sync_playwright().start()
+    try:
+        browser = p.chromium.connect_over_cdp(CHROME_ANSCHLUSS)
+    except Exception as e:
+        p.stop()
+        sys.exit(
+            f"Chrome nicht erreichbar ({type(e).__name__}).\n"
+            f"Chrome muss mit Debug-Anschluss laufen:\n"
+            f"    chrome.exe --remote-debugging-port=9222\n"
+            f"Am einfachsten in die Chrome-Verknüpfung eintragen.")
+    seiten = [s for ktx in browser.contexts for s in ktx.pages]
+    ziel = next((s for s in seiten if "degiro" in (s.url or "")), None)
+    if ziel is None:
+        p.stop()
+        sys.exit("Kein DEGIRO-Tab offen. Bitte trader.degiro.nl öffnen "
+                 "und anmelden.")
+    return p, browser, ziel
 
 
 def main():
@@ -154,43 +253,98 @@ def main():
         description="Bereitet eine DEGIRO-Kauforder vor. Bestätigt wird "
                     "von Hand.")
     ap.add_argument("ticker", nargs="?", help="Kürzel, z. B. NVDA")
-    ap.add_argument("--betrag", type=float, default=STANDARD_BETRAG_EUR,
-                    help=f"Gegenwert in Euro (Vorgabe {STANDARD_BETRAG_EUR:.0f})")
+    ap.add_argument("--firma", default="",
+                    help="Voller Firmenname für die Suche — trifft besser "
+                         "als das Kürzel")
+    ap.add_argument("--betrag", type=float, default=STANDARD_BETRAG_EUR)
     ap.add_argument("--limit", type=float, default=None,
-                    help="Limitpreis in Dollar; ohne Angabe Kurs plus "
+                    help="Limit in Dollar; ohne Angabe Kurs plus "
                          f"{LIMIT_AUFSCHLAG*100:.1f} Prozent")
-    ap.add_argument("--firma", default="", help="Firmenname für die Suche")
     ap.add_argument("--pruefe", action="store_true",
-                    help="NUR rechnen: Stückzahl und Umrechnung zeigen, "
-                         "ohne DEGIRO überhaupt anzufassen")
+                    help="Nur nachsehen, ob alle Anker in der Oberfläche "
+                         "noch da sind. Ändert nichts.")
     args = ap.parse_args()
 
-    if not args.ticker:
-        sys.exit("Bitte ein Kürzel angeben, z. B.: python degiro_order.py NVDA")
+    if not args.ticker and not args.pruefe:
+        sys.exit("Bitte ein Kürzel angeben, z. B.: "
+                 "python degiro_order.py NVDA --firma \"NVIDIA Corp\"")
 
-    kurs = kurs_von(args.ticker)
-    wechsel = eurusd()
-    rechnung = stueckzahl(args.betrag, kurs, wechsel)
-    limit = args.limit if args.limit else limitpreis(kurs)
+    p, browser, seite = verbinde()
+    try:
+        if args.pruefe:
+            fehlend = [k for k, s in ANKER.items()
+                       if seite.query_selector(s) is None]
+            print(f"DEGIRO-Tab: {seite.url[:60]}")
+            print(f"Anker gefunden: {len(ANKER) - len(fehlend)} von {len(ANKER)}")
+            if fehlend:
+                print("Nicht gefunden (kann normal sein, solange das "
+                      "Bedienfeld zu ist): " + ", ".join(fehlend))
+            return 0
 
-    print(vorlesen(args.ticker, args.firma, rechnung, limit))
+        such = args.firma or args.ticker
+        print(f"Suche nach {such!r} …")
+        if seite.query_selector(ANKER["formular"]) is None:
+            seite.click(ANKER["menue"])
+            seite.wait_for_timeout(400)
+            seite.get_by_text("Schnell & einfach", exact=False).first.click()
+            seite.wait_for_selector(ANKER["suchfeld"], timeout=8000)
+        feld = seite.query_selector(ANKER["suchfeld"])
+        feld.fill("")
+        feld.type(such, delay=40)
+        seite.wait_for_timeout(1200)
 
-    if rechnung["zu_teuer"]:
-        sys.exit(f"\nEine einzelne Aktie kostet mehr als {args.betrag:.0f} "
-                 f"Euro — für diese Positionsgröße nicht handelbar.")
+        zeilen = zeilen_lesen(seite)
+        print(f"{len(zeilen)} Trefferzeile(n) gefunden.")
+        ziel = waehle_zeile(zeilen, args.ticker)
+        print(f"Gewählt: {ziel['name']} | {ziel['isin']} | "
+              f"{ziel['boerse']} | {ziel['kuerzel']} | {ziel['waehrung']}")
 
-    if args.pruefe:
-        print("\n(Nur gerechnet — DEGIRO wurde nicht angefasst.)")
+        # Die K-Schaltfläche GENAU dieser Zeile
+        seite.evaluate("""(roh) => {
+            const zeilen = [...document.querySelectorAll(
+                '[data-name="productSearchResult"] [data-name="productItem"]')];
+            const z = zeilen.find(e =>
+                (e.textContent||'').replace(/\\s+/g,' ').trim().startsWith(roh));
+            if (!z) throw new Error('Zeile beim Klicken nicht mehr da');
+            const k = [...z.querySelectorAll('button')]
+                .find(b => (b.textContent||'').trim() === 'K');
+            if (!k) throw new Error('K-Schaltflaeche fehlt');
+            k.click();
+        }""", ziel["roh"])
+        seite.wait_for_selector(ANKER["limit"], timeout=8000)
+
+        kopf = kopf_lesen(seite)
+        if kopf.get("kuerzel") != args.ticker.upper():
+            raise SystemExit(
+                f"Der geöffnete Auftrag zeigt {kopf.get('kuerzel')}, "
+                f"erwartet war {args.ticker.upper()} — Abbruch, es wird "
+                f"nichts eingetragen.")
+
+        kurs = float(str(kopf["kurs"]).replace(".", "").replace(",", "."))
+        limit = args.limit if args.limit else round(kurs * (1 + LIMIT_AUFSCHLAG), 2)
+
+        seite.fill(ANKER["limit"], f"{limit:.2f}".replace(".", ","))
+        seite.fill(ANKER["betrag"], f"{args.betrag:.0f}")
+        seite.wait_for_timeout(900)      # DEGIRO rechnet die Anzahl aus
+
+        kopf = kopf_lesen(seite)
+        print(vorlesen(kopf, ziel["name"]))
+
+        if not kopf.get("anzahl"):
+            print("\n⚠ Es steht keine Anzahl im Auftrag — bitte nicht "
+                  "bestätigen, sondern nachsehen.")
+            return 1
+
+        print("\nDas Programm hält hier an. Der Auftrag ist ausgefüllt, "
+              "aber NICHT abgeschickt.")
+        print("Zum Abschicken in Chrome auf 'Order platzieren' und dann "
+              "auf 'Bestätigen'.")
         return 0
-
-    zugangsdaten()          # prueft nur, ob sie gesetzt sind
-    print("\nDer Weg über die DEGIRO-Oberfläche ist noch nicht gebaut.")
-    print("Dafür muss die Selektorkarte des Orderfensters aufgenommen "
-          "werden — Suchfeld, Kaufen-Schaltfläche, Ordertyp, Limitfeld, "
-          "Stückzahlfeld und die Rückleseflächen.")
-    print("Bis dahin liefert dieses Programm die fertige Rechnung, die "
-          "Mathias von Hand einträgt.")
-    return 0
+    finally:
+        try:
+            p.stop()
+        except Exception:
+            pass
 
 
 if __name__ == "__main__":
