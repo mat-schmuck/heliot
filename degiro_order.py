@@ -45,8 +45,16 @@ WAS AM 30.07.2026 IN DER OBERFLÄCHE GEMESSEN WURDE
       input[name="limit"]                 Limit ($)
       input[name="number"]                Anzahl
       input[name="amount"]                Betrag (€)
+      [data-name="orderConfirmation"]     Kontrollbildschirm
+      [data-name="orderConfirmationCancel"]  "Abbrechen"
+    Die Schaltfläche "Order platzieren" im Formular trägt kein data-name,
+    ist aber die einzige mit type="submit" darin.
     Die Feld-IDs enthalten Zeitstempel und sind NICHT brauchbar; die
     name-Attribute schon.
+
+    Der Kontrollbildschirm zeigt (live gemessen an AXGN): Anzahl,
+    Ordertyp, Orderdauer, Limit, Gesamtbetrag in Dollar UND Euro, Börse,
+    Geld-/Brief und die erwartete Transaktionsgebühr.
 
     Wichtiger Fund: Es gibt ein Feld "Betrag (€)". DEGIRO rechnet die
     Stückzahl daraus selbst aus. Der Umweg über einen eigenen
@@ -102,6 +110,14 @@ ANKER = {
     "limit": 'input[name="limit"]',
     "anzahl": 'input[name="number"]',
     "betrag": 'input[name="amount"]',
+    # Die Schaltfläche "Order platzieren" IM Formular. Sie trägt kein
+    # data-name, ist aber die einzige mit type="submit" darin — oben im
+    # Kopf der Seite heißt eine gleich, die öffnet nur das Bedienfeld.
+    "absenden": '[data-name="orderForm"] button[type="submit"]',
+    "kontrolle": '[data-name="orderConfirmation"]',
+    # Nur für den Notausgang: Stimmt auf dem Kontrollbildschirm etwas
+    # nicht, wird abgebrochen. "Bestätigen" kommt hier bewusst NICHT vor.
+    "kontrolle_abbrechen": '[data-name="orderConfirmationCancel"]',
 }
 
 
@@ -200,7 +216,7 @@ def vorlesen(kopf: dict, firma: str) -> str:
     zeilen = [
         "",
         "=" * 62,
-        "AUFTRAG STEHT — bitte prüfen und dann selbst bestätigen",
+        "AUFTRAG AUSGEFÜLLT — gleich kommt der Kontrollbildschirm",
         "=" * 62,
         f"  Aktie      {kopf.get('kuerzel')}"
         + (f", {firma}" if firma else ""),
@@ -214,6 +230,52 @@ def vorlesen(kopf: dict, firma: str) -> str:
         "=" * 62,
     ]
     return "\n".join(zeilen)
+
+
+def kontrolle_lesen(seite) -> list:
+    """Die Zeilen des Kontrollbildschirms "Order überprüfen".
+
+    DEGIRO baut jede Zeile als Beschriftung und Wert nebeneinander. Die
+    Werte sind innen noch einmal genauso aufgebaut ("$ 1.148" und
+    "(€ 995,69)"), das gäbe Doppelmeldungen — deshalb wird alles
+    übersprungen, was INNERHALB einer schon genommenen Zeile liegt."""
+    return seite.evaluate("""() => {
+        const p = document.querySelector('[data-name="orderConfirmation"]');
+        if (!p) return [];
+        const genommen = [], zeilen = [];
+        for (const e of p.querySelectorAll('*')) {
+            if (e.children.length !== 2) continue;
+            if (e.querySelector('button')) continue;
+            if (genommen.some(g => g.contains(e))) continue;
+            const a = (e.children[0].textContent || '').replace(/\\s+/g, ' ').trim();
+            const b = (e.children[1].textContent || '').replace(/\\s+/g, ' ').trim();
+            if (!a || !b || a.length > 40 || b.length > 40) continue;
+            genommen.push(e);
+            zeilen.push(a + ': ' + b);
+        }
+        return zeilen;
+    }""")
+
+
+def vorlesen_kontrolle(kopf: dict, firma: str, zeilen: list) -> str:
+    """Was auf dem Kontrollbildschirm steht — Wort für Wort aus der Seite.
+
+    Das ist die letzte Kontrolle vor dem Klick, den nur Mathias macht."""
+    kopfzeile = f"  {kopf.get('kuerzel')}" + (f", {firma}" if firma else "")
+    return "\n".join([
+        "",
+        "=" * 62,
+        "KONTROLLBILDSCHIRM OFFEN — jetzt liegt es an dir",
+        "=" * 62,
+        kopfzeile,
+        f"  {kopf.get('isin')} | {kopf.get('boerse')}",
+        "",
+        *[f"  {z}" for z in zeilen],
+        "=" * 62,
+        "Das Programm ist fertig. Der Auftrag ist NICHT abgeschickt.",
+        "In Chrome steht das Feld 'Order überprüfen' offen; unten sind",
+        "'Abbrechen' und 'Bestätigen'. Den letzten Klick machst du.",
+    ])
 
 
 # ---------------------------------------------------------------------------
@@ -345,14 +407,32 @@ def main():
         print(vorlesen(kopf, ziel["name"]))
 
         if not kopf.get("anzahl"):
-            print("\n⚠ Es steht keine Anzahl im Auftrag — bitte nicht "
-                  "bestätigen, sondern nachsehen.")
+            print("\n⚠ Es steht keine Anzahl im Auftrag — es wird nichts "
+                  "abgeschickt. Bitte nachsehen.")
             return 1
 
-        print("\nDas Programm hält hier an. Der Auftrag ist ausgefüllt, "
-              "aber NICHT abgeschickt.")
-        print("Zum Abschicken in Chrome auf 'Order platzieren' und dann "
-              "auf 'Bestätigen'.")
+        # Ein Klick weiter: "Order platzieren" schickt NICHTS ab, es
+        # öffnet nur den Kontrollbildschirm mit "Abbrechen" und
+        # "Bestätigen". Erst "Bestätigen" kauft — und das macht Mathias.
+        seite.click(ANKER["absenden"])
+        try:
+            seite.wait_for_selector(ANKER["kontrolle"], timeout=10000)
+        except Exception:
+            print("\n⚠ Der Kontrollbildschirm ist nicht aufgegangen. Bitte "
+                  "in Chrome nachsehen, bevor du irgendetwas bestätigst.")
+            return 1
+
+        # Noch einmal gegengeprüft, diesmal auf dem Kontrollbildschirm:
+        # Steht dort ein anderes Papier, wird abgebrochen statt gemeldet.
+        pruef = kopf_lesen(seite)
+        if pruef and pruef.get("kuerzel") != args.ticker.upper():
+            seite.click(ANKER["kontrolle_abbrechen"])
+            raise SystemExit(
+                f"Der Kontrollbildschirm zeigt {pruef.get('kuerzel')} statt "
+                f"{args.ticker.upper()} — abgebrochen, nichts gekauft.")
+
+        print(vorlesen_kontrolle(pruef or kopf, ziel["name"],
+                                 kontrolle_lesen(seite)))
         return 0
     finally:
         try:
