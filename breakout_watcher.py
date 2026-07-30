@@ -931,21 +931,24 @@ def email_kopf() -> dict:
     return {"Email": adresse} if adresse else {}
 
 
-# ntfy macht aus jeder Nachricht ueber 4096 Zeichen eine ANGEHAENGTE
-# Textdatei ("You received a file: attachment.txt"), die erst
-# heruntergeladen werden muss. Am 27.07.2026 an einem Wegwerf-Thema
-# nachgemessen: 3900 Zeichen kommen normal an, 4100 werden zur Datei.
-# Genau das ist Mathias an diesem Tag passiert, als viele Treffer auf
-# einmal kamen — und kostete ihn im Handel wertvolle Zeit. Darum wird
-# nie mehr als eine Portion auf einmal verschickt.
+# ntfy macht aus einer zu langen Nachricht eine ANGEHAENGTE Textdatei
+# ("You received a file: attachment.txt"), die erst heruntergeladen
+# werden muss. Genau das ist Mathias am 27.07.2026 passiert, als viele
+# Treffer auf einmal kamen — und kostete ihn im Handel wertvolle Zeit.
+# Darum wird nie mehr als eine Portion auf einmal verschickt.
 #
-# 4000 STATT 3000 (Mathias, 30.07.2026): "lass die Nachrichten wieder
-# unter der Marke von 4096 Zeichen begrenzen, sonst kommen 2 Nachrichten
-# auf ein Mal, die eig. eine sind." Bei 3000 wurde geteilt, was bequem in
-# eine Meldung gepasst haette. 4000 laesst 96 Zeichen Luft bis zur
-# gemessenen Marke — die Messung war eindeutig: 3900 kommt an, 4100 wird
-# zur Datei.
-NTFY_GRENZE = 4000
+# DIE GRENZE IST AM 30.07.2026 GENAU AUSGEMESSEN, an einem Wegwerf-Thema
+# mit Fuelltext, Laenge fuer Laenge:
+#     3900, 4000, 4090, 4095 Zeichen -> kommen normal an
+#     4096, 4097, 4100, 4200 Zeichen -> werden zur Datei
+# Die Marke heisst also "AB 4096", nicht "ueber 4096". Glatt 4096 zu
+# setzen haette jede volle Meldung zur Datei gemacht — genau das, was
+# vermieden werden soll. 4095 ist das Aeusserste, was durchgeht.
+#
+# Die Portionierung rechnet je Absatz zwei Zeichen fuer den Abstand mit,
+# auch beim letzten — die tatsaechliche Nachricht ist also noch zwei
+# Zeichen kuerzer als der hier gepruefte Wert.
+NTFY_GRENZE = 4095
 
 
 def _portionen(absaetze: list[str], grenze: int = NTFY_GRENZE) -> list[list[str]]:
