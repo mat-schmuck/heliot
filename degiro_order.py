@@ -417,6 +417,46 @@ def position_lesen(seite):
     return int(re.sub(r"[.\s]", "", m.group(1))), roh
 
 
+def depotbestaende(seite) -> dict:
+    """Alle offenen Positionen als {Kürzel: Stückzahl}.
+
+    Aus der Portfolioansicht, nicht aus dem Bedienfeld: Nur dort stehen
+    ALLE Positionen, ohne dass für jede erst ein Auftragsdialog geöffnet
+    werden müsste. Der Autopilot erkennt daran, dass ein Kauf ausgeführt
+    wurde — die Stückzahl steigt.
+
+    Gelesen wird ZELLENWEISE, nicht aus dem Zeilentext: Dort klebt ein
+    einbuchstabiges Kennzeichen direkt vor dem Kürzel ("…Adaptive
+    Biotechnologies Corp D ADPT"), und aus ADPT wurde so DADPT
+    (30.07.2026 aufgelaufen). In der Zelle steht sauber
+    "ADPT | US00650F1093", die Stückzahl in der Zelle daneben.
+
+    Auch die Spaltenfolge wird nicht vorausgesetzt — DEGIRO lässt die
+    Spalten einstellen. Gesucht wird die Zelle mit Kürzel und Kennung,
+    genommen wird die nächste."""
+    zeilen = seite.evaluate("""() => {
+        const p = document.querySelector('[data-name="positions"]');
+        if (!p) return null;
+        return [...p.querySelectorAll('tr, [role="row"]')].map(
+            z => [...z.querySelectorAll('td, [role="cell"], [role="gridcell"]')]
+                    .map(c => (c.textContent || '').replace(/\\s+/g, ' ').trim()));
+    }""")
+    if zeilen is None:
+        return {}
+    muster = re.compile(r"^([A-Z0-9.\-]{1,8})\s*\|\s*[A-Z]{2}[A-Z0-9]{10}$")
+    bestand = {}
+    for zellen in zeilen:
+        for i, zelle in enumerate(zellen[:-1]):
+            m = muster.match(zelle)
+            if not m:
+                continue
+            stueck = zellen[i + 1].replace(".", "").replace(" ", "")
+            if stueck.isdigit():
+                bestand[m.group(1)] = int(stueck)
+            break
+    return bestand
+
+
 # ---------------------------------------------------------------------------
 # Ablauf
 # ---------------------------------------------------------------------------
@@ -643,77 +683,90 @@ def main():
                   "in Chrome nachsehen.")
             return 1 if noch_offen else 0
 
-        ziel = papier_oeffnen(seite, args.ticker, args.firma)
-        kopf = kopf_lesen(seite)
-
-        if args.stufe == "kauf":
-            kurs = float(str(kopf["kurs"]).replace(".", "").replace(",", "."))
-            limit = (args.limit if args.limit
-                     else round(kurs * (1 + LIMIT_AUFSCHLAG), 2))
-            seite.fill(ANKER["limit"], f"{limit:.2f}".replace(".", ","))
-            seite.fill(ANKER["betrag"], f"{args.betrag:.0f}")
-            seite.wait_for_timeout(900)      # DEGIRO rechnet die Anzahl aus
-
-            kopf = kopf_lesen(seite)
-            print(vorlesen(kopf, ziel["name"]))
-            if not kopf.get("anzahl"):
-                print("\n⚠ Es steht keine Anzahl im Auftrag — es wird "
-                      "nichts abgeschickt. Bitte nachsehen.")
-                return 1
-            return absenden_und_vorlesen(seite, args.ticker, ziel["name"])
-
-        # ---- Verkaufsstufen: Schutzstop und Kursziel -------------------
-        # Beide verkaufen etwas, das schon im Depot liegt. Die Stückzahl
-        # kommt daher aus dem Depot und nicht aus einer Annahme — ein
-        # Kauf kann auch nur teilweise ausgeführt worden sein.
-        bestand, roh = position_lesen(seite)
-        if bestand is None:
-            raise SystemExit(
-                f"Der Bestand ist nicht lesbar ({roh!r}) — Abbruch, es "
-                f"wird nichts eingetragen.")
-        anzahl = args.anzahl if args.anzahl else bestand
-        if anzahl > bestand:
-            raise SystemExit(
-                f"{anzahl} Stück verlangt, im Depot liegen aber nur "
-                f"{bestand} — Abbruch. Mehr zu verkaufen als man hat, "
-                f"wäre ein Leerverkauf.")
-        print(f"Im Depot: {bestand} Stück, verkauft werden {anzahl}.")
-
-        seite.click(ANKER["verkauf"])
-        seite.wait_for_timeout(300)
-
-        if args.stufe == "stop":
-            auswahl_setzen(seite, ANKER["ordertyp"], STOP_ORDERTYP,
-                           "orderType", ORDERTYP_WERTE)
-            auswahl_setzen(seite, ANKER["dauer"], STOP_DAUER,
-                           "orderTimeType", DAUER_WERTE)
-            seite.wait_for_selector(ANKER["stopkurs"], timeout=8000)
-            seite.fill(ANKER["stopkurs"],
-                       f"{args.stop:.2f}".replace(".", ","))
-        else:
-            auswahl_setzen(seite, ANKER["ordertyp"], "Limit",
-                           "orderType", ORDERTYP_WERTE)
-            seite.fill(ANKER["limit"],
-                       f"{args.limit:.2f}".replace(".", ","))
-
-        seite.fill(ANKER["anzahl"], str(anzahl))
-        seite.wait_for_timeout(900)
-
-        kopf = kopf_lesen(seite)
-        if str(kopf.get("anzahl") or "").strip() != str(anzahl):
-            raise SystemExit(
-                f"Im Auftrag steht die Anzahl {kopf.get('anzahl')!r} "
-                f"statt {anzahl} — Abbruch, es wird nichts abgeschickt.")
-        if kopf.get("kauf_gewaehlt"):
-            raise SystemExit(
-                "Der Auftrag steht auf KAUF, verlangt war ein Verkauf — "
-                "Abbruch.")
-        return absenden_und_vorlesen(seite, args.ticker, ziel["name"])
+        return auftrag_vorbereiten(
+            seite, args.ticker, args.firma, args.stufe,
+            limit=args.limit, stop=args.stop,
+            betrag=args.betrag, anzahl=args.anzahl)
     finally:
         try:
             p.stop()
         except Exception:
             pass
+
+
+def auftrag_vorbereiten(seite, ticker: str, firma: str, stufe: str,
+                        limit=None, stop=None,
+                        betrag: float = STANDARD_BETRAG_EUR,
+                        anzahl=None) -> int:
+    """Eine Stufe bis zum Kontrollbildschirm — und dort ist Schluss.
+
+    Steht als eigene Funktion und nicht nur in main(), damit der
+    Autopilot (degiro_autopilot.py) dieselben Schritte aufrufen kann,
+    ohne den Umweg über die Kommandozeile und ohne eine zweite
+    Verbindung zu Chrome."""
+    ziel = papier_oeffnen(seite, ticker, firma)
+    kopf = kopf_lesen(seite)
+
+    if stufe == "kauf":
+        kurs = float(str(kopf["kurs"]).replace(".", "").replace(",", "."))
+        wunsch = limit if limit else round(kurs * (1 + LIMIT_AUFSCHLAG), 2)
+        seite.fill(ANKER["limit"], f"{wunsch:.2f}".replace(".", ","))
+        seite.fill(ANKER["betrag"], f"{betrag:.0f}")
+        seite.wait_for_timeout(900)          # DEGIRO rechnet die Anzahl aus
+
+        kopf = kopf_lesen(seite)
+        print(vorlesen(kopf, ziel["name"]))
+        if not kopf.get("anzahl"):
+            print("\n⚠ Es steht keine Anzahl im Auftrag — es wird "
+                  "nichts abgeschickt. Bitte nachsehen.")
+            return 1
+        return absenden_und_vorlesen(seite, ticker, ziel["name"])
+
+    # ---- Verkaufsstufen: Schutzstop und Kursziel -----------------------
+    # Beide verkaufen etwas, das schon im Depot liegt. Die Stückzahl
+    # kommt daher aus dem Depot und nicht aus einer Annahme — ein
+    # Kauf kann auch nur teilweise ausgeführt worden sein.
+    bestand, roh = position_lesen(seite)
+    if bestand is None:
+        raise SystemExit(
+            f"Der Bestand ist nicht lesbar ({roh!r}) — Abbruch, es "
+            f"wird nichts eingetragen.")
+    stueck = anzahl if anzahl else bestand
+    if stueck > bestand:
+        raise SystemExit(
+            f"{stueck} Stück verlangt, im Depot liegen aber nur "
+            f"{bestand} — Abbruch. Mehr zu verkaufen als man hat, "
+            f"wäre ein Leerverkauf.")
+    print(f"Im Depot: {bestand} Stück, verkauft werden {stueck}.")
+
+    seite.click(ANKER["verkauf"])
+    seite.wait_for_timeout(300)
+
+    if stufe == "stop":
+        auswahl_setzen(seite, ANKER["ordertyp"], STOP_ORDERTYP,
+                       "orderType", ORDERTYP_WERTE)
+        auswahl_setzen(seite, ANKER["dauer"], STOP_DAUER,
+                       "orderTimeType", DAUER_WERTE)
+        seite.wait_for_selector(ANKER["stopkurs"], timeout=8000)
+        seite.fill(ANKER["stopkurs"], f"{stop:.2f}".replace(".", ","))
+    else:
+        auswahl_setzen(seite, ANKER["ordertyp"], "Limit",
+                       "orderType", ORDERTYP_WERTE)
+        seite.fill(ANKER["limit"], f"{limit:.2f}".replace(".", ","))
+
+    seite.fill(ANKER["anzahl"], str(stueck))
+    seite.wait_for_timeout(900)
+
+    kopf = kopf_lesen(seite)
+    if str(kopf.get("anzahl") or "").strip() != str(stueck):
+        raise SystemExit(
+            f"Im Auftrag steht die Anzahl {kopf.get('anzahl')!r} "
+            f"statt {stueck} — Abbruch, es wird nichts abgeschickt.")
+    if kopf.get("kauf_gewaehlt"):
+        raise SystemExit(
+            "Der Auftrag steht auf KAUF, verlangt war ein Verkauf — "
+            "Abbruch.")
+    return absenden_und_vorlesen(seite, ticker, ziel["name"])
 
 
 if __name__ == "__main__":
