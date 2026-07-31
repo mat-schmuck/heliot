@@ -1043,6 +1043,30 @@ def push_text(topic: str, titel: str, body: str) -> bool:
     return sende(topic, titel, body.split("\n\n"), "high", "rocket")
 
 
+def tagesanteil_titel(treffer: list[dict]) -> str:
+    """Wie viel des Handelstages ueblicherweise schon gelaufen ist —
+    als Anhaengsel fuer den Titel (Mathias, 30.07.2026).
+
+    Die Zahl stand frueher im Text jeder einzelnen Meldung
+    ("hochgerechnet, 16% des Tages") und war dort in JEDER Zeile
+    wortgleich; am 29.07. flog sie deshalb heraus. Im Titel steht sie
+    genau einmal und sagt, wie belastbar die Volumenzahlen sind:
+    Nachgemessen (volumen_verlaesslichkeit.py) ist ein 'bestaetigt' um
+    10:00 New Yorker Zeit zu 36 % bis zum Schluss hinfaellig, um 14:00
+    nur noch zu 5 %.
+
+    Vor Handelsbeginn und nach Schluss ist der Anteil 1,0 — dann sagt
+    die Angabe nichts und bleibt weg."""
+    anteile = [t.get("vol_anteil") for t in treffer
+               if t.get("vol_anteil") is not None]
+    if not anteile:
+        return ""
+    anteil = min(anteile)
+    if anteil >= 0.99:
+        return ""
+    return f"; {anteil * 100:.0f}% des Tages"
+
+
 NACHTRAG_MARKE = "BEST|"
 
 
@@ -1092,7 +1116,8 @@ def push_nachtrag(topic: str, treffer: list[dict]) -> bool:
     # sind dort zu lang — "Alpine Income Property Trust Inc" allein sind
     # 31 Zeichen, und die Push-Vorschau schneidet ab. Der Name steht
     # ohnehin in der ersten Zeile jedes Eintrags.
-    titel = ", ".join(t["ticker"] for t in treffer) + ": Vol jetzt bestätigt"
+    titel = (", ".join(t["ticker"] for t in treffer)
+             + ": Vol jetzt bestätigt" + tagesanteil_titel(treffer))
     if len(treffer) == 1:
         absaetze = [format_treffer(treffer[0])]
     else:
@@ -1119,7 +1144,8 @@ def push(topic: str, treffer: list[dict]) -> bool:
     # Seit 29.07. ohne Emoji (Mathias) und kuerzer: Er entscheidet am
     # Titel, ob sich das Oeffnen ueberhaupt lohnt.
     titel = (f"{len(bestaetigt)} bestätigt"
-             + (f", {len(rest)} offen" if rest else ""))
+             + (f", {len(rest)} offen" if rest else "")
+             + tagesanteil_titel(treffer))
     return sende(topic, titel, absaetze,
                  "high" if bestaetigt else "default",
                  "chart_with_upwards_trend")
