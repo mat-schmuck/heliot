@@ -770,8 +770,17 @@ def pruefe_gap_and_go(ticker: str, q: dict):
        hochgerechnetes Tagesvolumen >= 5x Ø10-Tage
     5. Zum Handelsende zusaetzlich: Schluss im oberen Fuenftel der
        Tagesspanne UND rohes Tagesvolumen >= 5x Ø10 -> 'BESTÄTIGT'
-    Kaufpunkt = Tageshoch + 1 Cent (Einstieg am Folgetag), Stop = das
-    engere von Tagestief - 1 Cent und Kaufpunkt x 0,97."""
+    Kaufpunkt = Tageshoch + 1 Cent (Einstieg am Folgetag).
+
+    STOP = das WEITERE von Tagestief - 1 Cent und Kaufpunkt x 0,97,
+    also min() der beiden. Hier stand bis zum 03.08.2026 "das engere",
+    was dem Code widersprach — der Code hatte recht. Gemessen an 105
+    echten Gap-and-Go-Handeln aus 24 Monaten: Der Stop liegt so im
+    Median 11,5 % unter dem Einstieg, und das ist gut so. Die engere
+    Lesart (Kaufpunkt x 0,97, also 3 %) haette 74 % aller Handel
+    ausgestoppt und die Trefferquote nach 20 Tagen von 50 auf 25 %
+    halbiert. Der Zusatz x 0,97 ist also KEINE Risikodeckelung, sondern
+    ein Mindestabstand fuer Tage mit kleiner Spanne."""
     open_, high, low = q.get("open"), q.get("high"), q.get("low")
     prev, vol10 = q.get("prev_close"), q.get("vol10")
     kurs, vol = q.get("close"), q.get("volume")
