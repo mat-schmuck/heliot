@@ -32,21 +32,30 @@ from config import CFG as _Z
 
 XLSX = "kaufpunkte_aktuell.xlsx"
 GAP_MIN = 0.07
-# Gemessen wird die Fassung, die WIRKLICH GILT — sonst prueft der
-# Rueckblick etwas anderes als der Waechter. Seit dem 03.08.2026 ist das
-# Kapitel 7 im Original (63 Tage, 35 %, keine Durchschnittsbedingung);
-# umgeschaltet wird ausschliesslich in config.py.
-_FASSUNG = _Z["gap_and_go"]["flat_base"][_Z["gap_and_go"]["flat_base_fassung"]]
+SCHLUSS_POS = 0.80
+
+# Gemessen wird normalerweise die Fassung, die WIRKLICH GILT — sonst
+# prueft der Rueckblick etwas anderes als der Waechter. Seit dem
+# 03.08.2026 ist das Kapitel 7 im Original (63 Tage, 35 %, keine
+# Durchschnittsbedingung). Mit "--fassung A" laesst sich die andere
+# einmalig durchrechnen, ohne an config.py zu ruehren; das ist fuer den
+# direkten Vergleich der beiden Fassungen gedacht.
+FASSUNG_NAME = _Z["gap_and_go"]["flat_base_fassung"]
+if "--fassung" in sys.argv:
+    FASSUNG_NAME = sys.argv[sys.argv.index("--fassung") + 1]
+_ALLE_FASSUNGEN = _Z["gap_and_go"]["flat_base"]
+if FASSUNG_NAME not in _ALLE_FASSUNGEN:
+    sys.exit(f"Unbekannte Fassung {FASSUNG_NAME!r}. Bekannt: "
+             + ", ".join(_ALLE_FASSUNGEN))
+_FASSUNG = _ALLE_FASSUNGEN[FASSUNG_NAME]
 FLAT_TAGE = int(_FASSUNG["tage"])
 FLAT_SPANNE = float(_FASSUNG["max_spanne"])
 FLAT_MA = tuple(_FASSUNG["ma"])
-FASSUNG_NAME = _Z["gap_and_go"]["flat_base_fassung"]
 # Die jeweils andere Fassung als Gegenprobe, damit der Vergleich bleibt.
 _ANDERE_NAME = "A" if FASSUNG_NAME == "original" else "original"
-_ANDERE = _Z["gap_and_go"]["flat_base"][_ANDERE_NAME]
+_ANDERE = _ALLE_FASSUNGEN[_ANDERE_NAME]
 VERGLEICH_TAGE = int(_ANDERE["tage"])
 VERGLEICH_SPANNE = float(_ANDERE["max_spanne"])
-SCHLUSS_POS = 0.80
 
 
 def main():
@@ -214,6 +223,10 @@ def main():
         print(f"    davon zugleich Volumen ab 5× Ø10:        "
               f"{kreuz['ma_und_vol']:5,}")
     else:
+        # OHNE Durchschnittsbedingung waere die Zahl bedeutungslos:
+        # all() ueber eine leere Liste ist immer wahr, es kaeme also
+        # stets die Gesamtzahl heraus. Lieber gar nichts sagen als eine
+        # Zahl, die wie ein Befund aussieht und keiner ist.
         print("  (diese Fassung stellt keine Bedingung an gleitende "
               "Durchschnitte)")
     print()
