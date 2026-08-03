@@ -919,14 +919,23 @@ def nummeriert(bloecke: list[str]) -> str:
 
 
 def email_kopf() -> dict:
-    """Zusatz-Kopfzeile, damit ntfy die Meldung auch als E-Mail zustellt.
+    """Zusatz-Kopfzeile, damit ntfy eine Meldung AUCH als E-Mail zustellt.
 
-    Hintergrund: Die ntfy-App fuer iOS ist laut eigener Dokumentation
-    fehlerhaft und verlangte beim Abonnieren ein Kennwort, das es fuer
-    oeffentliche Topics gar nicht gibt. Der E-Mail-Weg braucht weder App noch
-    Konto - und eine Mail laesst sich mit einem Screenreader problemlos lesen.
+    NICHT IN BETRIEB, Stand 31.07.2026. Das Secret NTFY_EMAIL ist im
+    Repo gar nicht angelegt (in der Secret-Liste nachgesehen; da stehen
+    nur FINNHUB_API_KEY, FMP_API_KEY, NTFY_TOPIC, TRADERFOX_USER,
+    TRADERFOX_PASS und TWELVE_DATA_API_KEY). Die Workflows reichen
+    NTFY_EMAIL zwar durch, es kommt aber leer an — dann wird hier keine
+    Kopfzeile gesetzt und ntfy verschickt keine Mail. Mathias liest die
+    Meldungen in der ntfy-App.
 
-    Ist NTFY_EMAIL nicht gesetzt, aendert sich nichts."""
+    Warum der Weg trotzdem im Code steht: Die ntfy-App fuer iOS ist laut
+    eigener Dokumentation fehlerhaft und verlangte beim Abonnieren ein
+    Kennwort, das es fuer oeffentliche Topics gar nicht gibt. Fuer
+    diesen Fall waere die Mail der Ausweg gewesen — sie braucht weder
+    App noch Konto und laesst sich mit einem Screenreader problemlos
+    lesen. Wird NTFY_EMAIL eines Tages angelegt, greift der Weg ohne
+    weitere Aenderung."""
     adresse = (os.environ.get("NTFY_EMAIL") or "").strip()
     return {"Email": adresse} if adresse else {}
 
