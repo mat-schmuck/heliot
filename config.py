@@ -128,8 +128,38 @@ CFG = {
     "gap_and_go": {
         "gap_min": 0.07,             # ≥ 7 %
         "schluss_position_min": 0.80,# oberes Fünftel
-        "flat_base_wochen": 5,       # ≥ 5 Wochen (≈ 25 Tage)
-        "flat_base_max_tiefe": 0.15, # ≤ 15 %
+        # WELCHE FLAT BASE GILT (Mathias, 03.08.2026): "original" oder "A".
+        # Umschalten heißt: diese eine Zeile ändern, sonst nichts.
+        #
+        # Der Grund für "original": Nachgemessen über acht Monate, alle
+        # 265 Aktien, rund 28.400 Aktien-Tage — Gap and Go hätte mit
+        # Fassung A KEIN EINZIGES Mal ausgelöst, mit keinem der drei
+        # Volumen-Maßstäbe. Und das Volumen war dabei nicht der Engpass:
+        # Von 108 verteidigten Lücken erfüllten 13 das Fünffache gegen
+        # Ø10 und 20 gegen Ø50, aber nur EINE hatte zugleich eine Flat
+        # Base nach Fassung A. Fassung A siebt 108 auf 10 herunter und
+        # trifft dabei genau die Katalysator-Lücken; übrig bleiben ruhige
+        # Lücken mit 1,3- bis 2,6-fachem Volumen, also die Fälle, die das
+        # Volumenkriterium aussortieren soll. Die Kriterien arbeiten
+        # gegeneinander. Das Original hätte 30 statt 10 durchgelassen.
+        #
+        # GILT BIS GERHARD ETWAS ANDERES ENTSCHEIDET. Fassung A war seine
+        # verbindliche Vorgabe vom 28.07.2026 und steht unverändert
+        # daneben — sie ist nicht gelöscht, nur nicht in Kraft.
+        "flat_base_fassung": "original",
+        "flat_base": {
+            # Der ältere Entwurf aus Kapitel 7: langes Fenster, weite
+            # Spanne, keine Bedingung an gleitende Durchschnitte. Genau
+            # diese Werte wurden im Rückblick gegengeprüft.
+            "original": {"tage": 63, "max_spanne": 0.35, "ma": []},
+            # Gerhards Fassung A vom 28.07.2026, die spätere O'Neil/IBD-
+            # Fassung: mindestens 5 Wochen, höchstens 15 % Spanne, und
+            # der Kurs muss über MA10 und MA21 liegen.
+            "A": {"tage": 25, "max_spanne": 0.15, "ma": [10, 21]},
+        },
+        # Alte Schlüssel, damit nichts bricht, was sie noch liest.
+        "flat_base_wochen": 5,
+        "flat_base_max_tiefe": 0.15,
     },
     # --- Kapitel 9: Red-to-Green am Markt-Gap-Tag -------------------------
     # Gerhards Präzisierung vom 02.08.2026 ersetzt die bisherige vage Regel

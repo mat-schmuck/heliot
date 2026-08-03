@@ -28,11 +28,24 @@ Aufruf:  python gapgo_rueckblick.py [Monate]
 
 import sys
 
+from config import CFG as _Z
+
 XLSX = "kaufpunkte_aktuell.xlsx"
 GAP_MIN = 0.07
-FLAT_TAGE = 25
-FLAT_SPANNE = 0.15
-FLAT_MA = (10, 21)
+# Gemessen wird die Fassung, die WIRKLICH GILT — sonst prueft der
+# Rueckblick etwas anderes als der Waechter. Seit dem 03.08.2026 ist das
+# Kapitel 7 im Original (63 Tage, 35 %, keine Durchschnittsbedingung);
+# umgeschaltet wird ausschliesslich in config.py.
+_FASSUNG = _Z["gap_and_go"]["flat_base"][_Z["gap_and_go"]["flat_base_fassung"]]
+FLAT_TAGE = int(_FASSUNG["tage"])
+FLAT_SPANNE = float(_FASSUNG["max_spanne"])
+FLAT_MA = tuple(_FASSUNG["ma"])
+FASSUNG_NAME = _Z["gap_and_go"]["flat_base_fassung"]
+# Die jeweils andere Fassung als Gegenprobe, damit der Vergleich bleibt.
+_ANDERE_NAME = "A" if FASSUNG_NAME == "original" else "original"
+_ANDERE = _Z["gap_and_go"]["flat_base"][_ANDERE_NAME]
+VERGLEICH_TAGE = int(_ANDERE["tage"])
+VERGLEICH_SPANNE = float(_ANDERE["max_spanne"])
 SCHLUSS_POS = 0.80
 
 
@@ -72,12 +85,19 @@ def main():
             d = roh[t].dropna(subset=["Open", "High", "Low", "Close", "Volume"])
         except Exception:
             continue
-        if len(d) < 60:
+        # ERST AB DEM PUNKT RECHNEN, an dem ALLE Fenster wirklich in die
+        # Historie passen. Vorher stand hier fest 55 — das reichte fuer
+        # Fassung A (25 Tage), nicht aber fuer das Original (63 Tage).
+        # Ein Ausschnitt wie l[55-63:55] rutscht ins Negative und liefert
+        # stillschweigend ein falsches Fenster, hier ein leeres. Am
+        # 03.08.2026 beim Umstellen aufgelaufen.
+        start = max(55, FLAT_TAGE, VERGLEICH_TAGE)
+        if len(d) <= start:
             continue
         o, h, l, c, v = (d["Open"].values, d["High"].values, d["Low"].values,
                          d["Close"].values, d["Volume"].values)
-        handelstage += len(d) - 55
-        for i in range(55, len(d)):
+        handelstage += len(d) - start
+        for i in range(start, len(d)):
             prev = c[i - 1]
             if prev <= 0:
                 continue
@@ -101,14 +121,16 @@ def main():
             if vol5_50:
                 kreuz["vol5_o50"] += 1
 
-            # Gegenprobe mit der urspruenglichen Fassung aus Kapitel 7
-            if i >= 63:
-                a_l, a_h = l[i - 63:i], h[i - 63:i]
+            # Gegenprobe mit der jeweils ANDEREN Fassung — nur die Basis
+            # selbst, ohne Durchschnittsbedingung, damit die beiden Zahlen
+            # vergleichbar bleiben.
+            if i >= VERGLEICH_TAGE:
+                a_l, a_h = l[i - VERGLEICH_TAGE:i], h[i - VERGLEICH_TAGE:i]
                 a_tief = a_l.min()
-                if a_tief > 0 and (a_h.max() - a_tief) / a_tief <= 0.35:
+                if a_tief > 0 and (a_h.max() - a_tief) / a_tief <= VERGLEICH_SPANNE:
                     alt_flat += 1
 
-            # Flat Base der 25 Tage VOR dem Gap-Tag
+            # Flat Base im Fenster VOR dem Gap-Tag
             f_l, f_h = l[i - FLAT_TAGE:i], h[i - FLAT_TAGE:i]
             tief = f_l.min()
             if tief <= 0:
@@ -159,10 +181,14 @@ def main():
     print("Wo die Kandidaten haengenbleiben (vor dem Volumenkriterium):")
     print(f"  Lücke ab 7 %:            {stufen['gap']:6,}")
     print(f"  davon Lücke verteidigt:  {stufen['verteidigt']:6,}")
+    _ma_txt = (", über MA" + " und MA".join(str(m) for m in FLAT_MA)
+               if FLAT_MA else ", ohne Durchschnittsbedingung")
     print(f"  davon mit Flat Base:     {stufen['flat_base']:6,}"
-          f"   (Fassung A: 25 Tage, 15 %, über MA10 und MA21)")
-    print(f"    zum Vergleich, Kapitel 7 im Original "
-          f"(63 Tage, 35 %):  {alt_flat:5,}")
+          f"   (in Kraft: {FASSUNG_NAME}; {FLAT_TAGE} Tage, "
+          f"{FLAT_SPANNE*100:.0f} %{_ma_txt})")
+    print(f"    zum Vergleich, Fassung {_ANDERE_NAME} "
+          f"({VERGLEICH_TAGE} Tage, {VERGLEICH_SPANNE*100:.0f} %, nur die "
+          f"Basis):  {alt_flat:5,}")
     print(f"  davon Schluss oben:      {stufen['schluss']:6,}")
     print(f"  → so viele Kandidaten kommen überhaupt bis zum Volumen: "
           f"{stufen['volumen_egal']}\n")
@@ -177,15 +203,23 @@ def main():
     print(f"  davon mit Flat Base UND Volumen ab 5× Ø10: "
           f"{kreuz['flat_und_vol']:5,}\n")
 
-    print("Fassung A besteht aus ZWEI Bedingungen — einzeln betrachtet:")
-    print(f"  Spanne der 25 Tage höchstens 15 %:         {kreuz['eng']:5,}")
+    print(f"Die Flat Base in Fassung {FASSUNG_NAME} — ihre Teile einzeln:")
+    print(f"  Spanne der {FLAT_TAGE} Tage höchstens "
+          f"{FLAT_SPANNE*100:.0f} %:{'':7}{kreuz['eng']:5,}")
     print(f"    davon zugleich Volumen ab 5× Ø10:        "
           f"{kreuz['eng_und_vol']:5,}")
-    print(f"  Kurs über MA10 UND MA21:                   {kreuz['ma']:5,}")
-    print(f"    davon zugleich Volumen ab 5× Ø10:        "
-          f"{kreuz['ma_und_vol']:5,}\n")
+    if FLAT_MA:
+        print("  Kurs über MA" + " UND MA".join(str(m) for m in FLAT_MA)
+              + f":{'':19}{kreuz['ma']:5,}")
+        print(f"    davon zugleich Volumen ab 5× Ø10:        "
+              f"{kreuz['ma_und_vol']:5,}")
+    else:
+        print("  (diese Fassung stellt keine Bedingung an gleitende "
+              "Durchschnitte)")
+    print()
 
-    print("WIE VIEL BRINGT EINE WEITERE SPANNE? (25 Tage, mit MA-Bedingung)")
+    print(f"WIE VIEL BRINGT EINE WEITERE SPANNE? ({FLAT_TAGE} Tage"
+          + (", mit MA-Bedingung)" if FLAT_MA else ", ohne MA-Bedingung)"))
     print("  Spanne bis   Kandidaten   davon mit Volumen ab 5× Ø10")
     for grenze in (0.15, 0.20, 0.25, 0.30, 0.35, 0.50):
         passt = [s for s in SPANNEN if s[0] <= grenze and s[1]]

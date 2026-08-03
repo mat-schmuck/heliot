@@ -239,15 +239,21 @@ GAP_VOL_FAKTOR = _VOL["gap_and_go_faktor"]   # Tagesvolumen >= 5x Ø10-Tage
 GAP_FRUEH_FAKTOR = 3.0      # erste halbe Stunde: >= 300 % des zeitueblichen
 GAP_SCHLUSS_POS = _GAP["schluss_position_min"]
 
-# FLAT BASE — Fassung A (Gerhard, 28.07.2026, verbindlich).
-# Vorher stand hier der aeltere Entwurf: 63-126 Tage Fenster, Spanne
-# < 35 %. Gerhard hat klargestellt, dass die spaeter recherchierte
-# O'Neil/IBD-Fassung gilt: mindestens 5 Wochen (rund 25 Handelstage),
-# hoechstens 15 % Tiefe, und der Kurs muss ueber MA10 UND MA21 liegen.
-# Der Filter ist damit deutlich strenger und kuerzer als zuvor.
-FLAT_BASE_TAGE = int(_GAP["flat_base_wochen"] * 5)   # 5 Wochen = 25 Handelstage
-FLAT_BASE_MAX_SPANNE = _GAP["flat_base_max_tiefe"]   # 15 %
-FLAT_BASE_MA = (10, CFG["ma"]["kurz"])               # MA10 und MA21
+# FLAT BASE — welche Fassung gilt, steht in config.py und NUR dort.
+#
+# Mathias am 03.08.2026: "Setze bitte Kapitel 7 Original in Kraft, bis
+# ggf. etwas anderes beschlossen wird." Damit gilt der aeltere Entwurf
+# (63 Tage Fenster, Spanne bis 35 %, keine Bedingung an gleitende
+# Durchschnitte). Fassung A vom 28.07.2026 steht unveraendert daneben
+# und ist mit einer Zeile wieder scharf zu stellen.
+#
+# Der Grund steht ausfuehrlich in config.py: Mit Fassung A haette Gap
+# and Go in acht Monaten kein einziges Mal ausgeloest, und der Engpass
+# war nicht das Volumen, sondern genau diese Basis.
+_FASSUNG = _GAP["flat_base"][_GAP["flat_base_fassung"]]
+FLAT_BASE_TAGE = int(_FASSUNG["tage"])
+FLAT_BASE_MAX_SPANNE = float(_FASSUNG["max_spanne"])
+FLAT_BASE_MA = tuple(_FASSUNG["ma"])                 # leer = keine Bedingung
 
 
 # ---------------------------------------------------------------------------
@@ -571,9 +577,12 @@ def fetch_quotes_yahoo(tickers: list[str]) -> dict:
                                      ("low", "Low")):
                     wert = letzte.get(spalte)
                     eintrag[feld] = None if pd.isna(wert) else float(wert)
-                # FLAT BASE, Fassung A: die letzten 25 Handelstage (5 Wochen)
-                # vor dem Gap-Tag, Spanne hoechstens 15 %, und der Kurs muss
-                # ueber MA10 UND MA21 liegen (Gerhard, 28.07.2026).
+                # FLAT BASE in der geltenden Fassung (siehe config.py):
+                # das Fenster vor dem Gap-Tag, seine hoechstzulaessige
+                # Spanne und — nur in Fassung A — die Bedingung, dass der
+                # Kurs ueber MA10 und MA21 liegt. Im Original ist die
+                # Liste der Durchschnitte leer, die Schleife laeuft dann
+                # gar nicht und ueber_ma bleibt True.
                 fenster = vortage.tail(FLAT_BASE_TAGE)
                 if len(fenster) >= FLAT_BASE_TAGE:
                     tief = float(fenster["Low"].min())
@@ -753,9 +762,9 @@ def pruefe_gap_and_go(ticker: str, q: dict):
 
     1. Eroeffnung >= 7 % ueber Vortagesschluss
     2. Luecke verteidigt: Tagestief bleibt ueber dem Vortagesschluss
-    3. Flat Base davor, Fassung A (Gerhard, 28.07.2026): mindestens
-       5 Wochen (25 Handelstage), hoechstens 15 % Spanne, Kurs ueber
-       MA10 und MA21
+    3. Flat Base davor, in der GELTENDEN Fassung (config.py, derzeit
+       Kapitel 7 im Original: 63 Handelstage, Spanne bis 35 %, keine
+       Bedingung an gleitende Durchschnitte)
     4. Volumen: in der ersten halben Stunde >= 300 % des zeitueblichen
        Werts (Fruehregel, laut Regelwerk NUR live pruefbar); danach
        hochgerechnetes Tagesvolumen >= 5x Ø10-Tage
