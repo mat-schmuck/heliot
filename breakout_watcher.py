@@ -929,13 +929,20 @@ def email_kopf() -> dict:
     Kopfzeile gesetzt und ntfy verschickt keine Mail. Mathias liest die
     Meldungen in der ntfy-App.
 
-    Warum der Weg trotzdem im Code steht: Die ntfy-App fuer iOS ist laut
-    eigener Dokumentation fehlerhaft und verlangte beim Abonnieren ein
-    Kennwort, das es fuer oeffentliche Topics gar nicht gibt. Fuer
-    diesen Fall waere die Mail der Ausweg gewesen — sie braucht weder
-    App noch Konto und laesst sich mit einem Screenreader problemlos
-    lesen. Wird NTFY_EMAIL eines Tages angelegt, greift der Weg ohne
-    weitere Aenderung."""
+    DIE FRUEHERE BEGRUENDUNG HIER WAR FALSCH. Sie lautete, die ntfy-App
+    fuer iOS sei fehlerhaft und verlange beim Abonnieren ein Kennwort,
+    das es fuer oeffentliche Topics gar nicht gebe. Mathias am
+    31.07.2026: "Die App auf iOS ist nicht fehlerhaft, sondern man
+    erstellt sich einmalig ein Konto, mit dem man dann alle Themen
+    abonieren kann, die ntfy-App auf dem iPhone funktioniert bei uns
+    beiden problemlos." Das Kennwort war die normale Anmeldung, kein
+    Fehler.
+
+    Damit hat der E-Mail-Weg keinen Grund mehr. Er bleibt nur stehen,
+    weil er nichts kostet: ohne Secret keine Kopfzeile. Wird NTFY_EMAIL
+    eines Tages angelegt, greift er ohne weitere Aenderung. Soll er ganz
+    weg, sind es vier Stellen: diese Funktion, ihre beiden Aufrufe und
+    die Zeilen NTFY_EMAIL in alarme.yml und watcher.yml."""
     adresse = (os.environ.get("NTFY_EMAIL") or "").strip()
     return {"Email": adresse} if adresse else {}
 
