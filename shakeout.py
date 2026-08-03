@@ -65,6 +65,25 @@ CFG = _ALLE["shakeout"]
 # Hilfsdaten
 # ---------------------------------------------------------------------------
 
+def aus_scanner_df(df):
+    """Die Tagesdaten des Scanners in die Form bringen, die diese
+    Maschine erwartet.
+
+    Der Scanner führt Spalten klein geschrieben und einen Laufindex,
+    Gerhards Vorlage groß geschrieben und einen Datumsindex — den
+    braucht sie für die Wochenkerzen (resample) und für das Datum des
+    Spring-Tages. Übersetzt wird hier an genau einer Stelle, statt
+    beide Seiten aneinander anzupassen."""
+    spalten = {"open": "Open", "high": "High", "low": "Low",
+               "close": "Close", "volume": "Volume"}
+    fehlend = [s for s in spalten if s not in df.columns]
+    if fehlend:
+        raise KeyError(f"Spalten fehlen: {', '.join(fehlend)}")
+    neu = df.rename(columns=spalten)[list(spalten.values())].copy()
+    neu.index = pd.to_datetime(df["datetime"])
+    return neu
+
+
 def wochenkurse_aus_tageskursen(df_tage):
     """Tagesdaten zu Wochenkerzen zusammenfassen.
 

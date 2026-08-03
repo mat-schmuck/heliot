@@ -51,6 +51,7 @@ except ImportError:
     sys.exit("Bitte installieren: pip install requests pandas openpyxl")
 
 import ntfy_verlauf   # merkt sich jede verschickte Meldung fuer den Freitags-Putz
+import red_to_green   # Kapitel 9: Volumen-Signatur an der Kreuzung
 import volumen        # IBD Volume % Change — die EINZIGE Volumenrechnung
 from config import CFG, pruefe_config
 from kurs_cache import KursCache, Kurswert
@@ -812,6 +813,104 @@ def pruefe_gap_and_go(ticker: str, q: dict):
             "kurs": kurs}
 
 
+# ---------------------------------------------------------------------------
+# Red-to-Green (Regelwerk Kapitel 9, praezisiert am 02.08.2026)
+# ---------------------------------------------------------------------------
+# ES GAB DAFUER NOCH KEINE WAECHTERSCHLEIFE. Gerhards Uebergabe geht davon
+# aus, die bestehende bliebe "strukturell gleich" und nur der Volumen-Check
+# werde ausgetauscht — im Code stand bisher aber nur der Eintrag in
+# config.py, kein einziger Rechenweg. Der ganze Ablauf ist deshalb neu.
+#
+# Die Fokusliste kommt aus dem Nachtscan (fokusliste.json): RS ueber 90,
+# ueber EMA21 und EMA50, mindestens 50 % ueber dem 52-Wochen-Tief. Der
+# Waechter steuert nur bei, was erst am Morgen feststeht — den Gap.
+
+R2G_INDEX = "^IXIC"                  # Nasdaq Composite, der Regime-Schalter
+_r2g_fokus: dict = {}                # {Ticker: {firma, vortagesschluss, v50}}
+_r2g_verlauf: dict = {}              # {Ticker: [Punkte des Tages]}
+_r2g_regime = None                   # None = heute noch nicht geprueft
+
+
+def r2g_fokusliste_laden(pfad="fokusliste.json") -> dict:
+    """Die nachts vorbereitete Fokusliste holen.
+
+    Fehlt sie oder ist sie von gestern, laeuft Kapitel 9 heute nicht —
+    lieber gar nicht melden als gegen veraltete Kennzahlen."""
+    try:
+        with open(pfad, encoding="utf-8-sig") as f:
+            roh = json.load(f)
+    except (OSError, ValueError) as e:
+        print(f"  Red-to-Green: keine Fokusliste ({type(e).__name__}) — "
+              f"Kapitel 9 bleibt heute stumm.")
+        return {}
+    aktien = roh.get("aktien", {})
+    print(f"  Red-to-Green: {len(aktien)} Aktien auf der Fokusliste "
+          f"(gebaut am {roh.get('gebaut_am', 'unbekannt')}).")
+    return aktien
+
+
+def r2g_regime_pruefen():
+    """Einmal am Tag: Gapt der Nasdaq mindestens 1,5 % nach unten?
+
+    Ohne diesen Markt-Gap gibt es keinen Red-to-Green-Handel — dann
+    bleibt die ganze Strategie den Tag ueber stumm. Das Ergebnis wird
+    gemerkt, der Index also nicht in jedem Durchlauf neu abgerufen."""
+    global _r2g_regime
+    if _r2g_regime is not None:
+        return _r2g_regime
+    q = fetch_quotes_yahoo([R2G_INDEX]).get(R2G_INDEX) or {}
+    eroeffnung, vortag = q.get("open"), q.get("prev_close")
+    if not eroeffnung or not vortag:
+        print("  Red-to-Green: Nasdaq-Eröffnung nicht abrufbar — "
+              "Regime bleibt heute stumm.")
+        _r2g_regime = False
+        return False
+    scharf, gap = red_to_green.regime_scharf(eroeffnung, vortag)
+    print(f"  Red-to-Green: Nasdaq eröffnet {gap:+.2f} % — "
+          f"{'scharf' if scharf else 'stumm'}.")
+    _r2g_regime = scharf
+    return scharf
+
+
+def pruefe_red_to_green(ticker: str, q: dict, eintrag: dict):
+    """Eine Aktie der Fokusliste, ein Durchlauf.
+
+    Zwei Bedingungen vor der eigentlichen Signatur: Die Aktie muss selbst
+    mindestens 5 % nach unten gapen, und der Tagesverlauf wird
+    mitgeschrieben (ein Punkt je Minute, siehe punkt_setzen)."""
+    vortag = eintrag.get("vortagesschluss") or q.get("prev_close")
+    v50 = eintrag.get("v50")
+    kurs, vol, eroeffnung = q.get("close"), q.get("volume"), q.get("open")
+    if not (vortag and v50 and kurs and vol and eroeffnung):
+        return None
+    if not red_to_green.aktien_gap(eroeffnung, vortag)[0]:
+        return None
+
+    minute = volumen.minute_seit_eroeffnung()
+    if minute is None:
+        return None                      # ausserhalb der Handelszeit
+    verlauf = _r2g_verlauf.setdefault(ticker, [])
+    red_to_green.punkt_setzen(verlauf, minute, kurs, vol)
+    return red_to_green.pruefe(verlauf, vortag, v50)
+
+
+def format_r2g(t: dict) -> str:
+    """Meldung nach denselben Regeln wie ueberall: Kuerzel und Firma
+    zuerst, Strichpunkt zwischen verschiedenen Angaben, Beistrich
+    innerhalb zusammengehoeriger."""
+    sig = t["signatur"]
+    zeilen = [
+        f"{meldungskopf(t['ticker'], t.get('firma', ''))}; Red-to-Green",
+        f"Kreuzung {t['kurs']:.2f} über Vortagesschluss "
+        f"{t['vortagesschluss']:.2f}; Minute {t['minute']} des Handelstages",
+        f"Vol Sprung {sig['sprung_pct']:.0f} % über Ø50"
+        + (", Anflug trocken" if sig["anflug_pct"] is not None
+           and sig["anflug_pct"] <= 0 else "")
+        + ("; erste 30 Minuten, Anflug entfällt" if sig["in_fruehphase"] else ""),
+    ]
+    return "\n".join(zeilen)
+
+
 def format_gapgo(g: dict) -> str:
     """Meldungsregeln (Mathias, 23.07.2026, beide Nutzer blind mit
     iPhone/VoiceOver; ntfy zeigt alles als einen Textblock):
@@ -1277,6 +1376,12 @@ def main():
 
     gewuenscht = set(t.upper() for t in tickers)
 
+    # Kapitel 9 braucht die nachts gebaute Fokusliste. Ihre Aktien sind
+    # eine Teilmenge des Gap-and-Go-Universums, bekommen also ohnehin
+    # Kurse — es kommt kein einziger Abruf dazu.
+    global _r2g_fokus
+    _r2g_fokus = r2g_fokusliste_laden()
+
     # (Die Abstandsrechnung je Aktie ist mit der Staffelung entfallen —
     # es gibt keine knappen Plätze mehr zu vergeben.)
 
@@ -1670,6 +1775,45 @@ def main():
                     save_state(state)
                 else:
                     sperre_bis = jetzt_s + TAKT
+
+            # --- Red-to-Green (Regelwerk Kapitel 9) ------------------------
+            # Nur wenn der Nasdaq stark genug nach unten gegapt hat und die
+            # Aktie auf der nachts gebauten Fokusliste steht.
+            r2g_neu = []
+            if _r2g_fokus and r2g_regime_pruefen():
+                for rt, eintrag in _r2g_fokus.items():
+                    q = quotes.get(rt)
+                    if not q:
+                        continue
+                    treffer = pruefe_red_to_green(rt, q, eintrag)
+                    if not treffer:
+                        continue
+                    treffer["ticker"] = rt
+                    treffer["firma"] = eintrag.get("firma") or firmen.get(rt, "")
+                    treffer["key"] = f"R2G|{rt}|{date.today().isoformat()}"
+                    if treffer["key"] not in schon_gemeldet:
+                        r2g_neu.append(treffer)
+            if r2g_neu:
+                print(f"\nRed-to-Green: {len(r2g_neu)} Meldung(en)")
+                for t in r2g_neu:
+                    print("  " + format_r2g(t).replace("\n", "\n  ") + "\n")
+                if args.dry_run:
+                    print("(Dry-Run — kein Red-to-Green-Push)")
+                    for t in r2g_neu:       # sonst alle zwei Sekunden erneut
+                        schon_gemeldet.add(t["key"])
+                elif jetzt_s < sperre_bis:
+                    pass                    # Sendesperre nach Fehlschlag
+                else:
+                    titel = ("Red-to-Green: "
+                             + ", ".join(t["ticker"] for t in r2g_neu))
+                    if push_text(topic, titel,
+                                 nummeriert([format_r2g(t) for t in r2g_neu])):
+                        for t in r2g_neu:
+                            schon_gemeldet.add(t["key"])
+                            state["gemeldet"][t["key"]] = date.today().isoformat()
+                        save_state(state)
+                    else:
+                        sperre_bis = jetzt_s + TAKT
 
             # --- Gap and Go (Regelwerk Kapitel 7) --------------------------
             # Zwei Meldestufen je Aktie und Tag: 'im Aufbau', sobald alle

@@ -49,6 +49,8 @@ from scipy.signal import argrelextrema
 from scipy.stats import linregress
 
 import ntfy_verlauf   # merkt sich jede verschickte Meldung fuer den Freitags-Putz
+import red_to_green   # Kapitel 9: Fokusliste fuer den Live-Waechter
+import shakeout       # Kapitel 10: Spring samt Sekundaertest-Warteliste
 from config import CFG as ZENTRAL, pruefe_config
 
 pruefe_config()       # faengt widerspruechliche Schwellwerte sofort ab
@@ -805,6 +807,101 @@ def fallback_points(df: pd.DataFrame) -> list[dict]:
 PRIORITY = ["High & Tight Flag", "VCP", "Cup & Handle", "Darvas Box", "Rectangle Top"]
 
 
+# ---------------------------------------------------------------------------
+# Kapitel 9 und 10 — Gerhards Uebergabe vom 02.08.2026
+# ---------------------------------------------------------------------------
+
+SHAKEOUT_DATEI = "shakeout_warteliste.json"
+FOKUSLISTE_DATEI = "fokusliste.json"
+
+
+def _json_lesen(pfad, vorgabe):
+    try:
+        with open(pfad, encoding="utf-8-sig") as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return vorgabe
+
+
+def _json_schreiben(pfad, inhalt):
+    with open(pfad, "w", encoding="utf-8") as f:
+        json.dump(inhalt, f, ensure_ascii=False, indent=1)
+
+
+def shakeout_durchgang(loaded: dict) -> list[dict]:
+    """Kapitel 10 als zehnte Musterpruefung, einmal taeglich nach Schluss.
+
+    Anders als die anderen Musterdetektoren liefert diese Pruefung nicht
+    sofort ein Ergebnis: Ein Spring wandert erst auf eine Warteliste und
+    wird zum Kaufsignal, wenn ihn spaeter ein Ruecksetzer mit geringerem
+    Volumen bestaetigt. Das kann bis zu 15 Handelstage dauern, deshalb
+    ueberlebt die Liste in einer eigenen Datei.
+
+    ACHTUNG beim Aufraeumen (Gerhard ausdruecklich): Diese Datei gehoert
+    in denselben woechentlichen Rhythmus wie die anderen Zustandsdateien,
+    aber es duerfen NUR abgelaufene Eintraege weg — wer die ganze Liste
+    leert, verliert die aktiven Wartepositionen."""
+    warteliste = _json_lesen(SHAKEOUT_DATEI, {})
+    vorher = len(warteliste)
+    signale = []
+    for ticker, (df, company) in loaded.items():
+        try:
+            kurse = shakeout.aus_scanner_df(df)
+            warteliste, signal = shakeout.warte_auf_sekundaertest_und_alarmiere(
+                kurse, warteliste, ticker)
+        except Exception as e:
+            print(f"    Shakeout-Fehler bei {ticker}: {type(e).__name__}: {e}")
+            continue
+        if signal:
+            signal["firma"] = company
+            signale.append(signal)
+    _json_schreiben(SHAKEOUT_DATEI, warteliste)
+    print(f"Shakeout: {len(warteliste)} Aktie(n) warten auf ihren "
+          f"Sekundaertest (vorher {vorher}), {len(signale)} bestaetigt.")
+    return signale
+
+
+def fokusliste_schreiben(loaded: dict) -> int:
+    """Kapitel 9: die Bedingungen, die schon am Vorabend feststehen.
+
+    Der Waechter kann das morgens nicht selbst rechnen — fuer das
+    RS-Rating braucht es 252 Handelstage Historie und das ganze
+    Universum auf einmal. Also wird die Liste hier vorbereitet; am
+    Morgen kommt nur noch der Gap der Aktie dazu.
+
+    Gerhards Einschraenkung dazu: Gegen die eigene Kernliste gerechnet
+    ist das RS-Rating eine Naeherung. Belastbar wird es erst mit einem
+    marktweiten Universum."""
+    schluss_je_ticker = {t: df["close"].tolist() for t, (df, _) in loaded.items()}
+    ratings = red_to_green.rs_ratings_fuer_universum(schluss_je_ticker)
+
+    eintraege = {}
+    for ticker, (df, company) in loaded.items():
+        pruef = red_to_green.fokuslisten_kandidat(
+            df["close"].tolist(), df["low"].tolist(), ratings.get(ticker))
+        if not pruef["ok"]:
+            continue
+        eintraege[ticker] = {
+            "firma": company,
+            "vortagesschluss": round(float(df["close"].iloc[-1]), 4),
+            # Der Massstab fuer die Volumen-Signatur, hier einmal
+            # gerechnet statt am Morgen je Aktie.
+            "v50": round(float(df["volume"].tail(50).mean()), 1),
+            "rs_rating": pruef["rs_rating"],
+            "ueber_52w_tief_pct": pruef["ueber_52w_tief_pct"],
+        }
+    _json_schreiben(FOKUSLISTE_DATEI, {
+        "gebaut_am": datetime.now().strftime("%Y-%m-%d %H:%M"),
+        "universum": len(loaded), "aktien": eintraege,
+    })
+    _r2g = ZENTRAL["red_to_green"]
+    print(f"Fokusliste fuer Red-to-Green: {len(eintraege)} von "
+          f"{len(loaded)} Aktien (RS ueber {_r2g['rs_min']}, ueber EMA21 "
+          f"und EMA50, mindestens {_r2g['min_ueber_tief']*100:.0f} % "
+          f"ueber dem 52-Wochen-Tief).")
+    return len(eintraege)
+
+
 def analyze(df: pd.DataFrame, rs_percentile: float | None) -> dict:
     df = add_indicators(df)
     last = df.iloc[-1]
@@ -1067,8 +1164,22 @@ def main():
         print(f"  {tag} {ticker}: {res['pattern_count']} Muster"
               + (f" ({pats})" if pats else ""))
 
+    # Kapitel 10: die zehnte Musterpruefung. Laeuft NACH den anderen,
+    # weil sie eine eigene Warteliste ueber Tage hinweg fuehrt und nicht
+    # in die Excel-Mappe gehoert.
+    shakeout_signale = shakeout_durchgang(loaded)
+
+    # Kapitel 9: die Fokusliste fuer den Live-Waechter von morgen.
+    fokusliste_schreiben(loaded)
+
     write_excel(rows, args.out)
     print(f"\nFertig → {args.out}")
+    if shakeout_signale:
+        print("\nShakeout-Spring, Sekundaertest bestaetigt:")
+        for s in shakeout_signale:
+            print(f"  {s['symbol']} ({s.get('firma','')}): Kaufpunkt "
+                  f"{s['kaufpunkt']}, Stop {s['stop']}, Ziel {s['kursziel']}; "
+                  f"{s['volumen_typ']}")
     n_green = sum(1 for r in rows if r["res"]["pattern_count"] >= 1)
     n_tt = sum(1 for r in rows if r["res"]["tt_pass"])
     print(f"Treffer: {n_green} mit aktivem Muster, {n_tt} bestehen das Trend Template.")

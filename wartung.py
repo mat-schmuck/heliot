@@ -95,7 +95,46 @@ def raeume_zustaende(basis=".", grenze=None, heute=None):
         bericht.append(f"{name}: zurückgesetzt (war vom {tag or 'unbekannt'}, "
                        f"älter als der Putz vom {grenze}; {anzahl} alte "
                        f"Einträge entfernt, Feld '{feld}' erhalten)")
+    bericht.extend(raeume_shakeout_warteliste(basis))
     return bericht
+
+
+def raeume_shakeout_warteliste(basis=".", datei="shakeout_warteliste.json",
+                               max_tage=None):
+    """Die Warteliste aus Kapitel 10 aufräumen — aber NUR abgelaufene
+    Einträge.
+
+    Gerhard schreibt das ausdrücklich dazu: Diese Datei gehört in
+    denselben wöchentlichen Rhythmus wie die anderen Zustandsdateien,
+    darf aber nicht geleert werden. Ein Spring wartet bis zu 15
+    Handelstage auf seinen Sekundärtest; wer die Liste am Freitag leert,
+    verliert jede aktive Warteposition und damit genau die Signale, auf
+    die das Verfahren hinarbeitet.
+
+    Weg kommt deshalb nur, was seine Wartezeit überschritten hat."""
+    if max_tage is None:
+        from config import CFG
+        max_tage = CFG["shakeout"]["sekundaertest_max_wartetage"]
+    pfad = Path(basis) / datei
+    if not pfad.exists():
+        return [f"{datei}: nicht vorhanden (ok)"]
+    try:
+        data = json.loads(pfad.read_text(encoding="utf-8-sig"))
+    except Exception as e:
+        return [f"{datei}: unlesbar ({e}) — bleibt unangetastet"]
+    if not isinstance(data, dict):
+        return [f"{datei}: unerwarteter Aufbau — bleibt unangetastet"]
+
+    abgelaufen = [t for t, e in data.items()
+                  if isinstance(e, dict)
+                  and e.get("tage_gewartet", 0) > max_tage]
+    for t in abgelaufen:
+        del data[t]
+    if abgelaufen:
+        pfad.write_text(json.dumps(data, ensure_ascii=False, indent=1),
+                        encoding="utf-8")
+    return [f"{datei}: {len(data)} Warteposition(en) bleiben, "
+            f"{len(abgelaufen)} abgelaufene entfernt (über {max_tage} Tage)"]
 
 
 # ---------------------------------------------------------------------------

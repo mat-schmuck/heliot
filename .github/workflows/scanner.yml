@@ -87,6 +87,13 @@ jobs:
           # Fehlertolerant, siehe alarme.yml: fehlt die Datei, bricht
           # 'git add' mit Code 128 ab und faerbt den Lauf grundlos rot.
           git add -A -- ntfy_ids.json 2>/dev/null || true
+          # Kapitel 9 und 10 (Gerhard, 02.08.2026): Die Fokusliste braucht
+          # der Waechter am naechsten Morgen, und die Shakeout-Warteliste
+          # muss ueber Tage hinweg ueberleben — ein Spring wartet bis zu
+          # 15 Handelstage auf seinen Sekundaertest. Beide gehen deshalb
+          # denselben Weg zurueck ins Repo wie ntfy_ids.json.
+          git add -A -- fokusliste.json 2>/dev/null || true
+          git add -A -- shakeout_warteliste.json 2>/dev/null || true
           if git diff --cached --quiet; then
             echo "Keine Änderung gegenüber dem letzten Scan."
           else
