@@ -232,6 +232,14 @@ def main():
                         ("fest 5 %", 0.05),
                         ("fest 8 %", 0.08),
                         ("fest 12 %", 0.12),
+                        # WEITER als der Code rechnet. Ohne diese Zeilen
+                        # waere nur belegt, dass enger schlechter ist,
+                        # nicht ob es zwischen dem jetzigen Stop und gar
+                        # keinem noch etwas Besseres gibt.
+                        ("fest 15 %", 0.15),
+                        ("fest 20 %", 0.20),
+                        ("fest 25 %", 0.25),
+                        ("fest 30 %", 0.30),
                         ("gar keiner", 0.0)):
         ergebnis = []
         raus = 0
