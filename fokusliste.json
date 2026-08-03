@@ -1,0 +1,216 @@
+{
+ "gebaut_am": "2026-08-03 06:55",
+ "universum": 366,
+ "aktien": {
+  "ALMS": {
+   "firma": "Alumis Inc",
+   "vortagesschluss": 28.25,
+   "v50": 1400030.0,
+   "rs_rating": 99,
+   "ueber_52w_tief_pct": 651.3
+  },
+  "ANRO": {
+   "firma": "Alto Neuroscience Inc",
+   "vortagesschluss": 27.07,
+   "v50": 526110.0,
+   "rs_rating": 98,
+   "ueber_52w_tief_pct": 802.3
+  },
+  "APGE": {
+   "firma": "Apogee Therapeutics Inc",
+   "vortagesschluss": 134.09,
+   "v50": 3086914.0,
+   "rs_rating": 95,
+   "ueber_52w_tief_pct": 290.5
+  },
+  "ARWR": {
+   "firma": "Arrowhead Pharmaceuticals Inc",
+   "vortagesschluss": 84.65,
+   "v50": 2303122.0,
+   "rs_rating": 95,
+   "ueber_52w_tief_pct": 464.0
+  },
+  "CORT": {
+   "firma": "Corcept Therapeutics Inc",
+   "vortagesschluss": 114.49,
+   "v50": 1158644.0,
+   "rs_rating": 94,
+   "ueber_52w_tief_pct": 299.5
+  },
+  "CRNX": {
+   "firma": "Crinetics Pharmaceuticals Inc",
+   "vortagesschluss": 83.52,
+   "v50": 4247058.0,
+   "rs_rating": 94,
+   "ueber_52w_tief_pct": 223.3
+  },
+  "DDOG": {
+   "firma": "Datadog Inc",
+   "vortagesschluss": 267.97,
+   "v50": 5008236.0,
+   "rs_rating": 91,
+   "ueber_52w_tief_pct": 173.4
+  },
+  "DFTX": {
+   "firma": "Definium Therapeutics Inc",
+   "vortagesschluss": 43.52,
+   "v50": 3123338.0,
+   "rs_rating": 98,
+   "ueber_52w_tief_pct": 446.7
+  },
+  "DK": {
+   "firma": "Delek US Holdings Inc",
+   "vortagesschluss": 67.87,
+   "v50": 1164956.0,
+   "rs_rating": 92,
+   "ueber_52w_tief_pct": 242.6
+  },
+  "DNTH": {
+   "firma": "Dianthus Therapeutics Inc",
+   "vortagesschluss": 106.92,
+   "v50": 1144810.0,
+   "rs_rating": 96,
+   "ueber_52w_tief_pct": 491.4
+  },
+  "ELVN": {
+   "firma": "Enliven Therapeutics Inc",
+   "vortagesschluss": 54.81,
+   "v50": 1471128.0,
+   "rs_rating": 93,
+   "ueber_52w_tief_pct": 270.7
+  },
+  "ETON": {
+   "firma": "Eton Pharmaceuticals Inc",
+   "vortagesschluss": 46.42,
+   "v50": 475322.0,
+   "rs_rating": 96,
+   "ueber_52w_tief_pct": 236.9
+  },
+  "FBRX": {
+   "firma": "Forte Biosciences Inc",
+   "vortagesschluss": 76.6,
+   "v50": 1151484.0,
+   "rs_rating": 99,
+   "ueber_52w_tief_pct": 741.8
+  },
+  "GH": {
+   "firma": "Guardant Health Inc",
+   "vortagesschluss": 161.99,
+   "v50": 2888026.0,
+   "rs_rating": 95,
+   "ueber_52w_tief_pct": 301.5
+  },
+  "KOD": {
+   "firma": "Kodiak Sciences Inc",
+   "vortagesschluss": 41.58,
+   "v50": 729800.0,
+   "rs_rating": 95,
+   "ueber_52w_tief_pct": 569.6
+  },
+  "LIND": {
+   "firma": "Lindblad Expeditions Holdings Inc",
+   "vortagesschluss": 29.58,
+   "v50": 906496.0,
+   "rs_rating": 91,
+   "ueber_52w_tief_pct": 160.2
+  },
+  "LQDA": {
+   "firma": "Liquidia Corp",
+   "vortagesschluss": 84.11,
+   "v50": 1961244.0,
+   "rs_rating": 98,
+   "ueber_52w_tief_pct": 400.1
+  },
+  "MBX": {
+   "firma": "MBX Biosciences Inc",
+   "vortagesschluss": 65.93,
+   "v50": 850460.0,
+   "rs_rating": 98,
+   "ueber_52w_tief_pct": 584.6
+  },
+  "MNPR": {
+   "firma": "Monopar Therapeutics Inc",
+   "vortagesschluss": 108.35,
+   "v50": 208078.0,
+   "rs_rating": 91,
+   "ueber_52w_tief_pct": 271.3
+  },
+  "ORKA": {
+   "firma": "Oruka Therapeutics Inc",
+   "vortagesschluss": 96.51,
+   "v50": 1361888.0,
+   "rs_rating": 99,
+   "ueber_52w_tief_pct": 651.6
+  },
+  "PACS": {
+   "firma": "PACS Group Inc",
+   "vortagesschluss": 46.01,
+   "v50": 899934.0,
+   "rs_rating": 96,
+   "ueber_52w_tief_pct": 513.5
+  },
+  "PARR": {
+   "firma": "Par Pacific Holdings Inc",
+   "vortagesschluss": 86.03,
+   "v50": 945732.0,
+   "rs_rating": 91,
+   "ueber_52w_tief_pct": 220.6
+  },
+  "PBF": {
+   "firma": "PBF Energy Inc",
+   "vortagesschluss": 72.28,
+   "v50": 2878010.0,
+   "rs_rating": 93,
+   "ueber_52w_tief_pct": 240.3
+  },
+  "PLSE": {
+   "firma": "Pulse Biosciences Inc",
+   "vortagesschluss": 35.13,
+   "v50": 349342.0,
+   "rs_rating": 93,
+   "ueber_52w_tief_pct": 179.7
+  },
+  "RVMD": {
+   "firma": "Revolution Medicines Inc",
+   "vortagesschluss": 187.53,
+   "v50": 2791176.0,
+   "rs_rating": 97,
+   "ueber_52w_tief_pct": 451.6
+  },
+  "SYRE": {
+   "firma": "Spyre Therapeutics Inc",
+   "vortagesschluss": 98.33,
+   "v50": 1354908.0,
+   "rs_rating": 99,
+   "ueber_52w_tief_pct": 577.9
+  },
+  "TWST": {
+   "firma": "Twist Bioscience Corp",
+   "vortagesschluss": 91.55,
+   "v50": 1792576.0,
+   "rs_rating": 93,
+   "ueber_52w_tief_pct": 292.9
+  },
+  "TXG": {
+   "firma": "10x Genomics Inc",
+   "vortagesschluss": 47.27,
+   "v50": 3242804.0,
+   "rs_rating": 97,
+   "ueber_52w_tief_pct": 323.6
+  },
+  "VSAT": {
+   "firma": "Viasat Inc",
+   "vortagesschluss": 76.93,
+   "v50": 2875676.0,
+   "rs_rating": 94,
+   "ueber_52w_tief_pct": 403.8
+  },
+  "VSXY": {
+   "firma": "Victoria's Secret & Co",
+   "vortagesschluss": 88.68,
+   "v50": 2348292.0,
+   "rs_rating": 96,
+   "ueber_52w_tief_pct": 391.6
+  }
+ }
+}
