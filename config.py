@@ -131,12 +131,69 @@ CFG = {
         "flat_base_wochen": 5,       # ≥ 5 Wochen (≈ 25 Tage)
         "flat_base_max_tiefe": 0.15, # ≤ 15 %
     },
+    # --- Kapitel 9: Red-to-Green am Markt-Gap-Tag -------------------------
+    # Gerhards Präzisierung vom 02.08.2026 ersetzt die bisherige vage Regel
+    # "Volumen zieht an" durch eine exakte Signatur in zwei Phasen. Beide
+    # rechnen über dieselbe F(t)-Tagesverlaufskurve wie der Rest des Systems
+    # (volumen.py) — es gibt nur EINE Volumen-Wahrheit.
     "red_to_green": {
         "nasdaq_gap_scharf": -0.015, # Nasdaq ≥ 1,5 % im Minus
         "aktie_gap_min": -0.05,      # Aktie ≥ 5 % runter
         "rs_min": 90,                # RS Rating > 90
         "min_ueber_tief": 0.50,      # ≥ 50 % über 52-Wochen-Tief
         "wächter_takt_sek": 45,      # Live-Wächter-Schleife
+        "ema_kurz": 21,              # Kurs muss über EMA21 …
+        "ema_lang": 50,              # … und über EMA50 stehen
+        # ANFLUG: Vor der Kreuzung darf das Volumen höchstens im
+        # Normaltempo laufen. 0 % Abweichung heißt genau 100 % des
+        # 50-Tage-Schnitts, hochgerechnet auf die Uhrzeit.
+        "vol_anflug_max_pct": 0.0,
+        # SPRUNG: An der Kreuzung muss es auf mindestens doppeltes
+        # Normaltempo springen.
+        "vol_sprung_min_pct": 100.0,
+        # Kreuzt es in den ersten 30 Minuten, entfällt die Anflug-
+        # Bedingung: Die Eröffnungsphase ist ohnehin volumenstark, und das
+        # steckt bereits in der F(t)-Kurve.
+        "fruehe_phase_minuten": 30,
+        # Der Sprung muss halten: in den folgenden 10 Minuten höchstens
+        # 20 % Abfall, sonst war es eine Eintagsfliege.
+        "sprung_bestaetigung_minuten": 10,
+        "sprung_abfall_max": 0.20,
+        # Gerhard, 02.08.2026, wörtlich: Beide Werte sind Startwerte, kein
+        # gemessenes Optimum — erst mitschreiben, dann nachjustieren.
+    },
+    # --- Kapitel 10: Shakeout-Spring (Wyckoff) ----------------------------
+    # Werte aus Gerhards shakeout_engine.py, Fassung v2 vom 02.08.2026.
+    "shakeout": {
+        "ma_lang": 200,
+        "stage2_min_tage_steigend": 21,   # MA200 seit rund einem Monat steigend
+        "min_ueber_52w_tief": 1.00,       # ≥ 100 % über dem 52-Wochen-Tief
+        "lookback_tage": 1000,            # 3 bis 4 Jahre für den Level-Detektor
+        "swing_order": 5,                 # Fenster für Swing-Punkte (Tage)
+        "swing_order_wochen": 2,          # dasselbe auf Wochenbasis
+        "cluster_toleranz": 0.02,         # 2 % — Punkte zu einer Zone gruppieren
+        "shakeout_toleranz": 0.05,        # höchstens 5 % unter die Zone
+        # AM 02.08.2026 VON 0,90 AUF 0,70 GELOCKERT (Gerhard): oberes
+        # Drittel der Tagesspanne statt oberste 10 Prozent. Begründung aus
+        # dem Backtest: mehr echte Signale bei weiterhin klarem Schluss.
+        "schluss_oberste_pct": 0.70,
+        "level_score_schwelle": 55,
+        "ma_naehe_toleranz": 0.03,
+        # Gewichte der fünf Faktoren; sie müssen sich nicht auf 100 summieren.
+        "gewicht_beruehrungen": 30,
+        "gewicht_volumen": 30,
+        "gewicht_alter_extrempunkt": 15,
+        "gewicht_wochenchart": 15,
+        "gewicht_ma_naehe": 10,
+        # Wyckoff-Volumentyp am Spring-Tag, gemessen am Ø der letzten 20 Tage.
+        "vol_typ1_max": 0.7,              # unter 70 % = Typ 1, beste Qualität
+        "vol_typ3_min": 1.5,              # über 150 % = Typ 3, Test abwarten
+        "vol_typ_fenster": 20,
+        # Sekundärtest: Der bestätigende Rücksetzer darf bis zu 15
+        # Handelstage auf sich warten lassen.
+        "sekundaertest_max_wartetage": 15,
+        "sekundaertest_max_zusatz_unterschreitung": 0.02,
+        "kursziel_faktor": 1.0,           # Zonenhöhe einmal auf die Oberkante
     },
     "crash_support": {
         "min_marktkap_mrd": 20,
