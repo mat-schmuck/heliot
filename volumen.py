@@ -210,8 +210,19 @@ def baue_referenzkurve(tickers=None, tage=50, pfad=KURVE_DATEI):
     gemittelt[0] = 0.0
     gemittelt[HANDELSMINUTEN] = 1.0
 
+    # Zeitstempel in Wiener Zeit samt Zone. Auf einem GitHub-Rechner
+    # waere es sonst UTC, und ein Lauf um Mitternacht Wiener Zeit
+    # erschiene als 22:00 des VORTAGES — am 04.08.2026 genau so
+    # missverstanden worden.
+    try:
+        from zoneinfo import ZoneInfo
+        stempel = (datetime.now(ZoneInfo("Europe/Vienna"))
+                   .strftime("%Y-%m-%d %H:%M") + " Wien")
+    except Exception:
+        stempel = datetime.now().strftime("%Y-%m-%d %H:%M") + " (Zone unbekannt)"
+
     inhalt = {
-        "gebaut_am": datetime.now().strftime("%Y-%m-%d %H:%M"),
+        "gebaut_am": stempel,
         "ticker": tickers,
         "tage": len(kurven),
         "raster_minuten": RASTER,

@@ -815,6 +815,23 @@ SHAKEOUT_DATEI = "shakeout_warteliste.json"
 FOKUSLISTE_DATEI = "fokusliste.json"
 
 
+def wiener_zeit():
+    """Zeitstempel in Wiener Zeit, mit der Zone im Text.
+
+    Der Nachtscan laeuft auf einem GitHub-Rechner, und der steht auf
+    UTC. Ein Lauf um 18:00 New York wird dort als 22:00 des VORTAGES
+    geschrieben, obwohl er in Wien um 00:00 desselben Tages stattfand.
+    Am 04.08.2026 hat genau das Mathias stutzig gemacht: "Der
+    Nachtscanner ist also gestern gelaufen?" - er war es nicht.
+    Deshalb steht hier ab jetzt die Zeit, in der er denkt, samt Zone."""
+    try:
+        from zoneinfo import ZoneInfo
+        jetzt = datetime.now(ZoneInfo("Europe/Vienna"))
+        return jetzt.strftime("%Y-%m-%d %H:%M") + " Wien"
+    except Exception:
+        return datetime.now().strftime("%Y-%m-%d %H:%M") + " (Zone unbekannt)"
+
+
 def _json_lesen(pfad, vorgabe):
     try:
         with open(pfad, encoding="utf-8-sig") as f:
@@ -891,7 +908,7 @@ def fokusliste_schreiben(loaded: dict) -> int:
             "ueber_52w_tief_pct": pruef["ueber_52w_tief_pct"],
         }
     _json_schreiben(FOKUSLISTE_DATEI, {
-        "gebaut_am": datetime.now().strftime("%Y-%m-%d %H:%M"),
+        "gebaut_am": wiener_zeit(),
         "universum": len(loaded), "aktien": eintraege,
     })
     _r2g = ZENTRAL["red_to_green"]
