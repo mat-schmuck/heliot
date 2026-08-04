@@ -48,6 +48,7 @@ except ImportError:
 from scipy.signal import argrelextrema
 from scipy.stats import linregress
 
+import cup_handle_v2  # Cup & Handle auf Wochenbasis, "Giant Base"
 import ntfy_verlauf   # merkt sich jede verschickte Meldung fuer den Freitags-Putz
 import red_to_green   # Kapitel 9: Fokusliste fuer den Live-Waechter
 import shakeout       # Kapitel 10: Spring samt Sekundaertest-Warteliste
@@ -628,6 +629,13 @@ def detect_cup_handle(df: pd.DataFrame) -> dict | None:
     return {
         "strategie": "Cup & Handle",
         "kaufpunkt": kp,
+        # Die Punktzahl zusaetzlich als ZAHL. Sie stand bisher nur im
+        # Text unter "status". Gerhards Einbau-Beispiel vom 04.08.2026
+        # vergleicht die beiden Cup-Fassungen ueber ein Feld 'score' —
+        # ohne dieses Feld haette die Tagesfassung immer gewonnen und
+        # die Wochenfassung waere nie zum Zug gekommen. Die Rechnung
+        # selbst ist unveraendert.
+        "score": round(best["score"], 1),
         "stop": round(best["bottom"] + (best["left_high"] - best["bottom"]) * (2 / 3), 2),
         "ziel": ziel,
         "status": f"Score {best['score']:.0f}/100",
@@ -804,7 +812,12 @@ def fallback_points(df: pd.DataFrame) -> list[dict]:
 # Auswertung je Ticker
 # ---------------------------------------------------------------------------
 
-PRIORITY = ["High & Tight Flag", "VCP", "Cup & Handle", "Darvas Box", "Rectangle Top"]
+# Die Wochenfassung steht direkt hinter der Tagesfassung: Sie beschreibt
+# dasselbe Muster, nur ueber eine laengere Formation. Ohne diesen Eintrag
+# landete sie ganz hinten und fiele bei drei Kaufpunkten je Aktie oft
+# heraus (Gerhards Ergaenzung vom 04.08.2026).
+PRIORITY = ["High & Tight Flag", "VCP", "Cup & Handle",
+            "Cup & Handle (Wochenbasis)", "Darvas Box", "Rectangle Top"]
 
 
 # ---------------------------------------------------------------------------
@@ -926,7 +939,8 @@ def analyze(df: pd.DataFrame, rs_percentile: float | None) -> dict:
 
     hits = []
     for fn in (detect_htf, lambda d: detect_vcp(d, tt_pass), detect_cup_handle,
-               detect_darvas, detect_rectangle):
+               detect_darvas, detect_rectangle,
+               cup_handle_v2.detect_cup_handle_v2):
         try:
             res = fn(df)
         except Exception as e:
@@ -934,6 +948,19 @@ def analyze(df: pd.DataFrame, rs_percentile: float | None) -> dict:
             print(f"    Detektor-Fehler ({fn}): {e}")
         if res:
             hits.append(res)
+
+    # BEIDE CUP-FASSUNGEN LAUFEN NEBENEINANDER (Gerhard, 04.08.2026), weil
+    # die Wochenfassung bewusst gelockerte Toleranzen hat: Auf kurze Cups
+    # angewandt liesse sie Fehlsignale durch, die die strengere
+    # Tagesfassung zu Recht aussiebt. Feuern ausnahmsweise beide auf
+    # derselben Aktie, gewinnt die hoehere Punktzahl — zwei Eintraege fuer
+    # dasselbe Muster waeren nur Doppelmeldung.
+    cups = [h for h in hits if h["strategie"].startswith("Cup & Handle")]
+    if len(cups) > 1:
+        bester = max(cups, key=lambda h: h.get("score", 0))
+        for c in cups:
+            if c is not bester:
+                hits.remove(c)
 
     hits.sort(key=lambda h: PRIORITY.index(h["strategie"]) if h["strategie"] in PRIORITY else 99)
     points = hits[:3]

@@ -192,6 +192,45 @@ CFG = {
         # Gerhard, 02.08.2026, wörtlich: Beide Werte sind Startwerte, kein
         # gemessenes Optimum — erst mitschreiben, dann nachjustieren.
     },
+    # --- Cup & Handle auf Wochenbasis ("Giant Base") ----------------------
+    # Gerhards Ergänzung vom 04.08.2026. Sie ERSETZT die bestehende
+    # Tages-Erkennung NICHT, sondern läuft daneben.
+    #
+    # Der Fehler, den sie behebt: Bei sehr langen Konsolidierungen sieht
+    # die Tagesfunktion den echten linken Rand nicht mehr — ihr Fenster
+    # von rund 160 Tagen ist dafür zu kurz. Übrig bleibt ein Ausschnitt,
+    # der dann als Rectangle Top gemeldet wird. Aufgefallen an DDOG: Die
+    # Aktie brach am 01.08. über einen von IBD bestätigten
+    # Cup-&-Handle-Kaufpunkt aus, unser System meldete Rectangle Top zum
+    # gleichen Kurs.
+    #
+    # WARUM BEIDE NEBENEINANDER LAUFEN, wörtlich von Gerhard: Die
+    # gelockerten Toleranzen hier sind auf sehr lange Formationen
+    # kalibriert. Auf kurze Cups angewandt würden sie Fehlsignale
+    # durchlassen, die die strengere Tagesfunktion zu Recht aussiebt.
+    "cup_handle_v2": {
+        "cup_min_len_wochen": 5,      # wie IBDs Flat-Base-Mindestlänge
+        "cup_max_len_wochen": 104,    # bis zwei Jahre, deckt Giant Bases ab
+        "cup_min_depth": 0.12,
+        "cup_max_depth": 0.60,
+        # Randtoleranz 11 % statt 6 %: Bei sehr tiefen, langen Cups muss
+        # der rechte Rand das alte Hoch nicht so eng zurücktesten. Der
+        # echte MEDP-Fall brauchte 9,3 %.
+        "cup_rim_tolerance": 0.11,
+        "handle_min_len_wochen": 1,
+        "handle_max_len_wochen": 8,
+        # Rücksetzer höchstens 45 % der Cup-Höhe (Standard-Cup: 33 %).
+        # Das bleibt die eigentliche Qualitätsprüfung.
+        "handle_max_retrace": 0.45,
+        # Handle in der oberen HÄLFTE statt im oberen Drittel. Die
+        # Positionsregel war für proportional große Formationen zu streng.
+        "handle_min_position": 0.50,
+        "outlier_glaettung_fenster": 3,   # Median gegen Einzelausreißer
+        "min_score": 50,
+        "symmetrie_min": 0.15,        # Boden darf unsymmetrisch liegen
+        "symmetrie_max": 0.85,
+        "r2_min": 0.50,               # gelockert, weil vorher geglättet
+    },
     # --- Kapitel 10: Shakeout-Spring (Wyckoff) ----------------------------
     # Werte aus Gerhards shakeout_engine.py, Fassung v2 vom 02.08.2026.
     "shakeout": {
