@@ -177,6 +177,27 @@ def filter_regeln():
 # Auswertung
 # ---------------------------------------------------------------------------
 
+def monate_aus_argumenten(vorgabe):
+    """Die Monatszahl aus der Befehlszeile holen.
+
+    Ohne argparse, weil diese Werkzeuge nur EIN Argument kennen — aber
+    mit Anstand: "--help" oder etwas Unlesbares brach vorher mit einem
+    Rueckverfolgungsprotokoll ab (am 04.08.2026 im Fehlerdurchlauf
+    aufgefallen)."""
+    for arg in sys.argv[1:]:
+        if arg in ("-h", "--help", "/?"):
+            print(__doc__.strip())
+            sys.exit(0)
+        if arg.startswith("-"):
+            continue                     # gehoert einem anderen Schalter
+        try:
+            return int(arg)
+        except ValueError:
+            sys.exit(f"'{arg}' ist keine Monatszahl. Aufruf: "
+                     f"python {sys.argv[0]} [Monate]")
+    return vorgabe
+
+
 def kennzahlen(renditen):
     if not renditen:
         return None
@@ -198,7 +219,7 @@ KOPF = (f"{'':34s} {'n':>4s} {'Tr%':>6s} {'Median':>7s} {'Mittel':>7s} "
 
 
 def main():
-    monate = int(sys.argv[1]) if len(sys.argv) > 1 else 24
+    monate = monate_aus_argumenten(24)
 
     import pandas as pd
     import yfinance as yf

@@ -113,7 +113,6 @@ def raeume_shakeout_warteliste(basis=".", datei="shakeout_warteliste.json",
 
     Weg kommt deshalb nur, was seine Wartezeit überschritten hat."""
     if max_tage is None:
-        from config import CFG
         max_tage = CFG["shakeout"]["sekundaertest_max_wartetage"]
     pfad = Path(basis) / datei
     if not pfad.exists():
