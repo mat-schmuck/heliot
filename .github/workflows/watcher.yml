@@ -5,10 +5,19 @@ on:
   # fuer dieses Repo beharrlich Stunden nach (belegt 22.-24.07., z. B.
   # 23:45-Termin kam um 08:43). Die Zeitsteuerung liegt jetzt komplett bei
   # cron-job.org (Konto von Mathias, Fehler-E-Mails an ihn):
-  #   - "Heliot" wochentags 09:12 New York -> Dauerwache 390 Min
-  #   - "Heliot Teil 2 (Schlussstunde)" wochentags 15:09 New York
-  #     (haengt sich per concurrency hinter die Tagwache und uebernimmt
-  #     die letzte Stunde, weil 390 Min ab 09:12 um ~15:42 enden)
+  #   - "Heliot" (Tagwache) wochentags 09:28 New York -> Dauerwache 390 Min
+  #   - "Heliot Teil 2 (Schlussstunde)" wochentags 15:26 New York
+  #     (haengt sich per concurrency hinter die Tagwache und uebernimmt,
+  #     sobald GitHub sie nach sechs Stunden abschiesst, also gegen 15:28)
+  #
+  # DIE ZEITEN AM 04.08.2026 VERSCHOBEN (Mathias), von 09:12 auf 09:28
+  # und von 15:09 auf 15:26. Grund: Die sechs Stunden laufen ab dem Start
+  # des Auftrags, jede Minute Vorlauf fehlt also am Nachmittag. Gemessen
+  # dauert die ganze Vorbereitung 28 Sekunden — 18 Sekunden GitHub-
+  # Ruestzeit, 8,6 Sekunden fuer die Tagesdaten aller 366 Aktien, eine
+  # Sekunde fuer die fuenf Stromverbindungen. Dafuer waren 18 Minuten
+  # reserviert. Jetzt sind es zwei, und der Handelstag ist 16 Minuten
+  # laenger abgedeckt.
   # Beide rufen workflow_dispatch ueber die GitHub-API auf. Die
   # Warte-bis-zur-Eroeffnung-Logik (sekunden_bis_eroeffnung) bleibt im
   # Programm: Startet die Tagwache vor 09:30 New York, wartet sie bis zur
@@ -36,15 +45,17 @@ jobs:
     # 04.08.2026 hat es zutage gebracht.
     #
     # Was daraus folgt: Bei --dauerwache 390 endet die Tagwache NICHT nach
-    # 390 Minuten, sondern rund 360 Minuten nach dem Start, also gegen
-    # 15:12 New Yorker Zeit statt 15:42. Die Schlussstunden-Wache startet
-    # 15:09 und deckt ab — mit ganzen DREI Minuten Ueberlappung.
+    # 390 Minuten, sondern rund 360 Minuten nach dem Start des Auftrags —
+    # bei Start 09:28 also gegen 15:28 New Yorker Zeit. Die
+    # Schlussstunden-Wache wird 15:26 ausgeloest, haengt sich per
+    # concurrency dahinter und uebernimmt in dem Moment, in dem die
+    # Tagwache faellt.
     #
-    # ACHTUNG, falls die Zeiten je geaendert werden: Diese drei Minuten
-    # sind der einzige Puffer. Startet die zweite Wache spaeter oder faellt
-    # sie aus, entsteht ein Loch in der Ueberwachung. Der Abbruch der
-    # Tagwache vom 24.07. ('cancelled', zwei Minuten vor der Uebergabe) war
-    # genau dieser Fall, damals mit 355 Minuten.
+    # ACHTUNG, falls die Zeiten je geaendert werden: Diese ZWEIEINHALB
+    # MINUTEN sind der einzige Puffer im ganzen Handelstag. Der zweite
+    # Auftrag muss VOR dem Ende des ersten ausgeloest werden, sonst
+    # entsteht ein Loch in der Ueberwachung. Wer die Startzeit der
+    # Tagwache verschiebt, muss die des zweiten Auftrags mitverschieben.
     timeout-minutes: 360
     # contents: write, damit die Kennungen der verschickten Meldungen
     # (ntfy_ids.json) eingecheckt werden koennen — der Freitags-Putz

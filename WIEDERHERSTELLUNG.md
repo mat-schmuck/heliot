@@ -50,10 +50,26 @@ Aufträge neu angelegt werden:
   unabhängig davon weiter, weil der tägliche ntfy-Putz um 16:05
   denselben Befehl ausführt und Montag bis Freitag läuft, also auch am
   Freitag. Genau deshalb war das Löschen dieses Auftrags gefahrlos.
-- *Wächter Tagwache* — `12 9 * * 1-5`, watcher.yml,
+- *Wächter Tagwache* (Auftrag 8146990, trägt keinen Titel) —
+  `28 9 * * 1-5`, watcher.yml,
   Text `{"ref":"main","inputs":{"dauerwache":"390"}}`.
-- *Heliot Teil 2 (Schlussstunde, 15:09 New York)* — `9 15 * * 1-5`,
-  watcher.yml.
+- *Heliot Teil 2 (Schlussstunde, 15:26 New York)* (Auftrag 8147021) —
+  `26 15 * * 1-5`, watcher.yml, Text `{"ref":"main"}`.
+
+  **Am 04.08.2026 verschoben** (Mathias), von 09:12 auf 09:28 und von
+  15:09 auf 15:26. GitHub schießt jeden Auftrag nach sechs Stunden ab,
+  gerechnet ab dem Start — jede Minute Vorlauf fehlt also am Nachmittag.
+  Gemessen dauert die ganze Vorbereitung 28 Sekunden: 18 Sekunden
+  GitHub-Rüstzeit, 8,6 Sekunden für die Tagesdaten aller 366 Aktien,
+  eine Sekunde für die fünf Stromverbindungen. Reserviert waren dafür
+  18 Minuten. Der Handelstag ist jetzt 16 Minuten länger abgedeckt.
+
+  **Die beiden Zeiten gehören zusammen.** Der zweite Auftrag muss VOR
+  dem Ende des ersten auslösen, sonst entsteht ein Loch: Er hängt sich
+  per `concurrency` hinter die Tagwache und übernimmt genau dann, wenn
+  sie fällt. Zwischen 15:26 und 15:28 liegen zweieinhalb Minuten, und
+  das ist der einzige Puffer. Wer die eine Zeit verschiebt, muss die
+  andere mitverschieben.
 
 ACHTUNG beim Klonen eines Auftrags: Die Kopie wird **deaktiviert**
 angelegt und muss über „Job aktivieren" scharf geschaltet werden. Der
