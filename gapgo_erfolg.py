@@ -355,13 +355,20 @@ def main():
         n = min(20, len(e["schluss"]) - 1)
         r.append(e["schluss"][n] / e["schluss_luecke"] - 1)
     print(zeile("Schluss des Luecken-Tages (alle)", kennzahlen(r)))
-    if ohne:
+    # DER SAUBERE VERGLEICH ZUR FOLGETAGS-REGEL (Mathias, 05.08.2026:
+    # "Gap and Go ist eigentlich Follow Through Day"). Beide Gruppen ab
+    # DEMSELBEN Einstieg, dem Schluss des Luecken-Tages — nur so misst
+    # man die Regel selbst und nicht den unterschiedlichen Einstiegskurs.
+    print("\nDie Folgetags-Regel als reiner Filter, beide ab dem Schluss")
+    print("des Luecken-Tages gerechnet:")
+    print(KOPF)
+    for name, menge in (("Kaufpunkt am Folgetag ERREICHT", gehandelt),
+                        ("Kaufpunkt NICHT erreicht", ohne)):
         r = []
-        for e in ohne:
+        for e in menge:
             n = min(20, len(e["schluss"]) - 1)
             r.append(e["schluss"][n] / e["schluss_luecke"] - 1)
-        print(zeile("nur die NICHT ausgeloesten, ab Schluss",
-                    kennzahlen(r)))
+        print(zeile("  " + name, kennzahlen(r)))
 
     # --- 7. Lueckengroesse -------------------------------------------
     print("\n" + "=" * 74)
