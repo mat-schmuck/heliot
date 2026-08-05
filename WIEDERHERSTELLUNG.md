@@ -54,7 +54,14 @@ Aufträge neu angelegt werden:
   `28 9 * * 1-5`, watcher.yml,
   Text `{"ref":"main","inputs":{"dauerwache":"390"}}`.
 - *Heliot Teil 2 (Schlussstunde, 15:26 New York)* (Auftrag 8147021) —
-  `26 15 * * 1-5`, watcher.yml, Text `{"ref":"main"}`.
+  `26 15 * * 1-5`, watcher.yml,
+  Text `{"ref":"main","inputs":{"dauerwache":"390"}}`.
+
+  Also derselbe Text wie bei der Tagwache. Hier stand kurzzeitig
+  `{"ref":"main"}` — das war eine Annahme von mir und falsch, im
+  Auftrag nachgesehen am 05.08.2026. Die 390 Minuten laufen ohnehin nie
+  ab: Der Wächter beendet sich beim Schlussgong von selbst, also nach
+  rund 34 Minuten.
 
   **Am 04.08.2026 verschoben** (Mathias), von 09:12 auf 09:28 und von
   15:09 auf 15:26. GitHub schießt jeden Auftrag nach sechs Stunden ab,
