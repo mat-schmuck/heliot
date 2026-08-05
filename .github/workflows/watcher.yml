@@ -30,12 +30,22 @@ concurrency:
 jobs:
   wachen:
     runs-on: ubuntu-latest
-    # Hoch genug fuer die volle 390-Minuten-Dauerwache samt Wartezeit vor
-    # der Eroeffnung und Rundenueberhang. 355 war ZU KNAPP: Die Tagwache
-    # vom 24.07. (Lauf #23) wurde um 21:07 Wien vom Zeitlimit abgewuergt
-    # ('cancelled'), zwei Minuten bevor die Schlussstunden-Wache
-    # uebernahm. Normale Laeufe beenden sich weiterhin von selbst.
-    timeout-minutes: 420
+    # Hier stand 420. Das ist WIRKUNGSLOS: GitHub schiesst jeden Auftrag
+    # auf seinen eigenen Rechnern nach 360 Minuten ab, und timeout-minutes
+    # kann diese Grenze nicht anheben, nur senken. Mathias' Frage vom
+    # 04.08.2026 hat es zutage gebracht.
+    #
+    # Was daraus folgt: Bei --dauerwache 390 endet die Tagwache NICHT nach
+    # 390 Minuten, sondern rund 360 Minuten nach dem Start, also gegen
+    # 15:12 New Yorker Zeit statt 15:42. Die Schlussstunden-Wache startet
+    # 15:09 und deckt ab — mit ganzen DREI Minuten Ueberlappung.
+    #
+    # ACHTUNG, falls die Zeiten je geaendert werden: Diese drei Minuten
+    # sind der einzige Puffer. Startet die zweite Wache spaeter oder faellt
+    # sie aus, entsteht ein Loch in der Ueberwachung. Der Abbruch der
+    # Tagwache vom 24.07. ('cancelled', zwei Minuten vor der Uebergabe) war
+    # genau dieser Fall, damals mit 355 Minuten.
+    timeout-minutes: 360
     # contents: write, damit die Kennungen der verschickten Meldungen
     # (ntfy_ids.json) eingecheckt werden koennen — der Freitags-Putz
     # braucht sie, um die Woche in der ntfy-App wieder aufzuraeumen.

@@ -843,6 +843,12 @@ def pruefe_gap_and_go(ticker: str, q: dict):
 # ueber EMA21 und EMA50, mindestens 50 % ueber dem 52-Wochen-Tief. Der
 # Waechter steuert nur bei, was erst am Morgen feststeht — den Gap.
 
+# GitHub schiesst jeden Auftrag auf seinen Rechnern nach sechs Stunden ab.
+# Das ist eine harte Grenze; timeout-minutes im Workflow kann sie nicht
+# anheben. Sie steht hier, damit das Protokoll ehrlich sagt, wann wirklich
+# Schluss ist (Mathias' Frage vom 04.08.2026).
+GITHUB_GRENZE_MIN = 360
+
 R2G_INDEX = "^IXIC"                  # Nasdaq Composite, der Regime-Schalter
 _r2g_fokus: dict = {}                # {Ticker: {firma, vortagesschluss, v50}}
 _r2g_verlauf: dict = {}              # {Ticker: [Punkte des Tages]}
@@ -1474,15 +1480,29 @@ def main():
     # (22.07.2026): GitHub feuerte die Zeitplaene nach Repo-Umbenennung und
     # Workflow-Aenderungen stundenlang verspaetet — im ersten Boersenfenster
     # kam kein einziger geplanter Lauf. Mit --dauerwache haengt die
-    # Ueberwachung nicht mehr am Zeitplan: Der Lauf prueft alle 6 Minuten
+    # Ueberwachung nicht mehr am Zeitplan: Der Lauf prueft im Prueftakt
     # selbst weiter, bis die Boerse schliesst oder die Zeit ablaeuft. Die
     # Zeitplan-Laeufe bleiben als Rueckfallebene bestehen; die
     # concurrency-Gruppe im Workflow verhindert Doppelmeldungen.
+    #
+    # ACHTUNG, GITHUBS SECHS-STUNDEN-GRENZE: Ein Auftrag auf GitHubs
+    # Rechnern wird nach 360 Minuten abgeschossen, egal was hier steht.
+    # Bei --dauerwache 390 endet der Lauf also NICHT nach 390 Minuten,
+    # sondern rund 360 Minuten nach dem Start des Auftrags. Deshalb wird
+    # unten beides genannt: was verlangt wurde und wann GitHub spaetestens
+    # abbricht. Frueher stand hier nur die verlangte Zeit — das Protokoll
+    # versprach ein Ende um 15:42, tatsaechlich war um 15:12 Schluss.
     ende_dauerwache = None
     if args.dauerwache > 0:
         ende_dauerwache = datetime.now() + timedelta(minutes=args.dauerwache)
-        print(f"Dauerwache aktiv: alle 6 Minuten, für bis zu {args.dauerwache} "
-              f"Minuten (spätestens bis {ende_dauerwache:%H:%M} Serverzeit).")
+        github_ende = datetime.now() + timedelta(minutes=GITHUB_GRENZE_MIN)
+        print(f"Dauerwache aktiv: Prüfung alle {PRUEF_TAKT} Sekunden, für "
+              f"bis zu {args.dauerwache} Minuten "
+              f"(bis {ende_dauerwache:%H:%M} Serverzeit).")
+        if args.dauerwache > GITHUB_GRENZE_MIN:
+            print(f"  Hinweis: Auf GitHubs Rechnern ist nach "
+                  f"{GITHUB_GRENZE_MIN} Minuten Schluss, also gegen "
+                  f"{github_ende:%H:%M} — die zweite Wache übernimmt.")
 
     state = load_state()
     schon_gemeldet = set(state["gemeldet"])
