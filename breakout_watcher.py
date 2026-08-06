@@ -1409,6 +1409,77 @@ def push(topic: str, treffer: list[dict]) -> bool:
                  "chart_with_upwards_trend")
 
 
+def volalarm(topic: str, tickers: list[str]) -> int:
+    """Testalarm mit ECHTEN Volumenwerten, gerechnet nach der aktuellen
+    Formel — also mit der EIGENEN Kurve jeder Aktie (Gerhard, 06.08.2026).
+
+    Wozu es das gibt: --testpush weist nur nach, dass die Push-Kette
+    steht. Ob die neue Volumenrechnung im Betrieb dieselben Zahlen
+    liefert wie bei der Handabfrage, zeigt es nicht. Dieser Befehl
+    rechnet mit denselben Funktionen wie der Waechter und schickt das
+    Ergebnis, ohne einen Zustand zu aendern und ohne etwas als gemeldet
+    vorzumerken.
+
+    Fehlt einer Aktie die eigene Kurve, wird sie hier LIVE gebaut (im
+    Waechter geschieht das absichtlich nicht — dort zaehlt jede
+    Sekunde). Geht auch das nicht, steht in der Meldung der dritte
+    Status: NICHT VERIFIZIERBAR."""
+    import yfinance as yf
+    from zoneinfo import ZoneInfo
+
+    ny = ZoneInfo("America/New_York")
+    absaetze, bestaetigt, anteile = [], 0, []
+    for i, t in enumerate([x.upper() for x in tickers], 1):
+        try:
+            d = yf.download(t, period="6mo", interval="1d", progress=False,
+                            auto_adjust=False)
+            if hasattr(d.columns, "levels"):
+                d.columns = d.columns.droplevel(1)
+        except Exception as e:
+            absaetze.append(f"{i}. {t}; Abruf fehlgeschlagen ({type(e).__name__})")
+            continue
+        if d is None or d.empty:
+            absaetze.append(f"{i}. {t}; keine Kursdaten")
+            continue
+
+        heute = datetime.now(ny).date()
+        v50 = float(d[d.index.date < heute]["Volume"].tail(50).mean())
+        zeile_heute = d[d.index.date == heute]
+        if zeile_heute.empty:
+            absaetze.append(f"{i}. {t}; keine heutige Kurszeile")
+            continue
+        vol = float(zeile_heute["Volume"].iloc[-1])
+        kurs = float(zeile_heute["Close"].iloc[-1])
+
+        minute = volumen.minute_seit_eroeffnung()
+        kurve, quelle = volumen.hole_f_kurve_fuer_aktie(t)
+        pct = volumen.volume_pct_change(vol, v50, kurve, minute)
+        if pct is None:
+            absaetze.append(f"{i}. {t}; Kurs {kurs:.2f}; "
+                            f"Vol NICHT VERIFIZIERBAR, keine eigene Volumenkurve")
+            continue
+        if pct >= 0:
+            bestaetigt += 1
+        anteil = volumen.tagesanteil(minute, kurve)
+        hoch = vol / anteil if anteil else vol
+        anteile.append({"vol_anteil": anteil})
+        status = "Vol bestätigt" if pct >= 0 else "Vol NICHT bestätigt"
+        absaetze.append(
+            f"{i}. {t}; Kurs {kurs:.2f} / {status} {pct:+.0f} % / "
+            f"heute bisher {vol:,.0f} Stück, hochgerechnet {hoch:,.0f}, "
+            f"Ø50 {v50:,.0f} / eigene Kurve: {anteil*100:.1f} % des Tages "
+            f"sind um diese Zeit üblich".replace(",", "."))
+
+    if not absaetze:
+        print("Nichts zu senden.")
+        return 1
+    titel = (f"🧪 Test Volumenformel: {bestaetigt} von {len(absaetze)} bestätigt"
+             + tagesanteil_titel(anteile))
+    # Die Handelszeit-Sperre in sende() gilt auch hier: Ein Testalarm
+    # ausserhalb der Boersenzeit haette ohnehin keine Aussagekraft.
+    return 0 if sende(topic, titel, absaetze, "default", "test_tube") else 1
+
+
 def testpush(topic: str) -> int:
     """Schickt eine einzelne Testnachricht, damit die Push-Kette einmal
     nachweislich geprueft ist. Ohne Kursdaten, ohne Zustandsaenderung."""
@@ -1462,6 +1533,9 @@ def main():
                     help="Nur Breakouts MIT Volumen-Bestätigung pushen")
     ap.add_argument("--testpush", action="store_true",
                     help="Nur eine Testnachricht senden (ohne Kursdaten)")
+    ap.add_argument("--volalarm", metavar="KUERZEL",
+                    help="Testalarm mit echten Volumenwerten nach der "
+                         "aktuellen Formel (Komma-Liste, z. B. ATS,APP)")
     ap.add_argument("--ignoriere-handelszeit", action="store_true",
                     dest="ignoriere_handelszeit",
                     help="Auch ausserhalb der US-Handelszeit prüfen (zum Testen)")
@@ -1474,6 +1548,16 @@ def main():
         if not topic:
             sys.exit("Bitte NTFY_TOPIC setzen — ohne Topic kein Push möglich.")
         sys.exit(testpush(topic))
+
+    # Testalarm mit echten Volumenwerten — braucht ebenfalls weder
+    # API-Schluessel noch Kaufpunkte, rechnet aber mit echten Kursen.
+    if args.volalarm:
+        if not topic:
+            sys.exit("Bitte NTFY_TOPIC setzen — ohne Topic kein Push möglich.")
+        if args.ignoriere_handelszeit:
+            globals()["HANDELSZEIT_EGAL"] = True
+        sys.exit(volalarm(topic, [t.strip() for t in args.volalarm.split(",")
+                                  if t.strip()]))
 
     # Nur noch fuer die Rueckfallebene noetig — Hauptquelle ist Yahoo.
     api_key = os.environ.get("TWELVE_DATA_API_KEY")
