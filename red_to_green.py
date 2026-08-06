@@ -54,7 +54,7 @@ import argparse
 import sys
 
 import volumen
-from config import CFG as _ALLE
+from config import CFG as _ALLE, hoechstens, mind_erreicht
 
 CFG = _ALLE["red_to_green"]
 
@@ -78,7 +78,7 @@ def regime_scharf(nasdaq_open, nasdaq_vortagesschluss):
     if not nasdaq_vortagesschluss or nasdaq_vortagesschluss <= 0:
         return False, 0.0
     gap = nasdaq_open / nasdaq_vortagesschluss - 1
-    return gap <= CFG["nasdaq_gap_scharf"], round(gap * 100, 2)
+    return hoechstens(gap, CFG["nasdaq_gap_scharf"]), round(gap * 100, 2)
 
 
 def aktien_gap(aktie_open, aktie_vortagesschluss):
@@ -86,7 +86,7 @@ def aktien_gap(aktie_open, aktie_vortagesschluss):
     if not aktie_vortagesschluss or aktie_vortagesschluss <= 0:
         return False, 0.0
     gap = aktie_open / aktie_vortagesschluss - 1
-    return gap <= CFG["aktie_gap_min"], round(gap * 100, 2)
+    return hoechstens(gap, CFG["aktie_gap_min"]), round(gap * 100, 2)
 
 
 def fokuslisten_kandidat(schluss_serie, tief_serie, rs_rating):

@@ -54,7 +54,7 @@ import ntfy_verlauf   # merkt sich jede verschickte Meldung fuer den Freitags-Pu
 import red_to_green   # Kapitel 9: Volumen-Signatur an der Kreuzung
 import exit_regeln    # Exit-Regelwerk: Stops, Gewinnabsicherung
 import volumen        # IBD Volume % Change — die EINZIGE Volumenrechnung
-from config import CFG, mind_erreicht, pruefe_config
+from config import CFG, hoechstens, mind_erreicht, pruefe_config
 from kurs_cache import KursCache, Kurswert
 from yahoo_ws import YahooWebSocket
 
@@ -590,7 +590,7 @@ def fetch_quotes_yahoo(tickers: list[str]) -> dict:
                     if tief > 0:
                         spanne = (float(fenster["High"].max()) - tief) / tief
                         eintrag["base_spanne"] = spanne
-                        flach = spanne <= FLAT_BASE_MAX_SPANNE
+                        flach = hoechstens(spanne, FLAT_BASE_MAX_SPANNE)
                         # Ueber den gleitenden Durchschnitten? Beide werden
                         # OHNE den heutigen, unfertigen Tag gerechnet.
                         ueber_ma = True
@@ -788,7 +788,7 @@ def pruefe_gap_and_go(ticker: str, q: dict):
     if None in (open_, high, low, prev, kurs, vol) or not vol10 or prev <= 0:
         return None
     gap = open_ / prev - 1
-    if gap < GAP_MIN:
+    if not mind_erreicht(gap, GAP_MIN):
         return None
     if low <= prev:
         return None                      # Gap-Fill — Luecke nicht verteidigt
@@ -842,7 +842,7 @@ def pruefe_gap_and_go(ticker: str, q: dict):
     # das nahm zwar auch das Tief, kannte aber keine Obergrenze und lag
     # im Median 11,5 % und im Aeussersten 46 % entfernt.
     stop, stop_quelle = exit_regeln.berechne_initialen_stop(kp, low - 0.01)
-    bestaetigt = (kurz_vor_schluss and pos >= GAP_SCHLUSS_POS
+    bestaetigt = (kurz_vor_schluss and mind_erreicht(pos, GAP_SCHLUSS_POS)
                   and mind_erreicht(vol / vol10, GAP_VOL_FAKTOR))
     return {"ticker": ticker, "gap": gap, "frueh": in_frueh_phase,
             "frueh_ratio": frueh_ratio, "tages_ratio": tages_ratio,

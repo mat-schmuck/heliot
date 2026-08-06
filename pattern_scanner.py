@@ -53,7 +53,7 @@ import ntfy_verlauf   # merkt sich jede verschickte Meldung fuer den Freitags-Pu
 import positionen     # offene Positionen samt Exit-Regelwerk
 import red_to_green   # Kapitel 9: Fokusliste fuer den Live-Waechter
 import shakeout       # Kapitel 10: Spring samt Sekundaertest-Warteliste
-from config import CFG as ZENTRAL, pruefe_config
+from config import CFG as ZENTRAL, hoechstens, mind_erreicht, pruefe_config
 
 pruefe_config()       # faengt widerspruechliche Schwellwerte sofort ab
 
@@ -456,7 +456,7 @@ def check_trend_template(df: pd.DataFrame, rs_percentile: float | None) -> tuple
         "Kurs > MA50": last["close"] > last["ma50"],
         "≥25 % über 52W-Tief": last["close"] >= last["lo52"] * (1 + CFG["tt_min_above_low"]),
         "≤25 % unter 52W-Hoch": last["close"] >= last["hi52"] * (1 - CFG["tt_max_below_high"]),
-        "RS-Rank ≥ 70": rs_percentile is not None and rs_percentile >= CFG["tt_rs_min"],
+        "RS-Rank ≥ 70": rs_percentile is not None and mind_erreicht(rs_percentile, CFG["tt_rs_min"]),
     }
     failed = [k for k, v in checks.items() if not v]
     return len(failed) == 0, sum(checks.values()), failed
@@ -546,7 +546,8 @@ def detect_cup_handle(df: pd.DataFrame) -> dict | None:
         bot_rel = int(seg["low"].values.argmin())
         bottom = float(seg["low"].iloc[bot_rel])
         depth = 1 - bottom / left_high
-        if not (CFG["cup_min_depth"] <= depth <= CFG["cup_max_depth"]):
+        if not (mind_erreicht(depth, CFG["cup_min_depth"])
+                and hoechstens(depth, CFG["cup_max_depth"])):
             continue
         # rechter Rand: erstes Wiedererreichen von ~linkem Rand nach dem Boden
         after_bot = seg.iloc[bot_rel:]
@@ -579,7 +580,7 @@ def detect_cup_handle(df: pd.DataFrame) -> dict | None:
         h_low = float(handle["low"].min())
         retrace = (h_high - h_low) / (left_high - bottom + 1e-9)
         in_upper_third = h_low >= bottom + (left_high - bottom) * (2 / 3)
-        if retrace > CFG["handle_max_retrace"] or not in_upper_third:
+        if not hoechstens(retrace, CFG["handle_max_retrace"]) or not in_upper_third:
             continue
 
         # VOLUMENVERLAUF — laut Regelwerk Pflichtbestandteil des Musters:
@@ -623,7 +624,7 @@ def detect_cup_handle(df: pd.DataFrame) -> dict | None:
     # Schwelle 80 von 100 (Vorgabe Mathias, 21.07.2026). Vorher stand hier
     # 55 — damit galten auch Formationen als Cup & Handle, die das Muster
     # nur knapp zur Hälfte erfüllten.
-    if best is None or best["score"] < CFG["cup_min_score"]:
+    if best is None or not mind_erreicht(best["score"], CFG["cup_min_score"]):
         return None
     kp = round(best["h_high"] + 0.01, 2)
     ziel = round(kp + (best["left_high"] - best["bottom"]), 2)
@@ -712,7 +713,7 @@ def detect_htf(df: pd.DataFrame) -> dict | None:
         j_rel = int(seg.argmax())
         hi = seg[j_rel]
         rise = hi / lo - 1
-        if rise >= CFG["htf_min_rise"]:
+        if mind_erreicht(rise, CFG["htf_min_rise"]):
             cand = {"i": i, "j": i + j_rel, "lo": float(lo), "hi": float(hi), "rise": rise}
             if best is None or cand["rise"] > best["rise"]:
                 best = cand

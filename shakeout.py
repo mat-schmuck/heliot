@@ -56,7 +56,7 @@ import sys
 import numpy as np
 import pandas as pd
 
-from config import CFG as _ALLE
+from config import CFG as _ALLE, hoechstens, mind_erreicht
 
 CFG = _ALLE["shakeout"]
 
@@ -115,7 +115,7 @@ def pruefe_trendkontext(df):
 
     tief_52w = float(df["Low"].tail(252).min())
     ueber_tief_pct = (kurs / tief_52w - 1) if tief_52w > 0 else 0
-    verdoppelt = ueber_tief_pct >= CFG["min_ueber_52w_tief"]
+    verdoppelt = mind_erreicht(ueber_tief_pct, CFG["min_ueber_52w_tief"])
 
     n = CFG["stage2_min_tage_steigend"]
     ma200_vorher = float(ma200.iloc[-1 - n]) if len(ma200) > n else np.nan
@@ -248,7 +248,8 @@ def berechne_level_scores(df, df_wochen=None):
         ma_bonus = 0
         for ma_wert in (ma50, ma200):
             if (not np.isnan(ma_wert)
-                    and abs(z["mitte"] - ma_wert) / ma_wert <= CFG["ma_naehe_toleranz"]):
+                    and hoechstens(abs(z["mitte"] - ma_wert) / ma_wert,
+                                   CFG["ma_naehe_toleranz"])):
                 ma_bonus = 100
                 break
 
@@ -284,12 +285,12 @@ def pruefe_shakeout_tag(tag, zone):
 
     unterschritten = tief < zone_min
     tiefe_pct = (zone_min - tief) / zone_min if unterschritten else 0
-    nicht_zu_tief = tiefe_pct <= CFG["shakeout_toleranz"]
+    nicht_zu_tief = hoechstens(tiefe_pct, CFG["shakeout_toleranz"])
     zurueckerobert = schluss > zone_max
 
     spanne = hoch - tief
     schluss_position = (schluss - tief) / spanne if spanne > 0 else 0
-    starker_schluss = schluss_position >= CFG["schluss_oberste_pct"]
+    starker_schluss = mind_erreicht(schluss_position, CFG["schluss_oberste_pct"])
 
     ok = bool(unterschritten and nicht_zu_tief and zurueckerobert
               and starker_schluss)
@@ -386,7 +387,8 @@ def _starke_zonen(df, df_wochen):
     if df_wochen is None:
         df_wochen = wochenkurse_aus_tageskursen(df.iloc[:-1])
     zonen = berechne_level_scores(df.iloc[:-1], df_wochen)
-    return [z for z in zonen if z["score"] >= CFG["level_score_schwelle"]]
+    return [z for z in zonen
+            if mind_erreicht(z["score"], CFG["level_score_schwelle"])]
 
 
 def erkenne_shakeout_setup(df, df_wochen=None):

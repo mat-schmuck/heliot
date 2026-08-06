@@ -70,7 +70,7 @@ import sys
 import numpy as np
 import pandas as pd
 
-from config import CFG as _ALLE
+from config import CFG as _ALLE, hoechstens, mind_erreicht
 
 CFG = _ALLE["cup_handle_v2"]
 
@@ -159,7 +159,8 @@ def detect_cup_handle_v2(df, cfg=None):
         if left_high <= 0:
             continue
         depth = 1 - bottom / left_high
-        if not (cfg["cup_min_depth"] <= depth <= cfg["cup_max_depth"]):
+        if not (mind_erreicht(depth, cfg["cup_min_depth"])
+                and hoechstens(depth, cfg["cup_max_depth"])):
             continue
 
         # Wo erreicht der Kurs nach dem Boden wieder die Randschwelle?
@@ -197,7 +198,8 @@ def detect_cup_handle_v2(df, cfg=None):
 
         bot_abs = left + bot_rel
         sym = (bot_abs - left) / cup_len if cup_len > 0 else 0
-        if not (cfg["symmetrie_min"] <= sym <= cfg["symmetrie_max"]):
+        if not (mind_erreicht(sym, cfg["symmetrie_min"])
+                and hoechstens(sym, cfg["symmetrie_max"])):
             continue
 
         # U-Form, mit gedaempften Ausreissern: Eine einzelne Extremwoche
@@ -226,7 +228,7 @@ def detect_cup_handle_v2(df, cfg=None):
         hoehe = left_high - bottom
         retrace = (h_high - h_low) / (hoehe + 1e-9)
         oben_genug = h_low >= bottom + hoehe * cfg["handle_min_position"]
-        if retrace > cfg["handle_max_retrace"] or not oben_genug:
+        if not hoechstens(retrace, cfg["handle_max_retrace"]) or not oben_genug:
             continue
 
         score = (40 * min(1.0, r2 / 0.85)
@@ -243,7 +245,7 @@ def detect_cup_handle_v2(df, cfg=None):
         if best is None or kandidat["score"] > best["score"]:
             best = kandidat
 
-    if best is None or best["score"] < cfg["min_score"]:
+    if best is None or not mind_erreicht(best["score"], cfg["min_score"]):
         return None
 
     kp = round(best["h_high"] + 0.01, 2)
