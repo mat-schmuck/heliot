@@ -52,8 +52,9 @@ except ImportError:
 
 import ntfy_verlauf   # merkt sich jede verschickte Meldung fuer den Freitags-Putz
 import red_to_green   # Kapitel 9: Volumen-Signatur an der Kreuzung
+import exit_regeln    # Exit-Regelwerk: Stops, Gewinnabsicherung
 import volumen        # IBD Volume % Change — die EINZIGE Volumenrechnung
-from config import CFG, pruefe_config
+from config import CFG, mind_erreicht, pruefe_config
 from kurs_cache import KursCache, Kurswert
 from yahoo_ws import YahooWebSocket
 
@@ -791,8 +792,18 @@ def pruefe_gap_and_go(ticker: str, q: dict):
         return None
     if low <= prev:
         return None                      # Gap-Fill — Luecke nicht verteidigt
-    if q.get("flat_base") is not True:
-        return None                      # Flat Base ist Pflicht; unbekannt = nein
+
+    # DIE FLAT BASE SCHLIESST SEIT 05.08.2026 NICHTS MEHR AUS (Gerhard,
+    # nach meiner Messung). Sie kostete zwei Drittel der Signale und
+    # siebte ausgerechnet die grossen Gewinner weg: Der Anteil der Handel
+    # mit mindestens 20 % Gewinn lag ohne Filter bei 15 %, mit Kapitel 7
+    # im Original bei 3 %, mit Fassung A bei null — in zwei Jahren kein
+    # einziger. Sie laeuft jetzt als VERMERK in der Meldung mit.
+    #
+    # Gerhards inhaltliche Begruendung dazu: O'Neils eigene
+    # Acht-Wochen-Regel sagt, dass genau die Aktien, die explosionsartig
+    # aus einer Basis herausschiessen, die spaeteren Vervielfacher sind.
+    # Ein Filter, der die wegschneidet, arbeitet gegen die eigene Doktrin.
 
     anteil = tagesanteil()
     if anteil <= 0:
@@ -812,23 +823,33 @@ def pruefe_gap_and_go(ticker: str, q: dict):
     minuten = ny_minuten()
     in_frueh_phase = minuten is not None and minuten < 600     # vor 10:00 NY
     kurz_vor_schluss = minuten is not None and minuten >= 954  # ab 15:54 NY
+    # Schwellenvergleiche ueber die zentrale Hilfsfunktion: Ein Wert, der
+    # exakt auf der Schwelle liegt, soll sie ERREICHEN und nicht an einem
+    # Gleitkommarest scheitern (config.mind_erreicht, siehe dort).
     if in_frueh_phase:
-        if frueh_ratio < GAP_FRUEH_FAKTOR:
+        if not mind_erreicht(frueh_ratio, GAP_FRUEH_FAKTOR):
             return None
-    elif tages_ratio < GAP_VOL_FAKTOR:
+    elif not mind_erreicht(tages_ratio, GAP_VOL_FAKTOR):
         return None
 
     spanne = high - low
     pos = (kurs - low) / spanne if spanne > 0 else 1.0
     kp = round(high + 0.01, 2)
-    stop = round(min(low - 0.01, kp * 0.97), 2)
+    # DER STOP NACH DEM NEUEN GRUNDPRINZIP (Gerhard, 05.08.2026): Der
+    # strukturelle Bruchpunkt dieses Musters ist das Tief des
+    # Luecken-Tages; gedeckelt wird er bei zehn Prozent unter dem
+    # Kaufpunkt. Vorher stand hier min(Tagestief, Kaufpunkt x 0,97) —
+    # das nahm zwar auch das Tief, kannte aber keine Obergrenze und lag
+    # im Median 11,5 % und im Aeussersten 46 % entfernt.
+    stop, stop_quelle = exit_regeln.berechne_initialen_stop(kp, low - 0.01)
     bestaetigt = (kurz_vor_schluss and pos >= GAP_SCHLUSS_POS
-                  and vol / vol10 >= GAP_VOL_FAKTOR)
+                  and mind_erreicht(vol / vol10, GAP_VOL_FAKTOR))
     return {"ticker": ticker, "gap": gap, "frueh": in_frueh_phase,
             "frueh_ratio": frueh_ratio, "tages_ratio": tages_ratio,
             "roh_ratio": vol / vol10, "pos": pos, "kp": kp, "stop": stop,
+            "stop_quelle": stop_quelle,
             "bestaetigt": bestaetigt, "base_spanne": q.get("base_spanne"),
-            "kurs": kurs}
+            "flat_base": q.get("flat_base"), "kurs": kurs}
 
 
 # ---------------------------------------------------------------------------
@@ -848,6 +869,14 @@ def pruefe_gap_and_go(ticker: str, q: dict):
 # anheben. Sie steht hier, damit das Protokoll ehrlich sagt, wann wirklich
 # Schluss ist (Mathias' Frage vom 04.08.2026).
 GITHUB_GRENZE_MIN = 360
+
+# DER NEUE NAME FUER KAPITEL 7 (Gerhard, 05.08.2026). "Gap and Go" ist
+# besetzt und beschreibt ueblicherweise ein Tagesgeschaeft: kaufen am
+# Vormittag, verkaufen am Abend. Gebaut ist aber ein Einstieg am
+# FOLGETAG ueber dem Hoch des Luecken-Tages. "Follow Through Day" waere
+# ebenfalls falsch — der Begriff ist bei IBD fuer ein MARKTWEITES Signal
+# vergeben und haette die naechste Verwechslung gebaut.
+GAP_NAME = "Lücken-Bestätigungstag"
 
 R2G_INDEX = "^IXIC"                  # Nasdaq Composite, der Regime-Schalter
 _r2g_fokus: dict = {}                # {Ticker: {firma, vortagesschluss, v50}}
@@ -956,16 +985,25 @@ def format_gapgo(g: dict) -> str:
            + volumen.lage_text((g["tages_ratio"] - 1) * 100, VOL_FENSTER)
            + ", " + volumen.huerde_text(noetig))
     luecke = f"Lücke +{g['gap']*100:.1f}%"
+    # DIE BASIS IST SEIT 05.08.2026 EIN VERMERK, kein Ausschluss mehr.
+    # Sie steht deshalb weiterhin in der Meldung, jetzt aber in beiden
+    # Richtungen — enge Basis wie weite.
     if g.get("base_spanne") is not None:
-        luecke += f"; Flat Base davor, Spanne {g['base_spanne']*100:.0f}%"
-    zeilen = [f"{kopf}; Gap and Go {status}",
+        eng = "enge" if g.get("flat_base") else "weite"
+        luecke += (f"; {eng} Basis davor, "
+                   f"Spanne {g['base_spanne']*100:.0f}%")
+    stop_txt = f"Stop {g['stop']:.2f}"
+    if g.get("stop_quelle") == "deckel":
+        stop_txt += " (Zehn-Prozent-Deckel)"
+    zeilen = [f"{kopf}; {GAP_NAME} {status}",
               luecke,
               vol,
               f"Position in der Tagesspanne {g['pos']*100:.0f}%",
-              f"Kaufpunkt (Folgetag) {g['kp']:.2f}, Stop {g['stop']:.2f}"]
+              f"Kaufpunkt (Folgetag) {g['kp']:.2f}, {stop_txt}"]
     if not g["bestaetigt"]:
-        zeilen.append("Schlussbestätigung (oberes Fünftel + 5 mal Volumen) "
-                      "folgt zum Handelsende")
+        zeilen.append(f"Schlussbestätigung (oberes Fünftel + "
+                      f"{GAP_VOL_FAKTOR:.0f} mal Volumen) folgt zum "
+                      f"Handelsende")
     return "\n".join(zeilen)
 
 
@@ -1882,7 +1920,7 @@ def main():
                     pass                    # Sendesperre nach Fehlschlag
                 else:
                     body = nummeriert([format_gapgo(g) for g in gap_neu])
-                    titel = "🚀 Gap and Go: " + ", ".join(g["ticker"]
+                    titel = f"{GAP_NAME}: " + ", ".join(g["ticker"]
                                                           for g in gap_neu)
                     if push_text(topic, titel, body):
                         for g in gap_neu:
