@@ -42,7 +42,15 @@ CFG = {
         "fenster_tage": 50,          # Durchschnittsvolumen über N Handelstage
         "breakout_faktor": 1.0,      # Standard: Volumen > Ø
         "breakout_faktor_vcp": 1.4,  # VCP strenger: ≥ 140 % vom Ø
-        "gap_and_go_faktor": 5.0,    # Gap-and-Go: ≥ 5× Ø am Gap-Tag
+        # VON 5× AUF 3× GESENKT (Gerhard, 05.08.2026). Seine Begründung
+        # nach dem Nachrecherchieren: KEINE der etablierten Quellen
+        # verlangt das Fünffache. Weinstein nennt für einen gültigen
+        # Stage-2-Ausbruch das Zwei- bis Dreifache, IBD bei vergleichbaren
+        # Mustern 40 bis 50 % über dem Durchschnitt. Die 5× waren damit
+        # strenger als jeder publizierte Standard — und die Messung vom
+        # 04.08. (das Kriterium verschlechtert das Ergebnis) passt dazu.
+        # Genommen wird das obere, strengere Ende von Weinsteins Spanne.
+        "gap_and_go_faktor": 3.0,    # Lücken-Bestätigungstag: ≥ 3× Ø
     },
 
     # --- Gleitende Durchschnitte ---
@@ -192,6 +200,40 @@ CFG = {
         # Gerhard, 02.08.2026, wörtlich: Beide Werte sind Startwerte, kein
         # gemessenes Optimum — erst mitschreiben, dann nachjustieren.
     },
+    # --- Exit-Regelwerk (Gerhard, 05.08.2026, systemweit) -----------------
+    # DAS GRUNDPRINZIP, und es dreht die bisherige Denkweise um: Der Stop
+    # kommt NICHT aus einem Risikobudget. Er steht aus dem CHART fest, an
+    # dem Punkt, wo das Muster strukturell gebrochen ist — dort also, wo
+    # die These widerlegt ist, die den Einstieg begründet hat.
+    #
+    #     stop = max(struktureller Bruchpunkt, Einstieg × 0,90)
+    #
+    # Die zehn Prozent sind eine Obergrenze und nie das Ziel. Sie greifen
+    # nur, wenn der Strukturpunkt weiter weg liegt oder das Muster gar
+    # keinen liefert. Geprüft wird IMMER auf Schlusskursbasis — ein Docht
+    # darunter löst nicht aus, sonst wirft normales Tagesrauschen saubere
+    # Positionen hinaus.
+    #
+    # Quellen der Zahlen: Minervini (Stop 6 bis 8 %, nie über 10 %; Trail
+    # über MA21 und MA50), O'Neil und IBD (20 bis 25 % Gewinnmitnahme,
+    # 8-Wochen-Halteregel, Round-Trip-Verbot), Bulkowski (Unterstützungs-
+    # zone schlägt den rechnerischen Stop), Darvas (Boxboden und
+    # Box-Stacking). Alles Ausgangswerte für die Messung, keine
+    # gemessenen Optima.
+    "exit": {
+        "stop_deckel_pct": 0.10,      # absolute Obergrenze, nie das Ziel
+        "breakeven_ab_r": 2.0,        # Stufe A: ab 2R Stop auf Einstand
+        "breakeven_ab_pct": 0.10,     # Stufe A alternativ: ab 10 %
+        "teilverkauf_ab_pct": 0.20,   # Stufe B: Teilverkauf ab 20 %
+        "teilverkauf_anteil": 0.50,   # Stufe B: die Hälfte
+        # Ebene 3, die wichtigste Einzelregel: 20 % in unter drei Wochen
+        # heben den Teilverkauf auf, dann wird acht Wochen gehalten.
+        "schnellstarter_pct": 0.20,
+        "schnellstarter_tage": 15,    # drei Wochen in Handelstagen
+        "halteregel_tage": 40,        # acht Wochen ab Ausbruch
+        "trail_ma_schnell": 21,       # Stufe C, zügige Bewegungen
+        "trail_ma_langsam": 50,       # Stufe C, ruhige Bewegungen
+    },
     # --- Cup & Handle auf Wochenbasis ("Giant Base") ----------------------
     # Gerhards Ergänzung vom 04.08.2026. Sie ERSETZT die bestehende
     # Tages-Erkennung NICHT, sondern läuft daneben.
@@ -218,7 +260,23 @@ CFG = {
         # echte MEDP-Fall brauchte 9,3 %.
         "cup_rim_tolerance": 0.11,
         "handle_min_len_wochen": 1,
-        "handle_max_len_wochen": 8,
+        # HANDLE-FENSTER PROPORTIONAL ZUR CUP-LÄNGE (Gerhard, 05.08.2026,
+        # nach meinem Einwand): Cup-Länge geteilt durch drei, begrenzt auf
+        # mindestens 8 und höchstens 16 Wochen.
+        #
+        # Untergrenze 8, damit kurze Cups nicht plötzlich strenger werden
+        # als bisher. Obergrenze 16, weil ein sehr langer Handle laut
+        # O'Neil selbst ein Warnzeichen ist und kein Qualitätsmerkmal.
+        #
+        # Anlass: DDOG, also der Fall, der den ganzen Fix ausgelöst hat,
+        # wurde mit festen 8 Wochen NICHT erkannt — sein Handle lief
+        # länger. Eine feste 16 wäre Kurvenanpassung an einen Einzelfall
+        # gewesen, die proportionale Grenze folgt derselben Logik wie
+        # Gerhards Lockerung der Handle-POSITION ("zu strikt für
+        # proportional große Formationen").
+        "handle_max_len_wochen": 8,        # nur noch als Untergrenze
+        "handle_teiler": 3,                # Cup-Länge geteilt durch …
+        "handle_max_len_obergrenze": 16,
         # Rücksetzer höchstens 45 % der Cup-Höhe (Standard-Cup: 33 %).
         # Das bleibt die eigentliche Qualitätsprüfung.
         "handle_max_retrace": 0.45,
@@ -426,6 +484,44 @@ def letzter_putz_tag():
     if rueck == 0 and jetzt.hour * 60 + jetzt.minute < 16 * 60 + 2:
         freitag -= timedelta(days=7)
     return freitag.isoformat()
+
+
+# ---------------------------------------------------------------------------
+# Schwellenvergleiche
+# ---------------------------------------------------------------------------
+
+# WICHTIG, und ausdrücklich NICHT kosmetisch. 120,0 geteilt durch 100,0
+# minus 1 ergibt in Gleitkomma 0,19999999999999996, nicht 0,20. Ein
+# Vergleich "größer gleich 0,20" scheitert damit ausgerechnet am exakten
+# Grenzfall — also an genau dem Fall, den die Regel treffen soll.
+#
+# Gefunden am 02.08.2026 in der Volumensignatur zu Kapitel 9 (dort
+# rechnete sich exaktes Normaltempo zu 2,2 mal 10 hoch minus 14 statt zu
+# null). Gerhard ist am 05.08.2026 beim Bauen des Exit-Moduls in
+# denselben Fehler gelaufen und schlägt diese zentrale Stelle vor.
+#
+# Betroffen ist potenziell JEDER Schwellenvergleich im System: Lücke ab
+# 7 %, Volumen ab 3×, Rücksetzer bis 45 %, RS ab 90 und so weiter —
+# überall dort, wo ein Wert aus einer Division stammt und gegen eine
+# runde Zahl geprüft wird.
+SCHWELLEN_SPIEL = 1e-9
+
+
+def mind_erreicht(wert, schwelle):
+    """Ist der Wert mindestens so groß wie die Schwelle?
+
+    Schließt den exakten Grenzfall zuverlässig ein. None ergibt False —
+    ein fehlender Wert erreicht keine Schwelle."""
+    if wert is None or schwelle is None:
+        return False
+    return wert >= schwelle - SCHWELLEN_SPIEL
+
+
+def hoechstens(wert, schwelle):
+    """Die Gegenrichtung: Bleibt der Wert höchstens bei der Schwelle?"""
+    if wert is None or schwelle is None:
+        return False
+    return wert <= schwelle + SCHWELLEN_SPIEL
 
 
 def pruefe_config():

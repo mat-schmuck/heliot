@@ -101,6 +101,25 @@ def wochenkurse(df_tage):
     }).dropna()
 
 
+def handle_fenster_wochen(cup_len, cfg=None):
+    """Wie lange darf der Handle dauern? Proportional zur Cup-Laenge.
+
+    Gerhards Fassung vom 05.08.2026: Cup-Laenge geteilt durch drei,
+    begrenzt auf mindestens 8 und hoechstens 16 Wochen. Ein Cup ueber 40
+    Wochen darf also einen laengeren Handle haben als einer ueber 12;
+    kurze Cups werden aber nicht strenger als bisher, und ein sehr
+    langer Handle bleibt ausgeschlossen — laut O'Neil ist er selbst ein
+    Warnzeichen.
+
+    Vorher stand hier eine feste Zahl. Damit wurde DDOG nicht erkannt,
+    also ausgerechnet der Fall, der den ganzen Fix ausgeloest hat."""
+    cfg = cfg or CFG
+    unten = int(cfg["handle_max_len_wochen"])
+    oben = int(cfg.get("handle_max_len_obergrenze", unten))
+    teiler = float(cfg.get("handle_teiler", 3)) or 3.0
+    return max(unten, min(oben, int(cup_len / teiler)))
+
+
 def swing_highs(serie, order=3):
     """Lokale Hochpunkte: hoechster Wert im Fenster von 'order' Kerzen
     nach beiden Seiten."""
@@ -154,7 +173,19 @@ def detect_cup_handle_v2(df, cfg=None):
         # DER KERN DER KORREKTUR: von dort aus den tatsaechlichen
         # Hoehepunkt suchen, nicht die erste Beruehrung nehmen. Sonst
         # zaehlt die weiterlaufende Rally faelschlich zum Handle.
-        fenster_ende = min(erst + cfg["handle_max_len_wochen"], n)
+        #
+        # GESUCHT WIRD MIT DEM WEITESTEN FENSTER, geprueft wird danach
+        # streng. Grund: Henne und Ei. Das erlaubte Handle-Fenster haengt
+        # von der Cup-Laenge ab, die Cup-Laenge steht aber erst fest,
+        # wenn der rechte Rand gefunden ist — wofuer man das Fenster
+        # braucht. Rechnet man das Suchfenster aus der Laenge BIS HIERHER,
+        # faellt es zu klein aus und der wahre Hoehepunkt wird nie
+        # gefunden (am 06.08.2026 an DDOG aufgelaufen: mit jedem Teiler
+        # nicht erkannt, mit festem Fenster von 14 dagegen schon).
+        # Die proportionale Grenze ist eine GUELTIGKEITS-Regel fuer den
+        # Handle, keine Suchvorgabe — sie wird weiter unten angewandt.
+        fenster_ende = min(erst + int(cfg.get("handle_max_len_obergrenze",
+                                              cfg["handle_max_len_wochen"])), n)
         rand_fenster = w.iloc[erst:fenster_ende]
         if rand_fenster.empty:
             continue
@@ -185,8 +216,10 @@ def detect_cup_handle_v2(df, cfg=None):
         u_ok = coef[0] > 0 and r2 > cfg["r2_min"]
 
         handle = w.iloc[right:]
+        # Auch hier proportional, jetzt mit der ENDGUELTIGEN Cup-Laenge.
+        # Die drei Wochen Zugabe stammen aus Gerhards Vorlage und bleiben.
         if (len(handle) < cfg["handle_min_len_wochen"]
-                or len(handle) > cfg["handle_max_len_wochen"] + 3):
+                or len(handle) > handle_fenster_wochen(cup_len, cfg) + 3):
             continue
         h_high = float(w["high"].iloc[right])       # der Randpunkt selbst
         h_low = float(handle["low"].min())
