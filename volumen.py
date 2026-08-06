@@ -38,6 +38,21 @@ WAS SICH GEGENUEBER DER ALTEN RECHNUNG AENDERT
    Verhaeltnisses (21,3-fach). Verglichen wird weiterhin das
    Verhaeltnis — dieselbe Groesse, nur anders geschrieben, damit sich
    die Zahlen direkt gegen IBD halten lassen.
+4. (06.08.2026) EIGENE KURVE JE AKTIE, KEIN RUECKGRIFF MEHR. Bis dahin
+   diente EINE geliehene Kurve aus SPY, QQQ, AAPL, MSFT und AMD als
+   Massstab fuer ALLE Aktien. Gerhards Begruendung fuer die Abschaffung:
+   Eine volatile Nebenwerteaktie hat ein anderes untertaegiges
+   Volumenmuster als ein ruhiger Grosswert. Jede Aktie bekommt jetzt
+   ihre Kurve aus ihrer EIGENEN 50-Tage-Historie im Fuenf-Minuten-Raster.
+   Reicht die nicht (unter 40 von 50 Tagen, etwa ein frischer
+   Boersengang), gibt es KEINE Ersatzkurve mehr, sondern den eigenen
+   Status 'nicht_verifizierbar'.
+
+   DER DRITTE STATUS IST KEINE SPITZFINDIGKEIT. 'Nicht bestaetigt'
+   heisst: geprueft und zu schwach. 'Nicht verifizierbar' heisst: es
+   liess sich gar nicht pruefen. Wer beides in denselben Topf wirft,
+   laesst eine Aktie ohne genug Historie lautlos in der falschen
+   Kategorie verschwinden.
 
 ZUM FEHLERBEFUND IM UEBERGABEPAPIER (wichtig fuer die Akten)
 -------------------------------------------------------------
@@ -62,158 +77,162 @@ Aufruf:
 """
 
 import json
-import os
 import sys
 from datetime import datetime
 
 RASTER = 5                      # Minuten je Stuetzstelle
 HANDELSMINUTEN = 390            # 09:30 bis 16:00 New Yorker Zeit
-KURVE_DATEI = "volumenkurve.json"
+KURVEN_DATEI = "volumenkurven.json"      # eine Kurve JE AKTIE
 
-# Bewusst NICHT die zu scannenden Aktien, sondern ein stabiler Massstab
-# dafuer, wie sich Volumen ueblicherweise ueber den Tag verteilt.
-REFERENZ_TICKER = ["SPY", "QQQ", "AAPL", "MSFT", "AMD"]
+# Ab wie vielen eigenen Handelstagen ist eine Kurve verwendbar? Gerhards
+# Wert: 40 von angestrebten 50. Darunter 'nicht_verifizierbar'.
+MIN_TAGE_FUER_EIGENE_KURVE = 40
+TAGE_ZIEL = 50
 
-# RUECKFALL, wenn keine gebaute Kurve vorliegt: die bis 28.07.2026
-# verwendete Kurve, gemessen an 8 Aktien ueber 168 Aktien-Tage im
-# Halbstundenraster. Schluessel: Minuten SEIT Handelsbeginn am ENDE der
-# jeweiligen Halbstunde. Grob, aber gemessen — besser als gar nichts,
-# und das System darf nie hart ausfallen.
-RUECKFALL_KURVE = {
-    0: 0.000, 30: 0.213, 60: 0.314, 90: 0.396, 120: 0.465, 150: 0.523,
-    180: 0.581, 210: 0.630, 240: 0.676, 270: 0.721, 300: 0.764,
-    330: 0.810, 360: 0.867, 390: 1.000,
-}
+# ENTFERNT am 06.08.2026 auf Gerhards ausdrueckliche Anweisung:
+#   REFERENZ_TICKER = ["SPY", "QQQ", "AAPL", "MSFT", "AMD"]
+#   RUECKFALL_KURVE = {0: 0.000, 30: 0.213, ...}
+# Die eine geliehene Kurve fuer alle Aktien und die fest hinterlegte
+# Halbstundenkurve als Rueckfall. Beides ist weg, und zwar ersatzlos:
+# Eine Aktie wird NUR mit ihrer eigenen Historie bewertet oder gar nicht.
+# Wer einen Rueckfall wieder einbaut, hebt genau die Entscheidung auf,
+# um die es hier geht — ein stiller fremder Massstab ist schlimmer als
+# ein ehrliches "nicht pruefbar".
 
-_kurve = None                   # {minute: anteil}, einmal geladen
+_kurven = None                  # {ticker: {minute: anteil}}, einmal geladen
 
 
 # ---------------------------------------------------------------------------
-# Kurve laden und bauen
+# Die Entscheidung: eigene Kurve oder gar keine
 # ---------------------------------------------------------------------------
 
-def lade_kurve(pfad=KURVE_DATEI, leise=False):
-    """Holt die Referenzkurve aus der Datei; faellt auf die alte Kurve
-    zurueck, wenn nichts da oder etwas kaputt ist."""
-    global _kurve
-    if _kurve is not None:
-        return _kurve
-    try:
-        with open(pfad, encoding="utf-8") as f:
-            roh = json.load(f)
-        punkte = {int(k): float(v) for k, v in roh["kurve"].items()}
-        if len(punkte) < 10:
-            raise ValueError("zu wenige Stützstellen")
-        _kurve = punkte
-        if not leise:
-            print(f"  Volumenkurve geladen: {len(punkte)} Stützstellen, "
-                  f"gebaut am {roh.get('gebaut_am', 'unbekannt')} aus "
-                  f"{roh.get('tage', '?')} Handelstagen.")
-    except Exception as e:
-        _kurve = dict(RUECKFALL_KURVE)
-        if not leise:
-            print(f"  ⚠ Keine gebaute Volumenkurve ({type(e).__name__}) — "
-                  f"Rückfall auf die gemessene Halbstundenkurve.")
-    return _kurve
+def entscheide_kurven_quelle(verfuegbare_tage, min_tage_noetig=None):
+    """Reine Entscheidung, ohne Netz, deshalb direkt pruefbar.
+
+    Rueckgabe: 'eigene_aktie' oder 'nicht_verifizierbar'. Einen dritten
+    Ausgang gibt es nicht mehr."""
+    schwelle = min_tage_noetig or MIN_TAGE_FUER_EIGENE_KURVE
+    return ("eigene_aktie" if verfuegbare_tage >= schwelle
+            else "nicht_verifizierbar")
 
 
-def setze_kurve(punkte):
-    """Nur fuer Tests: Kurve direkt vorgeben."""
-    global _kurve
-    _kurve = {int(k): float(v) for k, v in punkte.items()}
-    return _kurve
+# ---------------------------------------------------------------------------
+# Kurven bauen (Netzwerk) — gehoert in den Nachtlauf, nicht in den Waechter
+# ---------------------------------------------------------------------------
 
+def _kurve_aus_kerzen(df):
+    """Aus Fuenf-Minuten-Kerzen EINER Aktie die Kurve F(t) bauen.
 
-def baue_referenzkurve(tickers=None, tage=50, pfad=KURVE_DATEI):
-    """Baut F(t) aus echten Fuenf-Minuten-Kerzen der Referenzwerte.
+    Rueckgabe: ({minute: anteil}, Zahl der verwendeten Handelstage).
 
-    Drei Fallen, die hier bewusst behandelt sind:
-
+    Drei Fallen, alle schon in der Fassung vom 28.07.2026 behandelt und
+    hier unveraendert uebernommen:
     1. VERSCHIEBUNG UM EINE KERZE. Die Kerze mit Beginn 09:30 enthaelt
-       den Umsatz BIS 09:35. Ihre kumulierte Summe gehoert also an die
-       Minute 5, nicht an die Minute 0. Wer das verwechselt, rechnet in
-       den ersten Minuten mit einem viel zu grossen Anteil — genau dort,
-       wo es am meisten schadet. Bei Minute 0 steht per Definition 0.
+       den Umsatz BIS 09:35; ihre kumulierte Summe gehoert an Minute 5,
+       nicht an Minute 0. Wer das verwechselt, rechnet frueh am Tag mit
+       einem viel zu grossen Anteil — genau dort, wo es am meisten
+       schadet. Bei Minute 0 steht per Definition 0.
     2. HALBE HANDELSTAGE. Vor Feiertagen schliesst die Boerse um 13:00.
-       An solchen Tagen sind 100 % des Volumens nach 210 Minuten
-       erreicht; mitteln wuerde die Kurve nach vorne verbiegen. Solche
-       Tage fliegen raus.
-    3. YFINANCE LIEFERT MEHRSTUFIGE SPALTEN. Seit der Umstellung kommt
-       auch bei EINEM Ticker ein zweistufiger Spaltenkopf zurueck;
-       df["Volume"] ist dann kein Vektor mehr, sondern eine Tabelle.
-       Gerhards Fassung scheitert daran mit "truth value of a Series is
-       ambiguous" — deshalb wird der Kopf hier eingeebnet."""
+       Dort sind 100 % nach 210 Minuten erreicht; mitteln wuerde die
+       Kurve nach vorne verbiegen. Solche Tage fliegen raus.
+    3. MEHRSTUFIGE SPALTEN von yfinance, auch bei einem einzelnen Ticker."""
     import pandas as pd
-    import yfinance as yf
 
-    tickers = tickers or REFERENZ_TICKER
-    raster = list(range(0, HANDELSMINUTEN + 1, RASTER))
+    if df is None or df.empty:
+        return None, 0
+    if isinstance(df.columns, pd.MultiIndex):
+        df = df.copy()
+        df.columns = df.columns.get_level_values(0)
+    try:
+        df = df.tz_convert("America/New_York")
+    except Exception:
+        pass
+
+    df = df[["Volume"]].dropna()
+    if df.empty:
+        return None, 0
+    df = df.copy()
+    df["minute"] = [(z.hour * 60 + z.minute) - (9 * 60 + 30)
+                    for z in df.index.time]
+    df["datum"] = df.index.date
+    df = df[(df["minute"] >= 0) & (df["minute"] < HANDELSMINUTEN)]
+
     kurven = []
-    verworfen = 0
-
-    for ticker in tickers:
-        try:
-            df = yf.download(ticker, period=f"{min(tage, 59)}d",
-                             interval="5m", progress=False,
-                             auto_adjust=False)
-        except Exception as e:
-            print(f"  {ticker}: Abruf fehlgeschlagen ({type(e).__name__})")
+    for _, tag in df.groupby("datum"):
+        tag = tag.sort_index()
+        gesamt = float(tag["Volume"].sum())
+        if gesamt <= 0:
             continue
-        if df is None or df.empty:
-            print(f"  {ticker}: keine Daten")
-            continue
-        if isinstance(df.columns, pd.MultiIndex):
-            df.columns = df.columns.get_level_values(0)
-        try:
-            df = df.tz_convert("America/New_York")
-        except Exception:
-            pass
-
-        df = df[["Volume"]].dropna()
-        df["minute"] = [(z.hour * 60 + z.minute) - (9 * 60 + 30)
-                        for z in df.index.time]
-        df["datum"] = df.index.date
-        df = df[(df["minute"] >= 0) & (df["minute"] < HANDELSMINUTEN)]
-
-        for _, tag in df.groupby("datum"):
-            tag = tag.sort_index()
-            gesamt = float(tag["Volume"].sum())
-            if gesamt <= 0:
-                continue
-            # Halbe Handelstage aussortieren (siehe Falle 2)
-            if int(tag["minute"].max()) < HANDELSMINUTEN - 40:
-                verworfen += 1
-                continue
-            kum = tag["Volume"].cumsum() / gesamt
-            # Kerzenende statt Kerzenbeginn (siehe Falle 1)
-            punkte = {0: 0.0}
-            for minute, wert in zip(tag["minute"].values, kum.values):
-                punkte[int(minute) + RASTER] = float(wert)
-            kurven.append(punkte)
+        if int(tag["minute"].max()) < HANDELSMINUTEN - 40:
+            continue                                   # halber Handelstag
+        kum = tag["Volume"].cumsum() / gesamt
+        punkte = {0: 0.0}
+        for minute, wert in zip(tag["minute"].values, kum.values):
+            punkte[int(minute) + RASTER] = float(wert)
+        kurven.append(punkte)
 
     if not kurven:
-        raise RuntimeError("Keine Referenzdaten erhalten — Netzwerk oder "
-                           "yfinance prüfen.")
+        return None, 0
 
-    # Median ueber alle Tage und Ticker: robust gegen einzelne wilde Tage.
+    raster = list(range(0, HANDELSMINUTEN + 1, RASTER))
     gemittelt = {}
     for m in raster:
         werte = sorted(k[m] for k in kurven if m in k)
         if werte:
-            gemittelt[m] = werte[len(werte) // 2]
-    # Monoton machen (ein Median kann kleine Dellen erzeugen) und die
-    # Enden festnageln.
+            gemittelt[m] = werte[len(werte) // 2]      # Median, robust
     letzter = 0.0
     for m in raster:
         if m in gemittelt:
             letzter = gemittelt[m] = max(letzter, gemittelt[m])
     gemittelt[0] = 0.0
     gemittelt[HANDELSMINUTEN] = 1.0
+    return gemittelt, len(kurven)
 
-    # Zeitstempel in Wiener Zeit samt Zone. Auf einem GitHub-Rechner
-    # waere es sonst UTC, und ein Lauf um Mitternacht Wiener Zeit
-    # erschiene als 22:00 des VORTAGES — am 04.08.2026 genau so
-    # missverstanden worden.
+
+def baue_kurven(tickers, tage=TAGE_ZIEL, pfad=KURVEN_DATEI,
+                bloecke=40, leise=False):
+    """Fuer JEDE uebergebene Aktie ihre eigene Kurve bauen und ablegen.
+
+    Gehoert in den NACHTLAUF, nicht in den Waechter. Gerhards Vorgabe
+    lautet 'einmal pro Tag und Aktie, dann zwischenspeichern'; der
+    Nachtscanner ist genau dieser eine Zeitpunkt. Der Waechter zur
+    Eroeffnung haette sonst 366 Abrufe zu erledigen, waehrend jede
+    Sekunde zaehlt.
+
+    Abgerufen wird in BLOECKEN. Gemessen am 06.08.2026: ein einzelner
+    Ticker braucht 0,3 bis 0,7 s, ein Sammelabruf ueber zehn Ticker
+    ebenfalls 0,7 s — die Blockbildung ist also fast gratis."""
+    import yfinance as yf
+
+    tickers = sorted({t.upper() for t in tickers if t})
+    ergebnis, ohne = {}, []
+    for i in range(0, len(tickers), bloecke):
+        block = tickers[i:i + bloecke]
+        try:
+            roh = yf.download(" ".join(block), period=f"{min(tage, 59)}d",
+                              interval="5m", group_by="ticker",
+                              progress=False, auto_adjust=False, threads=True)
+        except Exception as e:
+            if not leise:
+                print(f"    Volumenkurven: Block {i//bloecke+1} fehlgeschlagen "
+                      f"({type(e).__name__})")
+            ohne.extend(block)
+            continue
+        for t in block:
+            try:
+                df = roh[t] if len(block) > 1 else roh
+            except Exception:
+                ohne.append(t)
+                continue
+            kurve, n_tage = _kurve_aus_kerzen(df)
+            # Die Entscheidung faellt EINMAL, an genau einer Stelle.
+            if entscheide_kurven_quelle(n_tage) != "eigene_aktie" or not kurve:
+                ohne.append(t)
+                continue
+            ergebnis[t] = {"tage": n_tage, "quelle": "eigene_aktie",
+                           "kurve": {str(m): round(a, 6)
+                                     for m, a in sorted(kurve.items())}}
+
     try:
         from zoneinfo import ZoneInfo
         stempel = (datetime.now(ZoneInfo("Europe/Vienna"))
@@ -221,25 +240,103 @@ def baue_referenzkurve(tickers=None, tage=50, pfad=KURVE_DATEI):
     except Exception:
         stempel = datetime.now().strftime("%Y-%m-%d %H:%M") + " (Zone unbekannt)"
 
-    inhalt = {
-        "gebaut_am": stempel,
-        "ticker": tickers,
-        "tage": len(kurven),
-        "raster_minuten": RASTER,
-        "kurve": {str(m): round(a, 6) for m, a in sorted(gemittelt.items())},
-    }
+    inhalt = {"gebaut_am": stempel, "raster_minuten": RASTER,
+              "min_tage": MIN_TAGE_FUER_EIGENE_KURVE,
+              "nicht_verifizierbar": sorted(ohne), "aktien": ergebnis}
     with open(pfad, "w", encoding="utf-8") as f:
         json.dump(inhalt, f, ensure_ascii=False, indent=1)
-    print(f"  Kurve gebaut aus {len(kurven)} Handelstagen "
-          f"({len(tickers)} Referenzwerte, {verworfen} halbe Tage verworfen) "
-          f"→ {pfad}")
-    setze_kurve(gemittelt)
-    return gemittelt
+    if not leise:
+        print(f"  Volumenkurven: {len(ergebnis)} eigene Kurven gebaut, "
+              f"{len(ohne)} nicht verifizierbar (unter "
+              f"{MIN_TAGE_FUER_EIGENE_KURVE} eigenen Handelstagen) → {pfad}")
+    setze_kurven(inhalt)
+    return inhalt
+
+
+def zaehle_verfuegbare_tage(ticker, tage=TAGE_ZIEL):
+    """Wie viele eigene Handelstage mit Fuenf-Minuten-Daten gibt es?
+    Braucht Netzwerk; im Betrieb faellt die Antwort schon beim Bauen an."""
+    import yfinance as yf
+    try:
+        df = yf.download(ticker, period=f"{min(tage, 59)}d", interval="5m",
+                         progress=False, auto_adjust=False)
+    except Exception:
+        return 0
+    return 0 if df is None or df.empty else len(set(df.index.date))
+
+
+def hole_f_kurve_fuer_aktie(ticker, tage=TAGE_ZIEL, min_tage_noetig=None,
+                            pfad=KURVEN_DATEI):
+    """Gerhards Hauptfunktion. Rueckgabe: (f_kurve, quelle).
+
+    quelle ist 'eigene_aktie' oder 'nicht_verifizierbar'; im zweiten Fall
+    ist f_kurve None, und der Aufrufer MUSS das als eigenen Status
+    behandeln — nicht als 'Volumen nicht bestaetigt'.
+
+    Zuerst wird der Tagesvorrat aus KURVEN_DATEI befragt (der Nachtlauf
+    hat ihn gefuellt). Nur wenn dort nichts steht, wird live gebaut —
+    das kostet Netzwerk und soll im Waechter nicht vorkommen."""
+    if not ticker:
+        return None, "nicht_verifizierbar"
+    t = ticker.upper()
+    vorrat = lade_kurven(pfad, leise=True)
+    if t in vorrat:
+        return vorrat[t], "eigene_aktie"
+
+    import yfinance as yf
+    try:
+        df = yf.download(t, period=f"{min(tage, 59)}d", interval="5m",
+                         progress=False, auto_adjust=False)
+    except Exception:
+        return None, "nicht_verifizierbar"
+    kurve, n_tage = _kurve_aus_kerzen(df)
+    if entscheide_kurven_quelle(n_tage, min_tage_noetig) != "eigene_aktie" \
+            or not kurve:
+        return None, "nicht_verifizierbar"
+    return kurve, "eigene_aktie"
 
 
 # ---------------------------------------------------------------------------
-# Die Formel
+# Vorrat laden
 # ---------------------------------------------------------------------------
+
+def lade_kurven(pfad=KURVEN_DATEI, leise=False):
+    """Alle gebauten Kurven. Fehlt die Datei, ist der Vorrat LEER — und
+    damit jede Aktie 'nicht verifizierbar'. Genau so ist es gewollt: Ein
+    Rueckfall auf irgendeinen Ersatzmassstab gibt es seit 06.08.2026
+    nicht mehr."""
+    global _kurven
+    if _kurven is not None:
+        return _kurven
+    try:
+        with open(pfad, encoding="utf-8") as f:
+            roh = json.load(f)
+        _kurven = {t: {int(m): float(a) for m, a in e["kurve"].items()}
+                   for t, e in roh.get("aktien", {}).items()}
+        if not leise:
+            print(f"  Volumenkurven geladen: {len(_kurven)} Aktien mit eigener "
+                  f"Kurve, gebaut am {roh.get('gebaut_am', 'unbekannt')}.")
+    except Exception as e:
+        _kurven = {}
+        if not leise:
+            print(f"  ⚠ Keine Volumenkurven ({type(e).__name__}) — jede Aktie "
+                  f"gilt als nicht verifizierbar, bis der Nachtlauf sie baut.")
+    return _kurven
+
+
+def setze_kurven(inhalt):
+    """Vorrat direkt setzen (Nachtlauf und Selbsttest)."""
+    global _kurven
+    roh = inhalt.get("aktien", inhalt) if isinstance(inhalt, dict) else {}
+    _kurven = {}
+    for ticker, eintrag in (roh or {}).items():
+        punkte = eintrag.get("kurve", eintrag) if isinstance(eintrag, dict) else {}
+        # Minuten IMMER auf int: aus JSON kommen sie als Zeichenketten,
+        # und ein Vergleich int gegen str wirft mitten in der Rechnung.
+        _kurven[str(ticker).upper()] = {int(m): float(a)
+                                        for m, a in punkte.items()}
+    return _kurven
+
 
 def minute_seit_eroeffnung(jetzt=None):
     """Minuten seit 09:30 New Yorker Zeit. None ausserhalb des Handels
@@ -256,15 +353,21 @@ def minute_seit_eroeffnung(jetzt=None):
     return m
 
 
-def tagesanteil(minute=None):
+def tagesanteil(minute=None, kurve=None):
     """F(t): Anteil des Tagesvolumens, der bis zu dieser Minute seit
-    Handelsbeginn ueblicherweise schon gehandelt ist.
+    Handelsbeginn ueblicherweise schon gehandelt ist — nach der Kurve
+    DIESER Aktie.
 
-    None (vor Eroeffnung, nach Schluss) ergibt 1,0 — dann ist der Tag
-    komplett und es wird nichts hochgerechnet."""
+    None (vor Eroeffnung, nach Schluss) ergibt 1,0; dann ist der Tag
+    komplett und es wird nichts hochgerechnet — dafuer braucht es auch
+    keine Kurve (Gerhard: der reine EOD-Fall laeuft ohne).
+
+    Ohne Kurve und MIT Uhrzeit gibt es None: nicht verifizierbar. Frueher
+    stand hier ein Rueckgriff auf die geliehene Kurve."""
     if minute is None:
         return 1.0
-    kurve = lade_kurve(leise=True)
+    if not kurve:
+        return None
     minute = max(0, min(HANDELSMINUTEN, int(minute)))
     stellen = sorted(kurve)
     if minute <= stellen[0]:
@@ -283,28 +386,50 @@ def tagesanteil(minute=None):
     return 1.0
 
 
-def verhaeltnis(v_bisher, v50, minute=None):
+def kurve_fuer(ticker):
+    """Die Kurve dieser Aktie aus dem Tagesvorrat, sonst None."""
+    return lade_kurven(leise=True).get((ticker or "").upper())
+
+
+def verhaeltnis(v_bisher, v50, minute=None, kurve=None):
     """Das Vielfache des ueblichen Volumens FUER DIESE UHRZEIT.
     1,0 heisst voellig normal, 21,3 heisst 21-faches Tempo.
-    None, wenn kein Massstab vorliegt (brandneue Notierung)."""
+
+    None heisst NICHT VERIFIZIERBAR — entweder fehlt der 50-Tage-Schnitt
+    oder es gibt keine eigene Kurve fuer die Uhrzeit-Hochrechnung. Der
+    Aufrufer muss das als eigenen Status behandeln und NICHT als
+    'Volumen nicht bestaetigt' (Gerhard, 06.08.2026)."""
     if not v50 or v50 <= 0 or v_bisher is None:
         return None
-    return (v_bisher / tagesanteil(minute)) / v50
+    anteil = tagesanteil(minute, kurve)
+    if anteil is None:
+        return None
+    return (v_bisher / anteil) / v50
 
 
-def volume_pct_change(v_bisher, v50, minute=None):
+def volume_pct_change(v_bisher, v50, f_kurve=None, minute_seit_open=None):
     """Die IBD-Zahl: +2025 % heisst das 21,25-fache des Ueblichen,
-    -32 % heisst ein knappes Drittel unter dem Ueblichen."""
-    v = verhaeltnis(v_bisher, v50, minute)
+    -32 % heisst ein knappes Drittel unter dem Ueblichen.
+
+    Reihenfolge und Namen der Parameter wie in Gerhards Fassung vom
+    06.08.2026. Ohne Uhrzeit (EOD) braucht es keine Kurve; mit Uhrzeit
+    und ohne Kurve kommt None zurueck statt einer Ersatzrechnung."""
+    v = verhaeltnis(v_bisher, v50, minute_seit_open, f_kurve)
     return None if v is None else (v - 1.0) * 100.0
 
 
-def text(v_bisher, v50, minute=None):
+def text(v_bisher, v50, minute=None, kurve=None):
     """Einheitliche Schreibweise fuer Meldungen und Protokoll."""
-    p = volume_pct_change(v_bisher, v50, minute)
+    p = volume_pct_change(v_bisher, v50, kurve, minute)
     if p is None:
-        return "Volumen nicht bewertbar, zu wenig Kurshistorie"
+        return NICHT_VERIFIZIERBAR
     return f"{p:+.0f} % gegenüber dem 50-Tage-Schnitt"
+
+
+# Der dritte Status, woertlich und an EINER Stelle — damit er nirgends
+# als "nicht bestaetigt" umgedeutet wird.
+NICHT_VERIFIZIERBAR = ("Volumen NICHT VERIFIZIERBAR, keine eigene "
+                       "Volumenkurve (unter 40 Handelstagen Historie)")
 
 
 # --- Schreibweise fuer Meldungen ------------------------------------------
@@ -347,7 +472,19 @@ def lage_text(pct, fenster=50):
 
 if __name__ == "__main__":
     if "--bauen" in sys.argv:
-        baue_referenzkurve()
+        # Kurven fuer die Aktien aus einer CSV oder der Excel-Mappe bauen.
+        import argparse
+        ap = argparse.ArgumentParser()
+        ap.add_argument("--bauen", action="store_true")
+        ap.add_argument("--tickers", help="Komma-Liste; sonst aus kaufpunkte_aktuell.xlsx")
+        a, _ = ap.parse_known_args()
+        if a.tickers:
+            liste = [t.strip() for t in a.tickers.split(",") if t.strip()]
+        else:
+            import pandas as pd
+            liste = sorted(set(pd.read_excel("kaufpunkte_aktuell.xlsx")["Ticker"]
+                               .astype(str).str.upper()))
+        baue_kurven(liste)
         sys.exit(0)
 
     # Eine realistische Kurve von Hand, damit der Test ohne Netz laeuft:
@@ -355,7 +492,8 @@ if __name__ == "__main__":
     test_kurve = {0: 0.0, 5: 0.055, 10: 0.082, 15: 0.101, 30: 0.150,
                   60: 0.232, 120: 0.365, 195: 0.520, 270: 0.665,
                   330: 0.790, 375: 0.930, 390: 1.0}
-    setze_kurve(test_kurve)
+    setze_kurven({"TEST": {"kurve": {str(m): a for m, a in test_kurve.items()}}})
+    k = kurve_fuer("TEST")
 
     print("=" * 66)
     print("TEST 1: Am Handelsschluss muss die reine IBD-Tagesformel stehen")
@@ -363,62 +501,95 @@ if __name__ == "__main__":
     assert abs(volume_pct_change(1_100_000, 700_000) - 57.14) < 0.01
     assert abs(volume_pct_change(700_000, 700_000) - 0.0) < 1e-9
     print("  1,1 Mio gegen Ø50 700.000 → +57 %; genau am Schnitt → 0 %  ✓")
+    print("  (ohne Uhrzeit braucht die Formel KEINE Kurve — Gerhards EOD-Fall)")
 
     print("\n" + "=" * 66)
-    print("TEST 2: Eine ganz normale Aktie zeigt zu JEDER Uhrzeit rund 0 %")
+    print("TEST 2: Eine Aktie im üblichen Tempo zeigt zu JEDER Uhrzeit ~0 %")
     print("=" * 66)
-    v50 = 700_000
-    for m in (5, 15, 60, 195, 330):
-        v_normal = tagesanteil(m) * v50
-        p = volume_pct_change(v_normal, v50, m)
-        print(f"  Minute {m:>3} (F={tagesanteil(m):.3f}): {p:+.1f} %")
-        assert abs(p) < 0.5, "eine normale Aktie darf nicht auffällig wirken"
-    print("  ✓ Keine Scheinausschläge am Vormittag")
+    for minute in (5, 30, 60, 195, 330):
+        f = tagesanteil(minute, k)
+        pct = volume_pct_change(f * 700_000, 700_000, k, minute)
+        print(f"  Minute {minute:>3} (F={f:.3f}) → {pct:+.1f} %")
+        assert abs(pct) < 1.0
 
     print("\n" + "=" * 66)
-    print("TEST 3: Der KNSA-Fall — echte Auffälligkeit muss sichtbar sein")
+    print("TEST 3: Echte Auffälligkeit bleibt den ganzen Tag sichtbar")
     print("=" * 66)
-    v50_knsa, v_bisher = 743_000, 0.68 * 743_000
-    ohne = (v_bisher / v50_knsa - 1) * 100
-    mit = volume_pct_change(v_bisher, v50_knsa, 15)
-    print(f"  Ohne Hochrechnung (die Rechnung, die Gerhard vermutet hat): "
-          f"{ohne:+.0f} %")
-    print(f"  Mit Hochrechnung, Minute 15 (F={tagesanteil(15):.3f}): {mit:+.0f} %")
-    assert ohne < 0 and mit > 500
-    print("  ✓ Aus einem scheinbaren Minus wird die echte Auffälligkeit")
+    for minute in (5, 60, 195, 330):
+        f = tagesanteil(minute, k)
+        pct = volume_pct_change(f * 700_000 * 4.0, 700_000, k, minute)
+        print(f"  Minute {minute:>3}: vierfaches Tempo → {pct:+.0f} %")
+        assert 295 < pct < 305
 
     print("\n" + "=" * 66)
-    print("TEST 4: Ein echtes Signal bleibt den ganzen Tag stabil")
+    print("TEST 4: Die Entscheidung eigene Kurve oder gar keine")
     print("=" * 66)
-    for m in (5, 60, 195, 330):
-        p = volume_pct_change(tagesanteil(m) * v50 * 4.0, v50, m)
-        print(f"  Minute {m:>3}: vierfaches Tempo → {p:+.0f} %")
-        assert 299 < p < 301
-    print("  ✓ Vierfaches Tempo zeigt durchgehend +300 %, es verläuft nicht")
+    faelle = [(50, None, "eigene_aktie", "volle Historie"),
+              (40, None, "eigene_aktie", "genau an der Schwelle"),
+              (39, None, "nicht_verifizierbar", "einen Tag zu wenig"),
+              (15, None, "nicht_verifizierbar", "Börsengang vor drei Wochen"),
+              (0, None, "nicht_verifizierbar", "Börsengang heute"),
+              (25, 20, "eigene_aktie", "eigene, niedrigere Schwelle")]
+    for tage, schwelle, erwartet, was in faelle:
+        ist = entscheide_kurven_quelle(tage, schwelle)
+        print(f"  {was}: {tage} Tage → {ist}")
+        assert ist == erwartet, f"erwartet {erwartet}, war {ist}"
+    print("  ✓ Nur zwei Ausgänge, kein Rückgriff auf eine fremde Kurve")
 
     print("\n" + "=" * 66)
-    print("TEST 5: Die ersten Sekunden dürfen nicht explodieren")
+    print("TEST 5: Ohne eigene Kurve — NICHT VERIFIZIERBAR, kein Absturz")
     print("=" * 66)
-    p0 = volume_pct_change(1000, v50, 0)
-    print(f"  Minute 0, winziges Volumen: {p0:+.0f} % (F={tagesanteil(0):.4f})")
-    assert p0 is not None, "darf nicht abstürzen"
-    print("  ✓ Kein Sturz durch Division, F wird nie kleiner als 0,001")
+    # EOD ohne Kurve: geht, weil F(t)=1 keine Kurve braucht
+    assert volume_pct_change(150_000, 100_000, None, None) is not None
+    print("  EOD ohne Kurve: rechnet normal weiter  ✓")
+    # Intraday ohne Kurve: None, KEINE Ersatzrechnung
+    assert volume_pct_change(70_000, 100_000, None, 30) is None
+    assert tagesanteil(30, None) is None
+    assert verhaeltnis(70_000, 100_000, 30, None) is None
+    print("  Intraday ohne Kurve: None  ✓")
+    assert "NICHT VERIFIZIERBAR" in text(70_000, 100_000, 30, None)
+    print(f"  Text dazu: „{text(70_000, 100_000, 30, None)}"
+          f"“  ✓")
+    print("  ✓ Das ist NICHT dasselbe wie 'nicht bestätigt' — dort wurde")
+    print("    geprüft und für zu schwach befunden, hier gar nicht geprüft.")
 
     print("\n" + "=" * 66)
-    print("TEST 6: Ohne Maßstab wird ehrlich nichts behauptet")
+    print("TEST 6: Fehlender 50-Tage-Schnitt")
     print("=" * 66)
     assert volume_pct_change(500_000, 0) is None
     assert volume_pct_change(500_000, None) is None
-    assert "nicht bewertbar" in text(500_000, 0)
-    print("  ✓ Brandneue Notierung ohne Ø50 → 'nicht bewertbar', keine Zahl")
+    print("  Ohne Ø50 keine Zahl  ✓")
 
     print("\n" + "=" * 66)
-    print("TEST 7: Der Rückfall greift, wenn keine gebaute Kurve da ist")
+    print("TEST 7: Der Vorrat kennt eine Aktie nicht")
     print("=" * 66)
-    setze_kurve(RUECKFALL_KURVE)
-    assert 0.2 < tagesanteil(30) < 0.22
-    assert tagesanteil(390) == 1.0
-    print(f"  Halbstundenkurve: nach 30 Minuten {tagesanteil(30)*100:.1f} %, "
-          f"am Schluss {tagesanteil(390)*100:.0f} %  ✓")
+    assert kurve_fuer("GIBTSNICHT") is None
+    assert kurve_fuer(None) is None
+    assert volume_pct_change(1_000, 500, kurve_fuer("GIBTSNICHT"), 30) is None
+    print("  Unbekannte Aktie → keine Kurve → nicht verifizierbar  ✓")
+
+    print("\n" + "=" * 66)
+    print("TEST 8: Eine Kurve aus echten Kerzen bauen (ohne Netz)")
+    print("=" * 66)
+    import pandas as _pd
+    # Zwei volle Handelstage im Fuenf-Minuten-Raster, U-foermig verteilt.
+    zeilen, volumina = [], []
+    for tag in ("2026-07-01", "2026-07-02"):
+        for m in range(0, 390, 5):
+            zeilen.append(_pd.Timestamp(f"{tag} 09:30", tz="America/New_York")
+                          + _pd.Timedelta(minutes=m))
+            x = m / 390
+            volumina.append(1000 * (0.7 + 2.5 * (x - 0.5) ** 2))
+    df = _pd.DataFrame({"Volume": volumina}, index=_pd.DatetimeIndex(zeilen))
+    kurve, n = _kurve_aus_kerzen(df)
+    assert n == 2, f"zwei Handelstage erwartet, {n} gezählt"
+    assert kurve[0] == 0.0 and kurve[390] == 1.0
+    assert all(kurve[a] <= kurve[b] for a, b in zip(sorted(kurve), sorted(kurve)[1:]))
+    print(f"  {n} Tage, {len(kurve)} Stützstellen, monoton, 0 bis 1  ✓")
+    # Halber Handelstag muss ausgeschieden werden
+    halb = df[df.index.time < __import__("datetime").time(13, 0)]
+    _, n_halb = _kurve_aus_kerzen(halb)
+    assert n_halb == 0, f"halbe Tage müssen rausfallen, {n_halb} blieben"
+    print("  Halbe Handelstage (Feiertagsschluss 13:00) fliegen raus  ✓")
 
     print("\nAlle Volumen-Tests bestanden (ohne Netzwerk).")

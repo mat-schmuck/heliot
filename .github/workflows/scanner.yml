@@ -103,6 +103,10 @@ jobs:
           # waechst nur und wird nie geleert — ohne diesen Weg zurueck
           # ins Repo waere es nach jedem Cloud-Lauf weg, und dann liesse
           # sich nie messen, was die Regeln getaugt haetten.
+          # Die Volumenkurven, eine je Aktie (Gerhard, 06.08.2026).
+          # Der Waechter braucht sie am naechsten Morgen; ohne sie
+          # gilt jede Aktie als NICHT VERIFIZIERBAR.
+          git add -A -- volumenkurven.json 2>/dev/null || true
           git add -A -- trigger_logbuch.jsonl 2>/dev/null || true
           if git diff --cached --quiet; then
             echo "Keine Änderung gegenüber dem letzten Scan."

@@ -174,14 +174,18 @@ def rs_ratings_fuer_universum(kurse_je_ticker):
 # Die Volumen-Signatur
 # ---------------------------------------------------------------------------
 
-def volumen_signatur(verlauf, v50, index):
+def volumen_signatur(verlauf, v50, index, kurve=None):
     """Prüft Anflug, Sprung und Nachhaltigkeit an der Kreuzung.
 
     verlauf: Liste von Punkten, chronologisch, je Punkt ein dict mit
         "minute" (Minuten seit Handelsbeginn), "kurs" und "kum_volumen"
         (KUMULIERTES Tagesvolumen, nicht das Volumen der einzelnen
         Kerze — der Strom liefert genau das).
-    index: Position der Kreuzung im Verlauf."""
+    index: Position der Kreuzung im Verlauf.
+    kurve: die EIGENE Volumenkurve dieser Aktie (Gerhard,
+        06.08.2026). Ohne sie liefert volume_pct_change None,
+        und die Signatur gilt als nicht pruefbar — es wird
+        NICHT mit einer fremden Kurve gerechnet."""
     punkt = verlauf[index]
     minute = punkt["minute"]
     fruehphase = minute <= CFG["fruehe_phase_minuten"]
@@ -191,13 +195,13 @@ def volumen_signatur(verlauf, v50, index):
     if index > 0 and not fruehphase:
         vorher = verlauf[index - 1]
         anflug_pct = volumen.volume_pct_change(
-            vorher["kum_volumen"], v50, vorher["minute"])
+            vorher["kum_volumen"], v50, kurve, vorher["minute"])
         anflug_ok = (anflug_pct is not None
                      and anflug_pct <= CFG["vol_anflug_max_pct"] + GRENZ_SPIEL)
 
     # --- Sprung: an der Kreuzung --------------------------------------
     sprung_pct = volumen.volume_pct_change(
-        punkt["kum_volumen"], v50, minute)
+        punkt["kum_volumen"], v50, kurve, minute)
     sprung_ok = (sprung_pct is not None
                  and sprung_pct >= CFG["vol_sprung_min_pct"] - GRENZ_SPIEL)
 
@@ -211,7 +215,7 @@ def volumen_signatur(verlauf, v50, index):
     if spaeter and sprung_pct is not None:
         letzter = spaeter[-1]
         haelt_pct = volumen.volume_pct_change(
-            letzter["kum_volumen"], v50, letzter["minute"])
+            letzter["kum_volumen"], v50, kurve, letzter["minute"])
         haelt_an = (haelt_pct is not None
                     and haelt_pct >= sprung_pct * (1 - CFG["sprung_abfall_max"])
                                      - GRENZ_SPIEL)
@@ -228,7 +232,7 @@ def volumen_signatur(verlauf, v50, index):
     }
 
 
-def pruefe(verlauf, vortagesschluss, v50):
+def pruefe(verlauf, vortagesschluss, v50, kurve=None):
     """Sucht im bisherigen Tagesverlauf die erste gültige Kreuzung.
 
     Rot heißt unter dem Vortagesschluss, grün darüber. Gezählt wird nur
@@ -244,7 +248,7 @@ def pruefe(verlauf, vortagesschluss, v50):
             war_rot = True
             continue
         if war_rot and kurs > vortagesschluss:
-            sig = volumen_signatur(verlauf, v50, i)
+            sig = volumen_signatur(verlauf, v50, i, kurve)
             if sig["ok"]:
                 return {
                     "strategie": "Red-to-Green",
@@ -294,8 +298,10 @@ def selbsttest() -> int:
     # gleichmäßiger Handel über den ganzen Tag. Dann ist der Anteil
     # bis Minute m genau m/390, und die Sollwerte lassen sich von Hand
     # nachrechnen.
-    volumen.setze_kurve({m: m / volumen.HANDELSMINUTEN
-                         for m in range(0, volumen.HANDELSMINUTEN + 1, 5)})
+    # Seit 06.08.2026 wird die Kurve UEBERGEBEN statt global gesetzt —
+    # jede Aktie hat ihre eigene.
+    testkurve = {m: m / volumen.HANDELSMINUTEN
+                 for m in range(0, volumen.HANDELSMINUTEN + 1, 5)}
     v50 = 1_000_000.0
 
     pruefe_es("Regime scharf bei Nasdaq minus 2 %",
@@ -325,7 +331,7 @@ def selbsttest() -> int:
     punkt_setzen(verlauf, 119, 99.5, v50 * anteil(119) * 1.00)   # rot, trocken
     punkt_setzen(verlauf, 120, 100.5, v50 * anteil(120) * 2.00)  # grün, Sprung
     punkt_setzen(verlauf, 128, 101.0, v50 * anteil(128) * 1.95)  # hält
-    treffer = pruefe(verlauf, 100.0, v50)
+    treffer = pruefe(verlauf, 100.0, v50, testkurve)
     pruefe_es("Gültige Kreuzung wird gemeldet", treffer is not None,
               f"Sprung {treffer['signatur']['sprung_pct']} %, Anflug "
               f"{treffer['signatur']['anflug_pct']} %" if treffer else "")
@@ -335,14 +341,14 @@ def selbsttest() -> int:
     punkt_setzen(nass, 119, 99.5, v50 * anteil(119) * 1.60)      # zu viel
     punkt_setzen(nass, 120, 100.5, v50 * anteil(120) * 2.00)
     punkt_setzen(nass, 128, 101.0, v50 * anteil(128) * 1.95)
-    pruefe_es("Nasser Anflug wird verworfen", pruefe(nass, 100.0, v50) is None)
+    pruefe_es("Nasser Anflug wird verworfen", pruefe(nass, 100.0, v50, testkurve) is None)
 
     # --- Kein Sprung: verworfen -------------------------------------
     flau = []
     punkt_setzen(flau, 119, 99.5, v50 * anteil(119) * 1.00)
     punkt_setzen(flau, 120, 100.5, v50 * anteil(120) * 1.20)     # zu wenig
     pruefe_es("Fehlender Sprung wird verworfen",
-              pruefe(flau, 100.0, v50) is None)
+              pruefe(flau, 100.0, v50, testkurve) is None)
 
     # --- Eintagsfliege: Sprung fällt wieder ab ----------------------
     fliege = []
@@ -350,14 +356,14 @@ def selbsttest() -> int:
     punkt_setzen(fliege, 120, 100.5, v50 * anteil(120) * 2.00)
     punkt_setzen(fliege, 129, 101.0, v50 * anteil(129) * 1.30)   # bricht ein
     pruefe_es("Abfallender Sprung wird verworfen",
-              pruefe(fliege, 100.0, v50) is None)
+              pruefe(fliege, 100.0, v50, testkurve) is None)
 
     # --- Frühphase: nasser Anflug ist erlaubt -----------------------
     frueh = []
     punkt_setzen(frueh, 9, 99.5, v50 * anteil(9) * 3.00)         # sehr nass
     punkt_setzen(frueh, 10, 100.5, v50 * anteil(10) * 3.00)      # Sprung
     punkt_setzen(frueh, 18, 101.0, v50 * anteil(18) * 2.90)
-    t2 = pruefe(frueh, 100.0, v50)
+    t2 = pruefe(frueh, 100.0, v50, testkurve)
     pruefe_es("In den ersten 30 Minuten entfällt die Anflug-Bedingung",
               t2 is not None and t2["signatur"]["in_fruehphase"])
 
@@ -365,7 +371,7 @@ def selbsttest() -> int:
     nur_gruen = []
     punkt_setzen(nur_gruen, 120, 101.0, v50 * anteil(120) * 2.00)
     pruefe_es("Ohne vorherige rote Phase keine Meldung",
-              pruefe(nur_gruen, 100.0, v50) is None)
+              pruefe(nur_gruen, 100.0, v50, testkurve) is None)
 
     # --- Ein Punkt je Minute ----------------------------------------
     v = []

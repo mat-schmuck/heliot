@@ -402,7 +402,7 @@ jobs:
           git add -A -- ntfy_ids.json 2>/dev/null || true
           # Die neu gebaute Volumenkurve muss ins Repo zurück, sonst hätte
           # der Lauf sie nur für sich selbst gebaut.
-          git add -A -- volumenkurve.json 2>/dev/null || true
+          git add -A -- volumenkurven.json 2>/dev/null || true
           # Das Trigger-Logbuch: JEDES Signal, gekauft oder nicht. Es
           # waechst nur und wird nie geleert — ohne diesen Weg zurueck
           # ins Repo waere es nach jedem Cloud-Lauf weg, und dann liesse

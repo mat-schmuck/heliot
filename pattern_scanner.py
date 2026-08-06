@@ -55,6 +55,7 @@ import positionen     # offene Positionen samt Exit-Regelwerk
 import red_to_green   # Kapitel 9: Fokusliste fuer den Live-Waechter
 import shakeout       # Kapitel 10: Spring samt Sekundaertest-Warteliste
 import trigger_logbuch  # schreibt jedes Signal mit, gekauft oder nicht
+import volumen        # IBD Volume % Change, Kurve je Aktie
 from config import CFG as ZENTRAL, hoechstens, mind_erreicht, pruefe_config
 
 pruefe_config()       # faengt widerspruechliche Schwellwerte sofort ab
@@ -1353,6 +1354,18 @@ def main():
 
     # Kapitel 9: die Fokusliste fuer den Live-Waechter von morgen.
     fokusliste_schreiben(loaded)
+
+    # VOLUMENKURVEN, eine je Aktie (Gerhard, 06.08.2026). Sie gehören
+    # hierher und nicht in den Wächter: Seine Vorgabe lautet "einmal pro
+    # Tag und Aktie, dann zwischenspeichern", und der Nachtlauf ist genau
+    # dieser eine Zeitpunkt. Der Wächter zur Eröffnung hätte sonst
+    # hunderte Abrufe zu erledigen, während jede Sekunde zählt.
+    try:
+        volumen.baue_kurven(sorted({t for t, _ in tickers}))
+    except Exception as e:
+        print(f"  ⚠ Volumenkurven konnten nicht gebaut werden "
+              f"({type(e).__name__}: {e}) — die betroffenen Aktien gelten "
+              f"morgen als NICHT VERIFIZIERBAR. Geschätzt wird nichts.")
 
     # Kapitel 8, rekonstruiert: laeuft nur mit, meldet nur ins Logbuch.
     crash_support_durchgang(loaded, api_key, limiter)

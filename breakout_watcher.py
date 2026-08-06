@@ -269,17 +269,27 @@ FLAT_BASE_MA = tuple(_FASSUNG["ma"])                 # leer = keine Bedingung
 # vielen Stellen aufruft.
 
 
-def tagesanteil(jetzt=None) -> float:
+def tagesanteil(ticker=None, jetzt=None):
     """Welcher Anteil des Tagesvolumens ist zu dieser Uhrzeit ueblicherweise
-    schon gehandelt? Vor Handelsbeginn und nach Schluss 1,0, damit die
-    Hochrechnung dann nichts mehr veraendert."""
-    return volumen.tagesanteil(volumen.minute_seit_eroeffnung(jetzt))
+    schon gehandelt — nach der EIGENEN Kurve DIESER Aktie?
+
+    Vor Handelsbeginn und nach Schluss 1,0, damit die Hochrechnung dann
+    nichts mehr veraendert; dafuer braucht es keine Kurve.
+    None heisst: nicht verifizierbar, weil diese Aktie keine eigene Kurve
+    hat (seit 06.08.2026, Gerhard — eine geliehene gibt es nicht mehr)."""
+    return volumen.tagesanteil(volumen.minute_seit_eroeffnung(jetzt),
+                               volumen.kurve_fuer(ticker))
 
 
-def vol_verhaeltnis(vol, avg, jetzt=None):
+def vol_verhaeltnis(vol, avg, ticker=None, jetzt=None):
     """Das Vielfache des fuer DIESE UHRZEIT ueblichen Volumens.
-    None, wenn kein Massstab vorliegt."""
-    return volumen.verhaeltnis(vol, avg, volumen.minute_seit_eroeffnung(jetzt))
+
+    None heisst NICHT VERIFIZIERBAR und ist etwas anderes als 'nicht
+    bestaetigt': Entweder fehlt der 50-Tage-Schnitt, oder diese Aktie hat
+    keine eigene Volumenkurve. Geprueft und zu schwach befunden wurde in
+    beiden Faellen NICHTS."""
+    return volumen.verhaeltnis(vol, avg, volumen.minute_seit_eroeffnung(jetzt),
+                               volumen.kurve_fuer(ticker))
 
 
 def markt_offen(jetzt=None) -> tuple:
@@ -731,9 +741,22 @@ def pruefe_breakout(item: dict, quote: dict) -> dict | None:
     # UHRZEIT ungewoehnlich hoch? Verglichen wird das Verhaeltnis, gemeldet
     # wird Gerhards IBD-Prozentzahl — dieselbe Groesse, nur so
     # geschrieben, dass sie sich direkt gegen IBD halten laesst.
-    anteil = tagesanteil()
-    vol_ratio = vol_verhaeltnis(vol, avg)
-    vol_ok = None if vol_ratio is None else vol_ratio >= faktor
+    #
+    # DIE KURVE GEHOERT DER AKTIE (Gerhard, 06.08.2026): F(t) kommt aus
+    # der eigenen 50-Tage-Historie GENAU DIESER Aktie. Hat sie keine
+    # (unter 40 Handelstagen), ist das Volumen NICHT VERIFIZIERBAR — ein
+    # eigener, dritter Status neben bestaetigt und nicht bestaetigt.
+    anteil = tagesanteil(item["ticker"])
+    vol_ratio = vol_verhaeltnis(vol, avg, item["ticker"])
+    if vol_ratio is None:
+        # Warum keine Zahl? Fehlt der 50-Tage-Schnitt oder die eigene
+        # Kurve? Die Meldung soll das benennen koennen.
+        vol_ok = None
+        nicht_pruefbar = (volumen.kurve_fuer(item["ticker"]) is None
+                          and volumen.minute_seit_eroeffnung() is not None)
+    else:
+        vol_ok = vol_ratio >= faktor
+        nicht_pruefbar = False
 
     return {
         **item,
@@ -743,6 +766,7 @@ def pruefe_breakout(item: dict, quote: dict) -> dict | None:
         "vol_pct": None if vol_ratio is None else (vol_ratio - 1) * 100,
         "vol_noetig": faktor,
         "vol_ok": vol_ok,
+        "vol_nicht_verifizierbar": nicht_pruefbar,
         "vol_roh": vol,
         "vol_anteil": anteil,
     }
@@ -844,8 +868,11 @@ def pruefe_gap_and_go(ticker: str, q: dict):
     # aus einer Basis herausschiessen, die spaeteren Vervielfacher sind.
     # Ein Filter, der die wegschneidet, arbeitet gegen die eigene Doktrin.
 
-    anteil = tagesanteil()
-    if anteil <= 0:
+    anteil = tagesanteil(ticker)
+    if anteil is None or anteil <= 0:
+        # Keine eigene Volumenkurve: Gap and Go laesst sich fuer diese
+        # Aktie nicht pruefen. Frueher sprang hier die geliehene Kurve
+        # ein; seit 06.08.2026 gibt es die nicht mehr.
         return None
     # BEIDE Zahlen sind rechnerisch dieselbe Groesse — v/(Ø×F) und
     # (v/F)/Ø. Aufgefallen beim Aufschreiben der Formel fuer Gerhard am
@@ -854,7 +881,8 @@ def pruefe_gap_and_go(ticker: str, q: dict):
     # nicht zwei verschiedene Messgroessen. Bis Gerhard das klaert, bleibt
     # es so, wie es das Regelwerk beschreibt.
     tages_ratio = volumen.verhaeltnis(vol, vol10,
-                                      volumen.minute_seit_eroeffnung())
+                                      volumen.minute_seit_eroeffnung(),
+                                      volumen.kurve_fuer(ticker))
     if tages_ratio is None:
         return None
     frueh_ratio = tages_ratio
@@ -983,7 +1011,11 @@ def pruefe_red_to_green(ticker: str, q: dict, eintrag: dict):
         return None                      # ausserhalb der Handelszeit
     verlauf = _r2g_verlauf.setdefault(ticker, [])
     red_to_green.punkt_setzen(verlauf, minute, kurs, vol)
-    return red_to_green.pruefe(verlauf, vortag, v50)
+    # Die EIGENE Kurve dieser Aktie (Gerhard, 06.08.2026). Fehlt sie,
+    # liefert die Volumen-Signatur None und Kapitel 9 meldet nicht —
+    # gerechnet wird nicht mit einer fremden Kurve.
+    return red_to_green.pruefe(verlauf, vortag, v50,
+                               volumen.kurve_fuer(ticker))
 
 
 def format_r2g(t: dict) -> str:
@@ -1077,11 +1109,18 @@ def format_treffer(t: dict) -> str:
         vol_txt = f"Vol BESTÄTIGT, {lage}{huerde}"
     elif t["vol_ok"] is False:
         vol_txt = f"Vol NICHT bestätigt, {lage}{huerde}"
+    elif t.get("vol_nicht_verifizierbar"):
+        # DER DRITTE STATUS (Gerhard, 06.08.2026). Er darf NICHT mit
+        # "nicht bestätigt" zusammenfallen: Dort wurde geprüft und für zu
+        # schwach befunden, hier konnte gar nicht geprüft werden, weil
+        # diese Aktie keine eigene Volumenkurve hat. Wer beides in
+        # denselben Topf wirft, lässt eine Aktie ohne genug Historie
+        # lautlos in der falschen Kategorie verschwinden.
+        vol_txt = ("Vol NICHT VERIFIZIERBAR, keine eigene Volumenkurve; "
+                   "unter 40 Handelstagen Historie")
     else:
-        # Kommt nur vor, wenn keine Durchschnittsbasis existiert (brandneue
-        # Notierung oder Datenluecke der Kursquelle) — der Waechter rechnet
-        # sonst IMMER selbst. "Selbst pruefen" hiess frueher missverstaendlich,
-        # man muesse rechnen; gemeint ist: Signal ohne Volumenurteil.
+        # Keine Durchschnittsbasis (brandneue Notierung oder Datenlücke
+        # der Kursquelle) — der Wächter rechnet sonst IMMER selbst.
         vol_txt = "Vol nicht bewertbar, zu wenig Kurshistorie"
     # Erfuellt die Aktie mehrere Muster auf DEMSELBEN Kaufpunkt, wurden sie
     # zu einer Meldung zusammengelegt — dann werden auch beide genannt

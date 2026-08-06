@@ -133,7 +133,14 @@ def auswerten(eintraege, tage=(5, 10, 20), leise=False):
     import yfinance as yf
     from statistics import median
 
-    mit_kaufpunkt = [e for e in eintraege if e.get("ticker")]
+    # TROCKENLÄUFE BLEIBEN DRAUSSEN. Sie stehen absichtlich im Logbuch —
+    # ein Trockenlauf hat ein echtes Signal erkannt, das gehoert
+    # mitgeschrieben — aber sie entstehen beim Pruefen und Entwickeln
+    # oft mehrfach am selben Tag zur selben Aktie. Wer sie mitmisst,
+    # gewichtet Zufaelliges hoch (gemessen 06.08.2026: drei Probelaeufe
+    # erzeugten 68 Eintraege neben 28 echten).
+    mit_kaufpunkt = [e for e in eintraege
+                     if e.get("ticker") and not e.get("trockenlauf")]
     if not mit_kaufpunkt:
         return {}
     ticker = sorted({e["ticker"].upper() for e in mit_kaufpunkt})
@@ -240,6 +247,14 @@ def selbsttest() -> int:
     letzte = lies(pfad)[-1]
     pruefe("Nicht darstellbare Werte werden ausgelassen",
            letzte["ticker"] == "DDD" and "objekt" not in letzte)
+
+    # Trockenläufe stehen im Logbuch, zählen aber nicht mit
+    trocken = [{"ticker": "TROCK", "trockenlauf": True},
+               {"ticker": "ECHT", "trockenlauf": False}]
+    gefiltert = [e for e in trocken
+                 if e.get("ticker") and not e.get("trockenlauf")]
+    pruefe("Trockenläufe werden bei der Auswertung übersprungen",
+           [e["ticker"] for e in gefiltert] == ["ECHT"])
 
     # --- Zusammenfuehren (Waechter-Lauf in der Cloud) ---------------------
     ordner = os.path.dirname(pfad)
