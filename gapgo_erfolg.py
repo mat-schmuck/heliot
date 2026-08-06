@@ -166,8 +166,16 @@ def filter_regeln():
         ("relativ  (63 T, <= 3x Luecke)", lambda e: e["spanne63"] <= 3 * e["gap"]),
         ("nicht ueberdehnt  (<= 15 % ueber MA50)",
          lambda e: e["ueber_ma50"] <= 0.15),
-        ("Volumen ab 5x O10", lambda e: e["r10"] >= 5.0),
-        ("Volumen ab 5x O50", lambda e: e["r50"] >= 5.0),
+        # GERHARDS GEGENPROBE ZU ANTWORT 2 (05.08.2026): Er senkt von 5x
+        # auf 3x, weil keine publizierte Quelle das Fuenffache verlangt
+        # (Weinstein 2 bis 3x). Gefragt ist, ob 3x besser abschneidet als
+        # 5x UND als gar kein Filter.
+        ("Volumen ab 2x O10", lambda e: e["r10"] >= 2.0),
+        ("Volumen ab 3x O10  (NEU)", lambda e: e["r10"] >= 3.0),
+        ("Volumen ab 3x O50  (NEU)", lambda e: e["r50"] >= 3.0),
+        ("Volumen ab 4x O10", lambda e: e["r10"] >= 4.0),
+        ("Volumen ab 5x O10  (alt)", lambda e: e["r10"] >= 5.0),
+        ("Volumen ab 5x O50  (alt)", lambda e: e["r50"] >= 5.0),
         ("Volumen UNTER 3x O10", lambda e: e["r10"] < 3.0),
         ("Schluss im obersten Zehntel", lambda e: e["schlusspos"] >= 0.90),
     ]
