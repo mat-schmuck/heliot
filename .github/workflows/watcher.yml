@@ -135,16 +135,24 @@ jobs:
           # dazwischenfunkt.
           SICHERUNG=/tmp/ntfy_meine.json
           cp ntfy_ids.json "$SICHERUNG" 2>/dev/null || echo '[]' > "$SICHERUNG"
+          # Dasselbe fuer das Trigger-Logbuch: 'git reset --hard' unten
+          # wuerfe die Zeilen DIESES Laufs weg, also vorher sichern und
+          # danach wieder einarbeiten. Die Datei waechst nur an, deshalb
+          # ist Vereinen hier gefahrlos.
+          LOGBUCH=/tmp/trigger_meines.jsonl
+          cp trigger_logbuch.jsonl "$LOGBUCH" 2>/dev/null || : > "$LOGBUCH"
           for versuch in 1 2 3; do
             git fetch --quiet origin main
             git reset --hard --quiet FETCH_HEAD
             python ntfy_verlauf.py --vereinen "$SICHERUNG"
+            python trigger_logbuch.py --vereinen "$LOGBUCH" || true
             git add -A -- ntfy_ids.json 2>/dev/null || true
+            git add -A -- trigger_logbuch.jsonl 2>/dev/null || true
             if git diff --cached --quiet; then
               echo "Keine neuen Meldungen zu merken."
               break
             fi
-            git commit -q -m "ntfy-Verlauf: Kennungen der verschickten Meldungen"
+            git commit -q -m "ntfy-Verlauf und Trigger-Logbuch des Wächterlaufs"
             if git push --quiet origin main; then
               echo "ntfy-Kennungen gesichert."
               break

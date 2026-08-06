@@ -29,6 +29,14 @@ from config import CFG, letzter_putz_tag
 
 ZUSTANDSDATEIEN = ["fortschritt.json", "radar_state.json", "watcher_state.json"]
 
+# NICHT AUFRÄUMEN, niemals: trigger_logbuch.jsonl. Es ist kein Zustand,
+# sondern das Gedächtnis — jedes je erkannte Signal, gekauft oder nicht.
+# Sein einziger Zweck ist die spätere Auswertung, und die braucht gerade
+# die alten Einträge. Wer es leert, verliert die Messgrundlage für jedes
+# "per Mitschreiben verfeinern" aus Gerhards Übergaben.
+# Ebenso wenig gehört positionen.json hierher: Eine offene Position lebt,
+# solange sie offen ist, und nicht bis zum nächsten Handelstag.
+
 
 # ---------------------------------------------------------------------------
 # 1) Zustands-Aufräumer

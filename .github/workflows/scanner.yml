@@ -99,6 +99,11 @@ jobs:
           # weder Einstiegskurs noch Datum und keine Regel der Ebenen
           # 2 und 3 kann greifen.
           git add -A -- positionen.json 2>/dev/null || true
+          # Das Trigger-Logbuch: JEDES Signal, gekauft oder nicht. Es
+          # waechst nur und wird nie geleert — ohne diesen Weg zurueck
+          # ins Repo waere es nach jedem Cloud-Lauf weg, und dann liesse
+          # sich nie messen, was die Regeln getaugt haetten.
+          git add -A -- trigger_logbuch.jsonl 2>/dev/null || true
           if git diff --cached --quiet; then
             echo "Keine Änderung gegenüber dem letzten Scan."
           else

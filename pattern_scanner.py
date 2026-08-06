@@ -53,6 +53,7 @@ import ntfy_verlauf   # merkt sich jede verschickte Meldung fuer den Freitags-Pu
 import positionen     # offene Positionen samt Exit-Regelwerk
 import red_to_green   # Kapitel 9: Fokusliste fuer den Live-Waechter
 import shakeout       # Kapitel 10: Spring samt Sekundaertest-Warteliste
+import trigger_logbuch  # schreibt jedes Signal mit, gekauft oder nicht
 from config import CFG as ZENTRAL, hoechstens, mind_erreicht, pruefe_config
 
 pruefe_config()       # faengt widerspruechliche Schwellwerte sofort ab
@@ -893,6 +894,59 @@ def shakeout_durchgang(loaded: dict) -> list[dict]:
     return signale
 
 
+def crash_support_durchgang(loaded: dict, api_key, limiter) -> list[dict]:
+    """Kapitel 8, REKONSTRUIERT — laeuft nur zur Beobachtung mit.
+
+    Die Funde gehen ins Trigger-Logbuch und auf den Bildschirm, aber
+    NICHT in die Excel-Mappe und in keine Push-Meldung. Grund steht im
+    Kopf von crash_support.py: Von Kapitel 8 gibt es nur fuenf Zahlen
+    und einen Satz zum Stopp; Ausloeser, Kaufpunkt und Ziel sind
+    abgeleitet. Solange Gerhard das nicht bestaetigt hat, wird danach
+    nicht gehandelt.
+
+    Die Strategie ruht ausserdem meistens: Sie ist nur scharf, wenn der
+    SPY mindestens 10 % unter seinem 52-Wochen-Hoch steht. Gemessen an
+    fuenf Jahren waren das 13 % aller Handelstage."""
+    import crash_support
+
+    # Der Scanner führt die Spalten klein geschrieben, crash_support
+    # erwartet Yahoos Schreibweise — übersetzt wird an genau der Stelle,
+    # die Kapitel 10 dafür schon hat.
+    roh_index = fetch_history(crash_support.INDEX, api_key, limiter)
+    if roh_index is None:
+        print("Kapitel 8: kein Indexkurs — übersprungen.")
+        return []
+    df_index = shakeout.aus_scanner_df(roh_index)
+    scharf, rueck = crash_support.regime_scharf(df_index)
+    if rueck is None:
+        print("Kapitel 8: kein Indexkurs — übersprungen.")
+        return []
+    if not scharf:
+        print(f"Kapitel 8 (Crash-Support): ruht — {crash_support.INDEX} steht "
+              f"{rueck*100:+.1f} % unter dem 52-Wochen-Hoch, scharf ab "
+              f"{ZENTRAL['crash_support']['regime_index_drawdown']*100:.0f} %.")
+        return []
+
+    kennzahlen = crash_support.hole_kennzahlen(list(loaded))
+    signale = []
+    for ticker, (df, company) in loaded.items():
+        try:
+            s = crash_support.pruefe(shakeout.aus_scanner_df(df),
+                                     kennzahlen.get(ticker, {}), df_index,
+                                     ticker=ticker, firma=company)
+        except Exception as e:
+            print(f"    Kapitel-8-Fehler bei {ticker}: {type(e).__name__}: {e}")
+            continue
+        if s:
+            signale.append(s)
+
+    if signale:
+        trigger_logbuch.protokolliere_viele(signale, quelle="scanner/kapitel8")
+    print(f"Kapitel 8 (Crash-Support): scharf ({rueck*100:+.1f} %), "
+          f"{len(signale)} Beobachtung(en) — nur ins Logbuch, nicht in die Mappe.")
+    return signale
+
+
 def exit_durchgang(loaded: dict) -> list[dict]:
     """Das Exit-Regelwerk einmal taeglich gegen alle offenen Positionen.
 
@@ -1263,8 +1317,36 @@ def main():
     # Kapitel 9: die Fokusliste fuer den Live-Waechter von morgen.
     fokusliste_schreiben(loaded)
 
+    # Kapitel 8, rekonstruiert: laeuft nur mit, meldet nur ins Logbuch.
+    crash_support_durchgang(loaded, api_key, limiter)
+
     # Das Exit-Regelwerk gegen die offenen Positionen (Gerhard, 05.08.2026).
     exit_meldungen = exit_durchgang(loaded)
+
+    # Alles Gefundene mitschreiben — auch was nicht gekauft wird. Ohne
+    # das bleibt jedes "per Mitschreiben verfeinern" aus den Uebergaben
+    # ein frommer Wunsch, weil die Signale nach der Meldung weg sind.
+    trigger_logbuch.protokolliere_viele(
+        [{"ticker": s["symbol"], "firma": s.get("firma", ""),
+          "strategie": "Shakeout-Spring", "kaufpunkt": s["kaufpunkt"],
+          "stop": s["stop"], "ziel": s["kursziel"],
+          "volumen_typ": s.get("volumen_typ", "")} for s in shakeout_signale],
+        quelle="scanner/kapitel10")
+    # Ein Eintrag je MUSTER, nicht je Aktie: Jedes Muster hat seinen
+    # eigenen Kaufpunkt und Stopp, und genau die will man spaeter
+    # gegeneinander messen koennen. Fallback-Punkte bleiben draussen,
+    # sie sind kein Signal.
+    trigger_logbuch.protokolliere_viele(
+        [{"ticker": r["ticker"], "firma": r.get("company", ""),
+          "strategie": p["strategie"], "kaufpunkt": p.get("kaufpunkt"),
+          "stop": p.get("stop"), "ziel": p.get("ziel"),
+          "status": p.get("status", ""),
+          "rs": r["res"].get("rs"), "trend_template": r["res"].get("tt_pass"),
+          "schluss": r["res"].get("close")}
+         for r in rows if r["res"]["pattern_count"] >= 1
+         for p in r["res"]["points"]
+         if not p["strategie"].startswith("Fallback")],
+        quelle="scanner/nachtlauf")
 
     write_excel(rows, args.out)
     print(f"\nFertig → {args.out}")

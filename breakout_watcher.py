@@ -53,6 +53,7 @@ except ImportError:
 import ntfy_verlauf   # merkt sich jede verschickte Meldung fuer den Freitags-Putz
 import red_to_green   # Kapitel 9: Volumen-Signatur an der Kreuzung
 import exit_regeln    # Exit-Regelwerk: Stops, Gewinnabsicherung
+import trigger_logbuch  # schreibt jedes Signal mit, gemeldet oder nicht
 import volumen        # IBD Volume % Change — die EINZIGE Volumenrechnung
 from config import CFG, hoechstens, mind_erreicht, pruefe_config
 from kurs_cache import KursCache, Kurswert
@@ -1544,6 +1545,9 @@ def main():
 
     state = load_state()
     schon_gemeldet = set(state["gemeldet"])
+    # Was in DIESEM Lauf schon im Trigger-Logbuch steht. Getrennt von
+    # schon_gemeldet, das erst ein erfolgreicher Push fuellt.
+    _im_logbuch = set()
 
     # ZWEI TAKTE STATT EINEM (Mathias, 28.07.2026: "Stelle auf Echtzeit um").
     #
@@ -1792,6 +1796,33 @@ def main():
                 if uebersprungen:
                     print(f"{uebersprungen} Treffer ohne Volumenbestätigung — bleiben "
                           "offen und werden weiter beobachtet.")
+
+            # INS LOGBUCH kommt JEDER erkannte Ausbruch — auch der ohne
+            # Volumenbestaetigung, auch der im Trockenlauf, auch der,
+            # dessen Push scheitert. Das Logbuch fragt nicht, ob gemeldet
+            # oder gekauft wurde, sondern was das Regelwerk gesehen hat;
+            # nur so laesst sich spaeter messen, ob die aussortierten
+            # Treffer wirklich die schlechteren waren. Eigener Merker,
+            # weil schon_gemeldet erst nach erfolgreichem Push gesetzt
+            # wird — sonst gaebe es je Fehlversuch einen Eintrag.
+            _melde_schluessel = {t["key"] for t in zu_melden}
+            for t in neu:
+                if t["key"] in _im_logbuch:
+                    continue
+                _im_logbuch.add(t["key"])
+                trigger_logbuch.protokolliere(
+                    {"ticker": t.get("ticker"), "firma": t.get("firma", ""),
+                     "strategie": t.get("strategie"),
+                     "kaufpunkt": t.get("kaufpunkt"), "kurs": t.get("kurs"),
+                     "stop": t.get("stop"), "ziel": t.get("ziel"),
+                     "vol_ratio": t.get("vol_ratio"),
+                     "vol_noetig": t.get("vol_noetig"),
+                     "vol_bestaetigt": t.get("vol_ok"),
+                     "vol_anteil": t.get("vol_anteil"),
+                     "ueber_pct": t.get("ueber_pct"),
+                     "gemeldet": t["key"] in _melde_schluessel,
+                     "trockenlauf": bool(args.dry_run)},
+                    quelle="waechter")
 
             # SENDESPERRE NACH FEHLSCHLAG. Frueher lag zwischen zwei
             # Versuchen die volle Runde; jetzt sind es zwei Sekunden. Ohne

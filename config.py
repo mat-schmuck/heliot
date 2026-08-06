@@ -328,6 +328,12 @@ CFG = {
         "max_debt_to_equity": 0.5,
         "level_score_schwelle": 60,
         "regime_index_drawdown": -0.10,  # SPY ≥ 10 % unter Hoch
+        # ABGELEITET, nicht von Gerhard: Er nennt keinen Auslöser.
+        # "zone_schluss"    Schlusskurs IN der Zone — die Unterstützung
+        #                   hat auf Schlusskursbasis gehalten (Vorgabe).
+        # "rueckeroberung"  Zone unterschritten, Schluss wieder darüber.
+        "trigger": "zone_schluss",
+        "kursziel_faktor": 1.0,          # Zonenhöhe einmal auf die Oberkante
     },
     "bottom_fishing": {
         "rsi_periode": 2,
