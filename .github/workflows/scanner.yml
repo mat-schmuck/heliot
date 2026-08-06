@@ -94,6 +94,11 @@ jobs:
           # denselben Weg zurueck ins Repo wie ntfy_ids.json.
           git add -A -- fokusliste.json 2>/dev/null || true
           git add -A -- shakeout_warteliste.json 2>/dev/null || true
+          # Die offenen Positionen (Exit-Regelwerk, Gerhard 05.08.2026).
+          # Sie muessen ueber Tage ueberleben, sonst kennt das System
+          # weder Einstiegskurs noch Datum und keine Regel der Ebenen
+          # 2 und 3 kann greifen.
+          git add -A -- positionen.json 2>/dev/null || true
           if git diff --cached --quiet; then
             echo "Keine Änderung gegenüber dem letzten Scan."
           else

@@ -50,6 +50,7 @@ from scipy.stats import linregress
 
 import cup_handle_v2  # Cup & Handle auf Wochenbasis, "Giant Base"
 import ntfy_verlauf   # merkt sich jede verschickte Meldung fuer den Freitags-Putz
+import positionen     # offene Positionen samt Exit-Regelwerk
 import red_to_green   # Kapitel 9: Fokusliste fuer den Live-Waechter
 import shakeout       # Kapitel 10: Spring samt Sekundaertest-Warteliste
 from config import CFG as ZENTRAL, pruefe_config
@@ -891,6 +892,51 @@ def shakeout_durchgang(loaded: dict) -> list[dict]:
     return signale
 
 
+def exit_durchgang(loaded: dict) -> list[dict]:
+    """Das Exit-Regelwerk einmal taeglich gegen alle offenen Positionen.
+
+    Hier und nicht im Waechter, aus zwei Gruenden: Die Regeln pruefen
+    ausdruecklich auf SCHLUSSKURS-Basis (ein Docht darunter loest nicht
+    aus), und der Nachtscan hat die Tagesdaten ohnehin schon geholt.
+
+    Der Zaehler der Handelstage kommt aus der Kurshistorie, nicht aus
+    dem Kalender: Die Acht-Wochen-Regel zaehlt HANDELStage, und
+    Feiertage wuerden die Frist sonst verkuerzen."""
+    bestand = positionen.laden()
+    offen = [e for e in bestand.values() if e.get("status") == "offen"]
+    if not offen:
+        return []
+
+    kurse, ma21, ma50 = {}, {}, {}
+    heute_index = 0
+    for ticker, (df, _) in loaded.items():
+        if ticker not in bestand:
+            continue
+        kurse[ticker] = float(df["close"].iloc[-1])
+        if len(df) >= 21:
+            ma21[ticker] = float(df["close"].tail(21).mean())
+        if len(df) >= 50:
+            ma50[ticker] = float(df["close"].tail(50).mean())
+        heute_index = max(heute_index, len(df))
+
+    # Einstiegs-Index nachtragen, wo er noch fehlt: Beim Eroeffnen ueber
+    # die Befehlszeile ist er null, hier steht die Historie zur Verfuegung.
+    for ticker, e in bestand.items():
+        if e.get("status") == "offen" and not e.get("einstieg_index"):
+            df = loaded.get(ticker, (None, None))[0]
+            if df is not None and "datetime" in df.columns:
+                vorher = df[df["datetime"].astype(str) <= e["einstieg_datum"]]
+                e["einstieg_index"] = int(len(vorher))
+
+    meldungen = positionen.pruefe_bestand(
+        bestand, kurse, heute_index, ma21=ma21, ma50=ma50)
+    positionen.speichern(bestand)
+    noch_offen = sum(1 for e in bestand.values() if e.get("status") == "offen")
+    print(f"Exit-Regelwerk: {len(offen)} offene Position(en) geprueft, "
+          f"{len(meldungen)} Meldung(en), {noch_offen} bleiben offen.")
+    return meldungen
+
+
 def fokusliste_schreiben(loaded: dict) -> int:
     """Kapitel 9: die Bedingungen, die schon am Vorabend feststehen.
 
@@ -1216,8 +1262,19 @@ def main():
     # Kapitel 9: die Fokusliste fuer den Live-Waechter von morgen.
     fokusliste_schreiben(loaded)
 
+    # Das Exit-Regelwerk gegen die offenen Positionen (Gerhard, 05.08.2026).
+    exit_meldungen = exit_durchgang(loaded)
+
     write_excel(rows, args.out)
     print(f"\nFertig → {args.out}")
+
+    # Die Exit-Meldungen zuerst: Was zu VERKAUFEN ist, ist dringlicher als
+    # der naechste Kaufpunkt.
+    if exit_meldungen:
+        print("\nExit-Regelwerk, fällige Handlungen:")
+        for m in exit_meldungen:
+            print("  " + positionen.melde_text(m))
+
     if shakeout_signale:
         print("\nShakeout-Spring, Sekundaertest bestaetigt:")
         for s in shakeout_signale:
