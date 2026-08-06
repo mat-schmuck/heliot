@@ -26,6 +26,7 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
+import exit_regeln
 import pattern_scanner as ps
 
 st.set_page_config(page_title="Chart-Screening-Tool", page_icon="📈", layout="wide")
@@ -157,7 +158,10 @@ def zeige_ergebnis(ticker: str, df: pd.DataFrame, res: dict, mit_chart: bool = T
     for i, p in enumerate(res["points"], 1):
         ist_muster = not p["strategie"].startswith("Fallback")
         abstand = (p["kaufpunkt"] / kurs - 1) * 100
-        risiko = (p["kaufpunkt"] / p["stop"] - 1) * 100 if p["stop"] else None
+        # Abstand vom Kaufpunkt zum Stop, in Prozent DES KAUFPUNKTS.
+        # Bis 06.08.2026 wurde hier durch den Stop geteilt statt durch den
+        # Kaufpunkt — dasselbe Loch wie im Wächter (Gerhard, 06.08.2026).
+        risiko = exit_regeln.risiko_pct(p["kaufpunkt"], p["stop"])
         with st.container(border=True):
             k1, k2 = st.columns([3, 2])
             with k1:

@@ -49,6 +49,7 @@ from scipy.signal import argrelextrema
 from scipy.stats import linregress
 
 import cup_handle_v2  # Cup & Handle auf Wochenbasis, "Giant Base"
+import exit_regeln    # Stop-Deckel und die eine Risiko-Formel
 import ntfy_verlauf   # merkt sich jede verschickte Meldung fuer den Freitags-Putz
 import positionen     # offene Positionen samt Exit-Regelwerk
 import red_to_green   # Kapitel 9: Fokusliste fuer den Live-Waechter
@@ -1079,6 +1080,42 @@ def analyze(df: pd.DataFrame, rs_percentile: float | None) -> dict:
                 break
             if all(fb["strategie"] != p["strategie"] for p in points):
                 points.append(fb)
+
+    # ZWEI MUSTER AUF DEMSELBEN KAUFPUNKT bekamen bisher zwei
+    # VERSCHIEDENE Stops (Gerhard, 06.08.2026, an ANRO aufgefallen: Cup &
+    # Handle wollte 23,17, die Darvas Box 25,65 — bei identischem
+    # Kaufpunkt 28,86). Die Detektoren kennen einander nicht, jeder
+    # rechnet seinen eigenen Bruchpunkt.
+    # Der ENGERE Stop gewinnt, dieselbe Regel, nach der der Waechter
+    # gleiche Preise zusammenlegt. Der Kaufpunkt bleibt zweimal stehen,
+    # damit sichtbar bleibt, welche Muster erfuellt sind; zu zwei
+    # MELDUNGEN fuehrt das nicht, das verhindert der Waechter seit dem
+    # 28.07.2026 (gemessen: genau diese 7 Faelle legt er zusammen).
+    nach_preis = {}
+    for p in points:
+        if p.get("stop") is None or p.get("kaufpunkt") is None:
+            continue
+        schluessel = round(p["kaufpunkt"], 2)
+        nach_preis.setdefault(schluessel, []).append(p)
+    for gleiche in nach_preis.values():
+        if len(gleiche) < 2:
+            continue
+        engster = max(g["stop"] for g in gleiche)
+        for g in gleiche:
+            if g["stop"] != engster:
+                g["stop_eigen"] = g["stop"]      # was dieses Muster wollte
+                g["stop"] = engster
+
+    # DER ZEHN-PROZENT-DECKEL, an der einen Stelle, durch die JEDER
+    # Kaufpunkt muss — Muster wie Fallbacks (Gerhard, 06.08.2026).
+    # Die Regel stand immer im Regelwerk: stop = max(strukturpunkt,
+    # kaufpunkt * 0,90). Nur rief sie niemand auf. Jeder Detektor gab
+    # seinen Strukturpunkt roh zurueck, und der wanderte unveraendert in
+    # die Mappe: 344 von 1098 Paaren lagen ueber dem Deckel (31 %), der
+    # weiteste bei 73,2 % (WLFC). Ein Stop 73 % unter dem Kaufpunkt ist
+    # kein Stop.
+    for p in points:
+        exit_regeln.deckel_anwenden(p)
 
     return {
         "close": float(last["close"]),

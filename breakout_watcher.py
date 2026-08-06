@@ -453,7 +453,45 @@ def load_watchlist(xlsx_path: str, nur_muster: bool) -> list[dict]:
                 "stop": None if pd.isna(stop) else float(stop),
                 "ziel": None if (ziel is None or pd.isna(ziel) or ziel == "") else float(ziel),
             })
-    return _lege_gleiche_preise_zusammen(items)
+    return _lege_gleiche_preise_zusammen(_deckel_nachziehen(items))
+
+
+def _deckel_nachziehen(items: list[dict]) -> list[dict]:
+    """SCHUTZNETZ: Den Zehn-Prozent-Deckel auf jeden eingelesenen Stop.
+
+    Zustaendig ist eigentlich der Scanner — seit 06.08.2026 deckelt er
+    jeden Kaufpunkt, bevor er in die Mappe geht. Der Waechter liest die
+    Mappe aber auch dann, wenn sie von einem aelteren Lauf stammt, und
+    genau so entstand der Fehler: 344 von 1098 Paaren mit einem Risiko
+    ueber dem Deckel, bis zu 73,2 %.
+
+    ABSICHTLICH KORRIGIEREND STATT ABBRECHEND. Gerhard wollte eine
+    Assertion, die feuert, bevor eine Meldung rausgeht; die sitzt in
+    exit_regeln.risiko_pct() und bleibt scharf. Sie hier hart werfen zu
+    lassen haette aber den GANZEN Handelstag fuer ALLE Aktien beendet,
+    weil eine einzige alte Zeile in der Mappe steht. Der Waechter zieht
+    den Stop deshalb selbst nach, sagt laut, welche Zeilen betroffen
+    waren, und meldet weiter. Danach kann risiko_pct() nicht mehr
+    ausloesen, ohne dass wirklich etwas kaputt ist."""
+    korrigiert = []
+    for it in items:
+        _, geaendert = exit_regeln.deckel_anwenden(it)
+        if geaendert:
+            korrigiert.append(it)
+    if korrigiert:
+        print(f"  ⚠ {len(korrigiert)} Stop(s) aus der Mappe lagen weiter als "
+              f"{CFG['exit']['stop_deckel_pct']*100:.0f} % unter dem Kaufpunkt "
+              f"und wurden nachgezogen (die Mappe ist älter als der Scanner):")
+        for it in sorted(korrigiert,
+                         key=lambda x: -(x["kaufpunkt"] - x["stop_struktur"])
+                         / x["kaufpunkt"])[:10]:
+            alt = (it["kaufpunkt"] - it["stop_struktur"]) / it["kaufpunkt"] * 100
+            print(f"      {it['ticker']:6s} {it['strategie'][:24]:24s} "
+                  f"Kaufpunkt {it['kaufpunkt']:.2f}; Stop {it['stop_struktur']:.2f} "
+                  f"({alt:.1f} %) auf {it['stop']:.2f} nachgezogen")
+        if len(korrigiert) > 10:
+            print(f"      … und {len(korrigiert) - 10} weitere.")
+    return items
 
 
 def _lege_gleiche_preise_zusammen(items: list[dict]) -> list[dict]:
@@ -1058,7 +1096,10 @@ def format_treffer(t: dict) -> str:
     ]
     schluss = []
     if t["stop"] is not None:
-        risiko = (t["kurs"] / t["stop"] - 1) * 100
+        # Abstand vom KAUFPUNKT zum Stop, in Prozent des Kaufpunkts.
+        # Bis 06.08.2026 stand hier (kurs / stop - 1): falscher Bezugswert
+        # UND falscher Nenner. Bei MNPR ergab das 60,7 % statt 37,4 %.
+        risiko = exit_regeln.risiko_pct(t["kaufpunkt"], t["stop"])
         schluss.append(f"Stop {t['stop']:.2f}, Risk {risiko:.1f}%")
     if t["ziel"] is not None:
         chance = (t["ziel"] / t["kurs"] - 1) * 100

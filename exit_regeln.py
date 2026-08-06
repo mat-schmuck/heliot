@@ -52,6 +52,7 @@ Aufruf:
 """
 
 import argparse
+import math
 import sys
 from dataclasses import dataclass
 
@@ -114,9 +115,70 @@ def berechne_initialen_stop(einstieg, struktur_bruchpunkt):
 
     Rueckgabe: (stop, quelle) mit quelle 'struktur' oder 'deckel'."""
     deckel = einstieg * (1 - CFG["stop_deckel_pct"])
+    # AUF DEN NAECHSTEN CENT NACH OBEN, nicht kaufmaennisch runden. Sonst
+    # verletzt die Rundung selbst die Regel: 28,86 mal 0,90 ergibt 25,974,
+    # kaufmaennisch 25,97 — und damit ein Risiko von 10,01 %. Nach oben
+    # gerundet sind es 25,98 und 9,98 %. Der Unterschied ist ein Cent, die
+    # Richtung ist die sichere (Gefunden am 06.08.2026 von der eigenen
+    # Pruefung, unmittelbar nachdem die Assertion eingebaut war).
+    deckel_cent = math.ceil(deckel * 100 - 1e-9) / 100
     if struktur_bruchpunkt is None or struktur_bruchpunkt < deckel:
-        return round(deckel, 2), "deckel"
-    return round(struktur_bruchpunkt, 2), "struktur"
+        return deckel_cent, "deckel"
+    # Auch der Strukturpunkt wird auf Cent gerundet und kann dabei unter
+    # den Deckel rutschen, wenn er knapp darueber lag.
+    return max(round(struktur_bruchpunkt, 2), deckel_cent), "struktur"
+
+
+def risiko_pct(kaufpunkt, stop):
+    """Der Abstand vom KAUFPUNKT zum Stop, in Prozent des Kaufpunkts.
+
+    DIE EINZIGE richtige Formel. Vorher rechneten Waechter und
+    Streamlit-App (kurs - stop) / stop bzw. (kaufpunkt - stop) / stop,
+    also durch den STOP statt durch den Kaufpunkt, im Waechter zusaetzlich
+    mit dem aktuellen Kurs statt dem Kaufpunkt. Bei MNPR zeigte das 60,7 %
+    an, wo der tatsaechliche Abstand 37,4 % betrug (Gerhard, 06.08.2026).
+    Der Anzeigefehler machte die zu weiten Stops noch weiter, als sie
+    ohnehin waren, und verdeckte dabei, dass der Deckel gar nicht griff.
+
+    Gerhards Regel dazu ist absolut: Es gibt keinen legitimen Fall, in dem
+    das Risiko ueber dem Deckel liegt. Jeder hoehere Wert ist der Beweis
+    fuer einen Fehler, deshalb wirft diese Funktion, statt ihn
+    weiterzureichen. Wer einen Stop erst deckeln will, ruft vorher
+    berechne_initialen_stop() oder deckel_anwenden()."""
+    if kaufpunkt is None or stop is None or kaufpunkt <= 0:
+        return None
+    pct = (kaufpunkt - stop) / kaufpunkt * 100
+    grenze = CFG["stop_deckel_pct"] * 100
+    # Gleitkomma-Spiel: einstieg * 0,90 trifft die 10,0 nicht exakt.
+    if pct > grenze + 1e-6:
+        raise ValueError(
+            f"Risiko {pct:.1f} % über dem Deckel von {grenze:.0f} % "
+            f"(Kaufpunkt {kaufpunkt}, Stop {stop}). Der Stop wurde nicht "
+            f"gedeckelt — berechne_initialen_stop() wurde übersprungen.")
+    return pct
+
+
+def deckel_anwenden(punkt):
+    """Den Zehn-Prozent-Deckel auf einen fertigen Musterfund anwenden.
+
+    Nimmt ein dict mit 'kaufpunkt' und 'stop' und gibt (punkt, korrigiert)
+    zurueck, den Stop notfalls hochgezogen.
+
+    Hier und nicht in jedem Detektor: Am 06.08.2026 lagen 344 von 1098
+    Kaufpunkt-Stop-Paaren in der Mappe ueber dem Deckel (31 %, der
+    weiteste bei 73,2 %), weil JEDER Detektor seinen Strukturpunkt roh
+    zurueckgab und den Deckel niemand aufrief. Eine Stelle, durch die
+    alles muss, ist die einzige Bauart, die das dauerhaft verhindert."""
+    kp, stop = punkt.get("kaufpunkt"), punkt.get("stop")
+    if kp is None or stop is None or kp <= 0:
+        return punkt, False
+    neu, quelle = berechne_initialen_stop(kp, stop)
+    if quelle != "deckel" or neu == stop:
+        return punkt, False
+    punkt["stop_struktur"] = stop        # was das Muster wollte
+    punkt["stop"] = neu
+    punkt["stop_gedeckelt"] = True
+    return punkt, True
 
 
 def ist_stop_gebrochen(schlusskurs, stop):
@@ -258,6 +320,61 @@ def selbsttest() -> int:
     s, q = berechne_initialen_stop(100.0, None)
     pruefe("Ohne Strukturpunkt greift der Deckel",
            s == 90.0 and q == "deckel")
+
+    # 1b — Die Risiko-Formel und die Assertion (Gerhard, 06.08.2026)
+    pruefe("Risiko rechnet vom KAUFPUNKT aus, nicht vom Stop",
+           abs(risiko_pct(120.29, 108.30) - 9.968) < 0.01,
+           f"{risiko_pct(120.29, 108.30):.2f} %")
+    pruefe("Enger Stop ergibt kleines Risiko",
+           abs(risiko_pct(100.0, 96.0) - 4.0) < 1e-9)
+    pruefe("Genau am Deckel geht durch (Gleitkomma)",
+           abs(risiko_pct(100.0, 90.0) - 10.0) < 1e-9)
+    # DIE EIGENTLICHE INVARIANTE: Was berechne_initialen_stop liefert,
+    # darf die Assertion NIE ausloesen — bei keinem Kurs. Genau daran
+    # scheiterte die erste Fassung: Sie rundete den Deckel kaufmaennisch,
+    # und bei 28,86 ergab das 25,97 statt 25,98, also 10,01 % Risiko.
+    schlechte = []
+    for cent in range(50, 100000, 137):        # 0,50 bis 1000,00 in Schritten
+        kp = cent / 100
+        for struktur in (None, kp * 0.5, kp * 0.895, kp * 0.9, kp * 0.99):
+            s, _ = berechne_initialen_stop(kp, struktur)
+            try:
+                risiko_pct(kp, s)
+            except ValueError:
+                schlechte.append((kp, struktur, s))
+    pruefe("Kein einziger Kurs erzeugt einen Stop über dem Deckel",
+           not schlechte,
+           f"{len(schlechte)} Fälle, erster: {schlechte[0] if schlechte else ''}")
+    try:
+        risiko_pct(152.78, 92.47)      # FTNT, Gerhards Fall
+        geworfen = False
+    except ValueError:
+        geworfen = True
+    pruefe("Risiko über dem Deckel wirft einen Fehler (FTNT 39,5 %)", geworfen)
+    pruefe("Fehlender Stop ergibt None statt eines Fehlers",
+           risiko_pct(100.0, None) is None)
+
+    # 1c — Der Deckel auf einen fertigen Musterfund
+    p, geaendert = deckel_anwenden({"kaufpunkt": 152.78, "stop": 92.47})
+    pruefe("Zu weiter Stop wird nachgezogen",
+           geaendert and p["stop"] == 137.51, f"Stop {p['stop']}")
+    pruefe("Der ursprüngliche Strukturpunkt bleibt vermerkt",
+           p["stop_struktur"] == 92.47 and p["stop_gedeckelt"])
+    pruefe("Danach ist das Risiko genau am Deckel",
+           risiko_pct(p["kaufpunkt"], p["stop"]) <= 10.0 + 1e-9,
+           f"{risiko_pct(p['kaufpunkt'], p['stop']):.2f} %")
+    p, geaendert = deckel_anwenden({"kaufpunkt": 100.0, "stop": 96.0})
+    pruefe("Ein enger Stop bleibt unangetastet",
+           not geaendert and p["stop"] == 96.0 and "stop_gedeckelt" not in p)
+    p, geaendert = deckel_anwenden({"kaufpunkt": 100.0, "stop": None})
+    pruefe("Ohne Stop passiert nichts", not geaendert)
+    # ANRO: Beide Muster feuerten auf demselben Kaufpunkt mit
+    # verschiedenen Stops (25,65 und 23,17). Nach dem Deckel sind beide
+    # gleich — der Widerspruch loest sich von selbst auf.
+    a, _ = deckel_anwenden({"kaufpunkt": 28.86, "stop": 25.65})
+    b, _ = deckel_anwenden({"kaufpunkt": 28.86, "stop": 23.17})
+    pruefe("ANRO: zwei Muster, ein Kaufpunkt, nachher derselbe Stop",
+           a["stop"] == b["stop"] == 25.98, f"{a['stop']} und {b['stop']}")
 
     # 2 — Schlusskurs statt Docht
     pruefe("Ein Docht darüber löst nicht aus",
