@@ -8,7 +8,30 @@ on:
   # Fehler-E-Mail geht an Mathias. Das Sendefenster fuer die
   # Treffer-Nachricht (00-01 Uhr Wien, siehe unten) bleibt unveraendert
   # wirksam, weil es im Schritt selbst geprueft wird.
-  workflow_dispatch: {}        # manueller Start jederzeit möglich
+  # SEIT 07.08.2026 DARF DIESER ABLAUF OEFTER ANGESTOSSEN WERDEN.
+  # Anlass: Am 06.08. hatte GitHub Actions eine schwere Stoerung, der
+  # Nachtscan um 18:00 New York bekam keinen Rechner und fiel aus. Bei
+  # EINEM Termin am Tag heisst das: 24 Stunden mit veralteten
+  # Kaufpunkten, und niemand merkt es.
+  #
+  # cron-job.org kann selbst NICHTS pruefen — es schickt eine Anfrage
+  # und sieht die Antwort nicht an. Die Bedingung sitzt deshalb HIER:
+  # Der Ablauf wird alle zehn Minuten angestossen und endet nach wenigen
+  # Sekunden wieder, wenn der faellige Scan schon geglueckt ist. Erst
+  # wenn er fehlt, laeuft der teure Teil (siehe scan_noetig.py).
+  workflow_dispatch:
+    inputs:
+      erzwingen:
+        description: "Auch scannen, wenn der fällige Scan schon geglückt ist (ja/nein)"
+        required: false
+        default: "nein"
+
+# Zwei Scans duerfen sich nie ueberschneiden — sie schreiben dieselben
+# Dateien. Ohne Abbrechen: Ein zweiter Anstoss wartet, statt den
+# laufenden zu zerschiessen.
+concurrency:
+  group: pattern-scanner
+  cancel-in-progress: false
 
 jobs:
   scan:
@@ -20,13 +43,24 @@ jobs:
     permissions:
       contents: write
     steps:
+      # Die Pruefung steht ganz vorn, damit ein ueberfluessiger Anstoss
+      # nach Sekunden endet statt nach Minuten. Sie braucht nur den
+      # Quelltext und Bordmittel — kein pip, kein Schluessel.
       - uses: actions/checkout@v4
 
+      - name: Ist der fällige Scan schon erledigt?
+        id: pruefung
+        env:
+          ERZWINGEN: ${{ github.event.inputs.erzwingen }}
+        run: python3 scan_noetig.py
+
       - uses: actions/setup-python@v5
+        if: steps.pruefung.outputs.noetig == 'ja'
         with:
           python-version: "3.12"
 
       - name: Abhängigkeiten
+        if: steps.pruefung.outputs.noetig == 'ja'
         run: |
           pip install requests pandas numpy scipy openpyxl yfinance playwright
           playwright install chromium --with-deps
@@ -38,6 +72,7 @@ jobs:
       # morgens Alarme neu, die im Fruehhandel schon ausgeloest hatten,
       # und Mathias bekam Doppelsignale.
       - name: Session laden
+        if: steps.pruefung.outputs.noetig == 'ja'
         uses: actions/cache@v4
         with:
           path: session.json
@@ -45,6 +80,7 @@ jobs:
           restore-keys: traderfox-state-
 
       - name: Scanner ausführen
+        if: steps.pruefung.outputs.noetig == 'ja'
         env:
           TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
         # Sendefenster 00:00-01:59 Wiener Zeit (Mathias, 24.07.2026):
@@ -67,6 +103,7 @@ jobs:
             --rate 8
 
       - name: Excel als Artifact hochladen
+        if: steps.pruefung.outputs.noetig == 'ja'
         uses: actions/upload-artifact@v4
         with:
           name: kaufpunkte
@@ -79,6 +116,7 @@ jobs:
       # erreichbar. Der Push loest keine anderen Workflows aus (alle laufen
       # nur per Zeitplan oder Knopfdruck); Streamlit startet die App kurz neu.
       - name: Ergebnis für die Heliot-Anzeige veröffentlichen
+        if: steps.pruefung.outputs.noetig == 'ja'
         run: |
           cp kaufpunkte.xlsx kaufpunkte_aktuell.xlsx
           git config user.name "pattern-scanner"
