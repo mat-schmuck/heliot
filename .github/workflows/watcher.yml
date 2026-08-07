@@ -30,10 +30,6 @@ on:
         description: "Minuten am Stück wachen (0 = einmal prüfen). 390 = ganzer Handelstag."
         required: false
         default: "0"
-      volalarm:
-        description: "Testalarm mit echten Volumenwerten für diese Kürzel (Komma-Liste, z. B. ATS). Leer = normale Wache."
-        required: false
-        default: ""
 
 # Verhindert, dass sich zwei Läufe überschneiden
 concurrency:
@@ -110,13 +106,6 @@ jobs:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
           NTFY_EMAIL: ${{ secrets.NTFY_EMAIL }}
         run: |
-          # Testalarm mit echten Volumenwerten: braucht weder Kaufpunkte
-          # noch Dauerwache, rechnet aber mit der aktuellen Volumenformel
-          # (eigene Kurve je Aktie) und schickt EINE Meldung.
-          if [ -n "${{ github.event.inputs.volalarm }}" ]; then
-            python breakout_watcher.py --volalarm "${{ github.event.inputs.volalarm }}"
-            exit $?
-          fi
           if [ ! -f kaufpunkte.xlsx ]; then
             echo "Keine kaufpunkte.xlsx gefunden — erst den Scanner laufen lassen."
             exit 0
