@@ -44,7 +44,22 @@ from datetime import datetime
 LEBT = ("queued", "in_progress", "waiting", "requested", "pending")
 
 # Unter so vielen Minuten Restzeit lohnt kein Start mehr.
-MINDESTREST = 5
+#
+# ZWEI MINUTEN, und die Zahl ist begruendet statt geraten (Mathias'
+# Frage vom 07.08.2026: "Warum hoeren wir fuenf Minuten vor Ende auf?").
+# Vorher standen hier fuenf, aus dem Bauch. Das war falsch, denn
+# ausgerechnet die letzten Minuten sind die wichtigsten: Ab 15:54 New
+# Yorker Zeit prueft der Waechter die SCHLUSSBESTAETIGUNG fuer Gap and
+# Go (kurz_vor_schluss in breakout_watcher.py), und die Schlussauktion
+# allein macht rund sechs Prozent des Tagesvolumens aus. Ein Riegel bei
+# fuenf Minuten haette den Neustart genau in diesem Fenster verhindert.
+#
+# Warum ueberhaupt eine Untergrenze: Ein Lauf braucht gemessene 28
+# Sekunden, bis er das erste Mal Kurse prueft (18 s GitHub-Ruestzeit,
+# 8,6 s fuer die Tagesdaten aller Aktien, 1 s fuer die Stromverbindungen).
+# Unter zwei Minuten bliebe davon zu wenig uebrig, um noch etwas zu
+# sehen.
+MINDESTREST = 2
 
 
 def ny_jetzt():
@@ -148,11 +163,21 @@ def selbsttest() -> int:
     n, d, g = entscheide([], mitten)
     p("Gar keine Läufe: es wird gestartet", n and d == 300, g)
 
+    # DIE LETZTEN MINUTEN SIND DIE WICHTIGSTEN: Ab 15:54 New Yorker Zeit
+    # prueft der Waechter die Schlussbestaetigung fuer Gap and Go. Ein
+    # Neustart muss dort noch moeglich sein (Mathias, 07.08.2026).
+    n, d, g = entscheide(fertig, datetime(2026, 8, 7, 15, 54, tzinfo=NY))
+    p("Um 15:54 wird noch gestartet — Gap-and-Go-Schlussfenster",
+      n and d == 6, g)
+
     n, d, g = entscheide(fertig, datetime(2026, 8, 7, 15, 58, tzinfo=NY))
-    p("Zwei Minuten vor Schluss wird nicht mehr gestartet", not n, g)
+    p("Zwei Minuten vor Schluss: gerade noch", n and d == 2, g)
+
+    n, d, g = entscheide(fertig, datetime(2026, 8, 7, 15, 59, tzinfo=NY))
+    p("Eine Minute vor Schluss lohnt nicht mehr (28 s Rüstzeit)", not n, g)
 
     n, d, g = entscheide(fertig, datetime(2026, 8, 7, 15, 50, tzinfo=NY))
-    p("Zehn Minuten vor Schluss noch schon", n and d == 10, g)
+    p("Zehn Minuten vor Schluss selbstverständlich", n and d == 10, g)
 
     n, d, g = entscheide(fertig, datetime(2026, 8, 7, 3, 0, tzinfo=NY))
     p("Nachts wird nichts gestartet", not n, g)
