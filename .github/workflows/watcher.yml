@@ -1,4 +1,10 @@
-name: Breakout-Wächter (alle 6 Min)
+# ACHTUNG BEIM NAMEN: Hier stand bis 07.08.2026 "alle 6 Min". Das war
+# seit dem Umbau auf die Dauerwache falsch — der Waechter startet NICHT
+# alle sechs Minuten neu, er laeuft durch und prueft alle zwei Sekunden
+# (config.betrieb.pruef_takt_sekunden). Mathias hat den alten Namen fuer
+# einen echten Sechs-Minuten-Lauf gehalten und danach gefragt; ein Name,
+# der luegt, kostet spaeter genau solche Missverstaendnisse.
+name: Breakout-Wächter (Dauerwache, Prüftakt 2 s)
 
 on:
   # KEIN GitHub-Zeitplan mehr (Mathias, 24.07.2026): GitHubs cron hinkte
