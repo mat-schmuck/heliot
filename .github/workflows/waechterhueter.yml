@@ -1,0 +1,57 @@
+name: Wächter-Hüter (alle 6 Min)
+
+on:
+  # Angestossen von cron-job.org, Zeitzone America/New_York, alle sechs
+  # Minuten waehrend des Handels: "*/6 9-15 * * 1-5". Das deckt 15:30 bis
+  # 22:00 Wiener Zeit ab. Frueher oder spaeter angestossen schadet nicht,
+  # der Ablauf stellt selbst fest, dass ausserhalb der Handelszeit nichts
+  # zu tun ist.
+  #
+  # WOZU: Am 06.08.2026 fiel die Tagwache mitten im Handel aus (GitHub-
+  # Stoerung, kein Rechner frei). Bis zum naechsten Morgen wachte
+  # niemand, und niemand hat es gemerkt. Ein einziger Termin um 09:28
+  # genuegt nicht — faellt er aus, ist der ganze Handelstag blind.
+  workflow_dispatch: {}
+
+# EIGENE Gruppe, und das ist der ganze Witz an diesem Ablauf.
+# Mathias' Einwand vom 07.08.2026: Wuerde man watcher.yml selbst alle
+# sechs Minuten anstossen, geriete jeder Anstoss in DESSEN Gruppe und
+# verdraengte dort den wartenden Lauf. Der Wartende ist aber die
+# Schlussstunden-Wache, die um 15:26 New Yorker Zeit angestossen wird und
+# uebernimmt, sobald GitHub die Tagwache nach sechs Stunden abschiesst.
+# Sie waere ausgerechnet im letzten Handelsabschnitt weggeworfen worden.
+# Der Hueter fasst die Waechter-Gruppe deshalb nie an.
+concurrency:
+  group: waechter-hueter
+  cancel-in-progress: false
+
+jobs:
+  hueten:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # actions: write, um watcher.yml anstossen zu duerfen. Der eingebaute
+    # GITHUB_TOKEN reicht dafuer: workflow_dispatch ist von der Regel
+    # "Ereignisse des GITHUB_TOKEN loesen keine Ablaeufe aus"
+    # ausdruecklich ausgenommen (GitHub-Doku, geprueft 07.08.2026).
+    # Kein zusaetzliches Geheimnis noetig.
+    permissions:
+      actions: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Läuft oder wartet eine Wache?
+        id: pruefung
+        run: python3 waechter_noetig.py
+
+      # Gestartet wird NUR, wenn gar nichts da ist — weder ein laufender
+      # noch ein wartender Lauf. Die Dauerwache reicht genau bis zum
+      # Schlussgong, damit sie nicht darueber hinauslaeuft.
+      - name: Wache starten
+        if: steps.pruefung.outputs.noetig == 'ja'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh workflow run watcher.yml \
+            --repo "${{ github.repository }}" \
+            -f dauerwache="${{ steps.pruefung.outputs.dauerwache }}"
+          echo "Wache angestoßen mit ${{ steps.pruefung.outputs.dauerwache }} Minuten."
