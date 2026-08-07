@@ -23,9 +23,14 @@ WAS ES TUT UND WAS AUSDRUECKLICH NICHT
     sobald wieder Rechner frei sind. Wer bei jedem Durchgang nachlegt,
     baut einen Stau statt einer Absicherung.
 
-    Der Nachtscan wird nachgeholt, wenn der letzte erfolgreiche laenger
-    als 20 Stunden zurueckliegt. Die Tagwache wird gestartet, wenn
-    waehrend der Handelszeit keine laeuft.
+    Der Nachtscan wird nachgeholt, wenn sein TERMIN (18:00 New Yorker
+    Zeit) verstrichen ist, ohne dass danach ein Lauf glueckte. Gemessen
+    wird gegen den Termin, NICHT gegen ein Alter — sonst entsteht ein
+    Loch: Wurde tagsueber von Hand nachgeholt und faellt der Nachtscan
+    aus, waere der letzte Erfolg noch "frisch" und der Ausfall bliebe
+    stundenlang unbemerkt (Mathias, 07.08.2026).
+    Die Tagwache wird gestartet, wenn waehrend der Handelszeit keine
+    laeuft.
 
 ZUR VOLUMENFORMEL (Mathias' Einwand, 07.08.2026)
     Ein nachgeholter Scan mitten am Tag darf die Kurven nicht verbiegen.
@@ -51,11 +56,31 @@ GH = r"C:\Program Files\GitHub CLI\gh.exe"
 REPO = "mat-schmuck/heliot"
 PROTOKOLL = "wiederanlauf-log.txt"
 
-# Ein erfolgreicher Nachtscan darf hoechstens so alt sein. 20 Stunden,
-# nicht 24: Der Scan laeuft um 18:00 New Yorker Zeit, und um 08:00
-# Wiener Zeit am naechsten Morgen soll ein Ausfall schon auffallen,
-# nicht erst kurz vor dem naechsten Termin.
-SCAN_HOECHSTALTER_STUNDEN = 20
+# Wann der Nachtscan faellig ist: 18:00 New Yorker Zeit, Sonntag bis
+# Freitag (cron-job.org, "0 18 * * 0-5" — samstags gibt es keinen Lauf,
+# weil freitagabends der letzte Handelstag der Woche abgeschlossen ist).
+SCAN_STUNDE_NY = 18
+
+
+def letzter_faelliger_scan(jetzt=None):
+    """Der letzte Zeitpunkt, zu dem ein Nachtscan haette laufen sollen.
+
+    GEGEN DEN NAECHSTEN TERMIN messen, nicht gegen ein Alter. Vorher
+    stand hier "letzter Erfolg hoechstens 20 Stunden alt", und das hat
+    ein Loch, das Mathias am 07.08.2026 sofort gesehen hat: Wurde ein
+    Scan tagsueber von Hand nachgeholt und faellt der naechste
+    Nachtscan aus, ist der letzte Erfolg nur 15,5 Stunden alt — die
+    Pruefung haette geschwiegen und erst 4,6 Stunden spaeter reagiert.
+    Mit dem Termin als Massstab faellt der Ausfall binnen zehn Minuten
+    auf, egal was vorher war."""
+    from zoneinfo import ZoneInfo
+    j = (jetzt or ny_jetzt()).astimezone(ZoneInfo("America/New_York"))
+    faellig = j.replace(hour=SCAN_STUNDE_NY, minute=0, second=0, microsecond=0)
+    if faellig > j:
+        faellig -= timedelta(days=1)
+    while faellig.weekday() == 5:            # Samstag: kein Termin
+        faellig -= timedelta(days=1)
+    return faellig
 
 
 def ny_jetzt():
@@ -168,23 +193,23 @@ def pruefe(trocken=False, jetzt=None):
     if wartend:
         zeilen.append(f"  Nachtscan: {len(wartend)} Lauf/Läufe warten oder "
                       f"laufen — nichts nachgelegt.")
-    elif erfolg is None:
-        zeilen.append("  Nachtscan: kein erfolgreicher Lauf in den letzten "
-                      "Läufen gefunden.")
-        ok, wie = starten("scanner.yml", trocken=trocken)
-        zeilen.append(f"    nachgestartet: {wie}" if ok
-                      else f"    FEHLGESCHLAGEN: {wie}")
     else:
-        alter = (datetime.now(timezone.utc) - erfolg).total_seconds() / 3600
-        if alter > SCAN_HOECHSTALTER_STUNDEN:
-            zeilen.append(f"  Nachtscan: letzter Erfolg vor {alter:.1f} "
-                          f"Stunden — zu alt.")
+        faellig = letzter_faelliger_scan(j)
+        # Der Termin gilt als erfüllt, wenn NACH ihm ein Lauf glückte.
+        erfuellt = erfolg is not None and erfolg >= faellig.astimezone(timezone.utc)
+        if erfuellt:
+            zeilen.append(f"  Nachtscan: in Ordnung — Termin "
+                          f"{faellig:%d.%m. %H:%M} New York erfüllt "
+                          f"(Lauf {erfolg.astimezone(timezone.utc):%d.%m. %H:%M} UTC).")
+        else:
+            zeilen.append(f"  Nachtscan: Termin {faellig:%d.%m. %H:%M} "
+                          f"New York NICHT erfüllt"
+                          + (f" (letzter Erfolg "
+                             f"{erfolg.astimezone(timezone.utc):%d.%m. %H:%M} UTC)."
+                             if erfolg else " (gar kein Erfolg gefunden)."))
             ok, wie = starten("scanner.yml", trocken=trocken)
             zeilen.append(f"    nachgestartet: {wie}" if ok
                           else f"    FEHLGESCHLAGEN: {wie}")
-        else:
-            zeilen.append(f"  Nachtscan: in Ordnung, letzter Erfolg vor "
-                          f"{alter:.1f} Stunden.")
 
     # --- Tagwache -------------------------------------------------------
     if not markt_offen(j):
@@ -263,14 +288,35 @@ def selbsttest() -> int:
                        "conclusion": "failure",
                        "createdAt": "2026-08-07T06:00:00Z"}]) is None)
 
-    alt = datetime.now(timezone.utc) - timedelta(hours=21)
-    p("21 Stunden alter Scan gilt als zu alt",
-      (datetime.now(timezone.utc) - alt).total_seconds() / 3600
-      > SCAN_HOECHSTALTER_STUNDEN)
-    frisch = datetime.now(timezone.utc) - timedelta(hours=8)
-    p("8 Stunden alter Scan gilt als frisch",
-      (datetime.now(timezone.utc) - frisch).total_seconds() / 3600
-      <= SCAN_HOECHSTALTER_STUNDEN)
+    # --- Der Termin, nicht das Alter -------------------------------------
+    # Freitag 03:00 New York: der letzte Termin war Donnerstag 18:00.
+    f = letzter_faelliger_scan(datetime(2026, 8, 7, 3, 0, tzinfo=NY))
+    p("Vor dem heutigen Termin gilt der von gestern",
+      (f.day, f.hour) == (6, 18), f"{f:%d.%m. %H:%M}")
+    # Freitag 19:00 New York: der Termin von heute 18:00 ist durch.
+    f = letzter_faelliger_scan(datetime(2026, 8, 7, 19, 0, tzinfo=NY))
+    p("Nach dem Termin gilt der von heute",
+      (f.day, f.hour) == (7, 18), f"{f:%d.%m. %H:%M}")
+    # Sonntag 03:00: Samstag hat keinen Termin, also gilt Freitag 18:00.
+    f = letzter_faelliger_scan(datetime(2026, 8, 9, 3, 0, tzinfo=NY))
+    p("Samstag hat keinen Termin, es gilt Freitag",
+      (f.day, f.hour) == (7, 18), f"{f:%d.%m. %H:%M}")
+
+    # DAS LOCH, das die alte Alters-Regel hatte (Mathias, 07.08.2026):
+    # Ein Scan wurde tagsueber von Hand nachgeholt, der Nachtscan faellt
+    # aus. Nach Alter waere der Erfolg nur 15,5 Stunden alt und die
+    # Pruefung haette geschwiegen. Nach Termin faellt es sofort auf.
+    faellig = letzter_faelliger_scan(datetime(2026, 8, 7, 18, 10, tzinfo=NY))
+    handlauf = datetime(2026, 8, 7, 6, 38, tzinfo=timezone.utc)
+    p("Handlauf von morgens erfüllt den Abendtermin NICHT",
+      handlauf < faellig.astimezone(timezone.utc),
+      f"Termin {faellig:%d.%m. %H:%M} NY")
+    alter_std = (datetime(2026, 8, 7, 18, 10, tzinfo=NY) - handlauf).total_seconds() / 3600
+    p("...obwohl er nach altem Maß mit 15,5 Stunden 'frisch' wäre",
+      alter_std < 20, f"{alter_std:.1f} Stunden")
+    echter = datetime(2026, 8, 7, 22, 0, 30, tzinfo=timezone.utc)
+    p("Ein Lauf nach dem Termin erfüllt ihn",
+      echter >= faellig.astimezone(timezone.utc))
 
     print(f"\n{len(fehler)} Fehler." if fehler else "\nAlles bestanden.")
     return 1 if fehler else 0
