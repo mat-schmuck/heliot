@@ -29,3 +29,8 @@ __pycache__/
 venv/
 # PowerShell legt bei "> `$null" versehentlich eine Datei dieses Namens an
 $null
+
+# Protokoll des Wiederanlaufs (laeuft alle 10 Minuten lokal auf Mathias'
+# Rechner, siehe wiederanlauf.py). Reine Laufspur, gehoert nicht ins Repo.
+wiederanlauf-log.txt
+umgebung-diagnose.txt

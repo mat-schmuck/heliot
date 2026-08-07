@@ -120,6 +120,20 @@ def entscheide_kurven_quelle(verfuegbare_tage, min_tage_noetig=None):
 # Kurven bauen (Netzwerk) — gehoert in den Nachtlauf, nicht in den Waechter
 # ---------------------------------------------------------------------------
 
+def _ny_tag_und_schluss(jetzt=None):
+    """Welcher Tag ist in New York, und ist die Boerse dort schon zu?
+
+    Rueckgabe: (datum, nach_schluss). Ohne Zeitzone (datum, False) —
+    dann gilt der laufende Tag vorsichtshalber als unfertig."""
+    try:
+        from zoneinfo import ZoneInfo
+        ny = ZoneInfo("America/New_York")
+    except Exception:
+        return None, False
+    jetzt = (jetzt or datetime.now(ny)).astimezone(ny)
+    return jetzt.date(), (jetzt.hour * 60 + jetzt.minute) >= 16 * 60
+
+
 def _kurve_aus_kerzen(df):
     """Aus Fuenf-Minuten-Kerzen EINER Aktie die Kurve F(t) bauen.
 
@@ -157,8 +171,19 @@ def _kurve_aus_kerzen(df):
     df["datum"] = df.index.date
     df = df[(df["minute"] >= 0) & (df["minute"] < HANDELSMINUTEN)]
 
+    # NUR ABGESCHLOSSENE TAGE. Der laufende Tag darf nie in die Kurve,
+    # denn sein Gesamtvolumen steht noch nicht fest — die kumulierte
+    # Summe wuerde durch einen zu kleinen Nenner geteilt und die Kurve
+    # nach vorne verbogen. Die Halbtags-Regel unten faengt das fast
+    # immer ab (unter 350 Minuten fliegt der Tag raus), aber eben nicht
+    # zwischen 15:50 und 16:00 New Yorker Zeit. Genau dort koennte ein
+    # NACHZUEGLER-LAUF landen, wenn der Nachtscan ausgefallen ist und
+    # spaeter nachgeholt wird (Mathias, 07.08.2026).
+    heute_ny, nach_schluss = _ny_tag_und_schluss()
     kurven = []
-    for _, tag in df.groupby("datum"):
+    for datum, tag in df.groupby("datum"):
+        if datum == heute_ny and not nach_schluss:
+            continue                                   # laeuft noch
         tag = tag.sort_index()
         gesamt = float(tag["Volume"].sum())
         if gesamt <= 0:
@@ -487,6 +512,8 @@ if __name__ == "__main__":
         baue_kurven(liste)
         sys.exit(0)
 
+    from zoneinfo import ZoneInfo
+
     # Eine realistische Kurve von Hand, damit der Test ohne Netz laeuft:
     # steiler Eroeffnungsschub, ruhige Mitte, Schlussauktion.
     test_kurve = {0: 0.0, 5: 0.055, 10: 0.082, 15: 0.101, 30: 0.150,
@@ -591,5 +618,35 @@ if __name__ == "__main__":
     _, n_halb = _kurve_aus_kerzen(halb)
     assert n_halb == 0, f"halbe Tage müssen rausfallen, {n_halb} blieben"
     print("  Halbe Handelstage (Feiertagsschluss 13:00) fliegen raus  ✓")
+
+    print("\n" + "=" * 66)
+    print("TEST 9: Der LAUFENDE Tag darf nie in die Kurve")
+    print("=" * 66)
+    # Ein Tag, der bis 15:55 New Yorker Zeit reicht: Die Halbtags-Regel
+    # laesst ihn durch (385 von 390 Minuten), fertig ist er aber nicht.
+    # Genau dort kann ein Nachzuegler-Lauf landen.
+    from datetime import datetime as _dt
+    heute = _pd.Timestamp.now(tz="America/New_York").normalize()
+    zeilen2, vol2 = [], []
+    for m in range(0, 390, 5):
+        zeilen2.append(heute + _pd.Timedelta(hours=9, minutes=30 + m))
+        vol2.append(1000.0)
+    df_heute = _pd.DataFrame({"Volume": vol2},
+                             index=_pd.DatetimeIndex(zeilen2))
+    laufend = df_heute[df_heute.index <= heute + _pd.Timedelta(hours=15, minutes=55)]
+    mitten_im_handel = _dt(2026, 8, 7, 15, 55,
+                           tzinfo=ZoneInfo("America/New_York"))
+    tag, zu = _ny_tag_und_schluss(mitten_im_handel)
+    pruefe_9 = (not zu)
+    print(f"  15:55 New York: Börse zu? {zu}  (muss False sein)")
+    assert pruefe_9, "15:55 darf nicht als Handelsschluss gelten"
+    nach = _dt(2026, 8, 7, 16, 30, tzinfo=ZoneInfo("America/New_York"))
+    _, zu2 = _ny_tag_und_schluss(nach)
+    print(f"  16:30 New York: Börse zu? {zu2}  (muss True sein)")
+    assert zu2, "16:30 muss als nach Schluss gelten"
+    _, n_laufend = _kurve_aus_kerzen(laufend)
+    print(f"  Heutiger, unfertiger Tag (bis 15:55): {n_laufend} Tage verwendet")
+    assert n_laufend == 0, "der laufende Tag darf nicht in die Kurve"
+    print("  ✓ Ein Nachzügler-Lauf mitten im Handel verbiegt die Kurve nicht")
 
     print("\nAlle Volumen-Tests bestanden (ohne Netzwerk).")
