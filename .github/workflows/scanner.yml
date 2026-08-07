@@ -52,6 +52,9 @@ jobs:
         id: pruefung
         env:
           ERZWINGEN: ${{ github.event.inputs.erzwingen }}
+          # Siehe waechterhueter.yml: mit Anmeldung 1000 statt 60 Anfragen
+          # je Stunde. Ohne sie wäre ein enger Takt nicht haltbar.
+          GITHUB_TOKEN: ${{ github.token }}
         run: python3 scan_noetig.py
 
       - uses: actions/setup-python@v5

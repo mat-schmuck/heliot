@@ -104,14 +104,33 @@ def entscheide(laeufe, jetzt=None):
     return True, rest, f"KEINE Wache da, {rest} Minuten bis zum Schluss"
 
 
+def _kopfzeilen():
+    """Kopfzeilen fuer die Abfrage — MIT Anmeldung, wenn eine da ist.
+
+    WARUM DAS WICHTIG IST (gemessen 07.08.2026): Ohne Anmeldung erlaubt
+    GitHub 60 Anfragen je Stunde PRO IP-ADRESSE. Auf GitHubs eigenen
+    Rechnern teilt man sich diese Adresse mit allen anderen Nutzern —
+    schon ein Zwei-Minuten-Takt waere dort riskant, ein Ein-Minuten-Takt
+    verbrauchte allein 100 % des Kontingents.
+
+    Mit dem eingebauten GITHUB_TOKEN sind es 1000 Anfragen je Stunde und
+    Repository. Damit ist selbst ein Minutentakt kein Thema mehr. Der
+    Token kostet nichts und ist im Arbeitsablauf ohnehin vorhanden;
+    lokal ohne Token laeuft es weiter unangemeldet."""
+    kopf = {"Accept": "application/vnd.github+json",
+            "User-Agent": "heliot-pruefung"}
+    token = (os.environ.get("GITHUB_TOKEN") or "").strip()
+    if token:
+        kopf["Authorization"] = f"Bearer {token}"
+    return kopf
+
+
 def hole_laeufe(repo, anzahl=10):
     """Oeffentliche Schnittstelle, ohne Schluessel."""
     import urllib.request
     url = (f"https://api.github.com/repos/{repo}/actions/workflows/"
            f"watcher.yml/runs?per_page={anzahl}")
-    bitte = urllib.request.Request(url, headers={
-        "Accept": "application/vnd.github+json",
-        "User-Agent": "heliot-huter"})
+    bitte = urllib.request.Request(url, headers=_kopfzeilen())
     with urllib.request.urlopen(bitte, timeout=30) as a:
         return json.loads(a.read().decode("utf-8")).get("workflow_runs", [])
 

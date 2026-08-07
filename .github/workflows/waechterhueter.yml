@@ -35,12 +35,23 @@ jobs:
     # ausdruecklich ausgenommen (GitHub-Doku, geprueft 07.08.2026).
     # Kein zusaetzliches Geheimnis noetig.
     permissions:
+      # contents: read wird fuer actions/checkout gebraucht. Sobald man
+      # 'permissions' ueberhaupt angibt, stehen alle nicht genannten
+      # Rechte auf 'none' — beim oeffentlichen Repo ging der Checkout
+      # zwar auch so, aber darauf soll sich niemand verlassen muessen.
+      contents: read
       actions: write
     steps:
       - uses: actions/checkout@v4
 
       - name: Läuft oder wartet eine Wache?
         id: pruefung
+        env:
+          # MIT Anmeldung fragen: ohne sie erlaubt GitHub nur 60 Anfragen
+          # je Stunde und IP, und auf den Actions-Rechnern teilt man sich
+          # die IP mit Fremden. Mit dem eingebauten Token sind es 1000 je
+          # Stunde und Repository — erst damit ist ein enger Takt möglich.
+          GITHUB_TOKEN: ${{ github.token }}
         run: python3 waechter_noetig.py
 
       # Gestartet wird NUR, wenn gar nichts da ist — weder ein laufender
