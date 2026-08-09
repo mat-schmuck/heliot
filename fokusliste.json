@@ -1,186 +1,186 @@
 {
- "gebaut_am": "2026-08-08 00:02 Wien",
+ "gebaut_am": "2026-08-10 00:03 Wien",
  "universum": 366,
  "aktien": {
   "ALMS": {
    "firma": "Alumis Inc",
    "vortagesschluss": 27.6,
-   "v50": 1409997.7,
+   "v50": 1411594.0,
    "rs_rating": 98,
    "ueber_52w_tief_pct": 634.0
   },
   "ANRO": {
    "firma": "Alto Neuroscience Inc",
    "vortagesschluss": 28.67,
-   "v50": 538281.5,
+   "v50": 539252.0,
    "rs_rating": 99,
    "ueber_52w_tief_pct": 849.3
   },
   "APGE": {
    "firma": "Apogee Therapeutics Inc",
    "vortagesschluss": 134.84,
-   "v50": 3130291.6,
+   "v50": 3130432.0,
    "rs_rating": 95,
    "ueber_52w_tief_pct": 292.7
   },
   "ARWR": {
    "firma": "Arrowhead Pharmaceuticals Inc",
    "vortagesschluss": 87.65,
-   "v50": 2293569.4,
+   "v50": 2293654.0,
    "rs_rating": 93,
    "ueber_52w_tief_pct": 483.9
   },
   "ATEX": {
    "firma": "Anterix Inc",
    "vortagesschluss": 99.26,
-   "v50": 460329.4,
+   "v50": 460330.0,
    "rs_rating": 99,
    "ueber_52w_tief_pct": 464.6
   },
   "COGT": {
    "firma": "Cogent Biosciences Inc",
    "vortagesschluss": 42.39,
-   "v50": 2626409.8,
+   "v50": 2627766.0,
    "rs_rating": 92,
    "ueber_52w_tief_pct": 308.4
   },
   "CORT": {
    "firma": "Corcept Therapeutics Inc",
    "vortagesschluss": 110.77,
-   "v50": 1162566.5,
+   "v50": 1163328.0,
    "rs_rating": 91,
    "ueber_52w_tief_pct": 286.5
   },
   "CRNX": {
    "firma": "Crinetics Pharmaceuticals Inc",
    "vortagesschluss": 84.08,
-   "v50": 4399830.1,
+   "v50": 4400870.0,
    "rs_rating": 92,
    "ueber_52w_tief_pct": 225.5
   },
   "DELL": {
    "firma": "Dell Technologies Inc",
    "vortagesschluss": 453.77,
-   "v50": 9158256.6,
+   "v50": 9167752.0,
    "rs_rating": 97,
    "ueber_52w_tief_pct": 311.7
   },
   "DFTX": {
    "firma": "Definium Therapeutics Inc",
    "vortagesschluss": 46.14,
-   "v50": 3156006.7,
+   "v50": 3156070.0,
    "rs_rating": 98,
    "ueber_52w_tief_pct": 430.3
   },
   "DNTH": {
    "firma": "Dianthus Therapeutics Inc",
    "vortagesschluss": 108.92,
-   "v50": 1169453.4,
+   "v50": 1169460.0,
    "rs_rating": 96,
    "ueber_52w_tief_pct": 502.4
   },
   "ELVN": {
    "firma": "Enliven Therapeutics Inc",
    "vortagesschluss": 60.46,
-   "v50": 1593452.6,
+   "v50": 1595568.0,
    "rs_rating": 94,
    "ueber_52w_tief_pct": 308.9
   },
   "ETON": {
    "firma": "Eton Pharmaceuticals Inc",
    "vortagesschluss": 44.6,
-   "v50": 466562.3,
+   "v50": 466562.0,
    "rs_rating": 94,
    "ueber_52w_tief_pct": 212.5
   },
   "FBRX": {
    "firma": "Forte Biosciences Inc",
    "vortagesschluss": 76.79,
-   "v50": 1252276.9,
+   "v50": 1254436.0,
    "rs_rating": 99,
    "ueber_52w_tief_pct": 674.9
   },
   "FET": {
    "firma": "Forum Energy Technologies Inc",
    "vortagesschluss": 74.23,
-   "v50": 191035.3,
+   "v50": 191606.0,
    "rs_rating": 93,
    "ueber_52w_tief_pct": 309.7
   },
   "FTK": {
    "firma": "Flotek Industries Inc",
    "vortagesschluss": 35.42,
-   "v50": 387549.3,
+   "v50": 387550.0,
    "rs_rating": 94,
    "ueber_52w_tief_pct": 223.5
   },
   "GH": {
    "firma": "Guardant Health Inc",
    "vortagesschluss": 168.48,
-   "v50": 2741209.2,
+   "v50": 2741722.0,
    "rs_rating": 93,
    "ueber_52w_tief_pct": 249.2
   },
   "KOD": {
    "firma": "Kodiak Sciences Inc",
    "vortagesschluss": 45.37,
-   "v50": 735720.0,
+   "v50": 736496.0,
    "rs_rating": 95,
    "ueber_52w_tief_pct": 490.0
   },
   "LIND": {
    "firma": "Lindblad Expeditions Holdings Inc",
    "vortagesschluss": 33.95,
-   "v50": 952495.2,
+   "v50": 952732.0,
    "rs_rating": 91,
    "ueber_52w_tief_pct": 198.6
   },
   "LQDA": {
    "firma": "Liquidia Corp",
    "vortagesschluss": 90.22,
-   "v50": 1917478.5,
+   "v50": 1917658.0,
    "rs_rating": 97,
    "ueber_52w_tief_pct": 374.3
   },
   "MBX": {
    "firma": "MBX Biosciences Inc",
    "vortagesschluss": 67.82,
-   "v50": 853788.8,
+   "v50": 853992.0,
    "rs_rating": 98,
    "ueber_52w_tief_pct": 604.3
   },
   "NESR": {
    "firma": "National Energy Services Reunited Corp",
    "vortagesschluss": 29.02,
-   "v50": 2127563.7,
+   "v50": 2128038.0,
    "rs_rating": 92,
    "ueber_52w_tief_pct": 345.1
   },
   "ORKA": {
    "firma": "Oruka Therapeutics Inc",
    "vortagesschluss": 98.82,
-   "v50": 1309643.7,
+   "v50": 1309744.0,
    "rs_rating": 99,
    "ueber_52w_tief_pct": 669.6
   },
   "PACS": {
    "firma": "PACS Group Inc",
    "vortagesschluss": 48.44,
-   "v50": 959981.9,
+   "v50": 959988.0,
    "rs_rating": 95,
    "ueber_52w_tief_pct": 545.9
   },
   "PLSE": {
    "firma": "Pulse Biosciences Inc",
    "vortagesschluss": 42.41,
-   "v50": 361969.9,
+   "v50": 361990.0,
    "rs_rating": 95,
    "ueber_52w_tief_pct": 237.7
   },
   "PRAX": {
    "firma": "Praxis Precision Medicines Inc",
    "vortagesschluss": 360.76,
-   "v50": 532386.3,
+   "v50": 532440.0,
    "rs_rating": 96,
    "ueber_52w_tief_pct": 870.0
   },
@@ -194,49 +194,49 @@
   "RVMD": {
    "firma": "Revolution Medicines Inc",
    "vortagesschluss": 205.15,
-   "v50": 2737972.7,
+   "v50": 2738230.0,
    "rs_rating": 96,
    "ueber_52w_tief_pct": 503.4
   },
   "SYRE": {
    "firma": "Spyre Therapeutics Inc",
    "vortagesschluss": 104.91,
-   "v50": 1360964.0,
+   "v50": 1361124.0,
    "rs_rating": 99,
    "ueber_52w_tief_pct": 623.3
   },
   "TVTX": {
    "firma": "Travere Therapeutics Inc",
    "vortagesschluss": 61.32,
-   "v50": 1958548.4,
+   "v50": 1959722.0,
    "rs_rating": 91,
    "ueber_52w_tief_pct": 293.1
   },
   "TWST": {
    "firma": "Twist Bioscience Corp",
    "vortagesschluss": 115.67,
-   "v50": 1836818.4,
+   "v50": 1836818.0,
    "rs_rating": 97,
    "ueber_52w_tief_pct": 396.4
   },
   "TXG": {
    "firma": "10x Genomics Inc",
    "vortagesschluss": 52.03,
-   "v50": 3241393.6,
+   "v50": 3246296.0,
    "rs_rating": 98,
    "ueber_52w_tief_pct": 366.2
   },
   "URGN": {
    "firma": "UroGen Pharma Ltd",
    "vortagesschluss": 46.96,
-   "v50": 770104.3,
+   "v50": 771130.0,
    "rs_rating": 92,
    "ueber_52w_tief_pct": 196.1
   },
   "VSXY": {
    "firma": "Victoria's Secret & Co",
    "vortagesschluss": 98.54,
-   "v50": 2264476.1,
+   "v50": 2264724.0,
    "rs_rating": 96,
    "ueber_52w_tief_pct": 381.3
   }
