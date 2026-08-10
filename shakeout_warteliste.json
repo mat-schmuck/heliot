@@ -6,7 +6,7 @@
   "zone_max": 45.0,
   "spring_low": 44.27000045776367,
   "spring_volumen": 390700.0,
-  "tage_gewartet": 6
+  "tage_gewartet": 7
  },
  "NESR": {
   "spring_index": 499,
@@ -61,5 +61,32 @@
   "spring_low": 67.76010131835938,
   "spring_volumen": 3377352.0,
   "tage_gewartet": 1
+ },
+ "AUGO": {
+  "spring_index": 267,
+  "spring_datum": "2026-08-07",
+  "zone_min": 71.03500366210938,
+  "zone_max": 71.04000091552734,
+  "spring_low": 69.72000122070312,
+  "spring_volumen": 1331600.0,
+  "tage_gewartet": 0
+ },
+ "TNDM": {
+  "spring_index": 500,
+  "spring_datum": "2026-08-07",
+  "zone_min": 17.190000534057617,
+  "zone_max": 17.190000534057617,
+  "spring_low": 17.06999969482422,
+  "spring_volumen": 5434700.0,
+  "tage_gewartet": 0
+ },
+ "RKLB": {
+  "spring_index": 500,
+  "spring_datum": "2026-08-07",
+  "zone_min": 78.19999694824219,
+  "zone_max": 80.0,
+  "spring_low": 77.37999725341797,
+  "spring_volumen": 23988300.0,
+  "tage_gewartet": 0
  }
 }
