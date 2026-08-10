@@ -1,111 +1,111 @@
 {
- "gebaut_am": "2026-08-10 11:56 Wien",
- "universum": 234,
+ "gebaut_am": "2026-08-11 00:03 Wien",
+ "universum": 235,
  "aktien": {
   "AAOI": {
    "firma": "Applied Optoelectronics Inc",
-   "vortagesschluss": 135.63,
-   "v50": 12129078.0,
-   "rs_rating": 97,
-   "ueber_52w_tief_pct": 633.1
+   "vortagesschluss": 132.81,
+   "v50": 12289895.2,
+   "rs_rating": 98,
+   "ueber_52w_tief_pct": 617.9
   },
   "AXTI": {
    "firma": "AXT Inc",
-   "vortagesschluss": 88.58,
-   "v50": 10379926.0,
+   "vortagesschluss": 73.81,
+   "v50": 10617437.9,
    "rs_rating": 99,
-   "ueber_52w_tief_pct": 4263.5
+   "ueber_52w_tief_pct": 3500.5
   },
-  "COHR": {
-   "firma": "Coherent Corp",
-   "vortagesschluss": 379.13,
-   "v50": 5761910.0,
+  "AYA": {
+   "firma": "Aya Gold & Silver Inc",
+   "vortagesschluss": 27.92,
+   "v50": 589953.6,
    "rs_rating": 91,
-   "ueber_52w_tief_pct": 349.5
+   "ueber_52w_tief_pct": 237.6
   },
   "FRD": {
    "firma": "Friedman Industries Inc",
-   "vortagesschluss": 43.91,
-   "v50": 90098.0,
-   "rs_rating": 92,
-   "ueber_52w_tief_pct": 190.2
+   "vortagesschluss": 43.475,
+   "v50": 93132.5,
+   "rs_rating": 91,
+   "ueber_52w_tief_pct": 171.7
   },
   "FSLY": {
    "firma": "Fastly Inc",
-   "vortagesschluss": 22.96,
-   "v50": 6099056.0,
-   "rs_rating": 93,
-   "ueber_52w_tief_pct": 242.9
+   "vortagesschluss": 27.75,
+   "v50": 6302943.0,
+   "rs_rating": 94,
+   "ueber_52w_tief_pct": 314.5
   },
   "HYMC": {
    "firma": "Hycroft Mining Holding Corp",
-   "vortagesschluss": 26.54,
-   "v50": 2045326.0,
-   "rs_rating": 95,
-   "ueber_52w_tief_pct": 694.6
+   "vortagesschluss": 27.29,
+   "v50": 2053078.7,
+   "rs_rating": 96,
+   "ueber_52w_tief_pct": 717.1
   },
   "LITE": {
    "firma": "Lumentum Holdings Inc",
-   "vortagesschluss": 890.17,
-   "v50": 5221916.0,
-   "rs_rating": 98,
-   "ueber_52w_tief_pct": 718.8
-  },
-  "PKOH": {
-   "firma": "Park-Ohio Holdings Corp",
-   "vortagesschluss": 52.51,
-   "v50": 84108.0,
-   "rs_rating": 93,
-   "ueber_52w_tief_pct": 215.6
+   "vortagesschluss": 813.51,
+   "v50": 5220353.0,
+   "rs_rating": 97,
+   "ueber_52w_tief_pct": 631.6
   },
   "TSEM": {
    "firma": "Tower Semiconductor Ltd",
-   "vortagesschluss": 252.49,
-   "v50": 2025630.0,
+   "vortagesschluss": 252.55,
+   "v50": 2043501.2,
    "rs_rating": 94,
-   "ueber_52w_tief_pct": 454.8
+   "ueber_52w_tief_pct": 454.9
   },
   "CDNA": {
    "firma": "Caredx Inc",
-   "vortagesschluss": 46.69,
-   "v50": 1099420.0,
-   "rs_rating": 96,
-   "ueber_52w_tief_pct": 314.7
+   "vortagesschluss": 47.07,
+   "v50": 1108511.5,
+   "rs_rating": 95,
+   "ueber_52w_tief_pct": 317.6
+  },
+  "CRNX": {
+   "firma": "Crinetics Pharmaceuticals Inc",
+   "vortagesschluss": 84.15,
+   "v50": 4421669.3,
+   "rs_rating": 93,
+   "ueber_52w_tief_pct": 225.8
   },
   "DELL": {
    "firma": "Dell Technologies Inc",
-   "vortagesschluss": 453.77,
-   "v50": 9167752.0,
-   "rs_rating": 97,
-   "ueber_52w_tief_pct": 311.7
+   "vortagesschluss": 457.88,
+   "v50": 8722053.3,
+   "rs_rating": 96,
+   "ueber_52w_tief_pct": 315.4
   },
   "ETON": {
    "firma": "Eton Pharmaceuticals Inc",
-   "vortagesschluss": 44.6,
-   "v50": 466562.0,
+   "vortagesschluss": 43.67,
+   "v50": 465801.5,
    "rs_rating": 92,
-   "ueber_52w_tief_pct": 212.5
+   "ueber_52w_tief_pct": 206.0
   },
   "FTK": {
    "firma": "Flotek Industries Inc",
-   "vortagesschluss": 35.42,
-   "v50": 387550.0,
+   "vortagesschluss": 37.62,
+   "v50": 392118.8,
    "rs_rating": 93,
-   "ueber_52w_tief_pct": 223.5
+   "ueber_52w_tief_pct": 243.6
   },
   "LQDA": {
    "firma": "Liquidia Corp",
-   "vortagesschluss": 90.22,
-   "v50": 1917658.0,
-   "rs_rating": 96,
-   "ueber_52w_tief_pct": 374.3
+   "vortagesschluss": 91.03,
+   "v50": 1933853.6,
+   "rs_rating": 97,
+   "ueber_52w_tief_pct": 378.6
   },
   "UMAC": {
    "firma": "Unusual Machines Inc",
-   "vortagesschluss": 26.11,
-   "v50": 6195874.0,
-   "rs_rating": 91,
-   "ueber_52w_tief_pct": 260.4
+   "vortagesschluss": 27.14,
+   "v50": 5291744.2,
+   "rs_rating": 92,
+   "ueber_52w_tief_pct": 274.6
   }
  }
 }
