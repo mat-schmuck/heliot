@@ -28,9 +28,55 @@ Einzelne Datei zurückholen:
 **Zeitpläne bei cron-job.org** (Konto von Mathias, Zeitzone durchgehend
 America/New_York, GitHub-Token als Kopfzeile im jeweiligen Auftrag):
 
-- *Heliot Scan (18:00 New York)* — `0 18 * * 0-5`, scanner.yml,
-  Text `{"ref":"main"}`. Sonntag ist bewusst dabei, damit die am
-  Wochenende hochgeladene Liste am Montag bereitliegt.
+- *Heliot Scan (18:00 New York, Wiederanlauf alle 10 Min bis 09:00)*
+  (Auftrag 8147309) — `*/10 18-23,0-8 * * *`, scanner.yml,
+  Text `{"ref":"main"}`.
+
+  **Am 07.08.2026 vom Tagestermin auf einen Takt umgestellt.** Vorher
+  stand hier `0 18 * * 0-5`, also genau ein Anstoß am Tag. Am 06.08.
+  hatte GitHub Actions eine schwere Störung, der Lauf bekam keinen
+  Rechner und fiel aus — am nächsten Morgen war die Kaufpunkte-Mappe
+  zwei Tage alt, und niemand hatte es bemerkt.
+
+  Jetzt wird von der Fälligkeit um 18:00 durchgehend bis 08:50 am
+  nächsten Morgen alle zehn Minuten angeklopft. Dass daraus keine
+  dreißig Scans werden, verhindert `scan_noetig.py` im Arbeitsablauf
+  selbst: Es prüft, ob seit dem letzten fälligen Termin (18:00 New
+  York, Sonntag bis Freitag) schon ein Lauf geglückt ist, und beendet
+  den Ablauf sonst nach rund sechzehn Sekunden. Dazu die
+  concurrency-Gruppe `pattern-scanner`, die der Scanner bis dahin gar
+  nicht hatte.
+
+  Gemessen gegen ein ALTER zu prüfen wäre falsch: Wird tagsüber von
+  Hand nachgeholt, gälte der Abendausfall stundenlang als frisch.
+  Deshalb entscheidet der Termin, nicht das Alter.
+
+  Die Wochentage stehen bewusst auf `*` statt `0-5`. Das Fenster geht
+  über Mitternacht, und ein Ausfall am Freitagabend braucht die
+  Nachholversuche in der Nacht auf Samstag. Überflüssige Anstöße am
+  Wochenende erkennt die Prüfung von selbst — samstags gibt es keinen
+  fälligen Termin.
+
+- *Heliot Wächter-Hüter (alle 2 Min, Handelszeit)* (Auftrag 8231247,
+  angelegt 07.08.2026) — `*/2 9-15 * * 1-5`, **waechterhueter.yml**,
+  Text `{"ref":"main"}`.
+
+  Er sieht nach, ob überhaupt eine Wache läuft, und startet nur dann
+  eine, wenn gar nichts da ist — weder ein laufender noch ein wartender
+  Lauf. Ein WARTENDER zählt ausdrücklich mit: Das ist die
+  Schlussstunden-Wache, die nicht verdrängt werden darf.
+
+  **Deshalb ist er ein eigener Ablauf mit eigener concurrency-Gruppe.**
+  Stieße man watcher.yml selbst alle zwei Minuten an, geriete jeder
+  Anstoß in dessen Gruppe und würfe dort den wartenden Lauf weg — also
+  ausgerechnet die Schlussstunden-Wache, im wichtigsten Abschnitt des
+  Tages.
+
+  Beide Prüfungen fragen GitHub MIT dem eingebauten Token ab. Ohne
+  Anmeldung liegt die Grenze bei 60 Anfragen je Stunde und IP-Adresse,
+  und auf den Actions-Rechnern teilt man sich die Adresse mit Fremden;
+  mit Token sind es 1000 je Stunde und Repository. Erst damit ist ein
+  Zwei-Minuten-Takt haltbar.
 - *Heliot ntfy-Putz (16:05 New York)* — `5 16 * * 1-5`, alarme.yml,
   Text `{"ref":"main","inputs":{"modus":"ntfyputz"}}`.
 
@@ -50,7 +96,7 @@ Aufträge neu angelegt werden:
   unabhängig davon weiter, weil der tägliche ntfy-Putz um 16:05
   denselben Befehl ausführt und Montag bis Freitag läuft, also auch am
   Freitag. Genau deshalb war das Löschen dieses Auftrags gefahrlos.
-- *Wächter Tagwache* (Auftrag 8146990, trägt keinen Titel) —
+- *Heliot Tagwache (09:28 New York)* (Auftrag 8146990) —
   `28 9 * * 1-5`, watcher.yml,
   Text `{"ref":"main","inputs":{"dauerwache":"390"}}`.
 - *Heliot Teil 2 (Schlussstunde, 15:26 New York)* (Auftrag 8147021) —
