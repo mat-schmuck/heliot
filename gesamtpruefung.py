@@ -69,6 +69,7 @@ def ueberschrift(text):
 BETRIEB = ["config", "volumen", "kurs_cache", "pattern_scanner",
            "breakout_watcher", "cup_handle_v2", "shakeout", "red_to_green",
            "crash_support", "exit_regeln", "positionen", "trigger_logbuch",
+           "red_to_green_explosive",
            "scan_noetig", "waechter_noetig", "wartung", "ntfy_verlauf",
            "yahoo_ws", "staffelung", "traderfox_alarm_bot"]
 
@@ -108,7 +109,8 @@ def block_b():
     ueberschrift("B — SELBSTTESTS aller Module")
     mit_schalter = ["exit_regeln", "positionen", "crash_support",
                     "trigger_logbuch", "cup_handle_v2", "shakeout",
-                    "red_to_green", "scan_noetig", "waechter_noetig"]
+                    "red_to_green", "red_to_green_explosive",
+                    "scan_noetig", "waechter_noetig"]
     for name in mit_schalter:
         r = subprocess.run([sys.executable, f"{name}.py", "--selbsttest"],
                            capture_output=True, text=True, cwd=WURZEL,
@@ -203,6 +205,7 @@ def block_d(namen_aus_c=None):
 
     # Alle Strategienamen, die im System entstehen koennen.
     erzeugbar = set(ps.PRIORITY) | {"Lücken-Bestätigungstag", "Red-to-Green",
+                                    "Red-to-Green Explosive",
                                     "Shakeout-Spring", "Crash-Support"}
     if namen_aus_c:
         erzeugbar |= namen_aus_c
@@ -353,6 +356,25 @@ def block_e():
            "18% Risiko" in text, text.splitlines()[2][:60])
     pruefe("E", "Uebersprungene bekommen ein eigenes Schluessel-Vorzeichen",
            bw.UEBERSPRUNGEN_MARKE and bw.UEBERSPRUNGEN_MARKE != bw.NACHTRAG_MARKE)
+
+    # KAPITEL 11 — Red-to-Green Explosive (Mathias, 12.08.2026)
+    import red_to_green_explosive as k11
+    import red_to_green as k9
+    pruefe("E", "Kapitel 11 erkennt Fastly vom 10.08.2026",
+           k11.aktien_gap(22.45, 22.96)[0], f"{k11.aktien_gap(22.45, 22.96)[1]} %")
+    pruefe("E", "Kapitel 9 haette Fastly NICHT erkannt",
+           not k9.aktien_gap(22.45, 22.96)[0])
+    pruefe("E", "Kapitel 11 laeuft OHNE Nasdaq-Bedingung",
+           "nasdaq_gap_scharf" not in k11.CFG
+           and "nasdaq_gap_scharf" in k9.CFG)
+    pruefe("E", "Kapitel 11 teilt die Bausteine mit Kapitel 9",
+           k11.pruefe is k9.pruefe and k11.punkt_setzen is k9.punkt_setzen)
+    pruefe("E", "Der Waechter hat einen eigenen Weg fuer Kapitel 11",
+           hasattr(bw, "pruefe_red_to_green_explosive"))
+    import exit_regeln as ex11
+    pruefe("E", "Kapitel 11 hat einen Strukturpunkt fuer den Stop",
+           ex11.STRUKTURPUNKT.get(k11.NAME) is not None,
+           str(ex11.STRUKTURPUNKT.get(k11.NAME))[:40])
 
     # Handelszeit-Sperre
     from datetime import datetime as dt

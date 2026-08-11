@@ -52,6 +52,7 @@ except ImportError:
 
 import ntfy_verlauf   # merkt sich jede verschickte Meldung fuer den Freitags-Putz
 import red_to_green   # Kapitel 9: Volumen-Signatur an der Kreuzung
+import red_to_green_explosive  # Kapitel 11: dreht aus eigenem Antrieb
 import exit_regeln    # Exit-Regelwerk: Stops, Gewinnabsicherung
 import trigger_logbuch  # schreibt jedes Signal mit, gemeldet oder nicht
 import volumen        # IBD Volume % Change — die EINZIGE Volumenrechnung
@@ -1059,6 +1060,31 @@ def pruefe_red_to_green(ticker: str, q: dict, eintrag: dict):
     # gerechnet wird nicht mit einer fremden Kurve.
     return red_to_green.pruefe(verlauf, vortag, v50,
                                volumen.kurve_fuer(ticker))
+
+
+def pruefe_red_to_green_explosive(ticker, q, eintrag):
+    """Kapitel 11 (Mathias, 12.08.2026): dieselbe Signatur wie Kapitel 9,
+    aber OHNE Nasdaq-Bedingung und mit zwei statt fuenf Prozent Luecke.
+
+    Der Tagesverlauf wird mit Kapitel 9 GETEILT — beide schreiben in
+    dieselbe Reihe (_r2g_verlauf), und punkt_setzen haelt je Minute genau
+    einen Punkt. Zwei getrennte Reihen zu fuehren waere doppelte Arbeit
+    und koennte auseinanderlaufen."""
+    vortag = eintrag.get("vortagesschluss") or q.get("prev_close")
+    v50 = eintrag.get("v50")
+    kurs, vol, eroeffnung = q.get("close"), q.get("volume"), q.get("open")
+    if not (vortag and v50 and kurs and vol and eroeffnung):
+        return None
+    if not red_to_green_explosive.aktien_gap(eroeffnung, vortag)[0]:
+        return None
+
+    minute = volumen.minute_seit_eroeffnung()
+    if minute is None:
+        return None
+    verlauf = _r2g_verlauf.setdefault(ticker, [])
+    red_to_green_explosive.punkt_setzen(verlauf, minute, kurs, vol)
+    return red_to_green_explosive.pruefe(verlauf, vortag, v50,
+                                         volumen.kurve_fuer(ticker))
 
 
 def format_r2g(t: dict) -> str:
@@ -2127,6 +2153,63 @@ def main():
                     if push_text(topic, titel,
                                  nummeriert([format_r2g(t) for t in r2g_neu])):
                         for t in r2g_neu:
+                            schon_gemeldet.add(t["key"])
+                            state["gemeldet"][t["key"]] = date.today().isoformat()
+                        save_state(state)
+                    else:
+                        sperre_bis = jetzt_s + TAKT
+
+            # --- Red-to-Green EXPLOSIVE (Kapitel 11) -----------------------
+            # OHNE Marktbedingung: Hier zaehlt nur die Aktie selbst
+            # (Mathias, 12.08.2026). Deshalb steht die Schleife bewusst
+            # AUSSERHALB der r2g_regime_pruefen-Abfrage von Kapitel 9.
+            # Eigener Meldeschluessel, damit beide Kapitel am selben Tag
+            # unabhaengig voneinander feuern koennen.
+            r2gx_neu = []
+            if _r2g_fokus:
+                for rt, eintrag in _r2g_fokus.items():
+                    q = quotes.get(rt)
+                    if not q:
+                        continue
+                    treffer = pruefe_red_to_green_explosive(rt, q, eintrag)
+                    if not treffer:
+                        continue
+                    treffer["ticker"] = rt
+                    treffer["firma"] = eintrag.get("firma") or firmen.get(rt, "")
+                    treffer["strategie"] = red_to_green_explosive.NAME
+                    treffer["key"] = f"R2GX|{rt}|{date.today().isoformat()}"
+                    # Hat Kapitel 9 dieselbe Aktie heute schon gemeldet,
+                    # ist das hier kein zweites Ereignis, sondern dasselbe
+                    # mit lockererer Schwelle. Dann schweigen.
+                    if (treffer["key"] not in schon_gemeldet
+                            and f"R2G|{rt}|{date.today().isoformat()}"
+                            not in schon_gemeldet):
+                        r2gx_neu.append(treffer)
+            if r2gx_neu:
+                print("")
+                print(f"Red-to-Green Explosive: {len(r2gx_neu)} Meldung(en)")
+                for t in r2gx_neu:
+                    for zeile in format_r2g(t).split("\n"):
+                        print("  " + zeile)
+                    print("")
+                trigger_logbuch.protokolliere_viele(
+                    [{"ticker": t.get("ticker"), "firma": t.get("firma", ""),
+                      "strategie": red_to_green_explosive.NAME,
+                      "kurs": t.get("kurs"),
+                      "trockenlauf": bool(args.dry_run)} for t in r2gx_neu],
+                    quelle="waechter/kapitel11")
+                if args.dry_run:
+                    print("(Dry-Run — kein Push)")
+                    for t in r2gx_neu:
+                        schon_gemeldet.add(t["key"])
+                elif jetzt_s < sperre_bis:
+                    pass
+                else:
+                    titel = ("Red-to-Green Explosive: "
+                             + ", ".join(t["ticker"] for t in r2gx_neu))
+                    if push_text(topic, titel,
+                                 nummeriert([format_r2g(t) for t in r2gx_neu])):
+                        for t in r2gx_neu:
                             schon_gemeldet.add(t["key"])
                             state["gemeldet"][t["key"]] = date.today().isoformat()
                         save_state(state)

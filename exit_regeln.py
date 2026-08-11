@@ -77,6 +77,10 @@ STRUKTURPUNKT = {
     "Lücken-Bestätigungstag":      "Tief des Lücken-Tages",
     "Crash-Support":               "Unterkante der Unterstützungszone",
     "Red-to-Green":                "Schlusskurs fällt unter den Vortagesschluss",
+    # Kapitel 11 dreht aus eigenem Antrieb, hat aber denselben
+    # Bruchpunkt: Faellt der Schluss wieder unter den
+    # Vortagesschluss, war die Umkehr keine.
+    "Red-to-Green Explosive":      "Schlusskurs fällt unter den Vortagesschluss",
     "Shakeout-Spring":             "Spring-Tief",
 }
 

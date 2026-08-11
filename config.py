@@ -335,6 +335,51 @@ CFG = {
         "trigger": "zone_schluss",
         "kursziel_faktor": 1.0,          # Zonenhöhe einmal auf die Oberkante
     },
+    # --- Kapitel 11: Red-to-Green EXPLOSIVE (Mathias, 12.08.2026) ---
+    # Anlass war Fastly am 10.08.2026: Die Aktie eroeffnete bei 22,45 und
+    # damit 2,2 % UNTER dem Vortagesschluss, drehte und schloss bei 27,75,
+    # also 20,9 % im Plus. Von der Eroeffnung bis zum Schluss waren es
+    # 23,6 %. Gemeldet wurde nichts, und zwar aus zwei Gruenden:
+    #
+    #   * Eine BASIS gab es nicht — die zwoelf Tage davor hatten eine
+    #     Spanne von 43,8 %. Also kein Darvas, kein Rectangle, kein Cup.
+    #   * Eine LUECKE gab es auch nicht — Gap and Go verlangt sieben
+    #     Prozent nach OBEN, hier waren es 2,2 nach unten.
+    #   * Und Kapitel 9 verlangt ZWEI Dinge, die beide fehlten: der Nasdaq
+    #     haette mindestens 1,5 % nach unten aufmachen muessen (er
+    #     eroeffnete mit -0,04 %), und die Aktie selbst mindestens 5 %
+    #     (es waren 2,2).
+    #
+    # Kapitel 9 ist eine PANIK-Regel: ganzer Markt bricht ein, starke
+    # Aktie faellt mit, dreht als Erste. Kapitel 11 ist etwas anderes —
+    # die Aktie dreht AUS EIGENEM ANTRIEB, ohne dass der Markt etwas
+    # damit zu tun haette. Deshalb ein eigenes Kapitel und keine
+    # Aufweichung von Kapitel 9: Gerhard hat dessen Bedingungen mit
+    # Bedacht so eng gefasst, und sie bleiben unangetastet.
+    #
+    # ES GIBT HIER BEWUSST KEINEN NASDAQ-SCHALTER (Mathias' Vorgabe vom
+    # 12.08.2026). Die Marktlage spielt keine Rolle; gesucht wird die
+    # Aktie, die aus sich heraus dreht.
+    "red_to_green_explosive": {
+        # Der einzige gelockerte Wert: zwei statt fuenf Prozent. Genug,
+        # um einen roten Start zu verlangen, wenig genug, um Faelle wie
+        # Fastly (-2,2 %) zu erwischen.
+        "aktie_gap_min": -0.02,
+        # ALLES UEBRIGE ist wortgleich Kapitel 9 (Mathias: "ansonsten
+        # genau so"). Die Werte stehen hier ausgeschrieben statt geerbt,
+        # damit man beide Kapitel nebeneinander lesen kann und niemand
+        # eines aendert und dabei das andere mitverstellt.
+        "rs_min": 90,
+        "min_ueber_tief": 0.5,
+        "ema_kurz": 21,
+        "ema_lang": 50,
+        "vol_anflug_max_pct": 0.0,
+        "vol_sprung_min_pct": 100.0,
+        "fruehe_phase_minuten": 30,
+        "sprung_bestaetigung_minuten": 10,
+        "sprung_abfall_max": 0.2,
+    },
+
     "bottom_fishing": {
         "rsi_periode": 2,
         "rsi_kaufzone": 10,
