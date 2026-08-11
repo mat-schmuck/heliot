@@ -58,6 +58,17 @@ on:
         required: false
         default: "false"
 
+# ZWEI ALARM-LAEUFE DUERFEN SICH NIE UEBERSCHNEIDEN (gefunden am
+# 11.08.2026 von gesamtpruefung.py, Block H — als einziger Ablauf hatte
+# dieser keine Sperre). Der Bot meldet sich bei TraderFox an, arbeitet
+# eine gemeinsame Kursliste ab und schreibt fortschritt.json; zwei
+# gleichzeitige Laeufe wuerden einander die Suchkonsole umbauen und den
+# Fortschritt gegenseitig ueberschreiben. Ohne Abbrechen, damit ein
+# zweiter Anstoss wartet statt den laufenden zu zerschiessen.
+concurrency:
+  group: traderfox-alarme
+  cancel-in-progress: false
+
 jobs:
   lauf:
     runs-on: ubuntu-latest

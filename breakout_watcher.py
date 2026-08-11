@@ -176,6 +176,15 @@ VOL_FAKTOR = {
     "Darvas Box": _VOL["breakout_faktor"],
     "VCP": _VOL["breakout_faktor_vcp"],
     "Cup & Handle": _VOL["breakout_faktor"],
+    # DIE WOCHENFASSUNG GEHOERT AUSDRUECKLICH DAZU (gefunden am
+    # 11.08.2026 von gesamtpruefung.py, Block D). Der Scanner erzeugt den
+    # Namen "Cup & Handle (Wochenbasis)" seit dem 04.08.2026, diese
+    # Tabelle kannte ihn nicht — die Huerde fiel still auf
+    # VOL_FAKTOR_FALLBACK. Schaden entstand keiner, weil der Rueckfall
+    # zufaellig denselben Wert hat. Genau das ist das Gefaehrliche daran:
+    # Wer den Faktor fuer Cup & Handle je aendert, aendert ihn fuer die
+    # Wochenfassung NICHT mit, und niemand merkt es.
+    "Cup & Handle (Wochenbasis)": _VOL["breakout_faktor"],
     "Rectangle Top": _VOL["breakout_faktor"],
     "High & Tight Flag": _VOL["breakout_faktor"],
 }
