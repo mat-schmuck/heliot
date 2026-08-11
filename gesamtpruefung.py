@@ -280,8 +280,11 @@ def block_e():
     pruefe("E", "Ausbruch wird erkannt", t is not None)
     pruefe("E", "Kurs unter dem Kaufpunkt ergibt keinen Treffer",
            bw.pruefe_breakout(item, {**quote, "close": 99.0}) is None)
-    pruefe("E", "Kurs zu weit darueber ergibt keinen Treffer (Nachlaufsperre)",
-           bw.pruefe_breakout(item, {**quote, "close": 130.0}) is None)
+    # Weit darueber ist SEIT 11.08.2026 kein None mehr, sondern eine
+    # eigene Meldung. Kein Kaufsignal bleibt es trotzdem.
+    weit = bw.pruefe_breakout(item, {**quote, "close": 130.0})
+    pruefe("E", "Kurs zu weit darueber ist KEIN Ausbruch",
+           weit is not None and weit.get("uebersprungen") is True)
 
     # Die drei Volumen-Zustaende muessen SICHTBAR verschieden sein
     grund = {**item, "kurs": 101.0, "ueber_pct": 1.0, "vol_ratio": None,
@@ -328,6 +331,28 @@ def block_e():
     bw._deckel_nachziehen(weit)
     pruefe("E", "Zu weiter Stop aus der Mappe wird nachgezogen",
            abs(weit[0]["stop"] - 90.0) < 0.011, f"Stop {weit[0]['stop']}")
+
+    # UEBERSPRUNGENE KAUFPUNKTE (Gerhard, 11.08.2026, Fall Sea)
+    se = {"ticker": "SE", "firma": "Sea Ltd ADR",
+          "strategie": "Cup & Handle (Wochenbasis)", "kaufpunkt": 115.91,
+          "stop": 104.32, "ziel": None, "nr": 1}
+    t = bw.pruefe_breakout(se, {"close": 127.87, "volume": 5e6,
+                                "avg_volume": 1.2e6})
+    pruefe("E", "Uebersprungener Kaufpunkt wird erkannt statt verschluckt",
+           t is not None and t.get("uebersprungen") is True)
+    knapp = bw.pruefe_breakout(se, {"close": 120.0, "volume": 5e6,
+                                    "avg_volume": 1.2e6})
+    pruefe("E", "Knapp darueber (3,5 %) bleibt ein normaler Ausbruch",
+           knapp is not None and not knapp.get("uebersprungen"))
+    text = bw.format_uebersprungen(t)
+    pruefe("E", "Die Meldung sagt ausdruecklich, dass es kein Kaufsignal ist",
+           "kein Kaufsignal" in text)
+    pruefe("E", "Sie nennt KEIN Volumenurteil (waere ein Signal-Anschein)",
+           "BESTÄTIGT" not in text and "Vol " not in text)
+    pruefe("E", "Sie nennt das Risiko eines Einstiegs JETZT",
+           "18% Risiko" in text, text.splitlines()[2][:60])
+    pruefe("E", "Uebersprungene bekommen ein eigenes Schluessel-Vorzeichen",
+           bw.UEBERSPRUNGEN_MARKE and bw.UEBERSPRUNGEN_MARKE != bw.NACHTRAG_MARKE)
 
     # Handelszeit-Sperre
     from datetime import datetime as dt

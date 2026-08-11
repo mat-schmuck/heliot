@@ -424,6 +424,17 @@ CFG = {
         # Zwischen 2 und 20 Sekunden liegt dort kein einziger Zugriff
         # Unterschied.
         "pruef_takt_sekunden": 2,
+        # WIE WEIT UEBER DEM KAUFPUNKT gilt ein Ausbruch noch als sauber
+        # einsteigbar? Darueber wird nicht mehr als Kaufsignal gemeldet.
+        # Die Zahl stand bis 11.08.2026 fest im Waechter.
+        "nachlauf_grenze": 0.05,
+        # Und was passiert MIT dem, was darueber liegt? Seit 11.08.2026
+        # (Gerhards Fall Sea, das den Kaufpunkt mit einer Eroeffnungsluecke
+        # von 10,3 % uebersprang) gibt es dafuer eine EIGENE Meldung:
+        # "Kaufpunkt uebersprungen". Sie ist ausdruecklich KEIN Kaufsignal,
+        # sondern die Auskunft, dass etwas passiert ist. Auf False setzen,
+        # wenn nur noch handelbare Ausbrueche gemeldet werden sollen.
+        "melde_uebersprungene": True,
         # Weckuhr und Sammelfenster gab es nur am 30.07.2026 für ein paar
         # Stunden; mit dem festen Zwei-Sekunden-Takt sind sie wieder
         # heraus. Ebenso die Obergrenze von fünf Aktien je Push: Sie

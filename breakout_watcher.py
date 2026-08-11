@@ -223,6 +223,15 @@ TAKT = CFG["betrieb"].get("takt_sekunden", 60)
 # warten. Ausfuehrliche Begruendung in der Hauptschleife.
 PRUEF_TAKT = CFG["betrieb"].get("pruef_takt_sekunden", 2)
 
+# Wie weit ueber dem Kaufpunkt gilt ein Ausbruch noch als einsteigbar,
+# und was passiert mit dem, was darueber liegt (siehe pruefe_breakout).
+NACHLAUF_GRENZE = CFG["betrieb"].get("nachlauf_grenze", 0.05)
+MELDE_UEBERSPRUNGENE = CFG["betrieb"].get("melde_uebersprungene", True)
+# Eigenes Vorzeichen im Meldeschluessel: Ein uebersprungener Kaufpunkt
+# ist ein ANDERES Ereignis als ein sauberer Ausbruch und darf dessen
+# Gedaechtnis nicht belegen.
+UEBERSPRUNGEN_MARKE = "UEBER|"
+
 # SAMMELFENSTER. Nach der ersten Kursmeldung wird kurz nachgefasst, damit
 # gleichzeitig gerissene Kaufpunkte in EINER Push-Meldung landen statt in
 # zwanzig einzelnen — das passiert vor allem in den ersten Minuten nach
@@ -730,10 +739,35 @@ def pruefe_breakout(item: dict, quote: dict) -> dict | None:
     if kurs < kp:
         return None  # Kaufpunkt noch nicht erreicht
 
-    # Zu weit drüber? Dann ist der Zug abgefahren (kein sauberer Einstieg mehr)
+    # ZU WEIT DRUEBER: kein sauberer Einstieg mehr.
+    #
+    # Bis 11.08.2026 endete die Pruefung hier mit None, der Fall war also
+    # unsichtbar. Gerhard hat gefragt, warum Sea nichts gemeldet hat: Die
+    # Aktie eroeffnete am 11.08. mit 127,87 und damit 10,3 % ueber ihrem
+    # Kaufpunkt von 115,91 — keine einzige der 78 Fuenf-Minuten-Kerzen des
+    # Tages lag im Meldefenster. Die Aktie ist ueber den Kaufpunkt hinweg
+    # eroeffnet worden.
+    #
+    # Die Grenze bleibt, denn sie ist richtig: Wer bei 127,87 einsteigt,
+    # waehrend der Stop bei 104,32 liegt, traegt 18 % Risiko statt der
+    # geplanten zehn. Aber STILL bleiben soll der Fall nicht mehr. Er
+    # bekommt eine EIGENE Meldung, ausdruecklich kein Kaufsignal, sondern
+    # die Auskunft "hier ist etwas passiert, und zwar ohne dich".
     ueber = kurs / kp - 1
-    if ueber > 0.05:
-        return None
+    if ueber > NACHLAUF_GRENZE:
+        if not MELDE_UEBERSPRUNGENE:
+            return None
+        return {**item, "kurs": kurs, "ueber_pct": ueber * 100,
+                "uebersprungen": True,
+                # Kein Volumenurteil: Ob das Volumen stimmt, aendert
+                # nichts daran, dass der Einstieg vorbei ist. Eine
+                # Volumenzahl wuerde die Meldung wie ein Signal aussehen
+                # lassen, und genau das ist sie nicht.
+                "vol_ratio": None, "vol_pct": None, "vol_ok": None,
+                "vol_noetig": VOL_FAKTOR.get(item["strategie"],
+                                             VOL_FAKTOR_FALLBACK),
+                "vol_anteil": None, "vol_roh": quote.get("volume"),
+                "vol_nicht_verifizierbar": False}
 
     faktor = VOL_FAKTOR.get(item["strategie"], VOL_FAKTOR_FALLBACK)
     vol, avg = quote["volume"], quote["avg_volume"]
@@ -1085,6 +1119,51 @@ def format_gapgo(g: dict) -> str:
                       f"{GAP_VOL_FAKTOR:.0f} mal Volumen) folgt zum "
                       f"Handelsende")
     return "\n".join(zeilen)
+
+
+def format_uebersprungen(t: dict) -> str:
+    """Ein Kaufpunkt wurde uebersprungen — AUSDRUECKLICH KEIN Kaufsignal.
+
+    Der Ton ist bewusst anders als bei einem Ausbruch: kein "BESTAETIGT",
+    keine Volumenzahl, kein Stop und kein Ziel. Wer hier Zahlen liest,
+    die nach Einstieg aussehen, steigt womoeglich hinterher ein — und
+    genau davor schuetzt die Grenze.
+
+    Genannt wird stattdessen, was der Einstieg JETZT kosten wuerde: das
+    Risiko bis zum Stop des Musters. Bei Sea waeren das am 11.08.2026
+    18 % statt der geplanten zehn gewesen.
+    """
+    namen = t.get("strategien") or [t["strategie"]]
+    strategie = ", ".join(STRATEGIE_VOLL.get(n, n) for n in namen)
+    zeilen = [f"{t['ticker']} ({t.get('firma','')}); {strategie}",
+              f"Kaufpunkt {t['kaufpunkt']:.2f} ÜBERSPRUNGEN, Kurs "
+              f"{t['kurs']:.2f} liegt {t['ueber_pct']:.1f}% darüber"]
+    stop = t.get("stop")
+    if stop:
+        # BEWUSST NICHT ueber exit_regeln.risiko_pct: Das wirft ueber dem
+        # Deckel, und genau darum geht es hier. Gerechnet wird schlicht.
+        jetzt = (t["kurs"] - stop) / t["kurs"] * 100
+        geplant = (t["kaufpunkt"] - stop) / t["kaufpunkt"] * 100
+        zeilen.append(f"Einstieg jetzt hieße {jetzt:.0f}% Risiko bis Stop "
+                      f"{stop:.2f} statt der geplanten {geplant:.0f}%")
+    zeilen.append("Kein sauberer Einstieg mehr, daher kein Kaufsignal")
+    return "\n".join(zeilen)
+
+
+def push_uebersprungen(topic: str, treffer: list[dict]) -> bool:
+    """Meldet uebersprungene Kaufpunkte, getrennt von den Ausbruechen.
+
+    Eigene Nachricht und niedrige Dringlichkeit: Es ist eine Auskunft,
+    kein Signal. Waere sie in dieselbe Meldung gemischt, stuenden
+    handelbare und nicht handelbare Zeilen nebeneinander — und am Handy
+    liest man das im Zweifel als eine Liste."""
+    if not treffer:
+        return False
+    absaetze = [f"{i}. {format_uebersprungen(t)}"
+                for i, t in enumerate(treffer, 1)]
+    titel = (f"⤴ {len(treffer)} Kaufpunkt(e) übersprungen"
+             + tagesanteil_titel(treffer))
+    return sende(topic, titel, absaetze, "default", "fast_forward")
 
 
 def format_treffer(t: dict) -> str:
@@ -1807,13 +1886,24 @@ def main():
                 print("  " + ", ".join(fehlend))
                 print("  Für diese Werte wird kein Ausbruch erkannt.")
 
-            treffer, neu, nachtrag = [], [], []
+            treffer, neu, nachtrag, uebersprungen = [], [], [], []
             for item in items:
                 q = quotes.get(item["ticker"].upper())
                 if not q:
                     continue
                 res = pruefe_breakout(item, q)
                 if not res:
+                    continue
+                # UEBERSPRUNGENE KAUFPUNKTE gehen einen eigenen Weg
+                # (Gerhard, 11.08.2026, Fall Sea). Eigener Schluessel,
+                # eigene Nachricht, eigenes Gedaechtnis — sie duerfen
+                # weder als Ausbruch gezaehlt werden noch dessen
+                # Meldeplatz belegen.
+                if res.get("uebersprungen"):
+                    res["key"] = (UEBERSPRUNGEN_MARKE
+                                  + f"{item['ticker']}|{item['nr']}")
+                    if res["key"] not in schon_gemeldet:
+                        uebersprungen.append(res)
                     continue
                 # Kennung am Treffer mitfuehren. Vorgemerkt wird ERST nach
                 # einem erfolgreichen Push - siehe unten.
@@ -1968,6 +2058,38 @@ def main():
                     for t in nachtrag:
                         schon_gemeldet.add(t["key_best"])
                         state["gemeldet"][t["key_best"]] = heute_s
+                    save_state(state)
+                else:
+                    sperre_bis = jetzt_s + TAKT
+
+            # --- Uebersprungene Kaufpunkte ---------------------------
+            # Bewusst NACH den Ausbruechen und dem Nachtrag: Was handelbar
+            # ist, geht zuerst raus. Diese Meldung ist eine Auskunft.
+            if uebersprungen and jetzt_s >= sperre_bis:
+                print("")
+                print(f"{len(uebersprungen)} Kaufpunkt(e) übersprungen "
+                      f"(kein sauberer Einstieg mehr):")
+                for t in uebersprungen:
+                    for zeile in format_uebersprungen(t).split("\n"):
+                        print("  " + zeile)
+                    print("")
+                trigger_logbuch.protokolliere_viele(
+                    [{"ticker": t.get("ticker"), "firma": t.get("firma", ""),
+                      "strategie": t.get("strategie"),
+                      "kaufpunkt": t.get("kaufpunkt"), "kurs": t.get("kurs"),
+                      "stop": t.get("stop"), "ueber_pct": t.get("ueber_pct"),
+                      "uebersprungen": True,
+                      "trockenlauf": bool(args.dry_run)}
+                     for t in uebersprungen], quelle="waechter/uebersprungen")
+                if args.dry_run:
+                    print("(Dry-Run — nichts gesendet)")
+                    for t in uebersprungen:
+                        schon_gemeldet.add(t["key"])
+                elif push_uebersprungen(topic, uebersprungen):
+                    heute_s = date.today().isoformat()
+                    for t in uebersprungen:
+                        schon_gemeldet.add(t["key"])
+                        state["gemeldet"][t["key"]] = heute_s
                     save_state(state)
                 else:
                     sperre_bis = jetzt_s + TAKT
