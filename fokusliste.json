@@ -1,111 +1,104 @@
 {
- "gebaut_am": "2026-08-11 00:03 Wien",
+ "gebaut_am": "2026-08-12 00:02 Wien",
  "universum": 235,
  "aktien": {
   "AAOI": {
    "firma": "Applied Optoelectronics Inc",
-   "vortagesschluss": 132.81,
-   "v50": 12289895.2,
+   "vortagesschluss": 134.33,
+   "v50": 12235928.6,
    "rs_rating": 98,
-   "ueber_52w_tief_pct": 617.9
+   "ueber_52w_tief_pct": 626.1
   },
   "AXTI": {
    "firma": "AXT Inc",
-   "vortagesschluss": 73.81,
-   "v50": 10617437.9,
+   "vortagesschluss": 73.78,
+   "v50": 10548361.7,
    "rs_rating": 99,
-   "ueber_52w_tief_pct": 3500.5
+   "ueber_52w_tief_pct": 3499.0
   },
   "AYA": {
    "firma": "Aya Gold & Silver Inc",
-   "vortagesschluss": 27.92,
-   "v50": 589953.6,
+   "vortagesschluss": 27.84,
+   "v50": 590857.1,
    "rs_rating": 91,
-   "ueber_52w_tief_pct": 237.6
+   "ueber_52w_tief_pct": 236.6
   },
   "FRD": {
    "firma": "Friedman Industries Inc",
-   "vortagesschluss": 43.475,
-   "v50": 93132.5,
-   "rs_rating": 91,
-   "ueber_52w_tief_pct": 171.7
+   "vortagesschluss": 42.87,
+   "v50": 93909.2,
+   "rs_rating": 92,
+   "ueber_52w_tief_pct": 164.6
   },
   "FSLY": {
    "firma": "Fastly Inc",
-   "vortagesschluss": 27.75,
-   "v50": 6302943.0,
+   "vortagesschluss": 28.78,
+   "v50": 6331257.4,
    "rs_rating": 94,
-   "ueber_52w_tief_pct": 314.5
+   "ueber_52w_tief_pct": 329.9
   },
   "HYMC": {
    "firma": "Hycroft Mining Holding Corp",
-   "vortagesschluss": 27.29,
-   "v50": 2053078.7,
-   "rs_rating": 96,
-   "ueber_52w_tief_pct": 717.1
+   "vortagesschluss": 27.53,
+   "v50": 2046482.7,
+   "rs_rating": 97,
+   "ueber_52w_tief_pct": 724.3
   },
   "LITE": {
    "firma": "Lumentum Holdings Inc",
-   "vortagesschluss": 813.51,
-   "v50": 5220353.0,
-   "rs_rating": 97,
-   "ueber_52w_tief_pct": 631.6
+   "vortagesschluss": 820.59,
+   "v50": 5207803.9,
+   "rs_rating": 96,
+   "ueber_52w_tief_pct": 637.9
   },
   "TSEM": {
    "firma": "Tower Semiconductor Ltd",
-   "vortagesschluss": 252.55,
-   "v50": 2043501.2,
-   "rs_rating": 94,
-   "ueber_52w_tief_pct": 454.9
+   "vortagesschluss": 249.58,
+   "v50": 1999129.5,
+   "rs_rating": 93,
+   "ueber_52w_tief_pct": 448.4
   },
   "CDNA": {
    "firma": "Caredx Inc",
-   "vortagesschluss": 47.07,
-   "v50": 1108511.5,
-   "rs_rating": 95,
-   "ueber_52w_tief_pct": 317.6
+   "vortagesschluss": 47.23,
+   "v50": 1107584.4,
+   "rs_rating": 97,
+   "ueber_52w_tief_pct": 319.0
   },
   "CRNX": {
    "firma": "Crinetics Pharmaceuticals Inc",
-   "vortagesschluss": 84.15,
-   "v50": 4421669.3,
-   "rs_rating": 93,
-   "ueber_52w_tief_pct": 225.8
+   "vortagesschluss": 84.36,
+   "v50": 4417422.6,
+   "rs_rating": 92,
+   "ueber_52w_tief_pct": 218.4
   },
   "DELL": {
    "firma": "Dell Technologies Inc",
-   "vortagesschluss": 457.88,
-   "v50": 8722053.3,
-   "rs_rating": 96,
-   "ueber_52w_tief_pct": 315.4
-  },
-  "ETON": {
-   "firma": "Eton Pharmaceuticals Inc",
-   "vortagesschluss": 43.67,
-   "v50": 465801.5,
-   "rs_rating": 92,
-   "ueber_52w_tief_pct": 206.0
+   "vortagesschluss": 440.97,
+   "v50": 7993226.3,
+   "rs_rating": 95,
+   "ueber_52w_tief_pct": 300.1
   },
   "FTK": {
    "firma": "Flotek Industries Inc",
-   "vortagesschluss": 37.62,
-   "v50": 392118.8,
+   "vortagesschluss": 38.82,
+   "v50": 395347.0,
    "rs_rating": 93,
-   "ueber_52w_tief_pct": 243.6
+   "ueber_52w_tief_pct": 254.5
   },
   "LQDA": {
    "firma": "Liquidia Corp",
-   "vortagesschluss": 91.03,
-   "v50": 1933853.6,
-   "rs_rating": 97,
-   "ueber_52w_tief_pct": 378.6
+   "vortagesschluss": 88.05,
+   "v50": 1944371.8,
+   "rs_rating": 95,
+   "ueber_52w_tief_pct": 342.5
   },
-  "UMAC": {
-   "firma": "Unusual Machines Inc",
-   "vortagesschluss": 27.14,
-   "v50": 5291744.2,
-   "rs_rating": 92,
-   "ueber_52w_tief_pct": 274.6
+  "SEPN": {
+   "firma": "Septerna Inc",
+   "vortagesschluss": 47.76,
+   "v50": 435628.6,
+   "rs_rating": 94,
+   "ueber_52w_tief_pct": 349.9
   }
  }
 }
