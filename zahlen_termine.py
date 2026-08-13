@@ -27,8 +27,29 @@ WAS GEMELDET WIRD
       * Zahlen HEUTE vor Eroeffnung       — schon geschehen; erklaert
         eine Luecke, statt vor einer zu warnen.
 
-WOHER DIE DATEN KOMMEN
-    yfinance, Ticker.get_earnings_dates(). Der Zeitstempel traegt die
+WOHER DIE DATEN KOMMEN — ZWEI QUELLEN, und das ist noetig
+    1. yfinance, Ticker.get_earnings_dates().
+    2. Der oeffentliche Kalender der Nasdaq
+       (api.nasdaq.com/api/calendar/earnings?date=...). Ohne Schluessel,
+       ohne Anmeldung, alle US-Boersen; das Feld 'time' liefert genau
+       die Einordnung, die hier gebraucht wird.
+
+    WARUM ZWEI (gemessen am 13.08.2026 an der echten Wochenliste ueber
+    fuenf Handelstage): Von den Terminen, die beide kannten, stimmten
+    acht ueberein und ZWEI nicht — bei AYA um einen ganzen Tag UND um
+    die Tageszeit (Nasdaq 14.08. vorboerslich, Yahoo 13.08.
+    nachboerslich), bei DY um eine Woche. Und zwei Aktien, die an diesem
+    Tag berichteten, kannte Yahoo GAR NICHT: fuer ASND und IDR hatte es
+    ueberhaupt keinen kommenden Termin.
+
+    Eine Quelle allein haette also an genau dem Tag geschwiegen, an dem
+    gewarnt werden sollte. Deshalb gilt: Meldet EINE der beiden einen
+    Termin, wird vermerkt. Sind sie uneinig, gewinnt der fruehere Termin
+    und die Uneinigkeit steht im Vermerk — ein Hinweis, dem man ansieht,
+    wie sicher er ist, ist mehr wert als einer, der Sicherheit
+    vortaeuscht.
+
+    Zum Ausgangsstand: yfinance, Ticker.get_earnings_dates(). Der Zeitstempel traegt die
     Uhrzeit mit, und daran haengt die ganze Einordnung: 16:00 heisst
     nach Schluss, 07:00 oder 08:00 heisst davor. Gemessen am 12.08.2026
     an vier Aktien: NVDA 26.08. 16:00, FSLY 04.11. 15:00, SE 10.11.
@@ -116,8 +137,82 @@ def hole_termine(tickers, leise=False):
     return out, ohne
 
 
+def hole_nasdaq(tage=10, leise=False):
+    """Der oeffentliche Kalender der Nasdaq. Kein Schluessel noetig.
+
+    Gefragt wird Tag fuer Tag, Wochenenden ausgelassen. Faellt ein Tag
+    aus, fehlt er einfach — diese Quelle ist eine Ergaenzung, kein
+    Ersatz, und darf den Lauf nie aufhalten."""
+    import urllib.request
+
+    lage_aus = {"time-after-hours": "nachboerslich",
+                "time-pre-market": "vorboerslich",
+                "time-not-supplied": "unbekannt"}
+    out = {}
+    heute = date.today()
+    geprueft = 0
+    for i in range(0, tage + 6):
+        if geprueft >= tage:
+            break
+        tag = heute + timedelta(days=i)
+        if tag.weekday() >= 5:
+            continue
+        geprueft += 1
+        url = ("https://api.nasdaq.com/api/calendar/earnings?date="
+               + tag.isoformat())
+        bitte = urllib.request.Request(url, headers={
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+            "Accept": "application/json"})
+        try:
+            with urllib.request.urlopen(bitte, timeout=30) as a:
+                d = json.loads(a.read().decode("utf-8"))
+        except Exception as e:
+            if not leise:
+                print(f"    Nasdaq {tag}: nicht erreichbar ({type(e).__name__})")
+            continue
+        for r in ((d.get("data") or {}).get("rows") or []):
+            sym = (r.get("symbol") or "").upper()
+            if not sym or sym in out:       # der frueheste Termin gewinnt
+                continue
+            out[sym] = {"datum": tag.isoformat(), "uhrzeit": "",
+                        "lage": lage_aus.get(r.get("time"), "unbekannt")}
+    return out
+
+
+def _zusammenfuehren(yahoo, nasdaq, tickers):
+    """Beide Quellen zu einem Eintrag je Aktie.
+
+    REGEL: Meldet eine der beiden einen Termin, wird er uebernommen.
+    Sind sie uneinig, gewinnt der FRUEHERE — eine Warnung zu frueh ist
+    harmloser als eine zu spaet — und die Uneinigkeit wird vermerkt."""
+    zusammen = {}
+    for t in sorted({x.upper() for x in tickers if x}):
+        y, n = yahoo.get(t), nasdaq.get(t)
+        if not y and not n:
+            continue
+        if y and not n:
+            zusammen[t] = {**y, "quellen": ["yahoo"]}
+        elif n and not y:
+            zusammen[t] = {**n, "quellen": ["nasdaq"]}
+        elif y["datum"] == n["datum"]:
+            # Gleicher Tag: Yahoo gewinnt, weil es die Uhrzeit kennt.
+            eintrag = dict(y)
+            eintrag["quellen"] = ["yahoo", "nasdaq"]
+            if n["lage"] != "unbekannt" and n["lage"] != y["lage"]:
+                eintrag["uneinig"] = ("Tageszeit uneinig: Nasdaq "
+                                      + n["lage"] + ", Yahoo " + y["lage"])
+            zusammen[t] = eintrag
+        else:
+            frueher = y if y["datum"] < n["datum"] else n
+            zusammen[t] = {**frueher, "quellen": ["yahoo", "nasdaq"],
+                           "uneinig": ("Quellen uneinig: " + y["datum"]
+                                       + " (Yahoo) gegen " + n["datum"]
+                                       + " (Nasdaq)")}
+    return zusammen
+
+
 def baue(tickers, pfad=DATEI, leise=False):
-    """Termine holen und ablegen."""
+    """Termine holen und ablegen — aus BEIDEN Quellen."""
     termine, ohne = hole_termine(tickers, leise)
     try:
         from zoneinfo import ZoneInfo
@@ -125,8 +220,26 @@ def baue(tickers, pfad=DATEI, leise=False):
                    .strftime("%Y-%m-%d %H:%M") + " Wien")
     except Exception:
         stempel = datetime.now().strftime("%Y-%m-%d %H:%M")
+    try:
+        nasdaq = hole_nasdaq(leise=leise)
+    except Exception as e:
+        nasdaq = {}
+        if not leise:
+            print(f"    Nasdaq-Kalender nicht nutzbar ({type(e).__name__}) — "
+                  f"es gilt allein Yahoo.")
+    zusammen = _zusammenfuehren(termine, nasdaq, tickers)
+    nur_nasdaq = sorted(set(zusammen) - set(termine))
+    uneinig = sorted(k for k, v in zusammen.items() if v.get("uneinig"))
+    if not leise:
+        print(f"  Nasdaq kannte {len(nasdaq)} Termine; davon {len(nur_nasdaq)} "
+              f"in unserer Liste, die Yahoo NICHT hatte"
+              + (": " + ", ".join(nur_nasdaq[:8]) if nur_nasdaq else ""))
+        if uneinig:
+            print(f"  Quellen uneinig bei {len(uneinig)}: "
+                  + ", ".join(uneinig[:8]))
     inhalt = {"gebaut_am": stempel, "ohne_termin": sorted(ohne),
-              "aktien": termine}
+              "nur_nasdaq": nur_nasdaq, "uneinig": uneinig,
+              "aktien": zusammen}
     with open(pfad, "w", encoding="utf-8") as f:
         json.dump(inhalt, f, ensure_ascii=False, indent=1)
     if not leise:
@@ -179,14 +292,30 @@ def hinweis(ticker, heute=None, termine=None):
         return None
 
     lage, uhr = t.get("lage"), t.get("uhrzeit", "")
+    # Woher der Vermerk kommt und wie sicher er ist, gehoert dazu.
+    zusatz = ""
+    if t.get("uneinig"):
+        zusatz = "; " + t["uneinig"]
+    elif t.get("quellen") == ["nasdaq"]:
+        zusatz = "; nur laut Nasdaq-Kalender"
+    # Nasdaq liefert keine Uhrzeit. Dann faellt die Klammer ganz weg,
+    # statt eine Zeitangabe zu erfinden, die keine ist.
+    wann = f" ({uhr} New York)" if uhr else ""
     if tag == heute and lage == "nachboerslich":
-        return f"ZAHLEN HEUTE nach Börsenschluss ({uhr} New York)"
+        return f"ZAHLEN HEUTE nach Börsenschluss{wann}{zusatz}"
     if tag == heute and lage == "vorboerslich":
-        return f"Zahlen heute VOR Eröffnung gebracht ({uhr} New York)"
+        return f"Zahlen heute VOR Eröffnung gebracht{wann}{zusatz}"
+    # Nasdaq kennt oft nur den Tag, nicht die Uhrzeit. Dann wird trotzdem
+    # gewarnt — "Zeit unbekannt" ist eine ehrliche Auskunft, Schweigen
+    # waere die falsche.
+    if tag == heute and lage == "unbekannt":
+        return f"ZAHLEN HEUTE, Tageszeit unbekannt{zusatz}"
+    if tag == heute + timedelta(days=1) and lage == "unbekannt":
+        return f"ZAHLEN MORGEN, Tageszeit unbekannt{zusatz}"
     if tag == heute and lage == "im_handel":
-        return f"ZAHLEN HEUTE während des Handels ({uhr} New York)"
+        return f"ZAHLEN HEUTE während des Handels{wann}{zusatz}"
     if tag == heute + timedelta(days=1) and lage == "vorboerslich":
-        return f"ZAHLEN MORGEN vor Eröffnung ({uhr} New York)"
+        return f"ZAHLEN MORGEN vor Eröffnung{wann}{zusatz}"
     return None
 
 
