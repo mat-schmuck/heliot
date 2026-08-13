@@ -1,0 +1,1157 @@
+{
+ "gebaut_am": "2026-08-13 17:49 Wien",
+ "ohne_termin": [
+  "ASA",
+  "ASND",
+  "CBRS",
+  "COHR",
+  "GLBE",
+  "IDR",
+  "LFTO",
+  "LQDA",
+  "NBIS",
+  "PAAS"
+ ],
+ "aktien": {
+  "AAOI": {
+   "datum": "2026-11-05",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "AAON": {
+   "datum": "2026-11-05",
+   "uhrzeit": "07:00",
+   "lage": "vorboerslich"
+  },
+  "AAUC": {
+   "datum": "2026-11-04",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "ABNB": {
+   "datum": "2026-11-05",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "ADI": {
+   "datum": "2026-08-19",
+   "uhrzeit": "08:00",
+   "lage": "vorboerslich"
+  },
+  "ADV": {
+   "datum": "2026-11-05",
+   "uhrzeit": "07:00",
+   "lage": "vorboerslich"
+  },
+  "AEM": {
+   "datum": "2026-10-28",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "AGI": {
+   "datum": "2026-10-28",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "AGIO": {
+   "datum": "2026-10-29",
+   "uhrzeit": "08:00",
+   "lage": "vorboerslich"
+  },
+  "AGL": {
+   "datum": "2026-11-03",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "AIP": {
+   "datum": "2026-11-03",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "ALAB": {
+   "datum": "2026-11-03",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "ALNY": {
+   "datum": "2026-10-29",
+   "uhrzeit": "08:00",
+   "lage": "vorboerslich"
+  },
+  "AMD": {
+   "datum": "2026-11-03",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "AMPH": {
+   "datum": "2026-11-05",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "AMSC": {
+   "datum": "2026-11-04",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "ANET": {
+   "datum": "2026-11-03",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "APH": {
+   "datum": "2026-10-28",
+   "uhrzeit": "08:00",
+   "lage": "vorboerslich"
+  },
+  "APP": {
+   "datum": "2026-11-04",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "APPN": {
+   "datum": "2026-11-05",
+   "uhrzeit": "07:00",
+   "lage": "vorboerslich"
+  },
+  "ARGX": {
+   "datum": "2026-10-22",
+   "uhrzeit": "08:00",
+   "lage": "vorboerslich"
+  },
+  "ARQT": {
+   "datum": "2026-10-27",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "AS": {
+   "datum": "2026-08-18",
+   "uhrzeit": "08:00",
+   "lage": "vorboerslich"
+  },
+  "ASTH": {
+   "datum": "2026-11-05",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "ATAT": {
+   "datum": "2026-08-20",
+   "uhrzeit": "08:00",
+   "lage": "vorboerslich"
+  },
+  "AU": {
+   "datum": "2026-11-05",
+   "uhrzeit": "07:00",
+   "lage": "vorboerslich"
+  },
+  "AUGO": {
+   "datum": "2026-11-05",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "AVAV": {
+   "datum": "2026-09-02",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "AVGO": {
+   "datum": "2026-09-02",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "AVNT": {
+   "datum": "2026-11-09",
+   "uhrzeit": "07:00",
+   "lage": "vorboerslich"
+  },
+  "AXTI": {
+   "datum": "2026-10-29",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "AYA": {
+   "datum": "2026-08-13",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "B": {
+   "datum": "2026-11-09",
+   "uhrzeit": "07:00",
+   "lage": "vorboerslich"
+  },
+  "BAND": {
+   "datum": "2026-10-29",
+   "uhrzeit": "08:00",
+   "lage": "vorboerslich"
+  },
+  "BBUC": {
+   "datum": "2026-11-05",
+   "uhrzeit": "07:00",
+   "lage": "vorboerslich"
+  },
+  "BE": {
+   "datum": "2026-10-27",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "BEAM": {
+   "datum": "2026-11-03",
+   "uhrzeit": "07:00",
+   "lage": "vorboerslich"
+  },
+  "BKV": {
+   "datum": "2026-11-10",
+   "uhrzeit": "07:00",
+   "lage": "vorboerslich"
+  },
+  "BLLN": {
+   "datum": "2026-11-05",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "BROS": {
+   "datum": "2026-11-04",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "BRZE": {
+   "datum": "2026-09-03",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "BVN": {
+   "datum": "2026-10-29",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "CAI": {
+   "datum": "2026-11-04",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "CART": {
+   "datum": "2026-11-09",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "CDNA": {
+   "datum": "2026-11-03",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "CENX": {
+   "datum": "2026-11-05",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "CEVA": {
+   "datum": "2026-11-09",
+   "uhrzeit": "07:00",
+   "lage": "vorboerslich"
+  },
+  "CGAU": {
+   "datum": "2026-10-27",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "CIEN": {
+   "datum": "2026-09-03",
+   "uhrzeit": "08:00",
+   "lage": "vorboerslich"
+  },
+  "CLS": {
+   "datum": "2026-10-26",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "COHU": {
+   "datum": "2026-10-29",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "CPS": {
+   "datum": "2026-10-29",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "CRDO": {
+   "datum": "2026-09-02",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "CRNX": {
+   "datum": "2026-11-05",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "CSTM": {
+   "datum": "2026-10-28",
+   "uhrzeit": "08:00",
+   "lage": "vorboerslich"
+  },
+  "CSW": {
+   "datum": "2026-10-29",
+   "uhrzeit": "08:00",
+   "lage": "vorboerslich"
+  },
+  "CTEV": {
+   "datum": "2026-11-05",
+   "uhrzeit": "07:00",
+   "lage": "vorboerslich"
+  },
+  "CVNA": {
+   "datum": "2026-10-28",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "CVSA": {
+   "datum": "2026-10-29",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "CYD": {
+   "datum": "2027-02-24",
+   "uhrzeit": "07:00",
+   "lage": "vorboerslich"
+  },
+  "DDOG": {
+   "datum": "2026-11-05",
+   "uhrzeit": "07:00",
+   "lage": "vorboerslich"
+  },
+  "DELL": {
+   "datum": "2026-09-03",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "DKS": {
+   "datum": "2026-08-25",
+   "uhrzeit": "08:00",
+   "lage": "vorboerslich"
+  },
+  "DRD": {
+   "datum": "2026-08-19",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "DY": {
+   "datum": "2026-08-26",
+   "uhrzeit": "08:00",
+   "lage": "vorboerslich"
+  },
+  "ECG": {
+   "datum": "2026-11-03",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "ECO": {
+   "datum": "2026-11-11",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "EE": {
+   "datum": "2026-11-04",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "EGO": {
+   "datum": "2026-10-29",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "ENLT": {
+   "datum": "2026-11-11",
+   "uhrzeit": "07:00",
+   "lage": "vorboerslich"
+  },
+  "ERO": {
+   "datum": "2026-11-03",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "ESI": {
+   "datum": "2026-10-27",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "ESTA": {
+   "datum": "2026-11-04",
+   "uhrzeit": "07:00",
+   "lage": "vorboerslich"
+  },
+  "ETON": {
+   "datum": "2026-08-13",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "FIVE": {
+   "datum": "2026-08-26",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "FIVN": {
+   "datum": "2026-11-09",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "FIX": {
+   "datum": "2026-10-22",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "FLR": {
+   "datum": "2026-11-06",
+   "uhrzeit": "07:00",
+   "lage": "vorboerslich"
+  },
+  "FN": {
+   "datum": "2026-08-17",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "FNV": {
+   "datum": "2026-11-03",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "FRD": {
+   "datum": "2026-11-04",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "FROG": {
+   "datum": "2026-11-05",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "FSLR": {
+   "datum": "2026-10-29",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "FSLY": {
+   "datum": "2026-11-04",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "FTK": {
+   "datum": "2026-11-03",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "GEN": {
+   "datum": "2026-11-05",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "GFI": {
+   "datum": "2026-08-25",
+   "uhrzeit": "08:00",
+   "lage": "vorboerslich"
+  },
+  "GKOS": {
+   "datum": "2026-10-28",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "GLNG": {
+   "datum": "2026-08-13",
+   "uhrzeit": "08:00",
+   "lage": "vorboerslich"
+  },
+  "GMAB": {
+   "datum": "2026-11-05",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "GRDN": {
+   "datum": "2026-11-09",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "GRVY": {
+   "datum": "2026-11-06",
+   "uhrzeit": "07:00",
+   "lage": "vorboerslich"
+  },
+  "GTLB": {
+   "datum": "2026-09-02",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "HALO": {
+   "datum": "2026-11-02",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "HBB": {
+   "datum": "2026-11-04",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "HCC": {
+   "datum": "2026-11-04",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "HCI": {
+   "datum": "2026-11-05",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "HHH": {
+   "datum": "2026-11-09",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "HNGE": {
+   "datum": "2026-11-03",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "HYMC": {
+   "datum": "2026-10-27",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "IBTA": {
+   "datum": "2026-11-11",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "ICFI": {
+   "datum": "2026-10-29",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "ICUI": {
+   "datum": "2026-11-05",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "INCY": {
+   "datum": "2026-10-27",
+   "uhrzeit": "08:00",
+   "lage": "vorboerslich"
+  },
+  "INOD": {
+   "datum": "2026-11-05",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "INSM": {
+   "datum": "2026-10-29",
+   "uhrzeit": "08:00",
+   "lage": "vorboerslich"
+  },
+  "IONQ": {
+   "datum": "2026-11-04",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "IOT": {
+   "datum": "2026-09-03",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "IRTC": {
+   "datum": "2026-11-05",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "JHX": {
+   "datum": "2026-11-05",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "KALU": {
+   "datum": "2026-10-21",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "KARO": {
+   "datum": "2026-10-13",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "KGC": {
+   "datum": "2026-11-10",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "KLIC": {
+   "datum": "2026-11-18",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "KMTS": {
+   "datum": "2026-09-14",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "KNSA": {
+   "datum": "2026-10-27",
+   "uhrzeit": "08:00",
+   "lage": "vorboerslich"
+  },
+  "KRMN": {
+   "datum": "2026-11-05",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "KRT": {
+   "datum": "2026-11-05",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "KRYS": {
+   "datum": "2026-11-02",
+   "uhrzeit": "07:00",
+   "lage": "vorboerslich"
+  },
+  "KTOS": {
+   "datum": "2026-11-03",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "KYMR": {
+   "datum": "2026-11-03",
+   "uhrzeit": "07:00",
+   "lage": "vorboerslich"
+  },
+  "LASR": {
+   "datum": "2026-11-05",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "LEGH": {
+   "datum": "2026-11-06",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "LEGN": {
+   "datum": "2026-11-11",
+   "uhrzeit": "07:00",
+   "lage": "vorboerslich"
+  },
+  "LGND": {
+   "datum": "2026-11-05",
+   "uhrzeit": "07:00",
+   "lage": "vorboerslich"
+  },
+  "LITE": {
+   "datum": "2026-11-05",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "LLY": {
+   "datum": "2026-10-29",
+   "uhrzeit": "08:00",
+   "lage": "vorboerslich"
+  },
+  "LPG": {
+   "datum": "2026-11-05",
+   "uhrzeit": "07:00",
+   "lage": "vorboerslich"
+  },
+  "LRCX": {
+   "datum": "2026-10-21",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "LSCC": {
+   "datum": "2026-11-02",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "LTC": {
+   "datum": "2026-11-03",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "MCHP": {
+   "datum": "2026-11-05",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "MNDY": {
+   "datum": "2026-11-09",
+   "uhrzeit": "07:00",
+   "lage": "vorboerslich"
+  },
+  "MOD": {
+   "datum": "2026-10-27",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "MP": {
+   "datum": "2026-11-05",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "MPWR": {
+   "datum": "2026-10-29",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "MRP": {
+   "datum": "2026-11-11",
+   "uhrzeit": "07:00",
+   "lage": "vorboerslich"
+  },
+  "MTRN": {
+   "datum": "2026-10-28",
+   "uhrzeit": "08:00",
+   "lage": "vorboerslich"
+  },
+  "MTSI": {
+   "datum": "2026-11-05",
+   "uhrzeit": "07:00",
+   "lage": "vorboerslich"
+  },
+  "MU": {
+   "datum": "2026-09-23",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "MXL": {
+   "datum": "2026-10-22",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "NAVN": {
+   "datum": "2026-09-10",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "NBIX": {
+   "datum": "2026-10-28",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "NEM": {
+   "datum": "2026-10-22",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "NET": {
+   "datum": "2026-10-29",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "NOW": {
+   "datum": "2026-10-28",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "NTRA": {
+   "datum": "2026-11-05",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "NUTX": {
+   "datum": "2026-11-05",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "NVDA": {
+   "datum": "2026-08-26",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "NVT": {
+   "datum": "2026-10-30",
+   "uhrzeit": "08:00",
+   "lage": "vorboerslich"
+  },
+  "OGC": {
+   "datum": "2026-11-04",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "OKE": {
+   "datum": "2026-10-27",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "OKLO": {
+   "datum": "2026-11-10",
+   "uhrzeit": "07:00",
+   "lage": "vorboerslich"
+  },
+  "OMC": {
+   "datum": "2026-10-20",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "OMDA": {
+   "datum": "2026-11-05",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "ONC": {
+   "datum": "2026-11-05",
+   "uhrzeit": "07:00",
+   "lage": "vorboerslich"
+  },
+  "ONON": {
+   "datum": "2026-11-11",
+   "uhrzeit": "07:00",
+   "lage": "vorboerslich"
+  },
+  "ONTO": {
+   "datum": "2026-11-05",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "OR": {
+   "datum": "2026-11-04",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "OSCR": {
+   "datum": "2026-11-09",
+   "uhrzeit": "07:00",
+   "lage": "vorboerslich"
+  },
+  "OUST": {
+   "datum": "2026-11-03",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "PAY": {
+   "datum": "2026-11-02",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "PKOH": {
+   "datum": "2026-11-04",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "PLTR": {
+   "datum": "2026-11-02",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "PNTG": {
+   "datum": "2026-11-04",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "PPTA": {
+   "datum": "2026-08-13",
+   "uhrzeit": "08:00",
+   "lage": "vorboerslich"
+  },
+  "PSIX": {
+   "datum": "2026-11-05",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "PTRN": {
+   "datum": "2026-11-04",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "PWR": {
+   "datum": "2026-10-29",
+   "uhrzeit": "08:00",
+   "lage": "vorboerslich"
+  },
+  "QNST": {
+   "datum": "2026-11-05",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "RBLX": {
+   "datum": "2026-10-29",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "RBRK": {
+   "datum": "2026-08-27",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "RDDT": {
+   "datum": "2026-10-29",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "RELY": {
+   "datum": "2026-11-04",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "RGLD": {
+   "datum": "2026-11-04",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "RKLB": {
+   "datum": "2026-11-09",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "ROAD": {
+   "datum": "2026-11-19",
+   "uhrzeit": "07:00",
+   "lage": "vorboerslich"
+  },
+  "RYZ": {
+   "datum": "2026-11-03",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "SA": {
+   "datum": "2026-08-13",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "SANM": {
+   "datum": "2026-11-02",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "SCCO": {
+   "datum": "2026-10-27",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "SE": {
+   "datum": "2026-11-10",
+   "uhrzeit": "07:00",
+   "lage": "vorboerslich"
+  },
+  "SEPN": {
+   "datum": "2026-11-09",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "SHOP": {
+   "datum": "2026-11-03",
+   "uhrzeit": "07:00",
+   "lage": "vorboerslich"
+  },
+  "SIMO": {
+   "datum": "2026-10-29",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "SION": {
+   "datum": "2026-11-05",
+   "uhrzeit": "07:00",
+   "lage": "vorboerslich"
+  },
+  "SITE": {
+   "datum": "2026-10-28",
+   "uhrzeit": "08:00",
+   "lage": "vorboerslich"
+  },
+  "SITM": {
+   "datum": "2026-11-04",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "SKE": {
+   "datum": "2026-08-13",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "SKHY": {
+   "datum": "2026-10-27",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "SM": {
+   "datum": "2026-11-02",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "SMCI": {
+   "datum": "2026-11-03",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "SNDK": {
+   "datum": "2026-11-06",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "SNDX": {
+   "datum": "2026-11-02",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "SNOW": {
+   "datum": "2026-09-02",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "SPB": {
+   "datum": "2026-11-13",
+   "uhrzeit": "07:00",
+   "lage": "vorboerslich"
+  },
+  "SPCX": {
+   "datum": "2026-11-03",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "SSRM": {
+   "datum": "2026-11-03",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "STNG": {
+   "datum": "2026-10-29",
+   "uhrzeit": "08:00",
+   "lage": "vorboerslich"
+  },
+  "STRL": {
+   "datum": "2026-11-02",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "STX": {
+   "datum": "2026-10-27",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "SUN": {
+   "datum": "2026-11-04",
+   "uhrzeit": "07:00",
+   "lage": "vorboerslich"
+  },
+  "TARS": {
+   "datum": "2026-11-04",
+   "uhrzeit": "07:00",
+   "lage": "vorboerslich"
+  },
+  "TEAM": {
+   "datum": "2026-10-29",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "TECK": {
+   "datum": "2026-10-22",
+   "uhrzeit": "08:00",
+   "lage": "vorboerslich"
+  },
+  "TEM": {
+   "datum": "2026-11-03",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "TER": {
+   "datum": "2026-10-21",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "TFPM": {
+   "datum": "2026-11-03",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "TILE": {
+   "datum": "2026-11-06",
+   "uhrzeit": "07:00",
+   "lage": "vorboerslich"
+  },
+  "TNDM": {
+   "datum": "2026-11-05",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "TSEM": {
+   "datum": "2026-11-09",
+   "uhrzeit": "07:00",
+   "lage": "vorboerslich"
+  },
+  "TSM": {
+   "datum": "2026-10-15",
+   "uhrzeit": "08:00",
+   "lage": "vorboerslich"
+  },
+  "TWLO": {
+   "datum": "2026-10-29",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "U": {
+   "datum": "2026-11-04",
+   "uhrzeit": "07:00",
+   "lage": "vorboerslich"
+  },
+  "UBER": {
+   "datum": "2026-11-03",
+   "uhrzeit": "07:00",
+   "lage": "vorboerslich"
+  },
+  "UMAC": {
+   "datum": "2026-11-05",
+   "uhrzeit": "07:00",
+   "lage": "vorboerslich"
+  },
+  "URGN": {
+   "datum": "2026-11-05",
+   "uhrzeit": "07:00",
+   "lage": "vorboerslich"
+  },
+  "VIAV": {
+   "datum": "2026-10-28",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "VIST": {
+   "datum": "2026-10-28",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "VNOM": {
+   "datum": "2026-11-02",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "WELL": {
+   "datum": "2026-10-26",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "WLDN": {
+   "datum": "2026-11-05",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "WOLF": {
+   "datum": "2026-08-19",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich"
+  },
+  "WPM": {
+   "datum": "2026-11-05",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "XMTR": {
+   "datum": "2026-11-03",
+   "uhrzeit": "07:00",
+   "lage": "vorboerslich"
+  },
+  "YELP": {
+   "datum": "2026-11-05",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "ZD": {
+   "datum": "2026-11-05",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  },
+  "ZETA": {
+   "datum": "2026-11-03",
+   "uhrzeit": "15:00",
+   "lage": "im_handel"
+  }
+ }
+}

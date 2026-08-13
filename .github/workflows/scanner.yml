@@ -148,6 +148,10 @@ jobs:
           # Der Waechter braucht sie am naechsten Morgen; ohne sie
           # gilt jede Aktie als NICHT VERIFIZIERBAR.
           git add -A -- volumenkurven.json 2>/dev/null || true
+          # Zahlen-Termine (Gerhard, 12.08.2026). Der Waechter liest
+          # sie am naechsten Tag; ohne diesen Weg waeren sie nach
+          # jedem Cloud-Lauf weg.
+          git add -A -- zahlen_termine.json 2>/dev/null || true
           git add -A -- trigger_logbuch.jsonl 2>/dev/null || true
           if git diff --cached --quiet; then
             echo "Keine Änderung gegenüber dem letzten Scan."

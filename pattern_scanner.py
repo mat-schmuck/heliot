@@ -56,6 +56,7 @@ import red_to_green   # Kapitel 9: Fokusliste fuer den Live-Waechter
 import shakeout       # Kapitel 10: Spring samt Sekundaertest-Warteliste
 import trigger_logbuch  # schreibt jedes Signal mit, gekauft oder nicht
 import volumen        # IBD Volume % Change, Kurve je Aktie
+import zahlen_termine  # Wer heute Abend berichtet
 from config import CFG as ZENTRAL, hoechstens, mind_erreicht, pruefe_config
 
 pruefe_config()       # faengt widerspruechliche Schwellwerte sofort ab
@@ -1366,6 +1367,16 @@ def main():
         print(f"  ⚠ Volumenkurven konnten nicht gebaut werden "
               f"({type(e).__name__}: {e}) — die betroffenen Aktien gelten "
               f"morgen als NICHT VERIFIZIERBAR. Geschätzt wird nichts.")
+
+    # ZAHLEN-TERMINE (Gerhard, 12.08.2026). Wie die Volumenkurven einmal
+    # am Tag hier und nicht im Waechter: Ein Abruf je Aktie kostet Zeit,
+    # und der Waechter braucht sie zur Eroeffnung nicht.
+    try:
+        zahlen_termine.baue(sorted({t for t, _ in tickers}), leise=False)
+    except Exception as e:
+        print(f"  ⚠ Zahlen-Termine konnten nicht geholt werden "
+              f"({type(e).__name__}: {e}) — es wird nichts vermerkt. "
+              f"Ein fehlender Vermerk ist KEIN Beweis, dass keine kommen.")
 
     # Kapitel 8, rekonstruiert: laeuft nur mit, meldet nur ins Logbuch.
     crash_support_durchgang(loaded, api_key, limiter)

@@ -414,6 +414,10 @@ jobs:
           # Die neu gebaute Volumenkurve muss ins Repo zurück, sonst hätte
           # der Lauf sie nur für sich selbst gebaut.
           git add -A -- volumenkurven.json 2>/dev/null || true
+          # Zahlen-Termine (Gerhard, 12.08.2026). Der Waechter liest
+          # sie am naechsten Tag; ohne diesen Weg waeren sie nach
+          # jedem Cloud-Lauf weg.
+          git add -A -- zahlen_termine.json 2>/dev/null || true
           # Das Trigger-Logbuch: JEDES Signal, gekauft oder nicht. Es
           # waechst nur und wird nie geleert — ohne diesen Weg zurueck
           # ins Repo waere es nach jedem Cloud-Lauf weg, und dann liesse

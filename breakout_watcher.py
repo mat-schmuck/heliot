@@ -55,7 +55,8 @@ import red_to_green   # Kapitel 9: Volumen-Signatur an der Kreuzung
 import red_to_green_explosive  # Kapitel 11: dreht aus eigenem Antrieb
 import exit_regeln    # Exit-Regelwerk: Stops, Gewinnabsicherung
 import trigger_logbuch  # schreibt jedes Signal mit, gemeldet oder nicht
-import volumen        # IBD Volume % Change — die EINZIGE Volumenrechnung
+import volumen        # IBD Volume % Change
+import zahlen_termine  # Wer heute Abend berichtet, wird vermerkt — die EINZIGE Volumenrechnung
 from config import CFG, hoechstens, mind_erreicht, pruefe_config
 from kurs_cache import KursCache, Kurswert
 from yahoo_ws import YahooWebSocket
@@ -190,6 +191,11 @@ VOL_FAKTOR = {
     "High & Tight Flag": _VOL["breakout_faktor"],
 }
 VOL_FAKTOR_FALLBACK = _VOL["breakout_faktor"]
+
+# WER DARF OHNE VOLUMENBESTAETIGUNG MELDEN (Gerhard, 12.08.2026)?
+# Nur diese. Bei allen uebrigen Mustern bleibt ein Ausbruch ohne
+# Bestaetigung STILL und wird erst gemeldet, wenn das Volumen nachzieht.
+UNBESTAETIGT_ERLAUBT = set(_VOL.get("unbestaetigt_melden_bei", []))
 
 # Volumenfenster: EINHEITLICH 10 Tage (Gerhard, 28.07.2026). Der Waechter
 # verglich den Ausbruch bisher gegen den Ø20, waehrend Gap and Go schon
@@ -1173,6 +1179,12 @@ def format_uebersprungen(t: dict) -> str:
         zeilen.append(f"Einstieg jetzt hieße {jetzt:.0f}% Risiko bis Stop "
                       f"{stop:.2f} statt der geplanten {geplant:.0f}%")
     zeilen.append("Kein sauberer Einstieg mehr, daher kein Kaufsignal")
+    # Bei uebersprungenen Kaufpunkten ERKLAERT der Termin oft die
+    # Luecke: Sea eroeffnete am 11.08.2026 zehn Prozent ueber dem
+    # Kaufpunkt, nachdem es um 08:00 Zahlen gebracht hatte.
+    vermerk = zahlen_termine.hinweis(t.get("ticker"))
+    if vermerk:
+        zeilen.append(vermerk)
     return "\n".join(zeilen)
 
 
@@ -1259,6 +1271,14 @@ def format_treffer(t: dict) -> str:
         schluss.append(f"Ziel {t['ziel']:.2f} (+{chance:.1f}%)")
     if schluss:
         zeilen.append("; ".join(schluss))
+    # ZAHLEN-TERMIN (Gerhard, 12.08.2026). Ganz am Ende und in eigener
+    # Zeile, damit er nicht zwischen den Kurszahlen untergeht. Ein
+    # Ausbruch am Nachmittag ist etwas anderes, wenn dieselbe Firma zwei
+    # Stunden spaeter berichtet — dann entscheidet ueber Nacht nicht das
+    # Muster, sondern die Zahl.
+    vermerk = zahlen_termine.hinweis(t.get("ticker"))
+    if vermerk:
+        zeilen.append(vermerk)
     return "\n".join(zeilen)
 
 
@@ -1461,10 +1481,34 @@ def melde_stufe(res: dict, schon_gemeldet: set) -> str | None:
     Woche. Ein Schluessel, der erst bei Bestaetigung schliesst, haette
     bei zwei Sekunden Prueftakt dreissigmal je Minute gemeldet."""
     if res["key"] not in schon_gemeldet:
+        # SEIT 12.08.2026 (Gerhard): Ohne Volumenbestaetigung melden nur
+        # noch die Muster, bei denen das Volumen TEIL des Musters ist.
+        # Alle uebrigen bleiben still und kommen erst als Nachtrag, wenn
+        # die Bestaetigung nachzieht — verloren geht also nichts, es
+        # kommt nur spaeter und dafuer belastbar.
+        #
+        # AUSDRUECKLICH NICHT betroffen ist der dritte Status "nicht
+        # verifizierbar" (vol_ok is None). Der heisst "konnte gar nicht
+        # geprueft werden" und ist etwas anderes als "geprueft und zu
+        # schwach"; ihn mit zu unterdruecken wuerde genau die
+        # Unterscheidung aufheben, auf der Gerhard am 06.08.2026
+        # bestanden hat.
+        if res["vol_ok"] is False and not darf_unbestaetigt_melden(res):
+            return None
         return "neu"
     if res["vol_ok"] is True and res["key_best"] not in schon_gemeldet:
         return "nachtrag"
     return None
+
+
+def darf_unbestaetigt_melden(res: dict) -> bool:
+    """Darf dieser Treffer OHNE Volumenbestaetigung gemeldet werden?
+
+    Deckt ein Kaufpunkt mehrere Muster ab (zusammengelegte gleiche
+    Preise), genuegt EINES aus der Liste — sonst verloere die Meldung
+    ein Muster, das fuer sich allein melden duerfte."""
+    namen = res.get("strategien") or [res.get("strategie")]
+    return any(n in UNBESTAETIGT_ERLAUBT for n in namen)
 
 
 def push_nachtrag(topic: str, treffer: list[dict]) -> bool:

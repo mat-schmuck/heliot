@@ -51,6 +51,31 @@ CFG = {
         # 04.08. (das Kriterium verschlechtert das Ergebnis) passt dazu.
         # Genommen wird das obere, strengere Ende von Weinsteins Spanne.
         "gap_and_go_faktor": 3.0,    # Lücken-Bestätigungstag: ≥ 3× Ø
+        # WER DARF OHNE VOLUMENBESTAETIGUNG MELDEN? (Gerhard, 12.08.2026)
+        # Nur noch diese drei. Bei allen uebrigen Mustern wird ein
+        # Ausbruch ohne Volumenbestaetigung gar nicht mehr gemeldet — er
+        # bleibt offen und kommt erst, wenn das Volumen nachzieht (das
+        # macht der Nachtrag, den es seit 29.07.2026 gibt).
+        #
+        # Die drei sind nicht willkuerlich: Bei ihnen IST das Volumen
+        # Teil des Musters und wird eigens geprueft, statt nur als Filter
+        # obendrauf zu liegen. Gap and Go verlangt das Dreifache am
+        # Luecken-Tag, beide Red-to-Green-Kapitel eine dreiteilige
+        # Signatur (ruhiger Anflug, Sprung, haelt an), die Flagge das
+        # Volumen im Fahnenmast.
+        #
+        # ACHTUNG, was das NICHT betrifft: den dritten Status "nicht
+        # verifizierbar". Der heisst "konnte gar nicht geprueft werden"
+        # und ist etwas anderes als "geprueft und zu schwach" — genau
+        # darauf hat Gerhard am 06.08.2026 bestanden. Er wird weiterhin
+        # gemeldet, sonst verschwaende eine Aktie ohne eigene
+        # Volumenkurve lautlos.
+        "unbestaetigt_melden_bei": [
+            "Red-to-Green",
+            "Red-to-Green Explosive",
+            "High & Tight Flag",
+            "Lücken-Bestätigungstag",
+        ],
     },
 
     # --- Gleitende Durchschnitte ---

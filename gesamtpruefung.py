@@ -69,7 +69,7 @@ def ueberschrift(text):
 BETRIEB = ["config", "volumen", "kurs_cache", "pattern_scanner",
            "breakout_watcher", "cup_handle_v2", "shakeout", "red_to_green",
            "crash_support", "exit_regeln", "positionen", "trigger_logbuch",
-           "red_to_green_explosive",
+           "red_to_green_explosive", "zahlen_termine",
            "scan_noetig", "waechter_noetig", "wartung", "ntfy_verlauf",
            "yahoo_ws", "staffelung", "traderfox_alarm_bot"]
 
@@ -109,7 +109,7 @@ def block_b():
     ueberschrift("B — SELBSTTESTS aller Module")
     mit_schalter = ["exit_regeln", "positionen", "crash_support",
                     "trigger_logbuch", "cup_handle_v2", "shakeout",
-                    "red_to_green", "red_to_green_explosive",
+                    "red_to_green", "red_to_green_explosive", "zahlen_termine",
                     "scan_noetig", "waechter_noetig"]
     for name in mit_schalter:
         r = subprocess.run([sys.executable, f"{name}.py", "--selbsttest"],
@@ -375,6 +375,46 @@ def block_e():
     pruefe("E", "Kapitel 11 hat einen Strukturpunkt fuer den Stop",
            ex11.STRUKTURPUNKT.get(k11.NAME) is not None,
            str(ex11.STRUKTURPUNKT.get(k11.NAME))[:40])
+
+    # ZWEI NEUE REGELN VON GERHARD (12.08.2026)
+    # (1) Unbestaetigtes Volumen melden nur noch drei Muster.
+    def stufe(strategie, vol_ok):
+        return bw.melde_stufe({"key": "K", "key_best": "B",
+                               "vol_ok": vol_ok, "strategie": strategie}, set())
+    still = [x for x in ("Darvas Box", "Rectangle Top", "VCP",
+                         "Cup & Handle", "Cup & Handle (Wochenbasis)")
+             if stufe(x, False) is not None]
+    pruefe("E", "Ohne Volumenbestaetigung schweigen die uebrigen Muster",
+           not still, ", ".join(still))
+    laut = [x for x in ("Red-to-Green", "Red-to-Green Explosive",
+                        "High & Tight Flag", "Lücken-Bestätigungstag")
+            if stufe(x, False) is None]
+    pruefe("E", "Die drei erlaubten melden weiterhin unbestaetigt",
+           not laut, ", ".join(laut))
+    pruefe("E", "MIT Bestaetigung meldet jedes Muster",
+           stufe("Darvas Box", True) == "neu")
+    pruefe("E", "'nicht verifizierbar' wird NICHT mitunterdrueckt",
+           stufe("Darvas Box", None) == "neu")
+    # Unterdrueckt heisst NICHT abgehakt: kommt das Volumen nach, meldet er.
+    r = {"key": "K", "key_best": "B", "vol_ok": False, "strategie": "Darvas Box"}
+    gemeldet = set()
+    bw.melde_stufe(r, gemeldet)
+    pruefe("E", "Ein unterdrueckter Ausbruch gilt NICHT als gemeldet",
+           "K" not in gemeldet)
+
+    # (2) Zahlen-Termine
+    import zahlen_termine as zt
+    from datetime import date as _d
+    proben = {"AAA": {"datum": "2026-08-12", "uhrzeit": "16:00",
+                      "lage": "nachboerslich"}}
+    pruefe("E", "Zahlen heute Abend werden vermerkt",
+           "HEUTE nach Börsenschluss" in (zt.hinweis("AAA", _d(2026, 8, 12),
+                                                     proben) or ""))
+    pruefe("E", "Ohne Termin kein Vermerk",
+           zt.hinweis("ZZZ", _d(2026, 8, 12), proben) is None)
+    pruefe("E", "Der Vermerk steht in der Ausbruch-Meldung",
+           "vermerk" in bw.format_treffer.__code__.co_names
+           or "zahlen_termine" in bw.format_treffer.__code__.co_names)
 
     # Handelszeit-Sperre
     from datetime import datetime as dt
