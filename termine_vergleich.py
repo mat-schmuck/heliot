@@ -213,10 +213,78 @@ def main() -> int:
     for sym in sorted(set(f_liste) & set(yahoo)):
         if f_liste[sym]["datum"] != yahoo[sym]["datum"]:
             uneinig += 1
-            sag(f"  {sym:6s} Finnhub {f_liste[sym]['datum']} / "
-                f"Yahoo {yahoo[sym]['datum']}")
+            sag(f"  {sym:6s} Finnhub {f_liste[sym]['datum']} ({f_liste[sym]['lage']})"
+                f" / Yahoo {yahoo[sym]['datum']} ({yahoo[sym]['lage']})")
     einig = len(set(f_liste) & set(yahoo)) - uneinig
     sag(f"  einig {einig}, uneinig {uneinig}")
+    sag()
+
+    # -----------------------------------------------------------------
+    # IST DAS EIN ZEITZONEN-VERSATZ? (Mathias' Frage vom 13.08.2026)
+    # -----------------------------------------------------------------
+    # Der Verdacht ist berechtigt: Bei DKS und FIVE lag Finnhub BEIDE
+    # MALE genau einen Tag zu frueh, und "genau ein Tag" ist die
+    # Handschrift einer Zeitzonen-Umrechnung.
+    #
+    # Unterscheiden laesst sich das an der FORM der Abweichung, nicht an
+    # zwei Einzelfaellen:
+    #   Ein Zeitzonen-Fehler ist SYSTEMATISCH. Er trifft jeden Termin,
+    #   dessen Uhrzeit in das verschobene Fenster faellt — also eine
+    #   ganze KLASSE (etwa alle nachboerslichen), und zwar immer in
+    #   dieselbe Richtung.
+    #   Schlechte Daten sind ZUFAELLIG verstreut: mal ein Tag, mal eine
+    #   Woche, mal in die eine, mal in die andere Richtung.
+    #
+    # Gemessen wird deshalb ueber den GANZEN Markt (rund 1500 Firmen bei
+    # beiden Quellen), nicht nur ueber unsere 238 — nur dort ist die
+    # Verteilung aussagekraeftig. Dass Nasdaq selbst Fehler hat (AYA,
+    # DY), stoert hier NICHT: Gefragt ist nicht, wer recht hat, sondern
+    # ob die Abweichungen eine Schlagseite haben.
+    sag("ZEITZONEN-PRUEFUNG: Finnhub gegen Nasdaq ueber den GANZEN Markt")
+    gemeinsam = sorted(set(finnhub) & set(nasdaq))
+    sag(f"  {len(gemeinsam)} Firmen kennen beide.")
+    from collections import Counter
+    verteilung = Counter()
+    nach_lage = {}
+    for sym in gemeinsam:
+        try:
+            d = (date.fromisoformat(finnhub[sym]["datum"])
+                 - date.fromisoformat(nasdaq[sym]["datum"])).days
+        except Exception:
+            continue
+        schub = d if -3 <= d <= 3 else (4 if d > 3 else -4)
+        verteilung[schub] += 1
+        lage = finnhub[sym]["lage"]
+        nach_lage.setdefault(lage, Counter())[schub] += 1
+    gesamt = sum(verteilung.values()) or 1
+    namen = {-4: "mehr als 3 Tage frueher", -1: "1 Tag frueher",
+             0: "gleicher Tag", 1: "1 Tag spaeter",
+             4: "mehr als 3 Tage spaeter"}
+    for schub in sorted(verteilung):
+        sag(f"    {namen.get(schub, str(schub) + ' Tage'):24s} "
+            f"{verteilung[schub]:5d}  ({verteilung[schub] / gesamt * 100:5.1f} %)")
+    sag()
+    sag("  Aufgeschluesselt nach Finnhubs eigener Tageszeit-Angabe:")
+    for lage in sorted(nach_lage):
+        c = nach_lage[lage]
+        n = sum(c.values()) or 1
+        sag(f"    {lage:14s} n={n:5d}  gleicher Tag {c[0] / n * 100:5.1f} %, "
+            f"1 frueher {c[-1] / n * 100:5.1f} %, "
+            f"1 spaeter {c[1] / n * 100:5.1f} %")
+    sag()
+    einig_anteil = verteilung[0] / gesamt * 100
+    schief = (verteilung[-1] + verteilung[1]) / gesamt * 100
+    sag(f"  BEFUND: {einig_anteil:.1f} % gleicher Tag, {schief:.1f} % um genau "
+        f"einen Tag daneben.")
+    sag("  Ein Zeitzonen-Versatz muesste eine ganze Klasse geschlossen "
+        "verschieben.")
+    sag("  Verstreute Einzelabweichungen sind schlicht falsche Daten.")
+    sag()
+    sag("  Die beiden Streitfaelle im Rohzustand (Datum und Finnhubs "
+        "'hour'-Feld):")
+    for sym in ("DKS", "FIVE"):
+        f, n, y = finnhub.get(sym), nasdaq.get(sym), yahoo.get(sym)
+        sag(f"    {sym}: Finnhub {f} | Nasdaq {n} | Yahoo {y}")
 
     with open(ziel, "w", encoding="utf-8") as f:
         f.write("\n".join(zeilen) + "\n")
