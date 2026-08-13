@@ -88,9 +88,36 @@ WOHER DIE DATEN KOMMEN — ZWEI QUELLEN, und das ist noetig
         Ein Tag zu frueh ist genau der Fehler, der hier weh tut — die
         Warnung kaeme am falschen Abend.
 
+      LIEGT ES AN DEN ZEITZONEN? Nein, auch das ist gemessen (Mathias'
+        Frage, Lauf 31726191357). Beide Streitfaelle lagen genau EINEN
+        Tag zu frueh, und "genau ein Tag" ist die Handschrift einer
+        Zeitzonen-Umrechnung — deshalb ueber den GANZEN Markt geprueft,
+        960 Firmen, die Finnhub und Nasdaq beide kennen, aufgeschluesselt
+        nach Finnhubs eigenem 'hour'-Feld:
+          nachboerslich (n=321): 95,3 % gleicher Tag
+          vorboerslich  (n=220): 90,9 % gleicher Tag
+          OHNE Tageszeit (n=419): 17,7 % gleicher Tag, 43,0 % einen Tag
+                                  zu frueh, der Rest weit verstreut
+        Damit ist es KEIN Zeitzonen-Versatz, aus drei Gruenden:
+          1. Die nachboerslichen Termine muessten am staerksten betroffen
+             sein, weil 16 bis 20 Uhr New York am Datumsrand liegen. Sie
+             sind ausgerechnet die SAUBERSTE Klasse.
+          2. Der Fehler sitzt dort, wo Finnhub GAR KEINE Uhrzeit hat —
+             und wo keine Uhrzeit steht, gibt es nichts umzurechnen.
+          3. Eine Uhr verschiebt geschlossen. Diese Klasse streut aber:
+             neben den 43 % mit einem Tag gibt es Abweichungen von
+             mehreren Tagen in BEIDE Richtungen (9,1 % ueber drei Tage
+             zu spaet).
+        Was man stattdessen sieht: Finnhub fuellt unbestaetigte Termine
+        mit einer SCHAETZUNG, und die faellt meist einen Tag zu frueh
+        aus. Genau so ein Eintrag ohne Uhrzeit waren DKS und FIVE.
+
     FOLGE: Es bleibt bei zwei Quellen. Finnhub wird nicht eingebaut,
-    weil es weniger kennt und beim Abweichen falsch liegt. Das ist
-    jetzt gemessen; wer es wieder aufgreifen will, nimmt
+    weil es weniger kennt und beim Abweichen falsch liegt. Man koennte
+    es auf die Eintraege MIT Uhrzeit beschraenken, die stimmen zu 91 bis
+    95 % — es aendert nur nichts, weil Finnhub in unserer Liste ohnehin
+    keine Aktie beisteuert, die die anderen beiden nicht schon haben.
+    Das ist jetzt gemessen; wer es wieder aufgreifen will, nimmt
     termine_vergleich.py und misst neu.
 
     Zum Ausgangsstand: yfinance, Ticker.get_earnings_dates(). Der Zeitstempel traegt die
