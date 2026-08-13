@@ -1,19 +1,16 @@
 {
- "gebaut_am": "2026-08-13 18:49 Wien",
+ "gebaut_am": "2026-08-14 00:07 Wien",
  "ohne_termin": [
   "ASA",
   "ASND",
-  "CBRS",
-  "COHR",
-  "GLBE",
+  "GLNG",
   "IDR",
-  "LFTO",
-  "LQDA",
-  "NBIS",
-  "PAAS"
+  "MP",
+  "ZETA"
  ],
  "nur_nasdaq": [
   "ASND",
+  "GLNG",
   "IDR"
  ],
  "uneinig": [
@@ -386,6 +383,14 @@
     "yahoo"
    ]
   },
+  "CBRS": {
+   "datum": "2026-11-10",
+   "uhrzeit": "15:00",
+   "lage": "im_handel",
+   "quellen": [
+    "yahoo"
+   ]
+  },
   "CDNA": {
    "datum": "2026-11-03",
    "uhrzeit": "15:00",
@@ -434,6 +439,14 @@
     "yahoo"
    ]
   },
+  "COHR": {
+   "datum": "2026-11-04",
+   "uhrzeit": "15:00",
+   "lage": "im_handel",
+   "quellen": [
+    "yahoo"
+   ]
+  },
   "COHU": {
    "datum": "2026-10-29",
    "uhrzeit": "16:00",
@@ -451,7 +464,7 @@
    ]
   },
   "CRDO": {
-   "datum": "2026-09-02",
+   "datum": "2026-09-01",
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
@@ -745,12 +758,19 @@
     "yahoo"
    ]
   },
-  "GLNG": {
-   "datum": "2026-08-13",
-   "uhrzeit": "08:00",
+  "GLBE": {
+   "datum": "2026-11-18",
+   "uhrzeit": "07:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo",
+    "yahoo"
+   ]
+  },
+  "GLNG": {
+   "datum": "2026-08-13",
+   "uhrzeit": "",
+   "lage": "unbekannt",
+   "quellen": [
     "nasdaq"
    ]
   },
@@ -1042,6 +1062,14 @@
     "yahoo"
    ]
   },
+  "LFTO": {
+   "datum": "2026-11-11",
+   "uhrzeit": "15:00",
+   "lage": "im_handel",
+   "quellen": [
+    "yahoo"
+   ]
+  },
   "LGND": {
    "datum": "2026-11-05",
    "uhrzeit": "07:00",
@@ -1068,6 +1096,14 @@
   },
   "LPG": {
    "datum": "2026-11-05",
+   "uhrzeit": "07:00",
+   "lage": "vorboerslich",
+   "quellen": [
+    "yahoo"
+   ]
+  },
+  "LQDA": {
+   "datum": "2026-11-03",
    "uhrzeit": "07:00",
    "lage": "vorboerslich",
    "quellen": [
@@ -1118,14 +1154,6 @@
    "datum": "2026-10-27",
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
-   "quellen": [
-    "yahoo"
-   ]
-  },
-  "MP": {
-   "datum": "2026-11-05",
-   "uhrzeit": "15:00",
-   "lage": "im_handel",
    "quellen": [
     "yahoo"
    ]
@@ -1182,6 +1210,14 @@
    "datum": "2026-09-10",
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
+   "quellen": [
+    "yahoo"
+   ]
+  },
+  "NBIS": {
+   "datum": "2026-11-10",
+   "uhrzeit": "07:00",
+   "lage": "vorboerslich",
    "quellen": [
     "yahoo"
    ]
@@ -1339,6 +1375,14 @@
     "yahoo"
    ]
   },
+  "PAAS": {
+   "datum": "2026-11-16",
+   "uhrzeit": "15:00",
+   "lage": "im_handel",
+   "quellen": [
+    "yahoo"
+   ]
+  },
   "PAY": {
    "datum": "2026-11-02",
    "uhrzeit": "15:00",
@@ -1372,7 +1416,7 @@
    ]
   },
   "PPTA": {
-   "datum": "2026-08-13",
+   "datum": "2026-08-14",
    "uhrzeit": "08:00",
    "lage": "vorboerslich",
    "quellen": [
@@ -1863,14 +1907,6 @@
   },
   "ZD": {
    "datum": "2026-11-05",
-   "uhrzeit": "15:00",
-   "lage": "im_handel",
-   "quellen": [
-    "yahoo"
-   ]
-  },
-  "ZETA": {
-   "datum": "2026-11-03",
    "uhrzeit": "15:00",
    "lage": "im_handel",
    "quellen": [
