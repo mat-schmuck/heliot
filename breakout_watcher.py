@@ -1258,8 +1258,7 @@ def melde_sektor_radar(topic: str, befund: dict, schon_gemeldet: set,
     absaetze = sektor_radar.absaetze(treffer)
     # Priorität "default": Ein Branchendreher ist eine Auskunft, kein
     # Ausbruch — er soll nicht wie ein Kaufsignal klingeln.
-    if not sende(topic, sektor_radar.titel(treffer), absaetze,
-                 "default", "arrows_counterclockwise"):
+    if not sende(topic, sektor_radar.titel(treffer), absaetze, "default"):
         return False
     schon_gemeldet.add(key)
     state["gemeldet"][key] = date.today().isoformat()
@@ -1279,9 +1278,9 @@ def push_uebersprungen(topic: str, treffer: list[dict]) -> bool:
         return False
     absaetze = [f"{i}. {format_uebersprungen(t)}"
                 for i, t in enumerate(treffer, 1)]
-    titel = (f"⤴ {len(treffer)} Kaufpunkt(e) übersprungen"
+    titel = (f"{len(treffer)} Kaufpunkt(e) übersprungen"
              + tagesanteil_titel(treffer))
-    return sende(topic, titel, absaetze, "default", "fast_forward")
+    return sende(topic, titel, absaetze, "default")
 
 
 def format_treffer(t: dict) -> str:
@@ -1452,8 +1451,13 @@ def _portionen(absaetze: list[str], grenze: int = NTFY_GRENZE) -> list[list[str]
     return portionen
 
 
-def _sende_eine(topic: str, titel: str, body: str, prio: str, tag: str) -> bool:
-    kopf = {"Title": titel.encode("utf-8"), "Priority": prio, "Tags": tag}
+def _sende_eine(topic: str, titel: str, body: str, prio: str) -> bool:
+    # KEINE "Tags"-Kopfzeile (Mathias, 13.08.2026: "Entferne bitte alle
+    # Emojis aus den Meldungen, Raketen, Diagramme etc. nerven nur").
+    # Genau daraus baut ntfy die Bildchen: "rocket" wurde zur Rakete,
+    # "chart_with_upwards_trend" zum Diagramm, "fast_forward" zum
+    # Vorspul-Zeichen. Ohne die Kopfzeile bleibt die Meldung Text.
+    kopf = {"Title": titel.encode("utf-8"), "Priority": prio}
     kopf.update(email_kopf())
     try:
         r = requests.post(f"https://ntfy.sh/{topic}", data=body.encode("utf-8"),
@@ -1475,7 +1479,7 @@ def _sende_eine(topic: str, titel: str, body: str, prio: str, tag: str) -> bool:
 HANDELSZEIT_EGAL = False
 
 
-def sende(topic: str, titel: str, absaetze: list[str], prio: str, tag: str) -> bool:
+def sende(topic: str, titel: str, absaetze: list[str], prio: str) -> bool:
     """Verschickt die Absaetze in so vielen Nachrichten wie noetig.
 
     HIER sitzt die Handelszeit-Sperre (Mathias, 27.07.2026: 'Der Wächter
@@ -1505,7 +1509,7 @@ def sende(topic: str, titel: str, absaetze: list[str], prio: str, tag: str) -> b
     alle_ok = True
     for nr, teil in enumerate(portionen, 1):
         kopf = titel if len(portionen) == 1 else f"{titel} ({nr} von {len(portionen)})"
-        if not _sende_eine(topic, kopf, "\n\n".join(teil), prio, tag):
+        if not _sende_eine(topic, kopf, "\n\n".join(teil), prio):
             alle_ok = False
     return alle_ok
 
@@ -1517,7 +1521,7 @@ def push_text(topic: str, titel: str, body: str) -> bool:
     entfernt worden — ohne ihn setzt ntfy aber einen generischen Titel
     (die Themen-Adresse) ein, was schlimmer ist. Am 24.07. auf Mathias'
     Wunsch wiederhergestellt."""
-    return sende(topic, titel, body.split("\n\n"), "high", "rocket")
+    return sende(topic, titel, body.split("\n\n"), "high")
 
 
 def tagesanteil_titel(treffer: list[dict]) -> str:
@@ -1624,7 +1628,7 @@ def push_nachtrag(topic: str, treffer: list[dict]) -> bool:
     else:
         absaetze = [f"{i}. {format_treffer(t)}"
                     for i, t in enumerate(treffer, 1)]
-    return sende(topic, titel, absaetze, "high", "chart_with_upwards_trend")
+    return sende(topic, titel, absaetze, "high")
 
 
 def push(topic: str, treffer: list[dict]) -> bool:
@@ -1661,8 +1665,7 @@ def push(topic: str, treffer: list[dict]) -> bool:
              + (f", {len(rest)} offen" if rest else "")
              + tagesanteil_titel(treffer))
     return sende(topic, titel, absaetze,
-                 "high" if bestaetigt else "default",
-                 "chart_with_upwards_trend")
+                 "high" if bestaetigt else "default")
 
 
 def testpush(topic: str) -> int:
@@ -1675,9 +1678,8 @@ def testpush(topic: str) -> int:
             "Benachrichtigungskette.\n"
             f"Zustellweg: {weg}\n"
             f"Gesendet: {datetime.now():%d.%m.%Y %H:%M:%S}")
-    kopf = {"Title": "✅ Testnachricht Breakout-Wächter".encode("utf-8"),
-            "Priority": "default",
-            "Tags": "white_check_mark"}
+    kopf = {"Title": "Testnachricht Breakout-Wächter".encode("utf-8"),
+            "Priority": "default"}
     kopf.update(email_kopf())
     print(f"    Zustellweg: {weg}")
     try:

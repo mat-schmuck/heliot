@@ -480,6 +480,35 @@ def block_e():
         rest = "\n".join(formen["Ausbruch"].splitlines()[1:])
         pruefe("E", "Der Vermerk steht nur EINMAL in der Meldung",
                "Quartalszahlen" not in rest)
+        # KEINE EMOJIS IN MELDUNGEN (Mathias, 13.08.2026: "Raketen,
+        # Diagramme etc. nerven nur"). Zwei Quellen, beide geprueft:
+        #   a) buchstaebliche Zeichen in Titel und Text
+        #   b) die ntfy-Kopfzeile "Tags" - daraus baut ntfy die Bildchen,
+        #      im Quelltext sieht man dort nur harmlose Woerter wie
+        #      "rocket". Genau deshalb faellt das beim Lesen nicht auf
+        #      und gehoert geprueft.
+        import re as _re
+        bildzeichen = _re.compile(
+            "[🀀-🫿←-⇿⌀-➿"
+            "⤀-⥿⬀-⯿️]")
+        alle_texte = list(formen.values()) + [
+            bw.format_gapgo({"ticker": "AAA", "firma": "Alpha AG",
+                             "bestaetigt": False, "frueh": True,
+                             "tages_ratio": 3.0, "gap": 0.09,
+                             "base_spanne": None, "flat_base": False,
+                             "pos": 0.5, "kp": 11.0, "stop": 9.9,
+                             "stop_quelle": "struktur"})]
+        gefunden = [t[:40] for t in alle_texte if bildzeichen.search(t)]
+        pruefe("E", "Keine Bildzeichen im Meldungstext", not gefunden,
+               "; ".join(gefunden))
+        quelle = (pathlib.Path("breakout_watcher.py").read_text(encoding="utf-8")
+                  + pathlib.Path("wartung.py").read_text(encoding="utf-8"))
+        # Gesucht wird '"Tags":' MIT Doppelpunkt: So steht es nur im
+        # echten Kopfzeilen-Verzeichnis. Ohne ihn fand die Pruefung ihre
+        # eigenen Kommentare wieder und schlug grundlos an.
+        pruefe("E", 'Keine "Tags"-Kopfzeile an ntfy (daraus entstehen Emojis)',
+               '"Tags":' not in quelle)
+
         # Ohne Termin bleibt die Kopfzeile unveraendert.
         ohne = bw.format_treffer(dict(probe, ticker="ZZZ"))
         pruefe("E", "Ohne Termin kein Zusatz im Kopf",

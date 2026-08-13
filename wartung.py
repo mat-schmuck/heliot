@@ -158,7 +158,10 @@ def sammle_gesundheit(checks):
         if not ok:
             alles_ok = False
         zeilen.append(f"[{symbol}] {name}: {detail}")
-    kopf = "✅ Alle Systeme laufen" if alles_ok else "⚠️ ACHTUNG — Problem erkannt"
+    # Ohne Emoji und ohne Gedankenstrich (Mathias, 13.08.2026): Das
+    # Häkchen und das Warnzeichen sagen nichts, was die Wörter nicht
+    # schon sagen, und ein Gedankenstrich wird von JAWS verschluckt.
+    kopf = "Alle Systeme laufen" if alles_ok else "ACHTUNG: Problem erkannt"
     return kopf, "\n".join(zeilen), alles_ok
 
 
@@ -207,10 +210,11 @@ def push_gesundheit(topic, kopf, koerper, prioritaet="low"):
     import requests
     text = f"{datetime.now():%d.%m. %H:%M}\n{koerper}"
     try:
+        # Ohne "Tags"-Kopfzeile: Daraus baut ntfy die Emojis (Mathias,
+        # 13.08.2026), hier waere es ein Krankenhaus-Zeichen gewesen.
         r = requests.post(f"https://ntfy.sh/{topic}", data=text.encode("utf-8"),
                           headers={"Title": kopf.encode("utf-8"),
-                                   "Priority": prioritaet,
-                                   "Tags": "hospital"}, timeout=15)
+                                   "Priority": prioritaet}, timeout=15)
         return r.status_code
     except Exception as e:
         print(f"Health-Push fehlgeschlagen: {e}")
