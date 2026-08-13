@@ -1238,7 +1238,7 @@ def push_uebersprungen(topic: str, treffer: list[dict]) -> bool:
     absaetze = [f"{i}. {format_uebersprungen(t)}"
                 for i, t in enumerate(treffer, 1)]
     titel = (f"⤴ {len(treffer)} Kaufpunkt(e) übersprungen"
-             + tagesanteil_titel(treffer))
+             + zahlen_titel(treffer) + tagesanteil_titel(treffer))
     return sende(topic, titel, absaetze, "default", "fast_forward")
 
 
@@ -1478,6 +1478,31 @@ def push_text(topic: str, titel: str, body: str) -> bool:
     return sende(topic, titel, body.split("\n\n"), "high", "rocket")
 
 
+def zahlen_titel(treffer: list[dict]) -> str:
+    """Wer von den gemeldeten Aktien HEUTE Quartalszahlen bringt — als
+    Anhaengsel fuer den ntfy-Titel.
+
+    Mathias am 13.08.2026: "Das ist die Meldung, nicht der Kopf der
+    Meldung, oder?" — und damit hat er recht. Der Kopf, den ntfy zeigt
+    und den ein Screenreader zuerst vorliest, ist die Title-Kopfzeile;
+    was ich zuerst geaendert hatte, war die erste ZEILE des Textes.
+    Beides ist richtig, aber an verschiedenen Stellen: Am Titel
+    entscheidet er, ob sich das Oeffnen ueberhaupt lohnt (so steht es
+    schon bei push()), im Text steht dann, welche Aktie es betrifft und
+    wann genau.
+
+    Deshalb NUR die Kuerzel und ohne Uhrzeit — aus demselben Grund, aus
+    dem im Titel schon die Firmennamen fehlen: Die Push-Vorschau
+    schneidet ab. Ab vier Aktien wird gezaehlt statt aufgezaehlt."""
+    mit = [t["ticker"] for t in treffer if zahlen_termine.kopf_hinweis(
+        t.get("ticker"))]
+    if not mit:
+        return ""
+    if len(mit) > 3:
+        return f"; {len(mit)} mit Quartalszahlen"
+    return "; Quartalszahlen " + ", ".join(mit)
+
+
 def tagesanteil_titel(treffer: list[dict]) -> str:
     """Wie viel des Handelstages ueblicherweise schon gelaufen ist —
     als Anhaengsel fuer den Titel (Mathias, 30.07.2026).
@@ -1576,7 +1601,8 @@ def push_nachtrag(topic: str, treffer: list[dict]) -> bool:
     # 31 Zeichen, und die Push-Vorschau schneidet ab. Der Name steht
     # ohnehin in der ersten Zeile jedes Eintrags.
     titel = (", ".join(t["ticker"] for t in treffer)
-             + ": Vol jetzt bestätigt" + tagesanteil_titel(treffer))
+             + ": Vol jetzt bestätigt" + zahlen_titel(treffer)
+             + tagesanteil_titel(treffer))
     if len(treffer) == 1:
         absaetze = [format_treffer(treffer[0])]
     else:
@@ -1604,7 +1630,7 @@ def push(topic: str, treffer: list[dict]) -> bool:
     # Titel, ob sich das Oeffnen ueberhaupt lohnt.
     titel = (f"{len(bestaetigt)} bestätigt"
              + (f", {len(rest)} offen" if rest else "")
-             + tagesanteil_titel(treffer))
+             + zahlen_titel(treffer) + tagesanteil_titel(treffer))
     return sende(topic, titel, absaetze,
                  "high" if bestaetigt else "default",
                  "chart_with_upwards_trend")

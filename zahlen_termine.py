@@ -423,11 +423,16 @@ def kopf_hinweis(ticker, heute=None, termine=None):
     Kopfzeile — die traegt, was jetzt gilt; alles andere steht weiter
     unten und wuerde die wichtigste Zeile jeder Meldung verwaessern.
 
+    OHNE "bringt heute" (Mathias, 13.08.2026: "frisst zu viel Platz").
+    Der Vermerk erscheint ausschliesslich am Tag des Termins, also sagt
+    das Wort "heute" nichts, was der Zusammenhang nicht schon sagt.
+
     Die Tageszeit steht mit dabei, weil sie den Unterschied macht: Nach
     Boersenschluss entscheidet ueber Nacht nicht mehr das Muster,
     sondern die Zahl. Vor Eroeffnung ist sie dagegen schon draussen, und
-    das sagt der Satz dann auch — in der Vergangenheitsform, sonst
-    wartet man auf etwas, das laengst da ist.
+    das sagt das Wort "gebracht" — sonst wartet man auf etwas, das
+    laengst da ist. Kennt keine Quelle die Uhrzeit, steht nur
+    "Quartalszahlen"; eine Zeit zu erfinden waere schlimmer als keine.
 
     Der VORBEHALT (uneinige Quellen) steht hier bewusst NICHT: Er ist
     lang und gehoert nicht in die Zeile mit Kuerzel und Muster. Dafuer
@@ -450,12 +455,12 @@ def kopf_hinweis(ticker, heute=None, termine=None):
         return None
     lage = t.get("lage")
     if lage == "nachboerslich":
-        return "bringt heute Quartalszahlen nach Börsenschluss"
+        return "Quartalszahlen nach Börsenschluss"
     if lage == "vorboerslich":
-        return "hat heute vor Eröffnung Quartalszahlen gebracht"
+        return "Quartalszahlen vor Eröffnung gebracht"
     if lage == "im_handel":
-        return "bringt heute Quartalszahlen während des Handels"
-    return "bringt heute Quartalszahlen"
+        return "Quartalszahlen während des Handels"
+    return "Quartalszahlen"
 
 
 def vorbehalt(ticker, termine=None):
@@ -570,13 +575,16 @@ def selbsttest() -> int:
     # --- KOPFZEILEN-VERMERK (Mathias, 13.08.2026) ---
     heute = date(2026, 8, 13)
     p("Zahlen heute nach Schluss stehen im Kopf",
-      kopf_hinweis("AYA", heute, z)
-      == "bringt heute Quartalszahlen nach Börsenschluss",
+      kopf_hinweis("AYA", heute, z) == "Quartalszahlen nach Börsenschluss",
       kopf_hinweis("AYA", heute, z))
-    p("Waren die Zahlen heute frueh schon da, steht das auch so da",
+    p("Waren die Zahlen heute frueh schon da, sagt das Wort 'gebracht' es",
       kopf_hinweis("ASND", heute, z)
-      == "hat heute vor Eröffnung Quartalszahlen gebracht",
+      == "Quartalszahlen vor Eröffnung gebracht",
       kopf_hinweis("ASND", heute, z))
+    # Mathias am 13.08.2026: "bringt heute" frisst zu viel Platz.
+    p("Kein 'bringt heute' mehr in den Kopfvermerken",
+      all("bringt heute" not in (kopf_hinweis(t, heute, z) or "")
+          for t in ("AYA", "ASND", "DY")))
     p("Ein Termin an einem ANDEREN Tag gehoert nicht in den Kopf",
       kopf_hinweis("DY", heute, z) is None, kopf_hinweis("DY", heute, z))
     p("Auch morgen ist nicht heute",
@@ -587,9 +595,8 @@ def selbsttest() -> int:
     z2 = dict(z)
     z2["XX"] = {"datum": "2026-08-13", "uhrzeit": "", "lage": "unbekannt",
                 "quellen": ["nasdaq"]}
-    p("Ohne Tageszeit lautet der Kopfvermerk schlicht 'bringt heute "
-      "Quartalszahlen'",
-      kopf_hinweis("XX", heute, z2) == "bringt heute Quartalszahlen",
+    p("Ohne Tageszeit steht nur 'Quartalszahlen'",
+      kopf_hinweis("XX", heute, z2) == "Quartalszahlen",
       kopf_hinweis("XX", heute, z2))
 
     # --- VORBEHALT: getrennt, damit die Kopfzeile kurz bleibt ---
