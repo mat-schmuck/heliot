@@ -1551,6 +1551,44 @@ def tagesanteil_titel(treffer: list[dict]) -> str:
 NACHTRAG_MARKE = "BEST|"
 
 
+def ausbruch_schluessel(t: dict) -> str:
+    """Der Meldeschluessel eines Ausbruchs: Aktie plus Kaufpunkt-Nummer.
+
+    OHNE Preis (Mathias, 27.07.2026): Der Kaufpunkt wandert taeglich mit
+    dem Musterdeckel nach oben; steckte er im Schluessel, galte derselbe
+    Ausbruch am naechsten Tag als neu.
+
+    High and Tight Flag traegt ein Vorzeichen, damit load_state() ihr die
+    taegliche statt der woechentlichen Frist geben kann."""
+    namen = t.get("strategien") or [t.get("strategie")]
+    marke = HTF_MARKE if "High & Tight Flag" in namen else ""
+    return f"{marke}{t['ticker']}|{t['nr']}"
+
+
+def uebersprungen_schluessel(t: dict) -> str:
+    """Der Meldeschluessel der Meldung 'Kaufpunkt uebersprungen'."""
+    return f"{UEBERSPRUNGEN_MARKE}{t['ticker']}|{t['nr']}"
+
+
+def melde_uebersprungen(res: dict, schon_gemeldet: set) -> bool:
+    """Darf dieser uebersprungene Kaufpunkt gemeldet werden?
+
+    Steht hier als eigene, pruefbare Funktion statt verstreut in der
+    Schleife — aus demselben Grund wie melde_stufe().
+
+    ZWEI Bedingungen, und die zweite ist der Fall MNDY vom 13.08.2026:
+      1. Er wurde noch nicht als uebersprungen gemeldet.
+      2. Er wurde auch noch nicht als AUSBRUCH gemeldet. Diese Meldung
+         ist fuer Kaufpunkte gedacht, die NIE angesagt wurden, weil der
+         Kurs mit einer Luecke darueber hinweggegangen ist (Gerhards Fall
+         Sea, 10,3 % Luecke bei Eroeffnung). Wer den Ausbruch schon
+         bekommen hat, hatte seine Gelegenheit; ihm hinterher zu sagen,
+         der Kaufpunkt sei uebersprungen und "kein Kaufsignal",
+         widerspricht der ersten Meldung."""
+    return (uebersprungen_schluessel(res) not in schon_gemeldet
+            and ausbruch_schluessel(res) not in schon_gemeldet)
+
+
 def melde_stufe(res: dict, schon_gemeldet: set) -> str | None:
     """Welche Meldung ist faellig — und vor allem: welche NICHT?
 
@@ -1586,6 +1624,17 @@ def melde_stufe(res: dict, schon_gemeldet: set) -> str | None:
             return None
         return "neu"
     if res["vol_ok"] is True and res["key_best"] not in schon_gemeldet:
+        # EIN KAUFPUNKT, EINE GESCHICHTE (Mathias, 13.08.2026, Fall MNDY).
+        # Wurde derselbe Kaufpunkt schon als "uebersprungen" gemeldet,
+        # darf er nicht zwei Minuten spaeter als bestaetigter Ausbruch
+        # nachkommen. Genau das ist passiert: MNDY stand um 20:59 bei
+        # 93,00 und damit 5,10 % ueber dem Kaufpunkt 88,49 (ueber der
+        # Grenze, also "uebersprungen, kein Kaufsignal"), um 21:01 bei
+        # 92,91 und damit 4,99 % (unter der Grenze, also "Vol
+        # BESTAETIGT"). Neun Cent Kursbewegung, zwei einander
+        # widersprechende Meldungen.
+        if uebersprungen_schluessel(res) in schon_gemeldet:
+            return None
         return "nachtrag"
     return None
 
@@ -2088,9 +2137,17 @@ def main():
                 # weder als Ausbruch gezaehlt werden noch dessen
                 # Meldeplatz belegen.
                 if res.get("uebersprungen"):
-                    res["key"] = (UEBERSPRUNGEN_MARKE
-                                  + f"{item['ticker']}|{item['nr']}")
-                    if res["key"] not in schon_gemeldet:
+                    res["key"] = uebersprungen_schluessel(item)
+                    # EIN KAUFPUNKT, EINE GESCHICHTE (Mathias, 13.08.2026).
+                    # Wer den Ausbruch schon gemeldet bekommen hat, darf
+                    # nicht hinterher hoeren, der Kaufpunkt sei
+                    # uebersprungen worden und "kein Kaufsignal" - er hatte
+                    # seine Gelegenheit ja. Diese Meldung ist fuer
+                    # Kaufpunkte gedacht, die NIE angesagt wurden, weil der
+                    # Kurs mit einer Luecke darueber hinweggegangen ist
+                    # (Gerhards Fall Sea am 11.08.2026, 10,3 % Luecke bei
+                    # Eroeffnung).
+                    if melde_uebersprungen(res, schon_gemeldet):
                         uebersprungen.append(res)
                     continue
                 # Kennung am Treffer mitfuehren. Vorgemerkt wird ERST nach
@@ -2109,11 +2166,7 @@ def main():
                 # der woechentlichen. Deckt ein Kaufpunkt mehrere Muster
                 # ab, genuegt eines davon — die kuerzere Frist gewinnt,
                 # der Ausbruch darf dann taeglich neu melden.
-                marke = (HTF_MARKE
-                         if "High & Tight Flag" in (res.get("strategien")
-                                                    or [res["strategie"]])
-                         else "")
-                res["key"] = f"{marke}{item['ticker']}|{item['nr']}"
+                res["key"] = ausbruch_schluessel(res)
                 # ZWEITE STUFE (Mathias, 29.07.2026). Zwei GETRENNTE
                 # Schluessel, genau wie Gap and Go es seit jeher macht:
                 #   res["key"]      — beim ersten Melden gesetzt, egal ob

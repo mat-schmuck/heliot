@@ -424,6 +424,43 @@ def block_e():
     pruefe("E", "Ein unterdrueckter Ausbruch gilt NICHT als gemeldet",
            "K" not in gemeldet)
 
+    # EIN KAUFPUNKT, EINE GESCHICHTE (Mathias, 13.08.2026, Fall MNDY).
+    # Gemessen am echten Lauf: MNDY stand um 20:59 bei 93,00 und damit
+    # 5,10 % ueber dem Kaufpunkt 88,49, also ueber der Nachlaufgrenze —
+    # Meldung "uebersprungen, kein Kaufsignal". Zwei Minuten spaeter
+    # stand es bei 92,91, also 4,99 % darueber und damit UNTER der
+    # Grenze — Meldung "Vol BESTAETIGT". Neun Cent Kursbewegung, zwei
+    # einander widersprechende Meldungen. Ursache: Die beiden Meldewege
+    # fuehrten getrennte Schluessel und wussten nichts voneinander.
+    ausbr = {"ticker": "AAA", "nr": 1, "strategie": "Rectangle Top"}
+    pruefe("E", "Beide Wege rechnen denselben Schlüssel",
+           bw.ausbruch_schluessel(ausbr) == "AAA|1"
+           and bw.uebersprungen_schluessel(ausbr) == bw.UEBERSPRUNGEN_MARKE + "AAA|1")
+    pruefe("E", "High and Tight Flag behält ihr eigenes Vorzeichen",
+           bw.ausbruch_schluessel({**ausbr, "strategie": "High & Tight Flag"})
+           == bw.HTF_MARKE + "AAA|1")
+    # a) Schon als Ausbruch gemeldet -> KEINE Uebersprungen-Meldung mehr.
+    r_ueber = {**ausbr, "uebersprungen": True, "vol_ok": None}
+    pruefe("E", "Nach gemeldetem Ausbruch kommt keine Übersprungen-Meldung",
+           bw.melde_uebersprungen(r_ueber, {"AAA|1"}) is False)
+    pruefe("E", "Zweimal übersprungen wird auch nicht gemeldet",
+           bw.melde_uebersprungen(
+               r_ueber, {bw.UEBERSPRUNGEN_MARKE + "AAA|1"}) is False)
+    # b) Schon als uebersprungen gemeldet -> KEIN Nachtrag mehr.
+    r_nach = {**ausbr, "vol_ok": True, "key": "AAA|1", "key_best": "BEST|AAA|1"}
+    pruefe("E", "Nach Übersprungen-Meldung kommt kein Nachtrag",
+           bw.melde_stufe(r_nach, {"AAA|1", bw.UEBERSPRUNGEN_MARKE + "AAA|1"})
+           is None)
+    pruefe("E", "Ohne Übersprungen-Meldung kommt der Nachtrag normal",
+           bw.melde_stufe(r_nach, {"AAA|1"}) == "nachtrag")
+    # c) Der Fall, fuer den die Meldung gebaut wurde, muss weiter gehen:
+    #    ein Kaufpunkt, der NIE gemeldet wurde (Sea, 11.08.2026).
+    pruefe("E", "Ein nie gemeldeter Kaufpunkt wird weiter als übersprungen "
+           "gemeldet (Fall Sea)",
+           bw.melde_uebersprungen(r_ueber, set()) is True)
+    pruefe("E", "Ein ANDERER Kaufpunkt derselben Aktie bleibt unberührt",
+           bw.melde_uebersprungen({**r_ueber, "nr": 2}, {"AAA|1"}) is True)
+
     # (2) Zahlen-Termine
     import zahlen_termine as zt
     from datetime import date as _d
