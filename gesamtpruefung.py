@@ -91,7 +91,7 @@ def ueberschrift(text):
 BETRIEB = ["config", "volumen", "kurs_cache", "pattern_scanner",
            "breakout_watcher", "cup_handle_v2", "shakeout", "red_to_green",
            "crash_support", "exit_regeln", "positionen", "trigger_logbuch",
-           "red_to_green_explosive", "zahlen_termine",
+           "red_to_green_explosive", "zahlen_termine", "sektor_radar",
            "scan_noetig", "waechter_noetig", "wartung", "ntfy_verlauf",
            "yahoo_ws", "staffelung", "traderfox_alarm_bot"]
 
@@ -132,7 +132,7 @@ def block_b():
     mit_schalter = ["exit_regeln", "positionen", "crash_support",
                     "trigger_logbuch", "cup_handle_v2", "shakeout",
                     "red_to_green", "red_to_green_explosive", "zahlen_termine",
-                    "scan_noetig", "waechter_noetig"]
+                    "scan_noetig", "waechter_noetig", "sektor_radar"]
     for name in mit_schalter:
         r = subprocess.run([sys.executable, f"{name}.py", "--selbsttest"],
                            capture_output=True, text=True, cwd=WURZEL,

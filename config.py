@@ -78,6 +78,23 @@ CFG = {
         ],
     },
 
+    # --- Sektor-Radar (Gerhards Paket vom 13.08.2026) ---------------------
+    # Dreht gerade eine ganze Branche? Zwei bereits etablierte Regeln,
+    # keine neue Kennzahl: Kreuzung des eigenen 10-Tage-Schnitts UND ein
+    # Ausschlag in unserer Volumenformel am selben Tag.
+    #
+    # NICHT hier steht "bestaetigung_tage": Gerhards Entwurf fuehrt den
+    # Wert, sein Code liest ihn nie. Ein Einstellwert, den niemand liest,
+    # ist schlimmer als keiner - wer ihn verstellt, aendert nichts und
+    # glaubt es doch. Die Spanne der Bestaetigung ist deshalb in
+    # sektor_radar.BESTAETIGUNG_ABSTAND benannt und fest.
+    "sektor_radar": {
+        "ma_tage": 10,               # Umkehr gegen den eigenen 10-Tage-Schnitt
+        "vol_pct_schwelle": 50.0,    # Volume % Change mindestens +50 %
+        "v50_tage": 50,              # Durchschnittsbasis, IBD-Standard
+        "melden": True,              # meldet der Waechter zur Eroeffnung?
+    },
+
     # --- Gleitende Durchschnitte ---
     "ma": {
         "kurz": 21,                  # EMA21

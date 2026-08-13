@@ -105,6 +105,23 @@ jobs:
             --out kaufpunkte.xlsx \
             --rate 8
 
+      # --- Sektor-Radar (Gerhards Paket, eingebaut 13.08.2026) ---
+      # Hier, weil es TAGESSCHLUSSKURSE braucht: Waehrend des Handels ist
+      # die letzte Kurszeile eine halbe Kerze, und die Volumenpruefung
+      # rechnete dann systematisch zu niedrig.
+      # Es SENDET nichts (Mathias, 27.07.2026: "Gemeldet wird
+      # ausschliesslich vom Waechter, ab der New Yorker Eroeffnung") -
+      # es legt nur sektor_radar.json ab, aus der der Waechter am
+      # Morgen einmal meldet.
+      # Faellt es aus, darf der Scan nicht rot werden: Die Kaufpunkte
+      # sind das Wichtige, das Radar ist eine Zugabe.
+      - name: Sektor-Radar rechnen
+        if: steps.pruefung.outputs.noetig == 'ja'
+        continue-on-error: true
+        env:
+          TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
+        run: python sektor_radar.py --bauen
+
       - name: Excel als Artifact hochladen
         if: steps.pruefung.outputs.noetig == 'ja'
         uses: actions/upload-artifact@v4
@@ -125,6 +142,8 @@ jobs:
           git config user.name "pattern-scanner"
           git config user.email "actions@users.noreply.github.com"
           git add kaufpunkte_aktuell.xlsx
+          # Der Waechter liest die Datei beim Start aus dem Repo.
+          git add -A -- sektor_radar.json 2>/dev/null || true
           # Fehlertolerant, siehe alarme.yml: fehlt die Datei, bricht
           # 'git add' mit Code 128 ab und faerbt den Lauf grundlos rot.
           git add -A -- ntfy_ids.json 2>/dev/null || true

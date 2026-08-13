@@ -56,6 +56,7 @@ import red_to_green_explosive  # Kapitel 11: dreht aus eigenem Antrieb
 import exit_regeln    # Exit-Regelwerk: Stops, Gewinnabsicherung
 import trigger_logbuch  # schreibt jedes Signal mit, gemeldet oder nicht
 import volumen        # IBD Volume % Change
+import sektor_radar    # Dreht eine ganze Branche? Rechnet der Nachtlauf, meldet der Waechter
 import zahlen_termine  # Wer heute Abend berichtet, wird vermerkt — die EINZIGE Volumenrechnung
 from config import CFG, hoechstens, mind_erreicht, pruefe_config
 from kurs_cache import KursCache, Kurswert
@@ -428,6 +429,10 @@ def letzter_putz() -> str:
 
 
 HTF_MARKE = "HTF|"
+
+# Der Sektor-Radar-Befund wird je HANDELSTAG einmal gemeldet; der Tag steht
+# im Schluessel, damit er mit dem Freitags-Putz von selbst verfaellt.
+SEKTOR_MARKE = "SEKTOR|"
 
 
 def htf_grenze() -> str:
@@ -1226,6 +1231,43 @@ def format_uebersprungen(t: dict) -> str:
     return "\n".join(zeilen)
 
 
+def melde_sektor_radar(topic: str, befund: dict, schon_gemeldet: set,
+                       state: dict) -> bool:
+    """Den Befund des Nachtlaufs EINMAL je Handelstag melden.
+
+    WARUM HIER UND NICHT IM NACHTLAUF (Mathias, 27.07.2026, im
+    Scanner-Workflow festgehalten): "Gemeldet wird ausschliesslich vom
+    Waechter, und zwar erst ab der New Yorker Eroeffnung. Die frueheren
+    Mitternachtsnachrichten waren Treffer, die zu diesem Zeitpunkt
+    ohnehin niemand handeln konnte." Gerhards Paket sendet direkt aus dem
+    Nachtlauf; das waere ein Rueckfall hinter diese Entscheidung.
+    Gerechnet wird also nachts, gemeldet am Morgen.
+
+    Die Handelszeit-Sperre braucht es hier nicht eigens: Sie sitzt in
+    sende() und gilt fuer JEDE automatische Meldung. Schlaegt sie zu,
+    kommt false zurueck und der Befund bleibt offen.
+
+    Rueckgabe: true, wenn er weg ist (oder es nichts zu melden gab)."""
+    treffer = befund.get("treffer") or []
+    tag = befund.get("handelstag")
+    if not treffer or not tag:
+        return True
+    key = SEKTOR_MARKE + str(tag)
+    if key in schon_gemeldet:
+        return True
+    absaetze = sektor_radar.absaetze(treffer)
+    # Priorität "default": Ein Branchendreher ist eine Auskunft, kein
+    # Ausbruch — er soll nicht wie ein Kaufsignal klingeln.
+    if not sende(topic, sektor_radar.titel(treffer), absaetze,
+                 "default", "arrows_counterclockwise"):
+        return False
+    schon_gemeldet.add(key)
+    state["gemeldet"][key] = date.today().isoformat()
+    save_state(state)
+    print(f"Sektor-Radar gemeldet: {len(treffer)} Dreher vom {tag}.")
+    return True
+
+
 def push_uebersprungen(topic: str, treffer: list[dict]) -> bool:
     """Meldet uebersprungene Kaufpunkte, getrennt von den Ausbruechen.
 
@@ -1862,6 +1904,17 @@ def main():
     # Gewinn von Sekundenbruchteilen. Zwei Sekunden sind gegenueber den
     # bisherigen sechs Minuten der Faktor 180 — und der Rest waere
     # Rechenarbeit ohne Nutzen.
+    # SEKTOR-RADAR: einmal lesen, nicht in jeder Runde. Der Waechter
+    # prueft im Zwei-Sekunden-Takt; eine Datei so oft zu lesen waere
+    # Arbeit ohne Gegenwert.
+    radar_offen = bool(CFG["sektor_radar"]["melden"])
+    radar_befund = sektor_radar.lies() if radar_offen else {}
+    if radar_offen:
+        _n = len(radar_befund.get("treffer") or [])
+        _tag = radar_befund.get("handelstag")
+        print(f"Sektor-Radar: {_n} Dreher vom {_tag or 'unbekannt'} liegen vor."
+              if _n else "Sektor-Radar: kein Dreher zu melden.")
+
     basis = {}                       # letzter Tagesdaten-Stand
     naechster_abruf = 0.0
     sperre_bis = 0.0                 # nach Sendefehler kurz nicht erneut
@@ -1878,6 +1931,13 @@ def main():
             break
 
         laut = jetzt_s >= naechster_abruf
+        # Sektor-Radar, sobald die Boerse offen ist. An den Datentakt
+        # gehaengt (60 s) und nicht an den Prueftakt (2 s): Scheitert der
+        # Push, soll er nicht dreissigmal je Minute wiederholt werden.
+        if radar_offen and offen and laut:
+            radar_offen = not melde_sektor_radar(topic, radar_befund,
+                                                 schon_gemeldet, state)
+
         if not laut:
             if not basis:
                 time.sleep(PRUEF_TAKT)
