@@ -33,6 +33,7 @@ on:
           - grenztest        # Grenze oder Abdeckung: zwei Dinge oder eines?
           - yahoostrom       # Trägt Yahoos eigener Live-Strom die ganze Liste?
           - volumenkurve     # Referenzkurve F(t) neu aus Kursdaten bauen
+          - terminvergleich  # Zahlen-Termine: Finnhub gegen Yahoo und Nasdaq
       alle_level:
         description: "Auch Fallback-Level alarmieren? (true/false)"
         required: false
@@ -313,6 +314,25 @@ jobs:
         env:
           FMP_API_KEY: ${{ secrets.FMP_API_KEY }}
         run: python datenvergleich.py ${{ github.event.inputs.loeschen }}
+
+      # --- Termine vergleichen: Finnhub gegen Yahoo und Nasdaq ---
+      # Mathias' Auftrag vom 13.08.2026: "miss Finnhub in der Cloud".
+      # Hier, weil der Schluessel als Secret bei GitHub liegt; Claude
+      # bekommt den WERT nie zu sehen, nur das Messergebnis.
+      # Aendert NICHTS — liest drei Kalender und schreibt einen Bericht.
+      - name: "Zahlen-Termine vergleichen (Finnhub gegen Yahoo und Nasdaq)"
+        if: ${{ github.event.inputs.modus == 'terminvergleich' }}
+        env:
+          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
+        run: python termine_vergleich.py termine_vergleich.txt
+
+      - name: "Terminvergleich sichern"
+        if: ${{ github.event.inputs.modus == 'terminvergleich' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: terminvergleich
+          path: termine_vergleich.txt
+          retention-days: 14
 
       # --- ntfy-Testnachricht: prueft nur die Push-Kette aufs Handy ---
       - name: "Push-Testnachricht (ntfy)"
