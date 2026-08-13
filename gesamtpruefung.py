@@ -469,17 +469,13 @@ def block_e():
                    "Quartalszahlen" in erste, erste[:70])
         pruefe("E", "Kein 'bringt heute' mehr (Mathias: frisst Platz)",
                all("bringt heute" not in t for t in formen.values()))
-        # DER ECHTE KOPF ist die ntfy-Title-Zeile, nicht die erste
-        # Textzeile (Mathias, 13.08.2026). Sie wird hier eigens geprueft.
-        pruefe("E", "Der ntfy-Titel nennt die Aktie mit Zahlen",
-               bw.zahlen_titel([probe]) == "; Quartalszahlen AAA",
-               bw.zahlen_titel([probe]))
-        pruefe("E", "Ohne Termin bleibt der Titel unberuehrt",
-               bw.zahlen_titel([dict(probe, ticker="ZZZ")]) == "")
-        viele = [dict(probe, ticker="AAA") for _ in range(4)]
-        pruefe("E", "Ab vier Aktien zaehlt der Titel statt aufzuzaehlen",
-               bw.zahlen_titel(viele) == "; 4 mit Quartalszahlen",
-               bw.zahlen_titel(viele))
+        # DER NTFY-TITEL BLEIBT FREI DAVON (Mathias, 13.08.2026: die
+        # Sammelmeldung kommt sonst durcheinander). Das wird hier
+        # ausdruecklich geprueft, damit es niemand versehentlich
+        # wieder einbaut.
+        titel = (f"{1} bestätigt" + bw.tagesanteil_titel([probe]))
+        pruefe("E", "Der ntfy-Titel nennt KEINE Zahlen-Termine",
+               "Quartalszahlen" not in titel, titel)
         # Und er darf NICHT zusaetzlich weiter unten stehen.
         rest = "\n".join(formen["Ausbruch"].splitlines()[1:])
         pruefe("E", "Der Vermerk steht nur EINMAL in der Meldung",
