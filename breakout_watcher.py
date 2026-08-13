@@ -256,6 +256,42 @@ def meldungskopf(ticker: str, firma: str) -> str:
     firma = (firma or "").strip()
     return f"{ticker} ({firma})" if firma else ticker
 
+
+def kopfzeile(ticker: str, firma: str, rest: str) -> str:
+    """Die Kopfzeile einer Meldung: Kürzel, Firma, Muster — und ganz
+    hinten der Zahlen-Termin, wenn HEUTE welche kommen.
+
+    Mathias am 13.08.2026: "Schreib bitte bei Aktien, die am gleichen Tag
+    Quartalszahlen bringen, den Hinweis 'bringt heute Quartalszahlen' in
+    den Kopf der Meldung dazu."
+
+    WARUM AM ENDE DER ZEILE und nicht direkt hinter dem Kürzel: Der Satz
+    ist beim Vorlesen der Schlusspunkt der Kopfzeile und trennt nicht das
+    Kürzel vom Muster, das ja der Grund der Meldung ist. Er steht damit
+    trotzdem in der ERSTEN Zeile und wird als eines der ersten Dinge
+    angesagt.
+
+    Diese Funktion ist die EINZIGE Stelle, an der eine Kopfzeile gebaut
+    wird — sonst trüge sie den Vermerk in der einen Meldungsform und in
+    der anderen nicht."""
+    zeile = f"{meldungskopf(ticker, firma)}; {rest}"
+    vermerk = zahlen_termine.kopf_hinweis(ticker)
+    return f"{zeile}; {vermerk}" if vermerk else zeile
+
+
+def termin_nachsatz(ticker: str) -> str | None:
+    """Was die Kopfzeile NICHT schon gesagt hat, oder None.
+
+    Steht heute etwas an, trägt die Kopfzeile es bereits; hier bleibt
+    dann nur der Vorbehalt, falls die beiden Quellen uneinig sind.
+    Sonst der volle Vermerk — der Termin von MORGEN etwa gehört nach
+    unten, nicht in den Kopf.
+
+    So steht keine Angabe zweimal in derselben Meldung."""
+    if zahlen_termine.kopf_hinweis(ticker):
+        return zahlen_termine.vorbehalt(ticker)
+    return zahlen_termine.hinweis(ticker)
+
 # --- Gap and Go (Regelwerk Kapitel 7, Power-Gap-Fassung, Juli 2026) --------
 # Alle Kriterien sind PFLICHT; die Fassung ist bewusst streng ("Klasse statt
 # Masse"). Das Fruehvolumen-Kriterium ist laut Regelwerk NUR live pruefbar
@@ -1099,7 +1135,7 @@ def format_r2g(t: dict) -> str:
     innerhalb zusammengehoeriger."""
     sig = t["signatur"]
     zeilen = [
-        f"{meldungskopf(t['ticker'], t.get('firma', ''))}; Red-to-Green",
+        kopfzeile(t["ticker"], t.get("firma", ""), "Red-to-Green"),
         f"Kreuzung {t['kurs']:.2f} über Vortagesschluss "
         f"{t['vortagesschluss']:.2f}; Minute {t['minute']} des Handelstages",
         f"Vol Sprung {sig['sprung_pct']:.0f} % über Ø50"
@@ -1123,7 +1159,8 @@ def format_gapgo(g: dict) -> str:
     - Fuellwoerter wie "erst"/"nur" weglassen; die immer wahre Zeile
       "Luecke verteidigt" bleibt draussen.
     - Sonst alle Angaben drin — radikaleres Kuerzen war Mathias zu viel."""
-    kopf = meldungskopf(g["ticker"], g.get("firma", ""))
+    # Die Kopfzeile entsteht unten zusammen mit dem Musternamen, damit
+    # der Zahlen-Termin ganz hinten anschliessen kann.
     status = ("BESTÄTIGT (Schluss im oberen Fünftel)" if g["bestaetigt"]
               else "im Aufbau")
     noetig = GAP_FRUEH_FAKTOR if g["frueh"] else GAP_VOL_FAKTOR
@@ -1141,7 +1178,8 @@ def format_gapgo(g: dict) -> str:
     stop_txt = f"Stop {g['stop']:.2f}"
     if g.get("stop_quelle") == "deckel":
         stop_txt += " (Zehn-Prozent-Deckel)"
-    zeilen = [f"{kopf}; {GAP_NAME} {status}",
+    zeilen = [kopfzeile(g["ticker"], g.get("firma", ""),
+                        f"{GAP_NAME} {status}"),
               luecke,
               vol,
               f"Position in der Tagesspanne {g['pos']*100:.0f}%",
@@ -1167,7 +1205,7 @@ def format_uebersprungen(t: dict) -> str:
     """
     namen = t.get("strategien") or [t["strategie"]]
     strategie = ", ".join(STRATEGIE_VOLL.get(n, n) for n in namen)
-    zeilen = [f"{t['ticker']} ({t.get('firma','')}); {strategie}",
+    zeilen = [kopfzeile(t["ticker"], t.get("firma", ""), strategie),
               f"Kaufpunkt {t['kaufpunkt']:.2f} ÜBERSPRUNGEN, Kurs "
               f"{t['kurs']:.2f} liegt {t['ueber_pct']:.1f}% darüber"]
     stop = t.get("stop")
@@ -1182,7 +1220,7 @@ def format_uebersprungen(t: dict) -> str:
     # Bei uebersprungenen Kaufpunkten ERKLAERT der Termin oft die
     # Luecke: Sea eroeffnete am 11.08.2026 zehn Prozent ueber dem
     # Kaufpunkt, nachdem es um 08:00 Zahlen gebracht hatte.
-    vermerk = zahlen_termine.hinweis(t.get("ticker"))
+    vermerk = termin_nachsatz(t.get("ticker"))
     if vermerk:
         zeilen.append(vermerk)
     return "\n".join(zeilen)
@@ -1255,7 +1293,7 @@ def format_treffer(t: dict) -> str:
     namen = t.get("strategien") or [t["strategie"]]
     strategie = ", ".join(STRATEGIE_VOLL.get(n, n) for n in namen)
     zeilen = [
-        f"{meldungskopf(t['ticker'], t.get('firma', ''))}; {strategie}",
+        kopfzeile(t["ticker"], t.get("firma", ""), strategie),
         f"Kaufpunkt {t['kaufpunkt']:.2f}, Kurs {t['kurs']:.2f} "
         f"(+{t['ueber_pct']:.1f}%); {vol_txt}",
     ]
@@ -1271,12 +1309,17 @@ def format_treffer(t: dict) -> str:
         schluss.append(f"Ziel {t['ziel']:.2f} (+{chance:.1f}%)")
     if schluss:
         zeilen.append("; ".join(schluss))
-    # ZAHLEN-TERMIN (Gerhard, 12.08.2026). Ganz am Ende und in eigener
-    # Zeile, damit er nicht zwischen den Kurszahlen untergeht. Ein
-    # Ausbruch am Nachmittag ist etwas anderes, wenn dieselbe Firma zwei
-    # Stunden spaeter berichtet — dann entscheidet ueber Nacht nicht das
-    # Muster, sondern die Zahl.
-    vermerk = zahlen_termine.hinweis(t.get("ticker"))
+    # ZAHLEN-TERMIN (Gerhard, 12.08.2026). Ein Ausbruch am Nachmittag ist
+    # etwas anderes, wenn dieselbe Firma zwei Stunden spaeter berichtet —
+    # dann entscheidet ueber Nacht nicht das Muster, sondern die Zahl.
+    #
+    # SEIT 13.08.2026 steht ein HEUTIGER Termin in der KOPFZEILE (Mathias'
+    # Wunsch, siehe kopfzeile()). Hier unten bleibt nur, was dort nicht
+    # hingehoert: der Termin von morgen und der Vorbehalt bei uneinigen
+    # Quellen. Vorher stand alles hier in eigener Zeile am Ende — bei
+    # mehreren Aktien in einer Meldung ist das aber genau die Stelle, die
+    # man ueberhoert.
+    vermerk = termin_nachsatz(t.get("ticker"))
     if vermerk:
         zeilen.append(vermerk)
     return "\n".join(zeilen)

@@ -412,6 +412,70 @@ def hinweis(ticker, heute=None, termine=None):
     return None
 
 
+def kopf_hinweis(ticker, heute=None, termine=None):
+    """Der KURZE Vermerk fuer die Kopfzeile, oder None.
+
+    Mathias am 13.08.2026: "Schreib bitte bei Aktien, die am gleichen Tag
+    Quartalszahlen bringen, den Hinweis 'bringt heute Quartalszahlen' in
+    den Kopf der Meldung dazu."
+
+    NUR fuer HEUTE. Ein Termin von morgen gehoert nicht in die
+    Kopfzeile — die traegt, was jetzt gilt; alles andere steht weiter
+    unten und wuerde die wichtigste Zeile jeder Meldung verwaessern.
+
+    Die Tageszeit steht mit dabei, weil sie den Unterschied macht: Nach
+    Boersenschluss entscheidet ueber Nacht nicht mehr das Muster,
+    sondern die Zahl. Vor Eroeffnung ist sie dagegen schon draussen, und
+    das sagt der Satz dann auch — in der Vergangenheitsform, sonst
+    wartet man auf etwas, das laengst da ist.
+
+    Der VORBEHALT (uneinige Quellen) steht hier bewusst NICHT: Er ist
+    lang und gehoert nicht in die Zeile mit Kuerzel und Muster. Dafuer
+    gibt es vorbehalt()."""
+    t = (termine if termine is not None else lade()).get(
+        (ticker or "").upper())
+    if not t:
+        return None
+    if heute is None:
+        try:
+            from zoneinfo import ZoneInfo
+            heute = datetime.now(ZoneInfo("America/New_York")).date()
+        except Exception:
+            heute = date.today()
+    try:
+        tag = date.fromisoformat(t["datum"])
+    except Exception:
+        return None
+    if tag != heute:
+        return None
+    lage = t.get("lage")
+    if lage == "nachboerslich":
+        return "bringt heute Quartalszahlen nach Börsenschluss"
+    if lage == "vorboerslich":
+        return "hat heute vor Eröffnung Quartalszahlen gebracht"
+    if lage == "im_handel":
+        return "bringt heute Quartalszahlen während des Handels"
+    return "bringt heute Quartalszahlen"
+
+
+def vorbehalt(ticker, termine=None):
+    """Wie sicher der Termin ist, oder None.
+
+    Steht getrennt vom Vermerk selbst, damit die Kopfzeile kurz bleibt
+    und der Vorbehalt trotzdem nicht verlorengeht: Eine Warnung, der man
+    ansieht, wie belastbar sie ist, ist mehr wert als eine, die
+    Sicherheit vortaeuscht."""
+    t = (termine if termine is not None else lade()).get(
+        (ticker or "").upper())
+    if not t:
+        return None
+    if t.get("uneinig"):
+        return "Termin unsicher, " + t["uneinig"]
+    if t.get("quellen") == ["nasdaq"]:
+        return "Termin nur laut Nasdaq-Kalender"
+    return None
+
+
 def selbsttest() -> int:
     fehler = []
 
@@ -502,6 +566,45 @@ def selbsttest() -> int:
       "uneinig" in (hinweis("AYA", date(2026, 8, 13), z) or "").lower())
     p("Ein Termin nur von Nasdaq wird als solcher gekennzeichnet",
       "nur laut Nasdaq" in (hinweis("ASND", date(2026, 8, 13), z) or ""))
+
+    # --- KOPFZEILEN-VERMERK (Mathias, 13.08.2026) ---
+    heute = date(2026, 8, 13)
+    p("Zahlen heute nach Schluss stehen im Kopf",
+      kopf_hinweis("AYA", heute, z)
+      == "bringt heute Quartalszahlen nach Börsenschluss",
+      kopf_hinweis("AYA", heute, z))
+    p("Waren die Zahlen heute frueh schon da, steht das auch so da",
+      kopf_hinweis("ASND", heute, z)
+      == "hat heute vor Eröffnung Quartalszahlen gebracht",
+      kopf_hinweis("ASND", heute, z))
+    p("Ein Termin an einem ANDEREN Tag gehoert nicht in den Kopf",
+      kopf_hinweis("DY", heute, z) is None, kopf_hinweis("DY", heute, z))
+    p("Auch morgen ist nicht heute",
+      kopf_hinweis("AYA", date(2026, 8, 12), z) is None)
+    p("Eine unbekannte Aktie ergibt keinen Kopfvermerk",
+      kopf_hinweis("GIBTSNICHT", heute, z) is None)
+    # Ohne Tageszeit trotzdem warnen — schweigen waere das Falsche.
+    z2 = dict(z)
+    z2["XX"] = {"datum": "2026-08-13", "uhrzeit": "", "lage": "unbekannt",
+                "quellen": ["nasdaq"]}
+    p("Ohne Tageszeit lautet der Kopfvermerk schlicht 'bringt heute "
+      "Quartalszahlen'",
+      kopf_hinweis("XX", heute, z2) == "bringt heute Quartalszahlen",
+      kopf_hinweis("XX", heute, z2))
+
+    # --- VORBEHALT: getrennt, damit die Kopfzeile kurz bleibt ---
+    p("Der Kopfvermerk traegt den langen Vorbehalt NICHT",
+      "uneinig" not in (kopf_hinweis("AYA", heute, z) or ""))
+    p("Uneinige Quellen stehen aber im Vorbehalt",
+      (vorbehalt("AYA", z) or "").startswith("Termin unsicher"),
+      vorbehalt("AYA", z))
+    p("Ein Termin nur von Nasdaq wird im Vorbehalt genannt",
+      vorbehalt("ASND", z) == "Termin nur laut Nasdaq-Kalender",
+      vorbehalt("ASND", z))
+    p("Sind sich beide Quellen einig, gibt es keinen Vorbehalt",
+      vorbehalt("DKS", {"DKS": {"datum": "2026-08-25", "uhrzeit": "08:00",
+                                "lage": "vorboerslich",
+                                "quellen": ["yahoo", "nasdaq"]}}) is None)
 
     # Kaputte Daten duerfen nichts umwerfen
     p("Unlesbares Datum ergibt nichts",

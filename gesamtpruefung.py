@@ -434,9 +434,49 @@ def block_e():
                                                      proben) or ""))
     pruefe("E", "Ohne Termin kein Vermerk",
            zt.hinweis("ZZZ", _d(2026, 8, 12), proben) is None)
-    pruefe("E", "Der Vermerk steht in der Ausbruch-Meldung",
-           "vermerk" in bw.format_treffer.__code__.co_names
-           or "zahlen_termine" in bw.format_treffer.__code__.co_names)
+    # DER VERMERK IN DER KOPFZEILE (Mathias, 13.08.2026).
+    # Vorher stand hier eine Pruefung, die nur im Bytecode nachsah, ob ein
+    # Name vorkommt. Die haette JEDE Umstellung ueberlebt, ohne etwas zu
+    # merken — und genau das ist beim Umbau dann auch passiert. Jetzt wird
+    # die Meldung wirklich gebaut und nachgesehen, WO der Satz steht.
+    _kopf, _hin, _vor = zt.kopf_hinweis, zt.hinweis, zt.vorbehalt
+    zt.kopf_hinweis = lambda t, h=None, te=None: (
+        "bringt heute Quartalszahlen nach Börsenschluss" if t == "AAA" else None)
+    zt.hinweis = lambda t, h=None, te=None: None
+    zt.vorbehalt = lambda t, te=None: None
+    try:
+        probe = {"ticker": "AAA", "firma": "Alpha AG", "strategie": "Darvas Box",
+                 "kaufpunkt": 10.0, "kurs": 10.4, "ueber_pct": 4.0,
+                 "stop": 9.0, "ziel": 12.0, "vol_ok": True, "vol_pct": 60.0,
+                 "vol_noetig": 1.0}
+        formen = {
+            "Ausbruch": bw.format_treffer(probe),
+            "uebersprungen": bw.format_uebersprungen(probe),
+            "Red-to-Green": bw.format_r2g(
+                {"ticker": "AAA", "firma": "Alpha AG", "kurs": 10.4,
+                 "vortagesschluss": 10.1, "minute": 60,
+                 "signatur": {"sprung_pct": 200.0, "anflug_pct": -3.0,
+                              "in_fruehphase": False}}),
+            "Gap and Go": bw.format_gapgo(
+                {"ticker": "AAA", "firma": "Alpha AG", "bestaetigt": True,
+                 "frueh": False, "tages_ratio": 5.4, "gap": 0.08,
+                 "base_spanne": 0.2, "flat_base": True, "pos": 0.9,
+                 "kp": 11.0, "stop": 9.9, "stop_quelle": "struktur"}),
+        }
+        for name, text in formen.items():
+            erste = text.splitlines()[0]
+            pruefe("E", f"'bringt heute Quartalszahlen' im Kopf: {name}",
+                   "bringt heute Quartalszahlen" in erste, erste[:70])
+        # Und er darf NICHT zusaetzlich weiter unten stehen.
+        rest = "\n".join(formen["Ausbruch"].splitlines()[1:])
+        pruefe("E", "Der Vermerk steht nur EINMAL in der Meldung",
+               "Quartalszahlen" not in rest)
+        # Ohne Termin bleibt die Kopfzeile unveraendert.
+        ohne = bw.format_treffer(dict(probe, ticker="ZZZ"))
+        pruefe("E", "Ohne Termin kein Zusatz im Kopf",
+               "Quartalszahlen" not in ohne)
+    finally:
+        zt.kopf_hinweis, zt.hinweis, zt.vorbehalt = _kopf, _hin, _vor
 
     # Handelszeit-Sperre
     from datetime import datetime as dt
