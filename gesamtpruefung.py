@@ -424,42 +424,73 @@ def block_e():
     pruefe("E", "Ein unterdrueckter Ausbruch gilt NICHT als gemeldet",
            "K" not in gemeldet)
 
-    # EIN KAUFPUNKT, EINE GESCHICHTE (Mathias, 13.08.2026, Fall MNDY).
-    # Gemessen am echten Lauf: MNDY stand um 20:59 bei 93,00 und damit
-    # 5,10 % ueber dem Kaufpunkt 88,49, also ueber der Nachlaufgrenze —
-    # Meldung "uebersprungen, kein Kaufsignal". Zwei Minuten spaeter
-    # stand es bei 92,91, also 4,99 % darueber und damit UNTER der
-    # Grenze — Meldung "Vol BESTAETIGT". Neun Cent Kursbewegung, zwei
-    # einander widersprechende Meldungen. Ursache: Die beiden Meldewege
-    # fuehrten getrennte Schluessel und wussten nichts voneinander.
-    ausbr = {"ticker": "AAA", "nr": 1, "strategie": "Rectangle Top"}
-    pruefe("E", "Beide Wege rechnen denselben Schlüssel",
-           bw.ausbruch_schluessel(ausbr) == "AAA|1"
-           and bw.uebersprungen_schluessel(ausbr) == bw.UEBERSPRUNGEN_MARKE + "AAA|1")
-    pruefe("E", "High and Tight Flag behält ihr eigenes Vorzeichen",
-           bw.ausbruch_schluessel({**ausbr, "strategie": "High & Tight Flag"})
-           == bw.HTF_MARKE + "AAA|1")
-    # a) Schon als Ausbruch gemeldet -> KEINE Uebersprungen-Meldung mehr.
-    r_ueber = {**ausbr, "uebersprungen": True, "vol_ok": None}
-    pruefe("E", "Nach gemeldetem Ausbruch kommt keine Übersprungen-Meldung",
-           bw.melde_uebersprungen(r_ueber, {"AAA|1"}) is False)
-    pruefe("E", "Zweimal übersprungen wird auch nicht gemeldet",
-           bw.melde_uebersprungen(
-               r_ueber, {bw.UEBERSPRUNGEN_MARKE + "AAA|1"}) is False)
-    # b) Schon als uebersprungen gemeldet -> KEIN Nachtrag mehr.
-    r_nach = {**ausbr, "vol_ok": True, "key": "AAA|1", "key_best": "BEST|AAA|1"}
-    pruefe("E", "Nach Übersprungen-Meldung kommt kein Nachtrag",
-           bw.melde_stufe(r_nach, {"AAA|1", bw.UEBERSPRUNGEN_MARKE + "AAA|1"})
-           is None)
-    pruefe("E", "Ohne Übersprungen-Meldung kommt der Nachtrag normal",
-           bw.melde_stufe(r_nach, {"AAA|1"}) == "nachtrag")
-    # c) Der Fall, fuer den die Meldung gebaut wurde, muss weiter gehen:
-    #    ein Kaufpunkt, der NIE gemeldet wurde (Sea, 11.08.2026).
-    pruefe("E", "Ein nie gemeldeter Kaufpunkt wird weiter als übersprungen "
-           "gemeldet (Fall Sea)",
-           bw.melde_uebersprungen(r_ueber, set()) is True)
-    pruefe("E", "Ein ANDERER Kaufpunkt derselben Aktie bleibt unberührt",
-           bw.melde_uebersprungen({**r_ueber, "nr": 2}, {"AAA|1"}) is True)
+    # DAS EINSTIEGSFENSTER ALS ZUSTAND (Mathias, 13.08.2026, Fall MNDY).
+    # Er hat sich fuer "das Fenster ist das Fenster" entschieden: Der Kurs
+    # darf zurueckkommen, und jeder Wechsel wird gemeldet - hinaus als
+    # "uebersprungen", herein als "wieder im Einstiegsfenster".
+    #
+    # DER FALL, der dazu gefuehrt hat: MNDY stand um 20:59 bei 93,00 und
+    # damit 5,10 % ueber dem Kaufpunkt 88,49, zwei Minuten spaeter bei
+    # 92,91 und damit 4,99 %. Ergebnis waren zwei einander
+    # widersprechende Meldungen ("kein Kaufsignal", dann "Vol
+    # BESTAETIGT") fuer neun Cent Kursbewegung.
+    D, A = bw.DRIN, bw.DRAUSSEN
+    pruefe("E", "Über der Grenze heißt draußen",
+           bw.fenster_zustand(0.051, D) == A)
+    pruefe("E", "Deutlich darunter heißt drin",
+           bw.fenster_zustand(0.030, A) == D)
+    # DIE TOTZONE: gemessen an MNDY-Minutendaten haette die Reinform NEUN
+    # Meldungen in 22 Minuten erzeugt, mit einem Prozentpunkt Totzone EINE.
+    pruefe("E", "In der Totzone bleibt es beim bisherigen Zustand",
+           bw.fenster_zustand(0.045, A) is None
+           and bw.fenster_zustand(0.045, D) is None)
+    pruefe("E", "Beim ERSTEN Blick gilt die Totzone als drin",
+           bw.fenster_zustand(0.045, None) == D)
+    pruefe("E", "Der genaue Grenzwert zählt noch als drin",
+           bw.fenster_zustand(bw.NACHLAUF_GRENZE, D) is not A)
+
+    pruefe("E", "Hinausgehen wird gemeldet",
+           bw.fenster_wechsel(A, D) == "verlassen")
+    pruefe("E", "Zurückkommen wird gemeldet",
+           bw.fenster_wechsel(D, A) == "wiedereintritt")
+    pruefe("E", "Gleicher Zustand meldet nichts",
+           bw.fenster_wechsel(D, D) is None and bw.fenster_wechsel(A, A) is None)
+    pruefe("E", "Ohne Entscheidung (Totzone) meldet nichts",
+           bw.fenster_wechsel(None, A) is None)
+    # Der Fall Sea (Gerhard, 11.08.2026): 10,3 % Eroeffnungsluecke, der
+    # Kaufpunkt wurde NIE angesagt. Der erste Blick ist schon draussen.
+    pruefe("E", "Erster Blick schon über der Grenze wird gemeldet (Fall Sea)",
+           bw.fenster_wechsel(A, None) == "verlassen")
+    pruefe("E", "Erster Blick im Fenster meldet keinen Wiedereintritt",
+           bw.fenster_wechsel(D, None) is None)
+
+    # Der ECHTE Tagesverlauf von MNDY, auf die Minute nachgespielt.
+    verlauf = [0.004, 0.017, 0.036, 0.049, 0.051, 0.046, 0.050, 0.0489,
+               0.051, 0.0457, 0.0535, 0.0489, 0.0507, 0.030]
+    zustand, meldungen = None, []
+    for u in verlauf:
+        neu_z = bw.fenster_zustand(u, zustand)
+        w = bw.fenster_wechsel(neu_z, zustand)
+        if neu_z:
+            zustand = neu_z
+        if w:
+            meldungen.append(w)
+    pruefe("E", "MNDY-Tagesverlauf ergibt genau zwei Meldungen statt neun",
+           meldungen == ["verlassen", "wiedereintritt"], meldungen)
+
+    # Die Meldung sagt, dass es ein Wiedereintritt ist und KEIN Ausbruch.
+    probe_w = {"ticker": "AAA", "firma": "Alpha AG", "strategie": "Darvas Box",
+               "kaufpunkt": 10.0, "kurs": 10.3, "ueber_pct": 3.0, "stop": 9.0,
+               "ziel": 12.0, "vol_ok": True, "vol_pct": 60.0, "vol_noetig": 1.0}
+    erste = bw.format_wiedereintritt(probe_w).splitlines()[0]
+    pruefe("E", "Wiedereintritt ist als solcher beschriftet",
+           "wieder im Einstiegsfenster" in erste, erste[:70])
+    pruefe("E", "Die gewöhnliche Meldung trägt den Zusatz NICHT",
+           "wieder im Einstiegsfenster"
+           not in bw.format_treffer(probe_w).splitlines()[0])
+    pruefe("E", "Der Wiedereintritt nennt Kurs, Stop und Risiko",
+           "Kaufpunkt" in bw.format_wiedereintritt(probe_w)
+           and "Stop" in bw.format_wiedereintritt(probe_w))
 
     # (2) Zahlen-Termine
     import zahlen_termine as zt

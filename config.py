@@ -522,6 +522,16 @@ CFG = {
         # sondern die Auskunft, dass etwas passiert ist. Auf False setzen,
         # wenn nur noch handelbare Ausbrueche gemeldet werden sollen.
         "melde_uebersprungene": True,
+        # WIEDEREINTRITT (Mathias, 13.08.2026): Faellt der Kurs wieder ins
+        # Einstiegsfenster zurueck, wird das gemeldet - "das Fenster ist
+        # das Fenster". Damit ein Kurs, der genau auf der Grenze liegt,
+        # nicht staendig hin und her meldet, geht es erst UNTER
+        # (nachlauf_grenze minus totzone) wieder hinein.
+        # GEMESSEN an MNDY-Minutendaten vom 13.08.2026: ohne Totzone
+        # NEUN Meldungen in 22 Minuten (sechs Ueberquerungen), mit einem
+        # Prozentpunkt Totzone genau EINE. Auf 0 gesetzt gibt es die
+        # Reinform, in der jede Ueberquerung zaehlt.
+        "wiedereintritt_totzone": 0.01,
         # Weckuhr und Sammelfenster gab es nur am 30.07.2026 für ein paar
         # Stunden; mit dem festen Zwei-Sekunden-Takt sind sie wieder
         # heraus. Ebenso die Obergrenze von fünf Aktien je Push: Sie

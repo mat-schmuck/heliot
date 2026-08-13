@@ -234,6 +234,9 @@ PRUEF_TAKT = CFG["betrieb"].get("pruef_takt_sekunden", 2)
 # Wie weit ueber dem Kaufpunkt gilt ein Ausbruch noch als einsteigbar,
 # und was passiert mit dem, was darueber liegt (siehe pruefe_breakout).
 NACHLAUF_GRENZE = CFG["betrieb"].get("nachlauf_grenze", 0.05)
+# Wie weit UNTER die Grenze der Kurs zurueck muss, damit der Kaufpunkt
+# wieder als "im Einstiegsfenster" gilt. Siehe fenster_zustand().
+WIEDEREINTRITT_TOTZONE = CFG["betrieb"].get("wiedereintritt_totzone", 0.01)
 MELDE_UEBERSPRUNGENE = CFG["betrieb"].get("melde_uebersprungene", True)
 # Eigenes Vorzeichen im Meldeschluessel: Ein uebersprungener Kaufpunkt
 # ist ein ANDERES Ereignis als ein sauberer Ausbruch und darf dessen
@@ -480,7 +483,14 @@ def load_state() -> dict:
             # Zwei Fristen: High and Tight Flag TAEGLICH (Gerhard,
             # 29.07.2026), alles andere unveraendert im Wochentakt des
             # Freitags-Putzes.
-            return {"gemeldet": {
+            # DAS FENSTER-GEDAECHTNIS gilt nur fuer DIESEN Handelstag
+            # (Mathias, 13.08.2026). Ueber Nacht bewegt sich der Kurs
+            # ohnehin, und der Kaufpunkt selbst wandert mit dem
+            # Musterdeckel - ein gestriger Zustand sagt nichts mehr.
+            fenster = data.get("fenster", {})
+            if data.get("fenster_tag") != heute:
+                fenster = {}
+            return {"fenster_tag": heute, "fenster": fenster, "gemeldet": {
                 k: d for k, d in gemeldet.items()
                 # HTF_MARKE mit 'in' statt 'startswith': Der Nachtrag-
                 # Schluessel lautet 'BEST|HTF|AAPL|1', die Flaggen-Frist
@@ -489,7 +499,7 @@ def load_state() -> dict:
                              else grenze)}}
         except Exception:
             pass
-    return {"gemeldet": {}}
+    return {"fenster_tag": heute, "fenster": {}, "gemeldet": {}}
 
 
 def save_state(state: dict):
@@ -1267,6 +1277,31 @@ def melde_sektor_radar(topic: str, befund: dict, schon_gemeldet: set,
     return True
 
 
+def format_wiedereintritt(t: dict) -> str:
+    """Der Kurs ist ins Einstiegsfenster ZURUECKGEKEHRT.
+
+    Mathias am 13.08.2026, als er zwischen zwei Wegen zu waehlen hatte:
+    "Ich waere fuer den 2ten Weg mit einer Meldung, die den Wiedereintritt
+    zeigt." Also darf ein Kaufpunkt zurueckkommen, und der Wechsel wird
+    gemeldet — aber EHRLICH als Wiedereintritt und nicht als frischer
+    Ausbruch. Sonst stuende zweimal dasselbe da und man haelt es fuer
+    zwei Gelegenheiten.
+
+    Sonst wie ein Ausbruch: Kurs, Volumenlage, Stop, Risiko und Ziel
+    stehen dabei, denn der Einstieg ist wieder moeglich."""
+    return format_treffer(t, kopfzusatz="wieder im Einstiegsfenster")
+
+
+def push_wiedereintritt(topic: str, treffer: list[dict]) -> bool:
+    if not treffer:
+        return False
+    absaetze = [f"{i}. {format_wiedereintritt(t)}"
+                for i, t in enumerate(treffer, 1)]
+    titel = (", ".join(t["ticker"] for t in treffer)
+             + ": wieder im Einstiegsfenster" + tagesanteil_titel(treffer))
+    return sende(topic, titel, absaetze, "high")
+
+
 def push_uebersprungen(topic: str, treffer: list[dict]) -> bool:
     """Meldet uebersprungene Kaufpunkte, getrennt von den Ausbruechen.
 
@@ -1283,7 +1318,7 @@ def push_uebersprungen(topic: str, treffer: list[dict]) -> bool:
     return sende(topic, titel, absaetze, "default")
 
 
-def format_treffer(t: dict) -> str:
+def format_treffer(t: dict, kopfzusatz: str = "") -> str:
     """Trenner-Regeln und Hintergrund siehe format_gapgo.
 
     KURZFASSUNG seit 29.07.2026, mit Mathias Zeile fuer Zeile abgestimmt.
@@ -1334,7 +1369,8 @@ def format_treffer(t: dict) -> str:
     namen = t.get("strategien") or [t["strategie"]]
     strategie = ", ".join(STRATEGIE_VOLL.get(n, n) for n in namen)
     zeilen = [
-        kopfzeile(t["ticker"], t.get("firma", ""), strategie),
+        kopfzeile(t["ticker"], t.get("firma", ""),
+                  f"{strategie}; {kopfzusatz}" if kopfzusatz else strategie),
         f"Kaufpunkt {t['kaufpunkt']:.2f}, Kurs {t['kurs']:.2f} "
         f"(+{t['ueber_pct']:.1f}%); {vol_txt}",
     ]
@@ -1570,23 +1606,47 @@ def uebersprungen_schluessel(t: dict) -> str:
     return f"{UEBERSPRUNGEN_MARKE}{t['ticker']}|{t['nr']}"
 
 
-def melde_uebersprungen(res: dict, schon_gemeldet: set) -> bool:
-    """Darf dieser uebersprungene Kaufpunkt gemeldet werden?
+DRIN, DRAUSSEN = "drin", "draussen"
 
-    Steht hier als eigene, pruefbare Funktion statt verstreut in der
-    Schleife — aus demselben Grund wie melde_stufe().
 
-    ZWEI Bedingungen, und die zweite ist der Fall MNDY vom 13.08.2026:
-      1. Er wurde noch nicht als uebersprungen gemeldet.
-      2. Er wurde auch noch nicht als AUSBRUCH gemeldet. Diese Meldung
-         ist fuer Kaufpunkte gedacht, die NIE angesagt wurden, weil der
-         Kurs mit einer Luecke darueber hinweggegangen ist (Gerhards Fall
-         Sea, 10,3 % Luecke bei Eroeffnung). Wer den Ausbruch schon
-         bekommen hat, hatte seine Gelegenheit; ihm hinterher zu sagen,
-         der Kaufpunkt sei uebersprungen und "kein Kaufsignal",
-         widerspricht der ersten Meldung."""
-    return (uebersprungen_schluessel(res) not in schon_gemeldet
-            and ausbruch_schluessel(res) not in schon_gemeldet)
+def fenster_zustand(ueber: float, vorher: str | None) -> str | None:
+    """In welchem Zustand ist das Einstiegsfenster JETZT?
+
+    'ueber' ist der Abstand zum Kaufpunkt als Anteil (0,051 = 5,1 %).
+    Rueckgabe: DRIN, DRAUSSEN — oder None, wenn nichts entschieden wird
+    und der bisherige Zustand gilt.
+
+    DIE TOTZONE, und warum es sie gibt (gemessen am 13.08.2026 an
+    MNDY-Minutendaten, Mathias' Fall): Ohne sie pendelt ein Kurs, der
+    genau auf der Grenze liegt, staendig hin und her. MNDY hat die
+    Fuenf-Prozent-Linie an diesem Tag sechsmal ueberquert und haette
+    NEUN Meldungen in 22 Minuten erzeugt; mit einer Totzone von einem
+    Prozentpunkt war es EINE. Und das ist noch geschoent: Gemessen wurde
+    an Minutenkerzen, der Waechter prueft alle zwei Sekunden.
+
+    Hinaus geht es also ueber der Grenze, herein erst wieder DEUTLICH
+    darunter. Steht die Totzone auf 0, gibt es die Reinform: jede
+    Ueberquerung zaehlt."""
+    if ueber > NACHLAUF_GRENZE:
+        return DRAUSSEN
+    if ueber <= NACHLAUF_GRENZE - WIEDEREINTRITT_TOTZONE:
+        return DRIN
+    return None if vorher else DRIN
+
+
+def fenster_wechsel(neu: str | None, vorher: str | None) -> str | None:
+    """Was ist zu melden? 'verlassen', 'wiedereintritt' oder nichts.
+
+    Der ERSTE Blick auf einen Kaufpunkt ist kein Wechsel — mit einer
+    Ausnahme: Liegt der Kurs schon beim ersten Mal ueber der Grenze, ist
+    das genau der Fall, fuer den es die Meldung gibt (Gerhards Fall Sea
+    am 11.08.2026: 10,3 % Eroeffnungsluecke, der Kaufpunkt wurde nie
+    angesagt). Der wird gemeldet."""
+    if neu is None or neu == vorher:
+        return None
+    if neu == DRAUSSEN:
+        return "verlassen"
+    return "wiedereintritt" if vorher == DRAUSSEN else None
 
 
 def melde_stufe(res: dict, schon_gemeldet: set) -> str | None:
@@ -1624,17 +1684,6 @@ def melde_stufe(res: dict, schon_gemeldet: set) -> str | None:
             return None
         return "neu"
     if res["vol_ok"] is True and res["key_best"] not in schon_gemeldet:
-        # EIN KAUFPUNKT, EINE GESCHICHTE (Mathias, 13.08.2026, Fall MNDY).
-        # Wurde derselbe Kaufpunkt schon als "uebersprungen" gemeldet,
-        # darf er nicht zwei Minuten spaeter als bestaetigter Ausbruch
-        # nachkommen. Genau das ist passiert: MNDY stand um 20:59 bei
-        # 93,00 und damit 5,10 % ueber dem Kaufpunkt 88,49 (ueber der
-        # Grenze, also "uebersprungen, kein Kaufsignal"), um 21:01 bei
-        # 92,91 und damit 4,99 % (unter der Grenze, also "Vol
-        # BESTAETIGT"). Neun Cent Kursbewegung, zwei einander
-        # widersprechende Meldungen.
-        if uebersprungen_schluessel(res) in schon_gemeldet:
-            return None
         return "nachtrag"
     return None
 
@@ -2124,6 +2173,8 @@ def main():
                 print("  Für diese Werte wird kein Ausbruch erkannt.")
 
             treffer, neu, nachtrag, uebersprungen = [], [], [], []
+            wiedereintritt = []
+            fenster = state.setdefault("fenster", {})
             for item in items:
                 q = quotes.get(item["ticker"].upper())
                 if not q:
@@ -2131,24 +2182,31 @@ def main():
                 res = pruefe_breakout(item, q)
                 if not res:
                     continue
-                # UEBERSPRUNGENE KAUFPUNKTE gehen einen eigenen Weg
-                # (Gerhard, 11.08.2026, Fall Sea). Eigener Schluessel,
-                # eigene Nachricht, eigenes Gedaechtnis — sie duerfen
-                # weder als Ausbruch gezaehlt werden noch dessen
-                # Meldeplatz belegen.
+                # DAS EINSTIEGSFENSTER ALS ZUSTAND (Mathias, 13.08.2026,
+                # "das Fenster ist das Fenster"). Ein Kaufpunkt ist DRIN
+                # oder DRAUSSEN, und JEDER Wechsel wird gemeldet: hinaus
+                # als "uebersprungen", herein als "wieder im
+                # Einstiegsfenster". Solange er draussen ist, schweigt der
+                # gewoehnliche Ausbruchsweg ganz - sonst kaeme, wie bei
+                # MNDY am 13.08.2026, zwei Minuten nach "kein Kaufsignal"
+                # ein "Vol BESTAETIGT".
+                fkey = f"{item['ticker']}|{item['nr']}"
+                vorher = fenster.get(fkey)
+                zustand = fenster_zustand(res["ueber_pct"] / 100.0, vorher)
+                wechsel = fenster_wechsel(zustand, vorher)
+                if zustand:
+                    fenster[fkey] = zustand
                 if res.get("uebersprungen"):
                     res["key"] = uebersprungen_schluessel(item)
-                    # EIN KAUFPUNKT, EINE GESCHICHTE (Mathias, 13.08.2026).
-                    # Wer den Ausbruch schon gemeldet bekommen hat, darf
-                    # nicht hinterher hoeren, der Kaufpunkt sei
-                    # uebersprungen worden und "kein Kaufsignal" - er hatte
-                    # seine Gelegenheit ja. Diese Meldung ist fuer
-                    # Kaufpunkte gedacht, die NIE angesagt wurden, weil der
-                    # Kurs mit einer Luecke darueber hinweggegangen ist
-                    # (Gerhards Fall Sea am 11.08.2026, 10,3 % Luecke bei
-                    # Eroeffnung).
-                    if melde_uebersprungen(res, schon_gemeldet):
+                    if wechsel == "verlassen":
                         uebersprungen.append(res)
+                    continue
+                if wechsel == "wiedereintritt":
+                    res["key"] = ausbruch_schluessel(res)
+                    wiedereintritt.append(res)
+                    continue
+                if (zustand or vorher) == DRAUSSEN:
+                    # Noch in der Totzone auf dem Rueckweg: nichts melden.
                     continue
                 # Kennung am Treffer mitfuehren. Vorgemerkt wird ERST nach
                 # einem erfolgreichen Push - siehe unten.
@@ -2334,6 +2392,47 @@ def main():
                     save_state(state)
                 else:
                     sperre_bis = jetzt_s + TAKT
+
+            # --- Wieder im Einstiegsfenster (Mathias, 13.08.2026) ----------
+            # Der Kurs war ueber der Nachlaufgrenze und ist zurueckgekommen.
+            # Das ist eine ECHTE Gelegenheit und wird deshalb wie ein
+            # Ausbruch beziffert, aber ausdruecklich als Wiedereintritt
+            # beschriftet - sonst haelt man es fuer eine zweite Chance auf
+            # dasselbe und zaehlt die Meldungen doppelt.
+            #
+            # Das Gedaechtnis ist der ZUSTAND (state["fenster"]), nicht der
+            # Meldeschluessel: Ein Kaufpunkt darf an einem Tag mehrmals
+            # hinaus und wieder herein, jeder Wechsel zaehlt. Die Totzone
+            # in fenster_zustand() haelt das Zappeln an der Grenze fern.
+            if wiedereintritt and jetzt_s >= sperre_bis:
+                print("")
+                print(f"{len(wiedereintritt)} Kaufpunkt(e) wieder im "
+                      f"Einstiegsfenster:")
+                for t in wiedereintritt:
+                    for zeile in format_wiedereintritt(t).split("\n"):
+                        print("  " + zeile)
+                    print("")
+                trigger_logbuch.protokolliere_viele(
+                    [{"ticker": t.get("ticker"), "firma": t.get("firma", ""),
+                      "strategie": t.get("strategie"),
+                      "kaufpunkt": t.get("kaufpunkt"), "kurs": t.get("kurs"),
+                      "stop": t.get("stop"), "ueber_pct": t.get("ueber_pct"),
+                      "vol_bestaetigt": t.get("vol_ok") is True,
+                      "wiedereintritt": True,
+                      "trockenlauf": bool(args.dry_run)}
+                     for t in wiedereintritt], quelle="waechter/wiedereintritt")
+                if args.dry_run:
+                    print("(Dry-Run — nichts gesendet)")
+                elif not push_wiedereintritt(topic, wiedereintritt):
+                    # Nicht angekommen: Der Zustand wird zurueckgedreht,
+                    # damit der Wechsel beim naechsten Durchlauf erneut
+                    # auffaellt. Sonst gaelte er als erledigt, ohne dass
+                    # jemand davon erfahren haette.
+                    for t in wiedereintritt:
+                        fenster[f"{t['ticker']}|{t['nr']}"] = DRAUSSEN
+                    sperre_bis = jetzt_s + TAKT
+                else:
+                    save_state(state)
 
             # --- Red-to-Green (Regelwerk Kapitel 9) ------------------------
             # Nur wenn der Nasdaq stark genug nach unten gegapt hat und die
