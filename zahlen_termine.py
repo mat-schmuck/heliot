@@ -36,11 +36,22 @@ WOHER DIE DATEN KOMMEN — ZWEI QUELLEN, und das ist noetig
 
     WARUM ZWEI (gemessen am 13.08.2026 an der echten Wochenliste ueber
     fuenf Handelstage): Von den Terminen, die beide kannten, stimmten
-    acht ueberein und ZWEI nicht — bei AYA um einen ganzen Tag UND um
-    die Tageszeit (Nasdaq 14.08. vorboerslich, Yahoo 13.08.
-    nachboerslich), bei DY um eine Woche. Und zwei Aktien, die an diesem
-    Tag berichteten, kannte Yahoo GAR NICHT: fuer ASND und IDR hatte es
+    acht ueberein und ZWEI nicht. Und zwei Aktien, die an diesem Tag
+    berichteten, kannte Yahoo GAR NICHT: fuer ASND und IDR hatte es
     ueberhaupt keinen kommenden Termin.
+
+    WER RECHT HATTE, an echten Nachrichten nachgeprueft:
+      AYA  Yahoo 13.08. nach Schluss / Nasdaq 14.08. vorboerslich.
+           RICHTIG: 13.08. nach Schluss. Nasdaq hatte offenbar den
+           Termin der Telefonkonferenz am 14.08. genommen.
+      DY   Yahoo 26.08. vorboerslich / Nasdaq 19.08.
+           RICHTIG: 26.08. vorboerslich. Nasdaq lag eine Woche zu frueh.
+      ASND Nur Nasdaq. RICHTIG: hat am 13.08. berichtet.
+
+    Daraus die Arbeitsteilung: NASDAQ BRINGT ABDECKUNG, YAHOO BRINGT
+    GENAUIGKEIT. Bei Uneinigkeit gewinnt deshalb Yahoo — aber die
+    Uneinigkeit steht im Vermerk, denn zwei Faelle sind eine duenne
+    Grundlage.
 
     Eine Quelle allein haette also an genau dem Tag geschwiegen, an dem
     gewarnt werden sollte. Deshalb gilt: Meldet EINE der beiden einen
@@ -182,9 +193,30 @@ def hole_nasdaq(tage=10, leise=False):
 def _zusammenfuehren(yahoo, nasdaq, tickers):
     """Beide Quellen zu einem Eintrag je Aktie.
 
-    REGEL: Meldet eine der beiden einen Termin, wird er uebernommen.
-    Sind sie uneinig, gewinnt der FRUEHERE — eine Warnung zu frueh ist
-    harmloser als eine zu spaet — und die Uneinigkeit wird vermerkt."""
+    REGEL, an echten Nachrichten geprueft (13.08.2026):
+
+      * Meldet nur EINE der beiden einen Termin, wird er uebernommen.
+        Das ist der Fall, in dem die zweite Quelle ihr Geld verdient:
+        ASND hat am 13.08.2026 berichtet, und Yahoo kannte den Termin
+        ueberhaupt nicht (nachgeprueft an der Pressemeldung des
+        Unternehmens vom 06.08.2026).
+
+      * Sind BEIDE da und uneinig, gewinnt YAHOO. Das war zuerst anders
+        gebaut ("der fruehere Termin gewinnt"), und die Nachpruefung hat
+        es widerlegt:
+          AYA — Yahoo 13.08. nach Schluss, Nasdaq 14.08. vorboerslich.
+                Richtig war der 13.08. nach Schluss; Nasdaq hatte
+                offenbar den Termin der TELEFONKONFERENZ (14.08.,
+                10 Uhr) genommen.
+          DY  — Yahoo 26.08. vorboerslich, Nasdaq 19.08.
+                Richtig war der 26.08.; Nasdaq lag eine Woche zu frueh.
+        In beiden gepruefen Faellen lag Yahoo richtig und Nasdaq falsch.
+
+      * Die Uneinigkeit wird trotzdem VERMERKT. Zwei Faelle sind eine
+        duenne Grundlage fuer eine Regel; wer die Meldung liest, soll
+        sehen, dass hier etwas offen ist.
+
+    KURZ: Nasdaq bringt Abdeckung, Yahoo bringt Genauigkeit."""
     zusammen = {}
     for t in sorted({x.upper() for x in tickers if x}):
         y, n = yahoo.get(t), nasdaq.get(t)
@@ -203,11 +235,12 @@ def _zusammenfuehren(yahoo, nasdaq, tickers):
                                       + n["lage"] + ", Yahoo " + y["lage"])
             zusammen[t] = eintrag
         else:
-            frueher = y if y["datum"] < n["datum"] else n
-            zusammen[t] = {**frueher, "quellen": ["yahoo", "nasdaq"],
+            # YAHOO GEWINNT das Datum (siehe oben, an AYA und DY
+            # nachgeprueft). Nasdaq bleibt trotzdem im Vermerk stehen.
+            zusammen[t] = {**y, "quellen": ["yahoo", "nasdaq"],
                            "uneinig": ("Quellen uneinig: " + y["datum"]
-                                       + " (Yahoo) gegen " + n["datum"]
-                                       + " (Nasdaq)")}
+                                       + " (Yahoo, hier bevorzugt) gegen "
+                                       + n["datum"] + " (Nasdaq)")}
     return zusammen
 
 
@@ -381,6 +414,34 @@ def selbsttest() -> int:
       "HEUTE nach Börsenschluss" in (hinweis("ABC", date(2026, 8, 12), t) or ""))
     p("Am Tag danach ist er wieder still",
       hinweis("ABC", date(2026, 8, 13), t) is None)
+
+    # --- DIE DREI FAELLE, an echten Nachrichten geprueft (13.08.2026) ---
+    # Sie stehen hier, damit die Zusammenfuehr-Regel nicht wieder kippt.
+    # Quellen: Pressemeldungen der Unternehmen bzw. deren Ankuendigungen.
+    y = {"AYA": {"datum": "2026-08-13", "uhrzeit": "16:00",
+                 "lage": "nachboerslich"},
+         "DY": {"datum": "2026-08-26", "uhrzeit": "08:00",
+                "lage": "vorboerslich"}}
+    n = {"AYA": {"datum": "2026-08-14", "uhrzeit": "", "lage": "vorboerslich"},
+         "DY": {"datum": "2026-08-19", "uhrzeit": "", "lage": "unbekannt"},
+         "ASND": {"datum": "2026-08-13", "uhrzeit": "",
+                  "lage": "vorboerslich"}}
+    z = _zusammenfuehren(y, n, ["AYA", "DY", "ASND"])
+
+    p("AYA: Yahoo hatte recht (13.08. nach Schluss, nicht 14.08.)",
+      z["AYA"]["datum"] == "2026-08-13"
+      and z["AYA"]["lage"] == "nachboerslich", z["AYA"]["datum"])
+    p("DY: Yahoo hatte recht (26.08., nicht 19.08.)",
+      z["DY"]["datum"] == "2026-08-26", z["DY"]["datum"])
+    p("ASND: nur Nasdaq kannte den Termin, er wird uebernommen",
+      z["ASND"]["datum"] == "2026-08-13"
+      and z["ASND"]["quellen"] == ["nasdaq"])
+    p("Bei Uneinigkeit steht der Widerspruch im Eintrag",
+      z["AYA"].get("uneinig") and z["DY"].get("uneinig"))
+    p("Der Vermerk nennt die Uneinigkeit",
+      "uneinig" in (hinweis("AYA", date(2026, 8, 13), z) or "").lower())
+    p("Ein Termin nur von Nasdaq wird als solcher gekennzeichnet",
+      "nur laut Nasdaq" in (hinweis("ASND", date(2026, 8, 13), z) or ""))
 
     # Kaputte Daten duerfen nichts umwerfen
     p("Unlesbares Datum ergibt nichts",

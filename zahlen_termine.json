@@ -1,5 +1,5 @@
 {
- "gebaut_am": "2026-08-13 18:29 Wien",
+ "gebaut_am": "2026-08-13 18:49 Wien",
  "ohne_termin": [
   "ASA",
   "ASND",
@@ -288,7 +288,7 @@
     "yahoo",
     "nasdaq"
    ],
-   "uneinig": "Quellen uneinig: 2026-08-13 (Yahoo) gegen 2026-08-14 (Nasdaq)"
+   "uneinig": "Quellen uneinig: 2026-08-13 (Yahoo, hier bevorzugt) gegen 2026-08-14 (Nasdaq)"
   },
   "B": {
    "datum": "2026-11-09",
@@ -549,14 +549,14 @@
    ]
   },
   "DY": {
-   "datum": "2026-08-19",
-   "uhrzeit": "",
-   "lage": "unbekannt",
+   "datum": "2026-08-26",
+   "uhrzeit": "08:00",
+   "lage": "vorboerslich",
    "quellen": [
     "yahoo",
     "nasdaq"
    ],
-   "uneinig": "Quellen uneinig: 2026-08-26 (Yahoo) gegen 2026-08-19 (Nasdaq)"
+   "uneinig": "Quellen uneinig: 2026-08-26 (Yahoo, hier bevorzugt) gegen 2026-08-19 (Nasdaq)"
   },
   "ECG": {
    "datum": "2026-11-03",
