@@ -37,6 +37,7 @@ Aufruf:
 
 import argparse
 import json
+import os
 import pathlib
 import subprocess
 import sys
@@ -44,6 +45,27 @@ import warnings
 from datetime import datetime, timedelta, timezone
 
 warnings.filterwarnings("ignore")
+
+# AUSGABE AUF UTF-8 ZWINGEN (13.08.2026, hier selbst hineingelaufen).
+# In der Cloud laeuft alles unter UTF-8, auf einem deutschen Windows aber
+# unter cp1252 — und dort fehlen Zeichen, die die Module in ihren
+# Protokoll- und Pruefzeilen verwenden: das Warnzeichen U+26A0 in
+# breakout_watcher.py, der Pfeil U+2192 im Selbsttest von volumen.py.
+# Der Lauf ist daran zweimal gestorben, und zwar an der unguenstigsten
+# Stelle: mitten drin, sobald eine Zeile etwas zu MELDEN hatte.
+#
+# ZWEI Dinge sind noetig, und das erste allein reicht nicht:
+#   1. os.environ — damit erben die UNTERPROZESSE die Einstellung. Block
+#      B ruft jeden Selbsttest als eigenen Prozess auf; genau dort ist
+#      volumen.py gescheitert, waehrend die Pruefung selbst schon lief.
+#   2. reconfigure — die eigenen Stroeme stehen beim Programmstart schon
+#      fest, an die kommt die Umgebungsvariable nicht mehr heran.
+os.environ["PYTHONIOENCODING"] = "utf-8"
+for _strom in (sys.stdout, sys.stderr):
+    try:
+        _strom.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
 
 WURZEL = pathlib.Path(__file__).parent
 ERGEBNISSE = []          # (block, name, bestanden, zusatz)

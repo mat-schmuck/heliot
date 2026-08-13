@@ -55,10 +55,43 @@ WOHER DIE DATEN KOMMEN — ZWEI QUELLEN, und das ist noetig
 
     Eine Quelle allein haette also an genau dem Tag geschwiegen, an dem
     gewarnt werden sollte. Deshalb gilt: Meldet EINE der beiden einen
-    Termin, wird vermerkt. Sind sie uneinig, gewinnt der fruehere Termin
-    und die Uneinigkeit steht im Vermerk — ein Hinweis, dem man ansieht,
-    wie sicher er ist, ist mehr wert als einer, der Sicherheit
-    vortaeuscht.
+    Termin, wird vermerkt. Sind sie uneinig, gewinnt Yahoo und die
+    Uneinigkeit steht im Vermerk — ein Hinweis, dem man ansieht, wie
+    sicher er ist, ist mehr wert als einer, der Sicherheit vortaeuscht.
+
+    UND WARUM NICHT FINNHUB ALS DRITTE? Weil es gemessen ist, nicht
+    vermutet (13.08.2026, Lauf 31724479175 in der Cloud, wo der
+    Schluessel liegt; Werkzeug termine_vergleich.py, Modus
+    'terminvergleich' in alarme.yml). Der Kalender IST im Gratistarif
+    zugaenglich — die alte Ablehnung stuetzte sich auf einen Befund zu
+    Finnhubs KURSDATEN und war insofern unbegruendet. Nur nuetzt er
+    nichts:
+
+      ABDECKUNG unserer 238 Aktien im Zeitraum 10. bis 31.08.:
+        Nasdaq 37, Yahoo 35, Finnhub 25. Und entscheidend: Finnhub
+        kannte KEINE EINZIGE Aktie, die die beiden anderen nicht schon
+        hatten (nur-Finnhub: 0). Als dritte Quelle braechte es also
+        keinen einzigen zusaetzlichen Termin.
+
+      GENAUIGKEIT an den Faellen mit belegter Wahrheit:
+        Yahoo 2 von 3, Nasdaq 1 von 3, Finnhub 1 von 3 — AYA und ASND
+        kannte es gar nicht, und beide haben an diesem Tag berichtet.
+
+      WO ES ABWEICHT, LIEGT ES FALSCH: Von 22 Terminen, die Finnhub und
+        Yahoo beide kannten, waren sie bei 20 einig und bei 2 uneinig —
+        DKS (Finnhub 24.08., Yahoo 25.08.) und FIVE (Finnhub 25.08.,
+        Yahoo 26.08.). Beide Male ist Finnhub genau EINEN TAG ZU FRUEH,
+        und beide Male hat Yahoo recht: DICK'S Sporting Goods hat am
+        04.08.2026 selbst den 25.08. vor Boersenoeffnung angekuendigt
+        (bei FIVE deckt sich Yahoo mit dem Termin, den auch Nasdaq
+        nennt; die Firma selbst hat ihn noch nicht angekuendigt).
+        Ein Tag zu frueh ist genau der Fehler, der hier weh tut — die
+        Warnung kaeme am falschen Abend.
+
+    FOLGE: Es bleibt bei zwei Quellen. Finnhub wird nicht eingebaut,
+    weil es weniger kennt und beim Abweichen falsch liegt. Das ist
+    jetzt gemessen; wer es wieder aufgreifen will, nimmt
+    termine_vergleich.py und misst neu.
 
     Zum Ausgangsstand: yfinance, Ticker.get_earnings_dates(). Der Zeitstempel traegt die
     Uhrzeit mit, und daran haengt die ganze Einordnung: 16:00 heisst
