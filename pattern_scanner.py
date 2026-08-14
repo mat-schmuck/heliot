@@ -1036,15 +1036,27 @@ def fokusliste_schreiben(loaded: dict) -> int:
     return len(eintraege)
 
 
-def analyze(df: pd.DataFrame, rs_percentile: float | None) -> dict:
+def analyze(df: pd.DataFrame, rs_percentile: float | None,
+            darvas_erlaubt: bool = True) -> dict:
+    """Alle Muster auf eine Aktie.
+
+    darvas_erlaubt (Gerhard, 14.08.2026): Die Darvas Box laeuft
+    AUSSCHLIESSLICH auf der Darvas-Liste. Steht die Aktie nur in der
+    grossen Liste, wird der Detektor gar nicht erst aufgerufen — nicht
+    erst sein Ergebnis verworfen, denn ein nicht gelaufener Detektor
+    kann auch keinen Kaufpunkt in die Mappe schreiben. Die Regel selbst
+    steht in listen.py und nur dort."""
     df = add_indicators(df)
     last = df.iloc[-1]
     tt_pass, tt_count, tt_failed = check_trend_template(df, rs_percentile)
 
     hits = []
-    for fn in (detect_htf, lambda d: detect_vcp(d, tt_pass), detect_cup_handle,
-               detect_darvas, detect_rectangle,
-               cup_handle_v2.detect_cup_handle_v2):
+    detektoren = [detect_htf, lambda d: detect_vcp(d, tt_pass),
+                  detect_cup_handle, detect_rectangle,
+                  cup_handle_v2.detect_cup_handle_v2]
+    if darvas_erlaubt:
+        detektoren.insert(3, detect_darvas)
+    for fn in detektoren:
         try:
             res = fn(df)
         except Exception as e:
@@ -1260,6 +1272,7 @@ def push_ntfy(topic: str, rows: list[dict]):
 # ---------------------------------------------------------------------------
 
 def load_tickers(csv_path: str) -> list[tuple[str, str]]:
+    """Eine einzelne CSV. Fuer BEIDE Listen siehe listen.alle_ticker()."""
     df = pd.read_csv(csv_path)
     tcol = next((c for c in df.columns if c.strip().lower() == "ticker"), None)
     if tcol is None:
@@ -1276,7 +1289,10 @@ def load_tickers(csv_path: str) -> list[tuple[str, str]]:
 
 def main():
     ap = argparse.ArgumentParser(description="Pattern-Scanner nach Regelwerk (6 Muster)")
-    ap.add_argument("csv", help="Finviz-CSV mit Ticker-Spalte")
+    ap.add_argument("csv", help="Die grosse Finviz-CSV mit Ticker-Spalte")
+    ap.add_argument("--darvas", default=None,
+                    help="Die Darvas-Liste (Vorgabe: darvas.csv, wenn "
+                         "vorhanden). Nur auf ihr entstehen Darvas-Kaufpunkte.")
     ap.add_argument("--out", default="kaufpunkte.xlsx", help="Excel-Ausgabedatei")
     ap.add_argument("--rate", type=int, default=8, help="API-Calls pro Minute (Free-Tier: 8)")
     ap.add_argument("--ntfy", default=None, help="ntfy.sh-Topic für Push (optional)")
@@ -1291,11 +1307,23 @@ def main():
         print("⚠ Kein TWELVE_DATA_API_KEY gesetzt — es gibt dann keine "
               "Rückfallebene, falls Yahoo ausfällt.")
 
-    tickers = load_tickers(args.csv)
+    # ZWEI LISTEN (Gerhard, 14.08.2026): Gescannt wird die VEREINIGUNG
+    # beider, damit alle Muster ueberall laufen; nur die Darvas Box bleibt
+    # auf die Darvas-Liste beschraenkt. Die Regel steht in listen.py.
+    import listen
+    darvas_pfad = args.darvas or listen.DARVAS_DATEI
+    tickers = listen.alle_ticker(haupt=args.csv, darvas=darvas_pfad)
+    darvas_erlaubte = {t.upper() for t, _ in listen.darvas_liste(darvas_pfad)}
+    print(listen.uebersicht(haupt=args.csv, darvas=darvas_pfad))
+    hinweis = listen.fehlende_liste(haupt=args.csv, darvas=darvas_pfad)
+    if hinweis:
+        # NICHT nur ins Protokoll: Der Hinweis wandert unten auch in die
+        # Mappe, weil das Protokoll niemand liest (Mathias, 14.08.2026).
+        print(f"  ACHTUNG: {hinweis}")
     if args.limit:
         tickers = tickers[: args.limit]
     if not tickers:
-        sys.exit("Keine Ticker in der CSV gefunden.")
+        sys.exit("Keine Ticker in den Listen gefunden.")
     dauer = len(tickers) / args.rate
     print(f"{len(tickers)} Ticker geladen. Bei {args.rate} Calls/min dauert das "
           f"~{dauer:.0f} Minuten (Cache-Treffer sind gratis).")
@@ -1340,7 +1368,8 @@ def main():
     # 2. Durchlauf: Muster analysieren
     rows = []
     for ticker, (df, company) in loaded.items():
-        res = analyze(df, rs_pct.get(ticker))
+        res = analyze(df, rs_pct.get(ticker),
+                      darvas_erlaubt=ticker.upper() in darvas_erlaubte)
         rows.append({"ticker": ticker, "company": company, "res": res,
                      "fundamentals": fundamentals.get(ticker, {})})
         tag = "🟢" if res["pattern_count"] else ("🟡" if res["tt_pass"] else "⚪")

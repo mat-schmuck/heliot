@@ -142,9 +142,8 @@ def main() -> int:
         print(t)
         zeilen.append(t)
 
-    import pandas as pd
-    liste = sorted(set(pd.read_csv("finviz_3.csv")["Ticker"]
-                       .astype(str).str.upper()))
+    import listen
+    liste = sorted({t for t, _ in listen.alle_ticker()})
     von = date(2026, 8, 10)
     bis = date(2026, 8, 31)
     sag(f"TERMINE-VERGLEICH  {von} bis {bis}  ueber {len(liste)} Aktien")

@@ -428,6 +428,26 @@ with tab_scan:
 # der NUR auf dieses Repo und NUR auf Dateiinhalte berechtigt ist.
 
 LISTEN_DATEI = "finviz_3.csv"     # REPO ist oben beim Aktuellen Scan definiert
+DARVAS_DATEI = "darvas.csv"
+
+# ZWEI LISTEN seit 14.08.2026 (Gerhard): "Die Darvas-Tradingstrategie
+# bekommt eine eigene Liste. Das Tradingmuster Darvas soll in Zukunft
+# ausschliesslich auf diese Liste angewandt werden. Die Darvasliste soll
+# fuer die anderen Strategien herangezogen werden, jedoch nicht
+# umgekehrt." Beide werden getrennt abgelegt und getrennt ersetzt - wer
+# nur eine hochlaedt, laesst die andere unveraendert stehen.
+#
+# WELCHE IST WELCHE: Gerhard nennt die eine "Darvers"/"Darvas", die
+# andere "finviz.csv oder aehnlich". Der Dateiname entscheidet also
+# vor, ABER die Seite sagt vorher an, wohin sie geht, und die Wahl
+# laesst sich umstellen - ein stiller Griff in die falsche Liste waere
+# der teuerste Fehler dieser Seite.
+
+
+def liste_aus_dateiname(name: str) -> str:
+    """Welche Liste ist gemeint? Rueckgabe: DARVAS_DATEI oder LISTEN_DATEI."""
+    n = (name or "").lower()
+    return DARVAS_DATEI if ("darv" in n or "darvers" in n) else LISTEN_DATEI
 
 
 def pruefe_wochenliste(rohdaten: bytes) -> tuple[str, list[str]]:
@@ -456,17 +476,19 @@ def pruefe_wochenliste(rohdaten: bytes) -> tuple[str, list[str]]:
     return "", ticker
 
 
-def wochenliste_einspielen(rohdaten: bytes, token: str, anzahl: int) -> str:
-    """Ersetzt finviz_3.csv im Repo. Liefert '' bei Erfolg, sonst Fehlertext."""
+def wochenliste_einspielen(rohdaten: bytes, token: str, anzahl: int,
+                           ziel: str = None) -> str:
+    """Ersetzt die Zielliste im Repo. Liefert '' bei Erfolg, sonst Fehler."""
     import base64
     import requests
     kopf = {"Authorization": f"Bearer {token}",
             "Accept": "application/vnd.github+json"}
-    url = f"https://api.github.com/repos/{REPO}/contents/{LISTEN_DATEI}"
+    ziel = ziel or LISTEN_DATEI
+    url = f"https://api.github.com/repos/{REPO}/contents/{ziel}"
     try:
         alt = requests.get(url, headers=kopf, timeout=20)
         sha = alt.json().get("sha") if alt.status_code == 200 else None
-        daten = {"message": f"Wochenliste: {anzahl} Aktien (Upload über Heliot)",
+        daten = {"message": f"{ziel}: {anzahl} Aktien (Upload über Heliot)",
                  "content": base64.b64encode(rohdaten).decode()}
         if sha:
             daten["sha"] = sha
@@ -480,11 +502,12 @@ def wochenliste_einspielen(rohdaten: bytes, token: str, anzahl: int) -> str:
 
 
 @st.cache_data(ttl=300, show_spinner=False)
-def aktuelle_listengroesse() -> int | None:
+def aktuelle_listengroesse(datei: str = None) -> int | None:
     """Wie viele Aktien stehen derzeit im Repo? (öffentlich lesbar)"""
     import requests
+    datei = datei or LISTEN_DATEI
     try:
-        r = requests.get(f"https://raw.githubusercontent.com/{REPO}/main/{LISTEN_DATEI}",
+        r = requests.get(f"https://raw.githubusercontent.com/{REPO}/main/{datei}",
                          timeout=15)
         if r.status_code != 200:
             return None
@@ -495,9 +518,11 @@ def aktuelle_listengroesse() -> int | None:
 
 
 with tab_upload:
-    st.write("Hier lädt Gerhard seine wöchentliche Finviz-Aktienliste hoch "
-             "(CSV mit der Spalte 'Ticker'). Die neue Liste gilt ab dem "
-             "nächsten nächtlichen Scan.")
+    st.write("Hier lädt Gerhard seine wöchentlichen Aktienlisten hoch "
+             "(CSV mit der Spalte 'Ticker'). Es sind ZWEI: die große Liste "
+             "für alle Strategien und die Darvas-Liste. Auf der großen "
+             "läuft alles außer Darvas, auf der Darvas-Liste läuft alles. "
+             "Die neuen Listen gelten ab dem nächsten nächtlichen Scan.")
 
     try:
         kennwort_soll = st.secrets.get("UPLOAD_KENNWORT", "")
@@ -505,9 +530,16 @@ with tab_upload:
     except Exception:
         kennwort_soll = github_token = ""
 
-    anzahl_aktuell = aktuelle_listengroesse()
-    if anzahl_aktuell:
-        st.caption(f"Aktuelle Liste im System: {anzahl_aktuell} Aktien.")
+    anzahl_aktuell = aktuelle_listengroesse(LISTEN_DATEI)
+    anzahl_darvas = aktuelle_listengroesse(DARVAS_DATEI)
+    st.caption(
+        f"Im System: große Liste "
+        f"{anzahl_aktuell if anzahl_aktuell else 'fehlt'} Aktien, "
+        f"Darvas-Liste {anzahl_darvas if anzahl_darvas else 'fehlt'} Aktien.")
+    if not anzahl_darvas:
+        st.warning("Die Darvas-Liste fehlt. Solange sie fehlt, entstehen "
+                   "KEINE Darvas-Kaufpunkte; alle anderen Muster laufen "
+                   "normal weiter.")
 
     if not kennwort_soll or not github_token:
         st.warning("Der Upload ist noch nicht eingerichtet. In den "
@@ -516,9 +548,22 @@ with tab_upload:
     else:
         kennwort = st.text_input("Kennwort", type="password",
                                  key="upload_kennwort")
-        datei = st.file_uploader("Finviz-CSV (Spalte 'Ticker')", type=["csv"],
+        datei = st.file_uploader("CSV mit der Spalte 'Ticker'", type=["csv"],
                                  key="upload_datei")
-        if datei is not None and st.button("Wochenliste übernehmen",
+        # Der Dateiname schlaegt die Liste vor, entschieden wird hier
+        # sichtbar. Ein stiller Griff in die falsche Liste waere der
+        # teuerste Fehler dieser Seite.
+        vorschlag = liste_aus_dateiname(datei.name if datei else "")
+        wahl = st.radio(
+            "In welche Liste?",
+            [f"Große Liste für alle Strategien außer Darvas ({LISTEN_DATEI})",
+             f"Darvas-Liste, dort laufen ALLE Strategien ({DARVAS_DATEI})"],
+            index=1 if vorschlag == DARVAS_DATEI else 0, key="upload_wahl")
+        ziel_datei = DARVAS_DATEI if wahl.startswith("Darvas") else LISTEN_DATEI
+        if datei is not None:
+            st.caption(f"Aus dem Dateinamen {datei.name} geschlossen: "
+                       f"{vorschlag}. Bitte oben prüfen.")
+        if datei is not None and st.button(f"Liste {ziel_datei} übernehmen",
                                            type="primary"):
             import hmac
             import time as zeit
@@ -531,11 +576,13 @@ with tab_upload:
                 if fehler:
                     st.error("NICHT übernommen: " + fehler)
                 else:
-                    fehler = wochenliste_einspielen(roh, github_token, len(ticker))
+                    fehler = wochenliste_einspielen(roh, github_token,
+                                                    len(ticker), ziel_datei)
                     if fehler:
                         st.error("Hochladen fehlgeschlagen: " + fehler)
                     else:
-                        st.success(f"Übernommen: {len(ticker)} Aktien "
+                        st.success(f"Übernommen in {ziel_datei}: "
+                                   f"{len(ticker)} Aktien "
                                    f"(die ersten: {', '.join(ticker[:5])}). "
                                    "Ab dem nächsten nächtlichen Scan aktiv.")
                         aktuelle_listengroesse.clear()

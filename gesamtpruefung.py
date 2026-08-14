@@ -92,7 +92,7 @@ BETRIEB = ["config", "volumen", "kurs_cache", "pattern_scanner",
            "breakout_watcher", "cup_handle_v2", "shakeout", "red_to_green",
            "crash_support", "exit_regeln", "positionen", "trigger_logbuch",
            "red_to_green_explosive", "zahlen_termine", "sektor_radar",
-           "insider_scanner", "insider_edgar",
+           "insider_scanner", "insider_edgar", "listen",
            "scan_noetig", "waechter_noetig", "wartung", "ntfy_verlauf",
            "yahoo_ws", "staffelung", "traderfox_alarm_bot"]
 
@@ -134,7 +134,7 @@ def block_b():
                     "trigger_logbuch", "cup_handle_v2", "shakeout",
                     "red_to_green", "red_to_green_explosive", "zahlen_termine",
                     "scan_noetig", "waechter_noetig", "sektor_radar",
-                    "insider_scanner", "insider_edgar"]
+                    "insider_scanner", "insider_edgar", "listen"]
     for name in mit_schalter:
         r = subprocess.run([sys.executable, f"{name}.py", "--selbsttest"],
                            capture_output=True, text=True, cwd=WURZEL,
@@ -156,12 +156,16 @@ def block_b():
 
 def block_c(anzahl=40):
     ueberschrift(f"C — MUSTER-DETEKTOREN gegen echte Kursdaten ({anzahl} Aktien)")
-    import pandas as pd
     import pattern_scanner as ps
     import cup_handle_v2
     import shakeout
 
-    liste = pd.read_csv(WURZEL / "finviz_3.csv")["Ticker"].astype(str).tolist()
+    # BEIDE Listen (Gerhard, 14.08.2026): "dass alle tools weiterhin
+    # alle Listen ueberwachen, die ich hochlade".
+    import listen
+    liste = [t for t, _ in listen.alle_ticker(
+        haupt=str(WURZEL / "finviz_3.csv"),
+        darvas=str(WURZEL / "darvas.csv"))]
     proben = liste[:anzahl]
     ps.lade_yahoo_sammelabruf(proben)
 
@@ -573,6 +577,41 @@ def block_e():
            "Kaufpunkt" in bw.format_wiedereintritt(probe_w)
            and "Stop" in bw.format_wiedereintritt(probe_w))
 
+    # ZWEI LISTEN (Gerhard, 14.08.2026): Darvas ausschliesslich auf der
+    # Darvas-Liste, alle anderen Muster auf beiden. An echten Kursdaten
+    # gegengeprueft: INCY liefert in der grossen Liste nur Cup and Handle,
+    # in der Darvas-Liste zusaetzlich die Darvas Box.
+    import listen as _li
+    import tempfile as _tf
+    import pathlib as _pl
+    with _tf.TemporaryDirectory() as _o:
+        _op = _pl.Path(_o)
+        (_op / "g.csv").write_text("\n".join(["Ticker", "AAA", "BBB", ""]),
+                                   encoding="utf-8")
+        (_op / "d.csv").write_text("\n".join(["Ticker", "BBB", "CCC", ""]),
+                                   encoding="utf-8")
+        _g, _d = str(_op / "g.csv"), str(_op / "d.csv")
+        pruefe("E", "Beide Listen werden zusammen überwacht",
+               {t for t, _ in _li.alle_ticker(_g, _d)} == {"AAA", "BBB", "CCC"})
+        pruefe("E", "Darvas NUR auf der Darvas-Liste",
+               _li.darf_darvas("CCC", _d) and not _li.darf_darvas("AAA", _d))
+        pruefe("E", "Eine Aktie in beiden Listen darf Darvas",
+               _li.darf_darvas("BBB", _d))
+        MU = ["VCP", "Darvas Box", "Rectangle Top"]
+        pruefe("E", "Die große Liste verliert NUR Darvas",
+               _li.erlaubte_muster("AAA", MU, _d) == ["VCP", "Rectangle Top"])
+        pruefe("E", "Auf der Darvas-Liste laufen alle Muster",
+               _li.erlaubte_muster("CCC", MU, _d) == MU)
+        pruefe("E", "Fehlende Darvas-Liste wird gemeldet, nicht verschwiegen",
+               "Darvas-Liste fehlt" in (_li.fehlende_liste(
+                   _g, str(_op / "weg.csv")) or ""))
+    # Der Scanner muss die Erlaubnis wirklich durchreichen.
+    import inspect as _in
+    import pattern_scanner as _ps
+    pruefe("E", "Der Scanner ruft den Darvas-Detektor nur bei Erlaubnis",
+           "darvas_erlaubt" in _in.signature(_ps.analyze).parameters
+           and "if darvas_erlaubt" in _in.getsource(_ps.analyze))
+
     # (2) Zahlen-Termine
     import zahlen_termine as zt
     from datetime import date as _d
@@ -785,7 +824,11 @@ def block_g():
 
     # Deckt der Speicher die Wochenliste ab?
     import pandas as pd
-    liste = set(pd.read_csv(WURZEL / "finviz_3.csv")["Ticker"]
+    import listen as _listen
+    liste = set(t for t, _ in _listen.alle_ticker(
+        haupt=str(WURZEL / "finviz_3.csv"),
+        darvas=str(WURZEL / "darvas.csv"))) | set(pd.read_csv(
+            WURZEL / "finviz_3.csv")["Ticker"]
                 .astype(str).str.upper())
     datei = json.loads((WURZEL / "volumenkurven.json").read_text(encoding="utf-8"))
     ohne = liste - set(datei["aktien"]) - set(datei["nicht_verifizierbar"])

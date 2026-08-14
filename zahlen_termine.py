@@ -637,8 +637,9 @@ def main() -> int:
         if args.tickers:
             liste = [t.strip() for t in args.tickers.split(",") if t.strip()]
         else:
-            import pandas as pd
-            liste = pd.read_csv("finviz_3.csv")["Ticker"].astype(str).tolist()
+            # BEIDE Listen (Gerhard, 14.08.2026).
+            import listen
+            liste = [t for t, _ in listen.alle_ticker()]
         baue(liste)
         return 0
 
