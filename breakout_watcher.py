@@ -823,6 +823,9 @@ def pruefe_breakout(item: dict, quote: dict) -> dict | None:
             return None
         return {**item, "kurs": kurs, "ueber_pct": ueber * 100,
                 "uebersprungen": True,
+                # Fuer kam_von_unten(): Lag der Kurs GESTERN noch unter
+                # dem Kaufpunkt? Nur dann ist hier etwas passiert.
+                "vortagesschluss": quote.get("prev_close"),
                 # Kein Volumenurteil: Ob das Volumen stimmt, aendert
                 # nichts daran, dass der Einstieg vorbei ist. Eine
                 # Volumenzahl wuerde die Meldung wie ein Signal aussehen
@@ -1647,6 +1650,61 @@ def uebersprungen_schluessel(t: dict) -> str:
     return f"{UEBERSPRUNGEN_MARKE}{t['ticker']}|{t['nr']}"
 
 
+def kam_von_unten(res) -> bool:
+    """Wurde dieser Kaufpunkt ueberhaupt von UNTEN gerissen?
+
+    MATHIAS' EINWAND vom 14.08.2026, und er hat den ganzen Fall geklaert:
+    "Die Aktien kommen also idealerweise von unter dem Kaufpunkt, oder?"
+
+    Ohne diese Frage meldet der Waechter Unsinn, und zwar massenhaft. Der
+    Nachtlauf erzeugt zu jeder Aktie ohne sauberes Muster eine
+    RUECKSETZER-Marke ("Fallback: MA50-Pullback") - ein Kurs, auf den man
+    warten wuerde, wenn die Aktie zurueckfaellt. So eine Marke liegt
+    bauartbedingt UNTER dem Kurs, oft weit: Bei TEAM stand der Kurs am
+    14.08.2026 bei 165,98, die Marke bei 98,21, also 69 % darunter. Die
+    Pruefung "liegt der Kurs mehr als 5 % ueber dem Kaufpunkt?" ist dort
+    jeden Tag wahr, ohne dass irgendetwas geschehen waere.
+
+    GEMESSEN an genau diesem Tag: 114 Kaufpunkte lagen ueber der Grenze,
+    davon 108 solche Ruecksetzer-Marken. Nur SECHS kamen wirklich von
+    unten. Ohne diese Bedingung waeren 114 Meldungen an einem Morgen
+    hinausgegangen.
+
+    NICHT geprueft wird die Musterqualitaet - das war mein erster
+    Vorschlag, und Mathias hat ihn zu Recht verworfen: "Bei Sea wissen
+    wir nicht, ob er einem Muster entsprochen hat. Genau die wollen wir
+    ja eben nicht ausschliessen." Nachgemessen stimmt beides: Sea kam aus
+    einem echten Muster (Cup and Handle, Kaufpunkt 115,91; Schluss am
+    10.08. 114,80, Eroeffnung am 11.08. 127,87), aber von den sechs
+    echten Faellen des 14.08. stammten VIER aus Fallback-Marken - ETON,
+    UMAC, AAOI und MP. Ein Ausschluss nach Kategorie haette gerade die
+    weggeworfen. Gefragt wird also nicht, woher der Kaufpunkt kommt,
+    sondern ob wirklich etwas passiert ist.
+
+    OHNE VORTAGESSCHLUSS gilt der Fall als NICHT von unten gekommen. Das
+    ist die stille Richtung, und bei 114 gegen 6 ist sie die richtige;
+    die Alternative waere, im Zweifel hundertfach zu melden."""
+    vortag = res.get("vortagesschluss")
+    kp = res.get("kaufpunkt")
+    if vortag is None or kp is None:
+        return False
+    return float(vortag) < float(kp)
+
+
+def melde_uebersprungen(res, wechsel, schon_gemeldet) -> bool:
+    """Darf dieser uebersprungene Kaufpunkt gemeldet werden? DREI Riegel.
+
+    1. Es muss ein WECHSEL sein (Tageszustand, siehe fenster_wechsel).
+    2. Der Kaufpunkt muss von UNTEN gerissen worden sein (kam_von_unten).
+    3. Er darf nicht ohnehin schon als draussen angesagt sein
+       (Wochengedaechtnis) - sonst meldete derselbe Vorgang taeglich neu.
+
+    Steht als eigene Funktion hier statt verstreut in der Schleife, aus
+    demselben Grund wie melde_stufe(): damit man sie pruefen kann."""
+    return (wechsel == "verlassen" and kam_von_unten(res)
+            and uebersprungen_schluessel(res) not in schon_gemeldet)
+
+
 DRIN, DRAUSSEN = "drin", "draussen"
 
 
@@ -2254,22 +2312,15 @@ def main():
                     fenster[fkey] = zustand
                 if res.get("uebersprungen"):
                     res["key"] = uebersprungen_schluessel(item)
-                    # ZWEI Riegel, und der zweite ist teuer erkauft:
-                    #   1. Es muss ein WECHSEL sein (Tageszustand).
-                    #   2. Der Kaufpunkt darf nicht ohnehin schon als
-                    #      "draussen" angesagt sein (Wochengedaechtnis).
-                    # Ohne den zweiten meldete jeder Kaufpunkt, der seit
-                    # Tagen weit ueber dem Kurs steht, an JEDEM Morgen aufs
-                    # Neue "uebersprungen" - beim ersten Blick des Tages
-                    # ist er ja "draussen", und ohne Vorzustand gilt das
-                    # als Wechsel. Gemessen an der echten Mappe vom
-                    # 13.08.2026 waeren das 131 Meldungen an einem Morgen
-                    # gewesen. Der Riegel war vor dem Umbau da; ich hatte
-                    # ihn durch den Tageszustand ERSETZT statt ihn zu
-                    # ergaenzen.
-                    if (wechsel == "verlassen"
-                            and res["key"] not in schon_gemeldet):
+                    if melde_uebersprungen(res, wechsel, schon_gemeldet):
                         uebersprungen.append(res)
+                    elif (wechsel == "verlassen"
+                          and res.get("vortagesschluss") is None):
+                        # Ohne Vortagesschluss laesst sich nicht sagen, ob
+                        # etwas passiert ist. Das gehoert ins Protokoll,
+                        # sonst verschwindet ein echter Fall lautlos.
+                        print(f"  {item['ticker']}: über der Nachlaufgrenze, "
+                              f"aber ohne Vortagesschluss — keine Meldung.")
                     continue
                 if wechsel == "wiedereintritt":
                     res["key"] = ausbruch_schluessel(res)

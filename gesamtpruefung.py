@@ -493,6 +493,51 @@ def block_e():
     pruefe("E", "Ein Wiedereintritt löst den Wochenriegel wieder",
            "schon_gemeldet.discard(k)" in quelle_loop)
 
+    # DIE EINTRITTSKARTE: kam der Kaufpunkt von UNTEN? (Mathias,
+    # 14.08.2026). Ohne sie meldet der Waechter Ruecksetzer-Marken, unter
+    # denen der Kurs seit Wochen gar nicht war. Gemessen an diesem Tag:
+    # 114 Kaufpunkte lagen ueber der Grenze, 108 davon waren
+    # "Fallback: MA50-Pullback", und nur SECHS kamen wirklich von unten.
+    #
+    # DER FALL SEA (Gerhard, 11.08.2026), mit den echten Zahlen: Schluss
+    # am 10.08. 114,80, Kaufpunkt 115,91, Eroeffnung am 11.08. 127,87.
+    sea = {"ticker": "SE", "nr": 1, "strategie": "Cup & Handle (Wochenbasis)",
+           "kaufpunkt": 115.91, "kurs": 127.87, "vortagesschluss": 114.80}
+    pruefe("E", "Sea kam von unten und wird gemeldet",
+           bw.kam_von_unten(sea) and bw.melde_uebersprungen(sea, "verlassen", set()))
+    # DER FALL TEAM, ebenfalls echt: Kurs 165,98, Ruecksetzer-Marke 98,21.
+    team = {"ticker": "TEAM", "nr": 3, "strategie": "Fallback: MA50-Pullback",
+            "kaufpunkt": 98.21, "kurs": 167.40, "vortagesschluss": 165.98}
+    pruefe("E", "Eine Rücksetzer-Marke, unter der der Kurs nie war, "
+           "meldet NICHTS",
+           not bw.kam_von_unten(team)
+           and not bw.melde_uebersprungen(team, "verlassen", set()))
+    # NICHT nach Muster ausgeschlossen: ETON kam am 14.08. aus einer
+    # Fallback-Marke und war trotzdem ein echter Fall (gestern 40,80,
+    # Kaufpunkt 50,23, heute 58,12).
+    eton = {"ticker": "ETON", "nr": 1,
+            "strategie": "Fallback: 52W-Hoch-Breakout",
+            "kaufpunkt": 50.23, "kurs": 58.12, "vortagesschluss": 40.80}
+    pruefe("E", "Auch eine Fallback-Marke wird gemeldet, wenn sie von "
+           "unten kam",
+           bw.melde_uebersprungen(eton, "verlassen", set()))
+    pruefe("E", "Ohne Vortagesschluss wird nicht gemeldet",
+           not bw.kam_von_unten({**sea, "vortagesschluss": None}))
+    pruefe("E", "Genau auf dem Kaufpunkt geschlossen zählt nicht als "
+           "von unten",
+           not bw.kam_von_unten({**sea, "vortagesschluss": 115.91}))
+    pruefe("E", "Ohne Wechsel keine Meldung",
+           not bw.melde_uebersprungen(sea, None, set()))
+    pruefe("E", "Schon angesagt heißt nicht noch einmal",
+           not bw.melde_uebersprungen(
+               sea, "verlassen", {bw.uebersprungen_schluessel(sea)}))
+    # Mathias ausdruecklich am 14.08.2026: "Die Uebersprungenmeldung
+    # stoert uns nicht, im Gegenteil, genau so wollen wir es haben." Ein
+    # bereits gemeldeter AUSBRUCH darf sie also NICHT unterdruecken.
+    pruefe("E", "Ein bereits gemeldeter Ausbruch unterdrückt sie NICHT",
+           bw.melde_uebersprungen(sea, "verlassen",
+                                  {bw.ausbruch_schluessel(sea)}))
+
     # Die Meldung sagt, dass es ein Wiedereintritt ist und KEIN Ausbruch.
     probe_w = {"ticker": "AAA", "firma": "Alpha AG", "strategie": "Darvas Box",
                "kaufpunkt": 10.0, "kurs": 10.3, "ueber_pct": 3.0, "stop": 9.0,
