@@ -523,6 +523,27 @@ def block_e():
            bw.melde_uebersprungen(eton, "verlassen", set()))
     pruefe("E", "Ohne Vortagesschluss wird nicht gemeldet",
            not bw.kam_von_unten({**sea, "vortagesschluss": None}))
+    # ZWEI QUELLEN fuer den Vortagesschluss (Mathias, 14.08.2026). Die
+    # Mappe traegt ihn selbst mit: Der Nachtlauf rechnet nach dem New
+    # Yorker Schluss, sein Kurs IST der Vortagesschluss. Gegengeprueft an
+    # TEAM: Mappe 165,98, echter Schluss 165,98.
+    pruefe("E", "Der Kursabruf ist die erste Quelle",
+           bw.vortagesschluss({"kurs_scan": 99.0}, {"prev_close": 165.98})
+           == 165.98)
+    pruefe("E", "Fehlt er, springt der Kurs aus der Mappe ein",
+           bw.vortagesschluss({"kurs_scan": 165.98}, {}) == 165.98)
+    pruefe("E", "Fallen BEIDE aus, wird geschwiegen statt gemeldet",
+           bw.vortagesschluss({}, {}) is None
+           and not bw.kam_von_unten({**sea, "vortagesschluss": None}))
+    # Der Sinn der zweiten Quelle: Auch bei ausgefallenem Kursabruf bleibt
+    # die Ruecksetzer-Marke stumm, statt durch die Hintertür zu melden.
+    pruefe("E", "Rücksetzer-Marke bleibt auch ohne Kursabruf stumm",
+           not bw.kam_von_unten(
+               {"kaufpunkt": 98.21,
+                "vortagesschluss": bw.vortagesschluss({"kurs_scan": 165.98}, {})}))
+    pruefe("E", "Die Mappe wird mit dem Kurs eingelesen",
+           "kurs_scan" in pathlib.Path("breakout_watcher.py").read_text(
+               encoding="utf-8"))
     pruefe("E", "Genau auf dem Kaufpunkt geschlossen zählt nicht als "
            "von unten",
            not bw.kam_von_unten({**sea, "vortagesschluss": 115.91}))

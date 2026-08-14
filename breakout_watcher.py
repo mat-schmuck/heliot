@@ -536,12 +536,22 @@ def load_watchlist(xlsx_path: str, nur_muster: bool) -> list[dict]:
                 continue
             stop = row.get(f"KP{i} Stop")
             ziel = row.get(f"KP{i} Ziel")
+            # DER KURS AUS DER MAPPE ist der Schlusskurs des Vortags: Der
+            # Nachtlauf rechnet um 00:07 Wiener Zeit, also nach dem New
+            # Yorker Schluss. Nachgemessen am 14.08.2026 an fuenf Aktien
+            # gegen die echten Schlusskurse: null Abweichung (TEAM 165,98
+            # gegen 165,98, ETON 40,80 gegen 40,80 und so weiter), gefuellt
+            # bei 235 von 235. Er dient als zweite Quelle fuer
+            # kam_von_unten(), siehe vortagesschluss().
+            kurs_scan = row.get("Kurs")
             items.append({
                 "ticker": ticker,
                 "firma": firma,
                 "nr": i,
                 "strategie": strat,
                 "kaufpunkt": float(preis),
+                "kurs_scan": (None if kurs_scan is None or pd.isna(kurs_scan)
+                              else float(kurs_scan)),
                 "stop": None if pd.isna(stop) else float(stop),
                 "ziel": None if (ziel is None or pd.isna(ziel) or ziel == "") else float(ziel),
             })
@@ -825,7 +835,7 @@ def pruefe_breakout(item: dict, quote: dict) -> dict | None:
                 "uebersprungen": True,
                 # Fuer kam_von_unten(): Lag der Kurs GESTERN noch unter
                 # dem Kaufpunkt? Nur dann ist hier etwas passiert.
-                "vortagesschluss": quote.get("prev_close"),
+                "vortagesschluss": vortagesschluss(item, quote),
                 # Kein Volumenurteil: Ob das Volumen stimmt, aendert
                 # nichts daran, dass der Einstieg vorbei ist. Eine
                 # Volumenzahl wuerde die Meldung wie ein Signal aussehen
@@ -1650,6 +1660,36 @@ def uebersprungen_schluessel(t: dict) -> str:
     return f"{UEBERSPRUNGEN_MARKE}{t['ticker']}|{t['nr']}"
 
 
+def vortagesschluss(item, quote):
+    """Der Schlusskurs des Vortags, aus ZWEI Quellen. Oder None.
+
+    1. prev_close aus dem Kursabruf. Das ist der Normalfall; gemessen am
+       14.08.2026 lag er bei 235 von 235 Aktien vor.
+    2. Der Kurs aus der Kaufpunkt-Mappe. Der Nachtlauf rechnet nach dem
+       New Yorker Schluss, sein Kurs IST der Vortagesschluss; an fuenf
+       Aktien gegengeprueft, null Abweichung.
+
+    WARUM ZWEI (Mathias, 14.08.2026): Ohne die zweite Quelle muesste man
+    entscheiden, was bei einem fehlenden Vortagesschluss geschieht, und
+    beide Antworten waeren schlecht. Schweigen laesst einen echten Fall
+    verschwinden, und das Protokoll liest niemand ("Das Protokoll liest
+    ausser dir niemand"). Melden dagegen oeffnet eine Hintertuer: Faellt
+    der Kursabruf einmal breit aus, gelten schlagartig ALLE
+    Ruecksetzer-Marken als unklar, und die 114 Meldungen vom Morgen des
+    14.08. waeren zurueck. Die zweite Quelle loest den Streit, statt ihn
+    zu entscheiden - sie ist gerade dann da, wenn der Abruf hakt, denn
+    sie steht in einer Datei.
+
+    Fallen BEIDE aus, wird geschwiegen (Mathias' Entscheidung: "lasse die
+    Meldung bei Doppelausfall ganz weg, sonst passiert das, was du gesagt
+    hast")."""
+    v = quote.get("prev_close") if quote else None
+    if v:
+        return float(v)
+    k = (item or {}).get("kurs_scan")
+    return float(k) if k else None
+
+
 def kam_von_unten(res) -> bool:
     """Wurde dieser Kaufpunkt ueberhaupt von UNTEN gerissen?
 
@@ -2316,11 +2356,15 @@ def main():
                         uebersprungen.append(res)
                     elif (wechsel == "verlassen"
                           and res.get("vortagesschluss") is None):
-                        # Ohne Vortagesschluss laesst sich nicht sagen, ob
-                        # etwas passiert ist. Das gehoert ins Protokoll,
-                        # sonst verschwindet ein echter Fall lautlos.
+                        # BEIDE Quellen ausgefallen. Dann wird geschwiegen
+                        # (Mathias, 14.08.2026) - eine Meldung "im Zweifel"
+                        # waere die Hintertuer, durch die die 114
+                        # Ruecksetzer-Marken zurueckkaemen. Die Zeile ist
+                        # reine Diagnose fuer mich und keine Absicherung;
+                        # das Protokoll liest sonst niemand.
                         print(f"  {item['ticker']}: über der Nachlaufgrenze, "
-                              f"aber ohne Vortagesschluss — keine Meldung.")
+                              f"aber weder Vortagesschluss noch Mappen-Kurs "
+                              f"— keine Meldung.")
                     continue
                 if wechsel == "wiedereintritt":
                     res["key"] = ausbruch_schluessel(res)
