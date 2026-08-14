@@ -1,132 +1,139 @@
 {
- "gebaut_am": "2026-08-14 00:02 Wien",
+ "gebaut_am": "2026-08-15 00:02 Wien",
  "universum": 235,
  "aktien": {
   "AAOI": {
    "firma": "Applied Optoelectronics Inc",
-   "vortagesschluss": 130.08,
-   "v50": 12138279.6,
-   "rs_rating": 97,
-   "ueber_52w_tief_pct": 603.1
+   "vortagesschluss": 150.28,
+   "v50": 12320572.2,
+   "rs_rating": 98,
+   "ueber_52w_tief_pct": 712.3
   },
   "AXTI": {
    "firma": "AXT Inc",
-   "vortagesschluss": 77.45,
-   "v50": 10487536.1,
+   "vortagesschluss": 81.64,
+   "v50": 10558186.1,
    "rs_rating": 99,
-   "ueber_52w_tief_pct": 3678.0
+   "ueber_52w_tief_pct": 3882.4
   },
   "FRD": {
    "firma": "Friedman Industries Inc",
-   "vortagesschluss": 44.21,
-   "v50": 96944.6,
+   "vortagesschluss": 45.85,
+   "v50": 97790.0,
    "rs_rating": 92,
-   "ueber_52w_tief_pct": 168.6
+   "ueber_52w_tief_pct": 178.6
   },
   "FSLY": {
    "firma": "Fastly Inc",
-   "vortagesschluss": 30.02,
-   "v50": 6087761.3,
-   "rs_rating": 95,
-   "ueber_52w_tief_pct": 339.0
+   "vortagesschluss": 29.93,
+   "v50": 5874034.1,
+   "rs_rating": 93,
+   "ueber_52w_tief_pct": 337.6
   },
   "HYMC": {
    "firma": "Hycroft Mining Holding Corp",
-   "vortagesschluss": 26.57,
-   "v50": 2047853.6,
+   "vortagesschluss": 27.07,
+   "v50": 2043716.3,
    "rs_rating": 94,
-   "ueber_52w_tief_pct": 661.3
+   "ueber_52w_tief_pct": 651.9
   },
   "LITE": {
    "firma": "Lumentum Holdings Inc",
-   "vortagesschluss": 880.41,
-   "v50": 5220962.3,
-   "rs_rating": 96,
-   "ueber_52w_tief_pct": 691.7
+   "vortagesschluss": 926.14,
+   "v50": 5182167.5,
+   "rs_rating": 97,
+   "ueber_52w_tief_pct": 732.9
   },
   "TSEM": {
    "firma": "Tower Semiconductor Ltd",
-   "vortagesschluss": 252.95,
-   "v50": 1971070.6,
-   "rs_rating": 94,
-   "ueber_52w_tief_pct": 455.8
-  },
-  "BE": {
-   "firma": "Bloom Energy Corp",
-   "vortagesschluss": 236.22,
-   "v50": 15331104.8,
-   "rs_rating": 91,
-   "ueber_52w_tief_pct": 482.4
+   "vortagesschluss": 265.48,
+   "v50": 1970604.5,
+   "rs_rating": 93,
+   "ueber_52w_tief_pct": 477.1
   },
   "CDNA": {
    "firma": "Caredx Inc",
-   "vortagesschluss": 47.38,
-   "v50": 1117329.9,
-   "rs_rating": 96,
-   "ueber_52w_tief_pct": 320.3
+   "vortagesschluss": 45.32,
+   "v50": 1112184.3,
+   "rs_rating": 94,
+   "ueber_52w_tief_pct": 302.1
   },
   "CRNX": {
    "firma": "Crinetics Pharmaceuticals Inc",
-   "vortagesschluss": 84.44,
-   "v50": 4450427.5,
-   "rs_rating": 93,
-   "ueber_52w_tief_pct": 206.9
+   "vortagesschluss": 84.7,
+   "v50": 4487080.5,
+   "rs_rating": 92,
+   "ueber_52w_tief_pct": 194.8
   },
   "DELL": {
    "firma": "Dell Technologies Inc",
-   "vortagesschluss": 494.51,
-   "v50": 7542938.0,
+   "vortagesschluss": 490.81,
+   "v50": 7330379.3,
    "rs_rating": 97,
-   "ueber_52w_tief_pct": 348.7
+   "ueber_52w_tief_pct": 345.3
+  },
+  "ETON": {
+   "firma": "Eton Pharmaceuticals Inc",
+   "vortagesschluss": 58.86,
+   "v50": 516230.3,
+   "rs_rating": 96,
+   "ueber_52w_tief_pct": 312.5
   },
   "FTK": {
    "firma": "Flotek Industries Inc",
-   "vortagesschluss": 34.41,
-   "v50": 390837.5,
+   "vortagesschluss": 35.83,
+   "v50": 397221.1,
    "rs_rating": 91,
-   "ueber_52w_tief_pct": 214.2
+   "ueber_52w_tief_pct": 227.2
   },
   "MU": {
    "firma": "Micron Technology Inc",
-   "vortagesschluss": 949.83,
-   "v50": 49428511.7,
+   "vortagesschluss": 971.66,
+   "v50": 49182408.4,
+   "rs_rating": 97,
+   "ueber_52w_tief_pct": 756.4
+  },
+  "MXL": {
+   "firma": "MaxLinear Inc",
+   "vortagesschluss": 84.84,
+   "v50": 3712072.3,
    "rs_rating": 98,
-   "ueber_52w_tief_pct": 737.1
+   "ueber_52w_tief_pct": 564.4
   },
   "NBIS": {
    "firma": "Nebius Group NV",
-   "vortagesschluss": 255.04,
-   "v50": 21266316.0,
+   "vortagesschluss": 277.68,
+   "v50": 21616786.5,
    "rs_rating": 93,
-   "ueber_52w_tief_pct": 311.3
+   "ueber_52w_tief_pct": 347.8
   },
   "SEPN": {
    "firma": "Septerna Inc",
-   "vortagesschluss": 45.14,
-   "v50": 447843.3,
-   "rs_rating": 93,
-   "ueber_52w_tief_pct": 325.2
+   "vortagesschluss": 44.5,
+   "v50": 466148.8,
+   "rs_rating": 91,
+   "ueber_52w_tief_pct": 314.3
   },
   "SNDK": {
    "firma": "Sandisk Corp",
-   "vortagesschluss": 1528.11,
-   "v50": 14151449.2,
+   "vortagesschluss": 1641.11,
+   "v50": 14329904.5,
    "rs_rating": 99,
-   "ueber_52w_tief_pct": 3468.7
+   "ueber_52w_tief_pct": 3732.6
   },
   "STX": {
    "firma": "Seagate Technology Holdings Plc",
-   "vortagesschluss": 921.37,
-   "v50": 5026899.0,
-   "rs_rating": 95,
-   "ueber_52w_tief_pct": 506.0
+   "vortagesschluss": 973.44,
+   "v50": 5074959.5,
+   "rs_rating": 96,
+   "ueber_52w_tief_pct": 540.2
   },
   "UMAC": {
    "firma": "Unusual Machines Inc",
-   "vortagesschluss": 27.24,
-   "v50": 4513332.1,
-   "rs_rating": 92,
-   "ueber_52w_tief_pct": 276.0
+   "vortagesschluss": 34.06,
+   "v50": 4651971.5,
+   "rs_rating": 95,
+   "ueber_52w_tief_pct": 370.1
   }
  }
 }
