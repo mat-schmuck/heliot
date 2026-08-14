@@ -445,9 +445,18 @@ DARVAS_DATEI = "darvas.csv"
 
 
 def liste_aus_dateiname(name: str) -> str:
-    """Welche Liste ist gemeint? Rueckgabe: DARVAS_DATEI oder LISTEN_DATEI."""
-    n = (name or "").lower()
-    return DARVAS_DATEI if ("darv" in n or "darvers" in n) else LISTEN_DATEI
+    """Welche Liste ist gemeint? Rueckgabe: DARVAS_DATEI oder LISTEN_DATEI.
+
+    ACHTUNG BEI DER SCHREIBWEISE: Der Name kommt mit drei Varianten
+    vorbei. Gerhard schreibt "Darvers", die Datei vom 15.08.2026 hiess
+    "darwas", das Muster selbst heisst Darvas. Eine Suche nach "darv"
+    allein haette "darwas" NICHT erkannt und die Darvas-Liste
+    stillschweigend in die grosse Liste geschrieben - genau der
+    Fehlgriff, gegen den diese Seite die Wahl sichtbar anzeigt.
+    Erkannt wird deshalb "dar" plus v ODER w."""
+    import re
+    return (DARVAS_DATEI if re.search(r"dar[vw]", (name or "").lower())
+            else LISTEN_DATEI)
 
 
 def pruefe_wochenliste(rohdaten: bytes) -> tuple[str, list[str]]:
