@@ -56,6 +56,7 @@ import red_to_green_explosive  # Kapitel 11: dreht aus eigenem Antrieb
 import exit_regeln    # Exit-Regelwerk: Stops, Gewinnabsicherung
 import trigger_logbuch  # schreibt jedes Signal mit, gemeldet oder nicht
 import volumen        # IBD Volume % Change
+import insider_edgar   # Insider-Kaeufe bei der SEC (Gerhards Kapitel vom 14.08.2026)
 import sektor_radar    # Dreht eine ganze Branche? Rechnet der Nachtlauf, meldet der Waechter
 import zahlen_termine  # Wer heute Abend berichtet, wird vermerkt — die EINZIGE Volumenrechnung
 from config import CFG, hoechstens, mind_erreicht, pruefe_config
@@ -436,6 +437,11 @@ HTF_MARKE = "HTF|"
 # Der Sektor-Radar-Befund wird je HANDELSTAG einmal gemeldet; der Tag steht
 # im Schluessel, damit er mit dem Freitags-Putz von selbst verfaellt.
 SEKTOR_MARKE = "SEKTOR|"
+
+# Insider-Funde tragen ihre eigene Kennung im Schluessel, damit ein
+# waechsender Cluster (drei Insider, spaeter vier) erneut gemeldet
+# wird, derselbe Stand aber nicht.
+INSIDER_MARKE = "INSIDER|"
 
 
 def htf_grenze() -> str:
@@ -1302,6 +1308,41 @@ def push_wiedereintritt(topic: str, treffer: list[dict]) -> bool:
     return sende(topic, titel, absaetze, "high")
 
 
+def melde_insider(topic: str, funde: list[dict], schon_gemeldet: set,
+                  state: dict) -> list[dict]:
+    """Neue Insider-Funde melden. Rueckgabe: was NOCH offen ist.
+
+    WARUM UEBER DEN WAECHTER und nicht aus dem Scan selbst: dieselbe
+    Entscheidung wie beim Sektor-Radar (Mathias, 27.07.2026). Gemeldet
+    wird ausschliesslich hier und nur zur Handelszeit; die Sperre dafuer
+    sitzt in sende() und gilt fuer jede automatische Meldung.
+
+    Gerhard wollte das bestehende Trigger-Thema, kein eigenes — daran
+    haelt sich das: derselbe Weg wie alle anderen Meldungen."""
+    offen = []
+    for f in funde:
+        key = INSIDER_MARKE + f.get("kennung", f.get("ticker", "?"))
+        if key in schon_gemeldet:
+            continue
+        offen.append((key, f))
+    if not offen:
+        return []
+    absaetze = [f"{i}. " + "\n".join(f["zeilen"])
+                for i, (_, f) in enumerate(offen, 1)]
+    titel = ("Insider-Käufe: " + ", ".join(f["ticker"] for _, f in offen)
+             if len(offen) <= 4
+             else f"Insider-Käufe: {len(offen)} Aktien")
+    if not sende(topic, titel, absaetze, "default"):
+        return [f for _, f in offen]
+    heute_s = date.today().isoformat()
+    for key, _ in offen:
+        schon_gemeldet.add(key)
+        state["gemeldet"][key] = heute_s
+    save_state(state)
+    print(f"Insider-Käufe gemeldet: {len(offen)} Aktien.")
+    return []
+
+
 def push_uebersprungen(topic: str, treffer: list[dict]) -> bool:
     """Meldet uebersprungene Kaufpunkte, getrennt von den Ausbruechen.
 
@@ -2015,6 +2056,10 @@ def main():
     # SEKTOR-RADAR: einmal lesen, nicht in jeder Runde. Der Waechter
     # prueft im Zwei-Sekunden-Takt; eine Datei so oft zu lesen waere
     # Arbeit ohne Gegenwert.
+    insider_offen = (insider_edgar.lies_funde()
+                     if CFG["insider"].get("melden", True) else [])
+    if insider_offen:
+        print(f"Insider-Käufe: {len(insider_offen)} Fund(e) liegen vor.")
     radar_offen = bool(CFG["sektor_radar"]["melden"])
     radar_befund = sektor_radar.lies() if radar_offen else {}
     if radar_offen:
@@ -2045,6 +2090,9 @@ def main():
         if radar_offen and offen and laut:
             radar_offen = not melde_sektor_radar(topic, radar_befund,
                                                  schon_gemeldet, state)
+        if insider_offen and offen and laut:
+            insider_offen = melde_insider(topic, insider_offen,
+                                          schon_gemeldet, state)
 
         if not laut:
             if not basis:

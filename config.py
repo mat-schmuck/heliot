@@ -78,6 +78,25 @@ CFG = {
         ],
     },
 
+    # --- Insider-Kauf-Scanner (Gerhards Kapitel vom 14.08.2026) -----------
+    # SEC Form 4, Transaktionscode "P" (echter Kauf am freien Markt).
+    # Zwei unabhaengige Pfade, jeder fuer sich ausreichend:
+    #   A  Groesse:  EIN Kauf >= min(5 % der Marktkap, 25 Mio $)
+    #   B  Cluster:  >= 3 verschiedene Insider, je >= 2 % der Marktkap,
+    #                innerhalb von 10 HANDELSTAGEN
+    # ALLE Werte sind Gerhards begruendete Startwerte, KEINE gemessenen
+    # Optima - sein eigener Hinweis. Sie gehoeren mitgeschrieben und
+    # nachgeschaerft, bevor jemand darauf Geld setzt.
+    "insider": {
+        "min_marktkap": 300_000_000,        # kleinere Firmen sind Rauschen
+        "pfad_a_prozent_marktkap": 0.05,
+        "pfad_a_dollar_min": 25_000_000,    # was NIEDRIGER ist, gilt
+        "pfad_b_prozent_pro_person": 0.02,
+        "pfad_b_min_insider": 3,
+        "cluster_fenster_tage": 10,         # Handelstage, nicht Kalendertage
+        "melden": True,                     # meldet der Waechter die Funde?
+    },
+
     # --- Sektor-Radar (Gerhards Paket vom 13.08.2026) ---------------------
     # Dreht gerade eine ganze Branche? Zwei bereits etablierte Regeln,
     # keine neue Kennzahl: Kreuzung des eigenen 10-Tage-Schnitts UND ein

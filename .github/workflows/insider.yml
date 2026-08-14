@@ -1,0 +1,78 @@
+name: Insider-Kauf-Scanner (SEC Form 4)
+
+# GERHARDS KAPITEL vom 14.08.2026: zweimal taeglich den Tagesindex der SEC
+# durchsehen, echte Kaeufe (Transaktionscode P) sammeln und bewerten.
+#
+# ZWEIMAL, weil es etwas bringt: Der Morgenlauf holt alles, was ueber
+# Nacht eingereicht wurde; der Abendlauf nur noch das, was seit dem Morgen
+# dazugekommen ist (gelesene Einreichungen werden an ihrer Zugangsnummer
+# erkannt und gar nicht erst wieder abgerufen). Gemessen am 14.08.2026:
+# erster Lauf ueber 1002 Einreichungen 3,1 Minuten, zweiter Lauf auf
+# denselben Tag 4 Sekunden.
+#
+# Einreichungen nach 22 Uhr New Yorker Zeit rutschen in den Index des
+# NAECHSTEN Tages. Der Abendlauf sieht sie also nicht mehr, der naechste
+# Morgenlauf holt sie nach.
+#
+# GEMELDET WIRD HIER NICHTS. Der Lauf legt insider_funde.json ab; der
+# Waechter meldet daraus zur Handelszeit (Mathias, 27.07.2026: "Gemeldet
+# wird ausschliesslich vom Waechter, ab der New Yorker Eroeffnung").
+
+on:
+  workflow_dispatch:
+    inputs:
+      datum:
+        description: "Handelstag (JJJJ-MM-TT), leer = heute"
+        required: false
+        default: ""
+  schedule:
+    # 12:40 UTC = 08:40 New York, gut vor der Eroeffnung; der Waechter
+    # startet um 09:28 und findet die Funde dann schon vor.
+    - cron: "40 12 * * 1-5"
+    # 20:40 UTC = 16:40 New York, kurz nach Handelsschluss.
+    - cron: "40 20 * * 1-5"
+
+# Zwei Laeufe duerfen sich nie ueberschneiden: Beide schreiben denselben
+# Sammelspeicher, und ein zweiter Lauf wuerde die Zugangsnummern des
+# ersten nicht sehen und alles noch einmal abrufen.
+concurrency:
+  group: insider-scanner
+  cancel-in-progress: false
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Abhängigkeiten
+        run: pip install requests yfinance pandas
+
+      - name: Insider-Käufe holen und bewerten
+        env:
+          # Die SEC verlangt Name und E-Mail im User-Agent und sperrt
+          # sonst. Als Secret, weil dieses Repo oeffentlich ist.
+          SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
+        run: python insider_edgar.py --scan ${{ github.event.inputs.datum }}
+
+      - name: Ergebnis sichern
+        run: |
+          git config user.name "insider-scanner"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A -- insider_kaeufe.json insider_funde.json 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "Nichts Neues."
+          else
+            git commit -m "Insider-Käufe: Stand aktualisiert"
+            # Fremde Aenderungen (Waechter, Scanner) zuerst holen, sonst
+            # scheitert der Push - dieselbe Falle wie in scanner.yml.
+            git pull --rebase --autostash origin main || true
+            git push origin main || echo "Push fehlgeschlagen, nächster Lauf holt es nach."
+          fi
