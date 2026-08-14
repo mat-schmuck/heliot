@@ -478,6 +478,19 @@ def block_e():
     pruefe("E", "MNDY-Tagesverlauf ergibt genau zwei Meldungen statt neun",
            meldungen == ["verlassen", "wiedereintritt"], meldungen)
 
+    # DER WOCHENRIEGEL, teuer erkauft (13.08.2026, beim Umbau selbst
+    # hineingelaufen): Beim ersten Blick eines Tages hat ein Kaufpunkt
+    # keinen Vorzustand. Steht der Kurs dann schon ueber der Grenze, gilt
+    # das als Wechsel - und OHNE zweiten Riegel meldete jeder Kaufpunkt,
+    # der seit Tagen weit oben steht, an jedem Morgen aufs Neue. Gemessen
+    # an der echten Mappe waeren das 131 Meldungen an einem Morgen.
+    quelle_loop = pathlib.Path("breakout_watcher.py").read_text(encoding="utf-8")
+    pruefe("E", "Übersprungen prüft ZUSÄTZLICH das Wochengedächtnis",
+           'wechsel == "verlassen"' in quelle_loop
+           and 'res["key"] not in schon_gemeldet' in quelle_loop)
+    pruefe("E", "Ein Wiedereintritt löst den Wochenriegel wieder",
+           "schon_gemeldet.discard(k)" in quelle_loop)
+
     # Die Meldung sagt, dass es ein Wiedereintritt ist und KEIN Ausbruch.
     probe_w = {"ticker": "AAA", "firma": "Alpha AG", "strategie": "Darvas Box",
                "kaufpunkt": 10.0, "kurs": 10.3, "ueber_pct": 3.0, "stop": 9.0,

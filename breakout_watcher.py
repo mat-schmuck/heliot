@@ -1626,7 +1626,15 @@ def fenster_zustand(ueber: float, vorher: str | None) -> str | None:
 
     Hinaus geht es also ueber der Grenze, herein erst wieder DEUTLICH
     darunter. Steht die Totzone auf 0, gibt es die Reinform: jede
-    Ueberquerung zaehlt."""
+    Ueberquerung zaehlt.
+
+    WIE GROSS die Totzone ist, hat GERHARD entschieden (13.08.2026, ueber
+    Mathias): zwei Prozentpunkte, also hinaus ueber 5 % und wieder herein
+    erst bei 3 % oder darunter. Meine Messung hatte einen Prozentpunkt
+    nahegelegt, das haette gereicht, um das Zappeln zu beenden; seine
+    Fassung verlangt zusaetzlich, dass der Kurs wirklich in die Kaufzone
+    zurueckkommt und nicht bloss an ihrem Rand kratzt. Der Wert steht in
+    config.py und nur dort."""
     if ueber > NACHLAUF_GRENZE:
         return DRAUSSEN
     if ueber <= NACHLAUF_GRENZE - WIEDEREINTRITT_TOTZONE:
@@ -2198,7 +2206,21 @@ def main():
                     fenster[fkey] = zustand
                 if res.get("uebersprungen"):
                     res["key"] = uebersprungen_schluessel(item)
-                    if wechsel == "verlassen":
+                    # ZWEI Riegel, und der zweite ist teuer erkauft:
+                    #   1. Es muss ein WECHSEL sein (Tageszustand).
+                    #   2. Der Kaufpunkt darf nicht ohnehin schon als
+                    #      "draussen" angesagt sein (Wochengedaechtnis).
+                    # Ohne den zweiten meldete jeder Kaufpunkt, der seit
+                    # Tagen weit ueber dem Kurs steht, an JEDEM Morgen aufs
+                    # Neue "uebersprungen" - beim ersten Blick des Tages
+                    # ist er ja "draussen", und ohne Vorzustand gilt das
+                    # als Wechsel. Gemessen an der echten Mappe vom
+                    # 13.08.2026 waeren das 131 Meldungen an einem Morgen
+                    # gewesen. Der Riegel war vor dem Umbau da; ich hatte
+                    # ihn durch den Tageszustand ERSETZT statt ihn zu
+                    # ergaenzen.
+                    if (wechsel == "verlassen"
+                            and res["key"] not in schon_gemeldet):
                         uebersprungen.append(res)
                     continue
                 if wechsel == "wiedereintritt":
@@ -2423,7 +2445,17 @@ def main():
                      for t in wiedereintritt], quelle="waechter/wiedereintritt")
                 if args.dry_run:
                     print("(Dry-Run — nichts gesendet)")
-                elif not push_wiedereintritt(topic, wiedereintritt):
+                elif push_wiedereintritt(topic, wiedereintritt):
+                    # Der Kaufpunkt ist zurueck im Fenster, also gilt er
+                    # nicht mehr als angesagt-draussen. Verlaesst er das
+                    # Fenster spaeter wirklich noch einmal, ist das ein
+                    # neuer Vorgang und wird wieder gemeldet.
+                    for t in wiedereintritt:
+                        k = uebersprungen_schluessel(t)
+                        schon_gemeldet.discard(k)
+                        state["gemeldet"].pop(k, None)
+                    save_state(state)
+                else:
                     # Nicht angekommen: Der Zustand wird zurueckgedreht,
                     # damit der Wechsel beim naechsten Durchlauf erneut
                     # auffaellt. Sonst gaelte er als erledigt, ohne dass
@@ -2431,8 +2463,6 @@ def main():
                     for t in wiedereintritt:
                         fenster[f"{t['ticker']}|{t['nr']}"] = DRAUSSEN
                     sperre_bis = jetzt_s + TAKT
-                else:
-                    save_state(state)
 
             # --- Red-to-Green (Regelwerk Kapitel 9) ------------------------
             # Nur wenn der Nasdaq stark genug nach unten gegapt hat und die

@@ -531,7 +531,13 @@ CFG = {
         # NEUN Meldungen in 22 Minuten (sechs Ueberquerungen), mit einem
         # Prozentpunkt Totzone genau EINE. Auf 0 gesetzt gibt es die
         # Reinform, in der jede Ueberquerung zaehlt.
-        "wiedereintritt_totzone": 0.01,
+        #
+        # ZWEI Prozentpunkte auf GERHARDS Entscheidung (13.08.2026,
+        # Mathias hat mit ihm geredet): Wieder herein geht es erst bei
+        # 3 % ueber dem Kaufpunkt, nicht schon bei 4. Der Kurs muss also
+        # wirklich in die Kaufzone zurueckkommen und nicht bloss an ihrem
+        # Rand kratzen.
+        "wiedereintritt_totzone": 0.02,
         # Weckuhr und Sammelfenster gab es nur am 30.07.2026 für ein paar
         # Stunden; mit dem festen Zwei-Sekunden-Takt sind sie wieder
         # heraus. Ebenso die Obergrenze von fünf Aktien je Push: Sie
