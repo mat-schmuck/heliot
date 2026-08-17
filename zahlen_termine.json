@@ -1,7 +1,6 @@
 {
- "gebaut_am": "2026-08-17 00:04 Wien",
+ "gebaut_am": "2026-08-18 00:07 Wien",
  "ohne_termin": [
-  "JBL",
   "SKYT"
  ],
  "nur_nasdaq": [],
@@ -915,6 +914,14 @@
    "datum": "2026-10-14",
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
+   "quellen": [
+    "yahoo"
+   ]
+  },
+  "JBL": {
+   "datum": "2026-09-24",
+   "uhrzeit": "08:00",
+   "lage": "vorboerslich",
    "quellen": [
     "yahoo"
    ]
