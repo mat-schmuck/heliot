@@ -36,7 +36,8 @@
     "BHP|2": "drin",
     "XNCR|1": "drin",
     "VBNK|1": "drin",
-    "CRNX|1": "drin"
+    "CRNX|1": "drin",
+    "AMG|1": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -109,6 +110,8 @@
     "BHP|2": "2026-08-18",
     "BEST|BHP|2": "2026-08-18",
     "GAPGO|VIST|2026-08-18": "2026-08-18",
-    "HTF|CRNX|1": "2026-08-18"
+    "HTF|CRNX|1": "2026-08-18",
+    "AMG|1": "2026-08-18",
+    "BEST|AMG|1": "2026-08-18"
   }
 }
