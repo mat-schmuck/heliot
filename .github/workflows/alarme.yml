@@ -34,6 +34,7 @@ on:
           - yahoostrom       # Trägt Yahoos eigener Live-Strom die ganze Liste?
           - volumenkurve     # Referenzkurve F(t) neu aus Kursdaten bauen
           - terminvergleich  # Zahlen-Termine: Finnhub gegen Yahoo und Nasdaq
+          - kerzenvergleich  # Tageskerzen: Yahoo gegen Twelve Data (liest nur)
       alle_level:
         description: "Auch Fallback-Level alarmieren? (true/false)"
         required: false
@@ -325,6 +326,14 @@ jobs:
         env:
           FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
         run: python termine_vergleich.py termine_vergleich.txt
+
+      # --- Tageskerzen vergleichen: hat Twelve Data, was Yahoo aushoehlt? ---
+      # Mathias, 18.08.2026. Hier, weil der Schluessel als Secret liegt.
+      - name: "Tageskerzen vergleichen (Yahoo gegen Twelve Data)"
+        if: ${{ github.event.inputs.modus == 'kerzenvergleich' }}
+        env:
+          TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
+        run: python kerzenvergleich.py
 
       - name: "Terminvergleich sichern"
         if: ${{ github.event.inputs.modus == 'terminvergleich' }}
