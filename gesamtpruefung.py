@@ -540,6 +540,18 @@ def block_e():
                    "AAA|1" not in st["gemeldet"])
         finally:
             bw.STATE_FILE, bw.REPO_STATE = alt_cache, alt_repo
+    # LEERE YAHOO-KERZEN (18.08.2026): Datum da, Werte NaN — und NaN ist
+    # in Python WAHR. Der Vortagesschluss muss dann auf die Mappe
+    # zurueckfallen statt NaN weiterzureichen.
+    nan = float("nan")
+    pruefe("E", "NaN-Vortagesschluss fällt auf den Mappen-Kurs zurück",
+           bw.vortagesschluss({"kurs_scan": 361.15}, {"prev_close": nan})
+           == 361.15)
+    pruefe("E", "NaN in beiden Quellen ergibt None statt NaN",
+           bw.vortagesschluss({"kurs_scan": nan}, {"prev_close": nan}) is None)
+    pruefe("E", "kam_von_unten mit NaN meldet nicht",
+           not bw.kam_von_unten({"kaufpunkt": 100.0, "vortagesschluss": None}))
+
     quelle_w = pathlib.Path(".github/workflows/watcher.yml").read_text(
         encoding="utf-8")
     pruefe("E", "Der Endkommit des Laufs sichert das Melde-Gedächtnis mit",

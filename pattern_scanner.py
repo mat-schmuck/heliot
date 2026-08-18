@@ -279,7 +279,10 @@ def fetch_history(ticker: str, api_key: str, limiter: RateLimiter) -> pd.DataFra
 
     # Aus dem Sammelabruf bedienen, falls vorhanden
     if ticker in _YAHOO_DATEN:
-        df = _YAHOO_DATEN[ticker]
+        # Leere Kerzen (Datum ohne Werte) verwerfen - siehe
+        # breakout_watcher, Befund vom 18.08.2026: NaN-Zeilen vergiften
+        # sonst Indikatoren und Durchschnitte.
+        df = _YAHOO_DATEN[ticker].dropna(subset=["close"])
         df.to_csv(cache_file, index=False)
         return df
 

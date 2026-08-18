@@ -785,8 +785,20 @@ def fetch_quotes_yahoo(tickers: list[str]) -> dict:
             # Zusatzfelder fuer Gap and Go (Regelwerk Kapitel 7). Die letzte
             # Zeile ist waehrend des Handels der HEUTIGE, unfertige Tag —
             # Durchschnitt und Flat Base rechnen deshalb ohne ihn.
-            if len(df) >= 2:
-                vortage = df.iloc[:-1]
+            # LEERE KERZEN VERWERFEN (18.08.2026, gemessen): Yahoo
+            # lieferte am Dienstag fuer viele mittelgrosse Aktien die
+            # Montagszeile MIT Datum, aber ohne Werte (alles NaN) - um
+            # 00:04 waren die Werte noch da, vormittags waren sie
+            # rueckwirkend leer. Ohne dropna wird prev_close zu NaN, und
+            # NaN ist in Python WAHR: Es laeuft als "vorhandener"
+            # Vortagesschluss durch, jede Vergleichslogik (Gap,
+            # Red-to-Green, kam_von_unten) wird still falsch.
+            # Sind ALLE Vortage leer, fehlen nur die Zusatzfelder - die
+            # Aktie selbst bleibt beobachtet, und vortagesschluss() greift
+            # auf den Kurs aus der Mappe zurueck.
+            vortage = (df.iloc[:-1].dropna(subset=["Close"])
+                       if len(df) >= 2 else df.head(0))
+            if len(vortage):
                 eintrag["prev_close"] = float(vortage["Close"].iloc[-1])
                 # WAR fest auf 10 verdrahtet, waehrend der Ausbruch schon
                 # gegen ein anderes Fenster rechnete. Genau solche stillen
@@ -1764,10 +1776,12 @@ def vortagesschluss(item, quote):
     Meldung bei Doppelausfall ganz weg, sonst passiert das, was du gesagt
     hast")."""
     v = quote.get("prev_close") if quote else None
-    if v:
+    # NaN ist wahr - ein leerer Yahoo-Tag (18.08.2026) saehe sonst wie
+    # ein vorhandener Vortagesschluss aus. v == v ist nur bei NaN falsch.
+    if v and v == v:
         return float(v)
     k = (item or {}).get("kurs_scan")
-    return float(k) if k else None
+    return float(k) if (k and k == k) else None
 
 
 def kam_von_unten(res) -> bool:
