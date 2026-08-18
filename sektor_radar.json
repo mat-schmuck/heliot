@@ -1,15 +1,7 @@
 {
- "gebaut_am": "2026-08-17T22:08:04",
- "handelstag": "2026-08-17",
+ "gebaut_am": "2026-08-18T22:07:23",
+ "handelstag": "2026-08-18",
  "geladen": 36,
  "unfertig": [],
- "treffer": [
-  {
-   "etf": "XLRE",
-   "name": "Real Estate",
-   "richtung": "runter",
-   "volumen_pct": 60.6,
-   "kurs": 44.83
-  }
- ]
+ "treffer": []
 }

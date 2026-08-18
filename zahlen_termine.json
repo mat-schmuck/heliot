@@ -1,5 +1,5 @@
 {
- "gebaut_am": "2026-08-18 00:07 Wien",
+ "gebaut_am": "2026-08-19 00:07 Wien",
  "ohne_termin": [
   "SKYT"
  ],
@@ -274,14 +274,14 @@
    ]
   },
   "BHP": {
-   "datum": "2026-08-17",
-   "uhrzeit": "16:00",
-   "lage": "nachboerslich",
+   "datum": "2027-02-15",
+   "uhrzeit": "15:00",
+   "lage": "im_handel",
    "quellen": [
     "yahoo",
     "nasdaq"
    ],
-   "uneinig": "Quellen uneinig: 2026-08-17 (Yahoo, hier bevorzugt) gegen 2026-08-18 (Nasdaq)"
+   "uneinig": "Quellen uneinig: 2027-02-15 (Yahoo, hier bevorzugt) gegen 2026-08-18 (Nasdaq)"
   },
   "BTSG": {
    "datum": "2026-10-30",
@@ -1494,7 +1494,7 @@
   },
   "PRE": {
    "datum": "2026-08-18",
-   "uhrzeit": "08:00",
+   "uhrzeit": "07:00",
    "lage": "vorboerslich",
    "quellen": [
     "yahoo",
