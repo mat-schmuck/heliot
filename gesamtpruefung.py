@@ -552,6 +552,43 @@ def block_e():
     pruefe("E", "kam_von_unten mit NaN meldet nicht",
            not bw.kam_von_unten({"kaufpunkt": 100.0, "vortagesschluss": None}))
 
+    # TWELVE-DATA-NACHLADEN hohler Kerzen (Mathias, 18.08.2026) und
+    # NACHTRAG ALS NORMALE MELDUNG.
+    import pandas as _pd2
+    _n = float("nan")
+    _idx = _pd2.to_datetime(["2026-08-13", "2026-08-14", "2026-08-17",
+                             "2026-08-18"])
+    _roh = _pd2.DataFrame({"Open": [1, 1, _n, 1], "High": [1, 1, _n, 1],
+                           "Low": [1, 1, _n, 1],
+                           "Close": [10.0, 11.0, _n, 13.0],
+                           "Volume": [100, 100, _n, 100]}, index=_idx)
+    _echt = bw.td_kerze_nachladen
+    try:
+        bw.td_kerze_nachladen = lambda t, d: {
+            "Open": 11.5, "High": 12.5, "Low": 11.4, "Close": 12.0,
+            "Volume": 150.0}
+        _neu, _v = bw.hohle_kerze_fuellen("ZZ", _roh, 4)
+        pruefe("E", "Hohle Kerze wird von Twelve Data gefüllt",
+               float(_neu["Close"].iloc[-2]) == 12.0 and _v == 1)
+        bw.td_kerze_nachladen = lambda t, d: None
+        _neu2, _ = bw.hohle_kerze_fuellen("ZZ", _roh, 4)
+        pruefe("E", "Liefert Twelve Data nichts, bleibt der Tag weg "
+               "(Mappe übernimmt)", len(_neu2) == 3)
+        _, _v3 = bw.hohle_kerze_fuellen("ZZ", _roh, 0)
+        pruefe("E", "Ohne Rundenbudget wird nicht abgerufen", _v3 == 0)
+        _, _v4 = bw.hohle_kerze_fuellen("ZZ", _roh.dropna(), 4)
+        pruefe("E", "Ein Feiertag (Tag fehlt ganz) löst KEIN Nachladen aus",
+               _v4 == 0)
+    finally:
+        bw.td_kerze_nachladen = _echt
+    bw._td_kerzen_cache[("PRUEF", "2026-08-17")] = {"Close": 9.99}
+    pruefe("E", "Der Tages-Zwischenspeicher kommt vor jedem Netzabruf",
+           bw.td_kerze_nachladen("PRUEF", "2026-08-17") == {"Close": 9.99})
+    quelle_bw = pathlib.Path("breakout_watcher.py").read_text(encoding="utf-8")
+    pruefe("E", "Kein eigener Nachtrags-Wortlaut mehr (Mathias, 18.08.)",
+           "Vol jetzt best" not in quelle_bw
+           and "def push_nachtrag" not in quelle_bw)
+
     quelle_w = pathlib.Path(".github/workflows/watcher.yml").read_text(
         encoding="utf-8")
     pruefe("E", "Der Endkommit des Laufs sichert das Melde-Gedächtnis mit",

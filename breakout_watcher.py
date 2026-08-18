@@ -168,6 +168,104 @@ def merke_kurse(quotes: dict, quelle: str):
             continue
 
 QUOTE_URL = "https://api.twelvedata.com/quote"
+TS_URL = "https://api.twelvedata.com/time_series"
+
+# --- Nachladen hohler Tageskerzen (Mathias, 18.08.2026) --------------------
+# Yahoo liefert manchmal den juengsten fertigen Handelstag als Zeile MIT
+# Datum, aber OHNE Werte (gemessen am 18.08.2026: Montag bei KEYS, UMAC,
+# LPG und dutzenden weiteren leer, waehrend SPY und NVDA vollstaendig
+# waren; um 00:04 waren die Werte noch da, vormittags rueckwirkend weg).
+# Die eingebaute Rueckfallkette griff dabei NICHT, denn sie springt nur
+# an, wenn Yahoo GAR NICHTS liefert - eine Zeile ohne Werte hielt sie
+# fuer Erfolg. Gemessen ist auch die Loesung: Twelve Data hatte denselben
+# Tag fuer alle Pruefkandidaten vollstaendig, auf den Cent gleich mit
+# unserer Mappe.
+#
+# GEZIELT statt breit: nachgeladen wird nur der EINE fehlende Tag je
+# Aktie, mit Tages-Zwischenspeicher (jede Luecke wird hoechstens einmal
+# angefragt), gedrosselt auf die Gratis-Grenzen (8 je Minute, 800 je
+# Tag - unser Deckel liegt mit 300 weit darunter) und hoechstens
+# TD_JE_RUNDE Abrufe je Datenrunde, damit der 60-Sekunden-Takt nicht
+# aus dem Tritt kommt. Der Rest der Luecken kommt in den Folgerunden
+# dran; bis dahin traegt der Mappen-Rueckfall den Vortagesschluss.
+_td_kerzen_cache: dict = {}     # (ticker, datum) -> Werte-dict oder None
+_td_haushalt = {"tag": None, "gesamt": 0, "letzter": 0.0}
+TD_JE_RUNDE = 4
+TD_JE_TAG = 300
+
+
+def td_kerze_nachladen(ticker: str, datum) -> dict | None:
+    """Die EINE fehlende Tageskerze von Twelve Data, oder None.
+
+    Zwischenspeicher zuerst: Auch ein Fehlversuch wird gemerkt, damit
+    dieselbe Luecke nicht jede Runde neu angefragt wird. Der Schluessel
+    kommt aus der Umgebung (TWELVE_DATA_API_KEY, im Workflow gesetzt);
+    ohne ihn ist die Antwort still None."""
+    kennung = (ticker, str(datum))
+    if kennung in _td_kerzen_cache:
+        return _td_kerzen_cache[kennung]
+    api_key = (os.environ.get("TWELVE_DATA_API_KEY") or "").strip()
+    if not api_key:
+        return None
+    heute = date.today().isoformat()
+    if _td_haushalt["tag"] != heute:
+        _td_haushalt.update(tag=heute, gesamt=0)
+    if _td_haushalt["gesamt"] >= TD_JE_TAG:
+        return None                    # Budget erschoepft: NICHT cachen
+    warte = 7.6 - (time.time() - _td_haushalt["letzter"])
+    if warte > 0:
+        time.sleep(warte)              # 8 Abrufe je Minute, Pflichtgrenze
+    _td_haushalt["letzter"] = time.time()
+    _td_haushalt["gesamt"] += 1
+    try:
+        r = requests.get(TS_URL, params={
+            "symbol": ticker, "interval": "1day", "outputsize": 6,
+            "apikey": api_key}, timeout=15)
+        d = r.json()
+        if d.get("status") != "ok":
+            _td_kerzen_cache[kennung] = None
+            return None
+        for w in d.get("values", []):
+            if w.get("datetime") == str(datum):
+                werte = {"Open": float(w["open"]), "High": float(w["high"]),
+                         "Low": float(w["low"]), "Close": float(w["close"]),
+                         "Volume": float(w.get("volume") or 0.0)}
+                _td_kerzen_cache[kennung] = werte
+                print(f"  {ticker}: hohle Tageskerze {datum} von Twelve "
+                      f"Data nachgeladen (Schluss {werte['Close']:.2f}).")
+                return werte
+        _td_kerzen_cache[kennung] = None
+        return None
+    except Exception:
+        return None                    # Netzfehler: naechste Runde erneut
+
+
+def hohle_kerze_fuellen(ticker: str, roh_df, budget_frei: int):
+    """Fehlt der juengste FERTIGE Handelstag, weil Yahoo ihn leer
+    lieferte? Dann von Twelve Data fuellen.
+
+    Rueckgabe: (bereinigtes df, verbrauchte Abrufe). Erkannt wird die
+    Luecke daran, dass unter den weggeworfenen Leerzeilen eine liegt,
+    die NEUER ist als der letzte gute Vortag - ein Feiertag sieht anders
+    aus, fuer den gibt es bei Yahoo gar keine Zeile."""
+    df = roh_df.dropna(subset=["Close", "Volume"])
+    if len(df) < 2 or budget_frei <= 0:
+        return df, 0
+    leer = roh_df["Close"].isna()
+    if not bool(leer.iloc[:-1].any()):
+        return df, 0
+    letzte_leere = roh_df.index[:-1][leer.iloc[:-1]][-1]
+    vortage = df.iloc[:-1]
+    if not len(vortage) or letzte_leere <= vortage.index[-1]:
+        return df, 0                   # die Luecke liegt weiter zurueck
+    werte = td_kerze_nachladen(ticker, letzte_leere.date())
+    if not werte:
+        return df, 1
+    roh_df = roh_df.copy()
+    for spalte, wert in werte.items():
+        roh_df.loc[letzte_leere, spalte] = wert
+    return roh_df.dropna(subset=["Close", "Volume"]), 1
+
 STATE_FILE = Path("watcher_state.json")
 # Dieselbe Struktur, im REPO eingecheckt — die uebergabefeste Fassung
 # des Melde-Gedaechtnisses (siehe load_state/_repo_sichern).
@@ -752,10 +850,12 @@ def fetch_quotes_yahoo(tickers: list[str]) -> dict:
         return {}
 
     out = {}
+    td_budget = TD_JE_RUNDE
     for t in unique:
         try:
-            df = roh[t] if len(unique) > 1 else roh
-            df = df.dropna(subset=["Close", "Volume"])
+            roh_df = roh[t] if len(unique) > 1 else roh
+            df, verbraucht = hohle_kerze_fuellen(t, roh_df, td_budget)
+            td_budget -= verbraucht
             if df.empty:
                 continue
             letzte = df.iloc[-1]
@@ -1939,37 +2039,6 @@ def darf_unbestaetigt_melden(res: dict) -> bool:
     return any(n in UNBESTAETIGT_ERLAUBT for n in namen)
 
 
-def push_nachtrag(topic: str, treffer: list[dict]) -> bool:
-    """Meldet, dass ein zuvor UNBESTAETIGT gemeldeter Ausbruch inzwischen
-    die Volumenbestaetigung bekommen hat.
-
-    Warum es das gibt (nachgemessen 29.07.2026,
-    volumen_verlaesslichkeit.py): Ein 'nicht bestaetigt' um 10:00 New
-    Yorker Zeit wird in 14,7 % der Faelle bis zum Handelsschluss doch
-    noch bestaetigt. Bisher erfuhr das niemand — der Kaufpunkt galt nach
-    der ersten Meldung fuer die Woche als erledigt. Rund jeder siebte
-    gemeldete Ausbruch verlor so still seine Bestaetigung.
-
-    Der Nachtrag ist fuer sich allein handelbar: Kurs, Stop und Ziel
-    stehen auf dem AKTUELLEN Stand. Die erste Meldung von vor drei
-    Stunden zurueckzusuchen waere umstaendlich, und ihre Zahlen sind
-    inzwischen ueberholt."""
-    if not treffer:
-        return True
-    # Nur die KUERZEL in den Titel (Mathias, 30.07.2026). Firmennamen
-    # sind dort zu lang — "Alpine Income Property Trust Inc" allein sind
-    # 31 Zeichen, und die Push-Vorschau schneidet ab. Der Name steht
-    # ohnehin in der ersten Zeile jedes Eintrags.
-    titel = (", ".join(t["ticker"] for t in treffer)
-             + ": Vol jetzt bestätigt" + tagesanteil_titel(treffer))
-    if len(treffer) == 1:
-        absaetze = [format_treffer(treffer[0])]
-    else:
-        absaetze = [f"{i}. {format_treffer(t)}"
-                    for i, t in enumerate(treffer, 1)]
-    return sende(topic, titel, absaetze, "high")
-
-
 def push(topic: str, treffer: list[dict]) -> bool:
     """Schickt die Meldung und sagt ehrlich, ob sie angekommen ist.
 
@@ -2601,17 +2670,24 @@ def main():
                     if t["vol_ok"] is True:
                         schon_gemeldet.add(t["key_best"])
 
-            # --- Nachtrag: Volumen hat nachgezogen ---------------------
+            # --- Volumen hat nachgezogen: als GEWOEHNLICHE Meldung -----
+            # (Mathias, 18.08.2026: Gerhards Regel meinte nur
+            # UNBESTAETIGTE Volumina. Eine nachgezogene Bestaetigung ist
+            # eine vollwertige bestaetigte Meldung und soll auch so
+            # aussehen - Titel "N bestätigt" wie immer, kein eigener
+            # Nachtrags-Wortlaut mehr.) Getrennt bleibt nur
+            # der Schluessel-Haushalt: hier wird key_best vermerkt.
             if nachtrag and jetzt_s >= sperre_bis:
-                print(f"\n{len(nachtrag)} Ausbruch/Ausbrüche haben die "
-                      f"Volumenbestätigung nachgereicht:")
+                print(f"\n{len(nachtrag)} Ausbruch/Ausbrüche: Volumen hat "
+                      f"nachgezogen — Meldung wie ein gewöhnlicher "
+                      f"bestätigter Ausbruch:")
                 for t in nachtrag:
                     print("  " + format_treffer(t).replace("\n", "\n  ") + "\n")
                 if args.dry_run:
                     print("(Dry-Run — kein Nachtrag gesendet)")
                     for t in nachtrag:
                         schon_gemeldet.add(t["key_best"])
-                elif push_nachtrag(topic, nachtrag):
+                elif push(topic, nachtrag):
                     heute_s = date.today().isoformat()
                     for t in nachtrag:
                         schon_gemeldet.add(t["key_best"])
