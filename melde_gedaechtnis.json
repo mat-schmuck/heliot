@@ -34,7 +34,7 @@
     "PGC|1": "draussen",
     "HG|1": "drin",
     "BHP|2": "drin",
-    "XNCR|1": "drin",
+    "XNCR|1": "draussen",
     "VBNK|1": "drin",
     "CRNX|1": "drin",
     "AMG|1": "drin",
@@ -115,6 +115,7 @@
     "AMG|1": "2026-08-18",
     "BEST|AMG|1": "2026-08-18",
     "VBNK|1": "2026-08-18",
-    "BEST|VBNK|1": "2026-08-18"
+    "BEST|VBNK|1": "2026-08-18",
+    "UEBER|XNCR|1": "2026-08-18"
   }
 }
