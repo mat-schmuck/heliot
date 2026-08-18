@@ -154,6 +154,11 @@ jobs:
             python trigger_logbuch.py --vereinen "$LOGBUCH" || true
             git add -A -- ntfy_ids.json 2>/dev/null || true
             git add -A -- trigger_logbuch.jsonl 2>/dev/null || true
+            # Das uebergabefeste Melde-Gedaechtnis (18.08.2026): Der
+            # Waechter committet es zwar schon IM Lauf nach jeder
+            # Meldung, aber falls ein Push dort scheiterte, holt es
+            # dieser Endkommit nach.
+            git add -A -- melde_gedaechtnis.json 2>/dev/null || true
             if git diff --cached --quiet; then
               echo "Keine neuen Meldungen zu merken."
               break

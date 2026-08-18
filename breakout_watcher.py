@@ -169,6 +169,9 @@ def merke_kurse(quotes: dict, quelle: str):
 
 QUOTE_URL = "https://api.twelvedata.com/quote"
 STATE_FILE = Path("watcher_state.json")
+# Dieselbe Struktur, im REPO eingecheckt — die uebergabefeste Fassung
+# des Melde-Gedaechtnisses (siehe load_state/_repo_sichern).
+REPO_STATE = "melde_gedaechtnis.json"
 
 # Volumen-Faktor je Strategie (Vielfaches des Ø20-Tage-Volumens)
 # Alle Schwellwerte kommen seit 28.07.2026 aus config.py — der EINEN
@@ -464,6 +467,44 @@ def htf_grenze() -> str:
     return (date.today() - timedelta(days=1)).isoformat()
 
 
+def _staat_aus(pfad) -> dict:
+    """Eine Zustandsdatei lesen, leer bei jedem Fehler."""
+    try:
+        return json.loads(Path(pfad).read_text())
+    except Exception:
+        return {}
+
+
+def _gemeldet_filtern(gemeldet: dict, heute: str) -> dict:
+    """Die Fristen des Melde-Gedaechtnisses, an EINER Stelle.
+
+    Drei Fristen, je nach Vorzeichen im Schluessel:
+      HTF|      taeglich (Gerhard, 29.07.2026)
+      INSIDER|  30 Tage — AUSDRUECKLICH NICHT der Freitags-Putz (Mathias,
+                18.08.2026: "bereits erfolgte Meldungen sollen nicht
+                wieder angezeigt werden"). Ein Insider-Fund bleibt bis zu
+                zehn Handelstage im Fenster; mit der Wochenfrist waere
+                derselbe Grosskauf am Montag der Folgewoche wieder
+                gemeldet worden. 30 Tage ueberdauern jedes Fenster.
+      sonst     Wochenfrist bis zum letzten Freitags-Putz.
+    """
+    grenze = letzter_putz()
+    grenze_htf = htf_grenze()
+    grenze_insider = (date.today() - timedelta(days=30)).isoformat()
+    raus = {}
+    for k, d in gemeldet.items():
+        k_s, d_s = str(k), str(d)
+        if INSIDER_MARKE in k_s:
+            if d_s > grenze_insider:
+                raus[k_s] = d_s
+        elif HTF_MARKE in k_s:
+            if d_s > grenze_htf:
+                raus[k_s] = d_s
+        elif d_s > grenze:
+            raus[k_s] = d_s
+    return raus
+
+
 def load_state() -> dict:
     """Melde-Gedaechtnis im Wochen-Rhythmus des Freitags-Putzes.
 
@@ -477,35 +518,73 @@ def load_state() -> dict:
     eingetragenen Alarm-Liste. Gap-and-Go-Schluessel tragen zusaetzlich
     das Datum im Namen und sind je Tag einmalig."""
     heute = date.today().isoformat()
-    if STATE_FILE.exists():
-        try:
-            data = json.loads(STATE_FILE.read_text())
-            gemeldet = data.get("gemeldet", {})
-            if isinstance(gemeldet, list):
-                # Altes Tagesformat einmalig uebernehmen
-                gemeldet = {k: data.get("tag", heute) for k in gemeldet}
-            grenze = letzter_putz()
-            grenze_htf = htf_grenze()
-            # Zwei Fristen: High and Tight Flag TAEGLICH (Gerhard,
-            # 29.07.2026), alles andere unveraendert im Wochentakt des
-            # Freitags-Putzes.
-            # DAS FENSTER-GEDAECHTNIS gilt nur fuer DIESEN Handelstag
-            # (Mathias, 13.08.2026). Ueber Nacht bewegt sich der Kurs
-            # ohnehin, und der Kaufpunkt selbst wandert mit dem
-            # Musterdeckel - ein gestriger Zustand sagt nichts mehr.
-            fenster = data.get("fenster", {})
-            if data.get("fenster_tag") != heute:
-                fenster = {}
-            return {"fenster_tag": heute, "fenster": fenster, "gemeldet": {
-                k: d for k, d in gemeldet.items()
-                # HTF_MARKE mit 'in' statt 'startswith': Der Nachtrag-
-                # Schluessel lautet 'BEST|HTF|AAPL|1', die Flaggen-Frist
-                # muss auch fuer ihn gelten (29.07.2026).
-                if str(d) > (grenze_htf if HTF_MARKE in str(k)
-                             else grenze)}}
-        except Exception:
-            pass
-    return {"fenster_tag": heute, "fenster": {}, "gemeldet": {}}
+    # ZWEI QUELLEN, VEREINIGT (18.08.2026, nach dem Montags-Befund):
+    #   1. Der Actions-Cache (STATE_FILE nach dem Wiederherstellen).
+    #   2. Die im Repo eingecheckte Fassung (REPO_STATE) — die schreibt
+    #      der laufende Waechter nach jeder Meldung sofort ins Repo.
+    #
+    # WARUM: Der Cache wird erst am LAUFENDE gesichert. Die Schlussstunde
+    # startet um 21:26, die Tagwache sichert um 21:28 — die Schlussstunde
+    # bekam also an JEDEM Handelstag den Stand vom Vortag und meldete den
+    # halben Tag neu. Am 17.08.2026 nachgewiesen: Beide Laeufe stellten
+    # denselben Cache der FREITAG-Schlussstunde wieder her
+    # (watcher-state-31833222867); der Insider-Grosskauf RSG und zehn
+    # Ausbrueche kamen doppelt. Der Checkout dagegen ist beim Start
+    # frisch und enthaelt alles, was der Vorgaenger IM Lauf committet
+    # hat. Union statt Vorrang: Verlieren ist teurer als Behalten.
+    gemeldet, fenster = {}, {}
+    for quelle in (REPO_STATE, STATE_FILE):
+        data = _staat_aus(quelle)
+        g = data.get("gemeldet", {})
+        if isinstance(g, list):        # Altes Tagesformat einmalig
+            g = {k: data.get("tag", heute) for k in g}
+        gemeldet.update(g)
+        # DAS FENSTER-GEDAECHTNIS gilt nur fuer DIESEN Handelstag
+        # (Mathias, 13.08.2026) — gestrige Zustaende sagen nichts mehr.
+        if data.get("fenster_tag") == heute:
+            fenster.update(data.get("fenster", {}))
+    return {"fenster_tag": heute, "fenster": fenster,
+            "gemeldet": _gemeldet_filtern(gemeldet, heute)}
+
+
+_repo_stand = {"keys": None, "zeit": 0.0}
+
+
+def _repo_sichern(state: dict):
+    """Das Melde-Gedaechtnis SOFORT ins Repo — best effort.
+
+    Der Actions-Cache sichert erst am Laufende und kommt fuer die
+    Uebergabe zu spaet (siehe load_state). Deshalb committet der Waechter
+    nach jeder Meldung; die Schlussstunde findet den Stand dann im
+    Checkout vor. Gedrosselt auf eine Sicherung je 60 Sekunden und nur
+    bei veraenderter Meldungsmenge; jeder Fehler ist eine Protokollzeile
+    und KEIN Abbruch — im Zweifel greift der Endkommit des Workflows."""
+    keys = frozenset(state.get("gemeldet", {}))
+    jetzt = time.time()
+    if keys == _repo_stand["keys"] or jetzt - _repo_stand["zeit"] < 60:
+        return
+    _repo_stand["keys"] = keys
+    _repo_stand["zeit"] = jetzt
+    try:
+        Path(REPO_STATE).write_text(json.dumps(state, indent=2))
+        import subprocess
+        g = ["git", "-c", "user.name=breakout-watcher",
+             "-c", "user.email=actions@users.noreply.github.com"]
+        subprocess.run(g + ["add", REPO_STATE], capture_output=True, timeout=30)
+        r = subprocess.run(g + ["commit", "-m",
+                                "Melde-Gedächtnis (im Lauf gesichert)"],
+                           capture_output=True, timeout=30)
+        if r.returncode != 0:
+            return                     # nichts zu committen
+        subprocess.run(g + ["pull", "--rebase", "--autostash", "origin",
+                            "main"], capture_output=True, timeout=60)
+        p = subprocess.run(g + ["push", "origin", "main"],
+                           capture_output=True, timeout=60)
+        if p.returncode != 0:
+            print("  Melde-Gedächtnis: Push ins Repo fehlgeschlagen — "
+                  "der Endkommit des Laufs holt es nach.")
+    except Exception as e:
+        print(f"  Melde-Gedächtnis: Repo-Sicherung übersprungen ({e}).")
 
 
 def save_state(state: dict):
@@ -513,6 +592,7 @@ def save_state(state: dict):
         STATE_FILE.write_text(json.dumps(state, indent=2))
     except Exception as e:
         print(f"Zustand konnte nicht gespeichert werden: {e}")
+    _repo_sichern(state)
 
 
 # ---------------------------------------------------------------------------

@@ -497,6 +497,54 @@ def block_e():
     pruefe("E", "Ein Wiedereintritt löst den Wochenriegel wieder",
            "schon_gemeldet.discard(k)" in quelle_loop)
 
+    # DAS UEBERGABEFESTE MELDE-GEDAECHTNIS (18.08.2026, Fall RSG/CRNX):
+    # Die Schlussstunde stellte an jedem Handelstag den Cache vom VORTAG
+    # wieder her (gesichert wird erst am Laufende) und meldete den halben
+    # Tag neu — am 17.08. nachgewiesen an zehn doppelten Ausbruechen und
+    # dem doppelten Insider-Grosskauf. Jetzt: Union aus Repo-Datei und
+    # Cache, Sicherung ins Repo nach jeder Meldung.
+    import tempfile as _tf2
+    import pathlib as _pl2
+    import json as _json2
+    from datetime import date as _d2, timedelta as _td2
+    heute_s = _d2.today().isoformat()
+    alt_cache, alt_repo = bw.STATE_FILE, bw.REPO_STATE
+    with _tf2.TemporaryDirectory() as _o2:
+        _op2 = _pl2.Path(_o2)
+        bw.STATE_FILE = _op2 / "cache.json"
+        bw.REPO_STATE = str(_op2 / "repo.json")
+        try:
+            # Cache alt (kennt A), Repo frisch (kennt B) -> beide bleiben.
+            bw.STATE_FILE.write_text(_json2.dumps(
+                {"gemeldet": {"AAA|1": heute_s}}))
+            _pl2.Path(bw.REPO_STATE).write_text(_json2.dumps(
+                {"gemeldet": {"BBB|1": heute_s}}))
+            st = bw.load_state()
+            pruefe("E", "Melde-Gedächtnis vereinigt Cache und Repo-Datei",
+                   set(st["gemeldet"]) == {"AAA|1", "BBB|1"},
+                   sorted(st["gemeldet"]))
+            # Insider-Schluessel ueberleben den Freitags-Putz (30 Tage).
+            vor10 = (_d2.today() - _td2(days=10)).isoformat()
+            vor40 = (_d2.today() - _td2(days=40)).isoformat()
+            bw.STATE_FILE.write_text(_json2.dumps({"gemeldet": {
+                bw.INSIDER_MARKE + "RSG|pfad_a|0": vor10,
+                bw.INSIDER_MARKE + "ALT|pfad_a|0": vor40,
+                "AAA|1": vor10}}))
+            _pl2.Path(bw.REPO_STATE).write_text("{}")
+            st = bw.load_state()
+            pruefe("E", "Insider-Meldung überlebt den Freitags-Putz",
+                   bw.INSIDER_MARKE + "RSG|pfad_a|0" in st["gemeldet"])
+            pruefe("E", "Insider-Meldung verfällt nach 30 Tagen",
+                   bw.INSIDER_MARKE + "ALT|pfad_a|0" not in st["gemeldet"])
+            pruefe("E", "Gewöhnliche Schlüssel behalten die Wochenfrist",
+                   "AAA|1" not in st["gemeldet"])
+        finally:
+            bw.STATE_FILE, bw.REPO_STATE = alt_cache, alt_repo
+    quelle_w = pathlib.Path(".github/workflows/watcher.yml").read_text(
+        encoding="utf-8")
+    pruefe("E", "Der Endkommit des Laufs sichert das Melde-Gedächtnis mit",
+           "melde_gedaechtnis.json" in quelle_w)
+
     # DIE EINTRITTSKARTE: kam der Kaufpunkt von UNTEN? (Mathias,
     # 14.08.2026). Ohne sie meldet der Waechter Ruecksetzer-Marken, unter
     # denen der Kurs seit Wochen gar nicht war. Gemessen an diesem Tag:
