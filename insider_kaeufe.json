@@ -1,5 +1,5 @@
 {
- "stand": "2026-08-17",
+ "stand": "2026-08-18",
  "gelesen": [
   "0000002488-26-000141",
   "0000004977-26-000098",
@@ -2877,92 +2877,6 @@
     "rolle": "Direktor"
    }
   ],
-  "HEPA": [
-   {
-    "insider": "Appajosyula Sireesh",
-    "wert_dollar": 100000.0,
-    "datum": "2026-08-03",
-    "transaktionscode": "P",
-    "rolle": "Chief Operating Officer"
-   },
-   {
-    "insider": "LoPriore Vincent S",
-    "wert_dollar": 400000.0,
-    "datum": "2026-08-03",
-    "transaktionscode": "P",
-    "rolle": "Executive Chairman"
-   },
-   {
-    "insider": "LoPriore Vincent S",
-    "wert_dollar": 100000.0,
-    "datum": "2026-08-03",
-    "transaktionscode": "P",
-    "rolle": "Executive Chairman"
-   },
-   {
-    "insider": "Appajosyula Sireesh",
-    "wert_dollar": 100000.0,
-    "datum": "2026-08-03",
-    "transaktionscode": "P",
-    "rolle": "Chief Operating Officer"
-   },
-   {
-    "insider": "Purcell Michael J.",
-    "wert_dollar": 100000.0,
-    "datum": "2026-08-03",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "Stetz Gary S.",
-    "wert_dollar": 100000.0,
-    "datum": "2026-08-03",
-    "transaktionscode": "P",
-    "rolle": "Interim CEO"
-   },
-   {
-    "insider": "Stetz Gary S. II",
-    "wert_dollar": 25000.0,
-    "datum": "2026-08-03",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "LoPriore Vincent S",
-    "wert_dollar": 400000.0,
-    "datum": "2026-08-03",
-    "transaktionscode": "P",
-    "rolle": "Executive Chairman"
-   },
-   {
-    "insider": "LoPriore Vincent S",
-    "wert_dollar": 100000.0,
-    "datum": "2026-08-03",
-    "transaktionscode": "P",
-    "rolle": "Executive Chairman"
-   },
-   {
-    "insider": "Purcell Michael J.",
-    "wert_dollar": 100000.0,
-    "datum": "2026-08-03",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "Stetz Gary S.",
-    "wert_dollar": 100000.0,
-    "datum": "2026-08-03",
-    "transaktionscode": "P",
-    "rolle": "Interim CEO"
-   },
-   {
-    "insider": "Stetz Gary S. II",
-    "wert_dollar": 25000.0,
-    "datum": "2026-08-03",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   }
-  ],
   "APTV": [
    {
     "insider": "Mahoney Sean O",
@@ -4644,7 +4558,6 @@
   "CORRIGAN JACK E": "Direktor",
   "Battles Timothy Southgate": "Direktor",
   "LORD ALBERT L": "Direktor",
-  "Appajosyula Sireesh": "Chief Operating Officer",
   "Mahoney Sean O": "Direktor",
   "Artikkhodjaev Jakhongir Abidovich": "Insider",
   "Grimaldo Joseph F": "Direktor",
@@ -4684,10 +4597,6 @@
   "Gilstrap Charles A": "SVP, Treasury, Tax & CAO",
   "Lawson Hugh J": "Co-Chief Executive Officer",
   "HRT FINANCIAL LP": "Insider",
-  "LoPriore Vincent S": "Executive Chairman",
-  "Purcell Michael J.": "Direktor",
-  "Stetz Gary S.": "Interim CEO",
-  "Stetz Gary S. II": "Direktor",
   "Hudson Steven Kenneth": "Chief Executive Officer",
   "KAHN MICHAEL DAVID": "Direktor",
   "Kapenstein James M.": "SEE REMARKS",
