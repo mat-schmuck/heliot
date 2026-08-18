@@ -585,9 +585,14 @@ def block_e():
     pruefe("E", "Der Tages-Zwischenspeicher kommt vor jedem Netzabruf",
            bw.td_kerze_nachladen("PRUEF", "2026-08-17") == {"Close": 9.99})
     quelle_bw = pathlib.Path("breakout_watcher.py").read_text(encoding="utf-8")
-    pruefe("E", "Kein eigener Nachtrags-Wortlaut mehr (Mathias, 18.08.)",
-           "Vol jetzt best" not in quelle_bw
-           and "def push_nachtrag" not in quelle_bw)
+    # ENDSTAND nach Mathias' Klarstellung vom 18.08.2026 ("dort hat es
+    # ja einen Sinn"): Der Nachtrag behaelt seinen eigenen Wortlaut,
+    # denn er kennzeichnet die Bestaetigung einer schon gemeldeten
+    # unbestaetigten Meldung. Wer das aendern will, braucht einen neuen
+    # Beschluss von Mathias oder Gerhard.
+    pruefe("E", "Der Nachtrag behält seinen eigenen Wortlaut (18.08.)",
+           "Vol jetzt best" in quelle_bw
+           and "def push_nachtrag" in quelle_bw)
 
     quelle_w = pathlib.Path(".github/workflows/watcher.yml").read_text(
         encoding="utf-8")

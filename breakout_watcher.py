@@ -2039,6 +2039,45 @@ def darf_unbestaetigt_melden(res: dict) -> bool:
     return any(n in UNBESTAETIGT_ERLAUBT for n in namen)
 
 
+def push_nachtrag(topic: str, treffer: list[dict]) -> bool:
+    """Meldet, dass ein zuvor UNBESTAETIGT gemeldeter Ausbruch inzwischen
+    die Volumenbestaetigung bekommen hat.
+
+    Warum es das gibt (nachgemessen 29.07.2026,
+    volumen_verlaesslichkeit.py): Ein 'nicht bestaetigt' um 10:00 New
+    Yorker Zeit wird in 14,7 % der Faelle bis zum Handelsschluss doch
+    noch bestaetigt. Seit Gerhards Regel vom 12.08.2026 betrifft das nur
+    noch die Muster, die unbestaetigt melden duerfen — genau dort sagt
+    der eigene Wortlaut "Vol jetzt bestätigt", dass dies die
+    Bestaetigung der frueheren Meldung ist und kein neuer Ausbruch.
+
+    ZUR GESCHICHTE, damit das niemand wieder umbaut: Am 18.08.2026
+    vormittags auf Mathias' Wunsch in eine gewoehnliche Meldung
+    verwandelt, am selben Tag nach seiner Klarstellung zurueckgeholt —
+    sein Anliegen war ein Missverstaendnis gewesen (er glaubte, spaeter
+    bestaetigte Meldungen wuerden mit den Unbestaetigten unterdrueckt;
+    unterdrueckt wird aber nichts, beides kommt an). Wortlaut: "dort hat
+    es ja einen Sinn."
+
+    Der Nachtrag ist fuer sich allein handelbar: Kurs, Stop und Ziel
+    stehen auf dem AKTUELLEN Stand. Die erste Meldung von vor drei
+    Stunden zurueckzusuchen waere umstaendlich, und ihre Zahlen sind
+    inzwischen ueberholt."""
+    if not treffer:
+        return True
+    # Nur die KUERZEL in den Titel (Mathias, 30.07.2026). Firmennamen
+    # sind dort zu lang und die Push-Vorschau schneidet ab; der Name
+    # steht ohnehin in der ersten Zeile jedes Eintrags.
+    titel = (", ".join(t["ticker"] for t in treffer)
+             + ": Vol jetzt bestätigt" + tagesanteil_titel(treffer))
+    if len(treffer) == 1:
+        absaetze = [format_treffer(treffer[0])]
+    else:
+        absaetze = [f"{i}. {format_treffer(t)}"
+                    for i, t in enumerate(treffer, 1)]
+    return sende(topic, titel, absaetze, "high")
+
+
 def push(topic: str, treffer: list[dict]) -> bool:
     """Schickt die Meldung und sagt ehrlich, ob sie angekommen ist.
 
@@ -2670,24 +2709,22 @@ def main():
                     if t["vol_ok"] is True:
                         schon_gemeldet.add(t["key_best"])
 
-            # --- Volumen hat nachgezogen: als GEWOEHNLICHE Meldung -----
-            # (Mathias, 18.08.2026: Gerhards Regel meinte nur
-            # UNBESTAETIGTE Volumina. Eine nachgezogene Bestaetigung ist
-            # eine vollwertige bestaetigte Meldung und soll auch so
-            # aussehen - Titel "N bestätigt" wie immer, kein eigener
-            # Nachtrags-Wortlaut mehr.) Getrennt bleibt nur
-            # der Schluessel-Haushalt: hier wird key_best vermerkt.
+            # --- Nachtrag: Volumen hat nachgezogen ---------------------
+            # Eigener Wortlaut MIT ABSICHT (Mathias, 18.08.2026, nach
+            # kurzem Hin und Her ausdruecklich bestaetigt: "dort hat es
+            # ja einen Sinn"): Diese Aktien wurden bereits unbestaetigt
+            # gemeldet, und "Vol jetzt bestätigt" sagt, dass dies die
+            # Bestaetigung von vorhin ist und kein zweiter Ausbruch.
             if nachtrag and jetzt_s >= sperre_bis:
-                print(f"\n{len(nachtrag)} Ausbruch/Ausbrüche: Volumen hat "
-                      f"nachgezogen — Meldung wie ein gewöhnlicher "
-                      f"bestätigter Ausbruch:")
+                print(f"\n{len(nachtrag)} Ausbruch/Ausbrüche haben die "
+                      f"Volumenbestätigung nachgereicht:")
                 for t in nachtrag:
                     print("  " + format_treffer(t).replace("\n", "\n  ") + "\n")
                 if args.dry_run:
                     print("(Dry-Run — kein Nachtrag gesendet)")
                     for t in nachtrag:
                         schon_gemeldet.add(t["key_best"])
-                elif push(topic, nachtrag):
+                elif push_nachtrag(topic, nachtrag):
                     heute_s = date.today().isoformat()
                     for t in nachtrag:
                         schon_gemeldet.add(t["key_best"])
