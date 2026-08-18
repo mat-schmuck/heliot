@@ -27,7 +27,13 @@
     "SFST|1": "drin",
     "SNX|1": "drin",
     "ASC|2": "drin",
-    "OSCR|1": "drin"
+    "OSCR|1": "drin",
+    "PTGX|1": "drin",
+    "CBLL|1": "drin",
+    "VLO|1": "drin",
+    "PGC|1": "draussen",
+    "HG|1": "drin",
+    "BHP|2": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -92,6 +98,12 @@
     "SNX|1": "2026-08-18",
     "BEST|SNX|1": "2026-08-18",
     "OSCR|1": "2026-08-18",
-    "BEST|OSCR|1": "2026-08-18"
+    "BEST|OSCR|1": "2026-08-18",
+    "PTGX|1": "2026-08-18",
+    "BEST|PTGX|1": "2026-08-18",
+    "CBLL|1": "2026-08-18",
+    "BEST|CBLL|1": "2026-08-18",
+    "BHP|2": "2026-08-18",
+    "BEST|BHP|2": "2026-08-18"
   }
 }
