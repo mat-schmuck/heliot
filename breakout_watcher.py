@@ -2045,6 +2045,50 @@ def darf_unbestaetigt_melden(res: dict) -> bool:
     return any(n in UNBESTAETIGT_ERLAUBT for n in namen)
 
 
+def gruppiere_je_aktie(treffer: list[dict]) -> list[list[dict]]:
+    """Treffer nach Aktie buendeln, Reihenfolge des ersten Auftretens."""
+    gruppen: dict = {}
+    for t in treffer:
+        gruppen.setdefault(t["ticker"], []).append(t)
+    return list(gruppen.values())
+
+
+def format_aktie(gruppe: list[dict]) -> str:
+    """EINE Meldung je Aktie, egal wie viele Kaufpunkte gerissen sind.
+
+    Mathias am 19.08.2026, nachdem ASC zur Eroeffnung zwei getrennte
+    Meldungen bekommen hatte: "Buendeln mehrerer Kaufpunkte in einer
+    Meldung pro Aktie ist definitiv sinnvoller." Der Nachtscan vergibt
+    je Aktie bis zu drei Kaufpunkte auf verschiedenen Preisen; reisst
+    ein Eroeffnungssprung mehrere zugleich, stand dieselbe Aktie
+    mehrfach in der Nachricht.
+
+    EIN Kaufpunkt: unveraendert die gewohnte Meldung. MEHRERE: eine
+    Kopfzeile ("N Kaufpunkte gerissen", samt Zahlen-Termin), darunter je
+    Kaufpunkt seine gewohnten Zeilen, vorangestellt der Mustername mit
+    Doppelpunkt - Stop und Ziel sind je Kaufpunkt verschieden und
+    bleiben deshalb je Kaufpunkt stehen. Der Termin-Nachsatz steht nur
+    EINMAL am Ende statt nach jedem Kaufpunkt."""
+    if len(gruppe) == 1:
+        return format_treffer(gruppe[0])
+    erster = gruppe[0]
+    zeilen = [kopfzeile(erster["ticker"], erster.get("firma", ""),
+                        f"{len(gruppe)} Kaufpunkte gerissen")]
+    nachsatz = termin_nachsatz(erster.get("ticker"))
+    for t in gruppe:
+        koerper = format_treffer(t).split("\n")[1:]
+        if nachsatz and koerper and koerper[-1] == nachsatz:
+            koerper = koerper[:-1]
+        namen = t.get("strategien") or [t["strategie"]]
+        label = ", ".join(STRATEGIE_VOLL.get(n, n) for n in namen)
+        if koerper:
+            koerper[0] = f"{label}: {koerper[0]}"
+        zeilen.extend(koerper)
+    if nachsatz:
+        zeilen.append(nachsatz)
+    return "\n".join(zeilen)
+
+
 def push_nachtrag(topic: str, treffer: list[dict]) -> bool:
     """Meldet, dass ein zuvor UNBESTAETIGT gemeldeter Ausbruch inzwischen
     die Volumenbestaetigung bekommen hat.
@@ -2074,13 +2118,16 @@ def push_nachtrag(topic: str, treffer: list[dict]) -> bool:
     # Nur die KUERZEL in den Titel (Mathias, 30.07.2026). Firmennamen
     # sind dort zu lang und die Push-Vorschau schneidet ab; der Name
     # steht ohnehin in der ersten Zeile jedes Eintrags.
-    titel = (", ".join(t["ticker"] for t in treffer)
+    # Jedes Kuerzel nur einmal im Titel, auch wenn mehrere Kaufpunkte
+    # derselben Aktie nachziehen (Buendelung, Mathias 19.08.2026).
+    titel = (", ".join(dict.fromkeys(t["ticker"] for t in treffer))
              + ": Vol jetzt bestätigt" + tagesanteil_titel(treffer))
-    if len(treffer) == 1:
-        absaetze = [format_treffer(treffer[0])]
+    gruppen = gruppiere_je_aktie(treffer)
+    if len(gruppen) == 1:
+        absaetze = [format_aktie(gruppen[0])]
     else:
-        absaetze = [f"{i}. {format_treffer(t)}"
-                    for i, t in enumerate(treffer, 1)]
+        absaetze = [f"{i}. {format_aktie(g)}"
+                    for i, g in enumerate(gruppen, 1)]
     return sende(topic, titel, absaetze, "high")
 
 
@@ -2090,12 +2137,20 @@ def push(topic: str, treffer: list[dict]) -> bool:
     Der Rueckgabewert ist wichtig: Frueher wurde der Zustand auch dann als
     'gemeldet' gespeichert, wenn der Push fehlschlug - der Treffer waere
     danach NIE wieder gemeldet worden."""
-    bestaetigt = [t for t in treffer if t["vol_ok"] is True]
-    rest = [t for t in treffer if t["vol_ok"] is not True]
+    # JE AKTIE EIN BLOCK (Mathias, 19.08.2026): Alle gerissenen
+    # Kaufpunkte einer Aktie stehen unter einer Nummer. Bestaetigte
+    # Aktien zuerst; eine Aktie zaehlt als bestaetigt, sobald EINER
+    # ihrer Kaufpunkte die Volumenbestaetigung hat. Auch der Titel
+    # zaehlt seither AKTIEN, nicht Kaufpunkte - "2 bestätigt" heisst
+    # zwei Aktien, egal wie viele Marken sie gerissen haben.
+    gruppen = gruppiere_je_aktie(treffer)
+    bestaetigt = [g for g in gruppen
+                  if any(t["vol_ok"] is True for t in g)]
+    rest = [g for g in gruppen if g not in bestaetigt]
     # Durchlaufende Nummern ueber alle Portionen hinweg — beim Vorlesen
     # soll die zweite Nachricht mit '6.' weitergehen, nicht wieder mit '1.'.
     absaetze = [f"{i}. {block}" for i, block in
-                enumerate([format_treffer(t) for t in bestaetigt + rest], 1)]
+                enumerate([format_aktie(g) for g in bestaetigt + rest], 1)]
     # Titel am 24.07.2026 wiederhergestellt: Ohne Title-Kopfzeile setzt
     # ntfy einen generischen Titel (die Themen-Adresse) ein — das war
     # schlimmer als das am 23.07. beanstandete 'Wortgeklingel'.
@@ -2106,7 +2161,7 @@ def push(topic: str, treffer: list[dict]) -> bool:
     # keine Luecke (Mathias, 13.08.2026 — gebaut, vorgefuehrt, verworfen):
     # "Die offenen wollen wir nur bei bestimmten Mustern wissen, d.h.
     # kommt die Sammelmeldung wirklich durcheinander."
-    # Der Titel zaehlt bestaetigte und offene Treffer. Wie viele 'offen'
+    # Der Titel zaehlt bestaetigte und offene AKTIEN. Wie viele 'offen'
     # sind, haengt seit Gerhards Regel vom 12.08.2026 davon ab, welche
     # Muster ueberhaupt unbestaetigt gemeldet werden duerfen — die Zahl
     # ist also schon erklaerungsbeduerftig. Eine dritte, ganz anders

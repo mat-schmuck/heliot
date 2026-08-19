@@ -337,6 +337,61 @@ def block_e():
     pruefe("E", "'nicht verifizierbar' faellt nicht mit 'nicht bestaetigt' zusammen",
            texte["nicht verifizierbar"] != texte["nicht bestaetigt"])
 
+    # Buendelung je Aktie (Mathias, 19.08.2026: "Buendeln mehrerer
+    # Kaufpunkte in einer Meldung pro Aktie ist definitiv sinnvoller",
+    # nachdem ASC zur Eroeffnung zwei getrennte Meldungen bekam)
+    kp1 = {**grund, "vol_ratio": 2.0, "vol_pct": 100.0, "vol_ok": True}
+    kp2 = {**grund, "strategie": "VCP", "strategien": ["VCP"],
+           "kaufpunkt": 111.2, "kurs": 111.3, "ueber_pct": 0.1,
+           "stop": 101.0, "ziel": 130.0,
+           "vol_ratio": 0.8, "vol_pct": -20.0, "vol_ok": False}
+    fremd = {**grund, "ticker": "ZWEI", "vol_ok": False}
+    gr = bw.gruppiere_je_aktie([kp1, fremd, kp2])
+    pruefe("E", "Gruppierung: gleiche Aktie zusammen, Reihenfolge bleibt",
+           len(gr) == 3 - 1 and len(gr[0]) == 2
+           and gr[0][0] is kp1 and gr[0][1] is kp2 and gr[1][0] is fremd)
+    pruefe("E", "Ein Kaufpunkt: Meldung unveraendert",
+           bw.format_aktie([kp1]) == bw.format_treffer(kp1))
+    buendel = bw.format_aktie([kp1, kp2])
+    bz = buendel.split("\n")
+    pruefe("E", "Buendel-Kopf sagt '2 Kaufpunkte gerissen', Kuerzel einmal",
+           "2 Kaufpunkte gerissen" in bz[0] and bz[0].count(grund["ticker"]) == 1)
+    pruefe("E", "Jeder Kaufpunkt traegt seinen Musternamen mit Doppelpunkt",
+           any(z.startswith("Darvas Box: Kaufpunkt") for z in bz)
+           and any(z.startswith("Volatility Contraction Pattern: Kaufpunkt")
+                   for z in bz))
+    pruefe("E", "Stop und Ziel stehen je Kaufpunkt (zweimal)",
+           sum(1 for z in bz if z.startswith("Stop ")) == 2)
+    _alt_ns = bw.termin_nachsatz
+    bw.termin_nachsatz = lambda tk: "Termin-Probe unsicher"
+    try:
+        mit_ns = bw.format_aktie([kp1, kp2])
+        pruefe("E", "Termin-Nachsatz steht im Buendel nur EINMAL, am Ende",
+               mit_ns.count("Termin-Probe") == 1
+               and mit_ns.split("\n")[-1] == "Termin-Probe unsicher")
+    finally:
+        bw.termin_nachsatz = _alt_ns
+    _gesendet = []
+    _alt_sende = bw.sende
+    bw.sende = lambda topic, titel, absaetze, prio="default": (
+        _gesendet.append((titel, list(absaetze))) or True)
+    try:
+        bw.push("probe", [fremd, kp2, kp1])
+        titel_p, abs_p = _gesendet[-1]
+        pruefe("E", "push: je Aktie ein Block, bestaetigte Aktie zuerst",
+               len(abs_p) == 2 and abs_p[0].startswith("1. " + grund["ticker"])
+               and abs_p[1].startswith("2. ZWEI"))
+        pruefe("E", "push-Titel zaehlt AKTIEN, nicht Kaufpunkte",
+               titel_p.startswith("1 bestätigt, 1 offen"), titel_p)
+        _gesendet.clear()
+        bw.push_nachtrag("probe", [kp1, kp2])
+        titel_n, abs_n = _gesendet[-1]
+        pruefe("E", "Nachtrag: Kuerzel nur einmal im Titel, ein Block",
+               titel_n.startswith(grund["ticker"] + ": Vol jetzt best")
+               and len(abs_n) == 1)
+    finally:
+        bw.sende = _alt_sende
+
     # Risiko-Formel
     import exit_regeln as ex
     r = ex.risiko_pct(100.0, 92.0)
