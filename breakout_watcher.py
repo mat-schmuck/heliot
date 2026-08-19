@@ -1931,6 +1931,33 @@ def kam_von_unten(res) -> bool:
     return float(vortag) < float(kp)
 
 
+def fallback_ohne_riss(res: dict) -> bool:
+    """True, wenn eine reine AUSWEICH-Marke heute gar nicht gerissen
+    wurde - dann wird sie in KEINEM Meldeweg angefasst.
+
+    Seit 19.08.2026 laufen die Ausweich-Marken des Nachtscans mit
+    (--alle im Workflow; Mathias: "Ich habe den anderen Schalter
+    gemeint" - gemeint war nach dem AEHR-Befund, dass Aktien ohne
+    Muster an ihren Marken melden sollen). Die Ruecksetzer-Marke
+    "Fallback: MA50-Pullback" liegt aber bauartbedingt UNTER dem Kurs:
+    GEMESSEN am 19.08.2026 standen 32 der 252 Aktien allein am
+    Dienstagsschluss im 0-5-%-Meldefenster ihrer Ruecksetzer-Marke,
+    ohne dass dort irgendetwas geschehen waere (die 52-Wochen- und
+    20-Tage-Marken dagegen: null - die liegen ueber dem Kurs und
+    melden nur echte Durchbrueche). Deshalb gilt hier dasselbe Prinzip
+    wie bei den uebersprungenen Kaufpunkten (Mathias, 14.08.2026):
+    Gefragt wird nicht, woher der Kaufpunkt kommt, sondern ob wirklich
+    etwas passiert ist - der Vortagesschluss muss UNTER der Marke
+    liegen. Ohne Vortagesschluss gilt still (114 gegen 6).
+
+    Muster-Kaufpunkte bleiben unberuehrt; deckt ein Kaufpunkt Muster
+    UND Marke ab (gleicher Preis), zaehlt das Muster."""
+    namen = res.get("strategien") or [res.get("strategie")]
+    if not all(str(n or "").startswith("Fallback") for n in namen):
+        return False
+    return not kam_von_unten(res)
+
+
 def melde_uebersprungen(res, wechsel, schon_gemeldet) -> bool:
     """Darf dieser uebersprungene Kaufpunkt gemeldet werden? DREI Riegel.
 
@@ -2632,6 +2659,13 @@ def main():
                 wechsel = fenster_wechsel(zustand, vorher)
                 if zustand:
                     fenster[fkey] = zustand
+                if fallback_ohne_riss(res):
+                    # Ausweich-Marke, ueber der der Kurs schon gestern
+                    # stand: kein Riss, keine Meldung - auf KEINEM der
+                    # drei Wege (auch kein "wieder im Einstiegsfenster"
+                    # fuer eine Marke, die nie angesagt war). Der
+                    # Fensterzustand ist oben trotzdem gepflegt.
+                    continue
                 if res.get("uebersprungen"):
                     res["key"] = uebersprungen_schluessel(item)
                     if melde_uebersprungen(res, wechsel, schon_gemeldet):

@@ -116,7 +116,7 @@ jobs:
             echo "Keine kaufpunkte.xlsx gefunden — erst den Scanner laufen lassen."
             exit 0
           fi
-          python breakout_watcher.py kaufpunkte.xlsx --dauerwache "${{ github.event.inputs.dauerwache || '0' }}"
+          python breakout_watcher.py kaufpunkte.xlsx --alle --dauerwache "${{ github.event.inputs.dauerwache || '0' }}"
 
       # Kennungen der verschickten Meldungen sichern. Ohne sie kann der
       # Freitags-Putz die Woche in der ntfy-App nicht wegraeumen — und

@@ -337,6 +337,29 @@ def block_e():
     pruefe("E", "'nicht verifizierbar' faellt nicht mit 'nicht bestaetigt' zusammen",
            texte["nicht verifizierbar"] != texte["nicht bestaetigt"])
 
+    # Ausweich-Marken laufen mit (Mathias, 19.08.2026: "Ich habe den
+    # anderen Schalter gemeint") - samt Von-unten-Riegel gegen die
+    # Ruecksetzer-Marken (gemessen: 32 Mitlaeufer im Fenster).
+    pruefe("E", "watcher.yml ueberwacht die Ausweich-Marken (--alle)",
+           "--alle" in pathlib.Path(".github/workflows/watcher.yml")
+           .read_text(encoding="utf-8"))
+    def _fb(strategie, vortag, kp=100.0, strategien=None):
+        return bw.fallback_ohne_riss(
+            {"strategie": strategie, "strategien": strategien,
+             "vortagesschluss": vortag, "kaufpunkt": kp})
+    pruefe("E", "Marke von unten gerissen: wird gemeldet",
+           _fb("Fallback: 52W-Hoch-Breakout", 99.0) is False)
+    pruefe("E", "Marke, ueber der der Kurs schon gestern stand: still",
+           _fb("Fallback: MA50-Pullback", 102.0) is True)
+    pruefe("E", "Marke ohne Vortagesschluss: still (114 gegen 6)",
+           _fb("Fallback: MA50-Pullback", None) is True)
+    pruefe("E", "Muster-Kaufpunkte bleiben vom Riegel unberuehrt",
+           _fb("Darvas Box", 102.0) is False)
+    pruefe("E", "Muster neben Marke am selben Preis: das Muster zaehlt",
+           _fb("Fallback: 20-Tage-Hoch (Pivot)", 102.0,
+               strategien=["Fallback: 20-Tage-Hoch (Pivot)",
+                           "Rectangle Top"]) is False)
+
     # Buendelung je Aktie (Mathias, 19.08.2026: "Buendeln mehrerer
     # Kaufpunkte in einer Meldung pro Aktie ist definitiv sinnvoller",
     # nachdem ASC zur Eroeffnung zwei getrennte Meldungen bekam)
