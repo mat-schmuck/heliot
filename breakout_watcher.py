@@ -2053,8 +2053,15 @@ def gruppiere_je_aktie(treffer: list[dict]) -> list[list[dict]]:
     return list(gruppen.values())
 
 
-def format_aktie(gruppe: list[dict]) -> str:
+def format_aktie(gruppe: list[dict], nummer: int | None = None) -> str:
     """EINE Meldung je Aktie, egal wie viele Kaufpunkte gerissen sind.
+
+    UNTERNUMMERN seit dem 19.08.2026 (Mathias, gleich nach dem Einbau
+    der Buendelung): "Fuege vor den einzelnen Kaufpunkten 1.1 bzw 1.2
+    hinzu, dann weiss man gleich, wo der Erste aufhoert und der zweite
+    beginnt." `nummer` ist die Blocknummer der Aktie in der Nachricht;
+    Kaufpunkt j traegt dann `nummer.j` vor dem Musternamen. Ohne
+    Blocknummer (einzelne Aktie im Nachtrag) zaehlt es als Block 1.
 
     Mathias am 19.08.2026, nachdem ASC zur Eroeffnung zwei getrennte
     Meldungen bekommen hatte: "Buendeln mehrerer Kaufpunkte in einer
@@ -2070,19 +2077,22 @@ def format_aktie(gruppe: list[dict]) -> str:
     bleiben deshalb je Kaufpunkt stehen. Der Termin-Nachsatz steht nur
     EINMAL am Ende statt nach jedem Kaufpunkt."""
     if len(gruppe) == 1:
-        return format_treffer(gruppe[0])
+        text = format_treffer(gruppe[0])
+        return f"{nummer}. {text}" if nummer else text
     erster = gruppe[0]
-    zeilen = [kopfzeile(erster["ticker"], erster.get("firma", ""),
-                        f"{len(gruppe)} Kaufpunkte gerissen")]
+    kopf = kopfzeile(erster["ticker"], erster.get("firma", ""),
+                     f"{len(gruppe)} Kaufpunkte gerissen")
+    zeilen = [f"{nummer}. {kopf}" if nummer else kopf]
+    basis = nummer if nummer else 1
     nachsatz = termin_nachsatz(erster.get("ticker"))
-    for t in gruppe:
+    for j, t in enumerate(gruppe, 1):
         koerper = format_treffer(t).split("\n")[1:]
         if nachsatz and koerper and koerper[-1] == nachsatz:
             koerper = koerper[:-1]
         namen = t.get("strategien") or [t["strategie"]]
         label = ", ".join(STRATEGIE_VOLL.get(n, n) for n in namen)
         if koerper:
-            koerper[0] = f"{label}: {koerper[0]}"
+            koerper[0] = f"{basis}.{j} {label}: {koerper[0]}"
         zeilen.extend(koerper)
     if nachsatz:
         zeilen.append(nachsatz)
@@ -2120,14 +2130,18 @@ def push_nachtrag(topic: str, treffer: list[dict]) -> bool:
     # steht ohnehin in der ersten Zeile jedes Eintrags.
     # Jedes Kuerzel nur einmal im Titel, auch wenn mehrere Kaufpunkte
     # derselben Aktie nachziehen (Buendelung, Mathias 19.08.2026).
-    titel = (", ".join(dict.fromkeys(t["ticker"] for t in treffer))
-             + ": Vol jetzt bestätigt" + tagesanteil_titel(treffer))
+    # Ziehen MEHRERE Volumina zugleich nach, sagt der Titel die Zahl
+    # ("2 Volumina jetzt bestätigt", Mathias 19.08.2026); bei einem
+    # bleibt es beim gewohnten "Vol jetzt bestätigt".
+    kuerzel = ", ".join(dict.fromkeys(t["ticker"] for t in treffer))
+    wortlaut = ("Vol jetzt bestätigt" if len(treffer) == 1
+                else f"{len(treffer)} Volumina jetzt bestätigt")
+    titel = f"{kuerzel}: {wortlaut}" + tagesanteil_titel(treffer)
     gruppen = gruppiere_je_aktie(treffer)
     if len(gruppen) == 1:
         absaetze = [format_aktie(gruppen[0])]
     else:
-        absaetze = [f"{i}. {format_aktie(g)}"
-                    for i, g in enumerate(gruppen, 1)]
+        absaetze = [format_aktie(g, i) for i, g in enumerate(gruppen, 1)]
     return sende(topic, titel, absaetze, "high")
 
 
@@ -2149,8 +2163,8 @@ def push(topic: str, treffer: list[dict]) -> bool:
     rest = [g for g in gruppen if g not in bestaetigt]
     # Durchlaufende Nummern ueber alle Portionen hinweg — beim Vorlesen
     # soll die zweite Nachricht mit '6.' weitergehen, nicht wieder mit '1.'.
-    absaetze = [f"{i}. {block}" for i, block in
-                enumerate([format_aktie(g) for g in bestaetigt + rest], 1)]
+    absaetze = [format_aktie(g, i)
+                for i, g in enumerate(bestaetigt + rest, 1)]
     # Titel am 24.07.2026 wiederhergestellt: Ohne Title-Kopfzeile setzt
     # ntfy einen generischen Titel (die Themen-Adresse) ein — das war
     # schlimmer als das am 23.07. beanstandete 'Wortgeklingel'.

@@ -356,10 +356,13 @@ def block_e():
     bz = buendel.split("\n")
     pruefe("E", "Buendel-Kopf sagt '2 Kaufpunkte gerissen', Kuerzel einmal",
            "2 Kaufpunkte gerissen" in bz[0] and bz[0].count(grund["ticker"]) == 1)
-    pruefe("E", "Jeder Kaufpunkt traegt seinen Musternamen mit Doppelpunkt",
-           any(z.startswith("Darvas Box: Kaufpunkt") for z in bz)
-           and any(z.startswith("Volatility Contraction Pattern: Kaufpunkt")
+    pruefe("E", "Jeder Kaufpunkt traegt Unternummer und Musternamen",
+           any(z.startswith("1.1 Darvas Box: Kaufpunkt") for z in bz)
+           and any(z.startswith("1.2 Volatility Contraction Pattern: Kaufpunkt")
                    for z in bz))
+    pruefe("E", "Unternummern folgen der Blocknummer (Block 3: 3.1, 3.2)",
+           "3.1 Darvas Box: Kaufpunkt" in bw.format_aktie([kp1, kp2], 3)
+           and "3.2 Volatility" in bw.format_aktie([kp1, kp2], 3))
     pruefe("E", "Stop und Ziel stehen je Kaufpunkt (zweimal)",
            sum(1 for z in bz if z.startswith("Stop ")) == 2)
     _alt_ns = bw.termin_nachsatz
@@ -381,14 +384,26 @@ def block_e():
         pruefe("E", "push: je Aktie ein Block, bestaetigte Aktie zuerst",
                len(abs_p) == 2 and abs_p[0].startswith("1. " + grund["ticker"])
                and abs_p[1].startswith("2. ZWEI"))
+        pruefe("E", "push: Unternummern im Buendel, keine beim Einzel-KP",
+               "1.1 " in abs_p[0] and "1.2 " in abs_p[0]
+               and "2.1 " not in abs_p[1])
         pruefe("E", "push-Titel zaehlt AKTIEN, nicht Kaufpunkte",
                titel_p.startswith("1 bestätigt, 1 offen"), titel_p)
         _gesendet.clear()
         bw.push_nachtrag("probe", [kp1, kp2])
         titel_n, abs_n = _gesendet[-1]
-        pruefe("E", "Nachtrag: Kuerzel nur einmal im Titel, ein Block",
-               titel_n.startswith(grund["ticker"] + ": Vol jetzt best")
+        pruefe("E", "Nachtrag mehrerer Volumina: Titel nennt die Zahl",
+               titel_n.startswith(grund["ticker"]
+                                  + ": 2 Volumina jetzt bestätigt")
                and len(abs_n) == 1)
+        pruefe("E", "Nachtrag-Buendel traegt die Unternummern 1.1/1.2",
+               "1.1 " in abs_n[0] and "1.2 " in abs_n[0])
+        _gesendet.clear()
+        bw.push_nachtrag("probe", [kp1])
+        titel_n1, abs_n1 = _gesendet[-1]
+        pruefe("E", "Nachtrag EINES Volumens: gewohntes 'Vol jetzt bestätigt'",
+               titel_n1.startswith(grund["ticker"] + ": Vol jetzt bestätigt")
+               and "1.1 " not in abs_n1[0])
     finally:
         bw.sende = _alt_sende
 
