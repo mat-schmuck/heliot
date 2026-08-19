@@ -1819,7 +1819,13 @@ def tagesanteil_titel(treffer: list[dict]) -> str:
     nur noch zu 5 %.
 
     Vor Handelsbeginn und nach Schluss ist der Anteil 1,0 — dann sagt
-    die Angabe nichts und bleibt weg."""
+    die Angabe nichts und bleibt weg.
+
+    "0% des Tages" IST ABSICHT und wird nicht auf "unter 1 %"
+    verschoenert (Mathias, 19.08.2026, ausdruecklich: "lass es auf 0%,
+    dann weiss man, dass es quasi noch wertlos ist"). Die Null sagt dem
+    Leser ehrlich, dass die Volumen-Hochrechnung zu dieser Uhrzeit noch
+    nichts wert ist — genau das soll sie."""
     anteile = [t.get("vol_anteil") for t in treffer
                if t.get("vol_anteil") is not None]
     if not anteile:
