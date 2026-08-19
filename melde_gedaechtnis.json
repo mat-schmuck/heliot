@@ -15,7 +15,7 @@
     "DINO|1": "drin",
     "MRX|1": "draussen",
     "SN|1": "draussen",
-    "ARCB|1": "drin",
+    "ARCB|1": "draussen",
     "AVT|1": "drin",
     "CGAU|1": "drin",
     "EC|1": "drin",
@@ -32,7 +32,24 @@
     "SBLK|1": "drin",
     "TRGP|1": "draussen",
     "UFCS|1": "drin",
-    "XNCR|1": "drin"
+    "XNCR|1": "draussen",
+    "SFST|1": "drin",
+    "EQNR|1": "drin",
+    "TEN|1": "drin",
+    "IMO|1": "drin",
+    "LPG|1": "drin",
+    "NMM|1": "drin",
+    "MATX|1": "draussen",
+    "KMTS|1": "drin",
+    "CNQ|1": "drin",
+    "CVE|1": "drin",
+    "PR|1": "drin",
+    "MSGS|1": "drin",
+    "CBLL|1": "drin",
+    "VSXY|1": "drin",
+    "TALO|1": "drin",
+    "VBNK|1": "drin",
+    "SCCO|1": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -149,6 +166,9 @@
     "UFCS|1": "2026-08-19",
     "BEST|UFCS|1": "2026-08-19",
     "XNCR|1": "2026-08-19",
-    "BEST|XNCR|1": "2026-08-19"
+    "BEST|XNCR|1": "2026-08-19",
+    "GAPGO|TWST|2026-08-19": "2026-08-19",
+    "SCCO|1": "2026-08-19",
+    "BEST|SCCO|1": "2026-08-19"
   }
 }
