@@ -1,153 +1,139 @@
 {
- "gebaut_am": "2026-08-19 00:02 Wien",
+ "gebaut_am": "2026-08-20 00:02 Wien",
  "universum": 252,
  "aktien": {
   "AEHR": {
    "firma": "Aehr Test Systems",
-   "vortagesschluss": 123.25,
-   "v50": 2584666.8,
+   "vortagesschluss": 107.96,
+   "v50": 2607289.0,
    "rs_rating": 99,
-   "ueber_52w_tief_pct": 652.4
+   "ueber_52w_tief_pct": 559.1
   },
   "ARWR": {
    "firma": "Arrowhead Pharmaceuticals Inc",
-   "vortagesschluss": 87.9,
-   "v50": 2217696.3,
-   "rs_rating": 91,
-   "ueber_52w_tief_pct": 352.6
+   "vortagesschluss": 89.41,
+   "v50": 2219133.3,
+   "rs_rating": 92,
+   "ueber_52w_tief_pct": 360.4
+  },
+  "AYA": {
+   "firma": "Aya Gold & Silver Inc",
+   "vortagesschluss": 27.25,
+   "v50": 659871.2,
+   "rs_rating": 93,
+   "ueber_52w_tief_pct": 229.5
   },
   "CDNA": {
    "firma": "Caredx Inc",
-   "vortagesschluss": 46.18,
-   "v50": 1098801.9,
+   "vortagesschluss": 46.51,
+   "v50": 1125580.2,
    "rs_rating": 98,
-   "ueber_52w_tief_pct": 309.7
+   "ueber_52w_tief_pct": 312.6
   },
   "CLMT": {
    "firma": "Calumet Inc",
-   "vortagesschluss": 50.81,
-   "v50": 1111788.9,
-   "rs_rating": 96,
-   "ueber_52w_tief_pct": 292.7
+   "vortagesschluss": 49.19,
+   "v50": 1122302.5,
+   "rs_rating": 95,
+   "ueber_52w_tief_pct": 280.1
   },
   "CRNX": {
    "firma": "Crinetics Pharmaceuticals Inc",
-   "vortagesschluss": 84.72,
-   "v50": 4540844.1,
+   "vortagesschluss": 84.69,
+   "v50": 4575063.7,
    "rs_rating": 96,
-   "ueber_52w_tief_pct": 194.9
-  },
-  "DELL": {
-   "firma": "Dell Technologies Inc",
-   "vortagesschluss": 468.65,
-   "v50": 7073060.8,
-   "rs_rating": 99,
-   "ueber_52w_tief_pct": 325.2
-  },
-  "FSLY": {
-   "firma": "Fastly Inc",
-   "vortagesschluss": 26.59,
-   "v50": 5816355.1,
-   "rs_rating": 93,
-   "ueber_52w_tief_pct": 288.8
+   "ueber_52w_tief_pct": 194.8
   },
   "HPE": {
    "firma": "Hewlett Packard Enterprise Co",
-   "vortagesschluss": 55.69,
-   "v50": 20690772.4,
-   "rs_rating": 94,
-   "ueber_52w_tief_pct": 180.7
+   "vortagesschluss": 53.13,
+   "v50": 20468941.4,
+   "rs_rating": 93,
+   "ueber_52w_tief_pct": 167.8
   },
   "NBIS": {
    "firma": "Nebius Group NV",
-   "vortagesschluss": 248.43,
-   "v50": 21795536.9,
-   "rs_rating": 95,
-   "ueber_52w_tief_pct": 300.6
+   "vortagesschluss": 223.9,
+   "v50": 22516761.4,
+   "rs_rating": 91,
+   "ueber_52w_tief_pct": 261.1
   },
   "NESR": {
    "firma": "National Energy Services Reunited Corp",
-   "vortagesschluss": 35.29,
-   "v50": 2283187.9,
-   "rs_rating": 97,
-   "ueber_52w_tief_pct": 420.5
+   "vortagesschluss": 33.545,
+   "v50": 2312316.3,
+   "rs_rating": 96,
+   "ueber_52w_tief_pct": 380.6
   },
   "PBF": {
    "firma": "PBF Energy Inc",
-   "vortagesschluss": 75.2,
-   "v50": 3024929.4,
+   "vortagesschluss": 73.91,
+   "v50": 3033935.3,
    "rs_rating": 94,
-   "ueber_52w_tief_pct": 239.8
+   "ueber_52w_tief_pct": 234.0
+  },
+  "PUBM": {
+   "firma": "PubMatic Inc",
+   "vortagesschluss": 16.78,
+   "v50": 621750.5,
+   "rs_rating": 91,
+   "ueber_52w_tief_pct": 172.8
   },
   "SEPN": {
    "firma": "Septerna Inc",
-   "vortagesschluss": 43.8,
-   "v50": 452474.2,
-   "rs_rating": 93,
-   "ueber_52w_tief_pct": 307.8
+   "vortagesschluss": 43.93,
+   "v50": 455918.4,
+   "rs_rating": 95,
+   "ueber_52w_tief_pct": 309.0
   },
   "TVTX": {
    "firma": "Travere Therapeutics Inc",
-   "vortagesschluss": 63.9,
-   "v50": 1887808.0,
-   "rs_rating": 92,
-   "ueber_52w_tief_pct": 274.8
+   "vortagesschluss": 65.96,
+   "v50": 1860049.9,
+   "rs_rating": 94,
+   "ueber_52w_tief_pct": 286.9
   },
   "TWST": {
    "firma": "Twist Bioscience Corp",
-   "vortagesschluss": 116.1,
-   "v50": 1803305.9,
-   "rs_rating": 98,
-   "ueber_52w_tief_pct": 398.3
+   "vortagesschluss": 142.39,
+   "v50": 1823740.2,
+   "rs_rating": 99,
+   "ueber_52w_tief_pct": 511.1
   },
   "UMAC": {
    "firma": "Unusual Machines Inc",
-   "vortagesschluss": 30.58,
-   "v50": 4636147.5,
+   "vortagesschluss": 28.3,
+   "v50": 4613730.6,
    "rs_rating": 97,
-   "ueber_52w_tief_pct": 322.1
+   "ueber_52w_tief_pct": 290.6
   },
   "URGN": {
    "firma": "UroGen Pharma Ltd",
-   "vortagesschluss": 48.92,
-   "v50": 805652.4,
-   "rs_rating": 92,
-   "ueber_52w_tief_pct": 208.4
+   "vortagesschluss": 50.29,
+   "v50": 840132.4,
+   "rs_rating": 94,
+   "ueber_52w_tief_pct": 217.1
+  },
+  "VSXY": {
+   "firma": "Victoria's Secret & Co",
+   "vortagesschluss": 88.61,
+   "v50": 1748047.6,
+   "rs_rating": 96,
+   "ueber_52w_tief_pct": 317.4
   },
   "XNCR": {
    "firma": "Xencor Inc",
-   "vortagesschluss": 25.41,
-   "v50": 1047254.0,
-   "rs_rating": 96,
-   "ueber_52w_tief_pct": 256.4
+   "vortagesschluss": 27.52,
+   "v50": 1076809.2,
+   "rs_rating": 98,
+   "ueber_52w_tief_pct": 286.0
   },
   "CORT": {
    "firma": "Corcept Therapeutics Inc",
-   "vortagesschluss": 118.1,
-   "v50": 1140949.9,
+   "vortagesschluss": 119.02,
+   "v50": 1141090.6,
    "rs_rating": 92,
-   "ueber_52w_tief_pct": 312.1
-  },
-  "FORM": {
-   "firma": "FormFactor Inc",
-   "vortagesschluss": 124.34,
-   "v50": 1665312.6,
-   "rs_rating": 91,
-   "ueber_52w_tief_pct": 360.5
-  },
-  "LITE": {
-   "firma": "Lumentum Holdings Inc",
-   "vortagesschluss": 873.31,
-   "v50": 5138155.8,
-   "rs_rating": 99,
-   "ueber_52w_tief_pct": 685.4
-  },
-  "STX": {
-   "firma": "Seagate Technology Holdings Plc",
-   "vortagesschluss": 903.68,
-   "v50": 5130748.9,
-   "rs_rating": 98,
-   "ueber_52w_tief_pct": 492.6
+   "ueber_52w_tief_pct": 315.3
   }
  }
 }

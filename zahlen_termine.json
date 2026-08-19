@@ -1,12 +1,11 @@
 {
- "gebaut_am": "2026-08-19 00:07 Wien",
+ "gebaut_am": "2026-08-20 00:07 Wien",
  "ohne_termin": [
+  "NEO",
   "SKYT"
  ],
  "nur_nasdaq": [],
- "uneinig": [
-  "BHP"
- ],
+ "uneinig": [],
  "aktien": {
   "AAMI": {
    "datum": "2026-10-29",
@@ -26,7 +25,7 @@
   },
   "ADI": {
    "datum": "2026-08-19",
-   "uhrzeit": "08:00",
+   "uhrzeit": "07:00",
    "lage": "vorboerslich",
    "quellen": [
     "yahoo",
@@ -278,10 +277,8 @@
    "uhrzeit": "15:00",
    "lage": "im_handel",
    "quellen": [
-    "yahoo",
-    "nasdaq"
-   ],
-   "uneinig": "Quellen uneinig: 2027-02-15 (Yahoo, hier bevorzugt) gegen 2026-08-18 (Nasdaq)"
+    "yahoo"
+   ]
   },
   "BTSG": {
    "datum": "2026-10-30",
@@ -392,7 +389,8 @@
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "CRNX": {
@@ -494,7 +492,7 @@
    ]
   },
   "DELL": {
-   "datum": "2026-09-03",
+   "datum": "2026-09-01",
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
@@ -935,12 +933,11 @@
    ]
   },
   "KEYS": {
-   "datum": "2026-08-18",
-   "uhrzeit": "16:00",
-   "lage": "nachboerslich",
+   "datum": "2026-11-24",
+   "uhrzeit": "15:00",
+   "lage": "im_handel",
    "quellen": [
-    "yahoo",
-    "nasdaq"
+    "yahoo"
    ]
   },
   "KGS": {
@@ -1100,7 +1097,8 @@
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "MEI": {
@@ -1152,12 +1150,11 @@
    ]
   },
   "MRCY": {
-   "datum": "2026-08-18",
-   "uhrzeit": "16:00",
-   "lage": "nachboerslich",
+   "datum": "2026-11-03",
+   "uhrzeit": "15:00",
+   "lage": "im_handel",
    "quellen": [
-    "yahoo",
-    "nasdaq"
+    "yahoo"
    ]
   },
   "MRX": {
@@ -1210,14 +1207,6 @@
   },
   "NEM": {
    "datum": "2026-10-22",
-   "uhrzeit": "16:00",
-   "lage": "nachboerslich",
-   "quellen": [
-    "yahoo"
-   ]
-  },
-  "NEO": {
-   "datum": "2026-10-27",
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
@@ -1401,7 +1390,8 @@
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "PARR": {
@@ -1493,12 +1483,11 @@
    ]
   },
   "PRE": {
-   "datum": "2026-08-18",
+   "datum": "2026-11-10",
    "uhrzeit": "07:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo",
-    "nasdaq"
+    "yahoo"
    ]
   },
   "PRLB": {
@@ -1937,7 +1926,7 @@
   },
   "VIK": {
    "datum": "2026-08-19",
-   "uhrzeit": "08:00",
+   "uhrzeit": "07:00",
    "lage": "vorboerslich",
    "quellen": [
     "yahoo",

@@ -6,7 +6,7 @@
   "zone_max": 27.25,
   "spring_low": 26.049999237060547,
   "spring_volumen": 1498428.0,
-  "tage_gewartet": 8
+  "tage_gewartet": 9
  },
  "PLPC": {
   "spring_index": 499,
@@ -15,7 +15,7 @@
   "zone_max": 349.489990234375,
   "spring_low": 347.7449951171875,
   "spring_volumen": 93348.0,
-  "tage_gewartet": 8
+  "tage_gewartet": 9
  },
  "COGT": {
   "spring_index": 500,
@@ -78,7 +78,7 @@
   "zone_max": 808.7999877929688,
   "spring_low": 787.0599975585938,
   "spring_volumen": 5622997.0,
-  "tage_gewartet": 6
+  "tage_gewartet": 7
  },
  "SSRM": {
   "spring_index": 500,
@@ -96,7 +96,7 @@
   "zone_max": 801.8900146484375,
   "spring_low": 794.0100708007812,
   "spring_volumen": 3147394.0,
-  "tage_gewartet": 6
+  "tage_gewartet": 7
  },
  "ASTH": {
   "spring_index": 500,
