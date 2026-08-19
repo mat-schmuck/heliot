@@ -2063,6 +2063,12 @@ def format_aktie(gruppe: list[dict], nummer: int | None = None) -> str:
     Kaufpunkt j traegt dann `nummer.j` vor dem Musternamen. Ohne
     Blocknummer (einzelne Aktie im Nachtrag) zaehlt es als Block 1.
 
+    Die KOPFZEILE des Buendels traegt SELBST KEINE Blocknummer (Mathias,
+    19.08.2026, gleich danach: "Gib den 1er im Header wieder weg, den
+    brauchen wir nicht") - die Nummer des Blocks hoert man ohnehin in
+    jeder Unternummer. Aktien mit nur EINEM Kaufpunkt behalten ihre
+    schlichte Nummer wie eh und je.
+
     Mathias am 19.08.2026, nachdem ASC zur Eroeffnung zwei getrennte
     Meldungen bekommen hatte: "Buendeln mehrerer Kaufpunkte in einer
     Meldung pro Aktie ist definitiv sinnvoller." Der Nachtscan vergibt
@@ -2080,9 +2086,8 @@ def format_aktie(gruppe: list[dict], nummer: int | None = None) -> str:
         text = format_treffer(gruppe[0])
         return f"{nummer}. {text}" if nummer else text
     erster = gruppe[0]
-    kopf = kopfzeile(erster["ticker"], erster.get("firma", ""),
-                     f"{len(gruppe)} Kaufpunkte gerissen")
-    zeilen = [f"{nummer}. {kopf}" if nummer else kopf]
+    zeilen = [kopfzeile(erster["ticker"], erster.get("firma", ""),
+                        f"{len(gruppe)} Kaufpunkte gerissen")]
     basis = nummer if nummer else 1
     nachsatz = termin_nachsatz(erster.get("ticker"))
     for j, t in enumerate(gruppe, 1):

@@ -382,8 +382,11 @@ def block_e():
         bw.push("probe", [fremd, kp2, kp1])
         titel_p, abs_p = _gesendet[-1]
         pruefe("E", "push: je Aktie ein Block, bestaetigte Aktie zuerst",
-               len(abs_p) == 2 and abs_p[0].startswith("1. " + grund["ticker"])
+               len(abs_p) == 2 and abs_p[0].startswith(grund["ticker"])
                and abs_p[1].startswith("2. ZWEI"))
+        pruefe("E", "Buendel-Kopf OHNE Blocknummer (Mathias: '1er weg')",
+               not abs_p[0].startswith("1.")
+               and "2 Kaufpunkte gerissen" in abs_p[0].splitlines()[0])
         pruefe("E", "push: Unternummern im Buendel, keine beim Einzel-KP",
                "1.1 " in abs_p[0] and "1.2 " in abs_p[0]
                and "2.1 " not in abs_p[1])
