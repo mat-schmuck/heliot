@@ -299,7 +299,6 @@ VOL_FAKTOR_FALLBACK = _VOL["breakout_faktor"]
 # Nur diese. Bei allen uebrigen Mustern bleibt ein Ausbruch ohne
 # Bestaetigung STILL und wird erst gemeldet, wenn das Volumen nachzieht.
 UNBESTAETIGT_ERLAUBT = set(_VOL.get("unbestaetigt_melden_bei", []))
-KARENZ_ANTEIL = float(_VOL.get("karenz_tagesanteil", 0.03))
 
 # Volumenfenster: EINHEITLICH 10 Tage (Gerhard, 28.07.2026). Der Waechter
 # verglich den Ausbruch bisher gegen den Ø20, waehrend Gap and Go schon
@@ -999,31 +998,6 @@ def fetch_quotes(tickers: list[str], api_key: str, batch_size: int = 8,
 # Breakout-Prüfung
 # ---------------------------------------------------------------------------
 
-def karenz_anwenden(vol_ok, anteil):
-    """Volumen-Karenz: (vol_ok, vol_frueh) fuer den fruehen Handelstag.
-
-    Mathias, 19.08.2026: "Gewaehrleiste bitte, dass ausschliesslich
-    Volumina kommen, die bereits heutige Daten haben, das Vol. muss also
-    am gleichen Tag zustande gekommen sein." In den ersten Minuten teilt
-    die Hochrechnung das Eroeffnungsvolumen durch einen winzigen
-    ueblichen Anteil - praktisch alles erscheint dann BESTAETIGT
-    (gemessen am 19.08.2026: ueber 20 solcher Meldungen auf einmal zur
-    Eroeffnung). Solange weniger als KARENZ_ANTEIL des ueblichen Tages
-    gehandelt ist, wird deshalb KEIN Urteil gefaellt: vol_ok wird False
-    (fuer die Meldesperre der stillen Muster), vol_frueh True (fuer den
-    ehrlichen Text "Vol noch offen"). Sobald die Schwelle erreicht ist,
-    faellt das Urteil wie immer - ein dann bestaetigter Ausbruch kommt
-    als gewoehnliche Meldung, ein frueher gemeldeter (Darvas, Flagge)
-    bekommt den Nachtrag "Vol jetzt bestaetigt".
-
-    Ohne Urteil (None) und ohne Anteils-Kurve aendert die Karenz nichts:
-    "nicht verifizierbar" bleibt ein eigener Status (Gerhard,
-    06.08.2026) und wird weiter gemeldet."""
-    if vol_ok is None or anteil is None or anteil >= KARENZ_ANTEIL:
-        return vol_ok, False
-    return False, True
-
-
 def pruefe_breakout(item: dict, quote: dict) -> dict | None:
     """Prüft, ob der Kaufpunkt gerissen wurde. Gibt Treffer-Info zurück oder None."""
     kurs = quote["close"]
@@ -1095,7 +1069,6 @@ def pruefe_breakout(item: dict, quote: dict) -> dict | None:
     else:
         vol_ok = vol_ratio >= faktor
         nicht_pruefbar = False
-    vol_ok, vol_frueh = karenz_anwenden(vol_ok, anteil)
 
     return {
         **item,
@@ -1105,7 +1078,6 @@ def pruefe_breakout(item: dict, quote: dict) -> dict | None:
         "vol_pct": None if vol_ratio is None else (vol_ratio - 1) * 100,
         "vol_noetig": faktor,
         "vol_ok": vol_ok,
-        "vol_frueh": vol_frueh,
         "vol_nicht_verifizierbar": nicht_pruefbar,
         "vol_roh": vol,
         "vol_anteil": anteil,
@@ -1619,11 +1591,7 @@ def format_treffer(t: dict, kopfzusatz: str = "") -> str:
     # Die Huerde nur nennen, wo sie vom Ueblichen abweicht (VCP).
     huerde = ("" if t["vol_noetig"] <= 1.0
               else ", " + volumen.huerde_text(t["vol_noetig"]))
-    if t.get("vol_frueh"):
-        # Waehrend der Karenz gibt es kein Urteil - weder BESTAETIGT
-        # noch NICHT bestaetigt waere zu diesem Zeitpunkt belastbar.
-        vol_txt = "Vol noch offen, zu wenig vom Tag gehandelt"
-    elif t["vol_ok"] is True:
+    if t["vol_ok"] is True:
         vol_txt = f"Vol BESTÄTIGT, {lage}{huerde}"
     elif t["vol_ok"] is False:
         vol_txt = f"Vol NICHT bestätigt, {lage}{huerde}"

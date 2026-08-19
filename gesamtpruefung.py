@@ -337,28 +337,6 @@ def block_e():
     pruefe("E", "'nicht verifizierbar' faellt nicht mit 'nicht bestaetigt' zusammen",
            texte["nicht verifizierbar"] != texte["nicht bestaetigt"])
 
-    # Volumen-Karenz und Darvas-Schalter (beide Mathias, 19.08.2026)
-    pruefe("E", "Darvas Box steht auf der Unbestaetigt-Liste",
-           "Darvas Box" in bw.UNBESTAETIGT_ERLAUBT)
-    pruefe("E", "Karenz: 'bestaetigt' bei 0,2 % des Tages wird zurueckgehalten",
-           bw.karenz_anwenden(True, 0.002) == (False, True))
-    pruefe("E", "Karenz: ab der Schwelle bleibt das Urteil unangetastet",
-           bw.karenz_anwenden(True, bw.KARENZ_ANTEIL) == (True, False)
-           and bw.karenz_anwenden(False, 0.5) == (False, False))
-    pruefe("E", "Karenz: ohne Urteil oder ohne Kurve aendert sie nichts",
-           bw.karenz_anwenden(None, 0.001) == (None, False)
-           and bw.karenz_anwenden(True, None) == (True, False))
-    frueh = {**grund, "vol_ratio": 3.0, "vol_pct": 200.0, "vol_ok": False,
-             "vol_frueh": True}
-    frueh_txt = bw.format_treffer(frueh)
-    pruefe("E", "Karenz-Text sagt 'Vol noch offen', nie BESTAETIGT",
-           "Vol noch offen" in frueh_txt and "BESTÄTIGT" not in frueh_txt)
-    pruefe("E", "Karenz haelt Rectangle still und laesst Darvas sprechen",
-           bw.melde_stufe({**frueh, "key": "KZ1", "key_best": "BKZ1",
-                           "strategien": ["Rectangle Top"]}, set()) is None
-           and bw.melde_stufe({**frueh, "key": "KZ2", "key_best": "BKZ2",
-                               "strategien": ["Darvas Box"]}, set()) == "neu")
-
     # Buendelung je Aktie (Mathias, 19.08.2026: "Buendeln mehrerer
     # Kaufpunkte in einer Meldung pro Aktie ist definitiv sinnvoller",
     # nachdem ASC zur Eroeffnung zwei getrennte Meldungen bekam)
@@ -504,18 +482,15 @@ def block_e():
     def stufe(strategie, vol_ok):
         return bw.melde_stufe({"key": "K", "key_best": "B",
                                "vol_ok": vol_ok, "strategie": strategie}, set())
-    # Darvas Box wechselte am 19.08.2026 auf die erlaubte Seite
-    # (Mathias: "Ja, lege bitte den Schalter um").
-    still = [x for x in ("Rectangle Top", "VCP",
+    still = [x for x in ("Darvas Box", "Rectangle Top", "VCP",
                          "Cup & Handle", "Cup & Handle (Wochenbasis)")
              if stufe(x, False) is not None]
     pruefe("E", "Ohne Volumenbestaetigung schweigen die uebrigen Muster",
            not still, ", ".join(still))
     laut = [x for x in ("Red-to-Green", "Red-to-Green Explosive",
-                        "High & Tight Flag", "Lücken-Bestätigungstag",
-                        "Darvas Box")
+                        "High & Tight Flag", "Lücken-Bestätigungstag")
             if stufe(x, False) is None]
-    pruefe("E", "Die erlaubten (seit 19.08. samt Darvas) melden unbestaetigt",
+    pruefe("E", "Die drei erlaubten melden weiterhin unbestaetigt",
            not laut, ", ".join(laut))
     pruefe("E", "MIT Bestaetigung meldet jedes Muster",
            stufe("Darvas Box", True) == "neu")

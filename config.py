@@ -75,24 +75,7 @@ CFG = {
             "Red-to-Green Explosive",
             "High & Tight Flag",
             "Lücken-Bestätigungstag",
-            # Darvas Box seit 19.08.2026 (Mathias: "Ja, lege bitte den
-            # Schalter um", nach dem Wochenbefund: PBF und OII rissen
-            # ihre Boxen, blieben aber mangels Volumensbestaetigung
-            # still, und ueber Nacht war die Box aus der Mappe).
-            "Darvas Box",
         ],
-
-        # VOLUMEN-KARENZ (Mathias, 19.08.2026: "das Vol. muss also am
-        # gleichen Tag zustande gekommen sein"): Solange weniger als
-        # dieser Anteil eines ueblichen Handelstags vergangen ist, wird
-        # KEIN Urteil "BESTAETIGT" ausgesprochen - die Hochrechnung
-        # teilt dort durch fast nichts und schlaegt bei praktisch jeder
-        # Aktie an (gemessen: am 19.08. kamen zur Eroeffnung ueber 20
-        # "bestaetigte" Meldungen auf einmal, und schon ein "bestaetigt"
-        # um 16:00 ist bis Handelsschluss zu 36 % hinfaellig). 0.03
-        # heisst drei Prozent des ueblichen Tagesvolumens, das ist gegen
-        # 15:45 Wiener Zeit erreicht.
-        "karenz_tagesanteil": 0.03,
     },
 
     # --- Insider-Kauf-Scanner (Gerhards Kapitel vom 14.08.2026) -----------
