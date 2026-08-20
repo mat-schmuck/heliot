@@ -33,7 +33,7 @@
     "SN|3": "draussen",
     "TVTX|2": "draussen",
     "URGN|2": "draussen",
-    "VSXY|3": "draussen",
+    "VSXY|3": "drin",
     "BBVA|2": "draussen",
     "BHP|2": "draussen",
     "CBLL|2": "draussen",
@@ -102,7 +102,7 @@
     "NTAP|2": "draussen",
     "PANW|2": "draussen",
     "PTGX|2": "draussen",
-    "TWIN|2": "draussen",
+    "TWIN|2": "drin",
     "UMAC|2": "draussen",
     "AEHR|2": "draussen",
     "AMAL|2": "drin",
@@ -117,7 +117,7 @@
     "ERO|3": "draussen",
     "FDX|3": "drin",
     "FRO|2": "draussen",
-    "FROG|3": "drin",
+    "FROG|3": "draussen",
     "FSLY|3": "draussen",
     "GCT|2": "draussen",
     "GNK|3": "drin",
@@ -138,7 +138,7 @@
     "TPC|2": "draussen",
     "TWLO|2": "draussen",
     "VIST|3": "draussen",
-    "WAB|2": "drin",
+    "WAB|2": "draussen",
     "XNCR|2": "draussen",
     "NTRA|1": "drin",
     "NTRA|3": "drin",
@@ -156,7 +156,7 @@
     "LTH|2": "draussen",
     "MDB|2": "draussen",
     "VBNK|1": "drin",
-    "ALNT|2": "draussen",
+    "ALNT|2": "drin",
     "SPHR|2": "drin",
     "TWST|2": "draussen",
     "CIB|2": "draussen",
@@ -190,7 +190,16 @@
     "IMAX|1": "drin",
     "IMAX|3": "drin",
     "EC|1": "drin",
-    "SFST|3": "drin"
+    "SFST|3": "drin",
+    "MSGS|1": "drin",
+    "PRLB|3": "drin",
+    "PDS|2": "drin",
+    "HG|3": "drin",
+    "LIVN|3": "drin",
+    "OSCR|2": "drin",
+    "TGTX|3": "drin",
+    "PBT|1": "drin",
+    "PBT|3": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -327,6 +336,8 @@
     "UEBER|TALO|1": "2026-08-20",
     "UEBER|TALO|3": "2026-08-20",
     "GKOS|1": "2026-08-20",
-    "BEST|GKOS|1": "2026-08-20"
+    "BEST|GKOS|1": "2026-08-20",
+    "PBT|1": "2026-08-20",
+    "BEST|PBT|1": "2026-08-20"
   }
 }
