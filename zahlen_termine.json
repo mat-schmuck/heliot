@@ -1,11 +1,12 @@
 {
- "gebaut_am": "2026-08-20 00:07 Wien",
+ "gebaut_am": "2026-08-21 00:07 Wien",
  "ohne_termin": [
-  "NEO",
   "SKYT"
  ],
  "nur_nasdaq": [],
- "uneinig": [],
+ "uneinig": [
+  "FIVE"
+ ],
  "aktien": {
   "AAMI": {
    "datum": "2026-10-29",
@@ -24,12 +25,11 @@
    ]
   },
   "ADI": {
-   "datum": "2026-08-19",
+   "datum": "2026-11-24",
    "uhrzeit": "07:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo",
-    "nasdaq"
+    "yahoo"
    ]
   },
   "ADPT": {
@@ -305,7 +305,7 @@
    ]
   },
   "CASY": {
-   "datum": "2026-09-09",
+   "datum": "2026-09-08",
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
@@ -496,7 +496,8 @@
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "DGII": {
@@ -644,13 +645,14 @@
    ]
   },
   "FIVE": {
-   "datum": "2026-08-26",
+   "datum": "2026-09-02",
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
     "yahoo",
     "nasdaq"
-   ]
+   ],
+   "uneinig": "Quellen uneinig: 2026-09-02 (Yahoo, hier bevorzugt) gegen 2026-08-26 (Nasdaq)"
   },
   "FIX": {
    "datum": "2026-10-22",
@@ -833,7 +835,8 @@
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "HSHP": {
@@ -1069,7 +1072,7 @@
    ]
   },
   "MAMA": {
-   "datum": "2026-09-14",
+   "datum": "2026-09-03",
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
@@ -1213,6 +1216,14 @@
     "yahoo"
    ]
   },
+  "NEO": {
+   "datum": "2026-10-27",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich",
+   "quellen": [
+    "yahoo"
+   ]
+  },
   "NESR": {
    "datum": "2026-11-12",
    "uhrzeit": "07:00",
@@ -1247,11 +1258,10 @@
   },
   "NMM": {
    "datum": "2026-08-20",
-   "uhrzeit": "08:00",
+   "uhrzeit": "07:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo",
-    "nasdaq"
+    "yahoo"
    ]
   },
   "NPO": {
@@ -1267,7 +1277,8 @@
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "NTCT": {
@@ -1696,7 +1707,8 @@
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "SNX": {
@@ -1864,8 +1876,7 @@
    "uhrzeit": "08:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo",
-    "nasdaq"
+    "yahoo"
    ]
   },
   "TWLO": {
@@ -1925,12 +1936,11 @@
    ]
   },
   "VIK": {
-   "datum": "2026-08-19",
+   "datum": "2026-11-18",
    "uhrzeit": "07:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo",
-    "nasdaq"
+    "yahoo"
    ]
   },
   "VIST": {
