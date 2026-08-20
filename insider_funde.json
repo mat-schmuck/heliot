@@ -1,13 +1,13 @@
 {
- "stand": "2026-08-19",
+ "stand": "2026-08-20",
  "funde": [
   {
    "ticker": "RSG",
    "status": "pfad_a",
-   "marktkap": 67685318656.0,
-   "stichtag": "2026-08-19",
+   "marktkap": 67493933056.0,
+   "stichtag": "2026-08-20",
    "zeilen": [
-    "RSG; Großkauf; Marktwert 67,7 Mrd $",
+    "RSG; Großkauf; Marktwert 67,5 Mrd $",
     "Größter Einzelkauf 45,8 Mio $ am 11.08.; CASCADE INVESTMENT, L.L.C., Insider"
    ],
    "kennung": "RSG|pfad_a|0"

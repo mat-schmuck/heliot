@@ -1,5 +1,5 @@
 {
- "stand": "2026-08-19",
+ "stand": "2026-08-20",
  "gelesen": [
   "0000002488-26-000141",
   "0000004977-26-000098",
@@ -1398,8 +1398,36 @@
   "ATTO": [
    {
     "insider": "GOLDMAN SACHS GROUP INC",
-    "wert_dollar": 1785000.0,
-    "datum": "2026-08-05",
+    "wert_dollar": 8500000.0,
+    "datum": "2026-08-06",
+    "transaktionscode": "P",
+    "rolle": "Insider"
+   },
+   {
+    "insider": "WALSH COLIN",
+    "wert_dollar": 8500000.0,
+    "datum": "2026-08-06",
+    "transaktionscode": "P",
+    "rolle": "Direktor"
+   },
+   {
+    "insider": "GOLDMAN SACHS GROUP INC",
+    "wert_dollar": 8500000.0,
+    "datum": "2026-08-06",
+    "transaktionscode": "P",
+    "rolle": "Insider"
+   },
+   {
+    "insider": "GOLDMAN SACHS GROUP INC",
+    "wert_dollar": 8500000.0,
+    "datum": "2026-08-06",
+    "transaktionscode": "P",
+    "rolle": "Insider"
+   },
+   {
+    "insider": "GOLDMAN SACHS GROUP INC",
+    "wert_dollar": 8500000.0,
+    "datum": "2026-08-06",
     "transaktionscode": "P",
     "rolle": "Insider"
    },
@@ -1412,13 +1440,6 @@
    },
    {
     "insider": "WALSH COLIN",
-    "wert_dollar": 1785000.0,
-    "datum": "2026-08-05",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "WALSH COLIN",
     "wert_dollar": 8500000.0,
     "datum": "2026-08-06",
     "transaktionscode": "P",
@@ -1426,8 +1447,8 @@
    },
    {
     "insider": "GOLDMAN SACHS GROUP INC",
-    "wert_dollar": 1785000.0,
-    "datum": "2026-08-05",
+    "wert_dollar": 8500000.0,
+    "datum": "2026-08-06",
     "transaktionscode": "P",
     "rolle": "Insider"
    },
@@ -1440,106 +1461,8 @@
    },
    {
     "insider": "GOLDMAN SACHS GROUP INC",
-    "wert_dollar": 1785000.0,
-    "datum": "2026-08-05",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "GOLDMAN SACHS GROUP INC",
     "wert_dollar": 8500000.0,
     "datum": "2026-08-06",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "GOLDMAN SACHS GROUP INC",
-    "wert_dollar": 1785000.0,
-    "datum": "2026-08-05",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "GOLDMAN SACHS GROUP INC",
-    "wert_dollar": 8500000.0,
-    "datum": "2026-08-06",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "GOLDMAN SACHS GROUP INC",
-    "wert_dollar": 1785000.0,
-    "datum": "2026-08-05",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "GOLDMAN SACHS GROUP INC",
-    "wert_dollar": 8500000.0,
-    "datum": "2026-08-06",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "WALSH COLIN",
-    "wert_dollar": 1785000.0,
-    "datum": "2026-08-05",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "WALSH COLIN",
-    "wert_dollar": 8500000.0,
-    "datum": "2026-08-06",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "GOLDMAN SACHS GROUP INC",
-    "wert_dollar": 1785000.0,
-    "datum": "2026-08-05",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "GOLDMAN SACHS GROUP INC",
-    "wert_dollar": 8500000.0,
-    "datum": "2026-08-06",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "GOLDMAN SACHS GROUP INC",
-    "wert_dollar": 1785000.0,
-    "datum": "2026-08-05",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "GOLDMAN SACHS GROUP INC",
-    "wert_dollar": 8500000.0,
-    "datum": "2026-08-06",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "GOLDMAN SACHS GROUP INC",
-    "wert_dollar": 1785000.0,
-    "datum": "2026-08-05",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "GOLDMAN SACHS GROUP INC",
-    "wert_dollar": 8500000.0,
-    "datum": "2026-08-06",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "GOLDMAN SACHS GROUP INC",
-    "wert_dollar": 1785000.0,
-    "datum": "2026-08-05",
     "transaktionscode": "P",
     "rolle": "Insider"
    },
