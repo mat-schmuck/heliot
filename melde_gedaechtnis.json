@@ -55,7 +55,7 @@
     "HBM|3": "draussen",
     "HCC|1": "drin",
     "HCC|3": "draussen",
-    "KNX|1": "drin",
+    "KNX|1": "draussen",
     "LPG|2": "draussen",
     "MDB|2": "draussen",
     "MEOH|3": "draussen",
@@ -78,10 +78,10 @@
     "TX|1": "drin",
     "TX|2": "draussen",
     "TX|3": "drin",
-    "UFCS|3": "drin",
+    "UFCS|3": "draussen",
     "WT|2": "draussen",
     "ZETA|2": "draussen",
-    "ALNT|2": "draussen",
+    "ALNT|2": "drin",
     "ATI|2": "draussen",
     "CLMT|2": "draussen",
     "CTRN|2": "draussen",
@@ -108,7 +108,7 @@
     "DHT|3": "draussen",
     "DXPE|2": "draussen",
     "E|3": "draussen",
-    "ERO|2": "drin",
+    "ERO|2": "draussen",
     "ERO|3": "draussen",
     "EXPD|2": "draussen",
     "FDX|3": "drin",
@@ -169,7 +169,7 @@
     "OVV|1": "drin",
     "ASC|1": "drin",
     "TH|3": "drin",
-    "TGTX|3": "draussen",
+    "TGTX|3": "drin",
     "KNSA|2": "draussen",
     "OPY|3": "drin",
     "WAB|2": "draussen",
@@ -194,7 +194,10 @@
     "TBBB|1": "drin",
     "XNCR|1": "drin",
     "XNCR|3": "drin",
-    "NGL|2": "drin"
+    "NGL|2": "drin",
+    "NUE|3": "drin",
+    "UFCS|1": "drin",
+    "SNDA|2": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -357,6 +360,7 @@
     "UEBER|SCCO|3": "2026-08-21",
     "SDRL|1": "2026-08-21",
     "BEST|SDRL|1": "2026-08-21",
-    "UEBER|TGTX|3": "2026-08-21"
+    "UEBER|TGTX|3": "2026-08-21",
+    "UEBER|ERO|2": "2026-08-21"
   }
 }
