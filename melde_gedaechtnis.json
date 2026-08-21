@@ -184,7 +184,9 @@
     "SHG|1": "drin",
     "SHG|3": "draussen",
     "TRGP|2": "drin",
-    "DCO|2": "draussen"
+    "DCO|2": "draussen",
+    "NMM|2": "drin",
+    "CIB|2": "draussen"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -344,6 +346,8 @@
     "GAPGO|PARR|2026-08-21": "2026-08-21",
     "GAPGO|UMAC|2026-08-21": "2026-08-21",
     "GAPGO|PBF|2026-08-21": "2026-08-21",
-    "UEBER|SCCO|3": "2026-08-21"
+    "UEBER|SCCO|3": "2026-08-21",
+    "SDRL|1": "2026-08-21",
+    "BEST|SDRL|1": "2026-08-21"
   }
 }
