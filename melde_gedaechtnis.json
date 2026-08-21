@@ -4,7 +4,7 @@
     "ADPT|3": "draussen",
     "AYA|3": "draussen",
     "CRNX|3": "draussen",
-    "OSCR|3": "drin",
+    "OSCR|3": "draussen",
     "VLO|3": "draussen",
     "ASC|2": "drin",
     "HSHP|1": "drin",
@@ -47,7 +47,7 @@
     "EQNR|3": "draussen",
     "FIVE|3": "draussen",
     "FLYW|2": "draussen",
-    "GNK|1": "draussen",
+    "GNK|1": "drin",
     "HALO|1": "draussen",
     "HALO|3": "draussen",
     "HASI|1": "drin",
@@ -144,7 +144,7 @@
     "LPG|3": "drin",
     "P|2": "draussen",
     "SCCO|1": "draussen",
-    "SCCO|3": "drin",
+    "SCCO|3": "draussen",
     "TEN|1": "drin",
     "AAMI|2": "draussen",
     "KYMR|3": "draussen",
@@ -223,7 +223,8 @@
     "DINO|3": "drin",
     "FCFS|3": "drin",
     "PDS|2": "drin",
-    "KRYS|3": "drin"
+    "KRYS|3": "drin",
+    "TIGO|2": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
