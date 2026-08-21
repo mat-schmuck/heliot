@@ -218,7 +218,12 @@
     "DK|1": "drin",
     "DK|3": "drin",
     "NEO|1": "drin",
-    "PRE|3": "drin"
+    "PRE|3": "draussen",
+    "DINO|1": "drin",
+    "DINO|3": "drin",
+    "FCFS|3": "drin",
+    "PDS|2": "drin",
+    "KRYS|3": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -384,6 +389,7 @@
     "UEBER|TGTX|3": "2026-08-21",
     "UEBER|ERO|2": "2026-08-21",
     "DK|1": "2026-08-21",
-    "BEST|DK|1": "2026-08-21"
+    "BEST|DK|1": "2026-08-21",
+    "UEBER|PRE|3": "2026-08-21"
   }
 }
