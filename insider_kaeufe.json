@@ -1,5 +1,5 @@
 {
- "stand": "2026-08-20",
+ "stand": "2026-08-21",
  "gelesen": [
   "0000002488-26-000141",
   "0000004977-26-000098",
@@ -1104,13 +1104,6 @@
    },
    {
     "insider": "Huang Jack Jiajia",
-    "wert_dollar": 2027764.7999999998,
-    "datum": "2026-08-06",
-    "transaktionscode": "P",
-    "rolle": "Chief Executive Officer"
-   },
-   {
-    "insider": "Huang Jack Jiajia",
     "wert_dollar": 1754407.2,
     "datum": "2026-08-07",
     "transaktionscode": "P",
@@ -1120,13 +1113,6 @@
     "insider": "Huang Jack Jiajia",
     "wert_dollar": 3943605.5999999996,
     "datum": "2026-08-10",
-    "transaktionscode": "P",
-    "rolle": "Chief Executive Officer"
-   },
-   {
-    "insider": "Huang Jack Jiajia",
-    "wert_dollar": 2027764.7999999998,
-    "datum": "2026-08-06",
     "transaktionscode": "P",
     "rolle": "Chief Executive Officer"
    },
@@ -1393,85 +1379,6 @@
     "datum": "2026-08-12",
     "transaktionscode": "P",
     "rolle": "Direktor"
-   }
-  ],
-  "ATTO": [
-   {
-    "insider": "GOLDMAN SACHS GROUP INC",
-    "wert_dollar": 8500000.0,
-    "datum": "2026-08-06",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "WALSH COLIN",
-    "wert_dollar": 8500000.0,
-    "datum": "2026-08-06",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "GOLDMAN SACHS GROUP INC",
-    "wert_dollar": 8500000.0,
-    "datum": "2026-08-06",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "GOLDMAN SACHS GROUP INC",
-    "wert_dollar": 8500000.0,
-    "datum": "2026-08-06",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "GOLDMAN SACHS GROUP INC",
-    "wert_dollar": 8500000.0,
-    "datum": "2026-08-06",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "GOLDMAN SACHS GROUP INC",
-    "wert_dollar": 8500000.0,
-    "datum": "2026-08-06",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "WALSH COLIN",
-    "wert_dollar": 8500000.0,
-    "datum": "2026-08-06",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "GOLDMAN SACHS GROUP INC",
-    "wert_dollar": 8500000.0,
-    "datum": "2026-08-06",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "GOLDMAN SACHS GROUP INC",
-    "wert_dollar": 8500000.0,
-    "datum": "2026-08-06",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "GOLDMAN SACHS GROUP INC",
-    "wert_dollar": 8500000.0,
-    "datum": "2026-08-06",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "GOLDMAN SACHS GROUP INC",
-    "wert_dollar": 8500000.0,
-    "datum": "2026-08-06",
-    "transaktionscode": "P",
-    "rolle": "Insider"
    }
   ],
   "DFH": [
@@ -2315,13 +2222,6 @@
   "KRRO": [
    {
     "insider": "Lynx1 Capital Management LP",
-    "wert_dollar": 59529.755600000004,
-    "datum": "2026-08-06",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "Lynx1 Capital Management LP",
     "wert_dollar": 19279.2478,
     "datum": "2026-08-10",
     "transaktionscode": "P",
@@ -2329,22 +2229,8 @@
    },
    {
     "insider": "Lynx1 Capital Management LP",
-    "wert_dollar": 59529.755600000004,
-    "datum": "2026-08-06",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "Lynx1 Capital Management LP",
     "wert_dollar": 19279.2478,
     "datum": "2026-08-10",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "Lynx1 Capital Management LP",
-    "wert_dollar": 59529.755600000004,
-    "datum": "2026-08-06",
     "transaktionscode": "P",
     "rolle": "Insider"
    },
@@ -2738,22 +2624,6 @@
     "datum": "2026-08-11",
     "transaktionscode": "P",
     "rolle": "Executive Chairman"
-   }
-  ],
-  "APHP": [
-   {
-    "insider": "Battles Timothy Southgate",
-    "wert_dollar": 50000.0,
-    "datum": "2026-08-06",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "Battles Timothy Southgate",
-    "wert_dollar": 50000.0,
-    "datum": "2026-08-06",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
    }
   ],
   "APCX": [
@@ -4423,8 +4293,6 @@
   "Gross Mario": "Chief Supply Chain Officer",
   "Hill Jaime": "President, Building Materials",
   "Macadam Stephen E.": "Direktor",
-  "GOLDMAN SACHS GROUP INC": "Insider",
-  "WALSH COLIN": "Direktor",
   "BECKWITT RICHARD": "Direktor",
   "O'Sullivan Michael J.": "See Remarks",
   "SCHULER JACK W": "Insider",
@@ -4479,7 +4347,6 @@
   "NATHAN GILBERT E": "Direktor",
   "RADY ERNEST S": "Executive Chairman",
   "CORRIGAN JACK E": "Direktor",
-  "Battles Timothy Southgate": "Direktor",
   "LORD ALBERT L": "Direktor",
   "Mahoney Sean O": "Direktor",
   "Artikkhodjaev Jakhongir Abidovich": "Insider",
