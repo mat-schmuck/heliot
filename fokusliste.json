@@ -1,111 +1,118 @@
 {
- "gebaut_am": "2026-08-21 00:03 Wien",
+ "gebaut_am": "2026-08-22 00:02 Wien",
  "universum": 252,
  "aktien": {
   "ARWR": {
    "firma": "Arrowhead Pharmaceuticals Inc",
-   "vortagesschluss": 87.47,
-   "v50": 2197835.2,
+   "vortagesschluss": 87.11,
+   "v50": 2201428.0,
    "rs_rating": 92,
-   "ueber_52w_tief_pct": 350.4
+   "ueber_52w_tief_pct": 339.6
   },
   "AYA": {
    "firma": "Aya Gold & Silver Inc",
-   "vortagesschluss": 26.92,
-   "v50": 670319.6,
-   "rs_rating": 91,
-   "ueber_52w_tief_pct": 225.5
+   "vortagesschluss": 26.65,
+   "v50": 687433.1,
+   "rs_rating": 94,
+   "ueber_52w_tief_pct": 221.1
   },
   "CDNA": {
    "firma": "Caredx Inc",
-   "vortagesschluss": 46.99,
-   "v50": 1112353.0,
-   "rs_rating": 98,
-   "ueber_52w_tief_pct": 316.9
+   "vortagesschluss": 48.61,
+   "v50": 1142216.0,
+   "rs_rating": 99,
+   "ueber_52w_tief_pct": 309.2
   },
   "CLMT": {
    "firma": "Calumet Inc",
-   "vortagesschluss": 48.29,
-   "v50": 1129830.6,
+   "vortagesschluss": 49.01,
+   "v50": 1121364.7,
    "rs_rating": 95,
-   "ueber_52w_tief_pct": 273.2
+   "ueber_52w_tief_pct": 257.5
   },
   "CRNX": {
    "firma": "Crinetics Pharmaceuticals Inc",
    "vortagesschluss": 84.69,
-   "v50": 4630248.7,
-   "rs_rating": 97,
+   "v50": 4770595.1,
+   "rs_rating": 96,
    "ueber_52w_tief_pct": 194.8
+  },
+  "DK": {
+   "firma": "Delek US Holdings Inc",
+   "vortagesschluss": 71.47,
+   "v50": 1288068.6,
+   "rs_rating": 91,
+   "ueber_52w_tief_pct": 238.9
+  },
+  "FSLY": {
+   "firma": "Fastly Inc",
+   "vortagesschluss": 24.95,
+   "v50": 5830737.1,
+   "rs_rating": 93,
+   "ueber_52w_tief_pct": 255.9
   },
   "HPE": {
    "firma": "Hewlett Packard Enterprise Co",
-   "vortagesschluss": 52.89,
-   "v50": 20120937.3,
+   "vortagesschluss": 53.45,
+   "v50": 19585473.6,
    "rs_rating": 94,
-   "ueber_52w_tief_pct": 166.6
+   "ueber_52w_tief_pct": 169.4
   },
   "NESR": {
    "firma": "National Energy Services Reunited Corp",
-   "vortagesschluss": 32.72,
-   "v50": 2321594.2,
-   "rs_rating": 96,
-   "ueber_52w_tief_pct": 382.6
+   "vortagesschluss": 33.03,
+   "v50": 2369480.2,
+   "rs_rating": 93,
+   "ueber_52w_tief_pct": 301.3
   },
   "PBF": {
    "firma": "PBF Energy Inc",
-   "vortagesschluss": 69.56,
-   "v50": 3042411.9,
-   "rs_rating": 93,
-   "ueber_52w_tief_pct": 214.3
-  },
-  "SEPN": {
-   "firma": "Septerna Inc",
-   "vortagesschluss": 40.79,
-   "v50": 477524.9,
-   "rs_rating": 92,
-   "ueber_52w_tief_pct": 279.8
+   "vortagesschluss": 73.53,
+   "v50": 3046330.9,
+   "rs_rating": 95,
+   "ueber_52w_tief_pct": 232.3
   },
   "TVTX": {
    "firma": "Travere Therapeutics Inc",
-   "vortagesschluss": 64.46,
-   "v50": 1833591.0,
-   "rs_rating": 95,
-   "ueber_52w_tief_pct": 278.1
+   "vortagesschluss": 65.71,
+   "v50": 1812531.4,
+   "rs_rating": 94,
+   "ueber_52w_tief_pct": 285.4
   },
   "TWST": {
    "firma": "Twist Bioscience Corp",
-   "vortagesschluss": 136.33,
-   "v50": 1873012.2,
+   "vortagesschluss": 145.59,
+   "v50": 1843027.8,
    "rs_rating": 99,
-   "ueber_52w_tief_pct": 485.1
+   "ueber_52w_tief_pct": 524.8
   },
   "UMAC": {
    "firma": "Unusual Machines Inc",
-   "vortagesschluss": 25.98,
-   "v50": 4606460.9,
-   "rs_rating": 96,
-   "ueber_52w_tief_pct": 258.6
+   "vortagesschluss": 27.43,
+   "v50": 4598457.3,
+   "rs_rating": 97,
+   "ueber_52w_tief_pct": 278.6
   },
   "XNCR": {
    "firma": "Xencor Inc",
-   "vortagesschluss": 27.0,
-   "v50": 1091338.3,
+   "vortagesschluss": 27.8,
+   "v50": 1098042.7,
    "rs_rating": 97,
-   "ueber_52w_tief_pct": 278.7
+   "ueber_52w_tief_pct": 289.9
   },
   "CORT": {
    "firma": "Corcept Therapeutics Inc",
-   "vortagesschluss": 121.05,
-   "v50": 1108725.9,
-   "rs_rating": 94,
-   "ueber_52w_tief_pct": 322.4
+   "vortagesschluss": 122.25,
+   "v50": 1119797.1,
+   "rs_rating": 96,
+   "ueber_52w_tief_pct": 326.6
   },
   "LITE": {
    "firma": "Lumentum Holdings Inc",
-   "vortagesschluss": 879.28,
-   "v50": 5048795.3,
-   "rs_rating": 99,
-   "ueber_52w_tief_pct": 690.7
+   "vortagesschluss": 866.71,
+   "v50": 5007142.3,
+   "rs_rating": 98,
+   "ueber_52w_tief_pct": 652.3
   }
  }
 }

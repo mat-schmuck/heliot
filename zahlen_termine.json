@@ -1,12 +1,10 @@
 {
- "gebaut_am": "2026-08-21 00:07 Wien",
+ "gebaut_am": "2026-08-22 00:05 Wien",
  "ohne_termin": [
   "SKYT"
  ],
  "nur_nasdaq": [],
- "uneinig": [
-  "FIVE"
- ],
+ "uneinig": [],
  "aktien": {
   "AAMI": {
    "datum": "2026-10-29",
@@ -651,8 +649,7 @@
    "quellen": [
     "yahoo",
     "nasdaq"
-   ],
-   "uneinig": "Quellen uneinig: 2026-09-02 (Yahoo, hier bevorzugt) gegen 2026-08-26 (Nasdaq)"
+   ]
   },
   "FIX": {
    "datum": "2026-10-22",
@@ -679,7 +676,7 @@
    ]
   },
   "FRO": {
-   "datum": "2026-08-31",
+   "datum": "2026-08-28",
    "uhrzeit": "08:00",
    "lage": "vorboerslich",
    "quellen": [
@@ -1076,7 +1073,8 @@
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "MATX": {
@@ -1257,7 +1255,7 @@
    ]
   },
   "NMM": {
-   "datum": "2026-08-20",
+   "datum": "2026-11-17",
    "uhrzeit": "07:00",
    "lage": "vorboerslich",
    "quellen": [
@@ -1590,12 +1588,11 @@
    ]
   },
   "ROST": {
-   "datum": "2026-08-20",
-   "uhrzeit": "16:00",
-   "lage": "nachboerslich",
+   "datum": "2026-11-19",
+   "uhrzeit": "15:00",
+   "lage": "im_handel",
    "quellen": [
-    "yahoo",
-    "nasdaq"
+    "yahoo"
    ]
   },
   "RPRX": {
@@ -1872,8 +1869,8 @@
    ]
   },
   "TWIN": {
-   "datum": "2026-08-20",
-   "uhrzeit": "08:00",
+   "datum": "2026-11-04",
+   "uhrzeit": "07:00",
    "lage": "vorboerslich",
    "quellen": [
     "yahoo"
@@ -1932,7 +1929,8 @@
    "uhrzeit": "08:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "VIK": {
@@ -1964,7 +1962,8 @@
    "uhrzeit": "08:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "WAB": {
