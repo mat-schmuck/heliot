@@ -1,10 +1,12 @@
 {
- "gebaut_am": "2026-08-22 00:05 Wien",
+ "gebaut_am": "2026-08-24 00:05 Wien",
  "ohne_termin": [
   "SKYT"
  ],
  "nur_nasdaq": [],
- "uneinig": [],
+ "uneinig": [
+  "FRO"
+ ],
  "aktien": {
   "AAMI": {
    "datum": "2026-10-29",
@@ -680,8 +682,10 @@
    "uhrzeit": "08:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo"
-   ]
+    "yahoo",
+    "nasdaq"
+   ],
+   "uneinig": "Quellen uneinig: 2026-08-28 (Yahoo, hier bevorzugt) gegen 2026-09-04 (Nasdaq)"
   },
   "FROG": {
    "datum": "2026-11-05",
