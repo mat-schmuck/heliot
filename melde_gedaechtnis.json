@@ -220,7 +220,7 @@
     "AAMI|2": "draussen",
     "PM|1": "drin",
     "MSGE|2": "drin",
-    "ASST|2": "drin",
+    "ASST|2": "draussen",
     "OSCR|1": "drin",
     "ODTX|1": "drin",
     "ODTX|3": "drin",
@@ -233,7 +233,15 @@
     "BLSH|2": "drin",
     "HEI-A|2": "drin",
     "LIFE|1": "drin",
-    "LIFE|3": "drin"
+    "LIFE|3": "drin",
+    "NVCT|2": "drin",
+    "DDS|3": "drin",
+    "AWR|1": "drin",
+    "IBKR|1": "drin",
+    "CAI|2": "drin",
+    "CRNX|1": "drin",
+    "ILMN|1": "drin",
+    "ILMN|3": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -279,6 +287,7 @@
     "WIX|1": "2026-08-24",
     "BEST|WIX|1": "2026-08-24",
     "LIFE|1": "2026-08-24",
-    "BEST|LIFE|1": "2026-08-24"
+    "BEST|LIFE|1": "2026-08-24",
+    "UEBER|ASST|2": "2026-08-24"
   }
 }
