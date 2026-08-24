@@ -80,7 +80,7 @@
     "PM|3": "drin",
     "RBRK|2": "draussen",
     "REGN|2": "draussen",
-    "RYTM|3": "drin",
+    "RYTM|3": "draussen",
     "SBRA|3": "drin",
     "SDGR|3": "draussen",
     "SE|3": "draussen",
@@ -205,7 +205,16 @@
     "HMY|3": "draussen",
     "ITT|2": "drin",
     "WTS|2": "draussen",
-    "BCPC|1": "drin"
+    "BCPC|1": "drin",
+    "ARES|3": "draussen",
+    "INSW|2": "draussen",
+    "YPF|3": "drin",
+    "ELF|1": "drin",
+    "AMR|3": "draussen",
+    "FRHC|3": "draussen",
+    "MATX|1": "draussen",
+    "IMAX|1": "drin",
+    "IMAX|3": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -239,6 +248,8 @@
     "HTF|APPN|1": "2026-08-24",
     "BEST|HTF|APPN|1": "2026-08-24",
     "BCPC|1": "2026-08-24",
-    "BEST|BCPC|1": "2026-08-24"
+    "BEST|BCPC|1": "2026-08-24",
+    "IMAX|1": "2026-08-24",
+    "BEST|IMAX|1": "2026-08-24"
   }
 }
