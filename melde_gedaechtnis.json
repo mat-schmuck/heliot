@@ -119,7 +119,7 @@
     "ARGX|2": "draussen",
     "ARIS|3": "draussen",
     "ASST|3": "draussen",
-    "ATAT|3": "drin",
+    "ATAT|3": "draussen",
     "AU|3": "draussen",
     "AUGO|3": "draussen",
     "B|2": "drin",
@@ -220,7 +220,7 @@
     "AAMI|2": "draussen",
     "PM|1": "drin",
     "MSGE|2": "drin",
-    "ASST|2": "draussen",
+    "ASST|2": "drin",
     "OSCR|1": "drin",
     "ODTX|1": "drin",
     "ODTX|3": "drin",
@@ -241,7 +241,11 @@
     "CAI|2": "drin",
     "CRNX|1": "drin",
     "ILMN|1": "drin",
-    "ILMN|3": "drin"
+    "ILMN|3": "drin",
+    "AWR|3": "drin",
+    "CWT|1": "drin",
+    "XNCR|1": "drin",
+    "XNCR|3": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -288,6 +292,7 @@
     "BEST|WIX|1": "2026-08-24",
     "LIFE|1": "2026-08-24",
     "BEST|LIFE|1": "2026-08-24",
-    "UEBER|ASST|2": "2026-08-24"
+    "UEBER|ASST|2": "2026-08-24",
+    "HTF|XNCR|1": "2026-08-24"
   }
 }
