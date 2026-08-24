@@ -3,7 +3,7 @@
   "fenster": {
     "ADPT|3": "draussen",
     "AYA|3": "draussen",
-    "ENVA|3": "drin",
+    "ENVA|3": "draussen",
     "ETON|2": "draussen",
     "ETON|3": "draussen",
     "OSCR|2": "drin",
@@ -47,7 +47,7 @@
     "CDE|3": "draussen",
     "CVE|2": "draussen",
     "CWT|3": "drin",
-    "DDS|1": "drin",
+    "DDS|1": "draussen",
     "ECO|2": "draussen",
     "ELF|3": "draussen",
     "FOX|3": "draussen",
@@ -104,7 +104,7 @@
     "LIME|2": "draussen",
     "LIND|2": "draussen",
     "MRNA|2": "draussen",
-    "NBTX|3": "draussen",
+    "NBTX|3": "drin",
     "NVCT|3": "draussen",
     "PLPC|2": "draussen",
     "PLSE|2": "draussen",
@@ -150,7 +150,7 @@
     "FIGR|3": "draussen",
     "FNV|2": "drin",
     "FNV|3": "draussen",
-    "FROG|3": "draussen",
+    "FROG|3": "drin",
     "FSLY|3": "draussen",
     "FUTU|3": "draussen",
     "GFI|3": "draussen",
@@ -216,7 +216,7 @@
     "IMAX|1": "drin",
     "IMAX|3": "drin",
     "ETON|1": "drin",
-    "AWR|2": "drin",
+    "AWR|2": "draussen",
     "AAMI|2": "draussen",
     "PM|1": "drin",
     "MSGE|2": "drin",
@@ -224,7 +224,16 @@
     "OSCR|1": "drin",
     "ODTX|1": "drin",
     "ODTX|3": "drin",
-    "WIX|1": "drin"
+    "WIX|1": "drin",
+    "VLO|1": "drin",
+    "ENVA|2": "drin",
+    "AMR|2": "drin",
+    "ANDG|1": "drin",
+    "ANDG|3": "drin",
+    "BLSH|2": "drin",
+    "HEI-A|2": "drin",
+    "LIFE|1": "drin",
+    "LIFE|3": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -268,6 +277,8 @@
     "OSCR|1": "2026-08-24",
     "BEST|OSCR|1": "2026-08-24",
     "WIX|1": "2026-08-24",
-    "BEST|WIX|1": "2026-08-24"
+    "BEST|WIX|1": "2026-08-24",
+    "LIFE|1": "2026-08-24",
+    "BEST|LIFE|1": "2026-08-24"
   }
 }
