@@ -1,5 +1,5 @@
 {
- "stand": "2026-08-21",
+ "stand": "2026-08-24",
  "gelesen": [
   "0000002488-26-000141",
   "0000004977-26-000098",
@@ -1104,22 +1104,8 @@
    },
    {
     "insider": "Huang Jack Jiajia",
-    "wert_dollar": 1754407.2,
-    "datum": "2026-08-07",
-    "transaktionscode": "P",
-    "rolle": "Chief Executive Officer"
-   },
-   {
-    "insider": "Huang Jack Jiajia",
     "wert_dollar": 3943605.5999999996,
     "datum": "2026-08-10",
-    "transaktionscode": "P",
-    "rolle": "Chief Executive Officer"
-   },
-   {
-    "insider": "Huang Jack Jiajia",
-    "wert_dollar": 1754407.2,
-    "datum": "2026-08-07",
     "transaktionscode": "P",
     "rolle": "Chief Executive Officer"
    },
@@ -3000,22 +2986,6 @@
     "rolle": "Insider"
    }
   ],
-  "BOTJ": [
-   {
-    "insider": "SYREK MICHAEL A",
-    "wert_dollar": 2705.0,
-    "datum": "2026-08-07",
-    "transaktionscode": "P",
-    "rolle": "President - Bank of the James"
-   },
-   {
-    "insider": "SYREK MICHAEL A",
-    "wert_dollar": 2705.0,
-    "datum": "2026-08-07",
-    "transaktionscode": "P",
-    "rolle": "President - Bank of the James"
-   }
-  ],
   "OVBC": [
    {
     "insider": "BARNITZ ANNA P",
@@ -4353,7 +4323,6 @@
   "Grimaldo Joseph F": "Direktor",
   "Saul Kennedy O": "Direktor",
   "BANK OF AMERICA CORP /DE/": "Insider",
-  "SYREK MICHAEL A": "President - Bank of the James",
   "BARNITZ ANNA P": "Direktor",
   "LEMONIS MARCUS": "EXECUTIVE CHAIRMAN & CEO",
   "WINMILL & CO. INC": "Insider",
