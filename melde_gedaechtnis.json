@@ -220,10 +220,10 @@
     "AAMI|2": "draussen",
     "PM|1": "drin",
     "MSGE|2": "drin",
-    "ASST|2": "drin",
+    "ASST|2": "draussen",
     "OSCR|1": "drin",
     "ODTX|1": "drin",
-    "ODTX|3": "drin",
+    "ODTX|3": "draussen",
     "WIX|1": "drin",
     "VLO|1": "drin",
     "ENVA|2": "drin",
@@ -293,6 +293,7 @@
     "LIFE|1": "2026-08-24",
     "BEST|LIFE|1": "2026-08-24",
     "UEBER|ASST|2": "2026-08-24",
-    "HTF|XNCR|1": "2026-08-24"
+    "HTF|XNCR|1": "2026-08-24",
+    "UEBER|ODTX|3": "2026-08-24"
   }
 }
