@@ -1,118 +1,111 @@
 {
- "gebaut_am": "2026-08-24 00:02 Wien",
- "universum": 252,
+ "gebaut_am": "2026-08-24 14:01 Wien",
+ "universum": 195,
  "aktien": {
-  "ARWR": {
-   "firma": "Arrowhead Pharmaceuticals Inc",
-   "vortagesschluss": 87.11,
-   "v50": 2202170.0,
-   "rs_rating": 92,
-   "ueber_52w_tief_pct": 339.6
-  },
-  "AYA": {
-   "firma": "Aya Gold & Silver Inc",
-   "vortagesschluss": 26.65,
-   "v50": 689992.0,
-   "rs_rating": 94,
-   "ueber_52w_tief_pct": 221.1
+  "ATEX": {
+   "firma": "Anterix Inc",
+   "vortagesschluss": 93.25,
+   "v50": 464914.0,
+   "rs_rating": 93,
+   "ueber_52w_tief_pct": 430.4
   },
   "CDNA": {
    "firma": "Caredx Inc",
    "vortagesschluss": 48.61,
    "v50": 1142224.0,
-   "rs_rating": 99,
+   "rs_rating": 93,
    "ueber_52w_tief_pct": 309.2
   },
-  "CLMT": {
-   "firma": "Calumet Inc",
-   "vortagesschluss": 49.01,
-   "v50": 1121698.0,
-   "rs_rating": 95,
-   "ueber_52w_tief_pct": 257.5
+  "ETON": {
+   "firma": "Eton Pharmaceuticals Inc",
+   "vortagesschluss": 63.47,
+   "v50": 557742.0,
+   "rs_rating": 94,
+   "ueber_52w_tief_pct": 344.8
   },
-  "CRNX": {
-   "firma": "Crinetics Pharmaceuticals Inc",
-   "vortagesschluss": 84.69,
-   "v50": 4774062.0,
+  "QMCO": {
+   "firma": "Quantum Corp",
+   "vortagesschluss": 22.25,
+   "v50": 1613718.0,
+   "rs_rating": 95,
+   "ueber_52w_tief_pct": 431.0
+  },
+  "AMLX": {
+   "firma": "Amylyx Pharmaceuticals Inc",
+   "vortagesschluss": 38.66,
+   "v50": 2611036.0,
+   "rs_rating": 95,
+   "ueber_52w_tief_pct": 385.7
+  },
+  "CHRN": {
+   "firma": "ChronoScale Holdings Corp",
+   "vortagesschluss": 23.845,
+   "v50": 302362.0,
+   "rs_rating": 97,
+   "ueber_52w_tief_pct": 638.2
+  },
+  "LIME": {
+   "firma": "Neutron Holdings Inc",
+   "vortagesschluss": 41.06,
+   "v50": 245599.8,
+   "rs_rating": 99,
+   "ueber_52w_tief_pct": 5765.7
+  },
+  "MRNA": {
+   "firma": "Moderna Inc",
+   "vortagesschluss": 145.13,
+   "v50": 14704886.0,
+   "rs_rating": 98,
+   "ueber_52w_tief_pct": 551.4
+  },
+  "MU": {
+   "firma": "Micron Technology Inc",
+   "vortagesschluss": 966.78,
+   "v50": 45771158.0,
    "rs_rating": 96,
-   "ueber_52w_tief_pct": 194.8
+   "ueber_52w_tief_pct": 746.2
   },
-  "DK": {
-   "firma": "Delek US Holdings Inc",
-   "vortagesschluss": 71.47,
-   "v50": 1318802.0,
+  "NVCT": {
+   "firma": "Nuvectis Pharma Inc",
+   "vortagesschluss": 23.56,
+   "v50": 370968.0,
+   "rs_rating": 94,
+   "ueber_52w_tief_pct": 324.5
+  },
+  "PLSE": {
+   "firma": "Pulse Biosciences Inc",
+   "vortagesschluss": 50.42,
+   "v50": 397350.0,
    "rs_rating": 91,
-   "ueber_52w_tief_pct": 238.9
+   "ueber_52w_tief_pct": 301.4
   },
-  "FSLY": {
-   "firma": "Fastly Inc",
-   "vortagesschluss": 24.95,
-   "v50": 5830802.0,
-   "rs_rating": 93,
-   "ueber_52w_tief_pct": 255.9
+  "PSNL": {
+   "firma": "Personalis Inc",
+   "vortagesschluss": 18.38,
+   "v50": 4385916.0,
+   "rs_rating": 91,
+   "ueber_52w_tief_pct": 300.4
   },
-  "HPE": {
-   "firma": "Hewlett Packard Enterprise Co",
-   "vortagesschluss": 53.45,
-   "v50": 19614436.0,
-   "rs_rating": 94,
-   "ueber_52w_tief_pct": 169.4
-  },
-  "NESR": {
-   "firma": "National Energy Services Reunited Corp",
-   "vortagesschluss": 33.03,
-   "v50": 2369968.0,
-   "rs_rating": 93,
-   "ueber_52w_tief_pct": 301.3
-  },
-  "PBF": {
-   "firma": "PBF Energy Inc",
-   "vortagesschluss": 73.53,
-   "v50": 3046332.0,
-   "rs_rating": 95,
-   "ueber_52w_tief_pct": 232.3
-  },
-  "TVTX": {
-   "firma": "Travere Therapeutics Inc",
-   "vortagesschluss": 65.71,
-   "v50": 1815590.0,
-   "rs_rating": 94,
-   "ueber_52w_tief_pct": 285.4
+  "SLS": {
+   "firma": "SELLAS Life Sciences Group Inc",
+   "vortagesschluss": 15.46,
+   "v50": 8529734.0,
+   "rs_rating": 98,
+   "ueber_52w_tief_pct": 1012.2
   },
   "TWST": {
    "firma": "Twist Bioscience Corp",
    "vortagesschluss": 145.59,
    "v50": 1843046.0,
-   "rs_rating": 99,
+   "rs_rating": 97,
    "ueber_52w_tief_pct": 524.8
   },
-  "UMAC": {
-   "firma": "Unusual Machines Inc",
-   "vortagesschluss": 27.43,
-   "v50": 4599018.0,
-   "rs_rating": 97,
-   "ueber_52w_tief_pct": 278.6
-  },
-  "XNCR": {
-   "firma": "Xencor Inc",
-   "vortagesschluss": 27.8,
-   "v50": 1099080.0,
-   "rs_rating": 97,
-   "ueber_52w_tief_pct": 289.9
-  },
-  "CORT": {
-   "firma": "Corcept Therapeutics Inc",
-   "vortagesschluss": 122.25,
-   "v50": 1120138.0,
+  "TXG": {
+   "firma": "10x Genomics Inc",
+   "vortagesschluss": 65.12,
+   "v50": 3248256.0,
    "rs_rating": 96,
-   "ueber_52w_tief_pct": 326.6
-  },
-  "LITE": {
-   "firma": "Lumentum Holdings Inc",
-   "vortagesschluss": 866.71,
-   "v50": 5007192.0,
-   "rs_rating": 98,
-   "ueber_52w_tief_pct": 652.3
+   "ueber_52w_tief_pct": 483.5
   }
  }
 }
