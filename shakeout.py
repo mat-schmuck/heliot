@@ -434,6 +434,31 @@ def erkenne_shakeout_mit_sekundaertest(df, df_wochen=None):
     return None
 
 
+def warteliste_bereinigen(warteliste: dict, gelistet: set):
+    """Wartepositionen von Aktien entfernen, die auf KEINER aktuellen
+    Liste mehr stehen. Rueckgabe: (warteliste, entfernte Ticker).
+
+    WARUM (Mathias' Sicherheitsfrage vom 24.08.2026 nach Ueberbleibseln
+    der Vorwochen-Liste): Der Nachtscan rechnet nur die Aktien der
+    aktuellen Listen durch. Faellt eine Aktie von der Liste, wird ihre
+    Warteposition nie mehr angefasst - ihr Tage-Zaehler friert ein,
+    die Ablauf-Raeumung der Wartung (tage_gewartet > max) greift
+    deshalb nie, und die Eintraege sammelten sich wochenlang an
+    (gefunden: 12 eingefrorene Eintraege, aelteste vom 03.08.).
+    Ausloesen konnten sie nichts; sie waren totes Gewicht.
+
+    Gerhards Regel "beim Aufraeumen duerfen NUR abgelaufene Eintraege
+    weg, keine aktiven Wartepositionen" bleibt gewahrt: Eine
+    Warteposition ohne Listenplatz IST keine aktive Position mehr -
+    ohne Kursdaten kann ihr Sekundaertest nie eintreten, und die
+    Werkzeuge ueberwachen laut seiner Listenregel genau die
+    Vereinigung der aktuell hochgeladenen Listen."""
+    fremde = sorted(t for t in warteliste if t not in gelistet)
+    for t in fremde:
+        del warteliste[t]
+    return warteliste, fremde
+
+
 def warte_auf_sekundaertest_und_alarmiere(df, warteliste, symbol, df_wochen=None):
     """DIE EMPFOHLENE BETRIEBSART. Einmal täglich nach Handelsschluss je
     Aktie aufrufen.

@@ -49,6 +49,7 @@ from scipy.signal import argrelextrema
 from scipy.stats import linregress
 
 import cup_handle_v2  # Cup & Handle auf Wochenbasis, "Giant Base"
+import listen         # Wochenlisten: Vereinigung und Darvas-Recht
 import exit_regeln    # Stop-Deckel und die eine Risiko-Formel
 import ntfy_verlauf   # merkt sich jede verschickte Meldung fuer den Freitags-Putz
 import positionen     # offene Positionen samt Exit-Regelwerk
@@ -882,6 +883,14 @@ def shakeout_durchgang(loaded: dict) -> list[dict]:
     leert, verliert die aktiven Wartepositionen."""
     warteliste = _json_lesen(SHAKEOUT_DATEI, {})
     vorher = len(warteliste)
+    # Ohne Listenplatz keine Warteposition (24.08.2026, siehe
+    # shakeout.warteliste_bereinigen): sonst frieren Eintraege von
+    # Aktien, die von der Wochenliste gefallen sind, fuer immer ein.
+    gelistet = {t for t, _ in listen.alle_ticker()}
+    warteliste, fremde = shakeout.warteliste_bereinigen(warteliste, gelistet)
+    if fremde:
+        print(f"Shakeout: {len(fremde)} Warteposition(en) von Aktien "
+              f"ohne aktuellen Listenplatz entfernt: {', '.join(fremde)}")
     signale = []
     for ticker, (df, company) in loaded.items():
         try:

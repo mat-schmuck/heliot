@@ -337,6 +337,18 @@ def block_e():
     pruefe("E", "'nicht verifizierbar' faellt nicht mit 'nicht bestaetigt' zusammen",
            texte["nicht verifizierbar"] != texte["nicht bestaetigt"])
 
+    # Shakeout-Warteliste ohne Listen-Altlasten (Mathias, 24.08.2026)
+    import shakeout as sk
+    _wl = {"WEG": {"tage_gewartet": 3}, "BLEIBT": {"tage_gewartet": 3}}
+    _rest, _weg = sk.warteliste_bereinigen(_wl, {"BLEIBT"})
+    pruefe("E", "Warteliste: Aktien ohne Listenplatz werden entfernt",
+           _weg == ["WEG"] and set(_rest) == {"BLEIBT"})
+    pruefe("E", "Warteliste: aktive Positionen gelisteter Aktien bleiben",
+           _rest.get("BLEIBT", {}).get("tage_gewartet") == 3)
+    quelle_ps = pathlib.Path("pattern_scanner.py").read_text(encoding="utf-8")
+    pruefe("E", "Nachtscan ruft die Warteliste-Bereinigung",
+           "warteliste_bereinigen" in quelle_ps)
+
     # Ausweich-Marken laufen mit (Mathias, 19.08.2026: "Ich habe den
     # anderen Schalter gemeint") - samt Von-unten-Riegel gegen die
     # Ruecksetzer-Marken (gemessen: 32 Mitlaeufer im Fenster).
