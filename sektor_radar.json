@@ -1,15 +1,7 @@
 {
- "gebaut_am": "2026-08-24T12:04:48",
- "handelstag": "2026-08-21",
+ "gebaut_am": "2026-08-24T22:05:18",
+ "handelstag": "2026-08-24",
  "geladen": 36,
  "unfertig": [],
- "treffer": [
-  {
-   "etf": "XME",
-   "name": "Metals & Mining",
-   "richtung": "hoch",
-   "volumen_pct": 107.5,
-   "kurs": 119.34
-  }
- ]
+ "treffer": []
 }
