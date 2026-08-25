@@ -196,7 +196,7 @@
     "BCPC|3": "drin",
     "CWT|3": "drin",
     "ITT|2": "drin",
-    "ASST|1": "drin",
+    "ASST|1": "draussen",
     "LIFE|1": "drin",
     "LIFE|3": "drin",
     "PAAS|1": "drin",
@@ -231,7 +231,11 @@
     "ILMN|1": "drin",
     "IBKR|1": "drin",
     "FCX|1": "drin",
-    "WPM|1": "drin"
+    "WPM|1": "drin",
+    "OMER|1": "drin",
+    "OMER|3": "drin",
+    "JAZZ|1": "drin",
+    "BLSH|2": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -299,6 +303,8 @@
     "NBTX|1": "2026-08-25",
     "BEST|NBTX|1": "2026-08-25",
     "WPM|1": "2026-08-25",
-    "BEST|WPM|1": "2026-08-25"
+    "BEST|WPM|1": "2026-08-25",
+    "JAZZ|1": "2026-08-25",
+    "BEST|JAZZ|1": "2026-08-25"
   }
 }
