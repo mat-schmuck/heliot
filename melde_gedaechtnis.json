@@ -148,7 +148,7 @@
     "EOG|2": "draussen",
     "FIG|3": "draussen",
     "FIGR|3": "draussen",
-    "FROG|3": "draussen",
+    "FROG|3": "drin",
     "FSLY|3": "draussen",
     "FUTU|3": "draussen",
     "GFI|3": "draussen",
@@ -196,7 +196,11 @@
     "BCPC|3": "drin",
     "CWT|3": "drin",
     "ITT|2": "drin",
-    "ASST|1": "drin"
+    "ASST|1": "drin",
+    "LIFE|1": "drin",
+    "LIFE|3": "drin",
+    "PAAS|1": "drin",
+    "TECK|1": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -242,6 +246,8 @@
     "XNCR|1": "2026-08-25",
     "BEST|XNCR|1": "2026-08-25",
     "ASST|1": "2026-08-25",
-    "BEST|ASST|1": "2026-08-25"
+    "BEST|ASST|1": "2026-08-25",
+    "TECK|1": "2026-08-25",
+    "BEST|TECK|1": "2026-08-25"
   }
 }
