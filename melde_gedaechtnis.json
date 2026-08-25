@@ -57,7 +57,7 @@
     "FNV|3": "draussen",
     "FOX|3": "draussen",
     "FOXA|3": "draussen",
-    "GLBE|2": "drin",
+    "GLBE|2": "draussen",
     "HALO|2": "draussen",
     "HAS|3": "draussen",
     "HASI|1": "drin",
@@ -247,7 +247,12 @@
     "SSRM|1": "drin",
     "IAG|1": "drin",
     "SSRM|3": "drin",
-    "TIGO|3": "drin"
+    "TIGO|3": "drin",
+    "AU|2": "drin",
+    "TECK|2": "drin",
+    "AUGO|2": "drin",
+    "TIGO|1": "drin",
+    "HOOD|1": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -327,6 +332,8 @@
     "FNV|1": "2026-08-25",
     "BEST|FNV|1": "2026-08-25",
     "UEBER|TWST|3": "2026-08-25",
-    "UEBER|TWST|1": "2026-08-25"
+    "UEBER|TWST|1": "2026-08-25",
+    "HOOD|1": "2026-08-25",
+    "BEST|HOOD|1": "2026-08-25"
   }
 }
