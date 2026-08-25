@@ -205,7 +205,7 @@
     "DDS|3": "draussen",
     "TWST|3": "draussen",
     "HALO|1": "drin",
-    "TWST|1": "drin",
+    "TWST|1": "draussen",
     "HALO|3": "drin",
     "LOAR|3": "drin",
     "FRHC|1": "drin",
@@ -326,6 +326,7 @@
     "BEST|IAG|1": "2026-08-25",
     "FNV|1": "2026-08-25",
     "BEST|FNV|1": "2026-08-25",
-    "UEBER|TWST|3": "2026-08-25"
+    "UEBER|TWST|3": "2026-08-25",
+    "UEBER|TWST|1": "2026-08-25"
   }
 }
