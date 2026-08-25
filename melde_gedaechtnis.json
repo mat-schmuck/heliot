@@ -241,7 +241,11 @@
     "AEM|1": "drin",
     "CSTL|2": "drin",
     "FUTU|2": "drin",
-    "CDNA|1": "drin"
+    "CDNA|1": "drin",
+    "NVCT|2": "drin",
+    "B|1": "drin",
+    "SSRM|1": "drin",
+    "IAG|1": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -315,6 +319,8 @@
     "UEBER|ASST|1": "2026-08-25",
     "UEBER|INBX|2": "2026-08-25",
     "HTF|CDNA|1": "2026-08-25",
-    "BEST|HTF|CDNA|1": "2026-08-25"
+    "BEST|HTF|CDNA|1": "2026-08-25",
+    "IAG|1": "2026-08-25",
+    "BEST|IAG|1": "2026-08-25"
   }
 }
