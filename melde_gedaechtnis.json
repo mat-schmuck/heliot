@@ -252,7 +252,9 @@
     "TECK|2": "drin",
     "AUGO|2": "drin",
     "TIGO|1": "drin",
-    "HOOD|1": "drin"
+    "HOOD|1": "drin",
+    "FCX|3": "drin",
+    "DAR|1": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -334,6 +336,8 @@
     "UEBER|TWST|3": "2026-08-25",
     "UEBER|TWST|1": "2026-08-25",
     "HOOD|1": "2026-08-25",
-    "BEST|HOOD|1": "2026-08-25"
+    "BEST|HOOD|1": "2026-08-25",
+    "DAR|1": "2026-08-25",
+    "BEST|DAR|1": "2026-08-25"
   }
 }
