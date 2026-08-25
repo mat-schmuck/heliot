@@ -9,7 +9,7 @@
     "OSCR|3": "draussen",
     "VLO|3": "draussen",
     "JAZZ|2": "drin",
-    "JAZZ|3": "drin",
+    "JAZZ|3": "draussen",
     "MRX|1": "draussen",
     "MRX|3": "draussen",
     "ARWR|3": "draussen",
@@ -131,7 +131,7 @@
     "ALM|3": "draussen",
     "ANET|2": "draussen",
     "ARGX|2": "draussen",
-    "ATAT|3": "drin",
+    "ATAT|3": "draussen",
     "AU|3": "draussen",
     "AXTI|3": "drin",
     "BLSH|3": "draussen",
@@ -215,7 +215,15 @@
     "HTFL|3": "drin",
     "FIGR|2": "drin",
     "CAI|1": "drin",
-    "NGL|1": "drin"
+    "NGL|1": "drin",
+    "ADPT|1": "drin",
+    "HIMS|3": "drin",
+    "NBTX|1": "drin",
+    "TXG|3": "drin",
+    "NTRA|1": "drin",
+    "NTRA|3": "drin",
+    "EGO|1": "drin",
+    "CYRX|1": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -271,6 +279,10 @@
     "FRHC|1": "2026-08-25",
     "BEST|FRHC|1": "2026-08-25",
     "NGL|1": "2026-08-25",
-    "BEST|NGL|1": "2026-08-25"
+    "BEST|NGL|1": "2026-08-25",
+    "NTRA|1": "2026-08-25",
+    "BEST|NTRA|1": "2026-08-25",
+    "EGO|1": "2026-08-25",
+    "BEST|EGO|1": "2026-08-25"
   }
 }
