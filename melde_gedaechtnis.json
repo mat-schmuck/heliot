@@ -208,7 +208,7 @@
     "TWST|1": "draussen",
     "HALO|3": "drin",
     "LOAR|3": "drin",
-    "FRHC|1": "drin",
+    "FRHC|1": "draussen",
     "MSGE|2": "drin",
     "CWT|1": "drin",
     "HTFL|1": "drin",
@@ -260,7 +260,8 @@
     "BHP|3": "drin",
     "KYMR|2": "drin",
     "CTNM|1": "drin",
-    "CTNM|3": "drin"
+    "CTNM|3": "drin",
+    "ERO|3": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -347,6 +348,7 @@
     "BEST|DAR|1": "2026-08-25",
     "ERO|1": "2026-08-25",
     "BEST|ERO|1": "2026-08-25",
-    "UEBER|NGL|1": "2026-08-25"
+    "UEBER|NGL|1": "2026-08-25",
+    "UEBER|FRHC|1": "2026-08-25"
   }
 }
