@@ -245,7 +245,8 @@
     "NVCT|2": "drin",
     "B|1": "drin",
     "SSRM|1": "drin",
-    "IAG|1": "drin"
+    "IAG|1": "drin",
+    "SSRM|3": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -321,6 +322,8 @@
     "HTF|CDNA|1": "2026-08-25",
     "BEST|HTF|CDNA|1": "2026-08-25",
     "IAG|1": "2026-08-25",
-    "BEST|IAG|1": "2026-08-25"
+    "BEST|IAG|1": "2026-08-25",
+    "FNV|1": "2026-08-25",
+    "BEST|FNV|1": "2026-08-25"
   }
 }
