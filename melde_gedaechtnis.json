@@ -6,7 +6,7 @@
     "ETON|2": "draussen",
     "ETON|3": "draussen",
     "OSCR|2": "drin",
-    "OSCR|3": "draussen",
+    "OSCR|3": "drin",
     "VLO|3": "draussen",
     "JAZZ|2": "drin",
     "JAZZ|3": "draussen",
@@ -155,7 +155,7 @@
     "GILD|3": "draussen",
     "HAE|2": "draussen",
     "HL|3": "draussen",
-    "INBX|2": "drin",
+    "INBX|2": "draussen",
     "INBX|3": "draussen",
     "INSM|3": "draussen",
     "KKR|3": "draussen",
@@ -235,7 +235,10 @@
     "OMER|1": "drin",
     "OMER|3": "drin",
     "JAZZ|1": "drin",
-    "BLSH|2": "drin"
+    "BLSH|2": "drin",
+    "HOOD|3": "drin",
+    "RGLD|1": "drin",
+    "AEM|1": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -305,6 +308,8 @@
     "WPM|1": "2026-08-25",
     "BEST|WPM|1": "2026-08-25",
     "JAZZ|1": "2026-08-25",
-    "BEST|JAZZ|1": "2026-08-25"
+    "BEST|JAZZ|1": "2026-08-25",
+    "UEBER|ASST|1": "2026-08-25",
+    "UEBER|INBX|2": "2026-08-25"
   }
 }
