@@ -223,7 +223,8 @@
     "NTRA|1": "drin",
     "NTRA|3": "drin",
     "EGO|1": "drin",
-    "CYRX|1": "drin"
+    "CYRX|1": "drin",
+    "TXG|1": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -283,6 +284,8 @@
     "NTRA|1": "2026-08-25",
     "BEST|NTRA|1": "2026-08-25",
     "EGO|1": "2026-08-25",
-    "BEST|EGO|1": "2026-08-25"
+    "BEST|EGO|1": "2026-08-25",
+    "CAI|1": "2026-08-25",
+    "BEST|CAI|1": "2026-08-25"
   }
 }
