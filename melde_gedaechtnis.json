@@ -230,7 +230,8 @@
     "HQ|3": "drin",
     "ILMN|1": "drin",
     "IBKR|1": "drin",
-    "FCX|1": "drin"
+    "FCX|1": "drin",
+    "WPM|1": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -296,6 +297,8 @@
     "FCX|1": "2026-08-25",
     "BEST|FCX|1": "2026-08-25",
     "NBTX|1": "2026-08-25",
-    "BEST|NBTX|1": "2026-08-25"
+    "BEST|NBTX|1": "2026-08-25",
+    "WPM|1": "2026-08-25",
+    "BEST|WPM|1": "2026-08-25"
   }
 }
