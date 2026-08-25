@@ -213,7 +213,9 @@
     "CWT|1": "drin",
     "HTFL|1": "drin",
     "HTFL|3": "drin",
-    "FIGR|2": "drin"
+    "FIGR|2": "drin",
+    "CAI|1": "drin",
+    "NGL|1": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -267,6 +269,8 @@
     "HTFL|1": "2026-08-25",
     "BEST|HTFL|1": "2026-08-25",
     "FRHC|1": "2026-08-25",
-    "BEST|FRHC|1": "2026-08-25"
+    "BEST|FRHC|1": "2026-08-25",
+    "NGL|1": "2026-08-25",
+    "BEST|NGL|1": "2026-08-25"
   }
 }
