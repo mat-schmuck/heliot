@@ -224,7 +224,13 @@
     "NTRA|3": "drin",
     "EGO|1": "drin",
     "CYRX|1": "drin",
-    "TXG|1": "drin"
+    "TXG|1": "drin",
+    "ILMN|3": "drin",
+    "FNV|1": "drin",
+    "HQ|3": "drin",
+    "ILMN|1": "drin",
+    "IBKR|1": "drin",
+    "FCX|1": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -286,6 +292,8 @@
     "EGO|1": "2026-08-25",
     "BEST|EGO|1": "2026-08-25",
     "CAI|1": "2026-08-25",
-    "BEST|CAI|1": "2026-08-25"
+    "BEST|CAI|1": "2026-08-25",
+    "FCX|1": "2026-08-25",
+    "BEST|FCX|1": "2026-08-25"
   }
 }
