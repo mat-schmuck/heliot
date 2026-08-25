@@ -214,7 +214,7 @@
     "HTFL|1": "drin",
     "HTFL|3": "drin",
     "FIGR|2": "drin",
-    "CAI|1": "drin",
+    "CAI|1": "draussen",
     "NGL|1": "draussen",
     "ADPT|1": "drin",
     "HIMS|3": "drin",
@@ -355,6 +355,7 @@
     "UEBER|NGL|1": "2026-08-25",
     "UEBER|FRHC|1": "2026-08-25",
     "B|1": "2026-08-25",
-    "BEST|B|1": "2026-08-25"
+    "BEST|B|1": "2026-08-25",
+    "UEBER|CAI|1": "2026-08-25"
   }
 }
