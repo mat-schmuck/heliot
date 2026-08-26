@@ -1,12 +1,11 @@
 {
- "gebaut_am": "2026-08-26 00:05 Wien",
+ "gebaut_am": "2026-08-27 00:05 Wien",
  "ohne_termin": [
+  "B",
   "CHRN",
-  "GFI",
   "HQ",
   "LTGO",
   "MFP",
-  "OSCR",
   "SCTX"
  ],
  "nur_nasdaq": [
@@ -234,14 +233,6 @@
    "datum": "2026-11-20",
    "uhrzeit": "15:00",
    "lage": "im_handel",
-   "quellen": [
-    "yahoo"
-   ]
-  },
-  "B": {
-   "datum": "2026-11-09",
-   "uhrzeit": "07:00",
-   "lage": "vorboerslich",
    "quellen": [
     "yahoo"
    ]
@@ -663,6 +654,14 @@
     "yahoo"
    ]
   },
+  "GFI": {
+   "datum": "2027-02-19",
+   "uhrzeit": "07:00",
+   "lage": "vorboerslich",
+   "quellen": [
+    "yahoo"
+   ]
+  },
   "GH": {
    "datum": "2026-10-28",
    "uhrzeit": "16:00",
@@ -736,18 +735,17 @@
    ]
   },
   "HEI": {
-   "datum": "2026-08-25",
-   "uhrzeit": "16:00",
-   "lage": "nachboerslich",
+   "datum": "2026-12-17",
+   "uhrzeit": "15:00",
+   "lage": "im_handel",
    "quellen": [
-    "yahoo",
-    "nasdaq"
+    "yahoo"
    ]
   },
   "HEI-A": {
-   "datum": "2026-08-25",
-   "uhrzeit": "16:00",
-   "lage": "nachboerslich",
+   "datum": "2026-12-17",
+   "uhrzeit": "15:00",
+   "lage": "im_handel",
    "quellen": [
     "yahoo"
    ]
@@ -1144,6 +1142,14 @@
    "datum": "2026-11-12",
    "uhrzeit": "15:00",
    "lage": "im_handel",
+   "quellen": [
+    "yahoo"
+   ]
+  },
+  "OSCR": {
+   "datum": "2026-11-09",
+   "uhrzeit": "07:00",
+   "lage": "vorboerslich",
    "quellen": [
     "yahoo"
    ]
