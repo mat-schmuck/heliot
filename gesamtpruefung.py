@@ -337,6 +337,22 @@ def block_e():
     pruefe("E", "'nicht verifizierbar' faellt nicht mit 'nicht bestaetigt' zusammen",
            texte["nicht verifizierbar"] != texte["nicht bestaetigt"])
 
+    # Insider: mehrere Handelstage je Lauf (Befund 26.08.2026 - der
+    # Scanner fragte nur den heutigen Index ab, den es nie gibt)
+    import insider_edgar as ie
+    from datetime import date as _d
+    _tage = ie.indextage(_d(2026, 8, 26), 5)
+    pruefe("E", "Insider-Lauf nimmt mehrere Handelstage, alt nach neu",
+           len(_tage) == 5 and _tage[-1] == _d(2026, 8, 26)
+           and _tage == sorted(_tage))
+    pruefe("E", "Insider-Lauf ueberspringt Wochenenden",
+           all(t.weekday() < 5 for t in ie.indextage(_d(2026, 8, 24), 5)))
+    pruefe("E", "Montag blickt ueber das Wochenende zurueck",
+           ie.indextage(_d(2026, 8, 24), 2) == [_d(2026, 8, 21), _d(2026, 8, 24)])
+    _q_ie = pathlib.Path("insider_edgar.py").read_text(encoding="utf-8")
+    pruefe("E", "403 auf einen vergangenen Werktag wird als FEHLER gemeldet",
+           "vergangener_werktag" in _q_ie and "FEHLER: Tagesindex" in _q_ie)
+
     # Shakeout-Warteliste ohne Listen-Altlasten (Mathias, 24.08.2026)
     import shakeout as sk
     _wl = {"WEG": {"tage_gewartet": 3}, "BLEIBT": {"tage_gewartet": 3}}

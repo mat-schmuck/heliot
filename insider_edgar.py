@@ -58,7 +58,7 @@ import json
 import os
 import sys
 import time
-from datetime import date, datetime
+from datetime import date, timedelta, datetime
 from xml.etree import ElementTree as ET
 
 import insider_scanner as isc
@@ -106,9 +106,24 @@ def tagesindex(datum=None, leise=False):
            f"QTR{q}/form.{datum:%Y%m%d}.idx")
     r = requests.get(url, headers=kopfzeilen(), timeout=40)
     if r.status_code != 200:
+        # EHRLICH UNTERSCHEIDEN (Befund 26.08.2026): Die SEC antwortet
+        # auf einen Index, den es noch nicht gibt, mit 403 - nicht mit
+        # 404. Genau deshalb sah der Totalausfall zwoelf Tage lang wie
+        # ein harmloser Feiertag aus. Fuer HEUTE und die Zukunft ist das
+        # normal (der Index entsteht erst nach Handelsschluss), fuer
+        # einen vergangenen WERKTAG ist es ein echter Fehler und muss
+        # sichtbar sein.
+        vergangener_werktag = (datum < date.today() and datum.weekday() < 5)
         if not leise:
-            print(f"  Kein Tagesindex für {datum} (HTTP {r.status_code}) — "
-                  f"Wochenende, Feiertag oder noch nicht veröffentlicht.")
+            if vergangener_werktag:
+                print(f"  FEHLER: Tagesindex für {datum} nicht abrufbar "
+                      f"(HTTP {r.status_code}). Das ist ein Werktag in der "
+                      f"Vergangenheit — der Index MUSS existieren. "
+                      f"Kennsatz (SEC_USER_AGENT) oder Sperre prüfen.")
+            else:
+                print(f"  Kein Tagesindex für {datum} (HTTP "
+                      f"{r.status_code}) — Wochenende, Feiertag oder noch "
+                      f"nicht veröffentlicht.")
         return []
     pfade = []
     for zeile in r.text.splitlines():
@@ -308,6 +323,29 @@ def _zusammenfuehren(alt, neu):
 # Der ganze Lauf
 # ---------------------------------------------------------------------------
 
+def indextage(bis=None, anzahl=5):
+    """Die Handelstage, deren Index ein Lauf abarbeitet - alt nach neu.
+
+    WARUM MEHRERE (Befund 26.08.2026): Der Scanner nahm nur
+    date.today(). Den Tagesindex des laufenden Tages gibt es bei der
+    SEC aber noch nicht - sie antwortet mit 403, und das las sich wie
+    ein Feiertag. Zwoelf Tage lang kam deshalb kein einziger Kauf
+    herein, obwohl taeglich rund 1.100 Form-4-Einreichungen vorliegen.
+
+    Der heutige Tag bleibt bewusst DABEI (der Abendlauf faellt in die
+    Stunden, in denen die SEC den Index fertigstellt - ist er schon da,
+    nehmen wir ihn mit), die uebrigen sind Werktage rueckwaerts.
+    Doppelt gelesen wird nichts: Die Zugangsnummern-Dedup in scan()
+    laesst nur unbekannte Einreichungen durch."""
+    bis = bis or date.today()
+    tage, d = [], bis
+    while len(tage) < max(1, int(anzahl)):
+        if d.weekday() < 5:
+            tage.append(d)
+        d -= timedelta(days=1)
+    return list(reversed(tage))
+
+
 def scan(datum=None, leise=False, cfg=None, speicher=SPEICHER, funde=FUNDE):
     """Ein Lauf: Tagesindex holen, Kaeufe lesen, ablegen, bewerten.
 
@@ -317,12 +355,24 @@ def scan(datum=None, leise=False, cfg=None, speicher=SPEICHER, funde=FUNDE):
     datum = datum or date.today()
     kopf = kopfzeilen()
 
-    pfade = tagesindex(datum, leise)
+    # MEHRERE TAGE (26.08.2026): siehe indextage(). Die Pfade aller
+    # Tage kommen in EINEN Topf; die Dedup entscheidet, was zu lesen
+    # ist, und die Kaeufe tragen ohnehin ihr eigenes Datum.
     gelesen = lies_gelesene(speicher)
+    pfade, je_tag = [], []
+    for tag in indextage(datum, int(cfg.get("index_tage_zurueck", 5))):
+        p = tagesindex(tag, leise)
+        if p:
+            je_tag.append(f"{tag}: {len(p)}")
+        pfade.extend(p)
+    # Ein Pfad kann in zwei Tagesindizes stehen (Nachtraege) - hier
+    # einmalig machen, sonst laedt derselbe Lauf ihn zweimal.
+    pfade = list(dict.fromkeys(pfade))
     offen = [p for p in pfade if zugangsnummer(p) not in gelesen]
     if not leise:
-        print(f"  {len(pfade)} Form-4-Einreichungen am {datum}, davon "
-              f"{len(pfade) - len(offen)} bereits gelesen.")
+        print(f"  {len(pfade)} Form-4-Einreichungen "
+              f"({'; '.join(je_tag) if je_tag else 'kein Index abrufbar'}), "
+              f"davon {len(pfade) - len(offen)} bereits gelesen.")
     neu, rollen_neu = {}, {}
     fehler = 0
     for nr, pfad in enumerate(offen, 1):

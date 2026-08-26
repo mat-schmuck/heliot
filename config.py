@@ -95,6 +95,18 @@ CFG = {
         "pfad_b_min_insider": 3,
         "cluster_fenster_tage": 10,         # Handelstage, nicht Kalendertage
         "melden": True,                     # meldet der Waechter die Funde?
+
+        # WIE VIELE TAGE JE LAUF (Befund 26.08.2026): Der Scanner fragte
+        # bis dahin NUR den heutigen Tagesindex ab - den es bei der SEC
+        # noch gar nicht gibt (sie antwortet darauf mit 403). Ergebnis:
+        # Seit dem ersten Cloud-Lauf am 14.08. null Funde, zwoelf Tage
+        # lang, ohne dass irgendetwas nach Fehler aussah. Jetzt werden
+        # die letzten Handelstage abgearbeitet; die Zugangsnummern-
+        # Dedup sorgt dafuer, dass jede Einreichung trotzdem nur einmal
+        # gelesen wird. Fuenf deckt ein verlaengertes Wochenende samt
+        # Puffer ab (rund 1.100 Einreichungen je Tag, 0,11 s Abstand -
+        # der erste Lauf dauert deshalb einmalig laenger).
+        "index_tage_zurueck": 5,
     },
 
     # --- Sektor-Radar (Gerhards Paket vom 13.08.2026) ---------------------
