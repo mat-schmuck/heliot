@@ -6,7 +6,7 @@
     "CDNA|3": "draussen",
     "MRX|1": "draussen",
     "MRX|3": "draussen",
-    "OSCR|3": "draussen",
+    "OSCR|3": "drin",
     "VLO|3": "draussen",
     "CRNX|2": "draussen",
     "DELL|2": "draussen",
@@ -172,7 +172,7 @@
     "IMAX|2": "draussen",
     "CORT|2": "draussen",
     "KRYS|3": "drin",
-    "LIFE|1": "draussen",
+    "LIFE|1": "drin",
     "LIFE|3": "drin",
     "NTRA|1": "drin",
     "NTRA|3": "drin",
@@ -216,7 +216,9 @@
     "HALO|1": "drin",
     "AAMI|1": "drin",
     "LNG|1": "drin",
-    "BLSH|2": "drin"
+    "BLSH|2": "drin",
+    "INBX|2": "drin",
+    "ATRO|3": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -322,6 +324,6 @@
     "BEST|APPN|1": "2026-08-26",
     "HEI-A|2": "2026-08-26",
     "BEST|HEI-A|2": "2026-08-26",
-    "UEBER|LIFE|1": "2026-08-26"
+    "UEBER|LIFE|3": "2026-08-26"
   }
 }
