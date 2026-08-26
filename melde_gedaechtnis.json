@@ -165,7 +165,7 @@
     "ATAT|3": "draussen",
     "DGII|2": "draussen",
     "DRD|3": "draussen",
-    "FROG|3": "drin",
+    "FROG|3": "draussen",
     "GILD|3": "draussen",
     "YPF|3": "drin",
     "BCPC|3": "draussen",
@@ -202,7 +202,13 @@
     "APPN|1": "drin",
     "HASI|1": "drin",
     "ERO|1": "drin",
-    "ERO|3": "drin"
+    "ERO|3": "drin",
+    "TIGO|1": "drin",
+    "OSCR|2": "drin",
+    "FCX|1": "drin",
+    "FCX|3": "drin",
+    "GILD|2": "drin",
+    "HEI-A|2": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -305,6 +311,8 @@
     "AMR|1": "2026-08-26",
     "BEST|AMR|1": "2026-08-26",
     "APPN|1": "2026-08-26",
-    "BEST|APPN|1": "2026-08-26"
+    "BEST|APPN|1": "2026-08-26",
+    "HEI-A|2": "2026-08-26",
+    "BEST|HEI-A|2": "2026-08-26"
   }
 }
