@@ -223,7 +223,7 @@
     "HNGE|3": "drin",
     "AXGN|1": "drin",
     "AXGN|3": "drin",
-    "NBTX|1": "drin",
+    "NBTX|1": "draussen",
     "TWLO|1": "drin",
     "CRNX|1": "drin"
   },
@@ -331,6 +331,7 @@
     "BEST|APPN|1": "2026-08-26",
     "HEI-A|2": "2026-08-26",
     "BEST|HEI-A|2": "2026-08-26",
-    "UEBER|LIFE|3": "2026-08-26"
+    "UEBER|LIFE|3": "2026-08-26",
+    "UEBER|NBTX|1": "2026-08-26"
   }
 }
