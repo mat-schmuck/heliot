@@ -19,7 +19,7 @@
     "QMCO|2": "draussen",
     "AEM|3": "draussen",
     "AMR|3": "draussen",
-    "ANET|1": "drin",
+    "ANET|1": "draussen",
     "ANET|3": "draussen",
     "APPN|3": "draussen",
     "ARES|3": "draussen",
@@ -56,7 +56,7 @@
     "IAG|3": "draussen",
     "INCY|1": "draussen",
     "INSW|2": "draussen",
-    "JAZZ|3": "draussen",
+    "JAZZ|3": "drin",
     "KGC|3": "draussen",
     "LIFE|2": "draussen",
     "LLY|3": "drin",
@@ -121,7 +121,7 @@
     "FSLY|3": "draussen",
     "FUTU|3": "draussen",
     "HL|3": "draussen",
-    "IBKR|2": "drin",
+    "IBKR|2": "draussen",
     "INSM|3": "draussen",
     "ITT|2": "draussen",
     "KKR|3": "draussen",
@@ -218,7 +218,13 @@
     "LNG|1": "drin",
     "BLSH|2": "drin",
     "INBX|2": "drin",
-    "ATRO|3": "drin"
+    "ATRO|3": "drin",
+    "HNGE|1": "drin",
+    "HNGE|3": "drin",
+    "AXGN|1": "drin",
+    "AXGN|3": "drin",
+    "NBTX|1": "draussen",
+    "TWLO|1": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -324,6 +330,7 @@
     "BEST|APPN|1": "2026-08-26",
     "HEI-A|2": "2026-08-26",
     "BEST|HEI-A|2": "2026-08-26",
-    "UEBER|LIFE|3": "2026-08-26"
+    "UEBER|LIFE|3": "2026-08-26",
+    "UEBER|NBTX|1": "2026-08-26"
   }
 }
