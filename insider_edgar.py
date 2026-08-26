@@ -57,6 +57,7 @@ Aufruf:
 import json
 import os
 import sys
+import re
 import time
 from datetime import date, timedelta, datetime
 from xml.etree import ElementTree as ET
@@ -323,6 +324,59 @@ def _zusammenfuehren(alt, neu):
 # Der ganze Lauf
 # ---------------------------------------------------------------------------
 
+LIVE_URL = "https://www.sec.gov/cgi-bin/browse-edgar"
+
+
+def live_einreichungen(seiten=5, leise=False):
+    """Die gerade eingegangenen Form-4-Einreichungen. Liste von Pfaden.
+
+    WARUM ZUSAETZLICH ZUM TAGESINDEX (Mathias, 26.08.2026): Den
+    Tagesindex des laufenden Tages stellt die SEC erst nach
+    Handelsschluss fertig - ein Kauf ist deshalb fruehestens am Folgetag
+    zu sehen. EDGARs Strom der eingehenden Einreichungen
+    ("getcurrent") liefert dagegen sofort. GEMESSEN am 26.08.2026 an 30
+    echten Dokumenten: Die an diesem Vormittag eingereichten Form 4
+    trugen Kaeufe von GESTERN - ein voller Tag Vorsprung.
+
+    DER SCHALTER, auf den es ankommt, ist owner=only: ohne ihn mischt
+    der Strom alle Formulartypen (gemessen: 55 von 100 Eintraegen waren
+    Anleihe-Prospekte), mit ihm kommen ausschliesslich Form 4.
+
+    Je Seite 100 Einreichungen, hoechstens rund 500 erreichbar - das
+    deckt etwa einen Tag ab. Faellt der Strom aus, ist das KEIN Fehler:
+    Der Tagesindex holt alles am Folgetag nach, der Strom ist der
+    Vorsprung, nicht die Grundlage."""
+    import requests
+    pfade = []
+    for seite in range(max(1, int(seiten))):
+        try:
+            r = requests.get(LIVE_URL, headers=kopfzeilen(), timeout=40,
+                             params={"action": "getcurrent", "type": "4",
+                                     "owner": "only", "count": "100",
+                                     "output": "atom",
+                                     "start": str(seite * 100)})
+        except Exception as e:
+            if not leise:
+                print(f"  Live-Strom nicht erreichbar ({type(e).__name__}) — "
+                      f"der Tagesindex holt es morgen nach.")
+            break
+        if r.status_code != 200:
+            if not leise:
+                print(f"  Live-Strom antwortet HTTP {r.status_code} — "
+                      f"der Tagesindex holt es morgen nach.")
+            break
+        # Aus der Adresse der Index-Seite die Pfadform des Tagesindex
+        # bauen: .../data/<cik>/<lange nr>/<zugang>-index.htm wird zu
+        # edgar/data/<cik>/<zugang>.txt (an echten Adressen geprueft).
+        treffer = re.findall(r"/data/(\d+)/\d+/([\d-]+)-index\.htm", r.text)
+        if not treffer:
+            break
+        for cik, zugang in treffer:
+            pfade.append(f"edgar/data/{cik}/{zugang}.txt")
+        time.sleep(PAUSE_SEK)
+    return list(dict.fromkeys(pfade))
+
+
 def indextage(bis=None, anzahl=5):
     """Die Handelstage, deren Index ein Lauf abarbeitet - alt nach neu.
 
@@ -367,7 +421,29 @@ def scan(datum=None, leise=False, cfg=None, speicher=SPEICHER, funde=FUNDE):
         pfade.extend(p)
     # Ein Pfad kann in zwei Tagesindizes stehen (Nachtraege) - hier
     # einmalig machen, sonst laedt derselbe Lauf ihn zweimal.
-    pfade = list(dict.fromkeys(pfade))
+    # DER LIVE-STROM als Vorsprung (26.08.2026): Er bringt die heute
+    # eingereichten Meldungen, die im Tagesindex erst morgen stehen.
+    live = live_einreichungen(int(cfg.get("live_feed_seiten", 5)), leise)
+    if live:
+        je_tag.append(f"Live-Strom: {len(live)}")
+    pfade.extend(live)
+    # JEDE EINREICHUNG NUR EINMAL (Befund 26.08.2026): Die SEC listet
+    # eine Form 4 unter BEIDEN Beteiligten - einmal unter der Firma,
+    # einmal unter dem Insider. Gemessen am Tagesindex des 25.08.2026:
+    # 1047 Pfade, aber nur 500 verschiedene Einreichungen. Ueber den
+    # PFAD zu entdoppeln genuegt deshalb nicht - die Pfade sind ja
+    # verschieden (verschiedene CIK-Nummern), die Einreichung ist
+    # dieselbe. Das kostete nicht nur die doppelte Ladezeit: Jeder Kauf
+    # landete zweimal im Speicher, und Pfad B addiert die Kaeufe je
+    # Insider - eine Dublette verdoppelt seine Summe und kann ihn
+    # faelschlich ueber die Zwei-Prozent-Schwelle heben.
+    einmalig = {}
+    for p in pfade:
+        einmalig.setdefault(zugangsnummer(p), p)
+    if not leise and len(pfade) > len(einmalig):
+        print(f"  {len(pfade) - len(einmalig)} Doppelnennungen übersprungen "
+              f"(jede Einreichung steht unter Firma UND Insider).")
+    pfade = list(einmalig.values())
     offen = [p for p in pfade if zugangsnummer(p) not in gelesen]
     if not leise:
         print(f"  {len(pfade)} Form-4-Einreichungen "

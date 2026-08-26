@@ -107,6 +107,18 @@ CFG = {
         # Puffer ab (rund 1.100 Einreichungen je Tag, 0,11 s Abstand -
         # der erste Lauf dauert deshalb einmalig laenger).
         "index_tage_zurueck": 5,
+
+        # LIVE-STROM (26.08.2026, Mathias' Frage nach tagesaktuellen
+        # Kaeufen): EDGAR fuehrt neben dem Tagesindex einen Strom der
+        # gerade eingegangenen Einreichungen. Der Tagesindex des
+        # laufenden Tages entsteht erst nach Handelsschluss - der Strom
+        # liefert schon vorher. GEMESSEN am 26.08.2026: Die heute
+        # eingereichten Form 4 enthielten Kaeufe von GESTERN (die
+        # gesetzliche Frist betraegt zwei Werktage), der Tagesindex
+        # haette sie erst morgen gezeigt. Ein Tag Vorsprung.
+        # Je Seite 100 Einreichungen; fuenf Seiten reichen rund einen
+        # Tag zurueck (gemessen: 500 Eintraege bis zum Vortag-Nachmittag).
+        "live_feed_seiten": 5,
     },
 
     # --- Sektor-Radar (Gerhards Paket vom 13.08.2026) ---------------------

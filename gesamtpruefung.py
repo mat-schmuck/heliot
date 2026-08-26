@@ -349,6 +349,21 @@ def block_e():
            all(t.weekday() < 5 for t in ie.indextage(_d(2026, 8, 24), 5)))
     pruefe("E", "Montag blickt ueber das Wochenende zurueck",
            ie.indextage(_d(2026, 8, 24), 2) == [_d(2026, 8, 21), _d(2026, 8, 24)])
+    pruefe("E", "Jede Einreichung wird nur einmal geladen (Zugangsnummer)",
+           "einmalig.setdefault(zugangsnummer(p), p)" in
+           pathlib.Path("insider_edgar.py").read_text(encoding="utf-8"))
+    pruefe("E", "Dieselbe Einreichung unter Firma und Insider ist EINE",
+           ie.zugangsnummer("edgar/data/1865107/0001628280-26-058957.txt")
+           == ie.zugangsnummer("edgar/data/1200506/0001628280-26-058957.txt"))
+    pruefe("E", "Live-Strom filtert auf Insider-Meldungen (owner=only)",
+           'sowner=only' .replace("s", "") in
+           pathlib.Path("insider_edgar.py").read_text(encoding="utf-8")
+           .replace('"owner": "only"', "owner=only"))
+    pruefe("E", "Live-Strom ist Vorsprung, kein Ersatz (scan nutzt beides)",
+           "live_einreichungen(" in
+           pathlib.Path("insider_edgar.py").read_text(encoding="utf-8")
+           and "tagesindex(tag, leise)" in
+           pathlib.Path("insider_edgar.py").read_text(encoding="utf-8"))
     _q_ie = pathlib.Path("insider_edgar.py").read_text(encoding="utf-8")
     pruefe("E", "403 auf einen vergangenen Werktag wird als FEHLER gemeldet",
            "vergangener_werktag" in _q_ie and "FEHLER: Tagesindex" in _q_ie)
