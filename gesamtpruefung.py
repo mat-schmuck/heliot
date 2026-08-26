@@ -349,6 +349,19 @@ def block_e():
            all(t.weekday() < 5 for t in ie.indextage(_d(2026, 8, 24), 5)))
     pruefe("E", "Montag blickt ueber das Wochenende zurueck",
            ie.indextage(_d(2026, 8, 24), 2) == [_d(2026, 8, 21), _d(2026, 8, 24)])
+    pruefe("E", "Index-Rueckblick deckt Gerhards Cluster-Fenster ab",
+           ie.index_rueckblick({"cluster_fenster_tage": 10,
+                                "index_tage_zurueck": 0}) == 10)
+    pruefe("E", "Cluster-Fenster geaendert: Rueckblick wandert mit",
+           ie.index_rueckblick({"cluster_fenster_tage": 15,
+                                "index_tage_zurueck": 0}) == 15)
+    pruefe("E", "Eigener Wert ueberstimmt die Rechnung",
+           ie.index_rueckblick({"cluster_fenster_tage": 10,
+                                "index_tage_zurueck": 3}) == 3)
+    import config as _cfgm
+    pruefe("E", "Rueckblick der echten Einstellung deckt das Fenster",
+           ie.index_rueckblick(_cfgm.CFG["insider"])
+           >= _cfgm.CFG["insider"]["cluster_fenster_tage"])
     pruefe("E", "Jede Einreichung wird nur einmal geladen (Zugangsnummer)",
            "einmalig.setdefault(zugangsnummer(p), p)" in
            pathlib.Path("insider_edgar.py").read_text(encoding="utf-8"))

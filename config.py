@@ -103,10 +103,18 @@ CFG = {
         # lang, ohne dass irgendetwas nach Fehler aussah. Jetzt werden
         # die letzten Handelstage abgearbeitet; die Zugangsnummern-
         # Dedup sorgt dafuer, dass jede Einreichung trotzdem nur einmal
-        # gelesen wird. Fuenf deckt ein verlaengertes Wochenende samt
-        # Puffer ab (rund 1.100 Einreichungen je Tag, 0,11 s Abstand -
-        # der erste Lauf dauert deshalb einmalig laenger).
-        "index_tage_zurueck": 5,
+        # gelesen wird.
+        #
+        # 0 heisst: aus dem Cluster-Fenster errechnen (siehe
+        # insider_edgar.index_rueckblick). GERHARDS REGEL VERLANGT DAS:
+        # Pfad B sucht drei Insider innerhalb von cluster_fenster_tage
+        # HANDELSTAGEN. Wer nur die letzten fuenf Indizes liest, hat die
+        # erste Haelfte dieses Fensters nie gesehen - ein Cluster, das
+        # am 12. beginnt und am 25. drei Kaeufer zaehlt, faellt dann
+        # durch. Im Dauerbetrieb faellt das nicht auf (der Speicher
+        # waechst mit), nach jedem Ausfall und jedem Neuaufbau sehr
+        # wohl. Ein eigener Wert ueberstimmt die Rechnung.
+        "index_tage_zurueck": 0,
 
         # LIVE-STROM (26.08.2026, Mathias' Frage nach tagesaktuellen
         # Kaeufen): EDGAR fuehrt neben dem Tagesindex einen Strom der

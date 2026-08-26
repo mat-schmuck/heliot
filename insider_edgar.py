@@ -377,6 +377,25 @@ def live_einreichungen(seiten=5, leise=False):
     return list(dict.fromkeys(pfade))
 
 
+def index_rueckblick(cfg):
+    """Wie viele Handelstage der Lauf zuruecklesen muss.
+
+    GERHARDS FENSTER BESTIMMT DAS (Regelwerk 14.08.2026, Pfad B):
+    "Mindestens 3 VERSCHIEDENE Insider kaufen innerhalb desselben
+    Zeitfensters (Standard: 10 Handelstage)." Damit dieses Fenster
+    vollstaendig gefuellt ist, muessen die Tagesindizes seit
+    Fensterbeginn gelesen worden sein - sonst zaehlt Pfad B nur die
+    Kaeufer, die der Scanner zufaellig mitbekommen hat.
+
+    Ein eigener Wert in der Einstellung ueberstimmt; 0 heisst
+    errechnen. Aendert Gerhard das Cluster-Fenster, wandert der
+    Rueckblick von selbst mit."""
+    eigen = int(cfg.get("index_tage_zurueck", 0) or 0)
+    if eigen > 0:
+        return eigen
+    return int(cfg.get("cluster_fenster_tage", 10))
+
+
 def indextage(bis=None, anzahl=5):
     """Die Handelstage, deren Index ein Lauf abarbeitet - alt nach neu.
 
@@ -414,7 +433,7 @@ def scan(datum=None, leise=False, cfg=None, speicher=SPEICHER, funde=FUNDE):
     # ist, und die Kaeufe tragen ohnehin ihr eigenes Datum.
     gelesen = lies_gelesene(speicher)
     pfade, je_tag = [], []
-    for tag in indextage(datum, int(cfg.get("index_tage_zurueck", 5))):
+    for tag in indextage(datum, index_rueckblick(cfg)):
         p = tagesindex(tag, leise)
         if p:
             je_tag.append(f"{tag}: {len(p)}")
