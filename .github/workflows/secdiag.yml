@@ -1,0 +1,24 @@
+name: SEC-Diagnose
+
+# Einmal-Werkzeug (26.08.2026): Warum weist die SEC die Cloud-Laeufe des
+# Insider-Scanners mit HTTP 403 ab? Siehe sec_diagnose.py.
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: sec-diagnose
+  cancel-in-progress: false
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install requests
+      - name: Diagnose
+        env:
+          SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
+        run: python sec_diagnose.py
