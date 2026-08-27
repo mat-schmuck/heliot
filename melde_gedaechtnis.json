@@ -95,7 +95,7 @@
     "ANET|2": "draussen",
     "ATAT|3": "draussen",
     "AUGO|3": "draussen",
-    "AXTI|3": "draussen",
+    "AXTI|3": "drin",
     "BLSH|2": "drin",
     "BLSH|3": "draussen",
     "CORT|2": "draussen",
@@ -211,7 +211,10 @@
     "NAVN|1": "drin",
     "ZETA|1": "drin",
     "ZETA|3": "drin",
-    "IOT|1": "drin"
+    "IOT|1": "drin",
+    "NAVN|3": "drin",
+    "APPN|1": "drin",
+    "AYA|1": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -341,6 +344,8 @@
     "NAVN|1": "2026-08-27",
     "BEST|NAVN|1": "2026-08-27",
     "IOT|1": "2026-08-27",
-    "BEST|IOT|1": "2026-08-27"
+    "BEST|IOT|1": "2026-08-27",
+    "AYA|1": "2026-08-27",
+    "BEST|AYA|1": "2026-08-27"
   }
 }
