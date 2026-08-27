@@ -195,7 +195,16 @@
     "AAMI|1": "drin",
     "AAMI|3": "drin",
     "NTRA|1": "drin",
-    "NTRA|3": "drin"
+    "NTRA|3": "drin",
+    "ADPT|1": "drin",
+    "RGLD|1": "drin",
+    "LIME|1": "drin",
+    "LIME|3": "drin",
+    "GKOS|3": "draussen",
+    "BCPC|3": "drin",
+    "TWST|3": "drin",
+    "TWST|1": "drin",
+    "HNGE|1": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -317,6 +326,10 @@
     "HTF|CDNA|1": "2026-08-27",
     "HTF|TEAM|1": "2026-08-27",
     "BEST|HTF|TEAM|1": "2026-08-27",
-    "BEST|HTF|CDNA|1": "2026-08-27"
+    "BEST|HTF|CDNA|1": "2026-08-27",
+    "RGLD|1": "2026-08-27",
+    "BEST|RGLD|1": "2026-08-27",
+    "HNGE|1": "2026-08-27",
+    "BEST|HNGE|1": "2026-08-27"
   }
 }
