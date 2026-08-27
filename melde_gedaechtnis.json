@@ -7,7 +7,7 @@
     "ETON|3": "draussen",
     "GH|3": "draussen",
     "OSCR|3": "drin",
-    "IOT|2": "drin",
+    "IOT|2": "draussen",
     "ARWR|3": "draussen",
     "AXGN|2": "draussen",
     "DELL|2": "draussen",
@@ -182,7 +182,15 @@
     "LPG|2": "draussen",
     "ODTX|2": "draussen",
     "EL|1": "drin",
-    "CDNA|1": "drin"
+    "CDNA|1": "drin",
+    "AWR|3": "drin",
+    "ILMN|1": "drin",
+    "ILMN|3": "drin",
+    "FIG|2": "drin",
+    "FROG|2": "drin",
+    "GH|2": "drin",
+    "FROG|1": "drin",
+    "TEAM|1": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -301,6 +309,8 @@
     "DDS|2": "2026-08-27",
     "BEST|DDS|2": "2026-08-27",
     "UEBER|CHRN|3": "2026-08-27",
-    "HTF|CDNA|1": "2026-08-27"
+    "HTF|CDNA|1": "2026-08-27",
+    "HTF|TEAM|1": "2026-08-27",
+    "BEST|HTF|TEAM|1": "2026-08-27"
   }
 }
