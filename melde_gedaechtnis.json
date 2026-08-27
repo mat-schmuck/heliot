@@ -189,7 +189,7 @@
     "FIG|2": "draussen",
     "FROG|2": "draussen",
     "GH|2": "drin",
-    "FROG|1": "drin",
+    "FROG|1": "draussen",
     "TEAM|1": "drin",
     "CYRX|1": "drin",
     "AAMI|1": "drin",
@@ -235,7 +235,8 @@
     "HL|2": "drin",
     "TVTX|3": "drin",
     "RBRK|1": "drin",
-    "RBRK|3": "drin"
+    "RBRK|3": "drin",
+    "OXY|2": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -379,6 +380,7 @@
     "RBRK|1": "2026-08-27",
     "BEST|RBRK|1": "2026-08-27",
     "CDE|1": "2026-08-27",
-    "BEST|CDE|1": "2026-08-27"
+    "BEST|CDE|1": "2026-08-27",
+    "UEBER|FROG|1": "2026-08-27"
   }
 }
