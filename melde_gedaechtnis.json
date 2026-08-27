@@ -208,7 +208,10 @@
     "HNGE|3": "drin",
     "CRCL|2": "drin",
     "PLTR|1": "drin",
-    "NAVN|1": "drin"
+    "NAVN|1": "drin",
+    "ZETA|1": "drin",
+    "ZETA|3": "drin",
+    "IOT|1": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -336,6 +339,8 @@
     "HNGE|1": "2026-08-27",
     "BEST|HNGE|1": "2026-08-27",
     "NAVN|1": "2026-08-27",
-    "BEST|NAVN|1": "2026-08-27"
+    "BEST|NAVN|1": "2026-08-27",
+    "IOT|1": "2026-08-27",
+    "BEST|IOT|1": "2026-08-27"
   }
 }
