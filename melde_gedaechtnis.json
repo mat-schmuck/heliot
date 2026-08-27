@@ -168,7 +168,21 @@
     "KRYS|3": "drin",
     "TIGO|2": "drin",
     "VRDN|3": "draussen",
-    "DDS|2": "drin"
+    "DDS|2": "drin",
+    "PM|1": "drin",
+    "ATEX|1": "draussen",
+    "CMCL|3": "draussen",
+    "CYRX|3": "draussen",
+    "AAMI|2": "draussen",
+    "FRHC|3": "draussen",
+    "MSGE|2": "drin",
+    "TPG|3": "draussen",
+    "ARES|2": "drin",
+    "AMR|3": "draussen",
+    "LPG|2": "draussen",
+    "ODTX|2": "draussen",
+    "EL|1": "drin",
+    "CDNA|1": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -286,6 +300,7 @@
     "UEBER|AXTI|3": "2026-08-27",
     "DDS|2": "2026-08-27",
     "BEST|DDS|2": "2026-08-27",
-    "UEBER|CHRN|3": "2026-08-27"
+    "UEBER|CHRN|3": "2026-08-27",
+    "HTF|CDNA|1": "2026-08-27"
   }
 }
