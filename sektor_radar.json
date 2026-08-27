@@ -1,7 +1,22 @@
 {
- "gebaut_am": "2026-08-26T22:05:57",
- "handelstag": "2026-08-26",
+ "gebaut_am": "2026-08-27T22:06:37",
+ "handelstag": "2026-08-27",
  "geladen": 36,
  "unfertig": [],
- "treffer": []
+ "treffer": [
+  {
+   "etf": "HACK",
+   "name": "Cybersecurity",
+   "richtung": "hoch",
+   "volumen_pct": 205.1,
+   "kurs": 118.58
+  },
+  {
+   "etf": "IGV",
+   "name": "Software",
+   "richtung": "hoch",
+   "volumen_pct": 72.7,
+   "kurs": 110.32
+  }
+ ]
 }
