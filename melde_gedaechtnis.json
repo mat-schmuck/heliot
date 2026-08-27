@@ -186,7 +186,7 @@
     "AWR|3": "drin",
     "ILMN|1": "drin",
     "ILMN|3": "drin",
-    "FIG|2": "drin",
+    "FIG|2": "draussen",
     "FROG|2": "drin",
     "GH|2": "drin",
     "FROG|1": "drin",
@@ -353,6 +353,7 @@
     "ARES|2": "2026-08-27",
     "BEST|ARES|2": "2026-08-27",
     "HTF|WIX|1": "2026-08-27",
-    "BEST|HTF|WIX|1": "2026-08-27"
+    "BEST|HTF|WIX|1": "2026-08-27",
+    "UEBER|FIG|2": "2026-08-27"
   }
 }
