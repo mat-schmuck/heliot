@@ -233,7 +233,9 @@
     "ENVA|2": "drin",
     "SN|2": "drin",
     "HL|2": "drin",
-    "TVTX|3": "drin"
+    "TVTX|3": "drin",
+    "RBRK|1": "drin",
+    "RBRK|3": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -373,6 +375,8 @@
     "UEBER|FIG|2": "2026-08-27",
     "ECO|1": "2026-08-27",
     "BEST|ECO|1": "2026-08-27",
-    "UEBER|FROG|2": "2026-08-27"
+    "UEBER|FROG|2": "2026-08-27",
+    "RBRK|1": "2026-08-27",
+    "BEST|RBRK|1": "2026-08-27"
   }
 }
