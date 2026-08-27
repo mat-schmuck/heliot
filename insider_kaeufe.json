@@ -1,5 +1,5 @@
 {
- "stand": "2026-08-26",
+ "stand": "2026-08-27",
  "gelesen": [
   "0000002488-26-000141",
   "0000002488-26-000143",
@@ -42,6 +42,7 @@
   "0000008858-26-000083",
   "0000008947-26-000178",
   "0000009389-26-000113",
+  "0000009389-26-000115",
   "0000015615-26-000106",
   "0000015615-26-000107",
   "0000015615-26-000108",
@@ -193,6 +194,7 @@
   "0000080661-26-000312",
   "0000080661-26-000317",
   "0000086312-26-000165",
+  "0000087347-26-000116",
   "0000091440-26-000156",
   "0000091440-26-000159",
   "0000092380-26-000100",
@@ -254,6 +256,7 @@
   "0000351569-26-000147",
   "0000354190-26-000193",
   "0000354190-26-000195",
+  "0000354190-26-000199",
   "0000354647-26-000114",
   "0000354950-26-000152",
   "0000354950-26-000153",
@@ -483,6 +486,7 @@
   "0000905148-26-003938",
   "0000905148-26-003939",
   "0000905148-26-003940",
+  "0000905148-26-003960",
   "0000906107-26-000033",
   "0000906107-26-000048",
   "0000906107-26-000049",
@@ -576,9 +580,11 @@
   "0000921895-26-002230",
   "0000921895-26-002241",
   "0000921895-26-002305",
+  "0000921895-26-002318",
   "0000922147-26-000014",
   "0000922147-26-000016",
   "0000922147-26-000018",
+  "0000922147-26-000020",
   "0000923401-26-000004",
   "0000923401-26-000007",
   "0000923738-26-000040",
@@ -730,6 +736,13 @@
   "0000950103-26-012926",
   "0000950103-26-012927",
   "0000950103-26-012928",
+  "0000950103-26-012940",
+  "0000950103-26-012941",
+  "0000950103-26-012942",
+  "0000950103-26-012943",
+  "0000950103-26-012944",
+  "0000950103-26-012945",
+  "0000950103-26-012947",
   "0000950142-26-002354",
   "0000950142-26-002359",
   "0000950142-26-002379",
@@ -889,6 +902,9 @@
   "0001073894-26-000001",
   "0001078075-26-000112",
   "0001078075-26-000115",
+  "0001078075-26-000119",
+  "0001078075-26-000120",
+  "0001078075-26-000121",
   "0001079500-26-000008",
   "0001079973-26-001145",
   "0001079973-26-001162",
@@ -1129,6 +1145,16 @@
   "0001104659-26-101511",
   "0001104659-26-101514",
   "0001104659-26-101516",
+  "0001104659-26-101667",
+  "0001104659-26-101670",
+  "0001104659-26-101671",
+  "0001104659-26-101674",
+  "0001104659-26-101714",
+  "0001104659-26-101719",
+  "0001104659-26-101720",
+  "0001104659-26-101721",
+  "0001104659-26-101760",
+  "0001104659-26-101768",
   "0001104954-26-000004",
   "0001106578-26-000119",
   "0001106578-26-000120",
@@ -1282,9 +1308,15 @@
   "0001178913-26-004241",
   "0001178913-26-004259",
   "0001179680-26-000005",
+  "0001179684-26-000013",
+  "0001180004-26-000015",
+  "0001180008-26-000012",
+  "0001180017-26-000015",
+  "0001180017-26-000016",
   "0001181190-26-000007",
   "0001181928-26-000032",
   "0001181928-26-000034",
+  "0001181928-26-000036",
   "0001181941-26-000004",
   "0001181945-26-000024",
   "0001181945-26-000026",
@@ -2154,6 +2186,27 @@
   "0001193125-26-368840",
   "0001193125-26-368879",
   "0001193125-26-368927",
+  "0001193125-26-368962",
+  "0001193125-26-369034",
+  "0001193125-26-369035",
+  "0001193125-26-369037",
+  "0001193125-26-369039",
+  "0001193125-26-369063",
+  "0001193125-26-369065",
+  "0001193125-26-369079",
+  "0001193125-26-369081",
+  "0001193125-26-369099",
+  "0001193125-26-369111",
+  "0001193125-26-369139",
+  "0001193125-26-369145",
+  "0001193125-26-369146",
+  "0001193125-26-369147",
+  "0001193125-26-369150",
+  "0001193125-26-369155",
+  "0001193125-26-369157",
+  "0001193125-26-369161",
+  "0001193125-26-369162",
+  "0001193125-26-369163",
   "0001194020-26-000015",
   "0001194409-26-000010",
   "0001195052-26-000008",
@@ -2163,6 +2216,10 @@
   "0001196979-26-000008",
   "0001198477-26-000008",
   "0001198818-26-000011",
+  "0001199835-26-000310",
+  "0001199835-26-000312",
+  "0001199835-26-000314",
+  "0001199835-26-000316",
   "0001200507-26-000008",
   "0001201110-26-000007",
   "0001201232-26-000015",
@@ -2176,6 +2233,7 @@
   "0001205703-26-000027",
   "0001205703-26-000028",
   "0001206587-26-000019",
+  "0001206714-26-000009",
   "0001207637-26-000015",
   "0001207928-26-000008",
   "0001207928-26-000009",
@@ -2329,6 +2387,8 @@
   "0001213900-26-093923",
   "0001213900-26-093947",
   "0001213900-26-093998",
+  "0001213900-26-094076",
+  "0001213900-26-094078",
   "0001214612-26-000007",
   "0001214659-26-010097",
   "0001214659-26-010101",
@@ -2390,6 +2450,8 @@
   "0001214659-26-010911",
   "0001214659-26-010912",
   "0001214659-26-010926",
+  "0001214659-26-010931",
+  "0001214659-26-010932",
   "0001214993-26-000004",
   "0001215315-26-000036",
   "0001216055-26-000012",
@@ -2397,6 +2459,7 @@
   "0001218470-26-000016",
   "0001218802-26-000003",
   "0001218802-26-000004",
+  "0001218802-26-000005",
   "0001220808-26-000010",
   "0001221213-26-000005",
   "0001221302-26-000002",
@@ -2525,6 +2588,11 @@
   "0001225208-26-007327",
   "0001225208-26-007328",
   "0001225208-26-007329",
+  "0001225208-26-007331",
+  "0001225208-26-007332",
+  "0001225208-26-007334",
+  "0001225208-26-007335",
+  "0001225208-26-007337",
   "0001225817-26-000008",
   "0001227454-26-000012",
   "0001227556-26-000012",
@@ -2543,6 +2611,7 @@
   "0001231919-26-000962",
   "0001231919-26-001062",
   "0001231919-26-001100",
+  "0001231919-26-001102",
   "0001234673-26-000002",
   "0001235110-26-000064",
   "0001235743-26-000003",
@@ -2555,6 +2624,7 @@
   "0001238028-26-000004",
   "0001238040-26-000007",
   "0001238040-26-000009",
+  "0001238040-26-000011",
   "0001238303-26-000002",
   "0001239159-26-000007",
   "0001239594-26-000008",
@@ -2638,6 +2708,7 @@
   "0001294172-26-000017",
   "0001294731-26-000006",
   "0001294735-26-000004",
+  "0001296479-26-000011",
   "0001296630-26-000007",
   "0001297831-26-000007",
   "0001298598-26-000010",
@@ -2684,6 +2755,7 @@
   "0001315098-26-000174",
   "0001315098-26-000175",
   "0001315098-26-000177",
+  "0001315098-26-000179",
   "0001315419-26-000010",
   "0001315758-26-000015",
   "0001315758-26-000017",
@@ -2741,6 +2813,7 @@
   "0001352090-26-000006",
   "0001352573-26-000013",
   "0001352618-26-000012",
+  "0001352620-26-000006",
   "0001354986-26-000014",
   "0001355433-26-000009",
   "0001359115-26-000011",
@@ -2763,9 +2836,20 @@
   "0001369558-26-000004",
   "0001369850-26-000009",
   "0001371285-26-000177",
+  "0001371285-26-000188",
+  "0001371285-26-000189",
+  "0001371285-26-000190",
+  "0001371285-26-000191",
+  "0001371285-26-000192",
+  "0001371285-26-000193",
+  "0001371285-26-000194",
+  "0001371285-26-000195",
+  "0001371285-26-000196",
+  "0001371285-26-000197",
   "0001373817-26-000004",
   "0001374545-26-000010",
   "0001377714-26-000010",
+  "0001379816-26-000002",
   "0001382452-26-000002",
   "0001384243-26-000014",
   "0001387196-26-000004",
@@ -2831,6 +2915,7 @@
   "0001422283-26-000002",
   "0001423238-26-000010",
   "0001423689-26-000130",
+  "0001425450-26-000081",
   "0001427531-26-000005",
   "0001428849-26-000011",
   "0001429932-26-000010",
@@ -3077,6 +3162,9 @@
   "0001452385-26-000006",
   "0001452681-26-000033",
   "0001452681-26-000035",
+  "0001452681-26-000037",
+  "0001452681-26-000039",
+  "0001452681-26-000041",
   "0001453018-26-000007",
   "0001453279-26-000010",
   "0001454708-26-000010",
@@ -3157,6 +3245,7 @@
   "0001489097-26-000006",
   "0001489550-26-000003",
   "0001489550-26-000004",
+  "0001489550-26-000005",
   "0001490940-26-000004",
   "0001492126-26-000011",
   "0001492528-26-000004",
@@ -3324,6 +3413,10 @@
   "0001493152-26-040237",
   "0001493152-26-040238",
   "0001493152-26-040244",
+  "0001493152-26-040274",
+  "0001493152-26-040275",
+  "0001493152-26-040276",
+  "0001493152-26-040281",
   "0001493848-26-000005",
   "0001494259-26-000064",
   "0001494259-26-000065",
@@ -3334,6 +3427,7 @@
   "0001494794-26-000002",
   "0001494794-26-000004",
   "0001494794-26-000006",
+  "0001494794-26-000008",
   "0001495791-26-000005",
   "0001496995-26-000006",
   "0001497498-26-000004",
@@ -3349,6 +3443,7 @@
   "0001505398-26-000009",
   "0001505732-26-000108",
   "0001506293-26-000110",
+  "0001506293-26-000112",
   "0001506307-26-000113",
   "0001509284-26-000001",
   "0001509409-26-000010",
@@ -3373,6 +3468,7 @@
   "0001513845-26-000090",
   "0001513845-26-000092",
   "0001514114-26-000013",
+  "0001514225-26-000010",
   "0001514954-26-000031",
   "0001515140-26-000005",
   "0001515156-26-000118",
@@ -3420,6 +3516,7 @@
   "0001531152-26-000059",
   "0001531152-26-000061",
   "0001531183-26-000018",
+  "0001532010-26-000003",
   "0001535264-26-000052",
   "0001535760-26-000010",
   "0001535929-26-000162",
@@ -3465,6 +3562,7 @@
   "0001550404-26-000003",
   "0001551260-26-000006",
   "0001552781-26-000454",
+  "0001553179-26-000005",
   "0001555011-26-000003",
   "0001555394-26-000002",
   "0001556327-26-000003",
@@ -3527,6 +3625,7 @@
   "0001576244-26-000005",
   "0001577014-26-000016",
   "0001577243-26-000004",
+  "0001577452-26-000005",
   "0001577526-26-000098",
   "0001578490-26-000006",
   "0001578852-26-000022",
@@ -3605,6 +3704,8 @@
   "0001591698-26-000123",
   "0001591698-26-000124",
   "0001591698-26-000125",
+  "0001592712-26-000013",
+  "0001592970-26-000012",
   "0001593968-26-000154",
   "0001593968-26-000155",
   "0001593968-26-000156",
@@ -3646,6 +3747,7 @@
   "0001598549-26-000005",
   "0001598549-26-000007",
   "0001598549-26-000009",
+  "0001599725-26-000010",
   "0001599770-26-000007",
   "0001601099-26-000047",
   "0001601099-26-000049",
@@ -3716,6 +3818,9 @@
   "0001625641-26-000183",
   "0001625641-26-000184",
   "0001626201-26-000019",
+  "0001626240-26-000012",
+  "0001626259-26-000012",
+  "0001626260-26-000014",
   "0001626337-26-000010",
   "0001626850-26-000001",
   "0001628280-26-056491",
@@ -4223,6 +4328,7 @@
   "0001641334-26-000004",
   "0001641334-26-000007",
   "0001641733-26-000008",
+  "0001641792-26-000008",
   "0001642080-26-000015",
   "0001642080-26-000017",
   "0001642193-26-000008",
@@ -4282,6 +4388,8 @@
   "0001657120-26-000010",
   "0001657919-26-000004",
   "0001658452-26-000007",
+  "0001658566-26-000107",
+  "0001658566-26-000108",
   "0001658732-26-000013",
   "0001658918-26-000016",
   "0001659774-26-000010",
@@ -4306,6 +4414,7 @@
   "0001666134-26-000094",
   "0001666134-26-000096",
   "0001666134-26-000098",
+  "0001666134-26-000100",
   "0001666162-26-000013",
   "0001667211-26-000024",
   "0001667218-26-000002",
@@ -4325,9 +4434,12 @@
   "0001674260-26-000004",
   "0001674338-26-000009",
   "0001674797-26-000006",
+  "0001675457-26-000013",
+  "0001675476-26-000010",
   "0001675644-26-000083",
   "0001675644-26-000085",
   "0001675948-26-000005",
+  "0001675948-26-000006",
   "0001677053-26-000012",
   "0001677721-26-000012",
   "0001677721-26-000014",
@@ -4402,6 +4514,7 @@
   "0001683168-26-006733",
   "0001683168-26-006734",
   "0001683168-26-006735",
+  "0001683168-26-006737",
   "0001684701-26-000002",
   "0001684701-26-000004",
   "0001685295-26-000004",
@@ -4427,6 +4540,7 @@
   "0001694392-26-000010",
   "0001694645-26-000006",
   "0001694645-26-000008",
+  "0001695434-26-000011",
   "0001695803-26-000002",
   "0001696555-26-000008",
   "0001697157-26-000007",
@@ -4462,6 +4576,9 @@
   "0001706137-26-000016",
   "0001706903-26-000006",
   "0001707073-26-000006",
+  "0001707480-26-000012",
+  "0001707990-26-000012",
+  "0001708000-26-000012",
   "0001708519-26-000002",
   "0001708533-26-000010",
   "0001709048-26-000221",
@@ -4484,6 +4601,7 @@
   "0001717718-26-000002",
   "0001717718-26-000004",
   "0001717718-26-000006",
+  "0001717718-26-000008",
   "0001718156-26-000003",
   "0001718892-26-000007",
   "0001719301-26-000004",
@@ -4537,6 +4655,7 @@
   "0001739445-26-000130",
   "0001739445-26-000131",
   "0001739445-26-000132",
+  "0001740847-26-000006",
   "0001741076-26-000008",
   "0001741273-26-000017",
   "0001741344-26-000021",
@@ -4619,6 +4738,8 @@
   "0001769628-26-000402",
   "0001769628-26-000404",
   "0001769628-26-000406",
+  "0001769628-26-000409",
+  "0001769628-26-000410",
   "0001769793-26-000011",
   "0001769976-26-000003",
   "0001771383-26-000002",
@@ -4627,6 +4748,7 @@
   "0001771814-26-000005",
   "0001771961-26-000006",
   "0001772144-26-000002",
+  "0001772144-26-000004",
   "0001772584-26-000010",
   "0001772661-26-000017",
   "0001772661-26-000019",
@@ -4688,6 +4810,8 @@
   "0001782072-26-000004",
   "0001782135-26-000028",
   "0001782170-26-000077",
+  "0001782170-26-000079",
+  "0001782170-26-000081",
   "0001782435-26-000002",
   "0001782925-26-000012",
   "0001783059-26-000016",
@@ -4715,6 +4839,7 @@
   "0001785907-26-000002",
   "0001785907-26-000004",
   "0001785907-26-000006",
+  "0001785907-26-000008",
   "0001786054-26-000006",
   "0001786065-26-000002",
   "0001786065-26-000003",
@@ -4754,6 +4879,7 @@
   "0001802482-26-000002",
   "0001802482-26-000004",
   "0001802482-26-000006",
+  "0001802482-26-000008",
   "0001803666-26-000010",
   "0001803794-26-000003",
   "0001804567-26-000014",
@@ -4800,6 +4926,7 @@
   "0001818383-26-000215",
   "0001818383-26-000216",
   "0001818383-26-000218",
+  "0001818383-26-000220",
   "0001819303-26-000004",
   "0001819848-26-000437",
   "0001819848-26-000439",
@@ -4809,6 +4936,7 @@
   "0001821737-26-000011",
   "0001822492-26-000139",
   "0001822516-26-000004",
+  "0001822629-26-000014",
   "0001822928-26-000074",
   "0001822928-26-000075",
   "0001822993-26-000128",
@@ -4911,6 +5039,7 @@
   "0001849709-26-000016",
   "0001849709-26-000018",
   "0001850777-26-000018",
+  "0001850777-26-000020",
   "0001851003-26-000034",
   "0001851003-26-000035",
   "0001851105-26-000005",
@@ -4919,12 +5048,14 @@
   "0001851666-26-000004",
   "0001853089-26-000006",
   "0001853089-26-000007",
+  "0001853089-26-000008",
   "0001853109-26-000001",
   "0001853529-26-000002",
   "0001853905-26-000026",
   "0001855325-26-000026",
   "0001855764-26-000009",
   "0001855767-26-000017",
+  "0001855880-26-000016",
   "0001856304-26-000005",
   "0001856366-26-000002",
   "0001856513-26-000004",
@@ -4937,6 +5068,7 @@
   "0001856906-26-000082",
   "0001856906-26-000084",
   "0001856906-26-000086",
+  "0001857256-26-000006",
   "0001857436-26-000011",
   "0001857444-26-000011",
   "0001857896-26-000006",
@@ -4946,6 +5078,7 @@
   "0001858668-26-000008",
   "0001858936-26-000002",
   "0001858936-26-000004",
+  "0001859442-26-000011",
   "0001859889-26-000006",
   "0001859912-26-000006",
   "0001860481-26-000015",
@@ -5005,6 +5138,7 @@
   "0001872100-26-000003",
   "0001872111-26-000007",
   "0001872873-26-000006",
+  "0001872886-26-000009",
   "0001872955-26-000010",
   "0001873242-26-000007",
   "0001873387-26-000002",
@@ -5100,6 +5234,7 @@
   "0001916473-26-000038",
   "0001917246-26-000010",
   "0001917389-26-000010",
+  "0001917389-26-000012",
   "0001918349-26-000005",
   "0001918845-26-000029",
   "0001919175-26-000008",
@@ -5209,6 +5344,7 @@
   "0001974200-26-000012",
   "0001974234-26-000007",
   "0001974777-26-000016",
+  "0001975015-26-000048",
   "0001975134-26-000001",
   "0001975669-26-000011",
   "0001976408-26-000729",
@@ -5292,6 +5428,7 @@
   "0001992808-26-000024",
   "0001992908-26-000013",
   "0001995218-26-000015",
+  "0001996255-26-000004",
   "0001998053-26-000023",
   "0001998163-26-000022",
   "0001998179-26-000024",
@@ -5315,11 +5452,17 @@
   "0002001011-26-000114",
   "0002001011-26-000115",
   "0002001011-26-000116",
+  "0002001011-26-000125",
+  "0002001011-26-000126",
+  "0002001011-26-000127",
+  "0002001011-26-000128",
+  "0002001011-26-000129",
   "0002001162-26-000014",
   "0002001171-26-000006",
   "0002001557-26-000156",
   "0002002093-26-000010",
   "0002002763-26-000010",
+  "0002003059-26-000008",
   "0002003065-26-000006",
   "0002004135-26-000004",
   "0002004306-26-000004",
@@ -5446,6 +5589,7 @@
   "0002035875-26-000009",
   "0002035989-26-000069",
   "0002035989-26-000071",
+  "0002035989-26-000074",
   "0002036189-26-000008",
   "0002036956-26-000014",
   "0002037071-26-000002",
@@ -5504,6 +5648,7 @@
   "0002056453-26-000005",
   "0002056949-26-000005",
   "0002057486-26-000011",
+  "0002057567-26-000006",
   "0002057569-26-000026",
   "0002057569-26-000028",
   "0002057569-26-000030",
@@ -5605,6 +5750,7 @@
   "0002081604-26-000009",
   "0002081727-26-000004",
   "0002082246-26-000008",
+  "0002082674-26-000007",
   "0002082900-26-000006",
   "0002082930-26-000014",
   "0002082930-26-000016",
@@ -5664,6 +5810,7 @@
   "0002111103-26-000033",
   "0002111580-26-000010",
   "0002111867-26-000012",
+  "0002111904-26-000003",
   "0002111929-26-000014",
   "0002111929-26-000016",
   "0002111999-26-000009",
@@ -5716,6 +5863,7 @@
   "0002128745-26-000009",
   "0002128786-26-000006",
   "0002129321-26-000013",
+  "0002130035-26-000002",
   "0002130454-26-000004",
   "0002130460-26-000004",
   "0002130557-26-000004",
@@ -6328,13 +6476,6 @@
     "datum": "2026-08-20",
     "transaktionscode": "P",
     "rolle": "Direktor"
-   },
-   {
-    "insider": "Poillon Diane",
-    "wert_dollar": 88398.12,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
    }
   ],
   "RSG": [
@@ -6461,41 +6602,6 @@
     "insider": "CASCADE INVESTMENT, L.L.C.",
     "wert_dollar": 205667.48930000002,
     "datum": "2026-08-21",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "CASCADE INVESTMENT, L.L.C.",
-    "wert_dollar": 942417.441,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "CASCADE INVESTMENT, L.L.C.",
-    "wert_dollar": 5604117.7637,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "CASCADE INVESTMENT, L.L.C.",
-    "wert_dollar": 14885291.5068,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "CASCADE INVESTMENT, L.L.C.",
-    "wert_dollar": 15117801.636300001,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "CASCADE INVESTMENT, L.L.C.",
-    "wert_dollar": 1107603.21,
-    "datum": "2026-08-12",
     "transaktionscode": "P",
     "rolle": "Insider"
    },
@@ -6757,13 +6863,6 @@
     "rolle": "EVP/CCO"
    },
    {
-    "insider": "Lightheart Charmaine",
-    "wert_dollar": 1327.25,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "EVP/CRDEO"
-   },
-   {
     "insider": "Lam David",
     "wert_dollar": 5170.0,
     "datum": "2026-08-17",
@@ -6813,13 +6912,6 @@
     "insider": "Levinson Sam",
     "wert_dollar": 7630.48,
     "datum": "2026-08-20",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "Levinson Sam",
-    "wert_dollar": 213527.0468,
-    "datum": "2026-08-12",
     "transaktionscode": "P",
     "rolle": "Direktor"
    },
@@ -6896,13 +6988,6 @@
     "insider": "Mink Brook Asset Management LLC",
     "wert_dollar": 185.6931,
     "datum": "2026-08-24",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "Mink Brook Asset Management LLC",
-    "wert_dollar": 2355.7999999999997,
-    "datum": "2026-08-12",
     "transaktionscode": "P",
     "rolle": "Insider"
    },
@@ -7299,13 +7384,6 @@
    },
    {
     "insider": "HORIZON KINETICS ASSET MANAGEMENT LLC",
-    "wert_dollar": 353.15,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "HORIZON KINETICS ASSET MANAGEMENT LLC",
     "wert_dollar": 343.02,
     "datum": "2026-08-13",
     "transaktionscode": "P",
@@ -7387,13 +7465,6 @@
     "insider": "HORIZON KINETICS ASSET MANAGEMENT LLC",
     "wert_dollar": 2230.2000000000003,
     "datum": "2026-08-25",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "HORIZON KINETICS ASSET MANAGEMENT LLC",
-    "wert_dollar": 2192.4,
-    "datum": "2026-08-12",
     "transaktionscode": "P",
     "rolle": "Insider"
    },
@@ -8123,13 +8194,6 @@
     "datum": "2026-08-13",
     "transaktionscode": "P",
     "rolle": "Chief Executive Officer"
-   },
-   {
-    "insider": "Huang Jack Jiajia",
-    "wert_dollar": 6807375.000000001,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "Chief Executive Officer"
    }
   ],
   "AEON": [
@@ -8188,20 +8252,6 @@
     "insider": "AJB Investment Fund II, LP",
     "wert_dollar": 2873.9,
     "datum": "2026-08-25",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "AJB Investment Fund II, LP",
-    "wert_dollar": 2885.0,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "AJB Investment Fund II, LP",
-    "wert_dollar": 5.78,
-    "datum": "2026-08-12",
     "transaktionscode": "P",
     "rolle": "Insider"
    },
@@ -8357,6 +8407,41 @@
     "insider": "AULT MILTON C III",
     "wert_dollar": 5870.0,
     "datum": "2026-08-19",
+    "transaktionscode": "P",
+    "rolle": "Direktor"
+   },
+   {
+    "insider": "AULT MILTON C III",
+    "wert_dollar": 65904.0,
+    "datum": "2026-08-24",
+    "transaktionscode": "P",
+    "rolle": "Direktor"
+   },
+   {
+    "insider": "AULT MILTON C III",
+    "wert_dollar": 52674.2776,
+    "datum": "2026-08-25",
+    "transaktionscode": "P",
+    "rolle": "Direktor"
+   },
+   {
+    "insider": "AULT MILTON C III",
+    "wert_dollar": 2926.0,
+    "datum": "2026-08-25",
+    "transaktionscode": "P",
+    "rolle": "Direktor"
+   },
+   {
+    "insider": "AULT MILTON C III",
+    "wert_dollar": 60782.0,
+    "datum": "2026-08-26",
+    "transaktionscode": "P",
+    "rolle": "Direktor"
+   },
+   {
+    "insider": "AULT MILTON C III",
+    "wert_dollar": 1190.02,
+    "datum": "2026-08-26",
     "transaktionscode": "P",
     "rolle": "Direktor"
    }
@@ -8805,13 +8890,6 @@
     "insider": "Kurzius Lawrence Erik",
     "wert_dollar": 935920.0,
     "datum": "2026-08-20",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "Harrington Michael J",
-    "wert_dollar": 109100.0,
-    "datum": "2026-08-12",
     "transaktionscode": "P",
     "rolle": "Direktor"
    },
@@ -9265,13 +9343,6 @@
     "rolle": "Direktor"
    },
    {
-    "insider": "Hayden Michael R",
-    "wert_dollar": 481033.18999999994,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
     "insider": "Booth Andrew",
     "wert_dollar": 383904.0,
     "datum": "2026-08-14",
@@ -9552,13 +9623,6 @@
     "insider": "Sturm Len",
     "wert_dollar": 3687.5,
     "datum": "2026-08-24",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BECKWITT RICHARD",
-    "wert_dollar": 110640.0,
-    "datum": "2026-08-12",
     "transaktionscode": "P",
     "rolle": "Direktor"
    },
@@ -10089,18 +10153,18 @@
     "rolle": "Chief Legal Officer & Corp Sec"
    },
    {
-    "insider": "Oran Baris",
-    "wert_dollar": 141390.0,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "Chief Financial Officer"
-   },
-   {
     "insider": "Poletti Samuel Jonas",
     "wert_dollar": 117769.2,
     "datum": "2026-08-17",
     "transaktionscode": "P",
     "rolle": "Chief Strategy & M&A Officer"
+   },
+   {
+    "insider": "Sanche Jacques Wolf",
+    "wert_dollar": 186833.0,
+    "datum": "2026-08-26",
+    "transaktionscode": "P",
+    "rolle": "Direktor"
    }
   ],
   "BORR": [
@@ -10349,6 +10413,20 @@
     "datum": "2026-08-25",
     "transaktionscode": "P",
     "rolle": "Direktor"
+   },
+   {
+    "insider": "COLLINGSWORTH JAMES M",
+    "wert_dollar": 181833.79200000002,
+    "datum": "2026-08-25",
+    "transaktionscode": "P",
+    "rolle": "Direktor"
+   },
+   {
+    "insider": "COLLINGSWORTH JAMES M",
+    "wert_dollar": 3392.0,
+    "datum": "2026-08-26",
+    "transaktionscode": "P",
+    "rolle": "Direktor"
    }
   ],
   "URG": [
@@ -10449,15 +10527,6 @@
     "rolle": "Chief Executive Officer"
    }
   ],
-  "LXU": [
-   {
-    "insider": "Ackerman Jonathan Z.",
-    "wert_dollar": 9890.0,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   }
-  ],
   "ALT": [
    {
     "insider": "Durso Jerome Benedict",
@@ -10484,13 +10553,6 @@
    }
   ],
   "AMH": [
-   {
-    "insider": "BENHAM DOUGLAS N",
-    "wert_dollar": 11255.0,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
    {
     "insider": "CORRIGAN JACK E",
     "wert_dollar": 22385.0,
@@ -10541,47 +10603,6 @@
     "rolle": "Direktor"
    }
   ],
-  "ATMU": [
-   {
-    "insider": "Macadam Stephen E.",
-    "wert_dollar": 99551.2,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   }
-  ],
-  "BRK.B": [
-   {
-    "insider": "O'Sullivan Michael J.",
-    "wert_dollar": 22978.8,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "See Remarks"
-   },
-   {
-    "insider": "O'Sullivan Michael J.",
-    "wert_dollar": 205008.0,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "See Remarks"
-   },
-   {
-    "insider": "O'Sullivan Michael J.",
-    "wert_dollar": 22085.23,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "See Remarks"
-   }
-  ],
-  "BDSX": [
-   {
-    "insider": "SCHULER JACK W",
-    "wert_dollar": 366991.5,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   }
-  ],
   "LILA": [
    {
     "insider": "MALONE JOHN C",
@@ -10600,13 +10621,6 @@
   ],
   "BW": [
    {
-    "insider": "Young Kenneth M",
-    "wert_dollar": 67550.0,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "Chief Executive Officer"
-   },
-   {
     "insider": "Moeller Philip D",
     "wert_dollar": 47500.0,
     "datum": "2026-08-13",
@@ -10615,13 +10629,6 @@
    }
   ],
   "RICK": [
-   {
-    "insider": "Barabash Yura V",
-    "wert_dollar": 24233.4312,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
    {
     "insider": "LANGAN ERIC SCOTT",
     "wert_dollar": 50204.0,
@@ -10641,13 +10648,6 @@
   ],
   "BTDR": [
    {
-    "insider": "Potter Michael G",
-    "wert_dollar": 225999.99999999997,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "Chief Financial Officer"
-   },
-   {
     "insider": "Basit Haris Fozan",
     "wert_dollar": 221000.0,
     "datum": "2026-08-14",
@@ -10655,23 +10655,7 @@
     "rolle": "Chief Strategy Officer"
    }
   ],
-  "BLBD": [
-   {
-    "insider": "Thau Daniel Mark",
-    "wert_dollar": 22529.5,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   }
-  ],
   "CRT": [
-   {
-    "insider": "OLIVER ERIC L",
-    "wert_dollar": 130536.0,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
    {
     "insider": "OLIVER ERIC L",
     "wert_dollar": 31240.44,
@@ -10710,23 +10694,7 @@
     "rolle": "SVP & CFO"
    }
   ],
-  "CC": [
-   {
-    "insider": "Familiar Calderon Gerardo",
-    "wert_dollar": 30050.55,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "See Remarks"
-   }
-  ],
   "XRN": [
-   {
-    "insider": "Roseth Aaron Robert",
-    "wert_dollar": 495854.99999999994,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "COO"
-   },
    {
     "insider": "Whitlock Matthew Fitzsimmons",
     "wert_dollar": 18605.0,
@@ -10745,22 +10713,8 @@
   "CODI": [
    {
     "insider": "Sawtelle Zachary T.",
-    "wert_dollar": 299657.5,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "Sawtelle Zachary T.",
     "wert_dollar": 87150.0,
     "datum": "2026-08-13",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "Keller Stephen",
-    "wert_dollar": 120143.0,
-    "datum": "2026-08-12",
     "transaktionscode": "P",
     "rolle": "Insider"
    },
@@ -10772,13 +10726,6 @@
     "rolle": "Insider"
    },
    {
-    "insider": "SHAFFER TERI",
-    "wert_dollar": 145555.3191,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
     "insider": "RICHTER GLENN R",
     "wert_dollar": 499986.3349,
     "datum": "2026-08-14",
@@ -10786,53 +10733,7 @@
     "rolle": "Insider"
    }
   ],
-  "EMBC": [
-   {
-    "insider": "Elguicze Jacob",
-    "wert_dollar": 93360.0,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "SVP and CFO"
-   },
-   {
-    "insider": "HOMBACH ROBERT J.",
-    "wert_dollar": 223848.0,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "Mann Jeffrey Z",
-    "wert_dollar": 99800.0,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "Pres, Pharm Svc&Prod Mgmt, CLO"
-   },
-   {
-    "insider": "Kurdikar Devdatt",
-    "wert_dollar": 140937.0,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "President and CEO"
-   }
-  ],
-  "LTC": [
-   {
-    "insider": "Gruber David L",
-    "wert_dollar": 19150.0,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   }
-  ],
   "SUNS": [
-   {
-    "insider": "Hetzel Brandon",
-    "wert_dollar": 5404.54,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "CFO and Treasurer"
-   },
    {
     "insider": "TANNENBAUM LEONARD M",
     "wert_dollar": 375000.0,
@@ -10850,23 +10751,7 @@
     "rolle": "President and CEO"
    }
   ],
-  "RM": [
-   {
-    "insider": "Lamba Lakhbir S.",
-    "wert_dollar": 111160.0,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "President and CEO"
-   }
-  ],
   "MBGL": [
-   {
-    "insider": "PEEK MARK S",
-    "wert_dollar": 487495.0,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
    {
     "insider": "PEEK MARK S",
     "wert_dollar": 298071.0,
@@ -10875,48 +10760,7 @@
     "rolle": "Direktor"
    }
   ],
-  "TNC": [
-   {
-    "insider": "Morse Timothy R.",
-    "wert_dollar": 102270.00000000001,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "Mulligan Donal L",
-    "wert_dollar": 538720.0,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   }
-  ],
-  "OCSL": [
-   {
-    "insider": "Panossian Armen",
-    "wert_dollar": 21580.649999999998,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "See Remarks"
-   }
-  ],
-  "PAR": [
-   {
-    "insider": "Singh Narinder",
-    "wert_dollar": 199949.5288,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   }
-  ],
   "TXO": [
-   {
-    "insider": "SIMPSON BOB R",
-    "wert_dollar": 360757.5,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
    {
     "insider": "SIMPSON BOB R",
     "wert_dollar": 1789787.5,
@@ -10941,13 +10785,6 @@
     "datum": "2026-08-13",
     "transaktionscode": "P",
     "rolle": "Chief Executive Officer"
-   },
-   {
-    "insider": "Sarowitz Steven I",
-    "wert_dollar": 912316.8639,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
    },
    {
     "insider": "Sarowitz Steven I",
@@ -11040,47 +10877,13 @@
     "rolle": "Direktor"
    }
   ],
-  "GLXY": [
-   {
-    "insider": "DEASON DOUGLAS R",
-    "wert_dollar": 258432.00000000003,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   }
-  ],
-  "UTI": [
-   {
-    "insider": "DEVINCENZI ROBERT THOMAS",
-    "wert_dollar": 25945.0,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   }
-  ],
   "QTRX": [
-   {
-    "insider": "DONNELLY WILLIAM P",
-    "wert_dollar": 74676.25,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
    {
     "insider": "DONNELLY WILLIAM P",
     "wert_dollar": 211677.85,
     "datum": "2026-08-13",
     "transaktionscode": "P",
     "rolle": "Direktor"
-   }
-  ],
-  "VVV": [
-   {
-    "insider": "Denny Jordan M.",
-    "wert_dollar": 49999.200000000004,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "Chief Accounting Officer"
    }
   ],
   "BROS": [
@@ -11095,13 +10898,6 @@
   "ETN": [
    {
     "insider": "Johnson Gerald",
-    "wert_dollar": 32895.1,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "Johnson Gerald",
     "wert_dollar": 59267.0,
     "datum": "2026-08-13",
     "transaktionscode": "P",
@@ -11111,13 +10907,6 @@
   "EMPD": [
    {
     "insider": "Empery Asset Management, LP",
-    "wert_dollar": 1833715.0,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "Empery Asset Management, LP",
     "wert_dollar": 2238375.0,
     "datum": "2026-08-13",
     "transaktionscode": "P",
@@ -11125,13 +10914,6 @@
    }
   ],
   "MTDR": [
-   {
-    "insider": "Foran Joseph Wm",
-    "wert_dollar": 521599.99999999994,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "Chairman and CEO"
-   },
    {
     "insider": "Foran Joseph Wm",
     "wert_dollar": 257200.0,
@@ -11147,32 +10929,7 @@
     "rolle": "Chairman and CEO"
    }
   ],
-  "OTLK": [
-   {
-    "insider": "Sukhtian Ghiath M.",
-    "wert_dollar": 2499999.48,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   }
-  ],
-  "PFSA": [
-   {
-    "insider": "HRT FINANCIAL LP",
-    "wert_dollar": 5383.94,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   }
-  ],
   "MSS": [
-   {
-    "insider": "HRT FINANCIAL LP",
-    "wert_dollar": 32033.78,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
    {
     "insider": "HRT FINANCIAL LP",
     "wert_dollar": 10574.199999999999,
@@ -11184,8 +10941,15 @@
   "HDSN": [
    {
     "insider": "Hartree Partners, LP",
-    "wert_dollar": 28589.0,
-    "datum": "2026-08-12",
+    "wert_dollar": 51953.0,
+    "datum": "2026-08-24",
+    "transaktionscode": "P",
+    "rolle": "Insider"
+   },
+   {
+    "insider": "Hartree Partners, LP",
+    "wert_dollar": 501093.919,
+    "datum": "2026-08-25",
     "transaktionscode": "P",
     "rolle": "Insider"
    }
@@ -11236,15 +11000,6 @@
     "rolle": "VP, CAO & Assistant Treasurer"
    }
   ],
-  "TRST": [
-   {
-    "insider": "McCormick Lauren Ann",
-    "wert_dollar": 5820.53,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "VP,Treasurer, Asst. Corp. Sec."
-   }
-  ],
   "OPEN": [
    {
     "insider": "Nejatian Kasra",
@@ -11252,24 +11007,6 @@
     "datum": "2026-08-14",
     "transaktionscode": "P",
     "rolle": "Chief Executive Officer"
-   }
-  ],
-  "SLGL": [
-   {
-    "insider": "Opaleye Management Inc.",
-    "wert_dollar": 67996.5,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   }
-  ],
-  "BPRN": [
-   {
-    "insider": "TUCHMAN MARTIN",
-    "wert_dollar": 452730.25200000004,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
    }
   ],
   "TONX": [
@@ -11293,15 +11030,6 @@
     "datum": "2026-08-14",
     "transaktionscode": "P",
     "rolle": "Chief Executive Officer"
-   }
-  ],
-  "TRS": [
-   {
-    "insider": "Tredwell Daniel P",
-    "wert_dollar": 2524.177652,
-    "datum": "2026-08-12",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
    }
   ],
   "AGCO": [
@@ -12767,6 +12495,93 @@
     "transaktionscode": "P",
     "rolle": "Insider"
    }
+  ],
+  "ACDC": [
+   {
+    "insider": "THRC Holdings, LP",
+    "wert_dollar": 1008917.925,
+    "datum": "2026-08-21",
+    "transaktionscode": "P",
+    "rolle": "Insider"
+   },
+   {
+    "insider": "THRC Holdings, LP",
+    "wert_dollar": 1710603.6682000002,
+    "datum": "2026-08-24",
+    "transaktionscode": "P",
+    "rolle": "Insider"
+   },
+   {
+    "insider": "THRC Holdings, LP",
+    "wert_dollar": 148127.08399999997,
+    "datum": "2026-08-25",
+    "transaktionscode": "P",
+    "rolle": "Insider"
+   },
+   {
+    "insider": "Wilks Dan H.",
+    "wert_dollar": 1008917.925,
+    "datum": "2026-08-21",
+    "transaktionscode": "P",
+    "rolle": "Insider"
+   },
+   {
+    "insider": "Wilks Dan H.",
+    "wert_dollar": 1710603.6682000002,
+    "datum": "2026-08-24",
+    "transaktionscode": "P",
+    "rolle": "Insider"
+   },
+   {
+    "insider": "Wilks Dan H.",
+    "wert_dollar": 148127.08399999997,
+    "datum": "2026-08-25",
+    "transaktionscode": "P",
+    "rolle": "Insider"
+   }
+  ],
+  "NSLR": [
+   {
+    "insider": "Falk Erik A",
+    "wert_dollar": 511000.00000000006,
+    "datum": "2026-08-26",
+    "transaktionscode": "P",
+    "rolle": "Direktor"
+   }
+  ],
+  "BSX": [
+   {
+    "insider": "Morano Susan E",
+    "wert_dollar": 100407.78,
+    "datum": "2026-08-25",
+    "transaktionscode": "P",
+    "rolle": "Direktor"
+   }
+  ],
+  "OPLN": [
+   {
+    "insider": "Kelly Peter J",
+    "wert_dollar": 499998.5780515,
+    "datum": "2026-08-24",
+    "transaktionscode": "P",
+    "rolle": "Chief Executive Officer"
+   }
+  ],
+  "NPB": [
+   {
+    "insider": "Williams Charles Alan",
+    "wert_dollar": 508425.00000000006,
+    "datum": "2026-08-25",
+    "transaktionscode": "P",
+    "rolle": "CHAIRMAN & CEO"
+   },
+   {
+    "insider": "Williams Charles Alan",
+    "wert_dollar": 818680.6584,
+    "datum": "2026-08-26",
+    "transaktionscode": "P",
+    "rolle": "CHAIRMAN & CEO"
+   }
   ]
  },
  "rollen": {
@@ -12979,41 +12794,16 @@
   "KERSTEN GEERT R": "Chief Executive Officer",
   "Rosin Brian J": "CFO of IM8 (US) LLC",
   "Carroll Anthony": "Chief Executive Officer",
-  "Ackerman Jonathan Z.": "Direktor",
   "Durso Jerome Benedict": "President and CEO",
   "Altman Peter": "President and CEO",
-  "BENHAM DOUGLAS N": "Direktor",
-  "Oran Baris": "Chief Financial Officer",
-  "Macadam Stephen E.": "Direktor",
   "BECKWITT RICHARD": "Direktor",
-  "O'Sullivan Michael J.": "See Remarks",
-  "SCHULER JACK W": "Insider",
-  "Young Kenneth M": "Chief Executive Officer",
-  "Barabash Yura V": "Direktor",
   "Binkowski Brent": "CHIEF OPERATING OFFICER",
-  "Potter Michael G": "Chief Financial Officer",
-  "Thau Daniel Mark": "Direktor",
   "OLIVER ERIC L": "Insider",
-  "Familiar Calderon Gerardo": "See Remarks",
-  "Roseth Aaron Robert": "COO",
   "Sawtelle Zachary T.": "Insider",
-  "Keller Stephen": "Insider",
-  "Harrington Michael J": "Direktor",
-  "Elguicze Jacob": "SVP and CFO",
-  "HOMBACH ROBERT J.": "Direktor",
-  "Mann Jeffrey Z": "Pres, Pharm Svc&Prod Mgmt, CLO",
-  "Kurdikar Devdatt": "President and CEO",
-  "Gruber David L": "Direktor",
   "Hetzel Brandon": "CFO and Treasurer",
   "McAnena Stephen J": "President and CEO",
-  "Lamba Lakhbir S.": "President and CEO",
   "MALONE JOHN C": "Insider",
-  "Lightheart Charmaine": "EVP/CRDEO",
   "PEEK MARK S": "Direktor",
-  "Morse Timothy R.": "Direktor",
-  "Mulligan Donal L": "Direktor",
-  "Panossian Armen": "See Remarks",
-  "Singh Narinder": "Direktor",
   "SIMPSON BOB R": "Direktor",
   "MAVERICK CAPITAL LTD": "Direktor",
   "Booth Andrew": "Chief Financial Officer",
@@ -13022,31 +12812,22 @@
   "BURKE RUSSELL E III": "Direktor",
   "Moeller Philip D": "Direktor",
   "Currie Jeffrey": "Direktor",
-  "Poillon Diane": "Direktor",
   "Eriksen Howard Timothy": "Insider",
   "McPherson John R": "Direktor",
   "ENTERLINE LARRY L": "Insider",
-  "SHAFFER TERI": "Insider",
-  "DEASON DOUGLAS R": "Direktor",
-  "DEVINCENZI ROBERT THOMAS": "Direktor",
   "DONNELLY WILLIAM P": "Direktor",
-  "Denny Jordan M.": "Chief Accounting Officer",
   "Penegor Todd Allan": "Direktor",
   "Johnson Gerald": "Direktor",
   "Empery Asset Management, LP": "Insider",
   "Foran Joseph Wm": "Chairman and CEO",
-  "Sukhtian Ghiath M.": "Direktor",
   "Hartree Partners, LP": "Insider",
   "Lal Rohit": "Direktor",
   "McHugh Ryan": "VP, CAO & Assistant Treasurer",
-  "McCormick Lauren Ann": "VP,Treasurer, Asst. Corp. Sec.",
   "Nejatian Kasra": "Chief Executive Officer",
   "Opaleye Management Inc.": "Insider",
-  "TUCHMAN MARTIN": "Direktor",
   "Rice Amy F.": "President and COO",
   "Wright Bradley J.": "Chief Financial Officer",
   "Wilson Kevin Mark": "Chief Executive Officer",
-  "Tredwell Daniel P": "Direktor",
   "Pollard Wesley T": "Direktor",
   "BALBIRNIE BRIAN R": "Director, CEO",
   "De Lange Bob": "Direktor",
@@ -13211,6 +12992,14 @@
   "MetLife Investment Management, LLC": "Insider",
   "Cacioppo James": "Chief Executive Officer",
   "Kanayama Mei": "Representative Director (PEO)",
-  "Lesavoy Bernard M": "Direktor"
+  "Lesavoy Bernard M": "Direktor",
+  "THRC Holdings, LP": "Insider",
+  "Wilks Dan H.": "Insider",
+  "Falk Erik A": "Direktor",
+  "Morano Susan E": "Direktor",
+  "COLLINGSWORTH JAMES M": "Direktor",
+  "Kelly Peter J": "Chief Executive Officer",
+  "Williams Charles Alan": "CHAIRMAN & CEO",
+  "Sanche Jacques Wolf": "Direktor"
  }
 }
