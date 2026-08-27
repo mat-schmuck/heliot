@@ -164,7 +164,7 @@
     "FSLY|3": "draussen",
     "FUTU|3": "draussen",
     "INSW|2": "draussen",
-    "ITT|2": "draussen",
+    "ITT|2": "drin",
     "KRYS|3": "drin",
     "TIGO|2": "drin",
     "VRDN|3": "draussen",
@@ -217,7 +217,13 @@
     "AYA|1": "drin",
     "PAAS|1": "drin",
     "FRHC|2": "drin",
-    "WIX|1": "drin"
+    "WIX|1": "drin",
+    "AMR|1": "drin",
+    "TEAM|2": "drin",
+    "CDE|1": "drin",
+    "CMCL|1": "drin",
+    "AXGN|1": "drin",
+    "ECO|1": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -354,6 +360,8 @@
     "BEST|ARES|2": "2026-08-27",
     "HTF|WIX|1": "2026-08-27",
     "BEST|HTF|WIX|1": "2026-08-27",
-    "UEBER|FIG|2": "2026-08-27"
+    "UEBER|FIG|2": "2026-08-27",
+    "ECO|1": "2026-08-27",
+    "BEST|ECO|1": "2026-08-27"
   }
 }
