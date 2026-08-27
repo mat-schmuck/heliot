@@ -187,7 +187,7 @@
     "ILMN|1": "drin",
     "ILMN|3": "drin",
     "FIG|2": "draussen",
-    "FROG|2": "drin",
+    "FROG|2": "draussen",
     "GH|2": "drin",
     "FROG|1": "drin",
     "TEAM|1": "drin",
@@ -223,7 +223,17 @@
     "CDE|1": "drin",
     "CMCL|1": "drin",
     "AXGN|1": "drin",
-    "ECO|1": "drin"
+    "ECO|1": "drin",
+    "AXGN|3": "drin",
+    "ECO|3": "drin",
+    "PAAS|3": "drin",
+    "NBTX|2": "drin",
+    "ARGX|3": "drin",
+    "ARGX|1": "drin",
+    "ENVA|2": "drin",
+    "SN|2": "drin",
+    "HL|2": "drin",
+    "TVTX|3": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -362,6 +372,7 @@
     "BEST|HTF|WIX|1": "2026-08-27",
     "UEBER|FIG|2": "2026-08-27",
     "ECO|1": "2026-08-27",
-    "BEST|ECO|1": "2026-08-27"
+    "BEST|ECO|1": "2026-08-27",
+    "UEBER|FROG|2": "2026-08-27"
   }
 }
