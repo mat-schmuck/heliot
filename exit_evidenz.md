@@ -1,403 +1,334 @@
-# Exit-Evidenz und zwei Vorschläge zur automatischen Exit-Überwachung
+# Gewinn-Exits: Verkaufssignale im Plus, je Strategie, mit Evidenz
 
-Für Gerhard und Mathias, 27.08.2026. Auftrag (Gerhard): Evidenz für
-Verkaufssignale in allen Strategien, die online sind, aus Fachliteratur
-und Studienlage, gezielt nur zu unseren Strategien; dazu zwei
-konzeptuelle Vorschläge, wie eine Kaufpunkt-Triggermeldung zusätzlich
-zum Push an die jeweilige Exit-Strategie übergeben wird, sodass der
-Exit ab dem Trigger laut Chart überwacht wird.
+Für Gerhard und Mathias, 27.08.2026, zweite Fassung. Gerhards
+Klarstellung: Es geht ausschließlich um Verkaufssignale laut Chart IM
+PLUS, gestaffelt nach leicht, mittel und stark im Plus. Die
+Verlustseite (Strukturstop, Zehn-Prozent-Deckel, Bruch per
+Schlusskurs) ist mit Kapitel 11 erledigt und bleibt hier unangetastet.
+Die erste Fassung dieses Dokuments vom selben Tag vermischte beide
+Seiten; diese Fassung ersetzt sie.
 
-Arbeitsweise: Zuerst wurde der Bestand gelesen (Kapitel 11,
-exit_regeln.py, positionen.py, Gerhards Exit-Regelwerk vom 05.08.2026),
-dann je Strategie die Quelle der Strategie selbst und die Studienlage.
-Messzahlen von Bulkowski wurden am 27.08.2026 direkt von seiner Seite
-thepatternsite.com abgerufen, die zwei tragenden Studien (Kaminski und
-Lo; Jeng, Metrick und Zeckhauser) wurden am selben Tag gegen die
-Originalveröffentlichungen verifiziert. Wo eine Zahl nur aus dem
-Gedächtnis der Bücher stammt, steht das ausdrücklich dabei.
+Arbeitsweise: Quellen der Strategien selbst (Darvas, O'Neil, Minervini,
+Bulkowski, Weinstein, Wyckoff nach Pruden und Weis), dazu die
+Studienlage zu Gewinnmitnahme und Haltedauer. Bulkowskis Messzahlen
+wurden am 27.08.2026 von thepatternsite.com abgerufen; die Studien
+Jeng, Metrick und Zeckhauser (2003) sowie O'Neils
+200-Tage-Klimax-Regel wurden am selben Tag gegen Veröffentlichungen
+verifiziert. Buchregeln ohne externe Messung sind als
+Gedächtniswiedergabe der jeweiligen Kapitel gekennzeichnet. Evidenzgrad
+A heißt studien- oder messgestützt, B heißt Primärquelle mit interner
+Statistik, C heißt Praktiker-Überlieferung.
 
-## Teil 1: Was schon existiert, und wo die Lücke ist
+## Teil 1: Das Drei-Zonen-Bild, und warum es exakt der Literatur entspricht
 
-Kapitel 11 (exit_regeln.py, von Gerhard am 05.08.2026 festgelegt) regelt
-bereits systemweit: Stop am strukturellen Bruchpunkt mit
-Zehn-Prozent-Deckel, Bruch nur per Schlusskurs, Stop wandert nur nach
-oben, Stufe A Einstandsstop, Stufe B Teilverkauf bei 20 Prozent, Stufe C
-Trailing über MA21 oder MA50, Acht-Wochen-Halteregel für Schnellstarter,
-Round-Trip-Verbot. Die Tabelle STRUKTURPUNKT nennt je Muster den
-Bruchpunkt. positionen.py führt offene Positionen und kennt zwei
-Betriebsarten, ECHT und BEOBACHTUNG; die Beobachtungs-Betriebsart hat
-Gerhard selbst vorgeschlagen (05.08.2026): eine Position wird nur
-angenommen, damit sich Erfahrung sammelt, ohne dass Geld fließt.
+Gerhards Staffelung leicht, mittel, stark im Plus deckt sich
+verblüffend genau mit dem, was die Quellen hergeben. Die Literatur
+kennt drei Gewinnlagen mit je eigener Logik:
 
-Die Lücke, die der neue Auftrag benennt, ist zweifach. Erstens füttert
-NICHTS die Exit-Überwachung automatisch: Ein gemeldeter Kaufpunkt
-verhallt, solange niemand von Hand eine Position einträgt; die
-Positionsverwaltung steht seit dem 05.08. bei null Einträgen. Zweitens
-ist Kapitel 11 ein Einheitsregelwerk: Die musterspezifischen
-Verkaufssignale der Quellen (Boxboden-Nachziehen bei Darvas,
-Klimax-Zeichen bei O'Neil, Verkauf in die Stärke bei Minervini,
-Measure-Rule-Ziele bei Bulkowski, der Sechs-Monats-Horizont der
-Insider-Studien) sind darin nicht enthalten, und der Strukturpunkt
-steht nur als Text, er wird nicht laufend am Chart nachgeführt.
+ZONE LEICHT (Ausbruch gelungen, Gewinn unter dem Musterziel, grob
+unter zwei R): Hier sagen ALLE Quellen übereinstimmend: nicht
+verkaufen, sondern sichern. Die wissenschaftliche Begründung ist die
+stärkste des ganzen Themas: Odean (Are Investors Reluctant to Realize
+Their Losses?, Journal of Finance 1998, an zehntausend echten Depots
+gemessen) zeigt den Dispositionseffekt: Anleger verkaufen Gewinner
+systematisch zu früh, und die verkauften Gewinner laufen danach
+besser als die behaltenen Verlierer. Ein Meldesystem, das im leichten
+Plus zum Verkauf drängt, würde den teuersten Anlegerfehler
+automatisieren. Verkaufssignale gibt es in dieser Zone trotzdem, aber
+nur drei eng umrissene, siehe Teil 2.
 
-Online sind derzeit: Darvas Box, Cup and Handle (Wochenbasis),
-Rectangle Top, VCP, High and Tight Flag, Lücken-Bestätigungstag,
-Red-to-Green und Red-to-Green Explosive, Shakeout-Spring (Kapitel 10),
-die Ausweich-Marken (52-Wochen-Hoch, 20-Tage-Hoch, MA50), der
-Insider-Kauf-Scanner und der Sektor-Radar (letzterer meldet Lagen,
-keine Einstiege, und braucht deshalb keinen Exit).
+ZONE MITTEL (das gemessene Musterziel ist erreicht, oder 20 bis 25
+Prozent, grob zwei bis vier R): Das ist DIE Verkaufszone der Quellen.
+O'Neils Kernregel (How to Make Money in Stocks, Verkaufskapitel,
+Gedächtniswiedergabe): die meisten Gewinne bei 20 bis 25 Prozent
+mitnehmen, weil Wachstumsaktien nach solchen Anstiegen typischerweise
+neue Basen bilden; Ausnahme ist die Acht-Wochen-Regel für
+Schnellstarter, die in Kapitel 11 bereits eingebaut ist. Bulkowski
+liefert dazu die Messung je Muster: Sein Measure-Rule-Ziel wird beim
+Rectangle Top in 78 Prozent der Fälle erreicht, bei der High and
+Tight Flag (Halbhöhen-Ziel) in 82 Prozent, beim Cup with Handle nur in
+61 Prozent (thepatternsite.com, 27.08.2026). Ein erreichtes Ziel mit
+hoher Trefferquote heißt: Der statistische Erwartungswert des Musters
+ist verbraucht; ab dort ist Verkaufen in die Stärke oder hartes
+Straffen die belegte Handlung. Minervini (Think and Trade Like a
+Champion, Gedächtniswiedergabe) formuliert dasselbe in R: Teilverkauf
+in die Stärke, sobald der Gewinn ein Mehrfaches des Einstiegsrisikos
+beträgt; nie einen ordentlichen Gewinn in einen Verlust drehen lassen.
 
-## Teil 2: Evidenz je Strategie
+ZONE STARK (Klimax-Territorium: 25 bis 50 Prozent in ein bis drei
+Wochen nach längerem Anstieg, oder Vielfaches seit Einstieg): Hier
+liegt der detaillierteste Verkaufskatalog der gesamten Literatur,
+O'Neils Klimax-Regeln, und hier gilt sein Grundsatz, in die STÄRKE zu
+verkaufen, nicht in die anschließende Schwäche. Dazu kommt aus der
+Wissenschaft ein Zeitargument: Momentum-Gewinne bestehen über Halte-
+fenster von etwa drei bis zwölf Monaten und kehren sich danach um
+(Jegadeesh und Titman, Returns to Buying Winners and Selling Losers,
+Journal of Finance 1993, bestätigt 2001); extreme Momentum-Läufe enden
+zudem in Crashs (Daniel und Moskowitz, Momentum Crashes, Journal of
+Financial Economics 2016). Ein Gewinner, der viele Monate gelaufen
+ist, verliert also seinen statistischen Rückenwind; ein Zeitdeckel im
+starken Plus ist evidenzgestützt, kein Bauchgefühl.
 
-Je Strategie: was die Quelle selbst zum Verkauf sagt, was die
-Studienlage hergibt, und die daraus abgeleitete Regel. Evidenzgrad A
-heißt durch unabhängige Messung oder Studie gestützt, B heißt
-Primärquelle mit interner Statistik, C heißt Praktiker-Überlieferung
-ohne belastbare Messung.
+## Teil 2: Die Verkaufssignale je Zone, mit Quelle und Evidenzgrad
 
-### Darvas Box
+### Zone leicht im Plus: die drei einzigen legitimen Verkaufsgründe
 
-Quelle: Nicolas Darvas, How I Made 2,000,000 Dollars in the Stock
-Market, 1960. Die Methode IST im Kern eine Exit-Methode: Darvas zog
-den Stop mit jedem neuen, höheren Boxboden nach und verkaufte
-ausschließlich, wenn der Kurs aus dem Boden der aktuellen Box fiel.
-Kein Gewinnziel, kein Verkauf in Stärke; der nachgezogene Boxboden ist
-der historische Urahn des Trailing-Stops. Kapitel 11 nennt genau das
-als Bruchpunkt, verdrahtet ist das Nachziehen aber nicht.
+Erstens die Schlechtmarkt-Staffel (O'Neil, Gedächtniswiedergabe): In
+einem zähen oder korrigierenden Markt nimmt O'Neil Gewinne schon bei
+10 bis 15 Prozent mit statt bei 20 bis 25, und verengt zugleich die
+Verluststopps. Für uns heißt das: Die Zonengrenzen sind marktabhängig
+verschiebbar; der Sektor-Radar und eine einfache Marktampel (Index
+unter der 50-Tage-Linie) können die Staffel umschalten. Evidenzgrad B.
 
-Studienlage: Kaminski und Lo, When Do Stop-Loss Rules Stop Losses?,
-Journal of Financial Markets 18 (2014), Seiten 234 bis 254, verifiziert
-27.08.2026: Unter reiner Zufallsbewegung senken Stop-Regeln die
-erwartete Rendite, unter Momentum (Trendfolge) fügen sie Wert hinzu,
-gemessen 50 bis 100 Basispunkte je Monat während der
-Stop-out-Phasen (Daten 1950 bis 2004). Unser gesamtes System ist ein
-Momentum-System; die Studie ist damit die akademische Rückendeckung
-für Trailing-Stops überhaupt.
+Zweitens neue Hochs bei dünnem Volumen kurz nach dem Ausbruch
+(O'Neil, Gedächtniswiedergabe): Steigt die Aktie weiter, aber das
+Volumen versiegt, fehlt die institutionelle Nachfrage; das ist bei
+O'Neil ein frühes Verkaufs- beziehungsweise Straffungssignal. Wir
+haben die Volumenkurven je Aktie bereits im System; die Prüfung
+Schlusskurs auf neuem Hoch bei Volumen unter dem Schnitt ist mit
+Bestandsmitteln machbar. Evidenzgrad B.
 
-Abgeleitete Regel (Evidenzgrad A für den Stop-Ansatz, B für die
-Boxmechanik): Nach dem Trigger täglich am Tagesschluss die aktuelle Box
-nachführen; Exit-Meldung, wenn ein Schlusskurs unter dem gültigen
-Boxboden liegt; Stop-Nachzug-Meldung bei jeder neuen, höheren Box.
+Drittens der Rückfall unter die Ausbruchsmarke: streng genommen das
+Ende des Plus, aber die Grenze der Zone; Bulkowskis Throwback-Raten
+(62 bis 67 Prozent je Muster) belegen, wie häufig dieser Weg ist. Wer
+im leichten Plus verkauft, tut es laut Quellen NUR aus diesen drei
+Gründen; alles andere ist Dispositionseffekt. Evidenzgrad A für das
+Unterlassen, B für die Signale.
 
-### Cup and Handle (Wochenbasis)
+### Zone mittel im Plus: das erreichte Musterziel
 
-Quelle: William O'Neil, How to Make Money in Stocks (4. Auflage).
-O'Neils Verkaufsregeln, aus dem Buch (Gedächtniswiedergabe, im Buch
-verstreut über die Verkaufskapitel): Verluste hart bei 7 bis 8 Prozent
-unter dem Kaufpunkt kappen; die meisten Gewinne bei 20 bis 25 Prozent
-mitnehmen, AUSSER die Aktie stieg 20 Prozent in unter drei Wochen, dann
-acht Wochen halten (beides ist in Kapitel 11 bereits eingebaut);
-Klimax-Erkennung nach längerem Anstieg: größter Tagesgewinn seit Beginn
-der Bewegung, Erschöpfungslücke, Überschreiten der oberen Kanallinie,
-neue Hochs bei auffallend dünnem Volumen; als spätes Signal der
-Schlusskurs unter der Zehn-Wochen-Linie bei hohem Volumen.
+Je Strategie das konkrete, belegte Ziel:
 
-Messung: Bulkowski (thepatternsite.com/cup.html, abgerufen 27.08.2026,
-913 vermessene Fälle): durchschnittlicher Anstieg 54 Prozent,
-Break-even-Fehlerrate 5 Prozent, Throwback-Rate 62 Prozent,
-Kurszielquote der Measure Rule 61 Prozent, Gesamtrang 3 von 39.
-Bulkowskis eigene Stop-Empfehlung dort: Stop unter das Handle-Tief,
-mit steigendem Kurs nachziehen; deckt sich mit Kapitel 11.
+Rectangle Top: Ziel gleich Ausbruchskante plus Rechteckhöhe,
+Trefferquote 78 Prozent (Bulkowski, gemessen). Am Ziel Teilverkauf
+oder harte Straffung; die verbleibende Strecke ist statistisch
+Restrisiko. Evidenzgrad B mit Messung.
 
-Abgeleitete Regel (Evidenzgrad B, Teilaspekte A): Kapitel 11
-unverändert als Grundgerüst; ZUSÄTZLICH die Klimax-Zeichen als
-Verkaufs-in-Stärke-Meldung (größter Tagesgewinn seit Trigger plus
-Volumen über dem Schnitt nach mindestens 25 Prozent Anstieg) und die
-Zehn-Wochen-Linie als spätes Exit-Signal. Die hohe Throwback-Rate (62
-Prozent) begründet außerdem eine eigene Fehlsignal-Regel: Fällt der
-Kurs nach dem Ausbruch per Schluss zurück UNTER den Kaufpunkt, ist der
-Ausbruch gescheitert, noch bevor der Strukturstop erreicht ist.
+High and Tight Flag: Ziel gleich Ausbruch plus HALBER Fahnenmast,
+Trefferquote 82 Prozent, die beste im System (Bulkowski, gemessen).
+Ausdrücklich NICHT auf die volle Mastprojektion warten: Bulkowski
+rankt das Muster nur auf Platz 30 von 39, der Ruhm aus der
+O'Neil-Literatur ist größer als die gemessene Leistung. Evidenzgrad B
+mit Messung.
 
-### Rectangle Top
+Cup and Handle (Wochenbasis): Das Measure-Ziel trifft nur zu 61
+Prozent; hier ist O'Neils Prozentregel die bessere Leitplanke: 20 bis
+25 Prozent über dem Kaufpunkt Teilverkauf, außer die Acht-Wochen-Regel
+läuft (dann hält Kapitel 11 sie ohnehin offen). Evidenzgrad B.
 
-Quelle und Messung: Bulkowski, Encyclopedia of Chart Patterns;
-aktuelle Zahlen von thepatternsite.com/recttops.html (27.08.2026):
-durchschnittlicher Anstieg 51 Prozent, Break-even-Fehlerrate 15
-Prozent, Throwback-Rate 66 Prozent, Zielquote der Measure Rule
-(Rechteckhöhe auf die Oberkante addiert) 78 Prozent, Rang 4 von 39.
-
-Abgeleitete Regel (Evidenzgrad B mit gemessenen Quoten): Erstens die
-Fehlsignal-Regel: Ein Schlusskurs zurück IM Rechteck (unter der alten
-Oberkante) widerlegt den Ausbruch; das ist präziser als der
-Kapitel-11-Bruchpunkt Unterkante der Range, der erst viel tiefer
-greift, und bei 66 Prozent Throwbacks die wichtigste Einzelregel.
-Zweitens das Measure-Rule-Ziel als Straffungspunkt: Bei Erreichen von
-Oberkante plus Rechteckhöhe (Trefferquote 78 Prozent) den Stop deutlich
-enger ziehen oder Teilverkauf melden, denn ab dort ist der statistische
-Erwartungswert des Musters verbraucht.
-
-### VCP (Volatility Contraction Pattern)
-
-Quelle: Mark Minervini, Trade Like a Stock Market Wizard (2012) und
-Think and Trade Like a Champion (2017), Gedächtniswiedergabe der
-Verkaufskapitel: Anfangsstop nie über 10 Prozent, im Schnitt deutlich
-enger; nach einem Gewinn im Mehrfachen des Einstiegsrisikos den Stop
-auf Einstand ziehen (nie einen ordentlichen Gewinn in einen Verlust
-drehen lassen); in die Stärke hinein teilverkaufen, wenn der Gewinn ein
-Vielfaches des durchschnittlichen Verlusts erreicht; Verstoß ist der
-Schlusskurs unter der 50-Tage-Linie bei erhöhtem Volumen. Minervinis
-eigener Leistungsnachweis (US Investing Championship 1997 und 2021)
-ist dokumentiert, aber kein unabhängiger Beleg der Einzelregeln.
-
-Abgeleitete Regel (Evidenzgrad B): Kapitel 11 deckt Stop, Einstand und
-Teilverkauf bereits ab; ZUSÄTZLICH die 50-Tage-Linie als
-strategie-eigenes Exit-Signal (Schluss darunter mit Volumen über dem
-Schnitt) und die R-Rechnung, die Kapitel 11 schon führt, als Auslöser
-für den Einstandsstop (ab 2R), nicht erst die Prozentschwelle.
-
-### High and Tight Flag
-
-Quelle: O'Neil (Fahnenmast 100 bis 120 Prozent in vier bis acht
-Wochen, Flagge 10 bis 25 Prozent Korrektur); Messung Bulkowski
-(thepatternsite.com/htf.html, 27.08.2026, 1028 Fälle):
-durchschnittlicher Anstieg nach Ausbruch 39 Prozent,
-Break-even-Fehlerrate 15 Prozent, Throwback 67 Prozent, Halbhöhen-Ziel
-mit 82 Prozent Trefferquote, Gesamtrang 30 von 39. Ehrlich benannt:
-Bulkowskis Messung stuft das Muster deutlich nüchterner ein als der
-O'Neil-Ruf; die Fehlerrate ist dreimal so hoch wie beim Cup and
-Handle. Bulkowskis Exit-Hinweis dort: bei steilen Anstiegen
-Volatilitäts-Stop und Trendlinie unter den Kurs, Verkauf erwägen beim
-Schluss darunter.
-
-Abgeleitete Regel (Evidenzgrad B mit gemessenen Quoten): Stop unter dem
-Flaggentief (Kapitel 11, bestätigt); Halbhöhen-Ziel (halber Fahnenmast
-auf den Ausbruch addiert) als Straffungspunkt mit der besten
-gemessenen Trefferquote im ganzen System (82 Prozent); wegen der hohen
-Fehlerrate zusätzlich die Fehlsignal-Regel Schluss zurück unter den
-Kaufpunkt. Die tägliche Melde-Ausnahme der Flagge (HTF-Marke) bleibt
-davon unberührt, sie betrifft nur den Einstieg.
-
-### Lücken-Bestätigungstag
-
-Quellenlage: Zu Kurslücken selbst führt Bulkowski Statistiken (Lücken
-in Trendrichtung mit Bestätigung laufen weiter, gewöhnliche Lücken
-schließen schnell; Zahlen hier aus dem Gedächtnis, vor Einbau
-gegenprüfen). Die stärkste Evidenz kommt aus einer anderen Ecke, und
-sie ist für uns unmittelbar nutzbar: der Post-Earnings-Announcement
-Drift (Ball und Brown 1968; Bernard und Thomas 1989, Journal of
-Accounting Research): Nach Ergebnisüberraschungen driften Kurse über
-Wochen in Richtung der Überraschung weiter; einer der ältesten und
-meistbestätigten Kapitalmarkteffekte überhaupt.
-
-Abgeleitete Regel (Evidenzgrad A für den Zahlen-Fall, C für den Rest):
-Die Lücken-These ist widerlegt, wenn die Lücke per Schlusskurs
-geschlossen wird; das ist der natürliche Bruchpunkt und ersetzt bei
-diesem Muster jede Prozentmarke innerhalb des Deckels. INNOVATION aus
-dem Bestand: zahlen_termine.json weiß bereits, ob die Lücke ein
-Zahlen-Termin war. War sie es, spricht die Drift-Evidenz gegen einen
-schnellen Gewinn-Exit und für den weiten Anker (Lückenschluss oder
-Kapitel-11-Trail); war sie es nicht, gilt das engere Regime mit
-Straffung nach wenigen Tagen.
-
-### Red-to-Green und Red-to-Green Explosive
-
-Quellenlage: Tageshandels-Überlieferung (unter anderem Andrew Aziz, How
-to Day Trade for a Living; Ross Cameron), keine belastbare
-unabhängige Messung bekannt; Evidenzgrad C, und das gehört ehrlich
-gesagt. Kapitel 11 hat den Bruchpunkt bereits sauber definiert:
-Schlusskurs zurück unter dem Vortagesschluss, die Triggerlinie ist
-zugleich die Exit-Linie. Die Überlieferung ergänzt: Signale dieser Art
-sind Tagesgeschäft, die Position wird nicht über Nacht gehalten,
-sofern nicht ein übergeordnetes Muster dieselbe Aktie trägt.
-
-Abgeleitete Regel (Evidenzgrad C, aber symmetrisch und prüfbar):
-Intraday-Exit-Meldung, wenn der Kurs zurück unter den Vortagesschluss
-fällt (dieselbe Datenrunde, die den Trigger fand, sieht auch den
-Rückfall); Zeit-Exit-Hinweis zum Handelsschluss mit dem Stand seit
-Trigger. Für Explosive zusätzlich das Tagestief des Auslösetags als
-harte Linie.
-
-### Shakeout-Spring mit Sekundärtest (Kapitel 10)
-
-Quelle: Richard Wyckoff (Kursmethode), aufbereitet bei Pruden (The
-Three Skills of Top Trading, 2007) und Weis (Trades About to Happen,
-2013). Der Stop unter dem Spring-Tief steht bereits in Kapitel 10 und
-in der STRUKTURPUNKT-Tabelle. Wyckoffs Ausstiegslehre: Ziel aus der
-Höhe der Handelsspanne (Cause-Effect-Projektion), Warnzeichen sind
-Upthrust (Fehlausbruch nach oben), Schwächezeichen mit weitem Spread
-und hohem Volumen ohne Fortschritt, und der Kaufklimax. Unabhängige
-akademische Validierung der Wyckoff-Signale existiert praktisch nicht;
-Evidenzgrad C, in sich aber konsistent und regelbar.
-
-Abgeleitete Regel: Exit-Meldung bei Schluss unter dem Tief des
-Sekundärtests (näher als das Spring-Tief, sobald der Test bestätigt
-ist); Zielmarke Oberkante der Handelsspanne plus Spannenhöhe als
-Straffungspunkt; Warnmeldung bei Fehlausbruch über die Spanne mit
-Schluss zurück darin (Upthrust).
-
-### Insider-Kauf-Scanner
-
-Studienlage, die stärkste akademische im ganzen System: Jeng, Metrick
-und Zeckhauser, Estimating the Returns to Insider Trading, Review of
-Economics and Statistics 85 (2003), verifiziert 27.08.2026:
-Insider-KÄUFE erzielen abnormale Renditen von 52 bis 68 Basispunkten
-je Monat über die ersten sechs Monate, rund die Hälfte davon im ersten
-Monat; Insider-VERKÄUFE erzielen keine messbare abnormale Rendite.
-Dazu Lakonishok und Lee (Review of Financial Studies 2001, Käufe
-informativ, besonders bei kleinen Firmen) und Cohen, Malloy und
-Pomorski (Decoding Inside Information, Journal of Finance 2012:
-opportunistische, nicht routinemäßige Käufe tragen das Signal).
-
-Abgeleitete Regel (Evidenzgrad A): Erstens NICHT auf Insider-Verkäufe
-als Ausstiegssignal warten, die tragen laut Studienlage keine
-Information (Vergütung, Streuung); ein Verkaufs-Scanner wäre
-Fehlaufwand. Zweitens der Zeithorizont: Die Überrendite ist in den
-ersten Wochen am dichtesten und nach etwa sechs Monaten verbraucht;
-der Exit ist deshalb eine Zeitregel (Straffung nach vier Wochen,
-Horizont-Ende nach sechs Monaten) PLUS der gewöhnliche
-Kapitel-11-Chartstop, denn ein Insider-Signal hat keinen eigenen
-Strukturpunkt.
-
-### Ausweich-Marken (52-Wochen-Hoch, 20-Tage-Hoch, MA50)
-
-Studienlage: George und Hwang, The 52-Week High and Momentum
-Investing, Journal of Finance 2004: Die Nähe zum 52-Wochen-Hoch
-erklärt Momentum-Renditen besser als klassische Rankings, und die
-Gewinne kehren langfristig nicht um; das stützt sowohl die Marke als
-Einstieg als auch den Verbleib, solange neue Hochs entstehen. Zu
-MA-Regeln: Brock, Lakonishok und LeBaron (Journal of Finance 1992)
-fanden Prognosekraft einfacher MA-Regeln in Daten bis 1987, spätere
-Replikationen relativieren; Han, Yang und Zhou (JFQA 2013) zeigen
-Nutzen von MA-Timing in volatilen Portfolios. Gemischt, aber real;
+VCP: Minervinis R-Staffel: Teilverkauf in die Stärke ab etwa zwei bis
+drei R Gewinn (dem Mehrfachen des Einstiegsrisikos), Rest weiterlaufen
+lassen; Kapitel 11 rechnet bereits in R, die Zahl ist also verfügbar.
 Evidenzgrad B.
 
-Abgeleitete Regel: Für die Hoch-Marken gilt das Rectangle-Prinzip
-sinngemäß: Schluss zurück unter der gerissenen Marke widerlegt den
-Durchbruch. Für die MA50-Rückeroberung ist der Exit der Schluss zurück
-unter die Linie. Ein eigenes Gewinnregime brauchen die Marken nicht,
-Kapitel 11 trägt.
+Darvas Box, und das gehört ehrlich gesagt: Darvas kennt KEIN
+Verkaufen im Plus. Seine Methode verkauft ausschließlich über den
+nachgezogenen Boxboden; er hat Klimax-Hochs bewusst verpasst und das
+als Preis der Methode akzeptiert. Wer der Quelle folgt, meldet bei
+Darvas-Positionen in Zone mittel nichts, sondern zieht nur den Boden
+nach. Wenn wir dort trotzdem ein Ziel wollen, ist es eine bewusste
+Abweichung von der Quelle und gehört so beschriftet. Evidenzgrad B
+für das Unterlassen.
 
-### Übergreifend: warum automatische Exit-Meldungen überhaupt
+Shakeout-Spring: Wyckoffs Ziel ist die Projektion der Handelsspanne
+(Ursache-Wirkung): Oberkante der Spanne plus Spannenhöhe als erste
+Zielmarke; dort Teilverkauf oder Straffung. Evidenzgrad C, in sich
+konsistent.
 
-Die am besten belegte Erkenntnis der gesamten Exit-Forschung ist
-verhaltensökonomisch: Anleger verkaufen Gewinner zu früh und halten
-Verlierer zu lange (Dispositionseffekt; Shefrin und Statman, Journal
-of Finance 1985; Odean, Are Investors Reluctant to Realize Their
-Losses?, Journal of Finance 1998, an 10.000 Depots gemessen). Ein
-System, das den Exit ab dem Trigger regelbasiert überwacht und
-ansagt, bekämpft exakt diesen Fehler; zusammen mit Kaminski und Lo
-(Stops nützen in Momentum-Umgebungen) ist das die Evidenz dafür, dass
-der Auftrag selbst richtig angesetzt ist.
+Lücken-Bestätigungstag: zweigeteilt, und hier liegt eine Innovation
+aus dem Bestand. War die Lücke ein ZAHLEN-Termin (zahlen_termine.json
+weiß das bereits), gilt der Post-Earnings-Announcement Drift (Ball und
+Brown 1968; Bernard und Thomas, Journal of Accounting Research 1989):
+Kurse driften nach Ergebnisüberraschungen rund sechzig Handelstage in
+Richtung der Überraschung; ein frühes Gewinnziel verschenkt belegte
+Drift. Also: bei Zahlen-Lücken das mittlere Ziel erst nach dem
+Drift-Fenster oder per Klimax-Zeichen, bei gewöhnlichen Lücken früh
+straffen. Evidenzgrad A für den Zahlen-Fall.
 
-## Teil 3: Vorschlag A, das Schattenbuch
+Red-to-Green und Gap-and-Go (Tagesgeschäft): Das mittlere Plus ist
+hier ein Tagesverlauf. Überlieferung (Aziz, Cameron; Evidenzgrad C):
+Gewinn sichern beim ersten roten Fünf-Minuten-Balken nach einer
+Ausdehnung beziehungsweise beim Rückfall unter den
+Tagesvolumendurchschnittspreis; dazu eine Randnotiz aus der
+Wissenschaft: Die erste halbe Handelsstunde sagt die letzte voraus
+(Gao, Han, Li und Zhou, Market Intraday Momentum, Journal of Financial
+Economics 2018), was eher für das Halten bis zur Schlussstunde als
+für den Mittagsverkauf spricht. Zeit-Exit zum Handelsschluss bleibt
+die harte Grenze.
 
-Grundidee: Jede Kaufpunkt-Triggermeldung eröffnet im selben Atemzug
-eine BEOBACHTUNGS-Position in der bestehenden Positionsverwaltung;
-genau die Betriebsart, die Gerhard am 05.08. vorgesehen hat und die
-seither leer steht. Der Push bleibt unverändert, die Übergabe ist ein
-zweiter, interner Empfänger derselben Meldung.
+Insider-Kauf: kein Chart-Muster, dafür der klarste Zeitfahrplan der
+Studienlage (Jeng, Metrick und Zeckhauser, Review of Economics and
+Statistics 2003, verifiziert): 52 bis 68 Basispunkte Überrendite je
+Monat, rund die HÄLFTE davon im ersten Monat, nach sechs Monaten
+verbraucht. Das mittlere Ziel ist deshalb zeitlich: Teilgewinn nach
+vier bis sechs Wochen im Plus, Rest bis längstens sechs Monate.
+Evidenzgrad A.
 
-Mechanik: Der Wächter schreibt beim erfolgreichen Push je Signal einen
-Schattenbuch-Eintrag mit Ticker, Strategie, Triggerkurs, Triggerzeit,
-Strukturpunkt (aus der Mappe, wie er in der Meldung steht) und dem
-gedeckelten Anfangsstop aus Kapitel 11. Ab dann prüft die Tagwache
-intraday die Intraday-Regeln (Red-to-Green-Rückfall, Lückenschluss)
-und der Nachtscan am Tagesschluss die Schlusskurs-Regeln (Kapitel 11
-komplett plus die strategie-eigenen Zusätze aus Teil 2:
-Boxboden-Nachzug, Klimax-Zeichen, Measure-Rule-Straffung,
-50-Tage-Verstoß, Sechs-Monats-Horizont der Insider). Jede ausgelöste
-Regel wird über das bestehende ntfy-Thema gemeldet, im gewohnten
-Format, etwa: EXIT-Hinweis: JAZZ; Darvas Box; Schluss 241.10 unter
-Boxboden 243.80; seit Trigger plus 12,4 Prozent. Stop-Nachzüge und
-Straffungspunkte melden leiser (Priorität default), Brüche laut.
+Ausweich-Marken (52-Wochen-Hoch, 20-Tage-Hoch, MA50): George und
+Hwang (Journal of Finance 2004) zeigen, dass Gewinne nahe dem
+52-Wochen-Hoch NICHT langfristig umkehren; das spricht gegen
+vorschnelles Verkaufen, nur weil die Aktie am Hoch notiert
+(Ankereffekt). Für die Marken gilt die generische Staffel (O'Neil
+Prozent oder R), kein eigenes Ziel. Evidenzgrad A für das
+Nicht-Ankern.
 
-Zustand: eigene Datei schattenbuch.json nach dem Muster der
-Shakeout-Warteliste; sie überlebt den Freitagsputz ausdrücklich (die
-Lehre der Insider-30-Tage-Frist: Exit-Zustand ist kein
-Melde-Gedächtnis). Intraday-Strategien schließen ihre Beobachtung
-automatisch zum Handelsschluss, alle anderen enden durch Exit-Signal
-oder Zeitdeckel (Vorschlag: 26 Wochen, der Insider-Horizont als
-längster).
+### Zone stark im Plus: der Klimax-Katalog
 
-Der eigentliche Gewinn, und deshalb ist A mein Favorit: Das
-Schattenbuch schreibt automatisch mit, was aus jedem Trigger geworden
-ist (Triggerkurs, Exit-Kurs, Exit-Grund, Haltedauer, R-Vielfaches).
-Gerhard schreibt in jedem Regelwerk, die Schwellen seien Startwerte
-und per Mitschreiben zu verfeinern; das Schattenbuch IST dieses
-Mitschreiben, ohne dass jemand etwas eintragen muss. Nach drei Monaten
-liegen erstmals echte Trefferquoten je Strategie und je Exit-Regel
-vor, gemessen an unseren eigenen Signalen statt an Bulkowskis
-Universum.
+O'Neils Klimax-Zeichen (How to Make Money in Stocks,
+Verkaufskapitel; Gedächtniswiedergabe, einzeln als Regeln prüfbar):
 
-Aufwand und Risiken: mittel; neue Datei, Fütterung an einer Stelle im
-Wächter, Prüfschleife je Lauf über die offenen Beobachtungen (ein
-Kursabruf je Beobachtung ist NICHT nötig, die Tagwache streamt die
-Listen-Aktien ohnehin; nur Beobachtungen zu Aktien, die von der
-Wochenliste gefallen sind, brauchen eine eigene kleine Abrufrunde,
-dieselbe Mechanik wie beim Insider-Marktwert). Meldelast: bei zuletzt
-rund 20 bis 40 Triggern je Woche entsteht ein Bestand von grob 50 bis
-150 offenen Beobachtungen; Exit-Meldungen in ähnlicher Wochenzahl wie
-heute die Einstiege, gebündelt je Lauf wie gewohnt.
+Erstens der Klimax-Lauf selbst: 25 bis 50 Prozent Anstieg in ein bis
+drei Wochen, NACHDEM die Aktie schon viele Monate gelaufen ist; das
+ist das Hauptzeichen und zugleich Gerhards Definition von stark im
+Plus. Zweitens der größte Tagesgewinn seit Beginn der gesamten
+Bewegung, spät im Lauf; dasselbe für die größte Wochenkerze. Drittens
+die Erschöpfungslücke: eine Kurslücke nach oben, nachdem der Lauf
+schon lange läuft. Viertens der Abstand zur 200-Tage-Linie: notiert
+die Aktie 70 bis 100 Prozent über ihrer 200-Tage-Linie, ist das bei
+O'Neil ein Verkaufssignal (verifiziert 27.08.2026 gegen
+IBD-Sekundärliteratur, samt der ehrlichen Fußnote, dass O'Neil es
+selbst selten benutzte). Fünftens das Überschießen der oberen
+Kanallinie. Alle fünf sind mit Tagesdaten aus dem Bestand berechenbar.
 
-## Teil 4: Vorschlag B, die Exit-Grammatik im Wächter
+Dazu Weinstein (Secrets for Profiting in Bull and Bear Markets,
+Gedächtniswiedergabe): Das Ende von Stufe zwei kündigt sich an, wenn
+die 30-Wochen-Linie flach wird und der Kurs sie erstmals nach langem
+Lauf schneidet; das ist das langsamste, aber robusteste
+Stark-im-Plus-Signal. Wyckoff (nach Pruden und Weis): Buying Climax
+(weiteste Spanne, höchstes Volumen, Schluss unter der Mitte nach
+langem Anstieg) und der Fehlausbruch nach oben mit Rückfall (UTAD)
+als Verteilungszeichen; für Spring-Positionen die natürliche
+Stark-Zone. Evidenzgrad B bis C, aber regelbar.
 
-Grundidee: kein neues Buch, kein neues Kapitel; der Exit wird ein
-dritter Zustand der Maschinerie, die es schon gibt. Das
-Melde-Gedächtnis kennt je Signalschlüssel heute gemeldet oder nicht;
-es bekommt zusätzlich Schlüssel mit der Marke EXIT| samt eigener
-Frist (die Mechanik existiert, INSIDER| mit 30 Tagen zeigt den Weg).
-Nach einem Push wird der Schlüssel scharf, und die bestehende
-Fenster-Zustandsmaschine des Wächters prüft ihn fortan rückwärts.
+Und der Zeitdeckel als wissenschaftliche Klammer: Jenseits von etwa
+sechs bis zwölf Monaten Haltedauer kippt der Momentum-Rückenwind
+(Jegadeesh und Titman 1993; Daniel und Moskowitz 2016), bei
+Insider-Positionen schon nach sechs Monaten (Jeng et al. 2003), bei
+Zahlen-Lücken nach etwa sechzig Handelstagen (Bernard und Thomas
+1989). Eine Position, die ihren Zeitdeckel erreicht, bekommt die
+Meldung Gewinn sichern oder These erneuern: Nur wenn die Aktie JETZT
+wieder ein gültiges Muster trüge, bliebe sie ein Halten.
 
-Die Regeln kommen aus einer GRAMMATIK von sechs Bausteinen, die alle
-recherchierten Regeln abdecken: erstens Anfangsstop gleich
-Strukturpunkt mit Deckel (existiert); zweitens Nachziehanker, wählbar
-Boxboden, Vortagestief, MA50 oder 20-Tage-Tief; drittens
-Fehlsignal-Linie (Schluss zurück unter Kaufpunkt beziehungsweise
-zurück in der Range oder unter der Marke); viertens Straffungsziel
-(Measure Rule, Halbhöhe, Spannenprojektion); fünftens Klimax-Warnung
-(größter Tagesgewinn seit Trigger plus Volumen); sechstens Zeit- und
-Ereignisregel (Handelsschluss für Intraday, sechs Monate für Insider,
-Zahlen-Termin-Hinweis aus zahlen_termine.json). Jede Strategie ist
-dann nur noch ein Konfigurationsblock in config.py, der Bausteine
-auswählt und parametriert; ein einziger Prüfmotor läuft im Wächter,
-und die Gesamtprüfung kann jede Strategie mal jeden Baustein als
-Matrix absichern.
+## Teil 3: Vorschlag A, das Gewinn-Stufenwerk im Schattenbuch
 
-Stärken: minimal-invasiv, keine neue Zustandsdatei außer den
-EXIT|-Schlüsseln samt Ankerständen im vorhandenen Gedächtnis, ein
-Motor statt je Strategie einem Modul, sehr gut prüfbar. Schwächen und
-sie sind der Preis der Schlankheit: keine Mitschrift der Ergebnisse
-(was aus einem Trigger wurde, weiß hinterher niemand; genau das
-Verfeinerungs-Material fehlt dann wieder), das Melde-Gedächtnis
-bekommt eine zweite Natur als Zustandsspeicher und muss sorgfältig vom
-Freitagsputz abgeschirmt werden, und Tagesschluss-Regeln laufen im
-Wächter zeitlich unbequem (die Schlussstunde endet mit der Glocke; die
-saubere Schlusskurs-Prüfung gehört in den Nachtscan, womit auch B
-zwei Bauplätze braucht).
+Grundidee: Jede Kaufpunkt-Triggermeldung eröffnet automatisch eine
+Beobachtung in der vorhandenen Positionsverwaltung (die
+Beobachtungs-Betriebsart existiert seit 05.08. und steht leer). Jede
+Beobachtung trägt eine ZONEN-LEITER: leicht, mittel, stark, gemessen
+in R (Vielfaches des Abstands Trigger zu Strukturstop, wie Kapitel 11
+es schon rechnet) UND in Prozent, je nachdem, was die Strategie
+vorgibt. Die Tagwache prüft intraday nur die Tagesgeschäft-Regeln
+(Red-to-Green, Gap-and-Go, Lückenschluss), der Nachtscan am
+Tagesschluss alles andere: Zonenwechsel, Zielerreichung, die fünf
+Klimax-Zeichen, Weinstein-Linie, Zeitdeckel.
 
-## Teil 5: Vergleich, Empfehlung, offene Fragen
+Gemeldet wird über das bestehende ntfy-Thema, in drei Lautstärken:
+Zonenwechsel leise (Priorität default, gebündelt je Lauf), Ziel
+erreicht laut (das ist die Handlung: Teilverkauf oder Straffung,
+Meldung nennt Ziel, Trefferquote der Regel und Stand seit Trigger in
+Prozent und R), Klimax-Zeichen laut und einzeln (weil zeitkritisch:
+in die Stärke verkaufen heißt am selben oder nächsten Tag handeln).
+Beispiel einer Meldung: GEWINN-Ziel erreicht: SCCO; Rectangle Top;
+Kante plus Höhe 231.40 erreicht (Trefferquote 78 Prozent); seit
+Trigger plus 21,3 Prozent gleich 3,1 R; Vorschlag Teilverkauf, Rest
+mit nachgezogenem Boden.
 
-Beide Vorschläge teilen dieselbe recherchierte Regelbasis aus Teil 2
-und dasselbe Meldeformat; sie unterscheiden sich darin, WO der Zustand
-lebt und OB mitgeschrieben wird. B ist der schlankere Erstschritt, A
-ist das vollständigere Zielbild. Meine Empfehlung ist A, aus drei
-Gründen: Die Beobachtungs-Betriebsart existiert bereits und wartet
-seit dem 05.08. genau auf diese Fütterung; die automatische Mitschrift
-löst Gerhards eigenes Prinzip vom Verfeinern per Messung ein, das
-bisher an der Handarbeit scheitert; und die Erfahrung dieser Woche
-(Shakeout-Warteliste, Insider-Fenster) zeigt, dass langlebiger Zustand
-eine EIGENE Datei mit eigenen Fristen verdient, nicht einen Untermieter
-im Melde-Gedächtnis. Ein gangbarer Mittelweg: den Grammatik-Motor aus B
-als Herzstück in A einbauen, dann ist die Regelauswertung ein
-prüfbarer Block und das Schattenbuch nur die dünne Schicht darum.
+Zwei Kopplungen aus dem Bestand, beide ohne neue Datenquelle: Steht
+eine Beobachtung in Zone mittel oder stark und zahlen_termine.json
+meldet Quartalszahlen binnen fünf Handelstagen, kommt der Hinweis
+Gewinn vor Zahlen sichern (O'Neils Linie, Polster gegen die
+Ergebnisvolatilität abwägen). Und dreht der Sektor-Radar den eigenen
+Sektor-ETF auf runter mit Volumen, während eine Beobachtung in Zone
+stark steht, kommt ein Straffungshinweis.
 
-Offene Fragen an Gerhard, vor dem Bau zu entscheiden: erstens, ob
-JEDER gemeldete Trigger beobachtet wird oder nur bestätigte (mit
-Volumen); zweitens, ob Stop-Nachzüge und Straffungen gemeldet werden
-oder nur echte Exits (Meldelast); drittens die Zeitdeckel je Klasse
-(Intraday am Tagesschluss, Insider sechs Monate, Rest 26 Wochen?);
-viertens, ob die Klimax-Warnung scharf oder zunächst nur ins
-Schattenbuch geschrieben wird, bis ihre Trefferquote gemessen ist.
+Der doppelte Gewinn dieses Wegs: Das Schattenbuch schreibt
+automatisch mit, in welcher Zone jede Beobachtung endete, welches
+Signal den Ausstieg markiert hätte und was danach geschah. Gerhards
+Standardsatz, alle Schwellen seien Startwerte und per Mitschreiben zu
+verfeinern, wird damit erstmals von selbst eingelöst: Nach einem
+Quartal liegen für jede der recherchierten Regeln eigene Trefferquoten
+an unseren eigenen Signalen vor, und die Klimax-Zeichen, deren
+Parameter am unsichersten sind, können stumm mitlaufen, bis ihre
+Quote gemessen ist.
 
-Quellenübersicht: Darvas 1960; O'Neil, How to Make Money in Stocks,
-4. Auflage; Minervini 2012 und 2017; Bulkowski, Encyclopedia of Chart
-Patterns samt thepatternsite.com (Cup, Rectangle Tops, HTF, abgerufen
-27.08.2026); Wyckoff nach Pruden 2007 und Weis 2013; Kaminski und Lo,
-Journal of Financial Markets 2014; Jeng, Metrick und Zeckhauser,
-Review of Economics and Statistics 2003; Lakonishok und Lee, RFS 2001;
-Cohen, Malloy und Pomorski, Journal of Finance 2012; George und Hwang,
-Journal of Finance 2004; Bernard und Thomas, JAR 1989; Brock,
-Lakonishok und LeBaron, Journal of Finance 1992; Han, Yang und Zhou,
-JFQA 2013; Shefrin und Statman, Journal of Finance 1985; Odean,
-Journal of Finance 1998.
+Zustand: eigene Datei nach dem Muster der Shakeout-Warteliste,
+ausdrücklich vom Freitagsputz ausgenommen; Tagesgeschäft-Beobachtungen
+schließen zum Handelsschluss von selbst, alle anderen enden durch
+Zieleinlösung, Klimax-Exit, Strukturbruch (Kapitel 11, Minusseite,
+läuft parallel weiter) oder Zeitdeckel.
+
+## Teil 4: Vorschlag B, die Drei-Zonen-Ampel im Wächter
+
+Grundidee: kein neues Buch; die Zonen-Leiter wird an das vorhandene
+Melde-Gedächtnis gehängt. Jeder gemeldete Schlüssel bekommt eine
+GEWINN-Marke mit eigener Frist (die Mechanik existiert, die
+Insider-Marke mit dreißig Tagen zeigt den Weg) und darin Zone,
+Höchststand seit Trigger und Ankerstände. Ein einziger Prüfmotor im
+Wächter beziehungsweise Nachtscan arbeitet sechs Bausteine ab, die
+alle recherchierten Regeln abdecken: Zonengrenze (R oder Prozent, je
+Strategie), Musterziel (Kante plus Höhe, Halbhöhe, Spannenprojektion),
+Klimax-Katalog (die fünf O'Neil-Zeichen), Volumen-Schwäche (neues
+Hoch bei dünnem Volumen), Zeitdeckel (Handelsschluss, sechzig
+Handelstage, sechs Monate, zwölf Monate) und Marktstaffel (O'Neils
+Schlechtmarkt-Verschiebung der Zonengrenzen). Jede Strategie ist ein
+Konfigurationsblock in config.py, der Bausteine wählt und
+parametriert; die Gesamtprüfung sichert die Matrix Strategie mal
+Baustein ab.
+
+Stärken: minimal-invasiv, ein Motor, sehr gut prüfbar, keine neue
+Zustandsdatei. Schwächen, und sie wiegen bei der PLUS-Seite schwerer
+als bei der Minus-Seite: keine Mitschrift (gerade die Klimax-Parameter
+und Zonengrenzen bleiben dann für immer ungemessene Startwerte), das
+Melde-Gedächtnis wird zum Dauerzustands-Speicher und muss sorgfältig
+vom Freitagsputz abgeschirmt werden, und die Tagesschluss-Prüfungen
+gehören ohnehin in den Nachtscan, womit auch B zwei Bauplätze braucht.
+
+## Teil 5: Vergleich, Empfehlung, offene Fragen an Gerhard
+
+Beide Vorschläge nutzen dieselbe Regelbasis aus Teil 2 und dasselbe
+Meldeformat; sie unterscheiden sich darin, wo der Zustand lebt und ob
+mitgeschrieben wird. Empfehlung: A, mit dem Bausteinmotor aus B als
+Herzstück. Drei Gründe: Die Beobachtungs-Betriebsart wartet seit dem
+05.08. genau auf diese Fütterung; gerade die Gewinnseite lebt von der
+Mitschrift, weil ihre Parameter (Zonengrenzen, Klimax-Schwellen) die
+unsichersten des Regelwerks sind; und langlebiger Zustand verdient
+nach den Lehren dieser Woche eine eigene Datei mit eigenen Fristen,
+keinen Untermieter im Melde-Gedächtnis.
+
+Zu entscheiden, bevor gebaut wird: erstens die Zonengrenzen: in R
+(positionsgrößenunabhängig, Gerhards eigene Linie aus dem
+Exit-Regelwerk) oder in Prozent, und wo genau leicht endet und stark
+beginnt; Vorschlag: leicht bis zwei R, mittel ab Musterziel oder
+zwanzig Prozent, stark ab Klimax-Definition (25 Prozent in unter
+fünfzehn Handelstagen nach mindestens acht Wochen Lauf) oder drei R.
+Zweitens, ob Zonenwechsel gemeldet werden oder nur Ziel und Klimax
+(Meldelast). Drittens, ob die Klimax-Zeichen sofort scharf melden oder
+ein Quartal stumm mitgeschrieben werden, bis ihre Trefferquote an
+unseren Signalen gemessen ist; meine Empfehlung ist stumm messen, mit
+Ausnahme des Klimax-Laufs selbst (der ist bei O'Neil das Hauptzeichen
+und am besten belegt). Viertens die Darvas-Frage: quellentreu ohne
+Plus-Verkauf (nur Boden-Nachzug) oder bewusst mit generischer Staffel.
+Fünftens die Zeitdeckel-Werte je Klasse (Vorschlag: Tagesgeschäft am
+Handelsschluss, Zahlen-Lücken sechzig Handelstage, Insider sechs
+Monate, alles andere zwölf Monate mit Erneuerungsprüfung).
+
+Quellen: O'Neil, How to Make Money in Stocks, 4. Auflage
+(Verkaufskapitel; 20-bis-25-Prozent-Regel, Schlechtmarkt-Staffel,
+Klimax-Katalog, 70 bis 100 Prozent über der 200-Tage-Linie,
+Acht-Wochen-Regel); Minervini, Trade Like a Stock Market Wizard 2012
+und Think and Trade Like a Champion 2017 (Verkauf in die Stärke,
+R-Staffel); Darvas, How I Made 2,000,000 Dollars in the Stock Market
+1960 (Boxboden statt Gewinnziel); Bulkowski, Encyclopedia of Chart
+Patterns und thepatternsite.com, abgerufen 27.08.2026 (Zielquoten
+Rectangle 78, HTF-Halbhöhe 82, Cup 61 Prozent; Throwback-Raten);
+Weinstein, Secrets for Profiting in Bull and Bear Markets 1988
+(Stufe-3-Erkennung); Wyckoff nach Pruden 2007 und Weis 2013 (Buying
+Climax, UTAD, Spannenprojektion); Odean, Journal of Finance 1998
+(Dispositionseffekt); Jegadeesh und Titman, Journal of Finance 1993
+und 2001 (Momentum-Haltefenster); Daniel und Moskowitz, Journal of
+Financial Economics 2016 (Momentum-Crashs); Bernard und Thomas,
+Journal of Accounting Research 1989 (Drift nach Zahlen); Gao, Han, Li
+und Zhou, Journal of Financial Economics 2018 (Intraday-Momentum);
+George und Hwang, Journal of Finance 2004 (52-Wochen-Hoch, keine
+Umkehr); Jeng, Metrick und Zeckhauser, Review of Economics and
+Statistics 2003 (Insider-Horizont, verifiziert).
