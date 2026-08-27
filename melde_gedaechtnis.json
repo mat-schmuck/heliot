@@ -82,7 +82,7 @@
     "YPF|3": "drin",
     "ZETA|2": "draussen",
     "HPE|3": "draussen",
-    "LIND|2": "draussen",
+    "LIND|2": "drin",
     "MPC|2": "draussen",
     "MRNA|2": "draussen",
     "NGL|3": "draussen",
@@ -91,7 +91,7 @@
     "TWST|2": "draussen",
     "ANDG|1": "drin",
     "ANDG|2": "draussen",
-    "ANDG|3": "drin",
+    "ANDG|3": "draussen",
     "ANET|2": "draussen",
     "ATAT|3": "draussen",
     "AUGO|3": "draussen",
@@ -237,7 +237,8 @@
     "RBRK|1": "drin",
     "RBRK|3": "drin",
     "OXY|2": "drin",
-    "MTDR|1": "drin"
+    "MTDR|1": "drin",
+    "TVTX|1": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -383,6 +384,7 @@
     "CDE|1": "2026-08-27",
     "BEST|CDE|1": "2026-08-27",
     "UEBER|FROG|1": "2026-08-27",
-    "UEBER|TWLO|1": "2026-08-27"
+    "UEBER|TWLO|1": "2026-08-27",
+    "UEBER|ANDG|3": "2026-08-27"
   }
 }
