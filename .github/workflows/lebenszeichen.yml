@@ -1,0 +1,34 @@
+name: Lebenszeichen
+
+# Taeglich pruefen, ob jedes Kapitel noch ECHTE Daten sieht (26.08.2026).
+# Anlass: Der Insider-Scanner meldete zwoelf Tage lang "null Funde" und
+# hatte in Wahrheit nie einen Datensatz zu Gesicht bekommen. Gemeldet
+# wird nur bei Befund, sonst bleibt es still.
+on:
+  schedule:
+    # 12:30 UTC = 14:30 Wien, eine Stunde vor Boersenstart: Der
+    # Nachtscan ist durch, der Insider-Abendlauf von gestern auch,
+    # und es bleibt Zeit zu reagieren, bevor der Handel losgeht.
+    - cron: "30 12 * * 1-5"
+  workflow_dispatch:
+
+concurrency:
+  group: lebenszeichen
+  cancel-in-progress: false
+
+jobs:
+  pruefen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install requests pandas openpyxl
+      - name: Lebenszeichen pruefen
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        # Rueckgabewert 1 heisst "ein Kapitel ist still" - das ist ein
+        # Befund, kein Workflow-Fehler; sonst kaeme zusaetzlich eine
+        # Fehlermail von GitHub.
+        run: python lebenszeichen.py --melden || true

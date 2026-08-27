@@ -349,6 +349,26 @@ def block_e():
            all(t.weekday() < 5 for t in ie.indextage(_d(2026, 8, 24), 5)))
     pruefe("E", "Montag blickt ueber das Wochenende zurueck",
            ie.indextage(_d(2026, 8, 24), 2) == [_d(2026, 8, 21), _d(2026, 8, 24)])
+    # Lebenszeichen-Waechter (Mathias, 26.08.2026, nach dem Ausfall)
+    import lebenszeichen as lz
+    pruefe("E", "Lebenszeichen prueft alle sechs Kapitel",
+           len(lz.pruefe()) == 6)
+    from datetime import date as _dt
+    pruefe("E", "Handelstage statt Kalendertage (Montag schlaegt nicht an)",
+           # Freitag auf Montag ist EIN Handelstag, nicht drei Kalendertage
+           lz._handelstage_her("2026-08-21", _dt(2026, 8, 24)) == 1
+           and lz._handelstage_her("2026-08-21", _dt(2026, 8, 26)) == 3)
+    _echte = [z for z in lz.pruefe() if z[3]]
+    pruefe("E", "Am echten Bestand ist derzeit kein Kapitel still",
+           not _echte, ", ".join(z[0] for z in _echte))
+    pruefe("E", "Bericht kommt ohne Gedankenstrich (Screenreader)",
+           all("—" not in z and "–" not in z
+               for z in lz.bericht(lz.pruefe())))
+    pruefe("E", "Lebenszeichen laeuft taeglich als eigener Workflow",
+           "lebenszeichen.py --melden" in
+           pathlib.Path(".github/workflows/lebenszeichen.yml")
+           .read_text(encoding="utf-8"))
+
     pruefe("E", "Index-Rueckblick deckt Gerhards Cluster-Fenster ab",
            ie.index_rueckblick({"cluster_fenster_tage": 10,
                                 "index_tage_zurueck": 0}) == 10)
