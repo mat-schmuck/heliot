@@ -179,7 +179,10 @@
     "CSTL|3": "draussen",
     "TGTX|3": "drin",
     "NLY|1": "drin",
-    "APPN|1": "drin"
+    "APPN|1": "drin",
+    "AWR|3": "drin",
+    "AAMI|2": "draussen",
+    "ZETA|1": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -335,6 +338,8 @@
     "PLTR|1": "2026-08-28",
     "BEST|PLTR|1": "2026-08-28",
     "HTF|APPN|1": "2026-08-28",
-    "BEST|HTF|APPN|1": "2026-08-28"
+    "BEST|HTF|APPN|1": "2026-08-28",
+    "ZETA|1": "2026-08-28",
+    "BEST|ZETA|1": "2026-08-28"
   }
 }
