@@ -53,6 +53,7 @@ import listen         # Wochenlisten: Vereinigung und Darvas-Recht
 import exit_regeln    # Stop-Deckel und die eine Risiko-Formel
 import ntfy_verlauf   # merkt sich jede verschickte Meldung fuer den Freitags-Putz
 import positionen     # offene Positionen samt Exit-Regelwerk
+import gewinnzonen_lauf  # Kapitel 12: Gewinnzonen je offener Beobachtung
 import red_to_green   # Kapitel 9: Fokusliste fuer den Live-Waechter
 import shakeout       # Kapitel 10: Spring samt Sekundaertest-Warteliste
 import trigger_logbuch  # schreibt jedes Signal mit, gekauft oder nicht
@@ -979,8 +980,13 @@ def exit_durchgang(loaded: dict) -> list[dict]:
 
     kurse, ma21, ma50 = {}, {}, {}
     heute_index = 0
+    # SEIT KAPITEL 12 (28.08.2026): Beobachtungen heissen 'TICKER|Zusatz',
+    # der Kurs haengt am Symbol-Feld. Gebraucht werden die Kurse aller
+    # offenen SYMBOLE, egal wie der Eintrag verschluesselt ist.
+    gesucht = {e.get("symbol", k) for k, e in bestand.items()
+               if e.get("status") == "offen"}
     for ticker, (df, _) in loaded.items():
-        if ticker not in bestand:
+        if ticker not in gesucht:
             continue
         kurse[ticker] = float(df["close"].iloc[-1])
         if len(df) >= 21:
@@ -993,7 +999,7 @@ def exit_durchgang(loaded: dict) -> list[dict]:
     # die Befehlszeile ist er null, hier steht die Historie zur Verfuegung.
     for ticker, e in bestand.items():
         if e.get("status") == "offen" and not e.get("einstieg_index"):
-            df = loaded.get(ticker, (None, None))[0]
+            df = loaded.get(e.get("symbol", ticker), (None, None))[0]
             if df is not None and "datetime" in df.columns:
                 vorher = df[df["datetime"].astype(str) <= e["einstieg_datum"]]
                 e["einstieg_index"] = int(len(vorher))
@@ -1466,6 +1472,27 @@ def main():
             print(f"  {s['symbol']} ({s.get('firma','')}): Kaufpunkt "
                   f"{s['kaufpunkt']}, Stop {s['stop']}, Ziel {s['kursziel']}; "
                   f"{s['volumen_typ']}")
+        # Kapitel 12: Shakeout-Signale entstehen HIER, nicht im Waechter —
+        # ihre Beobachtungen werden deshalb hier eroeffnet.
+        try:
+            gewinnzonen_lauf.beobachtungen_aus_shakeout(shakeout_signale)
+        except Exception as e:
+            print(f"  Beobachtungs-Fuetterung (Shakeout) fehlgeschlagen: "
+                  f"{type(e).__name__}: {e}")
+
+    # KAPITEL 12 (Gerhards Uebergabe vom 28.08.2026): Gewinnzonen je
+    # offener Beobachtung. Laeuft NACH write_excel, damit der
+    # Stop-Nachzug die frischen Strukturpunkte dieser Nacht sieht.
+    # Gemeldet wird nichts um Mitternacht — die Befunde landen in
+    # exit_befunde.json, der Waechter meldet sie zur Handelszeit
+    # (dasselbe Muster wie beim Sektor-Radar). Auch die
+    # Kapitel-11-Meldungen oben gehen seither diesen Weg statt nur ins
+    # Protokoll.
+    try:
+        gewinnzonen_lauf.gewinn_durchgang(loaded, args.out,
+                                          exit_meldungen=exit_meldungen)
+    except Exception as e:
+        print(f"Kapitel 12 fehlgeschlagen: {type(e).__name__}: {e}")
     n_green = sum(1 for r in rows if r["res"]["pattern_count"] >= 1)
     n_tt = sum(1 for r in rows if r["res"]["tt_pass"])
     print(f"Treffer: {n_green} mit aktivem Muster, {n_tt} bestehen das Trend Template.")

@@ -100,6 +100,37 @@ def alle_ticker(haupt=None, darvas=None):
     return raus
 
 
+_SEKTOR_CACHE = {}
+
+
+def sektor_von(ticker, haupt=None, darvas=None):
+    """Der Finviz-Sektor einer Aktie, aus den Wochenlisten.
+
+    Fuer die Sektor-Radar-Kopplung von Kapitel 12 (28.08.2026): Die
+    Listen fuehren die Spalte 'Sector' seit jeher mit, sie wurde nur
+    nie gelesen. Gecacht je Dateipfad-Paar, denn der Nachtscan fragt
+    das je offener Beobachtung."""
+    import pandas as pd
+    schluessel = (haupt or HAUPT_DATEI, darvas or DARVAS_DATEI)
+    tabelle = _SEKTOR_CACHE.get(schluessel)
+    if tabelle is None:
+        tabelle = {}
+        for pfad in (schluessel[1], schluessel[0]):
+            try:
+                df = pd.read_csv(pfad)
+            except Exception:
+                continue
+            if "Ticker" not in df.columns or "Sector" not in df.columns:
+                continue
+            for _, z in df.iterrows():
+                t = str(z["Ticker"]).strip().upper()
+                s = str(z["Sector"]).strip()
+                if t and s and s.lower() != "nan":
+                    tabelle[t] = s
+        _SEKTOR_CACHE[schluessel] = tabelle
+    return tabelle.get(str(ticker or "").strip().upper())
+
+
 def darf_darvas(ticker, darvas=None):
     """Darf auf dieser Aktie ein Darvas-Kaufpunkt entstehen?
 

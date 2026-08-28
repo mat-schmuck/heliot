@@ -165,7 +165,30 @@ def _termine():
     return "Zahlen-Termine", stand, f"{len(aktien)} Aktien", krank
 
 
-PRUEFUNGEN = [_nachtscan, _volumenkurven, _waechter, _sektor, _insider, _termine]
+def _gewinnzonen():
+    """Kapitel 12: rechnet der Nachtscan die Beobachtungen durch?
+
+    Die Befunde-Datei wird JEDE Nacht neu geschrieben, auch wenn kein
+    Befund anfaellt (leere Liste) - genau daran erkennt man den
+    Unterschied zwischen 'nichts zu melden' und 'gar nicht gerechnet'."""
+    b = _json("positionen.json")
+    beob = sum(1 for e in (b or {}).values()
+               if isinstance(e, dict) and e.get("beobachtung")
+               and e.get("status") == "offen")
+    d = _json("exit_befunde.json")
+    if not d:
+        return ("Gewinnzonen (Kapitel 12)", None,
+                f"{beob} Beobachtung(en); noch nie gerechnet", beob > 0)
+    her = _handelstage_her(str(d.get("gebaut_am", ""))[:10])
+    krank = her is None or her > 2
+    return ("Gewinnzonen (Kapitel 12)",
+            f"gerechnet {str(d.get('gebaut_am', ''))[:10]}",
+            f"{beob} offene Beobachtung(en), "
+            f"{len(d.get('befunde', []))} Befund(e)", krank)
+
+
+PRUEFUNGEN = [_nachtscan, _volumenkurven, _waechter, _sektor, _insider,
+              _termine, _gewinnzonen]
 
 
 def pruefe():

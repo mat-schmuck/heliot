@@ -351,8 +351,8 @@ def block_e():
            ie.indextage(_d(2026, 8, 24), 2) == [_d(2026, 8, 21), _d(2026, 8, 24)])
     # Lebenszeichen-Waechter (Mathias, 26.08.2026, nach dem Ausfall)
     import lebenszeichen as lz
-    pruefe("E", "Lebenszeichen prueft alle sechs Kapitel",
-           len(lz.pruefe()) == 6)
+    pruefe("E", "Lebenszeichen prueft alle sieben Kapitel",
+           len(lz.pruefe()) == 7)
     from datetime import date as _dt
     pruefe("E", "Handelstage statt Kalendertage (Montag schlaegt nicht an)",
            # Freitag auf Montag ist EIN Handelstag, nicht drei Kalendertage
@@ -400,6 +400,114 @@ def block_e():
     _q_ie = pathlib.Path("insider_edgar.py").read_text(encoding="utf-8")
     pruefe("E", "403 auf einen vergangenen Werktag wird als FEHLER gemeldet",
            "vergangener_werktag" in _q_ie and "FEHLER: Tagesindex" in _q_ie)
+
+    # KAPITEL 12 — Gewinnzonen (Gerhards Uebergabe vom 28.08.2026)
+    import subprocess as _sp
+    _lauf = _sp.run([sys.executable, "gewinn_zonen.py"],
+                    capture_output=True, timeout=120)
+    pruefe("E", "Gerhards gewinn_zonen-Selbsttest besteht (14 Gruppen)",
+           _lauf.returncode == 0)
+    import beobachtungen as _bb
+    import positionen
+    pruefe("E", "Klassen: Darvas quellentreu, Tagesgeschaeft, Insider",
+           _bb.klasse_fuer(["Darvas Box"]) == "darvas"
+           and _bb.klasse_fuer(["Red-to-Green"]) == "tagesgeschaeft"
+           and _bb.klasse_fuer(["Gap and Go"]) == "tagesgeschaeft"
+           and _bb.klasse_fuer(["Insider-Kauf"]) == "insider"
+           and _bb.klasse_fuer(["Rectangle Top"]) == "standard")
+    pruefe("E", "Luecken-Tag wird nur mit frischem Termin zur Zahlen-Luecke",
+           _bb.klasse_fuer(["Lücken-Bestätigungstag"], termin_tage=-2)
+           == "zahlen_luecke"
+           and _bb.klasse_fuer(["Lücken-Bestätigungstag"], termin_tage=None)
+           == "standard"
+           and _bb.klasse_fuer(["Lücken-Bestätigungstag"], termin_tage=-20)
+           == "standard")
+    _bst = {}
+    _k1 = _bb.oeffnen(_bst, "tst", 1, "Rectangle Top", 100.0, 80.0,
+                      musterziel=110.0, klasse="standard")
+    pruefe("E", "Beobachtung: Schluessel TICKER|Zusatz, Stop gedeckelt",
+           _k1 == "TST|1" and _bst["TST|1"]["symbol"] == "TST"
+           and _bst["TST|1"]["aktueller_stop"] == 90.0
+           and _bst["TST|1"]["beobachtung"] is True
+           and _bst["TST|1"]["musterziel"] == 110.0)
+    pruefe("E", "Doppelte Oeffnung derselben Beobachtung wird verweigert",
+           _bb.oeffnen(_bst, "TST", 1, "Rectangle Top", 101.0, 95.0) is None)
+    _bb.schliessen(_bst["TST|1"], "Probe", 120.0)
+    pruefe("E", "Schliessen schreibt die Mitschrift (Prozent und R)",
+           _bst["TST|1"]["ergebnis_pct"] == 20.0
+           and _bst["TST|1"]["status"] == "geschlossen")
+    from datetime import date as _dk
+    pruefe("E", "Termin-Abstand rechnet deterministisch",
+           _bb.termin_abstand_tage("AAA", termine={"AAA": {"datum":
+               "2026-09-01"}}, heute=_dk(2026, 8, 28)) == 4
+           and _bb.termin_abstand_tage("BBB", termine={},
+                                       heute=_dk(2026, 8, 28)) is None)
+    import wartung as _wt
+    pruefe("E", "Wochenputz fasst Beobachtungen und Befunde nicht an",
+           "positionen.json" not in _wt.ZUSTANDSDATEIEN
+           and "exit_befunde.json" not in _wt.ZUSTANDSDATEIEN)
+    # pruefe_bestand findet den Kurs ueber das Symbol-Feld, nicht den
+    # Schluessel (Beobachtungen heissen TICKER|Zusatz)
+    _bst2 = {}
+    _bb.oeffnen(_bst2, "TST", 2, "Rectangle Top", 100.0, 95.0)
+    positionen.pruefe_bestand(_bst2, {"TST": 120.0}, 10)
+    pruefe("E", "pruefe_bestand erreicht Beobachtungen mit Zusatz-Schluessel",
+           _bst2["TST|2"]["hoechstkurs"] == 120.0)
+
+    # Ende-zu-Ende: der naechtliche Durchgang an drei Beobachtungen
+    import gewinnzonen_lauf as _gl
+    import tempfile as _tfk
+    import os as _osk
+    import json as _jsk
+    import pandas as _pdk
+    _wurzel = _osk.getcwd()
+    with _tfk.TemporaryDirectory() as _tmp:
+        try:
+            _osk.chdir(_tmp)
+            _bstE = {}
+            _bb.oeffnen(_bstE, "GEW", 1, "Rectangle Top", 100.0, 95.0,
+                        musterziel=110.0, klasse="standard",
+                        datum="2026-06-01")
+            _bb.oeffnen(_bstE, "TAG", "R2G-x", "Red-to-Green", 50.0, 49.0,
+                        klasse="tagesgeschaeft", datum="2026-08-28")
+            _bb.oeffnen(_bstE, "DRV", 1, "Darvas Box", 30.0, 28.0,
+                        klasse="darvas", datum="2026-06-01")
+            positionen.speichern(_bstE)
+            _tage = _pdk.date_range("2026-01-02", periods=170, freq="B")
+
+            def _df(start, schritt):
+                kurse = [start + i * schritt for i in range(len(_tage))]
+                return _pdk.DataFrame({
+                    "datetime": _tage.astype(str),
+                    "close": kurse,
+                    "high": [k * 1.01 for k in kurse],
+                    "low": [k * 0.99 for k in kurse]})
+            _loaded = {"GEW": (_df(90.0, 0.35), "Gewinn AG"),
+                       "TAG": (_df(50.0, 0.01), "Tages AG"),
+                       "DRV": (_df(28.0, 0.05), "Darvas AG")}
+            _bef = _gl.gewinn_durchgang(_loaded, "gibt_es_nicht.xlsx",
+                                        exit_meldungen=[],
+                                        heute=_dk(2026, 8, 28))
+            _nach = positionen.laden()
+            pruefe("E", "Durchgang: Musterziel-Befund kommt, laut und einzeln",
+                   any(b["typ"] == "ziel_erreicht"
+                       and b["symbol"] == "GEW"
+                       and b["prioritaet"] == "high"
+                       and not b["buendeln"] for b in _bef))
+            pruefe("E", "Durchgang: Tagesgeschaeft endet am Handelsschluss",
+                   _nach["TAG|R2G-x"]["status"] == "geschlossen"
+                   and any(b["typ"] == "tagesende" for b in _bef))
+            pruefe("E", "Durchgang: Darvas bleibt quellentreu ohne Befund",
+                   not any(b.get("symbol") == "DRV" for b in _bef)
+                   and _nach["DRV|1"]["status"] == "offen")
+            pruefe("E", "Durchgang: Zone wird gefuehrt und gespeichert",
+                   _nach["GEW|1"].get("zone") in ("mittel", "stark"))
+            _datei = _jsk.load(open("exit_befunde.json", encoding="utf-8"))
+            pruefe("E", "Befunde liegen fuer den Waechter bereit",
+                   _datei.get("handelstag") == "2026-08-28"
+                   and len(_datei.get("befunde", [])) == len(_bef))
+        finally:
+            _osk.chdir(_wurzel)
 
     # Shakeout-Warteliste ohne Listen-Altlasten (Mathias, 24.08.2026)
     import shakeout as sk
@@ -679,7 +787,13 @@ def block_e():
     import pathlib as _pl2
     import json as _json2
     from datetime import date as _d2, timedelta as _td2
-    heute_s = _d2.today().isoformat()
+    # NICHT das heutige Datum: Am Freitagabend liegt die Putz-Grenze AUF
+    # dem heutigen Tag, und Schluessel von heute werden konstruktions-
+    # gemaess geputzt — der Test waere jeden Freitagabend rot (gefunden
+    # 28.08.2026). Ein Datum NACH der Grenze ueberlebt den Filter an
+    # jedem Wochentag.
+    heute_s = (_d2.fromisoformat(bw.letzter_putz())
+               + _td2(days=1)).isoformat()
     alt_cache, alt_repo = bw.STATE_FILE, bw.REPO_STATE
     with _tf2.TemporaryDirectory() as _o2:
         _op2 = _pl2.Path(_o2)

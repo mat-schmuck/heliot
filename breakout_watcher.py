@@ -59,6 +59,8 @@ import volumen        # IBD Volume % Change
 import insider_edgar   # Insider-Kaeufe bei der SEC (Gerhards Kapitel vom 14.08.2026)
 import sektor_radar    # Dreht eine ganze Branche? Rechnet der Nachtlauf, meldet der Waechter
 import zahlen_termine  # Wer heute Abend berichtet, wird vermerkt — die EINZIGE Volumenrechnung
+import positionen      # Kapitel 11/12: Bestand samt Beobachtungen
+import beobachtungen   # Kapitel 12: Trigger werden Beobachtungen
 from config import CFG, hoechstens, mind_erreicht, pruefe_config
 from kurs_cache import KursCache, Kurswert
 from yahoo_ws import YahooWebSocket
@@ -668,7 +670,8 @@ def _repo_sichern(state: dict):
         import subprocess
         g = ["git", "-c", "user.name=breakout-watcher",
              "-c", "user.email=actions@users.noreply.github.com"]
-        subprocess.run(g + ["add", REPO_STATE], capture_output=True, timeout=30)
+        subprocess.run(g + ["add", REPO_STATE, "positionen.json"],
+                       capture_output=True, timeout=30)
         r = subprocess.run(g + ["commit", "-m",
                                 "Melde-Gedächtnis (im Lauf gesichert)"],
                            capture_output=True, timeout=30)
@@ -1545,7 +1548,155 @@ def melde_insider(topic: str, funde: list[dict], schon_gemeldet: set,
         state["gemeldet"][key] = heute_s
     save_state(state)
     print(f"Insider-Käufe gemeldet: {len(offen)} Aktien.")
+    # Kapitel 12: Insider-Funde sind marktweit und haben keinen
+    # Chart-Kaufpunkt — Einstieg ist der aktuelle Kurs, Stop der
+    # Kapitel-11-Deckel (kein Strukturpunkt), Klasse insider
+    # (Zeithorizont sechs Monate laut Studienlage).
+    eintraege = []
+    for _, f in offen:
+        try:
+            import yfinance as yf
+            hist = yf.Ticker(f["ticker"]).history(period="1d")
+            preis = float(hist["Close"].iloc[-1]) if len(hist) else None
+        except Exception:
+            preis = None
+        if not preis:
+            print(f"  {f['ticker']}: kein Kurs — Beobachtung entfällt.")
+            continue
+        eintraege.append({
+            "ticker": f["ticker"],
+            "zusatz": "INS-" + date.today().isoformat(),
+            "strategie": "Insider-Kauf", "kaufpunkt": preis,
+            "struktur": None, "ziel": None,
+            "firma": f.get("firma", ""), "klasse": "insider"})
+    beobachtungen_eintragen(eintraege)
     return []
+
+
+def beobachtungen_eintragen(eintraege):
+    """Kapitel-12-Fuetterung: Trigger werden Beobachtungen.
+
+    eintraege: Liste von dicts mit ticker, zusatz, strategie, kaufpunkt,
+    struktur, ziel, firma, klasse. Fehler brechen NIE die Meldekette —
+    die Fuetterung ist Zusatznutzen, kein Meldeweg."""
+    if not eintraege:
+        return
+    try:
+        bestand = positionen.laden()
+        neu = []
+        for e in eintraege:
+            key = beobachtungen.oeffnen(
+                bestand, e["ticker"], e["zusatz"], e.get("strategie", ""),
+                e.get("kaufpunkt"), e.get("struktur"),
+                musterziel=e.get("ziel"), firma=e.get("firma", ""),
+                klasse=e.get("klasse", "standard"))
+            if key:
+                neu.append(key)
+        if neu:
+            positionen.speichern(bestand)
+            print(f"Kapitel 12: {len(neu)} Beobachtung(en) eröffnet: "
+                  + ", ".join(neu))
+    except Exception as e:
+        print(f"Beobachtungs-Fütterung fehlgeschlagen: "
+              f"{type(e).__name__}: {e}")
+
+
+def beobachtungen_aus_breakouts(treffer):
+    """Ausbruchs-Treffer in Fuetterungs-Eintraege uebersetzen."""
+    eintraege = []
+    for t in treffer:
+        namen = t.get("strategien") or [t.get("strategie")]
+        termin = beobachtungen.termin_abstand_tage(t.get("ticker"))
+        eintraege.append({
+            "ticker": t.get("ticker"), "zusatz": t.get("nr"),
+            "strategie": ", ".join(str(n) for n in namen if n),
+            "kaufpunkt": t.get("kaufpunkt"), "struktur": t.get("stop"),
+            "ziel": t.get("ziel"), "firma": t.get("firma", ""),
+            "klasse": beobachtungen.klasse_fuer(namen, termin)})
+    beobachtungen_eintragen(eintraege)
+
+
+def tagesgeschaeft_wache(topic, quotes, dry_run):
+    """Intraday-Wache der Tagesgeschaeft-Beobachtungen (Kapitel 12):
+    Faellt der Kurs zurueck unter die Exit-Linie (bei Red-to-Green der
+    Vortagesschluss, bei Gap and Go der Muster-Stop), kommt SOFORT die
+    laute Exit-Meldung — nicht erst am Abend. Die Beobachtung wird
+    geschlossen und traegt ihr Ergebnis (die Mitschrift)."""
+    if dry_run or not quotes:
+        return
+    try:
+        bestand = positionen.laden()
+        raus = []
+        for key, e in beobachtungen.offene(bestand).items():
+            if e.get("klasse") != "tagesgeschaeft":
+                continue
+            q = quotes.get(e.get("symbol"))
+            kurs = q.get("close") if q else None
+            if kurs and kurs == kurs and float(kurs) < e["aktueller_stop"]:
+                beobachtungen.schliessen(
+                    e, "Rückfall unter die Exit-Linie (intraday)",
+                    float(kurs))
+                raus.append((key, e, float(kurs)))
+        if not raus:
+            return
+        absaetze = []
+        for i, (key, e, kurs) in enumerate(raus, 1):
+            pct = (kurs / e["einstieg"] - 1) * 100
+            absaetze.append(
+                f"{i}. {e['symbol']}; {e.get('strategie', '')}; Kurs "
+                f"{kurs:.2f} unter der Exit-Linie "
+                f"{e['aktueller_stop']:.2f}; seit Trigger "
+                + f"{pct:+.1f} %".replace(".", ","))
+        titel = ("EXIT Tagesgeschäft: "
+                 + ", ".join(e["symbol"] for _, e, _ in raus))
+        if sende(topic, titel, absaetze, "high"):
+            positionen.speichern(bestand)
+    except Exception as e:
+        print(f"Tagesgeschäft-Wache fehlgeschlagen: "
+              f"{type(e).__name__}: {e}")
+
+
+def melde_exit_befunde(topic, schon_gemeldet, state) -> bool:
+    """Die naechtlichen Kapitel-11/12-Befunde melden (exit_befunde.json,
+    geschrieben vom Nachtscan). Rueckgabe True, wenn nichts mehr offen
+    ist — dieselbe Mechanik wie beim Sektor-Radar: nachts gerechnet,
+    zur Handelszeit gemeldet, jeder Befund genau einmal
+    (GEWINN|<Handelstag>|<Nr> im Melde-Gedaechtnis)."""
+    daten = _staat_aus(BEFUNDE_DATEI)
+    befunde = daten.get("befunde") or []
+    tag = daten.get("handelstag", "")
+    if not befunde or not tag:
+        return True
+    heute_s = date.today().isoformat()
+    laute, leise = [], []
+    for i, b in enumerate(befunde):
+        key = f"GEWINN|{tag}|{i}"
+        if key in schon_gemeldet:
+            continue
+        (leise if b.get("buendeln") else laute).append((key, b))
+    if not laute and not leise:
+        return True
+    for key, b in laute:
+        if not sende(topic, b.get("titel") or "Gewinnzonen",
+                     [b.get("text", "")], b.get("prioritaet", "high")):
+            return False
+        schon_gemeldet.add(key)
+        state["gemeldet"][key] = heute_s
+        save_state(state)
+    if leise:
+        absaetze = [f"{i}. {b.get('text', '')}"
+                    for i, (_, b) in enumerate(leise, 1)]
+        if not sende(topic, f"Gewinnzonen: {len(leise)} Hinweis(e)",
+                     absaetze, "default"):
+            return False
+        for key, _ in leise:
+            schon_gemeldet.add(key)
+            state["gemeldet"][key] = heute_s
+        save_state(state)
+    return True
+
+
+BEFUNDE_DATEI = "exit_befunde.json"
 
 
 def push_uebersprungen(topic: str, treffer: list[dict]) -> bool:
@@ -2467,6 +2618,9 @@ def main():
                      if CFG["insider"].get("melden", True) else [])
     if insider_offen:
         print(f"Insider-Käufe: {len(insider_offen)} Fund(e) liegen vor.")
+    befunde_offen = True     # Kapitel 11/12: naechtliche Befunde melden
+    quotes = {}              # vor dem ersten Datenabruf leer — die
+                             # Tagesgeschäft-Wache prüft sonst ins Leere
     radar_offen = bool(CFG["sektor_radar"]["melden"])
     radar_befund = sektor_radar.lies() if radar_offen else {}
     if radar_offen:
@@ -2500,6 +2654,11 @@ def main():
         if insider_offen and offen and laut:
             insider_offen = melde_insider(topic, insider_offen,
                                           schon_gemeldet, state)
+        if befunde_offen and offen and laut:
+            befunde_offen = not melde_exit_befunde(topic, schon_gemeldet,
+                                                   state)
+        if offen and laut and not args.dry_run:
+            tagesgeschaeft_wache(topic, quotes, args.dry_run)
 
         if not laut:
             if not basis:
@@ -2804,6 +2963,9 @@ def main():
                             schon_gemeldet.add(t["key_best"])
                             state["gemeldet"][t["key_best"]] = heute_s
                     save_state(state)
+                    # Kapitel 12: Jede gemeldete Kaufpunkt-Meldung wird
+                    # ab jetzt als Beobachtung im Chart ueberwacht.
+                    beobachtungen_aus_breakouts(zu_melden)
                 else:
                     sperre_bis = jetzt_s + TAKT
                     print(f"⚠ Zustand NICHT gespeichert — nächster Versuch "
@@ -2964,6 +3126,14 @@ def main():
                             schon_gemeldet.add(t["key"])
                             state["gemeldet"][t["key"]] = date.today().isoformat()
                         save_state(state)
+                        beobachtungen_eintragen([{
+                            "ticker": t["ticker"],
+                            "zusatz": f"R2G-{date.today().isoformat()}",
+                            "strategie": "Red-to-Green",
+                            "kaufpunkt": t.get("kurs"),
+                            "struktur": t.get("vortagesschluss"),
+                            "ziel": None, "firma": t.get("firma", ""),
+                            "klasse": "tagesgeschaeft"} for t in r2g_neu])
                     else:
                         sperre_bis = jetzt_s + TAKT
 
@@ -3060,6 +3230,14 @@ def main():
                             schon_gemeldet.add(g["key"])
                             state["gemeldet"][g["key"]] = date.today().isoformat()
                         save_state(state)
+                        beobachtungen_eintragen([{
+                            "ticker": g["ticker"],
+                            "zusatz": f"GG-{date.today().isoformat()}",
+                            "strategie": "Gap and Go",
+                            "kaufpunkt": g.get("kp"),
+                            "struktur": g.get("stop"),
+                            "ziel": None, "firma": g.get("firma", ""),
+                            "klasse": "tagesgeschaeft"} for g in gap_neu])
                     else:
                         sperre_bis = jetzt_s + TAKT
 

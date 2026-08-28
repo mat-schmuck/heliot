@@ -157,7 +157,11 @@ def pruefe_bestand(bestand, kurse, heute_index, ma21=None, ma50=None,
     for symbol, e in bestand.items():
         if e.get("status") != "offen":
             continue
-        kurs = kurse.get(symbol)
+        # SEIT KAPITEL 12 (28.08.2026): Beobachtungen sind mit
+        # 'TICKER|Zusatz' verschluesselt, weil ein Ticker mehrere
+        # Kaufpunkte zugleich tragen kann (ASC|1 und ASC|2 am 19.08.).
+        # Der Kurs haengt am echten Symbol, nicht am Schluessel.
+        kurs = kurse.get(e.get("symbol", symbol))
         if kurs is None:
             continue
         pos = als_position(e)
