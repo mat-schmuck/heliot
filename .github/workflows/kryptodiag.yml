@@ -1,0 +1,22 @@
+name: Krypto-Diagnose
+
+# Einmal-Werkzeug (27.08.2026): Welche Krypto-Boersen sind von den
+# GitHub-Rechnern (USA) aus erreichbar? Siehe krypto_diagnose.py.
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: krypto-diagnose
+  cancel-in-progress: false
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install requests
+      - name: Erreichbarkeit messen
+        run: python krypto_diagnose.py
