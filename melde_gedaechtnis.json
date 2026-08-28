@@ -158,7 +158,7 @@
     "SHIP|2": "draussen",
     "TEAM|1": "drin",
     "TEAM|2": "draussen",
-    "TEAM|3": "drin",
+    "TEAM|3": "draussen",
     "TEM|3": "draussen",
     "TPG|3": "draussen",
     "U|3": "draussen",
@@ -367,6 +367,7 @@
     "BEST|ZETA|1": "2026-08-28",
     "ARIS|1": "2026-08-28",
     "BEST|ARIS|1": "2026-08-28",
-    "HTF|WIX|1": "2026-08-28"
+    "HTF|WIX|1": "2026-08-28",
+    "UEBER|TEAM|3": "2026-08-28"
   }
 }
