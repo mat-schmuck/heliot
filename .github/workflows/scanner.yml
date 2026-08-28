@@ -176,9 +176,36 @@ jobs:
           if git diff --cached --quiet; then
             echo "Keine Änderung gegenüber dem letzten Scan."
           else
-            git commit -m "Nachtscan: kaufpunkte_aktuell.xlsx aktualisiert"
-            git pull --rebase origin main
-            git push origin main
+            # KONFLIKTFEST IN DREI ANLAEUFEN (Befund 29.08.2026): Zwei
+            # Scans kurz hintereinander (regulaerer Nachtscan plus ein
+            # erzwungener) koennen sich beim Push ueberholen; ein
+            # Rebase ueber die BINAERE kaufpunkte_aktuell.xlsx kann nie
+            # mergen, der ganze Lauf verwarf seine Ergebnisse. Dasselbe
+            # Muster wie im Waechter (ntfy-Verlauf): eigene Ergebnisse
+            # beiseitelegen, hart auf den Serverstand, wieder
+            # einspielen, pushen. Die Scan-Ergebnisse DIESES Laufs sind
+            # die frischeren, sie duerfen gewinnen.
+            DATEIEN="kaufpunkte_aktuell.xlsx sektor_radar.json ntfy_ids.json fokusliste.json shakeout_warteliste.json positionen.json exit_befunde.json volumenkurven.json zahlen_termine.json trigger_logbuch.jsonl"
+            SICHERUNG=$(mktemp -d)
+            for f in $DATEIEN; do cp "$f" "$SICHERUNG/" 2>/dev/null || true; done
+            for versuch in 1 2 3; do
+              git fetch --quiet origin main
+              git reset --hard --quiet FETCH_HEAD
+              for f in $DATEIEN; do
+                [ -f "$SICHERUNG/$f" ] && cp "$SICHERUNG/$f" "$f"
+              done
+              for f in $DATEIEN; do git add -A -- "$f" 2>/dev/null || true; done
+              if git diff --cached --quiet; then
+                echo "Nach dem Abgleich keine Änderung mehr."
+                break
+              fi
+              git commit -q -m "Nachtscan: kaufpunkte_aktuell.xlsx aktualisiert"
+              if git push --quiet origin main; then
+                echo "Ergebnisse veröffentlicht (Versuch $versuch)."
+                break
+              fi
+              echo "Jemand war schneller (Versuch $versuch von 3) - noch einmal."
+            done
           fi
 
       # KEIN automatisches Eintragen mehr im Nachtscan (Mathias, 27.07.2026):
