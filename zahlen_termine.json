@@ -1,11 +1,12 @@
 {
- "gebaut_am": "2026-08-29 00:05 Wien",
+ "gebaut_am": "2026-08-29 00:20 Wien",
  "ohne_termin": [
   "CHRN",
   "HQ",
   "LTGO",
   "MFP",
-  "SCTX"
+  "SCTX",
+  "VNOM"
  ],
  "nur_nasdaq": [
   "CHRN"
@@ -1478,14 +1479,6 @@
    "datum": "2026-10-22",
    "uhrzeit": "08:00",
    "lage": "vorboerslich",
-   "quellen": [
-    "yahoo"
-   ]
-  },
-  "VNOM": {
-   "datum": "2026-11-02",
-   "uhrzeit": "15:00",
-   "lage": "im_handel",
    "quellen": [
     "yahoo"
    ]
