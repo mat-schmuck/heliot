@@ -1,16 +1,14 @@
 {
- "gebaut_am": "2026-08-28 00:06 Wien",
+ "gebaut_am": "2026-08-29 00:05 Wien",
  "ohne_termin": [
   "CHRN",
-  "HMY",
   "HQ",
   "LTGO",
   "MFP",
   "SCTX"
  ],
  "nur_nasdaq": [
-  "CHRN",
-  "HMY"
+  "CHRN"
  ],
  "uneinig": [],
  "aktien": {
@@ -776,11 +774,11 @@
    ]
   },
   "HMY": {
-   "datum": "2026-08-27",
-   "uhrzeit": "",
+   "datum": "2027-03-04",
+   "uhrzeit": "07:00",
    "lage": "vorboerslich",
    "quellen": [
-    "nasdaq"
+    "yahoo"
    ]
   },
   "HNGE": {
@@ -1260,12 +1258,11 @@
    ]
   },
   "RBRK": {
-   "datum": "2026-08-27",
-   "uhrzeit": "16:00",
-   "lage": "nachboerslich",
+   "datum": "2026-12-03",
+   "uhrzeit": "15:00",
+   "lage": "im_handel",
    "quellen": [
-    "yahoo",
-    "nasdaq"
+    "yahoo"
    ]
   },
   "REGN": {
