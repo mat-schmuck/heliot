@@ -1,67 +1,67 @@
 {
- "gebaut_am": "2026-08-29 00:17 Wien",
+ "gebaut_am": "2026-08-31 00:02 Wien",
  "universum": 195,
  "aktien": {
   "CDNA": {
    "firma": "Caredx Inc",
    "vortagesschluss": 49.79,
-   "v50": 1181749.0,
+   "v50": 1181776.0,
    "rs_rating": 94,
    "ueber_52w_tief_pct": 302.5
   },
   "CRNX": {
    "firma": "Crinetics Pharmaceuticals Inc",
    "vortagesschluss": 84.84,
-   "v50": 4758347.6,
+   "v50": 4766666.0,
    "rs_rating": 91,
    "ueber_52w_tief_pct": 180.5
   },
   "DELL": {
    "firma": "Dell Technologies Inc",
    "vortagesschluss": 456.24,
-   "v50": 6515310.4,
+   "v50": 6515400.0,
    "rs_rating": 91,
    "ueber_52w_tief_pct": 313.9
   },
   "ETON": {
    "firma": "Eton Pharmaceuticals Inc",
    "vortagesschluss": 59.78,
-   "v50": 588743.9,
+   "v50": 588744.0,
    "rs_rating": 95,
    "ueber_52w_tief_pct": 318.9
   },
   "QMCO": {
    "firma": "Quantum Corp",
    "vortagesschluss": 22.26,
-   "v50": 1550035.8,
+   "v50": 1550058.0,
    "rs_rating": 96,
    "ueber_52w_tief_pct": 431.3
   },
   "AMLX": {
    "firma": "Amylyx Pharmaceuticals Inc",
    "vortagesschluss": 34.74,
-   "v50": 2672042.9,
+   "v50": 2672044.0,
    "rs_rating": 93,
    "ueber_52w_tief_pct": 279.9
   },
   "LIME": {
    "firma": "Neutron Holdings Inc",
    "vortagesschluss": 42.34,
-   "v50": 276889.1,
+   "v50": 276889.0,
    "rs_rating": 99,
    "ueber_52w_tief_pct": 5948.6
   },
   "MRNA": {
    "firma": "Moderna Inc",
    "vortagesschluss": 137.99,
-   "v50": 16916972.6,
+   "v50": 16917558.0,
    "rs_rating": 98,
    "ueber_52w_tief_pct": 519.3
   },
   "MU": {
    "firma": "Micron Technology Inc",
    "vortagesschluss": 932.86,
-   "v50": 43425783.5,
+   "v50": 43426976.0,
    "rs_rating": 97,
    "ueber_52w_tief_pct": 716.5
   },
@@ -75,28 +75,28 @@
   "PLSE": {
    "firma": "Pulse Biosciences Inc",
    "vortagesschluss": 47.57,
-   "v50": 393753.7,
+   "v50": 393754.0,
    "rs_rating": 92,
    "ueber_52w_tief_pct": 278.7
   },
   "SLS": {
    "firma": "SELLAS Life Sciences Group Inc",
    "vortagesschluss": 13.21,
-   "v50": 8897220.1,
+   "v50": 8897764.0,
    "rs_rating": 98,
    "ueber_52w_tief_pct": 850.4
   },
   "TWST": {
    "firma": "Twist Bioscience Corp",
    "vortagesschluss": 141.38,
-   "v50": 1751439.3,
+   "v50": 1751446.0,
    "rs_rating": 97,
    "ueber_52w_tief_pct": 506.8
   },
   "TXG": {
    "firma": "10x Genomics Inc",
    "vortagesschluss": 61.54,
-   "v50": 3218441.5,
+   "v50": 3218460.0,
    "rs_rating": 95,
    "ueber_52w_tief_pct": 451.4
   }

@@ -1,12 +1,12 @@
 {
- "gebaut_am": "2026-08-29 00:20 Wien",
+ "gebaut_am": "2026-08-31 00:06 Wien",
  "ohne_termin": [
   "CHRN",
   "HQ",
+  "ITT",
   "LTGO",
   "MFP",
-  "SCTX",
-  "VNOM"
+  "SCTX"
  ],
  "nur_nasdaq": [
   "CHRN"
@@ -896,14 +896,6 @@
     "nasdaq"
    ]
   },
-  "ITT": {
-   "datum": "2026-10-27",
-   "uhrzeit": "08:00",
-   "lage": "vorboerslich",
-   "quellen": [
-    "yahoo"
-   ]
-  },
   "JAZZ": {
    "datum": "2026-11-04",
    "uhrzeit": "15:00",
@@ -1479,6 +1471,14 @@
    "datum": "2026-10-22",
    "uhrzeit": "08:00",
    "lage": "vorboerslich",
+   "quellen": [
+    "yahoo"
+   ]
+  },
+  "VNOM": {
+   "datum": "2026-11-02",
+   "uhrzeit": "15:00",
+   "lage": "im_handel",
    "quellen": [
     "yahoo"
    ]
