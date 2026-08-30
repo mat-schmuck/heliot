@@ -1448,10 +1448,12 @@ def format_uebersprungen(t: dict) -> str:
     zeilen.append("Kein sauberer Einstieg mehr, daher kein Kaufsignal")
     # Bei uebersprungenen Kaufpunkten ERKLAERT der Termin oft die
     # Luecke: Sea eroeffnete am 11.08.2026 zehn Prozent ueber dem
-    # Kaufpunkt, nachdem es um 08:00 Zahlen gebracht hatte.
+    # Kaufpunkt, nachdem es um 08:00 Zahlen gebracht hatte. Er steht als
+    # zweite Zeile oben (Mathias, 31.08.2026: "Wenn ein Unternehmen
+    # Zahlen bringt, soll dies am Anfang der Push-Mitteilung stehen").
     vermerk = termin_nachsatz(t.get("ticker"))
     if vermerk:
-        zeilen.append(vermerk)
+        zeilen.insert(1, vermerk)
     return "\n".join(zeilen)
 
 
@@ -1788,14 +1790,15 @@ def format_treffer(t: dict, kopfzusatz: str = "") -> str:
     # dann entscheidet ueber Nacht nicht das Muster, sondern die Zahl.
     #
     # SEIT 13.08.2026 steht ein HEUTIGER Termin in der KOPFZEILE (Mathias'
-    # Wunsch, siehe kopfzeile()). Hier unten bleibt nur, was dort nicht
-    # hingehoert: der Termin von morgen und der Vorbehalt bei uneinigen
-    # Quellen. Vorher stand alles hier in eigener Zeile am Ende — bei
-    # mehreren Aktien in einer Meldung ist das aber genau die Stelle, die
-    # man ueberhoert.
+    # Wunsch, siehe kopfzeile()). Was dort nicht hingehoert — der Termin
+    # von morgen und der Vorbehalt bei uneinigen Quellen — steht SEIT
+    # 31.08.2026 als ZWEITE Zeile direkt unter dem Kopf (Mathias: "Wenn
+    # ein Unternehmen Zahlen bringt, soll dies am Anfang der
+    # Push-Mitteilung stehen, nicht wie bisher am Ende"). In der letzten
+    # Zeile hatte man genau diesen Hinweis ueberhoert.
     vermerk = termin_nachsatz(t.get("ticker"))
     if vermerk:
-        zeilen.append(vermerk)
+        zeilen.insert(1, vermerk)
     return "\n".join(zeilen)
 
 
@@ -2259,7 +2262,8 @@ def format_aktie(gruppe: list[dict], nummer: int | None = None) -> str:
     Kaufpunkt seine gewohnten Zeilen, vorangestellt der Mustername mit
     Doppelpunkt - Stop und Ziel sind je Kaufpunkt verschieden und
     bleiben deshalb je Kaufpunkt stehen. Der Termin-Nachsatz steht nur
-    EINMAL am Ende statt nach jedem Kaufpunkt."""
+    EINMAL, seit 31.08.2026 direkt unter der Kopfzeile statt am Ende
+    (Mathias: "am Anfang der Push-Mitteilung")."""
     if len(gruppe) == 1:
         text = format_treffer(gruppe[0])
         return f"{nummer}. {text}" if nummer else text
@@ -2268,17 +2272,19 @@ def format_aktie(gruppe: list[dict], nummer: int | None = None) -> str:
                         f"{len(gruppe)} Kaufpunkte gerissen")]
     basis = nummer if nummer else 1
     nachsatz = termin_nachsatz(erster.get("ticker"))
+    if nachsatz:
+        zeilen.append(nachsatz)
     for j, t in enumerate(gruppe, 1):
         koerper = format_treffer(t).split("\n")[1:]
-        if nachsatz and koerper and koerper[-1] == nachsatz:
-            koerper = koerper[:-1]
+        # format_treffer traegt den Nachsatz als ERSTE Koerperzeile —
+        # im Buendel steht er schon oben, also je Kaufpunkt entfernen.
+        if nachsatz and koerper and koerper[0] == nachsatz:
+            koerper = koerper[1:]
         namen = t.get("strategien") or [t["strategie"]]
         label = ", ".join(STRATEGIE_VOLL.get(n, n) for n in namen)
         if koerper:
             koerper[0] = f"{basis}.{j} {label}: {koerper[0]}"
         zeilen.extend(koerper)
-    if nachsatz:
-        zeilen.append(nachsatz)
     return "\n".join(zeilen)
 
 
@@ -3126,6 +3132,21 @@ def main():
                             schon_gemeldet.add(t["key"])
                             state["gemeldet"][t["key"]] = date.today().isoformat()
                         save_state(state)
+                        # LOGBUCH (Mathias, 31.08.2026): Red-to-Green war
+                        # der blinde Fleck der Auswertung — nur die
+                        # Explosive-Variante wurde protokolliert. Der
+                        # Eintrag entsteht NUR bei Push-Erfolg, damit je
+                        # gemeldetem Signal genau eine Zeile steht.
+                        trigger_logbuch.protokolliere_viele(
+                            [{"ticker": t["ticker"],
+                              "firma": t.get("firma", ""),
+                              "strategie": "Red-to-Green",
+                              "kurs": t.get("kurs"),
+                              "kaufpunkt": t.get("kurs"),
+                              "vortagesschluss": t.get("vortagesschluss"),
+                              "minute": t.get("minute"),
+                              "gemeldet": True} for t in r2g_neu],
+                            quelle="waechter/kapitel9")
                         beobachtungen_eintragen([{
                             "ticker": t["ticker"],
                             "zusatz": f"R2G-{date.today().isoformat()}",
@@ -3230,6 +3251,20 @@ def main():
                             schon_gemeldet.add(g["key"])
                             state["gemeldet"][g["key"]] = date.today().isoformat()
                         save_state(state)
+                        # LOGBUCH (Mathias, 31.08.2026): beide Meldestufen
+                        # landen im Logbuch, die Stufe als eigenes Feld.
+                        # Nur bei Push-Erfolg — eine Zeile je Meldung.
+                        trigger_logbuch.protokolliere_viele(
+                            [{"ticker": g["ticker"],
+                              "firma": g.get("firma", ""),
+                              "strategie": "Gap and Go",
+                              "stufe": ("bestätigt" if g.get("bestaetigt")
+                                        else "im Aufbau"),
+                              "kurs": g.get("kurs"),
+                              "kaufpunkt": g.get("kp"),
+                              "stop": g.get("stop"),
+                              "gemeldet": True} for g in gap_neu],
+                            quelle="waechter/kapitel7")
                         beobachtungen_eintragen([{
                             "ticker": g["ticker"],
                             "zusatz": f"GG-{date.today().isoformat()}",

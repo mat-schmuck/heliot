@@ -432,9 +432,16 @@ def selbsttest() -> int:
 
     # 2. Der unfertige Handelstag. Genau hier lag die Falle im
     #    Referenzcode: waehrend des Handels ist die letzte Zeile halb.
-    heute_ny, _ = volumen._ny_tag_und_schluss()
-    laufend = reihe(kurs_voll, mit, ende=heute_ny)
-    mittags = datetime(heute_ny.year, heute_ny.month, heute_ny.day, 12, 0)
+    # FESTER WERKTAG statt heute (31.08.2026): Mit dem echten NY-Datum
+    # scheiterte die Pruefung an jedem Wochenende — am Sonntag endet die
+    # gebaute Reihe schon am Freitag, dessen Balken um 12:00 laengst
+    # fertig ist; "waehrend des Handels" gab es dann gar nicht. Eine
+    # Pruefung, die am Samstag anders ausgeht als am Dienstag, ist keine
+    # (dieselbe Lehre wie beim Union-Test der Gesamtpruefung). `jetzt`
+    # ist injektierbar, also braucht es das echte Heute hier nirgends.
+    probe_tag = date(2026, 8, 26)  # ein Mittwoch
+    laufend = reihe(kurs_voll, mit, ende=probe_tag)
+    mittags = datetime(probe_tag.year, probe_tag.month, probe_tag.day, 12, 0)
     try:
         from zoneinfo import ZoneInfo
         mittags = mittags.replace(tzinfo=ZoneInfo("America/New_York"))

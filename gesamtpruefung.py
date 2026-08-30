@@ -575,12 +575,33 @@ def block_e():
     _alt_ns = bw.termin_nachsatz
     bw.termin_nachsatz = lambda tk: "Termin-Probe unsicher"
     try:
+        # SEIT 31.08.2026 VORN statt am Ende (Mathias: "Wenn ein
+        # Unternehmen Zahlen bringt, soll dies am Anfang der
+        # Push-Mitteilung stehen, nicht wie bisher am Ende").
         mit_ns = bw.format_aktie([kp1, kp2])
-        pruefe("E", "Termin-Nachsatz steht im Buendel nur EINMAL, am Ende",
+        pruefe("E", "Termin-Nachsatz steht im Buendel nur EINMAL, als Zeile 2",
                mit_ns.count("Termin-Probe") == 1
-               and mit_ns.split("\n")[-1] == "Termin-Probe unsicher")
+               and mit_ns.split("\n")[1] == "Termin-Probe unsicher")
+        einzel_ns = bw.format_treffer(dict(kp1))
+        pruefe("E", "Termin-Nachsatz der Einzelmeldung als Zeile 2, nicht am Ende",
+               einzel_ns.split("\n")[1] == "Termin-Probe unsicher"
+               and einzel_ns.split("\n")[-1] != "Termin-Probe unsicher")
+        ueber_ns = bw.format_uebersprungen({**grund, "kurs": 116.0,
+                                            "ueber_pct": 6.0})
+        pruefe("E", "Auch die Uebersprungen-Meldung traegt ihn als Zeile 2",
+               ueber_ns.split("\n")[1] == "Termin-Probe unsicher")
     finally:
         bw.termin_nachsatz = _alt_ns
+    # Logbuch-Verdrahtung von Red-to-Green und Gap and Go (Mathias,
+    # 31.08.2026: "ja, bitte ins Logbuch eintragen") — vorher waren beide
+    # der blinde Fleck jeder Auswertung.
+    _bw_quelle = open("breakout_watcher.py", encoding="utf-8").read()
+    pruefe("E", "Red-to-Green protokolliert ins Logbuch (waechter/kapitel9)",
+           'quelle="waechter/kapitel9"' in _bw_quelle
+           and '"strategie": "Red-to-Green",' in _bw_quelle)
+    pruefe("E", "Gap and Go protokolliert ins Logbuch (waechter/kapitel7)",
+           'quelle="waechter/kapitel7"' in _bw_quelle
+           and '"strategie": "Gap and Go",' in _bw_quelle)
     _gesendet = []
     _alt_sende = bw.sende
     bw.sende = lambda topic, titel, absaetze, prio="default": (
