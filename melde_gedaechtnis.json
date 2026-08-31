@@ -55,7 +55,7 @@
     "WPM|3": "draussen",
     "WTTR|3": "drin",
     "XMTR|3": "drin",
-    "YPF|3": "drin",
+    "YPF|3": "draussen",
     "ZETA|2": "draussen",
     "ATI|2": "drin",
     "CLMT|2": "draussen",
@@ -118,7 +118,7 @@
     "BCPC|3": "drin",
     "BRZE|3": "draussen",
     "CNXC|3": "draussen",
-    "ECPG|2": "drin",
+    "ECPG|2": "draussen",
     "FIG|3": "draussen",
     "FOXA|3": "draussen",
     "GLBE|2": "drin",
@@ -140,7 +140,7 @@
     "ANDG|2": "draussen",
     "ARCT|3": "draussen",
     "ARGX|2": "draussen",
-    "BHVN|3": "drin",
+    "BHVN|3": "draussen",
     "BLSH|3": "draussen",
     "CORT|2": "draussen",
     "DGII|2": "drin",
@@ -155,7 +155,14 @@
     "XNCR|2": "draussen",
     "ZETA|1": "drin",
     "ZETA|3": "drin",
-    "NOW|2": "drin"
+    "NOW|2": "drin",
+    "LPG|2": "draussen",
+    "PBF|2": "draussen",
+    "MATX|1": "draussen",
+    "MATX|2": "drin",
+    "PLPC|2": "drin",
+    "NGL|3": "draussen",
+    "ATAT|1": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -186,6 +193,8 @@
     "VNOM|1": "2026-08-31",
     "BEST|VNOM|1": "2026-08-31",
     "ZETA|1": "2026-08-31",
-    "BEST|ZETA|1": "2026-08-31"
+    "BEST|ZETA|1": "2026-08-31",
+    "ATAT|1": "2026-08-31",
+    "BEST|ATAT|1": "2026-08-31"
   }
 }
