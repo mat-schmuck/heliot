@@ -1484,6 +1484,13 @@ def main():
         res = analyze(df, rs_pct.get(ticker),
                       darvas_erlaubt=ticker.upper() in darvas_erlaubte,
                       ticker=ticker)
+        # KELL-ZYKLUS (31.08.2026, nur Messung): die Phase je Aktie,
+        # fuers Logbuch — siehe kell_zyklus.py.
+        try:
+            import kell_zyklus
+            res["zyklus"] = kell_zyklus.klassifiziere(df)
+        except Exception:
+            res["zyklus"] = None
         rows.append({"ticker": ticker, "company": company, "res": res,
                      "fundamentals": fundamentals.get(ticker, {})})
         tag = "🟢" if res["pattern_count"] else ("🟡" if res["tt_pass"] else "⚪")
@@ -1546,6 +1553,7 @@ def main():
           "stop": p.get("stop"), "ziel": p.get("ziel"),
           "status": p.get("status", ""),
           "rs": r["res"].get("rs"), "trend_template": r["res"].get("tt_pass"),
+          "zyklus": r["res"].get("zyklus"),
           "schluss": r["res"].get("close")}
          for r in rows if r["res"]["pattern_count"] >= 1
          for p in r["res"]["points"]

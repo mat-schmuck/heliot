@@ -135,7 +135,7 @@ def block_b():
                     "red_to_green", "red_to_green_explosive", "zahlen_termine",
                     "scan_noetig", "waechter_noetig", "sektor_radar",
                     "insider_scanner", "insider_edgar", "listen",
-                    "earnings_pullback"]
+                    "earnings_pullback", "kell_zyklus"]
     for name in mit_schalter:
         r = subprocess.run([sys.executable, f"{name}.py", "--selbsttest"],
                            capture_output=True, text=True, cwd=WURZEL,
@@ -714,6 +714,13 @@ def block_e():
            and "HTF Innen-Einstieg" in ex.STRUKTURPUNKT
            and "HTF Innen-Einstieg" in
            __import__("config").CFG["volumen"]["unbestaetigt_melden_bei"])
+    import kell_zyklus as _kzk
+    pruefe("E", "Kell-Phase: Nachtscan klassifiziert und protokolliert",
+           "res[\"zyklus\"] = kell_zyklus.klassifiziere(df)" in
+           open("pattern_scanner.py", encoding="utf-8").read()
+           and "\"zyklus\": r[\"res\"].get(\"zyklus\")" in
+           open("pattern_scanner.py", encoding="utf-8").read()
+           and _kzk.klassifiziere(None) is None)
     pruefe("E", "Innen-Einstieg bekommt die taegliche HTF-Frist",
            bw.ausbruch_schluessel(
                {"strategien": ["HTF Innen-Einstieg"], "ticker": "T",

@@ -75,6 +75,24 @@ CFG = {
         "porosity": 0.04,            # G7: 4 % Toleranz unter dem Gap-Tag-Tief
     },
 
+    # --- Kell-Zyklus (Gerhards Freigabe vom 31.08.2026, nur Messung) ---
+    # Baustein 5, Teil 1: Der Nachtscan klassifiziert je Aktie die
+    # Phase in Oliver Kells Cycle of Price Action (10er/20er-EMA) und
+    # schreibt sie als Feld in jede Logbuch-Zeile. Gefiltert wird
+    # NICHTS — erst die Auswertung "Trefferquote je Phase" nach einigen
+    # Wochen entscheidet, ob die Phase je mehr darf. Die Schwellen sind
+    # Erstkalibrierungen; Kell selbst nennt keine Zahlen.
+    "kell_zyklus": {
+        "exhaustion_abstand": 0.15,  # 15 % ueber der 10er-Linie = Ueberdehnung
+        "reversal_abstand": 0.15,    # 15 % darunter = Kapitulation
+        "pop_fenster": 10,           # Rueckblick fuer die Rueckeroberung
+        "pop_mindesttage": 3,        # so viele Tage lag der Kurs unter BEIDEN Linien
+        # 4 statt 6 Prozent: Der eigene Selbsttest zeigte, dass 6 %
+        # auch einen stetigen Trend von 0,7 % je Tag als Basis
+        # durchwinkt — eine Basis, die niemand als solche erkennt.
+        "basen_spanne": 0.04,        # 8-Tage-Spanne unter 4 % = Base n' Break
+    },
+
     # --- Volumen (gilt EINHEITLICH für Scanner UND Wächter!) ---
     # GERECHNET WIRD AUSSCHLIESSLICH IN volumen.py — IBD "Volume % Change"
     # mit Hochrechnung über die Fünf-Minuten-Referenzkurve. Hier stehen nur
