@@ -671,6 +671,56 @@ def block_e():
     pruefe("E", "Scanner reicht den Ticker an den Pullback-Detektor",
            "earnings_pullback.detect_earnings_pullback(d, ticker)" in
            open("pattern_scanner.py", encoding="utf-8").read())
+
+    # HTF INNEN-EINSTIEG UND BENOTUNG (Soreide-Ausbau, Gerhards Freigabe
+    # 31.08.2026, Baustein 3): synthetische Flagge mit Inside Day.
+    import pattern_scanner as ps
+    import exit_regeln as ex
+    _tage_h = _pdm.bdate_range("2026-05-01", periods=60)
+    _mast = [10.0] * 20 + [10.0 + 10.0 * (i + 1) / 15 for i in range(15)]
+    _flagge = [19.6, 19.4, 19.6, 19.5, 19.6, 19.4, 19.8, 19.4]
+    _kurs_h = _mast + _flagge + [19.4] * (60 - len(_mast) - len(_flagge))
+    _kurs_h = _kurs_h[:60]
+    _dfh = _pdm.DataFrame({
+        "datetime": _tage_h,
+        "open": _kurs_h, "close": _kurs_h,
+        "high": [k + 0.2 for k in _kurs_h],
+        "low": [k - 0.2 for k in _kurs_h],
+        "volume": [1_000_000] * 35 + [900_000 - i * 25_000
+                                      for i in range(25)],
+    })
+    # Der letzte Tag wird zum Inside Day des vorletzten.
+    _dfh.loc[59, ["high", "low", "close", "open"]] = [19.5, 19.3, 19.4, 19.35]
+    _htf = ps.detect_htf(_dfh)
+    pruefe("E", "Benotung: die enge, steile, austrocknende Flagge ist Note A",
+           _htf is not None and _htf.get("htf_note") == "A"
+           and "Note A" in _htf.get("status", ""),
+           (_htf or {}).get("status", "kein Fund"))
+    _innen = ps.detect_htf_innen(_dfh)
+    pruefe("E", "Innen-Einstieg: Inside Day wird zur engeren Marke",
+           _innen is not None
+           and _innen["strategie"] == "HTF Innen-Einstieg"
+           and _innen["kaufpunkt"] < (_htf or {}).get("kaufpunkt", 0)
+           and _innen["stop"] > (_htf or {}).get("stop", 99)
+           and "Inside Day" in _innen["status"])
+    pruefe("E", "Innen-Einstieg: ohne Flagge kein Fund",
+           ps.detect_htf_innen(_pdm.DataFrame({
+               "datetime": _tage_h, "open": [10.0] * 60,
+               "close": [10.0] * 60, "high": [10.2] * 60,
+               "low": [9.8] * 60, "volume": [1_000_000] * 60})) is None)
+    pruefe("E", "Innen-Einstieg steht in allen Registern",
+           "HTF Innen-Einstieg" in ps.PRIORITY
+           and "HTF Innen-Einstieg" in bw.VOL_FAKTOR
+           and "HTF Innen-Einstieg" in ex.STRUKTURPUNKT
+           and "HTF Innen-Einstieg" in
+           __import__("config").CFG["volumen"]["unbestaetigt_melden_bei"])
+    pruefe("E", "Innen-Einstieg bekommt die taegliche HTF-Frist",
+           bw.ausbruch_schluessel(
+               {"strategien": ["HTF Innen-Einstieg"], "ticker": "T",
+                "nr": 2}).startswith(bw.HTF_MARKE)
+           and not bw.ausbruch_schluessel(
+               {"strategien": ["Rectangle Top"], "ticker": "T",
+                "nr": 1}).startswith(bw.HTF_MARKE))
     _gesendet = []
     _alt_sende = bw.sende
     bw.sende = lambda topic, titel, absaetze, prio="default": (

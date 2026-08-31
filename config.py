@@ -120,6 +120,11 @@ CFG = {
             "Red-to-Green",
             "Red-to-Green Explosive",
             "High & Tight Flag",
+            # Der Innen-Einstieg ist dieselbe Flagge mit engerer Marke
+            # (Soreide-Ausbau, 31.08.2026, Regelfrage G9): Das Volumen
+            # steckt wie bei der Flagge im Fahnenmast, also gilt
+            # dieselbe Ausnahme.
+            "HTF Innen-Einstieg",
             "Lücken-Bestätigungstag",
         ],
     },

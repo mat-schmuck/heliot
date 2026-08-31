@@ -746,6 +746,22 @@ def detect_htf(df: pd.DataFrame) -> dict | None:
         return None
 
     kp = round(flag_high + 0.01, 2)
+    # BENOTUNG (Soreide-Ausbau, Gerhards Freigabe 31.08.2026): Leif
+    # Soreide benotet jede Flagge und richtet die Positionsgroesse
+    # danach. Messbar sind drei seiner Groessen: die ENGE der Flagge
+    # (Spanne zur Masthoehe), die STEILHEIT des Masts (Prozent je
+    # Handelstag) und die VOLUMEN-AUSTROCKNUNG in der Flagge. Die
+    # Schwellen sind eine Erstkalibrierung und werden nach drei Monaten
+    # Logbuch nachgemessen; RS bleibt bewusst draussen, die Note soll
+    # allein aus dem Muster lesbar sein.
+    pole_tage = max(1, j - best["i"])
+    punkte = 0
+    punkte += 2 if flag_range <= pole_h * 0.15 else (
+        1 if flag_range <= pole_h * 0.20 else 0)
+    steil = best["rise"] / pole_tage
+    punkte += 2 if steil >= 0.03 else (1 if steil >= 0.022 else 0)
+    punkte += 2 if vol_slope < 0 else 0
+    note = "A" if punkte >= 5 else ("B" if punkte >= 3 else "C")
     return {
         "strategie": "High & Tight Flag",
         "kaufpunkt": kp,
@@ -754,9 +770,65 @@ def detect_htf(df: pd.DataFrame) -> dict | None:
         # Gerhards Entscheid 22.07.2026: Volumenverlauf ist bei der HTF KEIN
         # Pflichtkriterium (sonst fiele das seltenste Muster oft ganz aus),
         # sondern wird im Status gekennzeichnet.
-        "status": ("HTF komplett" if vol_slope < 0 else "HTF ohne Vol-Bestätigung"),
+        "status": ("HTF komplett" if vol_slope < 0
+                   else "HTF ohne Vol-Bestätigung") + f"; Note {note}",
         "notiz": f"Mast +{best['rise']*100:.0f}% in {j - best['i']} Tagen; "
                  f"Flag {cal_days} Kalendertage, Range {flag_range/pole_h*100:.0f}% der Masthöhe",
+        # Interne Felder fuer den Innen-Einstieg und die Auswertung;
+        # die Mappe liest nur ihre festen Spalten, hier stoert nichts.
+        "flag_tage": int(len(flag)),
+        "htf_note": note,
+    }
+
+
+def detect_htf_innen(df: pd.DataFrame) -> dict | None:
+    """HTF Innen-Einstieg (Soreide-Ausbau, Gerhards Freigabe 31.08.2026).
+
+    Leif Soreide (US-Meister 2019, Spezialist genau dieses Musters)
+    kauft nicht erst den Riss des Flaggenhochs, sondern enge Stellen IN
+    der Flagge: einen Inside Day (Hoch und Tief innerhalb des Vortags)
+    oder den engsten Tag der Flagge. Kaufpunkt = Hoch dieses Tages plus
+    1 Cent, Stop = sein Tief minus 1 Cent — das Risiko je Versuch wird
+    drastisch kleiner, dafuer steigt die Fehlversuchsquote; Soreides
+    Wort dazu: der beste Verlierer sein. Die Marke laeuft ZUSAETZLICH
+    zur Flaggenhoch-Marke (Regelfrage G8, so entschieden — die Mappe
+    traegt drei Kaufpunkte je Aktie, und der Waechter buendelt beide in
+    EINE Meldung, wenn sie zugleich reissen).
+
+    Gesucht wird nur in den JUENGSTEN fuenf Flaggentagen — eine alte
+    enge Stelle ist keine Einstiegsmarke mehr. Ist das Kandidaten-Hoch
+    schon ueberschritten oder liegt es nicht UNTER dem Flaggenhoch,
+    gibt es nichts zu melden."""
+    res = detect_htf(df)
+    if not res or (res.get("flag_tage") or 0) < 3:
+        return None
+    flag = df.iloc[-int(res["flag_tage"]):]
+    letzte = min(5, len(flag) - 1)
+    kandidat = None
+    for r in range(1, letzte + 1):
+        tag = flag.iloc[-r]
+        vortag = flag.iloc[-r - 1]
+        if (float(tag["high"]) <= float(vortag["high"])
+                and float(tag["low"]) >= float(vortag["low"])):
+            kandidat, art = tag, "Inside Day"
+            break
+    if kandidat is None:
+        fenster = flag.iloc[-letzte:]
+        spannen = (fenster["high"] - fenster["low"]).astype(float)
+        kandidat, art = fenster.loc[spannen.idxmin()], "engster Tag"
+    kp = round(float(kandidat["high"]) + 0.01, 2)
+    if kp >= res["kaufpunkt"]:
+        return None
+    if float(df["close"].iloc[-1]) > float(kandidat["high"]):
+        return None
+    return {
+        "strategie": "HTF Innen-Einstieg",
+        "kaufpunkt": kp,
+        "stop": round(float(kandidat["low"]) - 0.01, 2),
+        "ziel": None,
+        "status": f"{art} in der Flagge; Note {res.get('htf_note', 'C')}",
+        "notiz": res.get("notiz", ""),
+        "htf_note": res.get("htf_note"),
     }
 
 
@@ -827,8 +899,8 @@ def fallback_points(df: pd.DataFrame) -> list[dict]:
 # dasselbe Muster, nur ueber eine laengere Formation. Ohne diesen Eintrag
 # landete sie ganz hinten und fiele bei drei Kaufpunkten je Aktie oft
 # heraus (Gerhards Ergaenzung vom 04.08.2026).
-PRIORITY = ["High & Tight Flag", "VCP", "Cup & Handle",
-            "Cup & Handle (Wochenbasis)", "Darvas Box",
+PRIORITY = ["High & Tight Flag", "HTF Innen-Einstieg", "VCP",
+            "Cup & Handle", "Cup & Handle (Wochenbasis)", "Darvas Box",
             "Earnings-Pullback", "Rectangle Top"]
 
 
@@ -1070,7 +1142,8 @@ def analyze(df: pd.DataFrame, rs_percentile: float | None,
     tt_pass, tt_count, tt_failed = check_trend_template(df, rs_percentile)
 
     hits = []
-    detektoren = [detect_htf, lambda d: detect_vcp(d, tt_pass),
+    detektoren = [detect_htf, detect_htf_innen,
+                  lambda d: detect_vcp(d, tt_pass),
                   detect_cup_handle, detect_rectangle,
                   cup_handle_v2.detect_cup_handle_v2]
     if darvas_erlaubt:

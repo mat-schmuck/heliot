@@ -86,6 +86,9 @@ STRUKTURPUNKT = {
     # ist das Konsolidierungstief; darunter liegt nur noch die
     # Porosity-Toleranz ueber dem Gap-Tag-Tief (Morales/Kacher).
     "Earnings-Pullback":           "Tief der Konsolidierung über dem Zahlen-Gap",
+    # Innen-Einstieg (Soreide): Der Bruchpunkt ist das Tief des engen
+    # Tages selbst — genau das macht das Risiko so klein.
+    "HTF Innen-Einstieg":          "Tief des Inside Day beziehungsweise engsten Tages in der Flagge",
 }
 
 

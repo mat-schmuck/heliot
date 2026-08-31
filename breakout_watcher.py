@@ -301,6 +301,9 @@ VOL_FAKTOR = {
     # fuer solche Fortsetzungen nennt 40 bis 50 Prozent ueber dem
     # Schnitt, genau dieses Band.
     "Earnings-Pullback": _VOL["breakout_faktor_vcp"],
+    # HTF Innen-Einstieg (Soreide-Ausbau, 31.08.2026): dieselbe Huerde
+    # wie die Flagge selbst — das Volumen steckt im Fahnenmast.
+    "HTF Innen-Einstieg": _VOL["breakout_faktor"],
 }
 VOL_FAKTOR_FALLBACK = _VOL["breakout_faktor"]
 
@@ -2039,7 +2042,13 @@ def ausbruch_schluessel(t: dict) -> str:
     High and Tight Flag traegt ein Vorzeichen, damit load_state() ihr die
     taegliche statt der woechentlichen Frist geben kann."""
     namen = t.get("strategien") or [t.get("strategie")]
-    marke = HTF_MARKE if "High & Tight Flag" in namen else ""
+    # Der Innen-Einstieg gehoert zur selben Flagge und bekommt dieselbe
+    # TAEGLICHE Frist (Soreide-Ausbau, 31.08.2026) — sonst waere die
+    # engere Marke eine Woche lang stumm, waehrend die Flagge selbst
+    # jeden Tag neu melden darf.
+    marke = (HTF_MARKE if any(n in ("High & Tight Flag",
+                                    "HTF Innen-Einstieg")
+                              for n in namen if n) else "")
     return f"{marke}{t['ticker']}|{t['nr']}"
 
 
