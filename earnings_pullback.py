@@ -105,11 +105,13 @@ def _konsolidierung(df, gap_i):
 def _termin_belegt(ticker, gap_datum, termine=None, kalender=None):
     """Lag am Gap-Tag (oder am Abend davor) der Quartalstermin?
 
-    Regelfrage G5, entschieden: Die Zahlen-Bindung ist PFLICHT — ohne
-    belegten Termin kein Earnings-Pullback (fuer anlasslose Gaps gibt
-    es Gap and Go). Eine NEGATIVE Ueberraschung lehnt ab; eine fehlende
-    Ueberraschungs-Angabe laesst durch, denn viele Gaps kommen auf den
-    Ausblick statt auf die Gewinnzahl.
+    Regelfrage G5, GERHARDS ENTSCHEID vom 31.08.2026 abends: Der TERMIN
+    GENUEGT, die Ueberraschung ist egal — auch eine negative lehnt
+    nicht mehr ab (sein Wortlaut: "lieber mehr sehen und selbst
+    filtern"; ein Gap nach oben trotz verfehlter Gewinnzahl kommt vom
+    Ausblick, und genau solche Neubewertungen will er sehen). Die
+    Zahlen-Bindung selbst bleibt PFLICHT — ohne belegten Termin kein
+    Earnings-Pullback, fuer anlasslose Gaps gibt es Gap and Go.
 
     Zwei Quellen: die Termin-Historie von Yahoo (get_earnings_dates)
     und als Zweitquelle unser eigenes Terminmodul (kennt den Termin
@@ -129,10 +131,8 @@ def _termin_belegt(ticker, gap_datum, termine=None, kalender=None):
                                  else float(surprise)))
         except Exception:
             kalender = []
-    for tag, surprise in kalender:
+    for tag, _surprise in kalender:
         if tag in fenster:
-            if surprise is not None and surprise < 0:
-                return False
             return True
     try:
         import zahlen_termine
@@ -151,10 +151,20 @@ def detect_earnings_pullback(df, ticker, termine=None, kalender=None):
     """Der Detektor im Format der uebrigen Muster, oder None.
 
     Kaufpunkt = Konsolidierungshoch plus 1 Cent. Stop (Regelfrage G7,
-    entschieden) = das HOEHERE aus Konsolidierungstief minus 1 Cent und
-    Gap-Tag-Tief mal (1 minus Porosity) — Morales' Toleranz unter dem
-    Gap-Tag-Tief, damit ein Retest nicht sofort ausstoppt; den
-    Zehn-Prozent-Deckel legt wie ueberall der Scanner obendrauf.
+    GERHARDS WORTLAUT vom 31.08.2026 abends: "4 Prozent Puffer unter
+    dem Konsolidierungstief, weiter durch den Zehn-Prozent-Deckel
+    begrenzt") = Konsolidierungstief mal 0,96; den Deckel legt wie
+    ueberall der Scanner obendrauf. Der Puffer ist Morales' Porosity,
+    damit ein Rauschen-Retest nicht sofort ausstoppt.
+
+    FUER DIE AKTEN: Die zuerst gebaute Formel (das Hoehere aus
+    Konsolidierungstief und Gap-Tag-Tief mal 0,96) war durch die
+    Maximum-Bildung wirkungslos — das Konsolidierungstief liegt per
+    Musterdefinition IMMER ueber dem Gap-Tag-Tief, der Puffer kam also
+    nie zum Zug und der Stop klebte hart am Tief. Gerhards
+    Bestaetigungs-Wortlaut hat den Fehler aufgedeckt; seine Fassung ist
+    die gemeinte und die wirksame.
+
     Kein Kursziel: Die Bewirtschaftung uebernimmt Kapitel 12 in der
     Klasse zahlen_luecke (60 Tage Zeitdeckel, exakt die PEAD-Frist)."""
     if df is None or len(df) < 30:
@@ -170,8 +180,7 @@ def detect_earnings_pullback(df, ticker, termine=None, kalender=None):
         if not _termin_belegt(ticker, gap_datum, termine, kalender):
             continue
         kp = round(kons["hoch"] + 0.01, 2)
-        stop = round(max(kons["tief"] - 0.01,
-                         kons["gap_tief"] * (1 - C["porosity"])), 2)
+        stop = round(kons["tief"] * (1 - C["porosity"]), 2)
         return {
             "strategie": NAME,
             "kaufpunkt": kp,
@@ -241,8 +250,8 @@ def selbsttest() -> int:
 
     p("Ohne Termin-Beleg KEIN Signal (Gap and Go ist zustaendig)",
       detect_earnings_pullback(df, "TST", kalender=[]) is None)
-    p("Negative Ueberraschung lehnt ab",
-      detect_earnings_pullback(df, "TST", kalender=kal_negativ) is None)
+    p("Negative Ueberraschung laesst durch (Gerhard, G5: Termin genuegt)",
+      detect_earnings_pullback(df, "TST", kalender=kal_negativ) is not None)
     p("Fehlende Ueberraschungs-Angabe laesst durch (Ausblick-Gaps)",
       detect_earnings_pullback(df, "TST",
                                kalender=[(gap_datum, None)]) is not None)

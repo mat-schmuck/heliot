@@ -304,6 +304,10 @@ VOL_FAKTOR = {
     # HTF Innen-Einstieg (Soreide-Ausbau, 31.08.2026): dieselbe Huerde
     # wie die Flagge selbst — das Volumen steckt im Fahnenmast.
     "HTF Innen-Einstieg": _VOL["breakout_faktor"],
+    # EMA Crossback (Gerhard, G11 vom 31.08.2026): Standard-Huerde. Kell
+    # verlangt stuetzendes Kaufverhalten, das ist der uebliche
+    # Volumen-Massstab, keine Sonderhuerde.
+    "EMA Crossback": _VOL["breakout_faktor"],
 }
 VOL_FAKTOR_FALLBACK = _VOL["breakout_faktor"]
 
@@ -408,34 +412,29 @@ def termin_nachsatz(ticker: str) -> str | None:
     So steht keine Angabe zweimal in derselben Meldung."""
     if zahlen_termine.kopf_hinweis(ticker):
         return zahlen_termine.vorbehalt(ticker)
-    return zahlen_termine.hinweis(ticker)
+    h = zahlen_termine.hinweis(ticker)
+    if h:
+        return h
+    # STUFE A der Zahlen-Karenz (Gerhards Entscheid 31.08.2026 abends):
+    # Auch der Termin UEBERMORGEN (und der Montags-Termin am Freitag)
+    # steht als harter Warnkopf vorn in der Meldung. Gefiltert wird
+    # nichts mehr; die Warnung traegt das Urteil zu Mathias.
+    return zahlen_termine.karenz_hinweis(
+        ticker, CFG["zahlen_karenz"]["handelstage"])
 
 
-def zahlen_karenz_greift(t: dict) -> bool:
-    """Zurueckhalten, weil Quartalszahlen unmittelbar bevorstehen?
+def im_zahlen_karenzfenster(ticker) -> bool:
+    """Steht der Quartalstermin binnen der Karenz-Handelstage bevor?
 
-    ZAHLEN-KARENZ, Stufe B (Gerhards Freigabe vom 31.08.2026,
-    Regelfrage G1 des Einbau-Papiers; Messgrundlage die Forensik vom
-    30.08.: Signale mit Termin im Fenster minus 3,38 Prozent bei 25
-    Prozent Stopp-Quote gegen minus 0,83 bei 11 ohne). Im Fenster von
-    CFG-Handelstagen vor dem Termin werden nur VOLUMENBESTAETIGTE
-    Ausbrueche gemeldet. Unbestaetigte und nicht verifizierbare bleiben
-    offen: Ihr Schluessel wird nicht vorgemerkt, sie melden also
-    regulaer, sobald das Volumen nachzieht oder der Termin vorbei ist —
-    dieselbe Mechanik wie beim Schalter --nur-bestaetigt.
-
-    Bestaetigte laufen durch, weil der Termin ohnehin als zweite Zeile
-    in der Meldung steht und das Regelwerk kein Einstiegsverbot vor
-    Zahlen kennt; die haertere Stufe C braeuchte Gerhards
-    ausdruecklichen Entscheid. Ohne bekannten Termin greift nichts —
-    die Karenz schuetzt nur, wo der Kalender einen Termin fuehrt."""
-    if t.get("vol_ok") is True:
-        return False
-    namen = [n for n in (t.get("strategien") or [t.get("strategie")]) if n]
-    ausgenommen = CFG["zahlen_karenz"]["ausgenommen"]
-    if namen and all(n in ausgenommen for n in namen):
-        return False
-    tage = zahlen_termine.handelstage_bis(t.get("ticker"))
+    STUFE A (Gerhards Entscheid vom 31.08.2026 abends, ersetzt die
+    zuerst gebaute Stufe B): Diese Funktion FILTERT nichts mehr. Sie
+    markiert nur noch das Logbuch-Feld zahlen_karenz, damit messbar
+    bleibt, wie sich Meldungen im Terminfenster schlagen — und der
+    Warnkopf laeuft ueber termin_nachsatz() in jede betroffene
+    Meldung. Messgrundlage der Karenz bleibt die Forensik vom 30.08.:
+    Signale mit Termin im Fenster minus 3,38 Prozent bei 25 Prozent
+    Stopp-Quote gegen minus 0,83 bei 11 ohne."""
+    tage = zahlen_termine.handelstage_bis(ticker)
     return (tage is not None
             and tage <= CFG["zahlen_karenz"]["handelstage"])
 
@@ -2966,21 +2965,15 @@ def main():
                     print(f"{uebersprungen} Treffer ohne Volumenbestätigung — bleiben "
                           "offen und werden weiter beobachtet.")
 
-            # ZAHLEN-KARENZ (Gerhards Freigabe 31.08.2026, Stufe B):
-            # Unbestaetigte Risse unmittelbar vor dem Quartalstermin
-            # werden zurueckgehalten, siehe zahlen_karenz_greift().
-            # Jede Zurueckhaltung bekommt das Logbuch-Feld
-            # zahlen_karenz=true, damit die Regel messbar bleibt.
-            karenz_ids = {id(t) for t in zu_melden if zahlen_karenz_greift(t)}
-            if karenz_ids:
-                for t in zu_melden:
-                    if id(t) in karenz_ids:
-                        t["zahlen_karenz"] = True
-                        print(f"  ⏳ {t['ticker']}: Zahlen-Karenz — Termin "
-                              f"steht unmittelbar bevor und das Volumen ist "
-                              f"nicht bestätigt; bleibt offen.")
-                zu_melden = [t for t in zu_melden
-                             if id(t) not in karenz_ids]
+            # ZAHLEN-KARENZ, STUFE A (Gerhards Entscheid 31.08.2026
+            # abends, ersetzt Stufe B vom selben Tag): Es wird NICHTS
+            # mehr zurueckgehalten. Treffer im Karenzfenster werden
+            # gemeldet, tragen aber den harten Warnkopf (siehe
+            # termin_nachsatz) und das Logbuch-Feld zahlen_karenz, damit
+            # ihre Trefferquote messbar bleibt.
+            for t in zu_melden:
+                if im_zahlen_karenzfenster(t.get("ticker")):
+                    t["zahlen_karenz"] = True
 
             # INS LOGBUCH kommt JEDER erkannte Ausbruch — auch der ohne
             # Volumenbestaetigung, auch der im Trockenlauf, auch der,

@@ -89,6 +89,9 @@ STRUKTURPUNKT = {
     # Innen-Einstieg (Soreide): Der Bruchpunkt ist das Tief des engen
     # Tages selbst — genau das macht das Risiko so klein.
     "HTF Innen-Einstieg":          "Tief des Inside Day beziehungsweise engsten Tages in der Flagge",
+    # EMA Crossback (Kell, G11): Faellt der Kurs wieder unter das Tief
+    # des Ruecksetzers, war die Bestaetigung der Linien keine.
+    "EMA Crossback":               "Tief des Rücksetzers an die 10er/20er-Linie",
 }
 
 

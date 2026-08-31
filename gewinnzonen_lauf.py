@@ -62,6 +62,9 @@ def _prio(typ):
     eigene = {
         "zeitdeckel": {"prioritaet": "high", "buendeln": False},
         "zahlen_hinweis": {"prioritaet": "high", "buendeln": False},
+        # Kell Wedge Drop (Gerhard, G12 vom 31.08.2026): ein hartes
+        # Ausstiegssignal, laut und einzeln wie der Zeitdeckel.
+        "wedge_drop": {"prioritaet": "high", "buendeln": False},
         "sektor_hinweis": {"prioritaet": "default", "buendeln": True},
         "kapitel11": {"prioritaet": "high", "buendeln": True},
         "tagesende": {"prioritaet": "default", "buendeln": True},
@@ -372,6 +375,28 @@ def gewinn_durchgang(loaded, mappe_pfad, exit_meldungen=None, heute=None):
                         f"{sym}; {e.get('strategie', '')}; 30-Wochen-Linie "
                         f"flacht ab (Weinstein Stufe 3); "
                         + _stand_text(e, kurs), symbol=sym, key=key))
+
+            # 7b) Kell Wedge Drop — nur in Zone stark (GERHARDS ENTSCHEID
+            # vom 31.08.2026 abends, Regelfrage G12). Erster Schluss
+            # unter BEIDEN Tageslinien (10er/20er-EMA) nach der weit
+            # gelaufenen Phase ist Kells hartes Ausstiegssignal; die
+            # Phasen-Definition kommt aus kell_zyklus, der EINEN Quelle
+            # dieser Linienlogik. Einmalig je Beobachtung gemeldet.
+            if zonen["zone"] == "stark" and not e.get("wedge_drop_gemeldet"):
+                try:
+                    import kell_zyklus
+                    phase = kell_zyklus.klassifiziere(df)
+                except Exception:
+                    phase = None
+                if phase == "Wedge Drop":
+                    e["wedge_drop_gemeldet"] = True
+                    befunde.append(_befund(
+                        "wedge_drop", f"Wedge Drop: {sym}",
+                        f"{sym}; {e.get('strategie', '')}; erster Schluss "
+                        f"unter der 10er- und 20er-Tageslinie nach der "
+                        f"Überdehnung (Kell Wedge Drop); Ausstieg oder "
+                        f"harte Straffung; " + _stand_text(e, kurs),
+                        symbol=sym, key=key))
 
             # 8a) Zahlen-Termin binnen fuenf Tagen, ab Zone mittel.
             if (zonen["zone"] in ("mittel", "stark")

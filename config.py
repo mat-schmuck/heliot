@@ -35,23 +35,28 @@ CFG = {
     # Schnitt auf minus 3,38 Prozent bei 25 Prozent Stopp-Quote, alle
     # uebrigen auf minus 0,83 Prozent bei 11 Prozent; sechs der zehn
     # groessten Verlierer stuerzten an frischen Zahlen (ONON, LQDA
-    # zweimal, KOD, RBRK, HWM). Gewaehlt ist Stufe B des Einbau-Papiers
-    # (einbau_strategien.md, Frage G1): Im Karenzfenster werden nur
-    # VOLUMENBESTAETIGTE Ausbrueche gemeldet; unbestaetigte und nicht
-    # verifizierbare bleiben offen und melden regulaer, sobald das
-    # Volumen nachzieht oder der Termin vorbei ist. Bestaetigte laufen
-    # durch, weil der Termin-Hinweis seit 31.08. als zweite Zeile in
-    # jeder Meldung steht und Gerhards Regelwerk kein Einstiegsverbot
-    # vor Zahlen kennt; die haertere Stufe C braeuchte seinen
-    # ausdruecklichen Entscheid. Jede Zurueckhaltung steht mit
-    # zahlen_karenz=true im Logbuch, damit die Wirkung messbar bleibt.
+    # zweimal, KOD, RBRK, HWM).
+    #
+    # STUFE A seit 31.08.2026 abends (GERHARDS ENTSCHEID zu Frage G1,
+    # ersetzt die am Vormittag gebaute Stufe B): Es wird ALLES gemeldet,
+    # aber jede Meldung im Karenzfenster traegt einen harten Warnkopf
+    # als vorderste Zeile (heute und morgen ueber die bestehenden
+    # Termin-Hinweise, uebermorgen und der Montags-Fall am Freitag ueber
+    # zahlen_termine.karenz_hinweis). Sein Wortlaut: "Ich will die
+    # Signale sehen und selbst entscheiden, nicht dass das System sie
+    # fuer mich wegfiltert. Die Warnung reicht mir, das Urteil bleibt
+    # bei mir." Jeder Treffer im Fenster steht mit zahlen_karenz=true
+    # im Logbuch, damit die Trefferquote im Fenster messbar bleibt.
     "zahlen_karenz": {
         # 2 heisst: Termin heute, morgen oder uebermorgen (Handelstage).
         # Die gemessenen Killer lagen bei plus 0 bis plus 2 Tagen.
+        # Von Gerhard bestaetigt (Frage G2).
         "handelstage": 2,
-        # Kapitel 7 und 9 sind AUSGENOMMEN (Frage G3): Red-to-Green ist
-        # ein Tagesgeschaeft am selben Tag, und der
+        # Kapitel 7 und 9 bleiben AUSGENOMMEN (Frage G3, bestaetigt):
+        # Red-to-Green ist ein Tagesgeschaeft am selben Tag, und der
         # Luecken-Bestaetigungstag IST oft die Zahlen-Reaktion selbst.
+        # Bei Stufe A wirkt die Liste von selbst: Beide Kapitel melden
+        # ueber eigene Formatierer, die den Karenz-Warnkopf nie anhaengen.
         "ausgenommen": ["Red-to-Green", "Red-to-Green Explosive",
                         "Lücken-Bestätigungstag"],
     },
@@ -61,9 +66,11 @@ CFG = {
     # nicht der Sprung gekauft, sondern der Ausbruch aus der ersten
     # engen Konsolidierung darueber. Literatur: PEAD (Bernard/Thomas
     # 1989/1990), Power Earnings Gap (TraderStewie), Buyable Gap-Up
-    # (Morales/Kacher). Die Regelfragen G4 bis G7 sind nach bestem
-    # Wissen entschieden, je Wert vermerkt; Feinjustierung nach den
-    # ersten Logbuch-Wochen.
+    # (Morales/Kacher). G4, G6 und G7 hat Gerhard am 31.08.2026 abends
+    # bestaetigt; zu G5 hat er entschieden: Der TERMIN GENUEGT, auch
+    # eine negative Ueberraschung lehnt nicht mehr ab ("lieber mehr
+    # sehen und selbst filtern"). Feinjustierung nach den ersten
+    # Logbuch-Wochen.
     "earnings_pullback": {
         "suchfenster_tage": 15,      # so weit zurueck wird nach dem Gap gesucht
         "min_gap_open": 0.08,        # G4: Eroeffnung 8 % ueber Vortagesschluss …
@@ -72,7 +79,25 @@ CFG = {
         "min_konsolidierung": 2,     # G6: 2 bis 15 Handelstage Konsolidierung
         "max_konsolidierung": 15,
         "max_spanne_anteil": 0.5,    # Spanne <= halbe Gap-Tag-Spanne
-        "porosity": 0.04,            # G7: 4 % Toleranz unter dem Gap-Tag-Tief
+        # G7 in Gerhards Bestaetigungs-Wortlaut vom 31.08.2026: "4
+        # Prozent Puffer unter dem Konsolidierungstief, weiter durch den
+        # Zehn-Prozent-Deckel begrenzt". Die zuerst gebaute
+        # Gap-Tief-Fassung war durch die Maximum-Bildung wirkungslos,
+        # siehe detect_earnings_pullback.
+        "porosity": 0.04,            # 4 % unter dem Konsolidierungstief
+    },
+
+    # --- EMA Crossback (GERHARDS ENTSCHEID vom 31.08.2026 abends, G11:
+    # "DOCH BAUEN UND SCHARF SCHALTEN", mit der Bedingung, dass die
+    # Ruecksetzer-Logik ausschliesslich in diesem Kapitel lebt — siehe
+    # ema_crossback.py, dort steht, wie die Kapselung eingehalten wird).
+    # Kells Stufe 3: Kauf ueber dem Umkehrtag-Hoch des ersten
+    # Ruecksetzers an die 10er/20er-Linie nach frischer Rueckeroberung.
+    "ema_crossback": {
+        "min_historie": 40,          # weniger Tage: keine Aussage
+        "pop_fenster_tage": 10,      # so frisch muss die Rueckeroberung sein
+        "abwaerts_mindesttage": 3,   # echte Abwaertsphase vor dem Pop
+        "kontakt_fenster_tage": 3,   # Linien-Kontakt in den letzten N Tagen
     },
 
     # --- Kell-Zyklus (Gerhards Freigabe vom 31.08.2026, nur Messung) ---

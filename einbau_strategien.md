@@ -329,3 +329,27 @@ werden, und ist die 30-Wochen-Linie ihr einziger Ausstieg?
 Alle Regelfragen gesammelt: G1 bis G3 (Karenz), G4 bis G7
 (Earnings-Pullback), G8 bis G9 (HTF), G10 (Ampel), G11 bis G12 (Kell),
 G13 bis G15 (Tenbagger-Radar).
+
+## Gerhards Entscheid vom 31.08.2026 abends (G1 bis G12)
+
+Neun Punkte bestaetigt wie gebaut (G2, G3, G4, G6, G7, G8, G9, G10,
+G12), drei geaendert und noch am selben Abend umgesetzt:
+
+- G1: Stufe A statt B. Alles wird gemeldet, jede Meldung im
+  Karenzfenster traegt den harten Warnkopf (uebermorgen und der
+  Montags-Fall am Freitag ueber zahlen_termine.karenz_hinweis); das
+  Logbuch-Feld zahlen_karenz misst weiter.
+- G5: Der Termin genuegt, auch eine negative Ueberraschung lehnt nicht
+  mehr ab.
+- G11: EMA Crossback doch gebaut und scharf (ema_crossback.py), mit
+  Gerhards Kapselungs-Bedingung: Die Ruecksetzer-Logik lebt nur in
+  diesem Modul, die Ausloesung im Waechter bleibt ein gewoehnlicher
+  Ausbruch ueber das Umkehrtag-Hoch.
+
+Dazu praezisiert G7 seinen Wortlaut: 4 Prozent Puffer unter dem
+KONSOLIDIERUNGSTIEF (die zuerst gebaute Gap-Tief-Fassung war durch die
+Maximum-Bildung wirkungslos, der Bestaetigungs-Wortlaut hat den Fehler
+aufgedeckt). G12 ist als Kell-Wedge-Drop-Befund in Zone stark im
+Kapitel-12-Nachtlauf umgesetzt. Marktampel und Kell-Phasen-Kennung
+bleiben ausdruecklich nur messend. G13 bis G15 entscheidet Gerhard
+separat.

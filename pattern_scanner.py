@@ -901,7 +901,7 @@ def fallback_points(df: pd.DataFrame) -> list[dict]:
 # heraus (Gerhards Ergaenzung vom 04.08.2026).
 PRIORITY = ["High & Tight Flag", "HTF Innen-Einstieg", "VCP",
             "Cup & Handle", "Cup & Handle (Wochenbasis)", "Darvas Box",
-            "Earnings-Pullback", "Rectangle Top"]
+            "Earnings-Pullback", "EMA Crossback", "Rectangle Top"]
 
 
 # ---------------------------------------------------------------------------
@@ -1148,6 +1148,12 @@ def analyze(df: pd.DataFrame, rs_percentile: float | None,
                   cup_handle_v2.detect_cup_handle_v2]
     if darvas_erlaubt:
         detektoren.insert(3, detect_darvas)
+    # EMA CROSSBACK (Gerhards Entscheid 31.08.2026 abends, G11): die
+    # Ruecksetzer-Logik lebt komplett in ema_crossback.py; hier ist er
+    # ein Detektor wie jeder andere, und seine Marke loest im Waechter
+    # als gewoehnlicher AUSBRUCH ueber das Umkehrtag-Hoch aus.
+    import ema_crossback
+    detektoren.append(ema_crossback.detect_ema_crossback)
     if ticker:
         # EARNINGS-PULLBACK (Gerhards Freigabe 31.08.2026): braucht als
         # einziger Detektor den Ticker, weil er die Zahlen-Bindung des

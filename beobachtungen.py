@@ -129,6 +129,8 @@ def oeffnen(bestand, ticker, zusatz, strategie, kaufpunkt, struktur_stop,
         "weinstein_gemeldet": False,
         "zahlen_hinweis_gemeldet": False,
         "sektor_hinweis_gemeldet": False,
+        # Kell Wedge Drop (Gerhard, G12 vom 31.08.2026), nur Zone stark.
+        "wedge_drop_gemeldet": False,
     }
     return key
 

@@ -481,6 +481,37 @@ def vorbehalt(ticker, termine=None):
     return None
 
 
+def karenz_hinweis(ticker, max_handelstage, heute=None, termine=None):
+    """Der harte Warnkopf fuer Termine im Karenzfenster, oder None.
+
+    STUFE A (Gerhards Entscheid vom 31.08.2026 abends, ersetzt die
+    zuvor gebaute Stufe B): Es wird ALLES gemeldet, aber jede Meldung
+    im Karenzfenster traegt die Warnung. Sein Wortlaut: "Ich will die
+    Signale sehen und selbst entscheiden, nicht dass das System sie
+    fuer mich wegfiltert. Die Warnung reicht mir, das Urteil bleibt
+    bei mir."
+
+    Diese Funktion deckt NUR ab, was hinweis() nicht schon sagt: den
+    Termin uebermorgen, und den Montags-Termin, der am Freitag zwar
+    ein Handelstag entfernt ist, aber kein Kalender-Morgen (dort
+    lieferte hinweis() bisher nichts). Heute und Kalender-Morgen
+    behalten ihre bestehenden Texte."""
+    tage = handelstage_bis(ticker, heute, termine)
+    if tage is None or tage > max_handelstage:
+        return None
+    t = (termine if termine is not None else lade()).get(
+        (ticker or "").upper())
+    try:
+        tag = date.fromisoformat(str(t.get("datum", ""))[:10])
+    except (ValueError, AttributeError):
+        return None
+    if tage <= 0:
+        return None      # heute traegt die Kopfzeile den Vermerk
+    return (f"ACHTUNG: QUARTALSZAHLEN in {tage} Handelstag"
+            + ("" if tage == 1 else "en")
+            + f" (am {tag.day:02d}.{tag.month:02d}.)")
+
+
 def handelstage_bis(ticker, heute=None, termine=None):
     """Wie viele HANDELSTAGE bis zum vermerkten Termin? None ohne Termin.
 

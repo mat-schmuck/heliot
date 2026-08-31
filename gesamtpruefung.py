@@ -135,7 +135,7 @@ def block_b():
                     "red_to_green", "red_to_green_explosive", "zahlen_termine",
                     "scan_noetig", "waechter_noetig", "sektor_radar",
                     "insider_scanner", "insider_edgar", "listen",
-                    "earnings_pullback", "kell_zyklus"]
+                    "earnings_pullback", "kell_zyklus", "ema_crossback"]
     for name in mit_schalter:
         r = subprocess.run([sys.executable, f"{name}.py", "--selbsttest"],
                            capture_output=True, text=True, cwd=WURZEL,
@@ -625,27 +625,30 @@ def block_e():
         _morgen = _ny + _tdk(days=1)
         while _morgen.weekday() >= 5:
             _morgen += _tdk(days=1)
+        _uebermorgen = _morgen + _tdk(days=1)
+        while _uebermorgen.weekday() >= 5:
+            _uebermorgen += _tdk(days=1)
         _zt._termine = {"KAR": {"datum": _morgen.isoformat(),
-                                "lage": "nachboerslich"}}
-        _f = {"ticker": "KAR", "strategie": "Rectangle Top",
-              "strategien": None}
-        pruefe("E", "Zahlen-Karenz: unbestaetigt vor Termin wird gehalten, "
-               "bestaetigt laeuft, Ausnahme-Muster laeuft",
-               bw.zahlen_karenz_greift({**_f, "vol_ok": False}) is True
-               and bw.zahlen_karenz_greift({**_f, "vol_ok": None}) is True
-               and bw.zahlen_karenz_greift({**_f, "vol_ok": True}) is False
-               and bw.zahlen_karenz_greift(
-                   {**_f, "vol_ok": False,
-                    "strategie": "Lücken-Bestätigungstag",
-                    "strategien": ["Lücken-Bestätigungstag"]}) is False
-               and bw.zahlen_karenz_greift(
-                   {"ticker": "OHNE", "vol_ok": False,
-                    "strategie": "Rectangle Top",
-                    "strategien": None}) is False)
+                                "lage": "nachboerslich"},
+                        "KA2": {"datum": _uebermorgen.isoformat(),
+                                "lage": "unbekannt"}}
+        # STUFE A (Gerhard, 31.08.2026 abends): nichts wird mehr
+        # gefiltert, das Fenster markiert nur noch.
+        pruefe("E", "Karenzfenster markiert, filtert aber nicht mehr",
+               bw.im_zahlen_karenzfenster("KAR") is True
+               and bw.im_zahlen_karenzfenster("KA2") is True
+               and bw.im_zahlen_karenzfenster("OHNE") is False)
+        _warn = _zt.karenz_hinweis("KA2", 2)
+        pruefe("E", "Uebermorgen-Termin bekommt den harten Warnkopf",
+               _warn is not None and _warn.startswith("ACHTUNG: QUARTALSZAHLEN")
+               and _zt.karenz_hinweis("OHNE", 2) is None)
     finally:
         _zt._termine = _zt_alt
-    pruefe("E", "Karenz-Zurueckhaltung traegt das Logbuch-Feld",
-           '"zahlen_karenz": bool(t.get("zahlen_karenz"))' in _bw_quelle)
+    pruefe("E", "Stufe A: kein Karenz-Filter mehr im Meldepfad, nur Feld",
+           "karenz_ids" not in _bw_quelle
+           and "zahlen_karenz_greift" not in _bw_quelle
+           and '"zahlen_karenz": bool(t.get("zahlen_karenz"))' in _bw_quelle
+           and "karenz_hinweis" in _bw_quelle)
     import marktampel as _ma
     import pandas as _pdm
     _idx = _pdm.date_range("2026-01-02", periods=80, freq="B")
@@ -721,6 +724,35 @@ def block_e():
            and "\"zyklus\": r[\"res\"].get(\"zyklus\")" in
            open("pattern_scanner.py", encoding="utf-8").read()
            and _kzk.klassifiziere(None) is None)
+    import ema_crossback as _eck
+    import exit_regeln as _exk
+    _dfb = _eck._basisfall()
+    _resb = _eck.detect_ema_crossback(_dfb)
+    pruefe("E", "EMA Crossback: Marke ueber dem Umkehrtag-Hoch "
+           "(Ausloesung bleibt Ausbruch, G11-Kapselung)",
+           _resb is not None
+           and _resb["kaufpunkt"] > float(_dfb["close"].iloc[-1])
+           and _resb["strategie"] == "EMA Crossback")
+    pruefe("E", "EMA Crossback steht in allen Registern",
+           "EMA Crossback" in _psk.PRIORITY
+           and "EMA Crossback" in bw.VOL_FAKTOR
+           and "EMA Crossback" in _exk.STRUKTURPUNKT
+           and "EMA Crossback" not in
+           __import__("config").CFG["volumen"]["unbestaetigt_melden_bei"])
+    pruefe("E", "Kapselung: kein anderes Betriebsmodul importiert die "
+           "Ruecksetzer-Logik",
+           "import ema_crossback" not in _bw_quelle
+           and "ema_crossback" not in
+           open("gewinnzonen_lauf.py", encoding="utf-8").read())
+    _gzq = open("gewinnzonen_lauf.py", encoding="utf-8").read()
+    pruefe("E", "Wedge Drop (G12): nur Zone stark, einmalig, laut",
+           'zonen["zone"] == "stark" and not e.get("wedge_drop_gemeldet")'
+           in _gzq
+           and '"wedge_drop": {"prioritaet": "high", "buendeln": False}'
+           in _gzq)
+    pruefe("E", "G7: Stop liegt 4 Prozent unter dem Konsolidierungstief",
+           "kons[\"tief\"] * (1 - C[\"porosity\"])" in
+           open("earnings_pullback.py", encoding="utf-8").read())
     pruefe("E", "Innen-Einstieg bekommt die taegliche HTF-Frist",
            bw.ausbruch_schluessel(
                {"strategien": ["HTF Innen-Einstieg"], "ticker": "T",
