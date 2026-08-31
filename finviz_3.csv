@@ -1,169 +1,110 @@
 No.,Ticker,Company,Sector,Industry,Country,Market Cap,P/E,Price,Change,Volume
-1,AAMI,Acadian Asset Management Inc,Financial,Asset Management,USA,3275.74,32.57,92.30,1.60%,328911
-2,ADPT,Adaptive Biotechnologies Corp,Healthcare,Diagnostics & Research,USA,4147.90,,25.99,2.16%,1816948
-3,AEM,Agnico Eagle Mines Ltd,Basic Materials,Gold,Canada,110078.25,18.47,216.06,1.90%,5430723
-4,ALM,Almonty Industries Inc,Basic Materials,Other Industrial Metals & Mining,USA,5339.78,75.49,18.51,4.64%,8499757
-5,AMLX,Amylyx Pharmaceuticals Inc,Healthcare,Drug Manufacturers - Specialty & Generic,USA,4307.62,,38.66,-2.52%,4644894
-6,AMR,Alpha Metallurgical Resources Inc,Basic Materials,Coking Coal,USA,2662.73,,210.01,8.09%,519765
-7,ANDG,Andersen Group Inc,Consumer Cyclical,Personal Services,USA,5667.50,5.86,50.16,-0.32%,769120
-8,ANET,Arista Networks Inc,Technology,Computer Hardware,USA,237930.01,59.48,188.65,2.67%,8125220
-9,APO,Apollo Global Management Inc,Financial,Asset Management,USA,78359.18,50.19,132.69,2.08%,2215259
-10,APPN,Appian Corp,Technology,Software - Infrastructure,USA,2743.36,,38.30,2.74%,520249
-11,ARES,Ares Management Corp,Financial,Asset Management,USA,46651.66,64.41,141.25,0.73%,1422963
-12,ARGX,Argen X SE ADR,Healthcare,Biotechnology,Netherlands,65048.64,39.63,1039.78,0.16%,377300
-13,ARIS,Aris Mining Corp,Basic Materials,Gold,Canada,4305.50,15.18,20.86,3.32%,2110542
-14,ARWR,Arrowhead Pharmaceuticals Inc,Healthcare,Biotechnology,USA,12304.68,,87.11,-0.41%,1090199
-15,ASST,Strive Inc,Financial,Asset Management,USA,1556.75,,18.22,12.96%,14978178
-16,ATAT,Atour Lifestyle Holdings Ltd ADR,Consumer Cyclical,Lodging,China,3923.28,17.13,34.75,1.46%,1676086
-17,ATRC,Atricure Inc,Healthcare,Medical Instruments & Supplies,USA,2491.43,226.24,48.98,3.14%,421181
-18,ATRO,Astronics Corp,Industrials,Aerospace & Defense,USA,3349.05,41.33,78.00,2.55%,528590
-19,AU,AngloGold Ashanti Plc,Basic Materials,Gold,USA,61217.01,16.22,121.22,5.28%,6158118
-20,AUGO,Aura Minerals Inc,Basic Materials,Gold,USA,7311.45,24.76,87.26,0.66%,1106834
-21,AWR,American States Water Co,Utilities,Utilities - Regulated Water,USA,3512.91,24.26,88.63,-0.76%,159705
-22,AXTI,AXT Inc,Technology,Semiconductor Equipment & Materials,USA,4638.65,3803.23,70.74,-3.25%,8567215
-23,AZTA,Azenta Inc,Healthcare,Medical Instruments & Supplies,USA,1638.43,,37.40,2.44%,647100
-24,B,Barrick Mining Corp,Basic Materials,Gold,Canada,78343.89,12.24,47.60,2.87%,11522437
-25,BAM,Brookfield Asset Management Ltd,Financial,Asset Management,USA,83536.17,30.18,52.30,1.51%,1719569
-26,BBIO,BridgeBio Pharma Inc,Healthcare,Biotechnology,USA,15932.68,,81.50,-1.74%,1743869
-27,BCPC,Balchem Corp,Basic Materials,Specialty Chemicals,USA,5778.85,35.66,181.28,0.92%,137885
-28,BHP,BHP Group Limited ADR,Basic Materials,Other Industrial Metals & Mining,Australia,246463.96,25.05,97.03,3.63%,3777066
-29,BLK,Blackrock Inc,Financial,Asset Management,USA,187911.85,28.77,1156.55,1.47%,380596
-30,BLSH,Bullish,Technology,Software - Infrastructure,Cayman Islands,4570.69,,30.41,6.93%,2415935
-31,BMRN,Biomarin Pharmaceutical Inc,Healthcare,Biotechnology,USA,12911.37,179.83,66.70,-1.45%,1593613
-32,BX,Blackstone Inc,Financial,Asset Management,USA,178054.58,32.16,143.38,1.44%,2972251
-33,CAI,Caris Life Sciences Inc,Healthcare,Biotechnology,USA,7423.78,70.56,26.27,6.88%,6389323
-34,CARL,Carlsmed Inc,Healthcare,Health Information Services,USA,438.21,,16.05,-2.73%,263743
-35,CDE,Coeur Mining Inc,Basic Materials,Gold,USA,21555.80,17.22,20.97,-0.66%,45810809
-36,CDNA,Caredx Inc,Healthcare,Diagnostics & Research,USA,2514.80,23.43,48.61,3.45%,1160457
-37,CHRN,ChronoScale Holdings Corp,Technology,Information Technology Services,USA,3472.72,,23.84,-1.06%,133411
-38,CMCL,Caledonia Mining Corp Plc,Basic Materials,Gold,United Kingdom,478.93,7.35,24.77,-0.56%,225682
-39,CORT,Corcept Therapeutics Inc,Healthcare,Biotechnology,USA,13215.03,291.98,122.25,0.99%,656444
-40,CRC,California Resources Corp,Energy,Oil & Gas E&P,USA,4728.77,,53.24,-0.32%,1152739
-41,CRCL,Circle Internet Group Inc,Financial,Capital Markets,USA,22336.00,52.95,87.98,5.16%,26018078
-42,CRNX,Crinetics Pharmaceuticals Inc,Healthcare,Biotechnology,USA,8982.66,,84.69,0.00%,2016688
-43,CRSP,CRISPR Therapeutics AG,Healthcare,Biotechnology,Switzerland,5753.21,,59.50,2.37%,2453841
-44,CSTL,Castle Biosciences Inc,Healthcare,Diagnostics & Research,USA,1044.79,,34.20,3.86%,573470
-45,CTNM,Contineum Therapeutics Inc,Healthcare,Biotechnology,USA,646.71,,17.19,7.30%,353907
-46,CWT,California Water Service Group,Utilities,Utilities - Regulated Water,USA,3064.13,22.31,49.55,-0.94%,322646
-47,CYRX,CryoPort Inc,Industrials,Integrated Freight & Logistics,USA,867.62,,17.13,2.51%,1028864
-48,DDS,Dillard's Inc,Consumer Cyclical,Department Stores,USA,9709.53,14.23,621.63,3.96%,121520
-49,DNTH,Dianthus Therapeutics Inc,Healthcare,Biotechnology,USA,6214.31,,111.10,1.45%,730873
-50,DRD,DRDGold Ltd ADR,Basic Materials,Gold,South Africa,2662.92,10.57,30.70,4.03%,521121
-51,DUOL,Duolingo Inc,Technology,Software - Application,USA,6836.84,17.53,146.13,-0.61%,679602
-52,ECO,Okeanis Eco Tankers Corp,Industrials,Marine Shipping,Greece,2481.55,6.03,64.71,0.95%,454690
-53,ECPG,Encore Capital Group Inc,Financial,Credit Services,USA,2146.60,7.66,101.21,3.13%,399248
-54,EGO,Eldorado Gold Corp,Basic Materials,Gold,Canada,11947.55,16.11,45.72,7.20%,4391575
-55,EL,Estee Lauder Cos. Inc,Consumer Defensive,Household & Personal Products,USA,36881.75,204.86,101.94,6.02%,6022537
-56,ELF,e.l.f. Beauty Inc,Consumer Defensive,Household & Personal Products,USA,6015.28,103.63,101.94,3.53%,1443513
-57,EOG,EOG Resources Inc,Energy,Oil & Gas E&P,USA,80279.19,11.91,153.05,0.57%,3129346
-58,ERO,Ero Copper Corp,Basic Materials,Copper,Canada,4111.51,13.31,39.42,9.44%,3841985
-59,FCX,Freeport-McMoRan Inc,Basic Materials,Copper,USA,110085.10,37.85,76.66,7.64%,28518346
-60,FDMT,4D Molecular Therapeutics Inc,Healthcare,Biotechnology,USA,874.52,,15.83,-1.68%,921169
-61,FIG,Figma Inc,Technology,Software - Application,USA,14444.56,,27.10,-0.77%,10738174
-62,FIGR,Figure Technology Solutions Inc,Financial,Capital Markets,USA,8741.40,44.85,39.10,8.43%,5347653
-63,FNV,Franco-Nevada Corp,Basic Materials,Gold,Canada,51253.27,34.72,265.74,2.94%,1126239
-64,FOX,Fox Corp,Communication Services,Entertainment,USA,27113.16,15.92,61.05,0.99%,564513
-65,FOXA,Fox Corp,Communication Services,Entertainment,USA,27113.16,17.87,68.54,0.85%,5733749
-66,FRHC,Freedom Holding Corp,Financial,Financial Conglomerates,Kazakhstan,10886.00,67.51,170.66,4.26%,204676
-67,FROG,JFrog Ltd,Technology,Software - Application,USA,11359.75,,92.13,2.69%,1797035
-68,FSLY,Fastly Inc,Technology,Software - Application,USA,3974.54,,24.95,9.86%,5650357
-69,FUTU,Futu Holdings Ltd ADR,Financial,Capital Markets,Hong Kong,11838.53,12.22,123.64,9.68%,3466993
-70,GFI,Gold Fields Ltd ADR,Basic Materials,Gold,South Africa,42790.91,12.09,47.81,5.19%,4870968
-71,GH,Guardant Health Inc,Healthcare,Diagnostics & Research,USA,22905.94,,170.69,1.67%,1916804
-72,GILD,Gilead Sciences Inc,Healthcare,Drug Manufacturers - General,USA,181182.23,,146.12,1.87%,5384711
-73,GKOS,Glaukos Corp,Healthcare,Medical Devices,USA,10905.54,,184.89,0.00%,440177
-74,GLBE,Global E Online Ltd,Consumer Cyclical,Internet Retail,Israel,6811.08,46.26,40.55,-0.59%,840791
-75,HAE,Haemonetics Corp,Healthcare,Medical Devices,USA,4950.08,53.07,108.80,0.54%,582198
-76,HALO,Halozyme Therapeutics Inc,Healthcare,Biotechnology,USA,12277.08,32.32,108.17,1.93%,1150432
-77,HAS,Hasbro Inc,Consumer Cyclical,Leisure,USA,13193.30,16.81,93.54,-0.02%,1977498
-78,HASI,HA Sustainable Infrastructure Capital Inc,Financial,Asset Management,USA,5073.01,76.90,39.48,-2.81%,1089276
-79,HEI,Heico Corp,Industrials,Aerospace & Defense,USA,41665.90,63.41,355.04,1.27%,354413
-80,HEI-A,Heico Corp,Industrials,Aerospace & Defense,USA,41665.90,46.61,261.00,1.19%,207678
-81,HIMS,Hims & Hers Health Inc,Healthcare,Drug Manufacturers - Specialty & Generic,USA,7881.33,,33.78,6.03%,14706486
-82,HL,Hecla Mining Co,Basic Materials,Other Precious Metals & Mining,USA,13919.04,26.57,20.72,-0.48%,30491463
-83,HMY,Harmony Gold Mining Co Ltd ADR,Basic Materials,Gold,South Africa,14708.73,16.25,23.54,6.90%,5117723
-84,HNGE,Hinge Health Inc,Healthcare,Health Information Services,USA,7135.00,68.09,88.42,3.27%,1421204
-85,HOOD,Robinhood Markets Inc,Financial,Capital Markets,USA,97217.77,47.88,108.13,13.70%,50460153
-86,HPE,Hewlett Packard Enterprise Co,Technology,Communication Equipment,USA,70778.68,50.27,53.45,1.06%,7901110
-87,HQ,Horizon Quantum Holdings Ltd,Technology,Software - Infrastructure,Singapore,1027.95,,19.93,14.54%,1274681
-88,HTFL,Heartflow Inc,Healthcare,Health Information Services,USA,4325.94,,49.75,6.30%,2462338
-89,IAG,Iamgold Corp,Basic Materials,Gold,Canada,12070.94,10.71,21.14,3.12%,6110985
-90,IBKR,Interactive Brokers Group Inc,Financial,Capital Markets,USA,42530.45,37.37,93.87,4.47%,5762192
-91,ILMN,Illumina Inc,Healthcare,Diagnostics & Research,USA,33129.40,40.89,219.40,2.89%,1917222
-92,IMAX,Imax Corp,Communication Services,Entertainment,Canada,2892.37,72.22,52.74,0.00%,632927
-93,INBX,Inhibrx Biosciences Inc,Healthcare,Biotechnology,USA,1525.19,,103.63,4.52%,220744
-94,INCY,Incyte Corp,Healthcare,Biotechnology,USA,25906.80,16.29,127.81,0.46%,1367411
-95,INSM,Insmed Inc,Healthcare,Biotechnology,USA,27465.84,,125.77,0.55%,1124491
-96,INSW,International Seaways Inc,Energy,Oil & Gas Midstream,USA,4929.36,6.36,99.52,0.16%,486800
-97,IOT,Samsara Inc,Technology,Software - Infrastructure,USA,23345.47,411.33,39.94,2.46%,3133310
-98,ITT,ITT Inc,Industrials,Specialty Industrial Machinery,USA,18604.14,40.86,208.10,-0.02%,723334
-99,JAZZ,Jazz Pharmaceuticals plc,Healthcare,Biotechnology,Ireland,16506.48,17.54,254.28,2.24%,516753
-100,KGC,Kinross Gold Corp,Basic Materials,Gold,Canada,38861.22,12.43,32.76,4.23%,12846817
-101,KKR,KKR & Co Inc,Financial,Asset Management,USA,97375.52,34.58,108.48,1.36%,2680419
-102,KNSA,Kinikska Pharmaceuticals International Plc,Healthcare,Drug Manufacturers - Specialty & Generic,United Kingdom,6166.24,80.36,79.03,0.71%,270115
-103,KYMR,Kymera Therapeutics Inc,Healthcare,Biotechnology,USA,9961.44,,119.80,-1.40%,503430
-104,LIFE,Ethos Technologies Inc,Financial,Insurance Brokers,USA,2178.00,,34.16,1.91%,850094
-105,LIME,Neutron Holdings Inc,Industrials,Rental & Leasing Services,USA,2668.08,,41.06,-2.31%,353200
-106,LIND,Lindblad Expeditions Holdings Inc,Consumer Cyclical,Travel Services,USA,2040.12,,31.09,-0.73%,635099
-107,LLY,Lilly(Eli) & Co,Healthcare,Drug Manufacturers - General,USA,1181779.67,42.66,1255.40,0.88%,2503440
-108,LNG,Cheniere Energy Inc,Energy,Oil & Gas Midstream,USA,57315.29,20.65,277.51,-0.59%,1279909
-109,LOAR,Loar Holdings Inc,Industrials,Aerospace & Defense,USA,7026.64,105.59,75.00,0.85%,505944
-110,LPG,Dorian LPG Ltd,Energy,Oil & Gas Midstream,USA,2187.48,6.78,51.13,2.98%,850130
-111,LTGO,Latigo Biotherapeutics Inc,Healthcare,Biotechnology,USA,1414.63,,22.37,4.53%,197197
-112,MFP,Midera Food Processing Inc,Industrials,Specialty Industrial Machinery,USA,2293.64,,50.71,3.60%,696983
-113,MGNI,Magnite Inc,Communication Services,Advertising Agencies,USA,3370.47,21.52,23.50,0.64%,1555532
-114,MRNA,Moderna Inc,Healthcare,Biotechnology,USA,57941.10,,145.13,8.86%,87316065
-115,MRX,Marex Group Ltd,Financial,Capital Markets,Bermuda,5250.23,13.60,72.99,4.89%,487899
-116,MSGE,Madison Square Garden Entertainment Corp,Communication Services,Entertainment,USA,3779.23,57.98,79.89,0.08%,244821
-117,MTDR,Matador Resources Co,Energy,Oil & Gas E&P,USA,7224.77,10.03,58.38,-0.07%,1684951
-118,MU,Micron Technology Inc,Technology,Semiconductors,USA,1091874.66,21.89,966.78,-0.77%,21823443
-119,NAVN,Navan Inc,Technology,Software - Application,USA,7416.30,,29.16,2.10%,1345817
-120,NBTX,Nanobiotix ADR,Healthcare,Biotechnology,France,2203.63,,43.55,-0.30%,74312
-121,NLY,Annaly Capital Management Inc,Real Estate,REIT - Mortgage,USA,17456.03,5.80,23.16,-0.56%,6265673
-122,NP,Neptune Insurance Holdings Inc,Financial,Insurance Brokers,USA,4578.10,145.42,33.36,2.46%,305669
-123,NTRA,Natera Inc,Healthcare,Diagnostics & Research,USA,47860.19,,332.03,2.21%,1215079
-124,NVCT,Nuvectis Pharma Inc,Healthcare,Biotechnology,USA,767.62,,23.56,0.90%,196978
-125,ODTX,Odyssey Therapeutics Inc,Healthcare,Biotechnology,USA,1268.26,,26.39,6.97%,181275
-126,OMER,Omeros Corp,Healthcare,Biotechnology,USA,1394.92,13.40,19.27,3.44%,2582621
-127,OVV,Ovintiv Inc,Energy,Oil & Gas E&P,USA,18409.15,18.68,66.82,0.18%,3089786
-128,OXY,Occidental Petroleum Corp,Energy,Oil & Gas E&P,USA,61277.77,18.16,61.30,-0.36%,6456520
-129,P,Everpure Inc,Technology,Computer Hardware,USA,36082.56,165.02,108.55,-1.30%,2587606
-130,PAAS,Pan American Silver Corp,Basic Materials,Gold,Canada,22003.88,15.98,53.07,2.21%,14657884
-131,PLSE,Pulse Biosciences Inc,Healthcare,Medical Instruments & Supplies,USA,3596.09,,50.42,5.37%,453129
-132,PLTR,Palantir Technologies Inc,Technology,Software - Infrastructure,USA,432412.58,153.78,179.94,3.44%,41076203
-133,PM,Philip Morris International Inc,Consumer Defensive,Tobacco,USA,293377.82,27.06,188.23,-1.72%,4092864
-134,PSNL,Personalis Inc,Healthcare,Diagnostics & Research,USA,1962.98,,18.38,8.89%,8001823
-135,RBRK,Rubrik Inc,Technology,Software - Infrastructure,USA,20601.35,,100.09,2.64%,2128028
-136,REGN,Regeneron Pharmaceuticals Inc,Healthcare,Biotechnology,USA,85868.57,20.61,834.04,0.90%,786921
-137,RGLD,Royal Gold Inc,Basic Materials,Gold,USA,21945.36,28.24,259.01,2.64%,885102
-138,RYTM,Rhythm Pharmaceuticals Inc,Healthcare,Biotechnology,USA,7573.73,,110.00,0.99%,523138
-139,SBRA,Sabra Healthcare REIT Inc,Real Estate,REIT - Healthcare Facilities,USA,5208.89,78.39,20.39,-0.68%,1573205
-140,SCCO,Southern Copper Corp,Basic Materials,Copper,USA,182378.24,32.35,216.00,8.69%,1852286
-141,SCTX,Scribe Therapeutics Inc,Healthcare,Biotechnology,USA,643.84,,34.13,3.96%,179577
-142,SDGR,Schrodinger Inc,Healthcare,Health Information Services,USA,1474.42,,19.71,0.66%,1095709
-143,SE,Sea Ltd ADR,Consumer Cyclical,Internet Retail,Singapore,66634.81,44.49,117.53,0.25%,3449035
-144,SLS,SELLAS Life Sciences Group Inc,Healthcare,Biotechnology,USA,3122.08,,15.46,15.37%,15242068
-145,SN,SharkNinja Inc,Consumer Cyclical,"Furnishings, Fixtures & Appliances",USA,25463.94,36.93,180.76,0.43%,1017330
-146,SNOW,Snowflake Inc,Technology,Software - Application,USA,115341.55,,332.78,3.58%,3437066
-147,SSRM,SSR Mining Inc,Basic Materials,Gold,USA,7701.65,34.84,37.77,2.55%,4121720
-148,SU,Suncor Energy Inc,Energy,Oil & Gas Integrated,Canada,80026.08,12.61,68.42,0.71%,2098292
-149,TEAM,Atlassian Corp,Technology,Software - Application,USA,43491.78,,171.81,-1.77%,3275677
-150,TEM,Tempus AI Inc,Healthcare,Health Information Services,USA,13115.80,,72.69,9.06%,15973080
-151,TGTX,TG Therapeutics Inc,Healthcare,Biotechnology,USA,8307.06,19.77,54.27,7.34%,5558340
-152,TPG,TPG Inc,Financial,Asset Management,USA,20149.10,79.07,52.40,1.61%,2057278
-153,TVTX,Travere Therapeutics Inc,Healthcare,Biotechnology,USA,6193.90,,65.71,1.94%,1624898
-154,TWST,Twist Bioscience Corp,Healthcare,Diagnostics & Research,USA,9584.54,,145.59,6.79%,1795556
-155,TXG,10x Genomics Inc,Healthcare,Health Information Services,USA,8484.56,,65.12,1.96%,3249549
-156,U,Unity Software Inc,Technology,Software - Application,USA,20653.37,,46.93,0.84%,7498285
-157,URGN,UroGen Pharma Ltd,Healthcare,Biotechnology,USA,2290.54,,46.86,0.13%,755580
-158,VCTR,Victory Capital Holdings Inc,Financial,Asset Management,USA,7112.35,21.19,115.63,2.26%,465232
-159,VNOM,Viper Energy Inc,Energy,Oil & Gas Midstream,USA,16260.75,354.50,45.27,0.53%,1982281
-160,VRDN,Viridian Therapeutics Inc,Healthcare,Biotechnology,USA,2751.87,,24.29,-0.86%,906295
-161,WES,Western Midstream Partners LP,Energy,Oil & Gas Midstream,USA,19981.12,15.23,48.36,-0.60%,542784
-162,WHD,Cactus Inc,Energy,Oil & Gas Equipment & Services,USA,5566.86,59.43,69.43,0.84%,555077
-163,WIX,Wix.com Ltd,Technology,Software - Infrastructure,Israel,3434.59,,82.07,-0.39%,1123397
-164,WPM,Wheaton Precious Metals Corp,Basic Materials,Gold,Canada,71657.36,35.00,157.78,5.01%,3302105
-165,WTS,Watts Water Technologies Inc,Industrials,Specialty Industrial Machinery,USA,12537.67,32.78,375.57,1.53%,185923
-166,XNCR,Xencor Inc,Healthcare,Biotechnology,USA,2067.02,,27.80,2.96%,753106
-167,YPF,YPF ADR,Energy,Oil & Gas Integrated,Argentina,20127.05,16.96,51.18,0.51%,510019
-168,ZETA,Zeta Global Holdings Corp,Technology,Software - Infrastructure,USA,7296.97,,29.07,4.38%,5519051
+1,ADPT,Adaptive Biotechnologies Corp,Healthcare,Diagnostics & Research,USA,4020.22,,25.19,-4.73%,1509096
+2,AFRM,Affirm Holdings Inc,Financial,Credit Services,USA,26237.90,14.09,77.76,0.35%,29084738
+3,ANDG,Andersen Group Inc,Consumer Cyclical,Personal Services,USA,6295.72,6.51,55.72,-1.49%,311071
+4,ANET,Arista Networks Inc,Technology,Computer Hardware,USA,246418.07,61.60,195.38,-2.84%,3064698
+5,APPN,Appian Corp,Technology,Software - Infrastructure,USA,3044.92,,42.51,2.68%,1115842
+6,ARGX,Argen X SE ADR,Healthcare,Biotechnology,Netherlands,64012.02,39.00,1023.21,-3.37%,175521
+7,ARWR,Arrowhead Pharmaceuticals Inc,Healthcare,Biotechnology,USA,11993.92,,84.91,-4.15%,1282278
+8,ATAT,Atour Lifestyle Holdings Ltd ADR,Consumer Cyclical,Lodging,China,4007.95,17.50,35.50,2.33%,1062423
+9,BCPC,Balchem Corp,Basic Materials,Specialty Chemicals,USA,5688.31,35.10,178.44,0.33%,150707
+10,BLSH,Bullish,Technology,Software - Infrastructure,Cayman Islands,4943.44,,32.89,-2.00%,1308648
+11,BMRN,Biomarin Pharmaceutical Inc,Healthcare,Biotechnology,USA,12517.45,174.35,64.67,-0.96%,1098427
+12,BRC,Brady Corp,Industrials,Security & Protection Services,USA,4393.27,21.24,93.25,-0.24%,135670
+13,CAI,Caris Life Sciences Inc,Healthcare,Biotechnology,USA,7242.91,68.84,25.63,-2.84%,3835175
+14,CDNA,Caredx Inc,Healthcare,Diagnostics & Research,USA,2575.85,24.00,49.79,-4.91%,1178533
+15,CGAU,Centerra Gold Inc,Basic Materials,Gold,Canada,4585.10,7.47,23.44,-3.34%,1947979
+16,CORT,Corcept Therapeutics Inc,Healthcare,Biotechnology,USA,12310.25,271.98,113.88,-2.61%,917931
+17,CRNX,Crinetics Pharmaceuticals Inc,Healthcare,Biotechnology,USA,8998.57,,84.84,-0.01%,1127886
+18,DNTH,Dianthus Therapeutics Inc,Healthcare,Biotechnology,USA,5920.09,,105.84,-5.11%,376257
+19,ECO,Okeanis Eco Tankers Corp,Industrials,Marine Shipping,Greece,2564.00,6.23,66.86,0.78%,527418
+20,ECPG,Encore Capital Group Inc,Financial,Credit Services,USA,2098.45,7.49,98.94,-2.98%,363446
+21,ELF,e.l.f. Beauty Inc,Consumer Defensive,Household & Personal Products,USA,6142.73,105.82,104.10,-1.95%,1244244
+22,EOG,EOG Resources Inc,Energy,Oil & Gas E&P,USA,75191.26,11.15,143.35,-0.80%,2688408
+23,FIG,Figma Inc,Technology,Software - Application,USA,15361.34,,28.82,-5.88%,19101095
+24,FOX,Fox Corp,Communication Services,Entertainment,USA,27148.70,15.99,61.32,1.52%,943294
+25,FOXA,Fox Corp,Communication Services,Entertainment,USA,27148.70,17.84,68.42,1.79%,3622659
+26,FROG,JFrog Ltd,Technology,Software - Application,USA,12174.77,,98.74,-5.09%,2610903
+27,FSLY,Fastly Inc,Technology,Software - Application,USA,3670.27,,23.04,-6.49%,4015942
+28,FTNT,Fortinet Inc,Technology,Software - Infrastructure,USA,121796.46,58.49,166.00,-3.92%,5095563
+29,FUTU,Futu Holdings Ltd ADR,Financial,Capital Markets,Hong Kong,11897.90,12.28,124.26,-0.25%,889629
+30,GH,Guardant Health Inc,Healthcare,Diagnostics & Research,USA,21672.68,,161.50,-4.17%,1821582
+31,GKOS,Glaukos Corp,Healthcare,Medical Devices,USA,10609.44,,179.87,-1.12%,553591
+32,GLBE,Global E Online Ltd,Consumer Cyclical,Internet Retail,Israel,6710.30,45.57,39.95,1.16%,923596
+33,HALO,Halozyme Therapeutics Inc,Healthcare,Biotechnology,USA,11957.01,31.48,105.35,-1.47%,1681929
+34,HASI,HA Sustainable Infrastructure Capital Inc,Financial,Asset Management,USA,5139.83,77.91,40.00,-0.67%,552307
+35,HNGE,Hinge Health Inc,Healthcare,Health Information Services,USA,7048.66,67.26,87.35,-5.92%,2996796
+36,HPE,Hewlett Packard Enterprise Co,Technology,Communication Equipment,USA,69269.09,49.20,52.31,-3.86%,13921556
+37,HTFL,Heartflow Inc,Healthcare,Health Information Services,USA,4154.64,,47.78,-0.67%,1394458
+38,IBKR,Interactive Brokers Group Inc,Financial,Capital Markets,USA,43423.01,38.16,95.84,-0.74%,2236816
+39,IMAX,Imax Corp,Communication Services,Entertainment,Canada,2762.95,68.99,50.38,-3.00%,1101132
+40,INCY,Incyte Corp,Healthcare,Biotechnology,USA,25209.52,15.85,124.37,-2.64%,1215069
+41,INSM,Insmed Inc,Healthcare,Biotechnology,USA,25886.94,,118.54,-2.35%,1977867
+42,INSW,International Seaways Inc,Energy,Oil & Gas Midstream,USA,4894.19,6.31,98.81,-0.45%,463912
+43,IOT,Samsara Inc,Technology,Software - Infrastructure,USA,24058.57,423.89,41.16,-1.70%,4640486
+44,ITT,ITT Inc,Industrials,Specialty Industrial Machinery,USA,18147.31,39.86,202.99,-2.39%,402145
+45,KYMR,Kymera Therapeutics Inc,Healthcare,Biotechnology,USA,9824.25,,118.15,-1.73%,415947
+46,LIFE,Ethos Technologies Inc,Financial,Insurance Brokers,USA,2463.64,,38.64,-2.03%,1087426
+47,LNG,Cheniere Energy Inc,Energy,Oil & Gas Midstream,USA,58310.78,21.01,282.33,0.54%,1301714
+48,LPG,Dorian LPG Ltd,Energy,Oil & Gas Midstream,USA,2129.72,6.61,49.78,1.01%,264626
+49,MSGE,Madison Square Garden Entertainment Corp,Communication Services,Entertainment,USA,3704.02,56.83,78.30,0.19%,312673
+50,MTDR,Matador Resources Co,Energy,Oil & Gas E&P,USA,6978.50,9.68,56.39,-0.62%,901191
+51,NAVN,Navan Inc,Technology,Software - Application,USA,7248.44,,28.50,-6.80%,2332383
+52,NOG,Northern Oil and Gas Inc,Energy,Oil & Gas E&P,USA,2741.51,,25.73,-1.34%,1705023
+53,NTRA,Natera Inc,Healthcare,Diagnostics & Research,USA,47028.48,,326.26,-3.67%,833869
+54,OVV,Ovintiv Inc,Energy,Oil & Gas E&P,USA,17794.78,18.06,64.59,-0.91%,2170654
+55,OXY,Occidental Petroleum Corp,Energy,Oil & Gas E&P,USA,59078.57,17.51,59.10,-0.12%,4435757
+56,P,Everpure Inc,Technology,Computer Hardware,USA,31046.62,128.24,93.40,-5.88%,3256107
+57,PLTR,Palantir Technologies Inc,Technology,Software - Infrastructure,USA,447672.20,159.21,186.29,0.19%,25060205
+58,PR,Permian Resources Holdings Inc,Energy,Oil & Gas E&P,USA,19012.54,15.07,22.70,-2.07%,8557122
+59,PTGX,Protagonist Therapeutics Inc,Healthcare,Biotechnology,USA,9339.35,139.17,144.33,-3.46%,501247
+60,RBRK,Rubrik Inc,Technology,Software - Infrastructure,USA,19152.32,,93.05,-13.05%,9441328
+61,REGN,Regeneron Pharmaceuticals Inc,Healthcare,Biotechnology,USA,81765.82,19.63,794.19,-1.67%,488305
+62,SE,Sea Ltd ADR,Consumer Cyclical,Internet Retail,Singapore,67672.35,45.18,119.36,0.88%,5101441
+63,SM,SM Energy Co,Energy,Oil & Gas E&P,USA,8710.22,7.22,36.62,-0.52%,4481017
+64,SN,SharkNinja Inc,Consumer Cyclical,"Furnishings, Fixtures & Appliances",USA,26938.87,39.07,191.23,-0.85%,1320340
+65,SNOW,Snowflake Inc,Technology,Software - Application,USA,113684.80,,328.00,-0.34%,3089931
+66,SU,Suncor Energy Inc,Energy,Oil & Gas Integrated,Canada,76528.89,12.06,65.43,-1.49%,7081374
+67,TEAM,Atlassian Corp,Technology,Software - Application,USA,48201.43,,190.41,2.58%,5224708
+68,TVTX,Travere Therapeutics Inc,Healthcare,Biotechnology,USA,6190.12,,65.67,-2.74%,808519
+69,U,Unity Software Inc,Technology,Software - Application,USA,19060.25,,43.31,-0.41%,7637447
+70,URGN,UroGen Pharma Ltd,Healthcare,Biotechnology,USA,2132.17,,43.62,-4.13%,580050
+71,VNOM,Viper Energy Inc,Energy,Oil & Gas Midstream,USA,15869.23,345.97,44.18,-1.10%,1199734
+72,VRDN,Viridian Therapeutics Inc,Healthcare,Biotechnology,USA,2614.79,,23.08,-3.35%,778829
+73,WES,Western Midstream Partners LP,Energy,Oil & Gas Midstream,USA,19956.33,15.21,48.30,1.02%,427171
+74,WHD,Cactus Inc,Energy,Oil & Gas Equipment & Services,USA,5584.50,59.62,69.65,1.63%,1257127
+75,WPM,Wheaton Precious Metals Corp,Basic Materials,Gold,Canada,69636.35,34.01,153.33,-2.95%,2530204
+76,XMTR,Xometry Inc,Industrials,Industrial Distribution,USA,5394.72,,94.11,-2.23%,516937
+77,YPF,YPF ADR,Energy,Oil & Gas Integrated,Argentina,19741.65,16.64,50.20,-0.55%,717167
+78,ZETA,Zeta Global Holdings Corp,Technology,Software - Infrastructure,USA,7665.96,,30.54,1.06%,9280672
+79,ANDG,Andersen Group Inc,Consumer Cyclical,Personal Services,USA,6295.72,6.51,55.72,-1.49%,311071
+80,ANF,Abercrombie & Fitch Co,Consumer Cyclical,Apparel Retail,USA,6594.55,12.71,148.42,1.83%,2331678
+81,APPN,Appian Corp,Technology,Software - Infrastructure,USA,3044.92,,42.51,2.68%,1115842
+82,ARCT,Arcturus Therapeutics Holdings Inc,Healthcare,Biotechnology,USA,431.75,,15.19,-6.06%,1619519
+83,ASST,Strive Inc,Financial,Asset Management,USA,1949.72,,21.74,-5.97%,11772583
+84,BHVN,Biohaven Ltd,Healthcare,Biotechnology,USA,2327.58,,15.41,-4.40%,2888145
+85,BLSM,BlossomHill Therapeutics Inc,Healthcare,Biotechnology,USA,599.39,,19.56,-1.21%,163562
+86,BRZE,Braze Inc,Technology,Software - Application,USA,3889.17,,34.53,1.29%,1868912
+87,BZ,Kanzhun Ltd ADR,Communication Services,Internet Content & Information,China,6983.65,12.61,17.80,-1.11%,9719774
+88,CNXC,Concentrix Corp,Technology,Information Technology Services,USA,1792.72,,29.38,4.44%,1252627
+89,CRM,Salesforce Inc,Technology,Software - Application,USA,210688.00,23.33,256.00,1.57%,34362741
+90,CRWD,Crowdstrike Holdings Inc,Technology,Software - Infrastructure,USA,223627.36,6117.65,218.40,-4.19%,14728309
+91,ESTC,Elastic N.V,Technology,Software - Application,USA,10385.81,27.98,99.91,19.31%,10113770
+92,GAP,Gap Inc,Consumer Cyclical,Apparel Retail,USA,8452.31,7.01,23.48,12.94%,26386370
+93,INBX,Inhibrx Biosciences Inc,Healthcare,Biotechnology,USA,1816.31,,123.41,-0.42%,241482
+94,LIFE,Ethos Technologies Inc,Financial,Insurance Brokers,USA,2463.64,,38.64,-2.03%,1087426
+95,MEI,Methode Electronics Inc,Technology,Electronic Components,USA,646.36,,18.21,2.42%,1046820
+96,MNDY,Monday.Com Ltd,Technology,Software - Application,Israel,4257.43,42.93,100.71,1.21%,815568
+97,NCNO,Ncino Inc,Technology,Software - Application,USA,2430.87,76.20,22.99,-1.42%,2606241
+98,NOW,ServiceNow Inc,Technology,Software - Application,USA,149630.15,90.42,144.71,4.54%,29034381
+99,OKTA,Okta Inc,Technology,Software - Infrastructure,USA,29060.45,100.42,166.23,-3.86%,4435622
+100,PATH,UiPath Inc,Technology,Software - Infrastructure,USA,9403.89,29.95,18.15,-0.98%,53128613
+101,PRE,Prenetics Global Limited,Consumer Defensive,Packaged Foods,Hong Kong,441.62,,25.76,-1.87%,273752
+102,PSQL,Pasqal Holding SA,Technology,Computer Hardware,USA,732.49,,19.11,95.20%,3675424
+103,SNPS,Synopsys Inc,Technology,Software - Infrastructure,USA,84820.29,78.19,442.61,-4.79%,2004516
+104,SOLS,Solstice Advanced Materials Inc,Basic Materials,Specialty Chemicals,USA,10091.57,48.21,63.53,12.76%,16472504
+105,SRPT,Sarepta Therapeutics Inc,Healthcare,Biotechnology,USA,2203.38,,20.86,-3.38%,3612385
+106,TEAM,Atlassian Corp,Technology,Software - Application,USA,48201.43,,190.41,2.58%,5224708
+107,VEEV,Veeva Systems Inc,Healthcare,Health Information Services,USA,44798.56,45.52,276.69,-1.93%,3642299
+108,VOGX,Vogenx Inc,Healthcare,Biotechnology,USA,504.48,,33.96,0.98%,38209
+109,XMTR,Xometry Inc,Industrials,Industrial Distribution,USA,5394.72,,94.11,-2.23%,516937
