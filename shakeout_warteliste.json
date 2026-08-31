@@ -1,13 +1,4 @@
 {
- "AUGO": {
-  "spring_index": 267,
-  "spring_datum": "2026-08-07",
-  "zone_min": 71.03500366210938,
-  "zone_max": 71.04000091552734,
-  "spring_low": 69.72000122070312,
-  "spring_volumen": 1331600.0,
-  "tage_gewartet": 13
- },
  "SSRM": {
   "spring_index": 500,
   "spring_datum": "2026-08-11",
@@ -15,15 +6,6 @@
   "zone_max": 31.690000534057617,
   "spring_low": 31.264999389648438,
   "spring_volumen": 2009118.0,
-  "tage_gewartet": 11
- },
- "AZTA": {
-  "spring_index": 500,
-  "spring_datum": "2026-08-26",
-  "zone_min": 32.790000915527344,
-  "zone_max": 33.099998474121094,
-  "spring_low": 32.45000076293945,
-  "spring_volumen": 602150.0,
-  "tage_gewartet": 4
+  "tage_gewartet": 12
  }
 }
