@@ -1333,6 +1333,19 @@ def main():
     tickers = listen.alle_ticker(haupt=args.csv, darvas=darvas_pfad)
     darvas_erlaubte = {t.upper() for t, _ in listen.darvas_liste(darvas_pfad)}
     print(listen.uebersicht(haupt=args.csv, darvas=darvas_pfad))
+    # MARKTAMPEL (Gerhards Freigabe 31.08.2026, Baustein 4): einmal je
+    # Nachtscan berechnen, BEVOR die erste Logbuch-Zeile entsteht —
+    # trigger_logbuch haengt die Farbe an jede Zeile. Die Ampel
+    # informiert nur; gefiltert wird nichts, erst die Auswertung
+    # "Trefferquote je Farbe" entscheidet, ob sie je mehr darf.
+    try:
+        import marktampel
+        _ampel = marktampel.aktualisieren()
+        if _ampel:
+            print(f"Marktampel: {_ampel['farbe'].upper()} "
+                  f"(Handelstag {_ampel['handelstag']})")
+    except Exception as e:
+        print(f"Marktampel nicht berechenbar: {type(e).__name__}: {e}")
     hinweis = listen.fehlende_liste(haupt=args.csv, darvas=darvas_pfad)
     if hinweis:
         # NICHT nur ins Protokoll: Der Hinweis wandert unten auch in die

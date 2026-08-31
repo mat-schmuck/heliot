@@ -481,6 +481,43 @@ def vorbehalt(ticker, termine=None):
     return None
 
 
+def handelstage_bis(ticker, heute=None, termine=None):
+    """Wie viele HANDELSTAGE bis zum vermerkten Termin? None ohne Termin.
+
+    0 heisst heute, 1 heisst am naechsten Handelstag; Wochenenden
+    zaehlen nicht mit. Ein Termin in der Vergangenheit liefert None —
+    fuer die Karenz zaehlt nur, was noch bevorsteht.
+
+    Gebaut fuer die ZAHLEN-KARENZ (Gerhards Freigabe vom 31.08.2026,
+    Messgrundlage die Logbuch-Forensik vom 30.08.: Signale mit Termin
+    im Fenster liefen auf minus 3,38 Prozent bei 25 Prozent
+    Stopp-Quote, alle uebrigen auf minus 0,83 bei 11). `heute` und
+    `termine` sind injektierbar, damit die Pruefung nicht vom echten
+    Datum abhaengt."""
+    t = (termine if termine is not None else lade()).get(
+        (ticker or "").upper())
+    if not t:
+        return None
+    try:
+        tag = date.fromisoformat(str(t.get("datum", ""))[:10])
+    except ValueError:
+        return None
+    if heute is None:
+        try:
+            from zoneinfo import ZoneInfo
+            heute = datetime.now(ZoneInfo("America/New_York")).date()
+        except Exception:
+            heute = date.today()
+    if tag < heute:
+        return None
+    n, lauf = 0, heute
+    while lauf < tag:
+        lauf += timedelta(days=1)
+        if lauf.weekday() < 5:
+            n += 1
+    return n
+
+
 def selbsttest() -> int:
     fehler = []
 

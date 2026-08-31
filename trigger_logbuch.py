@@ -52,6 +52,27 @@ DATEI = "trigger_logbuch.jsonl"
 # Schreiben und lesen
 # ---------------------------------------------------------------------------
 
+_AMPEL_CACHE = "ungeladen"
+
+
+def _ampel():
+    """Die Marktampel-Farbe, einmal je Prozess gelesen.
+
+    SEIT 31.08.2026 (Gerhards Freigabe, Baustein 4): Jede Logbuch-Zeile
+    traegt die Farbe des Gesamtmarkts, damit sich die Trefferquote je
+    Ampelfarbe messen laesst, ehe die Ampel irgendetwas filtern darf.
+    Einmal je Prozess reicht: Die Farbe entsteht im Nachtscan, und der
+    berechnet sie, bevor er die erste Zeile schreibt."""
+    global _AMPEL_CACHE
+    if _AMPEL_CACHE == "ungeladen":
+        try:
+            import marktampel
+            _AMPEL_CACHE = marktampel.lese_farbe()[0]
+        except Exception:
+            _AMPEL_CACHE = None
+    return _AMPEL_CACHE
+
+
 def protokolliere(signal, quelle="", pfad=DATEI):
     """Ein Signal anhaengen. Nie ueberschreiben, nie loeschen.
 
@@ -59,6 +80,9 @@ def protokolliere(signal, quelle="", pfad=DATEI):
     uebernommen, wie es kommt — die Merkmale unterscheiden sich je
     Muster, und genau die will man spaeter auswerten koennen."""
     eintrag = {"datum": date.today().isoformat(), "quelle": quelle}
+    ampel = _ampel()
+    if ampel:
+        eintrag["ampel"] = ampel
     # Nur einfache Werte; alles andere waere in JSON nicht haltbar.
     for k, v in signal.items():
         if isinstance(v, (str, int, float, bool)) or v is None:

@@ -1,0 +1,27 @@
+{
+ "farbe": "gruen",
+ "handelstag": "2026-08-28",
+ "gebaut_am": "2026-08-31T14:35:27",
+ "indizes": {
+  "S&P 500": {
+   "schluss": 7711.76,
+   "ema21": 7668.77,
+   "sma50": 7563.79,
+   "ueber_ema21": true,
+   "ueber_sma50": true,
+   "ema21_ueber_sma50": true,
+   "sma50_steigt": true,
+   "handelstag": "2026-08-28"
+  },
+  "Nasdaq": {
+   "schluss": 26402.42,
+   "ema21": 26216.24,
+   "sma50": 25959.02,
+   "ueber_ema21": true,
+   "ueber_sma50": true,
+   "ema21_ueber_sma50": true,
+   "sma50_steigt": true,
+   "handelstag": "2026-08-28"
+  }
+ }
+}

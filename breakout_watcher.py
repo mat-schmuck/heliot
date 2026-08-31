@@ -400,6 +400,35 @@ def termin_nachsatz(ticker: str) -> str | None:
         return zahlen_termine.vorbehalt(ticker)
     return zahlen_termine.hinweis(ticker)
 
+
+def zahlen_karenz_greift(t: dict) -> bool:
+    """Zurueckhalten, weil Quartalszahlen unmittelbar bevorstehen?
+
+    ZAHLEN-KARENZ, Stufe B (Gerhards Freigabe vom 31.08.2026,
+    Regelfrage G1 des Einbau-Papiers; Messgrundlage die Forensik vom
+    30.08.: Signale mit Termin im Fenster minus 3,38 Prozent bei 25
+    Prozent Stopp-Quote gegen minus 0,83 bei 11 ohne). Im Fenster von
+    CFG-Handelstagen vor dem Termin werden nur VOLUMENBESTAETIGTE
+    Ausbrueche gemeldet. Unbestaetigte und nicht verifizierbare bleiben
+    offen: Ihr Schluessel wird nicht vorgemerkt, sie melden also
+    regulaer, sobald das Volumen nachzieht oder der Termin vorbei ist —
+    dieselbe Mechanik wie beim Schalter --nur-bestaetigt.
+
+    Bestaetigte laufen durch, weil der Termin ohnehin als zweite Zeile
+    in der Meldung steht und das Regelwerk kein Einstiegsverbot vor
+    Zahlen kennt; die haertere Stufe C braeuchte Gerhards
+    ausdruecklichen Entscheid. Ohne bekannten Termin greift nichts —
+    die Karenz schuetzt nur, wo der Kalender einen Termin fuehrt."""
+    if t.get("vol_ok") is True:
+        return False
+    namen = [n for n in (t.get("strategien") or [t.get("strategie")]) if n]
+    ausgenommen = CFG["zahlen_karenz"]["ausgenommen"]
+    if namen and all(n in ausgenommen for n in namen):
+        return False
+    tage = zahlen_termine.handelstage_bis(t.get("ticker"))
+    return (tage is not None
+            and tage <= CFG["zahlen_karenz"]["handelstage"])
+
 # --- Gap and Go (Regelwerk Kapitel 7, Power-Gap-Fassung, Juli 2026) --------
 # Alle Kriterien sind PFLICHT; die Fassung ist bewusst streng ("Klasse statt
 # Masse"). Das Fruehvolumen-Kriterium ist laut Regelwerk NUR live pruefbar
@@ -2921,6 +2950,22 @@ def main():
                     print(f"{uebersprungen} Treffer ohne Volumenbestätigung — bleiben "
                           "offen und werden weiter beobachtet.")
 
+            # ZAHLEN-KARENZ (Gerhards Freigabe 31.08.2026, Stufe B):
+            # Unbestaetigte Risse unmittelbar vor dem Quartalstermin
+            # werden zurueckgehalten, siehe zahlen_karenz_greift().
+            # Jede Zurueckhaltung bekommt das Logbuch-Feld
+            # zahlen_karenz=true, damit die Regel messbar bleibt.
+            karenz_ids = {id(t) for t in zu_melden if zahlen_karenz_greift(t)}
+            if karenz_ids:
+                for t in zu_melden:
+                    if id(t) in karenz_ids:
+                        t["zahlen_karenz"] = True
+                        print(f"  ⏳ {t['ticker']}: Zahlen-Karenz — Termin "
+                              f"steht unmittelbar bevor und das Volumen ist "
+                              f"nicht bestätigt; bleibt offen.")
+                zu_melden = [t for t in zu_melden
+                             if id(t) not in karenz_ids]
+
             # INS LOGBUCH kommt JEDER erkannte Ausbruch — auch der ohne
             # Volumenbestaetigung, auch der im Trockenlauf, auch der,
             # dessen Push scheitert. Das Logbuch fragt nicht, ob gemeldet
@@ -2945,6 +2990,7 @@ def main():
                      "vol_anteil": t.get("vol_anteil"),
                      "ueber_pct": t.get("ueber_pct"),
                      "gemeldet": t["key"] in _melde_schluessel,
+                     "zahlen_karenz": bool(t.get("zahlen_karenz")),
                      "trockenlauf": bool(args.dry_run)},
                     quelle="waechter")
 

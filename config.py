@@ -29,6 +29,33 @@ import os
 
 CFG = {
 
+    # --- Zahlen-Karenz (Gerhards Freigabe vom 31.08.2026) ---
+    # Messgrundlage ist die Logbuch-Forensik vom 30.08.2026: Signale mit
+    # Quartalstermin binnen sieben Tagen nach dem Trigger liefen im
+    # Schnitt auf minus 3,38 Prozent bei 25 Prozent Stopp-Quote, alle
+    # uebrigen auf minus 0,83 Prozent bei 11 Prozent; sechs der zehn
+    # groessten Verlierer stuerzten an frischen Zahlen (ONON, LQDA
+    # zweimal, KOD, RBRK, HWM). Gewaehlt ist Stufe B des Einbau-Papiers
+    # (einbau_strategien.md, Frage G1): Im Karenzfenster werden nur
+    # VOLUMENBESTAETIGTE Ausbrueche gemeldet; unbestaetigte und nicht
+    # verifizierbare bleiben offen und melden regulaer, sobald das
+    # Volumen nachzieht oder der Termin vorbei ist. Bestaetigte laufen
+    # durch, weil der Termin-Hinweis seit 31.08. als zweite Zeile in
+    # jeder Meldung steht und Gerhards Regelwerk kein Einstiegsverbot
+    # vor Zahlen kennt; die haertere Stufe C braeuchte seinen
+    # ausdruecklichen Entscheid. Jede Zurueckhaltung steht mit
+    # zahlen_karenz=true im Logbuch, damit die Wirkung messbar bleibt.
+    "zahlen_karenz": {
+        # 2 heisst: Termin heute, morgen oder uebermorgen (Handelstage).
+        # Die gemessenen Killer lagen bei plus 0 bis plus 2 Tagen.
+        "handelstage": 2,
+        # Kapitel 7 und 9 sind AUSGENOMMEN (Frage G3): Red-to-Green ist
+        # ein Tagesgeschaeft am selben Tag, und der
+        # Luecken-Bestaetigungstag IST oft die Zahlen-Reaktion selbst.
+        "ausgenommen": ["Red-to-Green", "Red-to-Green Explosive",
+                        "Lücken-Bestätigungstag"],
+    },
+
     # --- Volumen (gilt EINHEITLICH für Scanner UND Wächter!) ---
     # GERECHNET WIRD AUSSCHLIESSLICH IN volumen.py — IBD "Volume % Change"
     # mit Hochrechnung über die Fünf-Minuten-Referenzkurve. Hier stehen nur
