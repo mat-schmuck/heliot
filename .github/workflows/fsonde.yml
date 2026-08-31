@@ -1,0 +1,22 @@
+name: Fundament-Sonde (Einmal-Diagnose)
+
+# Einmalige Machbarkeits-Sonde fuer Gerhards Fundamentaldaten-Idee
+# (31.08.2026): misst die SEC-Bulk-Archive und die XBRL-Tiefe. Nur per
+# Hand ausloesbar, aendert nichts am Repo.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  sonde:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Sonde
+        env:
+          SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
+        run: python fundament_sonde.py
