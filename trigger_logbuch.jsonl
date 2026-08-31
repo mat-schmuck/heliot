@@ -4647,3 +4647,7 @@
 {"datum": "2026-08-31", "quelle": "waechter", "ampel": "gruen", "ticker": "ATAT", "firma": "Atour Lifestyle Holdings Ltd ADR", "strategie": "Rectangle Top", "kaufpunkt": 35.85, "kurs": 35.85, "stop": 32.76, "ziel": 38.92, "vol_ratio": 2.84268266689552, "vol_noetig": 1.0, "vol_bestaetigt": true, "vol_anteil": 0.032668, "ueber_pct": 0.0, "gemeldet": true, "zahlen_karenz": false, "trockenlauf": false}
 {"datum": "2026-08-31", "quelle": "waechter/uebersprungen", "ampel": "gruen", "ticker": "PSQL", "firma": "Pasqal Holding SA", "strategie": "Fallback: 52W-Hoch-Breakout", "kaufpunkt": 20.12, "kurs": 21.35, "stop": 18.69, "ueber_pct": 6.113320079522855, "uebersprungen": true, "trockenlauf": false}
 {"datum": "2026-08-31", "quelle": "waechter/uebersprungen", "ampel": "gruen", "ticker": "PSQL", "firma": "Pasqal Holding SA", "strategie": "Fallback: 20-Tage-Hoch (Pivot)", "kaufpunkt": 20.11, "kurs": 21.35, "stop": 18.1, "ueber_pct": 6.166086524117365, "uebersprungen": true, "trockenlauf": false}
+<<<<<<< Updated upstream
+=======
+{"datum": "2026-08-31", "quelle": "waechter", "ampel": "gruen", "ticker": "ZETA", "firma": "Zeta Global Holdings Corp", "strategie": "Cup & Handle (Wochenbasis)", "kaufpunkt": 30.84, "kurs": 30.845, "stop": 27.76, "ziel": 41.37, "vol_ratio": 1.2356149118861455, "vol_noetig": 1.0, "vol_bestaetigt": true, "vol_anteil": 0.8280466, "ueber_pct": 0.01621271076523989, "gemeldet": true, "zahlen_karenz": false, "trockenlauf": false}
+>>>>>>> Stashed changes
