@@ -134,7 +134,8 @@ def block_b():
                     "trigger_logbuch", "cup_handle_v2", "shakeout",
                     "red_to_green", "red_to_green_explosive", "zahlen_termine",
                     "scan_noetig", "waechter_noetig", "sektor_radar",
-                    "insider_scanner", "insider_edgar", "listen"]
+                    "insider_scanner", "insider_edgar", "listen",
+                    "earnings_pullback"]
     for name in mit_schalter:
         r = subprocess.run([sys.executable, f"{name}.py", "--selbsttest"],
                            capture_output=True, text=True, cwd=WURZEL,
@@ -602,6 +603,74 @@ def block_e():
     pruefe("E", "Gap and Go protokolliert ins Logbuch (waechter/kapitel7)",
            'quelle="waechter/kapitel7"' in _bw_quelle
            and '"strategie": "Gap and Go",' in _bw_quelle)
+
+    # ZAHLEN-KARENZ, MARKTAMPEL, EARNINGS-PULLBACK (Gerhards Freigabe
+    # vom 31.08.2026, Bausteine 1, 2 und 4 des Einbau-Papiers). Alles
+    # datumsfest ueber injizierte Termine und Kalender.
+    import zahlen_termine as _zt
+    from datetime import date as _dtk, timedelta as _tdk
+    _term = {"TST": {"datum": "2026-09-02", "lage": "nachboerslich"},
+             "ALT": {"datum": "2026-08-20", "lage": "nachboerslich"}}
+    pruefe("E", "handelstage_bis zaehlt Handelstage, nie Wochenenden",
+           _zt.handelstage_bis("TST", _dtk(2026, 8, 31), _term) == 2
+           and _zt.handelstage_bis("TST", _dtk(2026, 8, 28), _term) == 3
+           and _zt.handelstage_bis("ALT", _dtk(2026, 8, 31), _term) is None
+           and _zt.handelstage_bis("NIX", _dtk(2026, 8, 31), _term) is None)
+    _zt_alt = _zt._termine
+    try:
+        import zoneinfo as _zik
+        import datetime as _dtm
+        _ny = _dtm.datetime.now(
+            _zik.ZoneInfo("America/New_York")).date()
+        _morgen = _ny + _tdk(days=1)
+        while _morgen.weekday() >= 5:
+            _morgen += _tdk(days=1)
+        _zt._termine = {"KAR": {"datum": _morgen.isoformat(),
+                                "lage": "nachboerslich"}}
+        _f = {"ticker": "KAR", "strategie": "Rectangle Top",
+              "strategien": None}
+        pruefe("E", "Zahlen-Karenz: unbestaetigt vor Termin wird gehalten, "
+               "bestaetigt laeuft, Ausnahme-Muster laeuft",
+               bw.zahlen_karenz_greift({**_f, "vol_ok": False}) is True
+               and bw.zahlen_karenz_greift({**_f, "vol_ok": None}) is True
+               and bw.zahlen_karenz_greift({**_f, "vol_ok": True}) is False
+               and bw.zahlen_karenz_greift(
+                   {**_f, "vol_ok": False,
+                    "strategie": "Lücken-Bestätigungstag",
+                    "strategien": ["Lücken-Bestätigungstag"]}) is False
+               and bw.zahlen_karenz_greift(
+                   {"ticker": "OHNE", "vol_ok": False,
+                    "strategie": "Rectangle Top",
+                    "strategien": None}) is False)
+    finally:
+        _zt._termine = _zt_alt
+    pruefe("E", "Karenz-Zurueckhaltung traegt das Logbuch-Feld",
+           '"zahlen_karenz": bool(t.get("zahlen_karenz"))' in _bw_quelle)
+    import marktampel as _ma
+    import pandas as _pdm
+    _idx = _pdm.date_range("2026-01-02", periods=80, freq="B")
+    _steigend = _pdm.DataFrame(
+        {"Close": [100 + i for i in range(80)]}, index=_idx)
+    _lage = _ma._index_lage(_steigend)
+    pruefe("E", "Marktampel: steigende Reihe liegt ueber beiden Linien",
+           _lage is not None and _lage["ueber_ema21"]
+           and _lage["ueber_sma50"] and _lage["sma50_steigt"])
+    _fallend = _pdm.DataFrame(
+        {"Close": [200 - i for i in range(80)]}, index=_idx)
+    _lage2 = _ma._index_lage(_fallend)
+    pruefe("E", "Marktampel: fallende Reihe liegt unter der 50er-Linie",
+           _lage2 is not None and not _lage2["ueber_sma50"])
+    pruefe("E", "Logbuch haengt die Ampelfarbe an jede Zeile",
+           "eintrag[\"ampel\"] = ampel" in
+           open("trigger_logbuch.py", encoding="utf-8").read())
+    import pattern_scanner as _psk
+    pruefe("E", "Earnings-Pullback steht in der Muster-PRIORITY",
+           "Earnings-Pullback" in _psk.PRIORITY)
+    pruefe("E", "Earnings-Pullback wird zur Kapitel-12-Klasse zahlen_luecke",
+           _bb.klasse_fuer(["Earnings-Pullback"]) == "zahlen_luecke")
+    pruefe("E", "Scanner reicht den Ticker an den Pullback-Detektor",
+           "earnings_pullback.detect_earnings_pullback(d, ticker)" in
+           open("pattern_scanner.py", encoding="utf-8").read())
     _gesendet = []
     _alt_sende = bw.sende
     bw.sende = lambda topic, titel, absaetze, prio="default": (

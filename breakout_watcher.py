@@ -294,6 +294,13 @@ VOL_FAKTOR = {
     "Cup & Handle (Wochenbasis)": _VOL["breakout_faktor"],
     "Rectangle Top": _VOL["breakout_faktor"],
     "High & Tight Flag": _VOL["breakout_faktor"],
+    # Earnings-Pullback (Gerhards Freigabe 31.08.2026): Ausbruch aus der
+    # Konsolidierung nach dem Zahlen-Gap. Die VCP-Huerde (140 Prozent
+    # vom Schnitt) statt der Standard-Huerde — der Ausbruch soll zeigen,
+    # dass die Nachfrage nach der Ruhephase ZURUECK ist; O'Neils Rahmen
+    # fuer solche Fortsetzungen nennt 40 bis 50 Prozent ueber dem
+    # Schnitt, genau dieses Band.
+    "Earnings-Pullback": _VOL["breakout_faktor_vcp"],
 }
 VOL_FAKTOR_FALLBACK = _VOL["breakout_faktor"]
 

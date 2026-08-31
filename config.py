@@ -56,6 +56,25 @@ CFG = {
                         "Lücken-Bestätigungstag"],
     },
 
+    # --- Earnings-Pullback (Gerhards Freigabe vom 31.08.2026) ---
+    # Baustein 2 des Einbau-Papiers: Nach starken Quartalszahlen wird
+    # nicht der Sprung gekauft, sondern der Ausbruch aus der ersten
+    # engen Konsolidierung darueber. Literatur: PEAD (Bernard/Thomas
+    # 1989/1990), Power Earnings Gap (TraderStewie), Buyable Gap-Up
+    # (Morales/Kacher). Die Regelfragen G4 bis G7 sind nach bestem
+    # Wissen entschieden, je Wert vermerkt; Feinjustierung nach den
+    # ersten Logbuch-Wochen.
+    "earnings_pullback": {
+        "suchfenster_tage": 15,      # so weit zurueck wird nach dem Gap gesucht
+        "min_gap_open": 0.08,        # G4: Eroeffnung 8 % ueber Vortagesschluss …
+        "min_gap_close": 0.10,       # … ODER Schluss 10 % darueber
+        "vol_faktor": 3.0,           # und Volumen >= 3x Ø10 davor
+        "min_konsolidierung": 2,     # G6: 2 bis 15 Handelstage Konsolidierung
+        "max_konsolidierung": 15,
+        "max_spanne_anteil": 0.5,    # Spanne <= halbe Gap-Tag-Spanne
+        "porosity": 0.04,            # G7: 4 % Toleranz unter dem Gap-Tag-Tief
+    },
+
     # --- Volumen (gilt EINHEITLICH für Scanner UND Wächter!) ---
     # GERECHNET WIRD AUSSCHLIESSLICH IN volumen.py — IBD "Volume % Change"
     # mit Hochrechnung über die Fünf-Minuten-Referenzkurve. Hier stehen nur

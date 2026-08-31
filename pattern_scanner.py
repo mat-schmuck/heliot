@@ -828,7 +828,8 @@ def fallback_points(df: pd.DataFrame) -> list[dict]:
 # landete sie ganz hinten und fiele bei drei Kaufpunkten je Aktie oft
 # heraus (Gerhards Ergaenzung vom 04.08.2026).
 PRIORITY = ["High & Tight Flag", "VCP", "Cup & Handle",
-            "Cup & Handle (Wochenbasis)", "Darvas Box", "Rectangle Top"]
+            "Cup & Handle (Wochenbasis)", "Darvas Box",
+            "Earnings-Pullback", "Rectangle Top"]
 
 
 # ---------------------------------------------------------------------------
@@ -1055,7 +1056,7 @@ def fokusliste_schreiben(loaded: dict) -> int:
 
 
 def analyze(df: pd.DataFrame, rs_percentile: float | None,
-            darvas_erlaubt: bool = True) -> dict:
+            darvas_erlaubt: bool = True, ticker: str = "") -> dict:
     """Alle Muster auf eine Aktie.
 
     darvas_erlaubt (Gerhard, 14.08.2026): Die Darvas Box laeuft
@@ -1074,6 +1075,14 @@ def analyze(df: pd.DataFrame, rs_percentile: float | None,
                   cup_handle_v2.detect_cup_handle_v2]
     if darvas_erlaubt:
         detektoren.insert(3, detect_darvas)
+    if ticker:
+        # EARNINGS-PULLBACK (Gerhards Freigabe 31.08.2026): braucht als
+        # einziger Detektor den Ticker, weil er die Zahlen-Bindung des
+        # Gap-Tags belegt (Termin-Historie); die Kursreihe allein kann
+        # einen Zahlen-Gap nicht von einem anlasslosen unterscheiden.
+        import earnings_pullback
+        detektoren.append(
+            lambda d: earnings_pullback.detect_earnings_pullback(d, ticker))
     for fn in detektoren:
         try:
             res = fn(df)
@@ -1400,7 +1409,8 @@ def main():
     rows = []
     for ticker, (df, company) in loaded.items():
         res = analyze(df, rs_pct.get(ticker),
-                      darvas_erlaubt=ticker.upper() in darvas_erlaubte)
+                      darvas_erlaubt=ticker.upper() in darvas_erlaubte,
+                      ticker=ticker)
         rows.append({"ticker": ticker, "company": company, "res": res,
                      "fundamentals": fundamentals.get(ticker, {})})
         tag = "🟢" if res["pattern_count"] else ("🟡" if res["tt_pass"] else "⚪")

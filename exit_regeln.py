@@ -82,6 +82,10 @@ STRUKTURPUNKT = {
     # Vortagesschluss, war die Umkehr keine.
     "Red-to-Green Explosive":      "Schlusskurs fällt unter den Vortagesschluss",
     "Shakeout-Spring":             "Spring-Tief",
+    # Earnings-Pullback (Gerhards Freigabe 31.08.2026): Der Bruchpunkt
+    # ist das Konsolidierungstief; darunter liegt nur noch die
+    # Porosity-Toleranz ueber dem Gap-Tag-Tief (Morales/Kacher).
+    "Earnings-Pullback":           "Tief der Konsolidierung über dem Zahlen-Gap",
 }
 
 

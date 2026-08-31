@@ -76,6 +76,12 @@ def klasse_fuer(strategien, termin_tage=None):
         if termin_tage is not None and -5 <= termin_tage <= 0:
             return "zahlen_luecke"
         return "standard"
+    # EARNINGS-PULLBACK (Gerhards Freigabe 31.08.2026): per Definition
+    # zahlengebunden — der Detektor belegt den Termin selbst, deshalb
+    # braucht es hier keine termin_tage-Bedingung. Die Klasse traegt
+    # den 60-Tage-Zeitdeckel, exakt die PEAD-Drift-Frist.
+    if any("Earnings-Pullback" in n for n in namen):
+        return "zahlen_luecke"
     return "standard"
 
 
