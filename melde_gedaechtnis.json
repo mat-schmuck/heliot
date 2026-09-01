@@ -155,8 +155,9 @@
     "WTTR|3": "drin",
     "ZETA|1": "drin",
     "ZETA|3": "drin",
-    "ARCT|2": "drin",
-    "ARCT|1": "drin"
+    "ARCT|2": "draussen",
+    "ARCT|1": "drin",
+    "XMTR|3": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -210,6 +211,7 @@
     "HTF|ARCT|2": "2026-09-01",
     "BEST|HTF|ARCT|2": "2026-09-01",
     "HTF|ARCT|1": "2026-09-01",
-    "BEST|HTF|ARCT|1": "2026-09-01"
+    "BEST|HTF|ARCT|1": "2026-09-01",
+    "UEBER|ARCT|2": "2026-09-01"
   }
 }
