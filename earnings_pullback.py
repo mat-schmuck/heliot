@@ -189,6 +189,9 @@ def detect_earnings_pullback(df, ticker, termine=None, kalender=None):
             "status": (f"Zahlen-Gap +{gap_pct * 100:.0f}% am "
                        f"{gap_datum:%d.%m.}, {kons['dauer']} Tage "
                        f"Konsolidierung"),
+            "notiz": (f"Gap-Tag {gap_datum:%d.%m.} +{gap_pct * 100:.0f}%; "
+                      f"Konsolidierung {kons['dauer']} Tage, "
+                      f"{kons['tief']:.2f} bis {kons['hoch']:.2f}"),
         }
     return None
 

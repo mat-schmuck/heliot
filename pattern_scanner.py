@@ -1314,7 +1314,13 @@ def write_excel(rows: list[dict], out_path: str):
                 p = r["points"][i]
                 line += [p["strategie"], p["kaufpunkt"], dist(p["kaufpunkt"], r["close"]),
                          p["stop"], p["ziel"] if p["ziel"] else "", p["status"]]
-                notes.append(f"KP{i+1}: {p['notiz']}")
+                # .get statt harter Zugriff (Lehre vom 01.09.2026):
+                # Ein Detektor ohne Notiz-Feld liess write_excel mit
+                # KeyError sterben — der ganze Nachtscan scheiterte ab
+                # Mitternacht alle zehn Minuten, obwohl die Muster
+                # laengst gefunden waren. Der Mappen-Schreiber darf an
+                # einem Zusatzfeld nie mehr scheitern.
+                notes.append(f"KP{i+1}: {p.get('notiz') or p.get('status', '')}")
             else:
                 line += [""] * 6
         if not r["tt_pass"] and r["tt_failed"]:

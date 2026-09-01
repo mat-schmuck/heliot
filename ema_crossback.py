@@ -128,6 +128,9 @@ def detect_ema_crossback(df):
         "ziel": None,
         "status": (f"Rücksetzer an die 10er/20er-Linie, "
                    f"{n - 1 - pop_i} Tage nach der Rückeroberung"),
+        "notiz": (f"Rückeroberung vor {n - 1 - pop_i} Tag(en), "
+                  f"Kontakt-Tief {stop_tief:.2f}, Umkehrtag-Hoch "
+                  f"{h:.2f}"),
     }
 
 
