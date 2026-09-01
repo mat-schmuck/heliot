@@ -139,7 +139,14 @@
     "PSQL|2": "draussen",
     "SHIP|3": "draussen",
     "SRPT|3": "draussen",
-    "CNXC|1": "drin"
+    "CNXC|1": "drin",
+    "RNG|1": "drin",
+    "CNC|3": "drin",
+    "NGL|3": "drin",
+    "TWLO|1": "drin",
+    "PRE|2": "draussen",
+    "ATI|1": "drin",
+    "PLPC|2": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -182,6 +189,12 @@
     "KRYS|2": "2026-09-01",
     "BEST|KRYS|2": "2026-09-01",
     "CNXC|1": "2026-09-01",
-    "BEST|CNXC|1": "2026-09-01"
+    "BEST|CNXC|1": "2026-09-01",
+    "HTF|RNG|1": "2026-09-01",
+    "BEST|HTF|RNG|1": "2026-09-01",
+    "TWLO|1": "2026-09-01",
+    "BEST|TWLO|1": "2026-09-01",
+    "ATI|1": "2026-09-01",
+    "BEST|ATI|1": "2026-09-01"
   }
 }
