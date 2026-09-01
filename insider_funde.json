@@ -4,7 +4,7 @@
   {
    "ticker": "MAIR",
    "status": "pfad_a",
-   "marktkap": 12946952192.0,
+   "marktkap": 12919357440.0,
    "stichtag": "2026-09-01",
    "zeilen": [
     "MAIR; Großkauf; Marktwert 12,9 Mrd $",
@@ -15,10 +15,10 @@
   {
    "ticker": "RSG",
    "status": "pfad_a",
-   "marktkap": 68130856960.0,
+   "marktkap": 68374298624.0,
    "stichtag": "2026-09-01",
    "zeilen": [
-    "RSG; Großkauf; Marktwert 68,1 Mrd $",
+    "RSG; Großkauf; Marktwert 68,4 Mrd $",
     "Größter Einzelkauf 51,8 Mio $ am 27.08.; CASCADE INVESTMENT, L.L.C., Insider"
    ],
    "kennung": "RSG|pfad_a|0"
@@ -26,10 +26,10 @@
   {
    "ticker": "SCTH",
    "status": "pfad_a",
-   "marktkap": 368288896.0,
+   "marktkap": 376853760.0,
    "stichtag": "2026-09-01",
    "zeilen": [
-    "SCTH; Großkauf; Marktwert 368,3 Mio $",
+    "SCTH; Großkauf; Marktwert 376,9 Mio $",
     "Größter Einzelkauf 100,0 Mio $ am 21.08.; SITRA J SCOTT, President & CEO"
    ],
    "kennung": "SCTH|pfad_a|1"
