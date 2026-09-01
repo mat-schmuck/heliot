@@ -77,7 +77,7 @@
     "PBF|2": "draussen",
     "PBF|3": "drin",
     "ANDG|2": "draussen",
-    "BHVN|3": "drin",
+    "BHVN|3": "draussen",
     "BLSH|3": "draussen",
     "BZ|3": "draussen",
     "CRM|3": "draussen",
@@ -155,9 +155,10 @@
     "WTTR|3": "drin",
     "ZETA|1": "drin",
     "ZETA|3": "drin",
-    "ARCT|2": "draussen",
+    "ARCT|2": "drin",
     "ARCT|1": "drin",
-    "XMTR|3": "drin"
+    "XMTR|3": "drin",
+    "VNOM|1": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -211,7 +212,6 @@
     "HTF|ARCT|2": "2026-09-01",
     "BEST|HTF|ARCT|2": "2026-09-01",
     "HTF|ARCT|1": "2026-09-01",
-    "BEST|HTF|ARCT|1": "2026-09-01",
-    "UEBER|ARCT|2": "2026-09-01"
+    "BEST|HTF|ARCT|1": "2026-09-01"
   }
 }
