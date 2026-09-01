@@ -7,6 +7,10 @@ name: Fundament-Sonde (Einmal-Diagnose)
 on:
   workflow_dispatch:
 
+concurrency:
+  group: fundament-sonde
+  cancel-in-progress: false
+
 jobs:
   sonde:
     runs-on: ubuntu-latest
