@@ -68,7 +68,7 @@
     "YPF|3": "draussen",
     "ZETA|2": "draussen",
     "CRWD|2": "draussen",
-    "FTNT|2": "draussen",
+    "FTNT|2": "drin",
     "HPE|3": "drin",
     "INBX|3": "draussen",
     "MEI|3": "draussen",
@@ -155,7 +155,7 @@
     "WTTR|3": "drin",
     "ZETA|1": "drin",
     "ZETA|3": "drin",
-    "ARCT|2": "drin",
+    "ARCT|2": "draussen",
     "ARCT|1": "drin",
     "XMTR|3": "drin"
   },
@@ -211,6 +211,7 @@
     "HTF|ARCT|2": "2026-09-01",
     "BEST|HTF|ARCT|2": "2026-09-01",
     "HTF|ARCT|1": "2026-09-01",
-    "BEST|HTF|ARCT|1": "2026-09-01"
+    "BEST|HTF|ARCT|1": "2026-09-01",
+    "UEBER|ARCT|2": "2026-09-01"
   }
 }
