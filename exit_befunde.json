@@ -1,5 +1,69 @@
 {
  "handelstag": "2026-09-01",
- "gebaut_am": "2026-09-01T11:04:31",
- "befunde": []
+ "gebaut_am": "2026-09-01T22:04:31",
+ "befunde": [
+  {
+   "typ": "klimax_zeichen",
+   "titel": "KLIMAX: ARCT",
+   "text": "ARCT; High & Tight Flag; Klimax-Zeichen 4 ma200 abstand (+113,7 %); Verkauf in die Stärke erwägen; seit Trigger -2,3 % gleich -0,2 R",
+   "symbol": "ARCT",
+   "key": "ARCT|1",
+   "prioritaet": "high",
+   "buendeln": false
+  },
+  {
+   "typ": "klimax_zeichen",
+   "titel": "KLIMAX: ARCT",
+   "text": "ARCT; High & Tight Flag; Klimax-Zeichen 5 kanaluebershooting (+27,3 %); Verkauf in die Stärke erwägen; seit Trigger -2,3 % gleich -0,2 R",
+   "symbol": "ARCT",
+   "key": "ARCT|1",
+   "prioritaet": "high",
+   "buendeln": false
+  },
+  {
+   "typ": "klimax_zeichen",
+   "titel": "KLIMAX: ARCT",
+   "text": "ARCT; HTF Innen-Einstieg; Klimax-Zeichen 4 ma200 abstand (+113,7 %); Verkauf in die Stärke erwägen; seit Trigger +2,0 % gleich 0,2 R",
+   "symbol": "ARCT",
+   "key": "ARCT|2",
+   "prioritaet": "high",
+   "buendeln": false
+  },
+  {
+   "typ": "klimax_zeichen",
+   "titel": "KLIMAX: ARCT",
+   "text": "ARCT; HTF Innen-Einstieg; Klimax-Zeichen 5 kanaluebershooting (+27,3 %); Verkauf in die Stärke erwägen; seit Trigger +2,0 % gleich 0,2 R",
+   "symbol": "ARCT",
+   "key": "ARCT|2",
+   "prioritaet": "high",
+   "buendeln": false
+  },
+  {
+   "typ": "klimax_zeichen",
+   "titel": "KLIMAX: CNXC",
+   "text": "CNXC; Cup & Handle (Wochenbasis); Klimax-Zeichen 5 kanaluebershooting (+12,3 %); Verkauf in die Stärke erwägen; seit Trigger +6,4 % gleich 0,6 R",
+   "symbol": "CNXC",
+   "key": "CNXC|1",
+   "prioritaet": "high",
+   "buendeln": false
+  },
+  {
+   "typ": "klimax_zeichen",
+   "titel": "KLIMAX: RNG",
+   "text": "RNG; High & Tight Flag; Klimax-Zeichen 4 ma200 abstand (+81,8 %); Verkauf in die Stärke erwägen; seit Trigger +0,5 % gleich 0,0 R",
+   "symbol": "RNG",
+   "key": "RNG|1",
+   "prioritaet": "high",
+   "buendeln": false
+  },
+  {
+   "typ": "klimax_zeichen",
+   "titel": "KLIMAX: RNG",
+   "text": "RNG; HTF Innen-Einstieg; Klimax-Zeichen 4 ma200 abstand (+81,8 %); Verkauf in die Stärke erwägen; seit Trigger +1,4 % gleich 0,6 R",
+   "symbol": "RNG",
+   "key": "RNG|2",
+   "prioritaet": "high",
+   "buendeln": false
+  }
+ ]
 }
