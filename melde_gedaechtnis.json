@@ -158,7 +158,9 @@
     "ARCT|2": "drin",
     "ARCT|1": "drin",
     "XMTR|3": "drin",
-    "VNOM|1": "drin"
+    "VNOM|1": "drin",
+    "VSXY|2": "drin",
+    "ASST|1": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -212,6 +214,8 @@
     "HTF|ARCT|2": "2026-09-01",
     "BEST|HTF|ARCT|2": "2026-09-01",
     "HTF|ARCT|1": "2026-09-01",
-    "BEST|HTF|ARCT|1": "2026-09-01"
+    "BEST|HTF|ARCT|1": "2026-09-01",
+    "HTF|ASST|1": "2026-09-01",
+    "BEST|HTF|ASST|1": "2026-09-01"
   }
 }
