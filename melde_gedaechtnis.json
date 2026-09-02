@@ -75,7 +75,7 @@
     "CLMT|2": "draussen",
     "CLMT|3": "drin",
     "CORT|2": "draussen",
-    "KYMR|3": "drin",
+    "KYMR|3": "draussen",
     "OII|2": "draussen",
     "OKTA|2": "draussen",
     "PBF|2": "draussen",
@@ -131,7 +131,20 @@
     "INSM|3": "draussen",
     "SRPT|3": "draussen",
     "VRDN|3": "draussen",
-    "XNCR|2": "draussen"
+    "XNCR|2": "draussen",
+    "PBF|1": "drin",
+    "PBF|3": "drin",
+    "ARCT|2": "drin",
+    "CRM|2": "drin",
+    "TIGO|2": "drin",
+    "ANDG|2": "draussen",
+    "WES|2": "drin",
+    "IMAX|2": "draussen",
+    "VLO|1": "drin",
+    "ARGX|3": "drin",
+    "MRX|1": "draussen",
+    "MRX|3": "draussen",
+    "RNG|1": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -202,6 +215,7 @@
     "UEBER|DELL|2": "2026-09-02",
     "GAPGO|DELL|2026-09-02": "2026-09-02",
     "BHVN|1": "2026-09-02",
-    "BEST|BHVN|1": "2026-09-02"
+    "BEST|BHVN|1": "2026-09-02",
+    "HTF|RNG|1": "2026-09-02"
   }
 }
