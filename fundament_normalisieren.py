@@ -226,7 +226,8 @@ KENNZAHLEN = {
     # wird in der Abfrageschicht nach NAREIT aus Nettogewinn, Abschreibungen,
     # Wertminderungen und Verkaufsgewinnen BERECHNET; hier nur die Bausteine.
     "mieterloese": dict(art="dauer", einheit="USD", additiv=True, tags=[
-        "OperatingLeaseLeaseIncome", "OperatingLeasesIncomeStatementLeaseRevenue",
+        "OperatingLeaseLeaseIncome", "LeaseIncome",
+        "OperatingLeasesIncomeStatementLeaseRevenue",
         "RealEstateRevenueNet", "ifrs:RentalIncome"]),
     "immobilien_netto": dict(art="bestand", einheit="USD", additiv=False, tags=[
         "RealEstateInvestmentPropertyNet", "ifrs:InvestmentProperty"]),
