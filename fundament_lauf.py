@@ -190,6 +190,52 @@ def konsistenz(zeilen):
     return befunde
 
 
+def tag_sucher(firma, ende, soll, tol, hoechstens=6):
+    """Welche Konzepte der Firma tragen fuer die Periode einen Wert, der
+    dem belegten Wert entspricht? Beantwortet bei FEHLT direkt, ob die
+    Kaskade nur ein Konzept nicht kennt oder ob die Firma den Wert gar
+    nicht dimensionslos einreicht (dann ist er im companyfacts-Archiv
+    nicht enthalten)."""
+    treffer = []
+    tol = max(float(tol or 0), abs(float(soll)) * 0.0005)
+    for f in fn.alle_fakten(firma):
+        if f["end"] != ende or f["val"] is None:
+            continue
+        try:
+            if abs(float(f["val"]) - float(soll)) <= tol:
+                treffer.append((f["taxonomie"], f["tag"], f["einheit"], f["start"] or "", f["form"]))
+        except (TypeError, ValueError):
+            continue
+    if not treffer:
+        return [f"Tag-Sucher: kein dimensionsloser Fakt mit diesem Wert zum {ende}; die Firma "
+                f"reicht ihn nur mit Dimension oder gar nicht ein"]
+    einzig = sorted(set(treffer))
+    return [f"Tag-Sucher: {tax}:{tag} ({einheit}, Start {start or 'Stichtag'}, {form})"
+            for tax, tag, einheit, start, form in einzig[:hoechstens]]
+
+
+def bank_konsistenz(zeilen):
+    """Zinsueberschuss plus Provisionsertrag muss die Nettoertraege (den
+    Bank-Umsatz) ergeben; das ist der reported-Wert, den die
+    Pressemitteilungen meist nur als managed-Wert nennen."""
+    nach = defaultdict(dict)
+    for z in zeilen:
+        if z["typ"] == "Q":
+            nach[z["kennzahl"]][z["end"]] = z
+    zi, pr, um = nach.get("zinsueberschuss", {}), nach.get("provisionsertrag", {}), nach.get("umsatz", {})
+    geprueft = passt = 0
+    for ende in zi:
+        if ende in pr and ende in um:
+            geprueft += 1
+            summe = zi[ende]["wert_erst"] + pr[ende]["wert_erst"]
+            if abs(summe - um[ende]["wert_erst"]) <= max(1.0, abs(um[ende]["wert_erst"]) * 0.001):
+                passt += 1
+    if geprueft:
+        return [f"  Bank: Zinsueberschuss plus Provisionsertrag gleich Nettoertraege in "
+                f"{passt} von {geprueft} Quartalen"]
+    return []
+
+
 def tag_verlauf(zeilen, kennzahl):
     """Welches Konzept trug die Kennzahl in welchem Zeitraum (Kaskaden-Diagnose)."""
     nutzung = defaultdict(list)
@@ -245,6 +291,7 @@ def probe():
             b.append(f"  Nur als JAHRESWERT vorhanden (kein Quartal): {', '.join(nur_fy)}")
         b.append("  Innere Konsistenz:")
         b.extend(konsistenz(zeilen))
+        b.extend(bank_konsistenz(zeilen))
         b.append("  Vergleich mit den belegten Werten:")
         for per in firma_ref.get("perioden", []):
             typ = per.get("typ", "Q")
@@ -256,6 +303,8 @@ def probe():
                     gesamt["fehlt"] += 1
                     status = "FEHLT"
                     b.append(f"    {per['end']} {kennzahl}: soll {_fmt(soll)}, in den SEC-Daten NICHT gefunden")
+                    for hinweis in tag_sucher(firma, per["end"], soll, tol):
+                        b.append(f"      {hinweis}")
                 else:
                     ist = z["wert_erst"]
                     ok = ist is not None and abs(ist - soll) <= tol

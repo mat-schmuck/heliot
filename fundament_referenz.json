@@ -143,16 +143,15 @@
           "end": "2025-06-30",
           "typ": "Q",
           "quelle": "https://www.jpmorganchase.com/content/dam/jpmc/jpmorgan-chase-and-co/investor-relations/documents/quarterly-earnings/2025/2nd-quarter/ac5b7d95-9133-4fea-959c-2fa6d8fd8c5b.pdf",
+          "_hinweis": "Zinsueberschuss (23,3 Mrd) und Provisionsertrag (22,4 Mrd) nennt die Pressemitteilung nur auf managed basis (mit Steueraufschlag, non-GAAP); die SEC-Werte sind reported (23.209 und 21.703 Mio, Summe exakt der reported revenue 44.912). Deshalb hier nicht als Referenz, sondern ueber die Bank-Konsistenzpruefung Zinsueberschuss plus Provisionsertrag gleich Nettoertraege abgesichert.",
           "werte": {
             "umsatz": 44912000000,
-            "zinsueberschuss": 23300000000,
-            "provisionsertrag": 22400000000,
             "risikovorsorge": 2849000000,
             "verwaltungsaufwand_bank": 23779000000,
             "nettogewinn": 14987000000,
             "eps_verwaessert": 5.24
           },
-          "toleranz": {"zinsueberschuss": 50000000, "provisionsertrag": 50000000, "eps_verwaessert": 0.005}
+          "toleranz": {"eps_verwaessert": 0.005}
         },
         {
           "end": "2025-06-30",
