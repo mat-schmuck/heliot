@@ -313,11 +313,18 @@ class JahresParquet:
     def __init__(self, praefix, schema, jahr_feld="end"):
         self.praefix, self.schema, self.jahr_feld = praefix, schema, jahr_feld
         self.writer, self.puffer, self.zeilen = {}, defaultdict(list), 0
+        self.unplausibel = 0
 
     def add(self, zeilen):
         for z in zeilen:
             e = z.get(self.jahr_feld) or ""
             jahr = e[:4] if len(e) >= 4 else "0000"
+            # Tippfehler in den Einreichungen (Jahre wie 1927 oder 2215)
+            # erzeugten im ersten Vollauf winzige Jahresdateien; alles
+            # ausserhalb des XBRL-Zeitraums landet in einer Sammeldatei.
+            if not ("1990" <= jahr <= "2035"):
+                jahr = "sonstige"
+                self.unplausibel += 1
             self.puffer[jahr].append(z)
         self.zeilen += len(zeilen)
 
@@ -458,6 +465,8 @@ def voll(archiv, hoechstens=None):
          f"Stand {dt.datetime.now(dt.timezone.utc):%d.%m.%Y %H:%M} UTC",
          f"Firmen mit Fakten: {len(metadaten)}; Fehler: {len(fehler)}; "
          f"Kennzahl-Zeilen: {kennzahlen.zeilen:,}; Rohfakten: {rohdaten.zeilen:,}; Dauer {time.time()-start:.0f} s",
+         f"Zeilen mit unplausiblem Datum (Sammeldatei sonstige): Kennzahlen {kennzahlen.unplausibel:,}, "
+         f"Rohfakten {rohdaten.unplausibel:,}",
          "", "## Filer-Typen (F4)"]
     b += [f"  {k}: {v}" for k, v in sorted(filer_typen.items())]
     b += ["", "## Firmen mit Umsatz-Quartalswert je Kalenderjahr"]
