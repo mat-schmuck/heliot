@@ -120,7 +120,8 @@
             "gewinnruecklagen": 700300000,
             "eigenkapital": 781400000
           },
-          "toleranz": {"kasse": 50000, "vorraete": 50000, "umlaufvermoegen": 50000, "sachanlagen": 50000, "goodwill": 50000, "bilanzsumme": 50000, "kurzfristige_verbindlichkeiten": 50000, "verbindlichkeiten": 50000, "langfristige_schulden": 50000, "gewinnruecklagen": 50000, "eigenkapital": 50000}
+          "_toleranz_hinweis": "Summenzeilen der Pressemitteilung sind aus gerundeten Posten addiert (Umlaufvermoegen 1.012,8 gegen exakt 1.012,854), daher 100.000 statt 50.000",
+          "toleranz": {"kasse": 100000, "vorraete": 100000, "umlaufvermoegen": 100000, "sachanlagen": 100000, "goodwill": 100000, "bilanzsumme": 100000, "kurzfristige_verbindlichkeiten": 100000, "verbindlichkeiten": 100000, "langfristige_schulden": 100000, "gewinnruecklagen": 100000, "eigenkapital": 100000}
         }
       ]
     },

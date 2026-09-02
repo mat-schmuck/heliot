@@ -86,6 +86,9 @@ KENNZAHLEN = {
         "NetIncomeLoss", "ProfitLoss",
         "NetIncomeLossAvailableToCommonStockholdersBasic",
         "IncomeLossFromContinuingOperations", "ifrs:ProfitLoss"]),
+    "minderheiten_ergebnis": dict(art="dauer", einheit="USD", additiv=True, tags=[
+        "NetIncomeLossAttributableToNoncontrollingInterest",
+        "ifrs:ProfitLossAttributableToNoncontrollingInterests"]),
     "eps_verwaessert": dict(art="dauer", einheit="USD/shares", additiv=False, tags=[
         "EarningsPerShareDiluted", "EarningsPerShareBasicAndDiluted",
         "ifrs:DilutedEarningsLossPerShare"]),
@@ -260,14 +263,19 @@ def alle_fakten(firma):
 
 
 def _periodenende_je_einreichung(firma):
-    """Spaetestes Enddatum je Aktennummer = Hauptperiode der Einreichung."""
-    enden = {}
+    """Hauptperiode je Aktennummer: das HAEUFIGSTE Enddatum ihrer us-gaap-
+    und ifrs-Fakten (bei Gleichstand das spaetere). Nicht das spaeteste:
+    Deckblatt-Fakten der dei-Taxonomie tragen das Datum kurz vor der
+    Einreichung (Apple: Aktienzahl per 18.07. im Quartal bis 28.06.) und
+    haetten die Fiskalzuordnung aller Werte verfaelscht (Befund der
+    ersten Probe-Validierung, 02.09.2026)."""
+    zaehler = defaultdict(lambda: defaultdict(int))
     for f in alle_fakten(firma):
-        if not f["accn"] or not f["end"]:
+        if not f["accn"] or not f["end"] or f["taxonomie"] == "dei":
             continue
-        if f["accn"] not in enden or f["end"] > enden[f["accn"]]:
-            enden[f["accn"]] = f["end"]
-    return enden
+        zaehler[f["accn"]][f["end"]] += 1
+    return {accn: max(je_ende, key=lambda e: (je_ende[e], e))
+            for accn, je_ende in zaehler.items()}
 
 
 # ---------------------------------------------------------------------------
@@ -434,6 +442,29 @@ def _ableiten(cik, kennzahl, zeilen_typ, einheit):
     return neu
 
 
+def _nettogewinn_ohne_minderheiten(zeilen):
+    """Firmen mit Minderheitsanteilen taggen fuer das Konzernergebnis oft
+    nur ProfitLoss (samt Minderheiten) und den Minderheitenanteil
+    getrennt; NetIncomeLoss (der Anteil der Aktionaere) fehlt dann. Wo
+    die Kaskade auf ProfitLoss ausgewichen ist und ein Minderheiten-Wert
+    derselben Periode vorliegt, wird der Aktionaersanteil BERECHNET
+    (Befund IES Holdings, erste Probe-Validierung 02.09.2026)."""
+    minderheiten = {(z["start"], z["end"], z["einheit"]): z for z in zeilen
+                    if z["kennzahl"] == "minderheiten_ergebnis"}
+    for z in zeilen:
+        if z["kennzahl"] != "nettogewinn" or z["tag"] != "ProfitLoss":
+            continue
+        m = minderheiten.get((z["start"], z["end"], z["einheit"]))
+        if m is None:
+            continue
+        for feld in ("wert_erst", "wert_letzt"):
+            if z[feld] is not None and m[feld] is not None:
+                z[feld] = round(z[feld] - m[feld], 6)
+        z["restated"] = z["wert_erst"] != z["wert_letzt"]
+        z["tag"] = "ProfitLoss minus NetIncomeLossAttributableToNoncontrollingInterest"
+        z["quelle"] = "berechnet"
+
+
 def filer_typ(firma):
     facts = firma.get("facts") or {}
     formen = set()
@@ -441,9 +472,10 @@ def filer_typ(firma):
         if f["form"]:
             formen.add(f["form"])
     hat_ifrs = bool(facts.get("ifrs-full"))
-    hat_usgaap = bool(facts.get("us-gaap"))
     auslaendisch = any(fm in AUSLAND_FORMEN for fm in formen)
-    if hat_ifrs and not hat_usgaap:
+    # IFRS-Fakten fuehrt nur, wer als auslaendischer Emittent einreicht;
+    # daneben liegende us-gaap- oder dei-Reste aendern daran nichts.
+    if hat_ifrs:
         return "ausland_ifrs"
     if auslaendisch:
         return "ausland_usgaap"
@@ -479,6 +511,7 @@ def normalisiere(firma, kennzahlen=None):
                 nach_typ["Q"].extend(_ableiten(cik, kennzahl, nach_typ, einheit))
             for typ in ("Q", "FY", "B"):
                 zeilen.extend(nach_typ.get(typ, []))
+    _nettogewinn_ohne_minderheiten(zeilen)
     zeilen.sort(key=lambda z: (z["kennzahl"], z["end"], z["typ"]))
     enden_alle = [z["end"] for z in zeilen]
     meta = {
@@ -563,8 +596,10 @@ def _synthetische_firma():
     return {
         "cik": 1, "entityName": "Synthetik Inc.",
         "facts": {
+            # Deckblatt-Aktienzahl traegt das Datum kurz vor der Einreichung,
+            # NICHT das Periodenende (die Apple-Falle)
             "dei": {"EntityCommonStockSharesOutstanding": {"units": {"shares": [
-                _fakt(None, "2024-12-31", 1000000, a["k_24"], 2024, "FY", "10-K", "2025-02-15")]}}},
+                _fakt(None, "2025-02-10", 1000000, a["k_24"], 2024, "FY", "10-K", "2025-02-15")]}}},
             "us-gaap": {
                 "RevenueFromContractWithCustomerExcludingAssessedTax": {"units": {"USD": umsatz_neu}},
                 "SalesRevenueNet": {"units": {"USD": umsatz_alt}},
@@ -583,6 +618,23 @@ def _ifrs_firma():
                 _fakt("2024-01-01", "2024-12-31", 900, "0002-25-000001", 2024, "FY", "20-F", "2025-03-30")]}},
             "ProfitLoss": {"units": {"EUR": [
                 _fakt("2024-01-01", "2024-12-31", 90, "0002-25-000001", 2024, "FY", "20-F", "2025-03-30")]}},
+        }},
+    }
+
+
+def _konzern_firma():
+    """Nur ProfitLoss (samt Minderheiten) und der Minderheitenanteil
+    getaggt, kein NetIncomeLoss."""
+    q = ("2025-04-01", "2025-06-30")
+    return {
+        "cik": 3, "entityName": "Konzern Inc.",
+        "facts": {"us-gaap": {
+            "ProfitLoss": {"units": {"USD": [
+                _fakt(*q, 150, "0003-25-000001", 2025, "Q2", "10-Q", "2025-08-01")]}},
+            "NetIncomeLossAttributableToNoncontrollingInterest": {"units": {"USD": [
+                _fakt(*q, 10, "0003-25-000001", 2025, "Q2", "10-Q", "2025-08-01")]}},
+            "Assets": {"units": {"USD": [
+                _fakt(None, "2025-06-30", 900, "0003-25-000001", 2025, "Q2", "10-Q", "2025-08-01")]}},
         }},
     }
 
@@ -654,6 +706,20 @@ def selbsttest() -> int:
       f"{b['2023-12-31']['fiskaljahr']} {b['2023-12-31']['fiskalperiode']}")
     p("Bestands-Kalender als Instant-Frame",
       b["2024-03-31"]["kalender"] == "CY2024Q1I")
+    p("Bilanzsumme 31.12.2024: Fiskal 2024 FY trotz spaeterem Deckblatt-Datum (Hauptperiode = haeufigstes Ende)",
+      b["2024-12-31"]["fiskaljahr"] == 2024 and b["2024-12-31"]["fiskalperiode"] == "FY",
+      f"{b['2024-12-31']['fiskaljahr']} {b['2024-12-31']['fiskalperiode']}")
+    p("Q1 2025: Fiskal 2025 Q1 direkt aus der Hauptperiode des 10-Q",
+      q["2025-03-31"]["fiskaljahr"] == 2025 and q["2025-03-31"]["fiskalperiode"] == "Q1")
+
+    meta3, zeilen3 = normalisiere(_konzern_firma())
+    ng = [z for z in zeilen3 if z["kennzahl"] == "nettogewinn"]
+    p("Konzern ohne NetIncomeLoss: Aktionaersanteil = ProfitLoss minus Minderheiten (150 minus 10), berechnet",
+      len(ng) == 1 and ng[0]["wert_erst"] == 140 and ng[0]["quelle"] == "berechnet"
+      and ng[0]["fiskaljahr"] == 2025 and ng[0]["fiskalperiode"] == "Q2",
+      ng[0] if ng else "keine Zeile")
+    p("Minderheiten-Ergebnis als eigene Kennzahl",
+      any(z["kennzahl"] == "minderheiten_ergebnis" and z["wert_erst"] == 10 for z in zeilen3))
     ao = [z for z in zeilen if z["kennzahl"] == "aktien_ausstehend"]
     p("Deckblatt-Aktienzahl aus der dei-Taxonomie",
       len(ao) == 1 and ao[0]["taxonomie"] == "dei" and ao[0]["wert_erst"] == 1000000)
