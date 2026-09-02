@@ -31,10 +31,26 @@ Schnittstelle (Gerhards Punkt 5); deshalb prueft jeder Lauf zuerst ein
 LEBENSZEICHEN an fuenf Referenzfirmen und meldet per Push, wenn die
 Quelle nicht liefert.
 
+DROSSELUNG (Befund 02.09.2026, erster Cloud-Lauf 33667090657): Yahoo hat
+die GitHub-Adresse nach rund 1.300 Abfragen in 45 Sekunden gedrosselt
+(HTTP 429 beim Crumb, danach 401 "Invalid Crumb" fuer jede Abfrage).
+yfinance verbirgt solche Fehler (Vorgabe hide_exceptions) und liefert
+still leere Daten; der Lauf zaehlte deshalb 9.109 Firmen als "ohne
+Konsens" mit null Fehlern, und das Register haette sie 90 Tage lang nicht
+mehr angesehen. Seither gilt: (1) eine BREMSE auf hoechstens
+ABFRAGEN_JE_SEKUNDE Firmen je Sekunde ueber alle Faeden, (2) die
+Meldungen des yfinance-Protokolls werden je Abfrage mitgelesen, und
+Drossel-Meldungen werfen YahooRateLimit, worauf gewartet und wiederholt
+wird, (3) ein leeres Ergebnis OHNE erkennbaren Grund gilt als Fehler und
+nie als "ohne Konsens", (4) eine NOTBREMSE beendet den Lauf nach
+NOTBREMSE_DROSSEL Drossel-Fehlern in Folge und meldet per Push; Fehler
+und Uebersprungenes kommen nie ins Register und nie in den Bestand.
+
 Aufruf:
   python konsens_einfrieren.py --selbsttest
   python konsens_einfrieren.py --daten <Ordner des Datenrepos> [--modus schnappschuss|bestandsaufnahme]
       [--hoechstens N] [--ticker-datei DATEI] [--nur-wochenlisten] [--faeden 4]
+      [--abfragen-je-sekunde 4]
 """
 
 import argparse
@@ -43,8 +59,10 @@ import datetime as dt
 import gzip
 import io
 import json
+import logging
 import os
 import sys
+import threading
 import time
 
 REFERENZ = ["AAPL", "MSFT", "JPM", "ANF", "KRYS"]
@@ -53,6 +71,11 @@ FELDER = ["zeit_utc", "ticker", "periode", "periodenende", "umsatz_avg", "umsatz
           "umsatz_high", "umsatz_analysten", "eps_avg", "eps_low", "eps_high",
           "eps_analysten", "waehrung", "naechster_termin", "quelle"]
 NEU_PRUEFEN_NACH_TAGEN = 90     # Firmen ohne Konsens spaeter noch einmal ansehen
+ABFRAGEN_JE_SEKUNDE = 4.0       # Bremse ueber alle Faeden (jede Firma kostet zwei Anfragen); 0 = keine
+NOTBREMSE_DROSSEL = 12          # so viele Drossel-Fehler in Folge beenden den Lauf
+WARTEN_BEI_DROSSEL_S = 30       # Wartezeit je Versuch, mal Versuchsnummer (30, 60, 90)
+DROSSEL_MUSTER = ("429", "invalid crumb", "unauthorized", "too many requests", "rate-limit", "rate limit")
+LEGITIM_MUSTER = ("no fundamentals data found", "quote not found")
 
 
 # ---------------------------------------------------------------------------
@@ -86,6 +109,82 @@ def _raw(d, k):
 
 
 # ---------------------------------------------------------------------------
+# Drossel-Erkennung (Befund 02.09.2026)
+# ---------------------------------------------------------------------------
+
+class YahooRateLimit(Exception):
+    """Yahoo drosselt die Adresse. Der Name traegt 'RateLimit', damit
+    _einer wartet und wiederholt."""
+
+
+_MELDUNGEN = threading.local()
+_ABBRUCH = threading.Event()
+_HANDLER = {"da": False}
+_BREMSE = {"lock": threading.Lock(), "zuletzt": 0.0}
+
+
+def _warte(sekunden):
+    """Wartet, endet aber sofort, wenn die Notbremse gezogen wurde."""
+    return _ABBRUCH.wait(sekunden)
+
+
+_SCHLAFE = _warte                 # der Selbsttest ersetzt das Warten
+
+
+class _YahooMeldungen(logging.Handler):
+    """Sammelt die Meldungen des yfinance-Protokolls je Faden. yfinance
+    verbirgt HTTP-Fehler (401, 404, 429) und schreibt sie nur dorthin."""
+
+    def emit(self, record):
+        liste = getattr(_MELDUNGEN, "liste", None)
+        if liste is not None:
+            try:
+                liste.append(record.getMessage())
+            except Exception:
+                pass
+
+
+def _meldungen_einhaengen():
+    if _HANDLER["da"]:
+        return
+    lg = logging.getLogger("yfinance")
+    lg.addHandler(_YahooMeldungen())
+    if lg.level == logging.NOTSET or lg.level > logging.WARNING:
+        lg.setLevel(logging.WARNING)
+    _HANDLER["da"] = True
+
+
+def _bremse(rate=None):
+    rate = ABFRAGEN_JE_SEKUNDE if rate is None else rate
+    if rate <= 0:
+        return
+    with _BREMSE["lock"]:
+        warte = _BREMSE["zuletzt"] + 1.0 / rate - time.monotonic()
+        if warte > 0:
+            time.sleep(warte)
+        _BREMSE["zuletzt"] = time.monotonic()
+
+
+def drossel_pruefen(ticker, trend, meldungen, ausnahme=None):
+    """Wirft YahooRateLimit bei Drossel-Meldungen (auch wenn ein Trend
+    kam: dann wird gewartet und sauber wiederholt), RuntimeError bei einem
+    leeren Ergebnis ohne erkennbaren Grund; ein leeres Ergebnis mit
+    Yahoos 'No fundamentals data' oder 'Quote not found' ist legitim."""
+    if ausnahme is not None and "RateLimit" in type(ausnahme).__name__:
+        raise YahooRateLimit(f"{ticker}: {ausnahme}")
+    for m in meldungen:
+        klein = str(m).lower()
+        if any(k in klein for k in DROSSEL_MUSTER):
+            raise YahooRateLimit(f"{ticker}: {str(m)[:120]}")
+    if trend:
+        return
+    if any(any(k in str(m).lower() for k in LEGITIM_MUSTER) for m in meldungen):
+        return
+    grund = f"{type(ausnahme).__name__}: {ausnahme}"[:120] if ausnahme is not None else "keine Meldung"
+    raise RuntimeError(f"{ticker}: leeres Ergebnis ohne erkennbaren Grund ({grund})")
+
+
+# ---------------------------------------------------------------------------
 # Abruf
 # ---------------------------------------------------------------------------
 
@@ -95,13 +194,16 @@ def hole_trend(ticker, fetcher=None):
     if fetcher is not None:
         return fetcher(ticker)
     import yfinance as yf
+    _meldungen_einhaengen()
+    _bremse()
+    _MELDUNGEN.liste = []
     tk = yf.Ticker(yahoo_ticker(ticker))
-    trend = None
+    trend, ausnahme = None, None
     try:
         tk.revenue_estimate                       # loest den Abruf aus
         trend = getattr(tk._analysis, "_earnings_trend", None)
-    except Exception:
-        trend = None
+    except Exception as e:  # noqa
+        ausnahme = e
     if not trend:
         # Rueckfall ohne Periodenende, falls yfinance sein Innenleben aendert
         trend = []
@@ -122,8 +224,10 @@ def hole_trend(ticker, fetcher=None):
                                                    "numberOfAnalysts": z.get("numberOfAnalysts"),
                                                    "earningsCurrency": z.get("currency")}
                 trend.append(eintrag)
-        except Exception:
+        except Exception as e:  # noqa
+            ausnahme = ausnahme or e
             trend = []
+    drossel_pruefen(ticker, trend, list(getattr(_MELDUNGEN, "liste", None) or []), ausnahme)
     termin = None
     try:
         cal = tk.calendar or {}
@@ -290,6 +394,8 @@ def universum(daten, modus, hoechstens, ticker_datei=None, nur_wochenlisten=Fals
 # ---------------------------------------------------------------------------
 
 def _einer(ticker, zeit, fetcher):
+    if _ABBRUCH.is_set():
+        return ticker, [], "uebersprungen"
     versuche = 0
     while True:
         try:
@@ -298,8 +404,9 @@ def _einer(ticker, zeit, fetcher):
         except Exception as e:  # noqa
             name = type(e).__name__
             versuche += 1
-            if "RateLimit" in name and versuche <= 3:
-                time.sleep(60 * versuche)
+            if "RateLimit" in name and versuche <= 3 and not _ABBRUCH.is_set():
+                if _SCHLAFE(WARTEN_BEI_DROSSEL_S * versuche):
+                    return ticker, [], "uebersprungen"
                 continue
             return ticker, [], f"{name}: {e}"[:200]
 
@@ -310,6 +417,7 @@ def lauf(daten, modus="schnappschuss", hoechstens=2500, ticker_datei=None,
     zeit = jetzt.strftime("%Y-%m-%dT%H:%M:%SZ")
     kennung = jetzt.strftime("%Y-%m-%d_%H%MZ")
     start = time.time()
+    _ABBRUCH.clear()
 
     leben = lebenszeichen(fetcher)
     print("Lebenszeichen:", ", ".join(f"{t} {'ok' if ok else 'FEHLT'}" for t, ok in leben.items()))
@@ -326,18 +434,30 @@ def lauf(daten, modus="schnappschuss", hoechstens=2500, ticker_datei=None,
     ticker = universum(daten, modus, hoechstens, ticker_datei, nur_wochenlisten, register=register)
     print(f"{len(ticker)} Firmen ({modus})")
     alle_zeilen, fehler, mit, ohne = [], {}, [], []
+    uebersprungen, drossel_folge, abgebrochen, abgebrochen_bei = 0, 0, False, None
     with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, faeden)) as ex:
         for i, (t, zeilen, fehl) in enumerate(ex.map(lambda x: _einer(x, zeit, fetcher), ticker), 1):
-            if fehl:
+            if fehl == "uebersprungen":
+                uebersprungen += 1
+            elif fehl:
                 fehler[t] = fehl
+                drossel_folge = drossel_folge + 1 if "RateLimit" in fehl else 0
+                if drossel_folge >= NOTBREMSE_DROSSEL and not _ABBRUCH.is_set():
+                    _ABBRUCH.set()
+                    abgebrochen, abgebrochen_bei = True, i
+                    print(f"NOTBREMSE nach {i} Firmen: {drossel_folge} Drossel-Fehler in Folge, "
+                          f"Yahoo sperrt diese Adresse. Der Rest wird uebersprungen.", flush=True)
             elif hat_konsens(zeilen):
                 alle_zeilen.extend(zeilen)
                 mit.append(t)
+                drossel_folge = 0
             else:
                 ohne.append(t)
+                drossel_folge = 0
             if i % 250 == 0:
                 print(f"  {i}/{len(ticker)} nach {time.time()-start:.0f} s, "
-                      f"{len(mit)} mit Konsens, {len(ohne)} ohne, {len(fehler)} Fehler", flush=True)
+                      f"{len(mit)} mit Konsens, {len(ohne)} ohne, {len(fehler)} Fehler, "
+                      f"{uebersprungen} uebersprungen", flush=True)
 
     jahr = jetzt.strftime("%Y")
     pfad = os.path.join(daten, "konsens", jahr, f"{kennung}.jsonl.gz")
@@ -346,6 +466,8 @@ def lauf(daten, modus="schnappschuss", hoechstens=2500, ticker_datei=None,
         for z in alle_zeilen:
             f.write(json.dumps(z, ensure_ascii=False) + "\n")
 
+    # Fehler und Uebersprungenes kommen weder in den Bestand noch ins Register:
+    # sie werden im naechsten Lauf einfach wieder angesehen.
     bestand_pfad = os.path.join(daten, "konsens", "firmen_mit_konsens.json")
     bestand = _json(bestand_pfad, {})
     heute = jetzt.date().isoformat()
@@ -364,13 +486,20 @@ def lauf(daten, modus="schnappschuss", hoechstens=2500, ticker_datei=None,
     _schreibe_json(stand_pfad, stand)
 
     protokoll = {"zeit_utc": zeit, "modus": modus, "firmen": len(ticker), "mit_konsens": len(mit),
-                 "ohne_konsens": len(ohne), "fehler": len(fehler), "zeilen": len(alle_zeilen),
+                 "ohne_konsens": len(ohne), "fehler": len(fehler), "uebersprungen": uebersprungen,
+                 "abgebrochen": abgebrochen, "zeilen": len(alle_zeilen),
                  "dauer_s": round(time.time() - start), "datei": os.path.relpath(pfad, daten).replace(os.sep, "/")}
     with io.open(os.path.join(daten, "konsens", "laeufe.jsonl"), "a", encoding="utf-8") as f:
         f.write(json.dumps(protokoll, ensure_ascii=False) + "\n")
     if fehler:
         _schreibe_json(os.path.join(daten, "konsens", jahr, f"{kennung}_fehler.json"), fehler)
     print(json.dumps(protokoll, ensure_ascii=False))
+    if abgebrochen:
+        text = (f"Konsens-Einfrieren ({modus}) nach {abgebrochen_bei} von {len(ticker)} Firmen abgebrochen: "
+                f"Yahoo drosselt die Cloud-Adresse ({len(fehler)} Fehler, {uebersprungen} uebersprungen). "
+                f"Eingefroren ist, was davor kam ({len(mit)} Firmen); der Rest folgt im naechsten Lauf.")
+        print(text)
+        push("Konsens: Yahoo drosselt", text)
     return 0
 
 
@@ -391,6 +520,7 @@ def _fake_trend(ticker, analysten=12, ende="2026-09-30"):
 
 def selbsttest() -> int:
     import tempfile
+    global _SCHLAFE
     fehler = []
 
     def p(name, bedingung, zusatz=""):
@@ -413,6 +543,36 @@ def selbsttest() -> int:
     p("Lebenszeichen: fuenf Referenzfirmen lebendig", lebendig(alle_ok) and len(alle_ok) == 5)
     wackelig = lebenszeichen(fetcher=lambda t: _fake_trend(t, analysten=0 if t in ("JPM", "ANF") else 5))
     p("Lebenszeichen: zwei Ausfaelle von fuenf gelten als tot", not lebendig(wackelig))
+
+    # Drossel-Erkennung (Befund 02.09.2026: 401 Invalid Crumb ab Firma ~1300)
+    m401 = ['HTTP Error 401: {"finance":{"result":null,"error":{"code":"Unauthorized","description":"Invalid Crumb"}}}']
+    m429 = ["Crumb fetch rate-limited (HTTP 429), continuing without crumb"]
+    m404 = ['HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"No fundamentals data found for symbol: VXX"}}}']
+    try:
+        drossel_pruefen("X", [], m401)
+        p("Drosselung (401 Invalid Crumb) wird als Drossel-Fehler erkannt", False)
+    except YahooRateLimit:
+        p("Drosselung (401 Invalid Crumb) wird als Drossel-Fehler erkannt", True)
+    try:
+        drossel_pruefen("X", _fake_trend("X")["trend"], m429)
+        p("Drosselung (429 beim Crumb) wird auch bei geliefertem Trend erkannt", False)
+    except YahooRateLimit:
+        p("Drosselung (429 beim Crumb) wird auch bei geliefertem Trend erkannt", True)
+    try:
+        drossel_pruefen("VXX", [], m404)
+        p("Leer mit Yahoos 'No fundamentals data' gilt als ohne Konsens", True)
+    except Exception as e:  # noqa
+        p("Leer mit Yahoos 'No fundamentals data' gilt als ohne Konsens", False, str(e))
+    try:
+        drossel_pruefen("Y", [], [])
+        p("Leer ohne erkennbaren Grund gilt als Fehler, nicht als ohne Konsens", False)
+    except RuntimeError:
+        p("Leer ohne erkennbaren Grund gilt als Fehler, nicht als ohne Konsens", True)
+    try:
+        drossel_pruefen("Z", _fake_trend("Z")["trend"], [])
+        p("Geliefener Trend ohne Meldung geht durch", True)
+    except Exception as e:  # noqa
+        p("Geliefener Trend ohne Meldung geht durch", False, str(e))
 
     with tempfile.TemporaryDirectory() as d:
         register = ["AAPL", "BBB", "CCC", "DDD", "EEE"]
@@ -448,6 +608,39 @@ def selbsttest() -> int:
         p("Tote Quelle: Lauf bricht ohne Schnappschuss ab (Rueckgabe 0, keine Fehlermail)",
           tot == 0 and not os.path.exists(os.path.join(d, "konsens", "2026", "2026-09-03_0900Z.jsonl.gz")))
 
+    # Gedrosselte Firmen kommen nicht ins Register; Notbremse nach Drossel-Fehlern in Folge
+    with tempfile.TemporaryDirectory() as d:
+        alt = _SCHLAFE
+        _SCHLAFE = lambda s: False
+        try:
+            register = ["AAPL"] + [f"T{i:03d}" for i in range(40)]
+            wl = set(wochenlisten_ticker())
+
+            def fetch_drossel(t):
+                if t in REFERENZ or t in wl:
+                    return _fake_trend(t)
+                raise YahooRateLimit(f"{t}: HTTP Error 401 Invalid Crumb")
+            rc = lauf(d, modus="bestandsaufnahme", hoechstens=100, faeden=2, fetcher=fetch_drossel,
+                      register=register, jetzt=dt.datetime(2026, 9, 2, 10, 0, tzinfo=dt.timezone.utc))
+            stand = _json(os.path.join(d, "konsens", "bestandsaufnahme.json"), {"geprueft": {}})
+            bestand = _json(os.path.join(d, "konsens", "firmen_mit_konsens.json"), {})
+            with io.open(os.path.join(d, "konsens", "laeufe.jsonl"), encoding="utf-8") as f:
+                protokoll = [json.loads(l) for l in f][-1]
+            p("Gedrosselte Firmen kommen weder ins Register noch in den Bestand",
+              rc == 0 and stand["geprueft"].get("AAPL", {}).get("konsens") is True
+              and not any(t.startswith("T0") for t in stand["geprueft"])
+              and not any(t.startswith("T0") for t in bestand), sorted(stand["geprueft"])[:3])
+            p("Notbremse: Lauf bricht nach Drossel-Fehlern in Folge ab und protokolliert es",
+              protokoll.get("abgebrochen") is True and protokoll["fehler"] >= NOTBREMSE_DROSSEL
+              and protokoll["fehler"] + protokoll["uebersprungen"] == 40,
+              {k: protokoll[k] for k in ("fehler", "uebersprungen", "abgebrochen")})
+            fehlerdatei = _json(os.path.join(d, "konsens", "2026", "2026-09-02_1000Z_fehler.json"), {})
+            p("Fehlerdatei nennt die gedrosselten Firmen mit Grund",
+              len(fehlerdatei) == protokoll["fehler"] and all("RateLimit" in v for v in fehlerdatei.values()))
+        finally:
+            _SCHLAFE = alt
+            _ABBRUCH.clear()
+
     if fehler:
         print(f"\n{len(fehler)} FEHLER: {', '.join(fehler)}")
         return 1
@@ -456,6 +649,7 @@ def selbsttest() -> int:
 
 
 def main():
+    global ABFRAGEN_JE_SEKUNDE
     ap = argparse.ArgumentParser()
     ap.add_argument("--selbsttest", action="store_true")
     ap.add_argument("--daten", help="Ordner des Datenrepos heliot-daten")
@@ -464,7 +658,10 @@ def main():
     ap.add_argument("--ticker-datei")
     ap.add_argument("--nur-wochenlisten", action="store_true")
     ap.add_argument("--faeden", type=int, default=4)
+    ap.add_argument("--abfragen-je-sekunde", type=float, default=ABFRAGEN_JE_SEKUNDE,
+                    help="Bremse ueber alle Faeden; 0 = keine")
     a = ap.parse_args()
+    ABFRAGEN_JE_SEKUNDE = a.abfragen_je_sekunde
     if a.selbsttest:
         return selbsttest()
     if not a.daten:
