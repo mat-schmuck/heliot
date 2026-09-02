@@ -129,7 +129,7 @@ def konsistenz(zeilen):
         nach[(z["kennzahl"], z["typ"])][z["end"]] = z
 
     # 1. Quartalssumme gegen Jahreswert (nur amtliche Quartale, additiv)
-    geprueft = passt = 0
+    geprueft = passt = restated = 0
     for kennzahl, spez in fn.KENNZAHLEN.items():
         if spez["art"] != "dauer" or not spez["additiv"]:
             continue
@@ -140,14 +140,28 @@ def konsistenz(zeilen):
                         if zf["start"] <= zq["start"] and zq["end"] <= ende]
             if len(quartale) != 4 or any(x["quelle"] != "amtlich" for x in quartale):
                 continue
-            summe = sum(x["wert_letzt"] for x in quartale)
             geprueft += 1
-            if abs(summe - zf["wert_letzt"]) <= max(1.0, abs(zf["wert_letzt"]) * 0.001):
+            treffer = {}
+            for fassung in ("wert_erst", "wert_letzt"):
+                summe = sum(x[fassung] for x in quartale)
+                treffer[fassung] = abs(summe - zf[fassung]) <= max(1.0, abs(zf[fassung]) * 0.001)
+            if treffer["wert_letzt"]:
                 passt += 1
+            elif treffer["wert_erst"]:
+                # Die urspruenglich eingereichten Zahlen passen zusammen; der
+                # Jahreswert wurde spaeter geaendert, die Quartale nie neu
+                # eingereicht (Befund Abercrombie 2010, Restatement im 10-K 2012).
+                passt += 1
+                restated += 1
+                befunde.append(f"  Hinweis {kennzahl} Jahr bis {ende}: Erstfassungen stimmen "
+                               f"({_fmt(zf['wert_erst'])}), der Jahreswert wurde am {zf['filed_letzt']} "
+                               f"auf {_fmt(zf['wert_letzt'])} geaendert, die Quartale nicht")
             else:
+                summe = sum(x["wert_letzt"] for x in quartale)
                 befunde.append(f"  Abweichung {kennzahl} Jahr bis {ende}: Quartalssumme "
-                               f"{_fmt(summe)} gegen Jahr {_fmt(zf['wert_letzt'])}")
-    befunde.insert(0, f"  Quartalssumme gegen Jahr: {passt} von {geprueft} stimmen (alle vier Quartale amtlich)")
+                               f"{_fmt(summe)} gegen Jahr {_fmt(zf['wert_letzt'])} (beide Fassungen)")
+    befunde.insert(0, f"  Quartalssumme gegen Jahr: {passt} von {geprueft} stimmen (alle vier Quartale "
+                      f"amtlich), davon {restated} nur in der Erstfassung (Jahr spaeter geaendert)")
 
     # 2. Bruttogewinn = Umsatz minus Umsatzkosten
     g = nach.get(("bruttogewinn", "Q"), {})
