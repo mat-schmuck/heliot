@@ -29,6 +29,20 @@ import os
 
 CFG = {
 
+    # --- Push-Sammler (Gerhards Go vom 02.09.2026) ---
+    # Befund vom 31.08.2026 (ntfy-Zustellprotokoll): Der Waechter schickte
+    # fuenf Pushes binnen EINER Sekunde (15:32:28), alle mit HTTP 200
+    # angenommen, aber Mathias' iPhone zeigte nur einen Teil davon an.
+    # Apples Push-Dienst fasst schnelle Serien zusammen und verwirft
+    # einzelne Meldungen; damit gingen echte Signale verloren. Gerhard:
+    # "Das heisst, ich verpasse gerade echte Signale. Dafuer gebe ich dir
+    # hiermit sofort das Go." Zwischen zwei Pushes liegt seither ein
+    # Mindestabstand; die Wartezeit sitzt VOR der Handelszeit-Sperre,
+    # damit ein verzoegerter Push nie nach dem Schlussgong rausgeht.
+    "push": {
+        "mindestabstand_s": 10,
+    },
+
     # --- Zahlen-Karenz (Gerhards Freigabe vom 31.08.2026) ---
     # Messgrundlage ist die Logbuch-Forensik vom 30.08.2026: Signale mit
     # Quartalstermin binnen sieben Tagen nach dem Trigger liefen im

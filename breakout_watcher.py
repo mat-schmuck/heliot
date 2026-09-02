@@ -1925,12 +1925,51 @@ def _portionen(absaetze: list[str], grenze: int = NTFY_GRENZE) -> list[list[str]
     return portionen
 
 
+# Zeitpunkt (time.monotonic) des letzten angenommenen Pushes; None vor dem
+# ersten. Traegt den Mindestabstand des Push-Sammlers (CFG["push"]).
+_LETZTER_PUSH = None
+
+
+def push_abstand_warten(jetzt=None, schlafe=time.sleep) -> float:
+    """Wartet, bis seit dem letzten Push der Mindestabstand vergangen
+    ist, und gibt die gewartete Zeit in Sekunden zurueck.
+
+    PUSH-SAMMLER (Gerhards Go vom 02.09.2026): Fuenf Pushes binnen einer
+    Sekunde kamen am 31.08.2026 alle mit HTTP 200 an, das iPhone zeigte
+    aber nur einen Teil; Apples Push-Dienst fasst schnelle Serien zusammen.
+    Der Abstand entzerrt die Serie, ohne Meldungen zu verschmelzen: Titel,
+    Prioritaet und Reihenfolge bleiben, jede Meldung bleibt fuer sich
+    lesbar. Der Waechter prueft im Zwei-Sekunden-Takt und Yahoo liefert
+    ohnehin mit Verzug; zehn Sekunden je weiterem Push aendern an der
+    Handelbarkeit nichts."""
+    abstand = float(CFG.get("push", {}).get("mindestabstand_s", 0) or 0)
+    if _LETZTER_PUSH is None or abstand <= 0:
+        return 0.0
+    jetzt = time.monotonic() if jetzt is None else jetzt
+    rest = abstand - (jetzt - _LETZTER_PUSH)
+    if rest <= 0:
+        return 0.0
+    print(f"  Push-Sammler: {rest:.1f} s Abstand zum vorigen Push abgewartet")
+    schlafe(rest)
+    return rest
+
+
 def _sende_eine(topic: str, titel: str, body: str, prio: str) -> bool:
+    global _LETZTER_PUSH
     # KEINE "Tags"-Kopfzeile (Mathias, 13.08.2026: "Entferne bitte alle
     # Emojis aus den Meldungen, Raketen, Diagramme etc. nerven nur").
     # Genau daraus baut ntfy die Bildchen: "rocket" wurde zur Rakete,
     # "chart_with_upwards_trend" zum Diagramm, "fast_forward" zum
     # Vorspul-Zeichen. Ohne die Kopfzeile bleibt die Meldung Text.
+    push_abstand_warten()
+    if not HANDELSZEIT_EGAL:
+        # Nach der Wartezeit noch einmal auf die Uhr sehen: Der Abstand
+        # darf keinen Push ueber den Schlussgong schieben.
+        offen, grund = markt_offen()
+        if not offen:
+            print(f"⛔ NICHT gesendet — Börse geschlossen ({grund}), "
+                  f"nach dem Warten des Push-Sammlers.")
+            return False
     kopf = {"Title": titel.encode("utf-8"), "Priority": prio}
     kopf.update(email_kopf())
     try:
@@ -1943,6 +1982,7 @@ def _sende_eine(topic: str, titel: str, body: str, prio: str) -> bool:
         print(f"⚠ Push abgelehnt: HTTP {r.status_code} — {r.text[:200]}")
         return False
     ntfy_verlauf.merke_antwort(r)
+    _LETZTER_PUSH = time.monotonic()
     print(f"Push gesendet an ntfy.sh/{topic} ({len(body)} Zeichen, "
           f"HTTP {r.status_code})")
     return True
