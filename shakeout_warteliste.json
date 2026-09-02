@@ -6,6 +6,15 @@
   "zone_max": 31.690000534057617,
   "spring_low": 31.264999389648438,
   "spring_volumen": 2009118.0,
-  "tage_gewartet": 14
+  "tage_gewartet": 15
+ },
+ "FROG": {
+  "spring_index": 500,
+  "spring_datum": "2026-09-02",
+  "zone_min": 89.16000366210938,
+  "zone_max": 89.16000366210938,
+  "spring_low": 88.0,
+  "spring_volumen": 2203066.0,
+  "tage_gewartet": 0
  }
 }
