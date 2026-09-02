@@ -1,0 +1,73 @@
+name: Fundament Phase 1
+
+# Gerhards Fundamentaldaten-Tool, Phase 1 (Freigabe 01.09.2026): amtliche
+# XBRL-Fakten der SEC normalisieren und gegen echte Berichte validieren.
+# Nur per Hand ausloesbar. Laeuft auf dem Branch, von dem es gestartet
+# wird (Bausicherheit ueber Branches, F6). Ergebnisse als Artefakt; der
+# Vollmodus legt die Parquet-Bestaende zusaetzlich als Release ab.
+
+on:
+  workflow_dispatch:
+    inputs:
+      modus:
+        description: "probe (Referenzfirmen validieren) oder voll (Gesamtarchiv)"
+        type: choice
+        options:
+          - probe
+          - voll
+        default: probe
+      hoechstens:
+        description: "Vollmodus: nur die ersten N Archivdateien (leer = alle)"
+        required: false
+        default: ""
+
+concurrency:
+  group: fundament-phase1
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  lauf:
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Abhaengigkeiten
+        run: pip install pyarrow pandas
+      - name: Selbsttest der Normalisierung
+        run: python fundament_normalisieren.py --selbsttest
+      - name: Lauf
+        env:
+          SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
+        run: |
+          if [ -n "${{ inputs.hoechstens }}" ]; then
+            python fundament_lauf.py --modus "${{ inputs.modus }}" --hoechstens "${{ inputs.hoechstens }}"
+          else
+            python fundament_lauf.py --modus "${{ inputs.modus }}"
+          fi
+      - name: Berichte als Artefakt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fundament-${{ inputs.modus }}-${{ github.run_id }}
+          path: |
+            fundament_ausgabe/*.md
+            fundament_ausgabe/*.json
+            fundament_ausgabe/*.csv
+          if-no-files-found: warn
+      - name: Release mit den Parquet-Bestaenden (nur voll)
+        if: inputs.modus == 'voll' && inputs.hoechstens == ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          rm -f fundament_daten/companyfacts.zip
+          tag="fundament-roh-$(date -u +%Y%m%d-%H%M)"
+          gh release create "$tag" fundament_ausgabe/*.parquet fundament_ausgabe/fundament_firmen.csv fundament_ausgabe/abdeckung.md fundament_ausgabe/fundament_fehler.json \
+            --target "${{ github.sha }}" \
+            --title "Fundament Rohbestand $tag" \
+            --notes "Phase 1, Vollarchiv companyfacts der SEC, normalisiert (Kennzahlen je Jahr) samt Rohdaten aller Felder je Jahr. Erzeugt vom Lauf ${{ github.run_id }} auf Branch ${{ github.ref_name }}."
