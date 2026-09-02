@@ -1281,6 +1281,38 @@ def block_e():
     pruefe("E", "Handelszeit-Sperre: offen/zu/Wochenende",
            offen and not zu and not we)
 
+    # Push-Sammler (Gerhards Go vom 02.09.2026): Mindestabstand zwischen
+    # zwei Pushes, damit Apples Push-Dienst keine Serie mehr verschluckt.
+    from config import CFG as _cfg
+    abstand = float(_cfg.get("push", {}).get("mindestabstand_s", 0))
+    pruefe("E", "Push-Sammler: Mindestabstand in der Konfiguration (mindestens 5 s)",
+           abstand >= 5, abstand)
+    quelle = (WURZEL / "breakout_watcher.py").read_text(encoding="utf-8")
+    sende_eine = quelle[quelle.index("def _sende_eine("):quelle.index("HANDELSZEIT_EGAL = False")]
+    pruefe("E", "Push-Sammler: _sende_eine wartet VOR dem Senden und prueft danach die Uhr",
+           "push_abstand_warten()" in sende_eine
+           and sende_eine.index("push_abstand_warten()") < sende_eine.index("requests.post")
+           and sende_eine.index("markt_offen()") < sende_eine.index("requests.post"))
+    pruefe("E", "Push-Sammler: der Zeitpunkt wird nur nach angenommenem Push gemerkt",
+           "_LETZTER_PUSH = time.monotonic()" in sende_eine
+           and sende_eine.index("merke_antwort(r)") < sende_eine.index("_LETZTER_PUSH = time.monotonic()"))
+    gewartet = []
+    _alt = bw._LETZTER_PUSH
+    try:
+        bw._LETZTER_PUSH = None
+        pruefe("E", "Push-Sammler: vor dem ersten Push kein Warten",
+               bw.push_abstand_warten(jetzt=1000.0, schlafe=gewartet.append) == 0.0 and not gewartet)
+        bw._LETZTER_PUSH = 1000.0
+        w = bw.push_abstand_warten(jetzt=1001.0, schlafe=gewartet.append)
+        pruefe("E", "Push-Sammler: eine Sekunde nach dem Push wird der Rest des Abstands gewartet",
+               abs(w - (abstand - 1.0)) < 1e-6 and gewartet == [w], w)
+        gewartet.clear()
+        pruefe("E", "Push-Sammler: nach Ablauf des Abstands kein Warten",
+               bw.push_abstand_warten(jetzt=1000.0 + abstand + 0.5, schlafe=gewartet.append) == 0.0
+               and not gewartet)
+    finally:
+        bw._LETZTER_PUSH = _alt
+
 
 # ---------------------------------------------------------------------------
 # F — Exit-Regelwerk
