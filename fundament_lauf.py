@@ -358,6 +358,40 @@ def _als_float(z, felder):
     return z
 
 
+def _als_int(z, felder):
+    """Ganzzahlfelder fuers Parquet-Schema; alles Unlesbare wird None
+    (das Bulk-Archiv liefert manche Felder als Zeichenkette)."""
+    for f in felder:
+        v = z.get(f)
+        if v is not None and not isinstance(v, int):
+            try:
+                z[f] = int(str(v).strip())
+            except (TypeError, ValueError):
+                z[f] = None
+    return z
+
+
+def _als_text(z, felder):
+    for f in felder:
+        v = z.get(f)
+        if v is not None and not isinstance(v, str):
+            z[f] = str(v)
+    return z
+
+
+def _kennzahl_zeile(z):
+    _als_float(z, ("wert_erst", "wert_letzt"))
+    _als_int(z, ("cik", "fiskaljahr", "n_einreichungen"))
+    return _als_text(z, ("fiskalperiode", "kalender", "form_erst", "form_letzt",
+                         "accn_erst", "accn_letzt", "filed_erst", "filed_letzt"))
+
+
+def _roh_zeile(r):
+    _als_float(r, ("val",))
+    _als_int(r, ("cik", "fy"))
+    return _als_text(r, ("fp", "form", "filed", "frame", "accn", "start", "end", "einheit"))
+
+
 def voll(archiv, hoechstens=None):
     os.makedirs(AUSGABE, exist_ok=True)
     _lade_archiv(archiv)
@@ -382,10 +416,10 @@ def voll(archiv, hoechstens=None):
                     continue
                 meta, zeilen = fn.normalisiere(firma)
                 for z in zeilen:
-                    _als_float(z, ("wert_erst", "wert_letzt"))
+                    _kennzahl_zeile(z)
                 kennzahlen.add(zeilen)
-                rohdaten.add([_als_float(r, ("val",)) for r in fn.alle_fakten(firma)])
-                cik = firma.get("cik")
+                rohdaten.add([_roh_zeile(r) for r in fn.alle_fakten(firma)])
+                cik = meta["cik"]
                 for z in zeilen:
                     if z["typ"] in ("Q", "B") and z["end"] >= "2020-01-01":
                         abdeckung_kz[z["kennzahl"]].add(cik)

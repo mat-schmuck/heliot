@@ -247,9 +247,19 @@ def _taxonomie(tag):
     return "us-gaap", tag
 
 
+def cik_zahl(firma):
+    """Die CIK als Zahl. Die API liefert sie als Zahl, das Bulk-Archiv als
+    zehnstellige Zeichenkette mit fuehrenden Nullen ('0000022606')."""
+    roh = firma.get("cik")
+    try:
+        return int(str(roh).strip())
+    except (TypeError, ValueError):
+        return None
+
+
 def alle_fakten(firma):
     """Generator ueber ALLE Fakten aller Taxonomien (Rohdaten, F2)."""
-    cik = firma.get("cik")
+    cik = cik_zahl(firma)
     for tax, konzepte in (firma.get("facts") or {}).items():
         for name, inhalt in (konzepte or {}).items():
             for einheit, liste in (inhalt.get("units") or {}).items():
@@ -486,7 +496,7 @@ def normalisiere(firma, kennzahlen=None):
     """(metadaten, zeilen) fuer eine Firma. zeilen enthaelt Quartals-
     (typ Q) und Jahreszeilen (typ FY) aller Kennzahlen; Halbjahres- und
     Neunmonatswerte dienen nur der Ableitung und werden nicht ausgegeben."""
-    cik = firma.get("cik")
+    cik = cik_zahl(firma)
     enden = _periodenende_je_einreichung(firma)
     zeilen = []
     waehrungen = set()
@@ -720,6 +730,12 @@ def selbsttest() -> int:
       ng[0] if ng else "keine Zeile")
     p("Minderheiten-Ergebnis als eigene Kennzahl",
       any(z["kennzahl"] == "minderheiten_ergebnis" and z["wert_erst"] == 10 for z in zeilen3))
+
+    archiv_firma = dict(_synthetische_firma(), cik="0000000001")
+    meta4, zeilen4 = normalisiere(archiv_firma)
+    p("CIK aus dem Bulk-Archiv ('0000000001') wird zur Zahl 1, in Metadaten, Zeilen und Rohdaten",
+      meta4["cik"] == 1 and all(z["cik"] == 1 for z in zeilen4)
+      and all(f["cik"] == 1 for f in alle_fakten(archiv_firma)))
     ao = [z for z in zeilen if z["kennzahl"] == "aktien_ausstehend"]
     p("Deckblatt-Aktienzahl aus der dei-Taxonomie",
       len(ao) == 1 and ao[0]["taxonomie"] == "dei" and ao[0]["wert_erst"] == 1000000)
