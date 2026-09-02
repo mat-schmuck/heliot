@@ -868,7 +868,7 @@
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
-  "status": "offen",
+  "status": "geschlossen",
   "verlauf": [],
   "klasse": "tagesgeschaeft",
   "musterziel": null,
@@ -878,7 +878,12 @@
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
-  "wedge_drop_gemeldet": false
+  "wedge_drop_gemeldet": false,
+  "schluss_datum": "2026-09-02",
+  "schluss_grund": "Rückfall unter die Exit-Linie (intraday)",
+  "schluss_kurs": 456.69,
+  "ergebnis_pct": -1.81,
+  "ergebnis_r": -1.04
  },
  "BHVN|1": {
   "symbol": "BHVN",

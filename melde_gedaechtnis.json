@@ -29,7 +29,7 @@
     "CMBT|2": "draussen",
     "ECPG|1": "drin",
     "ELF|3": "draussen",
-    "EOG|3": "drin",
+    "EOG|3": "draussen",
     "ERO|2": "draussen",
     "ESTC|2": "draussen",
     "FIG|3": "draussen",
@@ -46,7 +46,7 @@
     "INSW|2": "draussen",
     "LNG|3": "draussen",
     "LPG|2": "draussen",
-    "NAVN|3": "draussen",
+    "NAVN|3": "drin",
     "NOW|3": "draussen",
     "OVV|2": "draussen",
     "OXY|3": "draussen",
@@ -71,7 +71,7 @@
     "AXGN|2": "draussen",
     "AYA|2": "draussen",
     "CDNA|2": "draussen",
-    "CLMT|1": "drin",
+    "CLMT|1": "draussen",
     "CLMT|2": "draussen",
     "CLMT|3": "draussen",
     "CORT|2": "draussen",
@@ -111,7 +111,7 @@
     "U|3": "draussen",
     "MATX|1": "draussen",
     "PBT|3": "draussen",
-    "DNTH|2": "drin",
+    "DNTH|2": "draussen",
     "KNSA|3": "draussen",
     "PRE|2": "draussen",
     "QMCO|2": "draussen",
@@ -134,7 +134,7 @@
     "XNCR|2": "draussen",
     "PBF|1": "drin",
     "PBF|3": "drin",
-    "ARCT|2": "drin",
+    "ARCT|2": "draussen",
     "CRM|2": "drin",
     "TIGO|2": "drin",
     "ANDG|2": "draussen",
@@ -147,7 +147,8 @@
     "RNG|1": "drin",
     "XMTR|1": "drin",
     "ARGX|1": "drin",
-    "BCPC|3": "drin"
+    "BCPC|3": "drin",
+    "EOG|1": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -220,6 +221,8 @@
     "BHVN|1": "2026-09-02",
     "BEST|BHVN|1": "2026-09-02",
     "HTF|RNG|1": "2026-09-02",
-    "UEBER|CLMT|3": "2026-09-02"
+    "UEBER|CLMT|3": "2026-09-02",
+    "UEBER|CLMT|1": "2026-09-02",
+    "UEBER|ARCT|2": "2026-09-02"
   }
 }
