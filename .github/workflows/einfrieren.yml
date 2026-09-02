@@ -1,0 +1,93 @@
+name: Konsens einfrieren
+
+# Gerhards F9 (Freigabe 02.09.2026): zweimal je Handelstag den aktuellen
+# Analystenkonsens aller Firmen mit Konsens einfrieren, um 05:00 und um
+# 15:30 New Yorker Zeit, ausgeloest von cron-job.org (GitHubs eigener
+# Zeitplan hinkt Stunden nach, siehe scanner.yml). Die Schnappschuesse
+# gehen in das PRIVATE Datenrepo heliot-daten (F17); dafuer braucht es
+# das Secret DATEN_TOKEN (fein granuliertes Token, nur dieses eine Repo,
+# Inhalte lesen und schreiben). Fehlt es, tut der Lauf nichts und sagt es.
+
+on:
+  workflow_dispatch:
+    inputs:
+      modus:
+        description: "schnappschuss (Bestand) oder bestandsaufnahme (Register in Portionen durchgehen)"
+        type: choice
+        options:
+          - schnappschuss
+          - bestandsaufnahme
+        default: schnappschuss
+      hoechstens:
+        description: "Bestandsaufnahme: hoechstens so viele neue Firmen je Lauf"
+        required: false
+        default: "2500"
+
+concurrency:
+  group: konsens-einfrieren
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  einfrieren:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - name: Ist das Datenrepo-Token da?
+        id: token
+        env:
+          DATEN_TOKEN: ${{ secrets.DATEN_TOKEN }}
+        run: |
+          if [ -z "$DATEN_TOKEN" ]; then
+            echo "Secret DATEN_TOKEN fehlt; ohne Schreibzugang auf heliot-daten wird nichts eingefroren."
+            echo "da=nein" >> "$GITHUB_OUTPUT"
+          else
+            echo "da=ja" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.token.outputs.da == 'ja'
+      - uses: actions/checkout@v4
+        if: steps.token.outputs.da == 'ja'
+        with:
+          repository: mat-schmuck/heliot-daten
+          token: ${{ secrets.DATEN_TOKEN }}
+          path: daten
+      - uses: actions/setup-python@v5
+        if: steps.token.outputs.da == 'ja'
+        with:
+          python-version: "3.11"
+      - name: Abhaengigkeiten
+        if: steps.token.outputs.da == 'ja'
+        run: pip install yfinance pandas requests
+      - name: Selbsttest
+        if: steps.token.outputs.da == 'ja'
+        run: python konsens_einfrieren.py --selbsttest
+      - name: Einfrieren
+        if: steps.token.outputs.da == 'ja'
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
+        run: python konsens_einfrieren.py --daten daten --modus "${{ inputs.modus }}" --hoechstens "${{ inputs.hoechstens }}"
+      - name: Schnappschuss ins Datenrepo
+        if: steps.token.outputs.da == 'ja'
+        run: |
+          cd daten
+          git config user.name "heliot-einfrieren"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Nichts Neues."
+            exit 0
+          fi
+          git commit -q -m "Konsens-Schnappschuss $(date -u +%Y-%m-%d_%H%MZ) (${{ inputs.modus }})"
+          for versuch in 1 2 3; do
+            if git push --quiet origin main; then
+              echo "Gesichert."
+              exit 0
+            fi
+            git pull --rebase --quiet origin main || true
+          done
+          echo "Push nach drei Anlaeufen gescheitert."
+          exit 1
