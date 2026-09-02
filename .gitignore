@@ -29,3 +29,7 @@ __pycache__/
 venv/
 # PowerShell legt bei "> `$null" versehentlich eine Datei dieses Namens an
 $null
+
+# Fundament Phase 1: Arbeitsdaten und Ausgaben des Runners (Release statt Repo)
+fundament_daten/
+fundament_ausgabe/

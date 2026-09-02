@@ -135,7 +135,8 @@ def block_b():
                     "red_to_green", "red_to_green_explosive", "zahlen_termine",
                     "scan_noetig", "waechter_noetig", "sektor_radar",
                     "insider_scanner", "insider_edgar", "listen",
-                    "earnings_pullback", "kell_zyklus", "ema_crossback"]
+                    "earnings_pullback", "kell_zyklus", "ema_crossback",
+                    "fundament_normalisieren"]
     for name in mit_schalter:
         r = subprocess.run([sys.executable, f"{name}.py", "--selbsttest"],
                            capture_output=True, text=True, cwd=WURZEL,

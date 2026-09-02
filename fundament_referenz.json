@@ -1,0 +1,148 @@
+{
+  "_hinweis": "Belegte Werte aus echten Quartalsberichten (Pressemitteilungen der Firmen mit vollstaendigen Abschlusstabellen). Jede Periode nennt die Quelle. Toleranzen decken nur die Rundung der Quelle ab (Millionen mit einer Dezimale usw.), nie Abweichungen. Firmen ohne perioden dienen der Struktur-Diagnose (Auslaender, Banken, Small Caps).",
+  "firmen": [
+    {
+      "ticker": "AAPL",
+      "name": "Apple Inc., Geschaeftsjahr endet Ende September; Q3 FY2025 = drei Monate bis 28.06.2025",
+      "perioden": [
+        {
+          "end": "2025-06-28",
+          "typ": "Q",
+          "quelle": "https://www.apple.com/newsroom/pdfs/fy2025-q3/FY25_Q3_Consolidated_Financial_Statements.pdf",
+          "werte": {
+            "umsatz": 94036000000,
+            "umsatzkosten": 50318000000,
+            "bruttogewinn": 43718000000,
+            "forschung_entwicklung": 8866000000,
+            "vertrieb_verwaltung": 6650000000,
+            "betriebsaufwand": 15516000000,
+            "operatives_ergebnis": 28202000000,
+            "ergebnis_vor_steuern": 28031000000,
+            "steuern": 4597000000,
+            "nettogewinn": 23434000000,
+            "eps_basis": 1.57,
+            "eps_verwaessert": 1.57,
+            "aktien_basis": 14902886000,
+            "aktien_verwaessert": 14948179000
+          },
+          "toleranz": {"eps_basis": 0.005, "eps_verwaessert": 0.005}
+        },
+        {
+          "end": "2025-06-28",
+          "typ": "B",
+          "quelle": "https://www.apple.com/newsroom/pdfs/fy2025-q3/FY25_Q3_Consolidated_Financial_Statements.pdf",
+          "werte": {
+            "kasse": 36269000000,
+            "kurzfristige_anlagen": 19103000000,
+            "forderungen": 27557000000,
+            "vorraete": 5925000000,
+            "umlaufvermoegen": 122491000000,
+            "sachanlagen": 48508000000,
+            "bilanzsumme": 331495000000,
+            "kurzfristige_verbindlichkeiten": 141120000000,
+            "verbindlichkeiten": 265665000000,
+            "eigenkapital": 65830000000,
+            "gewinnruecklagen": -17607000000
+          }
+        }
+      ]
+    },
+    {
+      "ticker": "ANF",
+      "name": "Abercrombie & Fitch Co., 52/53-Wochen-Geschaeftsjahr; Q2 FY2025 = dreizehn Wochen bis 02.08.2025",
+      "perioden": [
+        {
+          "end": "2025-08-02",
+          "typ": "Q",
+          "quelle": "https://www.globenewswire.com/news-release/2025/08/27/3139910/0/en/Abercrombie-Fitch-Co-Reports-Second-Quarter-Fiscal-2025-Results.html",
+          "werte": {
+            "umsatz": 1208560000,
+            "umsatzkosten": 451590000,
+            "operatives_ergebnis": 206658000,
+            "ergebnis_vor_steuern": 209132000,
+            "steuern": 65744000,
+            "nettogewinn": 141383000,
+            "eps_basis": 2.97,
+            "eps_verwaessert": 2.91,
+            "aktien_basis": 47550000,
+            "aktien_verwaessert": 48551000
+          },
+          "toleranz": {"eps_basis": 0.005, "eps_verwaessert": 0.005}
+        },
+        {
+          "end": "2025-08-02",
+          "typ": "B",
+          "quelle": "https://www.globenewswire.com/news-release/2025/08/27/3139910/0/en/Abercrombie-Fitch-Co-Reports-Second-Quarter-Fiscal-2025-Results.html",
+          "werte": {
+            "kasse": 572730000,
+            "kurzfristige_anlagen": 30795000,
+            "forderungen": 174000000,
+            "vorraete": 592966000,
+            "umlaufvermoegen": 1489115000,
+            "sachanlagen": 638590000,
+            "bilanzsumme": 3301941000,
+            "kurzfristige_verbindlichkeiten": 1038041000,
+            "eigenkapital": 1292255000
+          }
+        }
+      ]
+    },
+    {
+      "ticker": "IESC",
+      "name": "IES Holdings, Geschaeftsjahr endet 30.09.; Q3 FY2025 = drei Monate bis 30.06.2025 (Pressemitteilung nennt Millionen mit einer Dezimale bzw. gerundet)",
+      "perioden": [
+        {
+          "end": "2025-06-30",
+          "typ": "Q",
+          "quelle": "https://investors.ies-corporate.com/news-releases/news-release-details/ies-holdings-reports-fiscal-2025-third-quarter-results",
+          "werte": {
+            "umsatz": 890000000,
+            "operatives_ergebnis": 111900000,
+            "nettogewinn": 77200000,
+            "eps_verwaessert": 3.81
+          },
+          "toleranz": {"umsatz": 500000, "operatives_ergebnis": 50000, "nettogewinn": 50000, "eps_verwaessert": 0.005}
+        },
+        {
+          "end": "2025-06-30",
+          "typ": "B",
+          "quelle": "https://investors.ies-corporate.com/news-releases/news-release-details/ies-holdings-reports-fiscal-2025-third-quarter-results",
+          "werte": {
+            "kasse": 101400000,
+            "vorraete": 108800000,
+            "umlaufvermoegen": 1012800000,
+            "sachanlagen": 164400000,
+            "goodwill": 95300000,
+            "bilanzsumme": 1469700000,
+            "kurzfristige_verbindlichkeiten": 546600000,
+            "verbindlichkeiten": 647300000,
+            "langfristige_schulden": 20000000,
+            "gewinnruecklagen": 700300000,
+            "eigenkapital": 781400000
+          },
+          "toleranz": {"kasse": 50000, "vorraete": 50000, "umlaufvermoegen": 50000, "sachanlagen": 50000, "goodwill": 50000, "bilanzsumme": 50000, "kurzfristige_verbindlichkeiten": 50000, "verbindlichkeiten": 50000, "langfristige_schulden": 50000, "gewinnruecklagen": 50000, "eigenkapital": 50000}
+        }
+      ]
+    },
+    {
+      "ticker": "ASML",
+      "name": "ASML Holding, niederlaendischer 20-F-Einreicher nach IFRS in EUR (Struktur-Diagnose F4: was liefert die SEC fuer Auslaender?)",
+      "perioden": []
+    },
+    {
+      "ticker": "ATAT",
+      "name": "Atour Lifestyle Holdings, chinesischer 20-F-Einreicher (Struktur-Diagnose F4)",
+      "perioden": []
+    },
+    {
+      "ticker": "JPM",
+      "name": "JPMorgan Chase, Bank (Struktur-Diagnose: Umsatz-Konzepte der Banken)",
+      "perioden": []
+    },
+    {
+      "ticker": "KRYS",
+      "name": "Krystal Biotech, Small Cap aus der Wochenliste (Struktur-Diagnose)",
+      "perioden": []
+    }
+  ]
+}
