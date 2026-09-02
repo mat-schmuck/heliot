@@ -165,7 +165,13 @@
     "REGN|3": "drin",
     "SHIP|1": "drin",
     "PRE|1": "drin",
-    "PRE|3": "drin"
+    "PRE|3": "drin",
+    "YPF|1": "drin",
+    "HASI|1": "drin",
+    "FRO|1": "drin",
+    "FRO|3": "drin",
+    "ANDG|1": "drin",
+    "ANDG|3": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -247,6 +253,8 @@
     "BEST|HTF|HTFL|2": "2026-09-02",
     "BEST|HTF|RNG|1": "2026-09-02",
     "PRE|1": "2026-09-02",
-    "BEST|PRE|1": "2026-09-02"
+    "BEST|PRE|1": "2026-09-02",
+    "HASI|1": "2026-09-02",
+    "BEST|HASI|1": "2026-09-02"
   }
 }
