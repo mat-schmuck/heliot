@@ -185,6 +185,58 @@ KENNZAHLEN = {
         "ifrs:NumberOfSharesOutstanding"]),
     "streubesitz_wert": dict(art="bestand", einheit="USD", additiv=False, tags=[
         "dei:EntityPublicFloat"]),
+    # --- Sonderbranchen (Gerhards Entscheid F14 vom 02.09.2026: gleich mit
+    # eigenen Zeilen, nicht erst in einer zweiten Runde) ---
+    # Banken: Der "Umsatz" einer Bank sind ihre Nettoertraege (Kaskade
+    # oben, RevenuesNetOfInterestExpense); dazu die Bausteine.
+    "zinsertrag": dict(art="dauer", einheit="USD", additiv=True, tags=[
+        "InterestAndDividendIncomeOperating", "InterestIncomeOperating",
+        "ifrs:InterestRevenueCalculatedUsingEffectiveInterestMethod"]),
+    "zinsueberschuss": dict(art="dauer", einheit="USD", additiv=True, tags=[
+        "InterestIncomeExpenseNet", "ifrs:NetInterestIncome"]),
+    "provisionsertrag": dict(art="dauer", einheit="USD", additiv=True, tags=[
+        "NoninterestIncome", "ifrs:FeeAndCommissionIncome"]),
+    "verwaltungsaufwand_bank": dict(art="dauer", einheit="USD", additiv=True, tags=[
+        "NoninterestExpense"]),
+    "risikovorsorge": dict(art="dauer", einheit="USD", additiv=True, tags=[
+        "ProvisionForLoanLeaseAndOtherLosses", "ProvisionForCreditLosses",
+        "CreditLossExpense", "ProvisionForLoanLossesExpensed",
+        "ifrs:ImpairmentLossOnFinancialAssets"]),
+    "einlagen": dict(art="bestand", einheit="USD", additiv=False, tags=[
+        "Deposits", "ifrs:DepositsFromCustomers"]),
+    "kredite": dict(art="bestand", einheit="USD", additiv=False, tags=[
+        "LoansAndLeasesReceivableNetReportedAmount",
+        "LoansAndLeasesReceivableNetOfDeferredIncome", "NotesReceivableNet",
+        "ifrs:LoansAndAdvancesToCustomers"]),
+    "kernkapitalquote": dict(art="bestand", einheit="pure", additiv=False, tags=[
+        "CommonEquityTierOneCapitalToRiskWeightedAssets",
+        "TierOneRiskBasedCapitalToRiskWeightedAssets"]),
+    # Versicherer
+    "praemien_verdient": dict(art="dauer", einheit="USD", additiv=True, tags=[
+        "PremiumsEarnedNet", "PremiumsEarnedNetPropertyAndCasualty",
+        "ifrs:RevenueFromInsuranceContractsIssuedWithoutReductionForReinsuranceHeld"]),
+    "praemien_gebucht": dict(art="dauer", einheit="USD", additiv=True, tags=[
+        "PremiumsWrittenNet"]),
+    "schadenaufwand": dict(art="dauer", einheit="USD", additiv=True, tags=[
+        "PolicyholderBenefitsAndClaimsIncurredNet",
+        "IncurredClaimsPropertyCasualtyAndLiability", "BenefitsLossesAndExpenses"]),
+    "kapitalanlageertrag": dict(art="dauer", einheit="USD", additiv=True, tags=[
+        "NetInvestmentIncome"]),
+    # Immobiliengesellschaften (REITs). FFO ist kein amtliches Konzept und
+    # wird in der Abfrageschicht nach NAREIT aus Nettogewinn, Abschreibungen,
+    # Wertminderungen und Verkaufsgewinnen BERECHNET; hier nur die Bausteine.
+    "mieterloese": dict(art="dauer", einheit="USD", additiv=True, tags=[
+        "OperatingLeaseLeaseIncome", "OperatingLeasesIncomeStatementLeaseRevenue",
+        "RealEstateRevenueNet", "ifrs:RentalIncome"]),
+    "immobilien_netto": dict(art="bestand", einheit="USD", additiv=False, tags=[
+        "RealEstateInvestmentPropertyNet", "ifrs:InvestmentProperty"]),
+    "immobilien_anschaffungskosten": dict(art="bestand", einheit="USD", additiv=False, tags=[
+        "RealEstateInvestmentPropertyAtCost"]),
+    "wertminderung_immobilien": dict(art="dauer", einheit="USD", additiv=True, tags=[
+        "ImpairmentOfRealEstate"]),
+    "gewinn_immobilienverkauf": dict(art="dauer", einheit="USD", additiv=True, tags=[
+        "GainLossOnSaleOfProperties", "GainsLossesOnSalesOfInvestmentRealEstate",
+        "GainLossOnSalesOfRealEstate"]),
 }
 
 AUSLAND_FORMEN = ("20-F", "40-F", "6-K", "20-F/A", "40-F/A", "6-K/A")
@@ -536,9 +588,18 @@ def normalisiere(firma, kennzahlen=None):
     return meta, zeilen
 
 
-def quartalsreihe(zeilen, kennzahl, fassung="letzt"):
+def quartalsreihe(zeilen, kennzahl, fassung="erst"):
     """Bequemer Blick: [(end, wert, quelle), ...] der Quartale einer
-    Kennzahl, chronologisch."""
+    Kennzahl, chronologisch.
+
+    STANDARD IST DIE ERSTFASSUNG (Gerhards Entscheid F11 vom 02.09.2026,
+    abweichend von meiner Empfehlung): "Fuer mich zaehlt, was damals
+    bekannt war, nicht was die Firma zwei Jahre spaeter daraus gemacht
+    hat." Die Letztfassung bleibt in jeder Zeile mitgefuehrt und wird auf
+    Abruf gezeigt; Abweichungen zwischen beiden nennt die Abfrageschicht
+    ausdruecklich. Ebenso F13: Standardachse der Abfrage ist das
+    KALENDERQUARTAL (Feld kalender), das Fiskalquartal wird immer mit
+    angezeigt."""
     feld = "wert_" + fassung
     return [(z["end"], z[feld], z["quelle"]) for z in zeilen
             if z["kennzahl"] == kennzahl and z["typ"] == "Q"]
@@ -736,6 +797,25 @@ def selbsttest() -> int:
     p("CIK aus dem Bulk-Archiv ('0000000001') wird zur Zahl 1, in Metadaten, Zeilen und Rohdaten",
       meta4["cik"] == 1 and all(z["cik"] == 1 for z in zeilen4)
       and all(f["cik"] == 1 for f in alle_fakten(archiv_firma)))
+    bank = {"cik": 4, "entityName": "Bank Corp.", "facts": {"us-gaap": {
+        "InterestIncomeExpenseNet": {"units": {"USD": [
+            _fakt("2025-04-01", "2025-06-30", 500, "0004-25-000001", 2025, "Q2", "10-Q", "2025-08-01")]}},
+        "ProvisionForLoanLeaseAndOtherLosses": {"units": {"USD": [
+            _fakt("2025-04-01", "2025-06-30", 40, "0004-25-000001", 2025, "Q2", "10-Q", "2025-08-01")]}},
+        "Deposits": {"units": {"USD": [
+            _fakt(None, "2025-06-30", 9000, "0004-25-000001", 2025, "Q2", "10-Q", "2025-08-01")]}},
+        "CommonEquityTierOneCapitalToRiskWeightedAssets": {"units": {"pure": [
+            _fakt(None, "2025-06-30", 0.15, "0004-25-000001", 2025, "Q2", "10-Q", "2025-08-01")]}},
+    }}}
+    _, zb = normalisiere(bank)
+    werte = {z["kennzahl"]: (z["wert_erst"], z["einheit"]) for z in zb}
+    p("Sonderbranchen (F14): Zinsueberschuss, Risikovorsorge, Einlagen und Kernkapitalquote einer Bank",
+      werte.get("zinsueberschuss") == (500, "USD") and werte.get("risikovorsorge") == (40, "USD")
+      and werte.get("einlagen") == (9000, "USD") and werte.get("kernkapitalquote") == (0.15, "pure"),
+      werte)
+    p("Sonderbranchen: 40 Kernzeilen plus 17 Branchenzeilen im Register",
+      len(KENNZAHLEN) == 57, len(KENNZAHLEN))
+
     ao = [z for z in zeilen if z["kennzahl"] == "aktien_ausstehend"]
     p("Deckblatt-Aktienzahl aus der dei-Taxonomie",
       len(ao) == 1 and ao[0]["taxonomie"] == "dei" and ao[0]["wert_erst"] == 1000000)

@@ -137,8 +137,72 @@
     },
     {
       "ticker": "JPM",
-      "name": "JPMorgan Chase, Bank (Struktur-Diagnose: Umsatz-Konzepte der Banken)",
-      "perioden": []
+      "name": "JPMorgan Chase, Bank; Q2 2025 = drei Monate bis 30.06.2025 (Pressemitteilung in Millionen; gerundete Angaben mit Toleranz)",
+      "perioden": [
+        {
+          "end": "2025-06-30",
+          "typ": "Q",
+          "quelle": "https://www.jpmorganchase.com/content/dam/jpmc/jpmorgan-chase-and-co/investor-relations/documents/quarterly-earnings/2025/2nd-quarter/ac5b7d95-9133-4fea-959c-2fa6d8fd8c5b.pdf",
+          "werte": {
+            "umsatz": 44912000000,
+            "zinsueberschuss": 23300000000,
+            "provisionsertrag": 22400000000,
+            "risikovorsorge": 2849000000,
+            "verwaltungsaufwand_bank": 23779000000,
+            "nettogewinn": 14987000000,
+            "eps_verwaessert": 5.24
+          },
+          "toleranz": {"zinsueberschuss": 50000000, "provisionsertrag": 50000000, "eps_verwaessert": 0.005}
+        },
+        {
+          "end": "2025-06-30",
+          "typ": "B",
+          "quelle": "https://www.jpmorganchase.com/content/dam/jpmc/jpmorgan-chase-and-co/investor-relations/documents/quarterly-earnings/2025/2nd-quarter/ac5b7d95-9133-4fea-959c-2fa6d8fd8c5b.pdf",
+          "werte": {
+            "kernkapitalquote": 0.15
+          },
+          "toleranz": {"kernkapitalquote": 0.005}
+        }
+      ]
+    },
+    {
+      "ticker": "PGR",
+      "name": "Progressive, Versicherer; Q2 2025 = drei Monate bis 30.06.2025 (Pressemitteilung in Millionen)",
+      "perioden": [
+        {
+          "end": "2025-06-30",
+          "typ": "Q",
+          "quelle": "https://investors.progressive.com/financials/financial-news-releases/news-details/2025/Progressive-Reports-June-2025-Results/default.aspx",
+          "werte": {
+            "praemien_gebucht": 20076000000,
+            "praemien_verdient": 20310000000,
+            "nettogewinn": 3175000000,
+            "eps_verwaessert": 5.40
+          },
+          "toleranz": {"praemien_gebucht": 500000, "praemien_verdient": 500000, "nettogewinn": 500000, "eps_verwaessert": 0.005}
+        }
+      ]
+    },
+    {
+      "ticker": "O",
+      "name": "Realty Income, Immobiliengesellschaft (REIT); Q2 2025 = drei Monate bis 30.06.2025 (Ergebnisbericht in Tausend)",
+      "perioden": [
+        {
+          "end": "2025-06-30",
+          "typ": "Q",
+          "quelle": "https://www.realtyincome.com/sites/realty-income/files/2025-08/realty-income-earnings-release-and-supplemental-information-q2-2025.pdf",
+          "werte": {
+            "umsatz": 1410378000,
+            "mieterloese": 1338188000,
+            "abschreibungen": 647849000,
+            "gewinn_immobilienverkauf": 38566000,
+            "minderheiten_ergebnis": 2092000,
+            "nettogewinn": 196919000,
+            "eps_verwaessert": 0.22
+          },
+          "toleranz": {"eps_verwaessert": 0.005}
+        }
+      ]
     },
     {
       "ticker": "KRYS",
