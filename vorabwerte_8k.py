@@ -54,6 +54,8 @@ HOECHSTENS_SEITEN = 10
 QUELLE = "vorlaeufig_pressemitteilung"
 UMSATZ_TOLERANZ = 0.5           # mehr als 50 Prozent neben dem Vorjahresquartal heisst unsicher
 GEWINN_FAKTOR = 10.0            # Nettogewinn und EPS: mehr als das Zehnfache daneben heisst unsicher
+AKTIEN_FAKTOR = 3.0       # Aktienzahl aus Nettogewinn/EPS darf hoechstens um diesen Faktor vom Vorjahr abweichen
+AKTIEN_EPS_MIN = 0.05     # darunter macht die Rundung des EPS die Aktienzahl unbrauchbar
 PERIODE_HOECHSTENS_TAGE = 75    # das gemeldete Quartalsende muss zum 8-K passen (Messung 03.09.2026)
 
 
@@ -226,6 +228,27 @@ def plausibilitaet(werte, vorjahr, filing_datum):
                 abw[k] = round(_abw(ist, vj), 4)
                 if faktor is not None and (faktor > GEWINN_FAKTOR or faktor < 1.0 / GEWINN_FAKTOR) and abs(ist - vj) > 1e-9:
                     gruende.append(f"{k} um mehr als das Zehnfache neben dem Vorjahresquartal")
+    # Waechter: Nettogewinn und EPS muessen zur selben Aktienzahl fuehren wie im Vorjahr
+    # (fing den Lesefehler "(11.4 | )" als 114 Millionen bei Methode Electronics, 03.09.2026).
+    try:
+        ni, eps = float(werte.get("nettogewinn")), float(werte.get("eps_verwaessert"))
+    except (TypeError, ValueError):
+        ni = eps = None
+    if ni is not None and eps is not None:
+        if ni * eps < 0:
+            gruende.append("Nettogewinn und Ergebnis je Aktie haben verschiedene Vorzeichen")
+        elif abs(eps) >= AKTIEN_EPS_MIN and vorjahr:
+            try:
+                ni_vj, eps_vj = float(vorjahr.get("nettogewinn")), float(vorjahr.get("eps_verwaessert"))
+            except (TypeError, ValueError):
+                ni_vj = eps_vj = None
+            if ni_vj is not None and eps_vj is not None and abs(eps_vj) >= AKTIEN_EPS_MIN and ni_vj != 0:
+                aktien, aktien_vj = abs(ni) / abs(eps), abs(ni_vj) / abs(eps_vj)
+                faktor = aktien / aktien_vj
+                abw["aktien_verhaeltnis"] = round(faktor, 3)
+                if faktor > AKTIEN_FAKTOR or faktor < 1.0 / AKTIEN_FAKTOR:
+                    gruende.append("Nettogewinn und Ergebnis je Aktie passen nicht zusammen "
+                                   f"(Aktienzahl daraus {aktien / 1e6:.1f} Mio, im Vorjahr {aktien_vj / 1e6:.1f} Mio)")
     status = "unsicher" if gruende else "vorlaeufig"
     return status, gruende, abw
 
@@ -540,6 +563,26 @@ def selbsttest() -> int:
     p("Vorjahr ohne Umsatz: unsicher mit klarem Grund, keine Unendlich-Zahl in der Ablage",
       st7 == "unsicher" and any("ohne Umsatz" in g for g in gr7) and abw7.get("umsatz") is None
       and json.dumps(abw7, allow_nan=False) is not None, (st7, gr7, abw7))
+    st8, gr8, abw8 = plausibilitaet({"periodenende": "2026-08-01", "umsatz": 265.4e6, "nettogewinn": -114e6,
+                                     "eps_verwaessert": -0.32, "gaap": True},
+                                    {"umsatz": 240.5e6, "nettogewinn": -10.3e6, "eps_verwaessert": -0.29}, "2026-09-03")
+    p("Aktien-Waechter: Methode-Lesefehler (114 statt 11,4 Mio) faellt auf, Verhaeltnis rund 10",
+      st8 == "unsicher" and any("passen nicht zusammen" in g for g in gr8) and 9 < abw8.get("aktien_verhaeltnis", 0) < 11, (gr8, abw8))
+    st9, gr9, abw9 = plausibilitaet({"periodenende": "2026-07-31", "umsatz": 12.213e9, "nettogewinn": 1.511e9,
+                                     "eps_verwaessert": 1.06, "gaap": True},
+                                    {"umsatz": 9.136e9, "nettogewinn": 305e6, "eps_verwaessert": 0.21}, "2026-09-02")
+    p("Aktien-Waechter: HPE mit fuenffachem Gewinn bleibt vorlaeufig, Aktienzahl stimmt",
+      st9 == "vorlaeufig" and 0.9 < abw9.get("aktien_verhaeltnis", 0) < 1.1, (gr9, abw9))
+    st10, gr10, abw10 = plausibilitaet({"periodenende": "2026-07-31", "umsatz": 129.458e6, "nettogewinn": 1.918e6,
+                                       "eps_verwaessert": 0.03, "gaap": True},
+                                      {"umsatz": 117.255e6, "nettogewinn": 0.654e6, "eps_verwaessert": 0.01}, "2026-09-02")
+    p("Aktien-Waechter: bei EPS unter 5 Cent wird nicht geurteilt (Rundung)",
+      st10 == "vorlaeufig" and "aktien_verhaeltnis" not in abw10, (gr10, abw10))
+    st11, gr11, _ = plausibilitaet({"periodenende": "2026-07-31", "umsatz": 100e6, "nettogewinn": 5e6,
+                                    "eps_verwaessert": -0.10, "gaap": True},
+                                   {"umsatz": 95e6, "nettogewinn": 4e6, "eps_verwaessert": 0.08}, "2026-09-02")
+    p("Aktien-Waechter: verschiedene Vorzeichen heissen unsicher",
+      st11 == "unsicher" and any("Vorzeichen" in g for g in gr11), gr11)
     seiten = []
 
     def hole(url):
