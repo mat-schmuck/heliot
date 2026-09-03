@@ -1,7 +1,8 @@
 {
- "gebaut_am": "2026-09-02 00:04 Wien",
+ "gebaut_am": "2026-09-03 00:03 Wien",
  "ohne_termin": [
   "BLSM",
+  "DELL",
   "PSQL",
   "VOGX"
  ],
@@ -320,15 +321,6 @@
    "lage": "im_handel",
    "quellen": [
     "yahoo"
-   ]
-  },
-  "DELL": {
-   "datum": "2026-09-01",
-   "uhrzeit": "16:00",
-   "lage": "nachboerslich",
-   "quellen": [
-    "yahoo",
-    "nasdaq"
    ]
   },
   "DGII": {

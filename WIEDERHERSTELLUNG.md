@@ -124,13 +124,38 @@ Aufträge neu angelegt werden:
   das ist der einzige Puffer. Wer die eine Zeit verschiebt, muss die
   andere mitverschieben.
 
+- *Heliot Konsens einfrieren (05:00 New York)* (Auftrag 8373624,
+  angelegt 02.09.2026) — `0 5 * * 1-5`, **einfrieren.yml**,
+  Text `{"ref":"main","inputs":{"modus":"schnappschuss"}}`.
+- *Heliot Konsens einfrieren (15:30 New York)* (Auftrag 8373640,
+  angelegt 02.09.2026) — `30 15 * * 1-5`, **einfrieren.yml**,
+  Text `{"ref":"main","inputs":{"modus":"schnappschuss"}}`.
+
+  Gerhards F9: Der Analystenkonsens wird zweimal je Handelstag
+  eingefroren, vor den Vorbörsen-Meldungen und vor den
+  Nachbörsen-Meldungen. Die Schnappschüsse landen im PRIVATEN Datenrepo
+  `mat-schmuck/heliot-daten` (F17); der Ablauf braucht dafür das
+  Geheimnis `DATEN_TOKEN` (fein granuliertes Token nur für dieses eine
+  Repo, Inhalte lesen und schreiben, kein Ablaufdatum). Fehlt es, tut
+  der Lauf nichts und sagt es. Die Bestandsaufnahme über das ganze
+  SEC-Register (Modus `bestandsaufnahme`, Portionen zu 2.500) wird von
+  Hand angestoßen; sie teilt die concurrency-Gruppe mit den
+  Schnappschüssen, deshalb nie zwei Läufe auf einmal anstoßen: Die
+  Gruppe hält nur EINEN wartenden Lauf.
+
 ACHTUNG beim Klonen eines Auftrags: Die Kopie wird **deaktiviert**
 angelegt und muss über „Job aktivieren" scharf geschaltet werden. Der
 Anfragetext der Vorlage wird mitkopiert und muss angepasst werden.
+Die Konsole speichert per Skript gesetzte Textfelder (Titel,
+Anfrage-Body) erst, wenn das Feld auch verlassen wurde; Uhrzeit-Listen
+und der Aktivieren-Schalter reagieren sofort. Nach dem Speichern die
+Seite neu laden und nachsehen, was wirklich angekommen ist.
 
 **Geheimnisse bei GitHub** (nur die Namen, die Werte trägt Mathias
 selbst ein): `TRADERFOX_USER`, `TRADERFOX_PASS`, `NTFY_TOPIC`,
-`TWELVE_DATA_API_KEY`, `FMP_API_KEY`.
+`TWELVE_DATA_API_KEY`, `FMP_API_KEY`, `FINNHUB_API_KEY`,
+`SEC_USER_AGENT` (Kontaktkennung für SEC-Abrufe, nie im Quelltext),
+`DATEN_TOKEN` (Schreibzugang auf heliot-daten).
 
 **Zustand, der nur im Actions-Zwischenspeicher lebt:** `session.json`
 (TraderFox-Sitzung, wird bei Bedarf neu erzeugt) und
@@ -142,6 +167,8 @@ doppelt.
 
 - **00:00** (So–Fr): Scanner rechnet die neue Kaufpunkt-Liste, sendet
   nichts, veröffentlicht `kaufpunkte_aktuell.xlsx` ins Repo.
+- **11:00** (Mo–Fr, 05:00 New York): Konsens einfrieren, Schnappschuss
+  vor den Vorbörsen-Meldungen ins Datenrepo heliot-daten.
 - **14:00** (Mo–Fr): Alarm-Bot gleicht ab — entfernt Marken, deren
   Kaufpunkt sich verschoben hat oder deren Muster weggefallen ist — und
   trägt die neuen ein. Zwei Durchgänge, der zweite holt Nachzügler.
@@ -149,6 +176,8 @@ doppelt.
 - **15:30 bis 22:00**: Wächter prüft alle sechs Minuten; meldet jede
   Aktie einmal pro Woche. Außerhalb dieser Zeiten wird **nie** gemeldet.
 - **21:09**: Schlussstunden-Wache übernimmt.
+- **21:30** (Mo–Fr, 15:30 New York): Konsens einfrieren, Schnappschuss
+  vor den Nachbörsen-Meldungen.
 - **22:05** (Mo–Fr): ntfy-Meldungen werden gelöscht.
 - **22:02** (Fr): sämtliche TraderFox-Alarme und ntfy-Meldungen weg,
   Gedächtnis geleert; am Wochenende lädt Gerhard die neue Liste hoch.

@@ -138,7 +138,7 @@
     "CRM|2": "drin",
     "TIGO|2": "drin",
     "ANDG|2": "draussen",
-    "WES|2": "drin",
+    "WES|2": "draussen",
     "IMAX|2": "draussen",
     "VLO|1": "drin",
     "ARGX|3": "drin",
@@ -165,7 +165,17 @@
     "REGN|3": "drin",
     "SHIP|1": "drin",
     "PRE|1": "drin",
-    "PRE|3": "drin"
+    "PRE|3": "drin",
+    "YPF|1": "drin",
+    "HASI|1": "drin",
+    "FRO|1": "drin",
+    "FRO|3": "drin",
+    "ANDG|1": "drin",
+    "ANDG|3": "drin",
+    "ECO|1": "drin",
+    "ECO|3": "drin",
+    "LPG|1": "drin",
+    "LPG|3": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -247,6 +257,9 @@
     "BEST|HTF|HTFL|2": "2026-09-02",
     "BEST|HTF|RNG|1": "2026-09-02",
     "PRE|1": "2026-09-02",
-    "BEST|PRE|1": "2026-09-02"
+    "BEST|PRE|1": "2026-09-02",
+    "HASI|1": "2026-09-02",
+    "BEST|HASI|1": "2026-09-02",
+    "GAPGOFIX|DELL|2026-09-02": "2026-09-02"
   }
 }
