@@ -6,7 +6,9 @@ name: Messung KI-Abfrage (Quartal ueber Quartal)
 # SEC-Archiv, EODHD-Konsens und Yahoo-Kursen, dazu die Pressetexte aus dem
 # Archiv (pressetexte/). Jede Antwort wird im Datenrepo unter messungen/
 # abgelegt. Nur per Hand; laeuft auf dem Branch, von dem es gestartet wird.
-# Braucht die Secrets SEC_USER_AGENT, MISTRAL_API_KEY und DATEN_TOKEN.
+# Braucht die Secrets SEC_USER_AGENT, MISTRAL_API_KEY und DATEN_TOKEN; die
+# Nachrichtenlage ueber Groqs Websuche zusaetzlich GROQ_API_KEY (fehlt es,
+# laeuft die Messung ohne Nachrichten).
 
 on:
   workflow_dispatch:
@@ -27,6 +29,10 @@ on:
         description: "so viele Quartale zurueck"
         required: false
         default: "8"
+      websuche:
+        description: "Nachrichtenlage ueber Groqs Websuche (an oder aus; braucht das Secret GROQ_API_KEY)"
+        required: false
+        default: "an"
 
 concurrency:
   group: frage-messung
@@ -71,7 +77,8 @@ jobs:
         env:
           SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
           MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
-        run: python frage_messung.py --daten daten --ticker "${{ inputs.ticker }}" --frage "${{ inputs.frage }}" --modelle "${{ inputs.modelle }}" --quartale "${{ inputs.quartale }}"
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: python frage_messung.py --daten daten --ticker "${{ inputs.ticker }}" --frage "${{ inputs.frage }}" --modelle "${{ inputs.modelle }}" --quartale "${{ inputs.quartale }}" --websuche "${{ inputs.websuche }}"
       - name: Ins Datenrepo
         if: always() && steps.secrets.outputs.da == 'ja'
         run: |

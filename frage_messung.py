@@ -25,6 +25,18 @@ MODELLE_VORGABE = ["mistral-small-2603", "mistral-medium-2604"]
 QUARTALE = 8
 TEXT_JE_MITTEILUNG = 25000
 KOPF_JE_MITTEILUNG = 12000
+GROQ_KEY = os.environ.get("GROQ_API_KEY", "").strip()
+WEBSUCHE_MODELL = "groq/compound-mini"   # Groqs System mit eingebauter Websuche; Gratisstufe 30 je Minute, 250 je Tag
+WEBSUCHE_ABSTAND_S = 2.5
+
+WEBSUCHE_AUFTRAG = (
+    "Du bist ein Rechercheur fuer Boersennachrichten. Suche im Netz nach Nachrichten und Analystenkommentaren "
+    "zu der Firma und beantworte nur diese zwei Fragen aus dem, was du gefunden hast: Erstens, welche Gruende "
+    "nennen Nachrichten und Analysten fuer die Kursreaktion nach den juengsten Quartalszahlen? Zweitens, welche "
+    "Gruende nennen sie fuer die Kursentwicklung der letzten Wochen? Nenne zu jeder Aussage die Quelle (Medium "
+    "und Datum). Erfinde nichts; was du nicht findest, sagst du ausdruecklich. Antworte auf Deutsch in ganzen "
+    "Saetzen, ohne Markdown, ohne Tabellen, hoechstens 300 Woerter."
+)
 
 AUFTRAG = (
     "Du bist ein nuechterner Finanzanalyst. Du beantwortest die Frage des Nutzers AUSSCHLIESSLICH aus den "
@@ -32,6 +44,8 @@ AUFTRAG = (
     "gemeldetes bereinigtes Ergebnis, Ueberraschung, Kursreaktion um den Meldetag) und den Pressemitteilungen "
     "der Firma zu diesen Quartalen. Regeln: Alle Zahlen stammen aus der Tabelle; aus den Pressemitteilungen "
     "nimmst du nur Aussagen des Managements, Segmente, Sondereffekte und den Ausblick, mit Angabe des Quartals. "
+    "Liegt ein Abschnitt Nachrichtenlage vor, darfst du daraus Gruende fuer die Kursentwicklung nennen, jeweils mit "
+    "Quelle und Datum, wie dort angegeben. "
     "Erfinde nichts; was in den Daten nicht steht, nennst du ausdruecklich als fehlend. Vermutungen kennzeichnest "
     "du mit dem Wort Vermutung. Antworte auf Deutsch, in ganzen Saetzen, ohne Markdown, ohne Tabellen, ohne "
     "Aufzaehlungszeichen; die Antwort wird mit einem Screenreader vorgelesen. Aufbau: erstens eine Kurzantwort in "
@@ -233,6 +247,57 @@ def zahlen_pruefen(antwort, tab_text, texte_text):
     return {"zahlen_gesamt": len(a_w) + len(a_p), "unbelegt": unbelegt_w, "unbelegt_prozent": unbelegt_p}
 
 
+def websuche_frage(ticker, name, meldedatum, heute):
+    return (f"Firma: {name} (Ticker {ticker}). Juengste Quartalszahlen gemeldet am {meldedatum or 'unbekannt'}. "
+            f"Heutiges Datum: {heute}.")
+
+
+def websuche_groq(ticker, name, meldedatum, heute, log=print):
+    """Nachrichtenlage ueber Groqs compound-mini (eingebaute Websuche). Rueckgabe
+    {text, quellen, usage, dauer_s, status, hinweise}; ohne Schluessel status 0."""
+    import messung_8k as m8k
+    if not GROQ_KEY:
+        return {"text": "", "quellen": [], "usage": None, "dauer_s": 0, "status": 0, "hinweise": ["GROQ_API_KEY fehlt"]}
+    koerper = {"model": WEBSUCHE_MODELL, "temperature": 0, "max_completion_tokens": 1500,
+               "messages": [{"role": "system", "content": WEBSUCHE_AUFTRAG},
+                            {"role": "user", "content": websuche_frage(ticker, name, meldedatum, heute)}]}
+    hinweise = []
+    for versuch in range(4):
+        t0 = time.time()
+        status, kopf, roh = m8k._anfrage("https://api.groq.com/openai/v1/chat/completions", koerper, key=GROQ_KEY)
+        dauer = time.time() - t0
+        if status == 429 or status >= 500:
+            hinweise.append(f"{status} beim Versuch {versuch + 1}")
+            try:
+                pause = float({str(a).lower(): b for a, b in (kopf or {}).items()}.get("retry-after") or 0)
+            except (TypeError, ValueError):
+                pause = 0
+            time.sleep(min(90, pause) if pause > 0 else 15)
+            continue
+        if status != 200:
+            return {"text": "", "quellen": [], "usage": None, "dauer_s": round(dauer, 1), "status": status,
+                    "hinweise": hinweise + [f"HTTP {status}: {roh[:300]}"]}
+        a = json.loads(roh)
+        nachricht = a["choices"][0]["message"]
+        quellen = []
+        for w in nachricht.get("executed_tools") or []:
+            quellen.append({"typ": w.get("type"), "eingabe": (w.get("arguments") or w.get("input") or "")[:300] if isinstance(w.get("arguments") or w.get("input"), str) else str(w.get("arguments") or w.get("input"))[:300],
+                            "ausgabe": (w.get("output") or "")[:2000] if isinstance(w.get("output"), str) else str(w.get("output"))[:2000]})
+        time.sleep(WEBSUCHE_ABSTAND_S)
+        return {"text": (nachricht.get("content") or "").strip(), "quellen": quellen, "usage": a.get("usage"),
+                "dauer_s": round(dauer, 1), "status": 200, "hinweise": hinweise, "modell_laut_antwort": a.get("model"),
+                "abbruchgrund": a["choices"][0].get("finish_reason")}
+    return {"text": "", "quellen": [], "usage": None, "dauer_s": 0, "status": 0, "hinweise": hinweise + ["aufgegeben"]}
+
+
+def eingabe_mit_nachrichten(frage, tab_text, texte_text, nachrichten_text):
+    if not nachrichten_text:
+        return eingabe(frage, tab_text, texte_text)
+    return (f"Frage des Nutzers: {frage}\n\n{tab_text}\n\nNachrichtenlage (Ergebnis einer Websuche, mit Quellenangaben; "
+            f"daraus darfst du Gruende fuer die Kursentwicklung nennen, jeweils mit Quelle und Datum):\n{nachrichten_text}"
+            f"\n\nPressemitteilungen der Firma zu diesen Quartalen:\n\n{texte_text}")
+
+
 def modell_fragen(modell, frage_text, bremse):
     import messung_8k as m8k
     koerper = {"model": modell, "temperature": 0, "max_tokens": 3000,
@@ -278,7 +343,7 @@ def kurse_laden(ticker, von, bis):
         return {}
 
 
-def lauf(daten, ticker, frage, modelle, quartale=QUARTALE, ausgabe=None, log=print):
+def lauf(daten, ticker, frage, modelle, quartale=QUARTALE, ausgabe=None, log=print, websuche=True):
     import gzip
     import messung_8k as m8k
     import pressetexte as pt
@@ -294,7 +359,9 @@ def lauf(daten, ticker, frage, modelle, quartale=QUARTALE, ausgabe=None, log=pri
         raise RuntimeError(f"{ticker}: keine CIK in der SEC-Liste")
     zeilen = va._zeilen_lader()(cik)
     kpfad = os.path.join(daten, "eodhd", "konsens", f"{ticker}.json.gz")
-    konsens = json.load(gzip.open(kpfad, "rt", encoding="utf-8")).get("zeilen", []) if os.path.exists(kpfad) else []
+    konsens_datei = json.load(gzip.open(kpfad, "rt", encoding="utf-8")) if os.path.exists(kpfad) else {}
+    konsens = konsens_datei.get("zeilen", [])
+    konsens_name = (konsens_datei.get("kopf") or {}).get("name") or ""
     texte = pt.texte_der_firma(daten, cik, quartale)
     if not texte:
         raise RuntimeError(f"{ticker}: keine Pressetexte im Archiv (zuerst pressetexte.yml mit ticker={ticker} laufen lassen)")
@@ -303,7 +370,16 @@ def lauf(daten, ticker, frage, modelle, quartale=QUARTALE, ausgabe=None, log=pri
     kurse = kurse_laden(ticker, von, dt.date.today().isoformat())
     liste, tab_text = tabelle(zeilen, konsens, kurse, quartale)
     texte_text = texte_block(texte)
-    frage_text = eingabe(frage, tab_text, texte_text)
+    nachrichten = None
+    if websuche and GROQ_KEY:
+        juengst = liste[-1] if liste else {}
+        name = konsens_name or ticker
+        nachrichten = websuche_groq(ticker, name, juengst.get("meldedatum"), dt.date.today().isoformat(), log=log)
+        log(f"  Websuche {WEBSUCHE_MODELL}: Status {nachrichten.get('status')}, {len(nachrichten.get('text') or '')} Zeichen, "
+            f"{len(nachrichten.get('quellen') or [])} Werkzeugaufrufe, {nachrichten.get('dauer_s')} s, Hinweise {nachrichten.get('hinweise')}")
+    elif websuche:
+        log("  Websuche uebersprungen: GROQ_API_KEY fehlt")
+    frage_text = eingabe_mit_nachrichten(frage, tab_text, texte_text, (nachrichten or {}).get("text") or "")
     log(f"{ticker} CIK {cik}: {len(zeilen)} amtliche Zeilen, {len(konsens)} Konsens-Zeilen, {len(kurse)} Kurstage, "
         f"{len(texte)} Pressetexte, Eingabe {len(frage_text)} Zeichen")
     ausgabe = ausgabe or os.path.join(daten, "messungen", f"frage-{ticker.lower()}-{dt.datetime.now(dt.timezone.utc):%Y%m%d-%H%M}")
@@ -318,9 +394,15 @@ def lauf(daten, ticker, frage, modelle, quartale=QUARTALE, ausgabe=None, log=pri
         json.dump(liste, f, ensure_ascii=False, indent=1)
     with io.open(os.path.join(ausgabe, "eingabe.txt"), "w", encoding="utf-8") as f:
         f.write(frage_text + "\n")
+    if nachrichten is not None:
+        with io.open(os.path.join(ausgabe, "nachrichten-groq.txt"), "w", encoding="utf-8") as f:
+            f.write((nachrichten.get("text") or "") + "\n")
+        with io.open(os.path.join(ausgabe, "nachrichten-groq.json"), "w", encoding="utf-8") as f:
+            json.dump({k: v for k, v in nachrichten.items() if k != "text"}, f, ensure_ascii=False, indent=1)
     bremse = m8k.Bremse()
     bilanz = {"zeit": dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat(), "ticker": ticker,
-              "eingabe_zeichen": len(frage_text), "modelle": {}}
+              "eingabe_zeichen": len(frage_text), "modelle": {},
+              "websuche": None if nachrichten is None else {k: v for k, v in nachrichten.items() if k not in ("text", "quellen")}}
     for modell in modelle:
         r = modell_fragen(modell, frage_text, bremse)
         u = r.get("usage") or {}
@@ -414,6 +496,17 @@ def selbsttest() -> int:
     z3 = zahlen_pruefen("Umsatz 100,6 Milliarden, Vorjahr 94,0 Milliarden, Gewinn 25 Mrd, Konsens 1,6.", text, block)
     p("Waechter: gerundete Zahlen gelten als belegt (100,6 fuer 100,600; 94,0 fuer 94,036)",
       z3["unbelegt"] == [] and z3["unbelegt_prozent"] == [], z3)
+    en = eingabe_mit_nachrichten("Warum?", text, block, "Jefferies senkte am 3. September 2026 das Kursziel (Quelle: Yahoo Finance, 3.9.2026).")
+    p("Eingabe mit Nachrichtenlage: Abschnitt steht zwischen Tabelle und Pressemitteilungen",
+      en.index("Zahlentabelle") < en.index("Nachrichtenlage") < en.index("Pressemitteilungen der Firma"))
+    p("Eingabe ohne Nachrichten bleibt die alte Form", eingabe_mit_nachrichten("Warum?", text, block, "") == eingabe("Warum?", text, block))
+    wf = websuche_frage("AAPL", "Apple Inc", "2026-07-30", "2026-09-03")
+    p("Websuche-Frage nennt Firma, Ticker, Meldedatum und heutiges Datum",
+      all(s in wf for s in ("Apple Inc", "AAPL", "2026-07-30", "2026-09-03")), wf)
+    p("Websuche-Auftrag verlangt Quellen mit Datum, Deutsch, kein Markdown, Erfinden verboten",
+      all(w in WEBSUCHE_AUFTRAG for w in ("Quelle", "Datum", "Deutsch", "ohne Markdown", "Erfinde nichts")))
+    ohne = websuche_groq("AAPL", "Apple", "2026-07-30", "2026-09-03", log=lambda *_: None) if not GROQ_KEY else {"status": 0, "hinweise": ["GROQ_API_KEY fehlt"]}
+    p("Websuche ohne Schluessel: Status 0 mit klarem Hinweis, kein Netzaufruf", ohne["status"] == 0 and "GROQ_API_KEY fehlt" in ohne["hinweise"])
     p("Auftrag verlangt Deutsch, keine Tabellen, Vermutungen gekennzeichnet, Quellen nur die Daten",
       all(w in AUFTRAG for w in ("Deutsch", "ohne Tabellen", "Vermutung", "AUSSCHLIESSLICH", "Safe Harbor")))
     p("Textblock nennt nur das Veroeffentlichungsdatum, kein falsches Quartal", "Quartal bis" not in block and "veroeffentlicht am 2026-07-31" in block)
@@ -428,6 +521,7 @@ def main():
     ap.add_argument("--frage", default=FRAGE_VORGABE)
     ap.add_argument("--modelle", default=",".join(MODELLE_VORGABE))
     ap.add_argument("--quartale", type=int, default=QUARTALE)
+    ap.add_argument("--websuche", default="an", choices=["an", "aus"])
     ap.add_argument("--selbsttest", action="store_true")
     a = ap.parse_args()
     if a.selbsttest:
@@ -437,7 +531,7 @@ def main():
         import messung_8k as m8k
         modelle = m8k.modelle_laden()
         print("Alle Text-Chat-Modelle der Tagesliste:", ", ".join(modelle))
-    lauf(a.daten, a.ticker, a.frage or FRAGE_VORGABE, modelle, a.quartale)
+    lauf(a.daten, a.ticker, a.frage or FRAGE_VORGABE, modelle, a.quartale, websuche=(a.websuche == "an"))
     return 0
 
 
