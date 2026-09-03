@@ -38,7 +38,10 @@ AUFTRAG = (
     "zwei bis drei Saetzen; zweitens Quartal ueber Quartal, je Quartal ein Absatz vom aeltesten zum juengsten, mit "
     "Umsatz und Ergebnis je Aktie, Veraenderung zum Vorjahresquartal, Konsens und Ueberraschung, Kursreaktion und "
     "dem, was das Management sagte; drittens deine Deutung, warum der Kurs trotz guter Zahlen schwach sein koennte, "
-    "nur soweit die Daten das hergeben; viertens, was fuer eine sichere Antwort fehlt."
+    "nur soweit die Daten das hergeben, und jeder Deutungssatz beginnt mit dem Wort Vermutung; viertens, was fuer "
+    "eine sichere Antwort fehlt. Die Standard-Risikohinweise am Ende der Pressemitteilungen (Safe Harbor) sind "
+    "kein Inhalt und werden nicht als Aussage des Managements gewertet. Datumsangaben der Quartale nimmst du nur "
+    "aus der Tabelle, nie aus dem Veroeffentlichungsdatum einer Mitteilung."
 )
 
 
@@ -172,7 +175,7 @@ def texte_block(texte, je=TEXT_JE_MITTEILUNG, kopf=KOPF_JE_MITTEILUNG):
     teile = []
     for meta, text in sorted(texte, key=lambda mt: mt[0].get("filed") or ""):
         t = m8k.text_kuerzen(text, limit=je, kopf=kopf)
-        teile.append(f"=== Pressemitteilung vom {meta.get('filed')} (Quartal bis {meta.get('report')}) ===\n{t}")
+        teile.append(f"=== Pressemitteilung, veroeffentlicht am {meta.get('filed')} (das gemeldete Quartal steht im Text) ===\n{t}")
     return "\n\n".join(teile)
 
 
@@ -344,7 +347,8 @@ def selbsttest() -> int:
     p("Eingabe: Frage, Tabelle und Texte in dieser Reihenfolge",
       e.index("Frage des Nutzers") < e.index("Zahlentabelle") < e.index("Pressemitteilungen der Firma"))
     p("Auftrag verlangt Deutsch, keine Tabellen, Vermutungen gekennzeichnet, Quellen nur die Daten",
-      all(w in AUFTRAG for w in ("Deutsch", "ohne Tabellen", "Vermutung", "AUSSCHLIESSLICH")))
+      all(w in AUFTRAG for w in ("Deutsch", "ohne Tabellen", "Vermutung", "AUSSCHLIESSLICH", "Safe Harbor")))
+    p("Textblock nennt nur das Veroeffentlichungsdatum, kein falsches Quartal", "Quartal bis" not in block and "veroeffentlicht am 2026-07-31" in block)
     print("Alles bestanden." if fehler == 0 else f"{fehler} Fehler.")
     return fehler
 
