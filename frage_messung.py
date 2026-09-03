@@ -218,8 +218,18 @@ def zahlen_pruefen(antwort, tab_text, texte_text):
     a_w, a_p = _zahlen(antwort)
     b_w, b_p = _zahlen(tab_text + "\n" + texte_text)
     belegt = b_w | b_p
-    unbelegt_w = sorted(w for w in a_w if w not in belegt and not (float(w).is_integer() and w <= 31))
-    unbelegt_p = sorted(w for w in a_p if w not in belegt)
+
+    def gedeckt(w):
+        if w in belegt:
+            return True
+        # Rundung: 94,04 deckt 94,036 und 143,76 deckt 143,756 (auf die Stellen der Antwortzahl gerundet)
+        s = f"{w:.10f}".rstrip("0").split(".")
+        stellen = len(s[1]) if len(s) > 1 else 0
+        if stellen == 0:
+            return False  # ganze Zahlen nur exakt, sonst deckte 12,6 die 13
+        return any(round(b, stellen) == w for b in belegt)
+    unbelegt_w = sorted(w for w in a_w if not gedeckt(w) and not (float(w).is_integer() and w <= 31))
+    unbelegt_p = sorted(w for w in a_p if not gedeckt(w))
     return {"zahlen_gesamt": len(a_w) + len(a_p), "unbelegt": unbelegt_w, "unbelegt_prozent": unbelegt_p}
 
 
@@ -401,6 +411,9 @@ def selbsttest() -> int:
                         "Kursreaktion minus 2,97 Prozent. Erstens, zweitens, 3 Punkte.", text, block)
     p("Waechter: alle Zahlen einer treuen Antwort sind belegt, kleine Aufzaehlungszahlen zaehlen nicht",
       z2["unbelegt"] == [] and z2["unbelegt_prozent"] == [], z2)
+    z3 = zahlen_pruefen("Umsatz 100,6 Milliarden, Vorjahr 94,0 Milliarden, Gewinn 25 Mrd, Konsens 1,6.", text, block)
+    p("Waechter: gerundete Zahlen gelten als belegt (100,6 fuer 100,600; 94,0 fuer 94,036)",
+      z3["unbelegt"] == [] and z3["unbelegt_prozent"] == [], z3)
     p("Auftrag verlangt Deutsch, keine Tabellen, Vermutungen gekennzeichnet, Quellen nur die Daten",
       all(w in AUFTRAG for w in ("Deutsch", "ohne Tabellen", "Vermutung", "AUSSCHLIESSLICH", "Safe Harbor")))
     p("Textblock nennt nur das Veroeffentlichungsdatum, kein falsches Quartal", "Quartal bis" not in block and "veroeffentlicht am 2026-07-31" in block)
