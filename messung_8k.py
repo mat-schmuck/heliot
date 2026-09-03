@@ -44,9 +44,6 @@ AUSGABE = "messung_8k"
 TEXT_ZEICHEN = 30000
 KOPF_ZEICHEN = 9000
 MISTRAL_KEY = os.environ.get("MISTRAL_API_KEY", "").strip()
-GROQ_KEY = os.environ.get("GROQ_API_KEY", "").strip()
-DIENSTE = {"mistral": {"basis": "https://api.mistral.ai/v1", "key": MISTRAL_KEY, "name": "Mistral"},
-           "groq": {"basis": "https://api.groq.com/openai/v1", "key": GROQ_KEY, "name": "Groq"}}
 
 # Gemischt: Grosskonzerne, Bank, Versicherer, Immobilien, Mittelstand,
 # Small Caps; dazu die Wochenlisten (siehe lauf()).
@@ -271,13 +268,13 @@ def fall_finden(ticker, cik, log=print):
 # Mistral
 # ---------------------------------------------------------------------------
 
-def _anfrage(url, koerper=None, methode="POST", timeout=180, key=None):
+def _anfrage(url, koerper=None, methode="POST", timeout=180):
     import urllib.request
     import urllib.error
     daten = json.dumps(koerper).encode("utf-8") if koerper is not None else None
     req = urllib.request.Request(url, data=daten, method=methode, headers={
-        "Authorization": "Bearer " + (key if key is not None else MISTRAL_KEY), "Content-Type": "application/json",
-        "Accept": "application/json", "User-Agent": "heliot-messung/1.0"})  # Groqs Cloudflare weist urllib ohne User-Agent ab
+        "Authorization": "Bearer " + MISTRAL_KEY, "Content-Type": "application/json",
+        "Accept": "application/json"})
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:
             return r.status, dict(r.headers), r.read().decode("utf-8")
@@ -285,29 +282,14 @@ def _anfrage(url, koerper=None, methode="POST", timeout=180, key=None):
         return e.code, dict(e.headers), e.read().decode("utf-8", "replace")
 
 
-def modelle_laden(dienst="mistral"):
-    """Alle Text-Chat-Modelle der Tagesliste des Dienstes. Mistral: je Aliasgruppe
-    eines (der Name mit Fassungsangabe), ohne Einbettung, OCR, Moderation,
-    Sprachausgabe, Transkription und Echtzeit. Groq: ohne Whisper, Sprachausgabe,
-    Wache und Einbettung."""
-    d = DIENSTE[dienst]
-    status, _, roh = _anfrage(d["basis"] + "/models", methode="GET", key=d["key"])
+def modelle_laden():
+    """Alle Text-Chat-Modelle der Tagesliste, je Aliasgruppe eines (der
+    Name mit Fassungsangabe), ohne Einbettung, OCR, Moderation, Sprachausgabe,
+    Transkription und Echtzeit."""
+    status, _, roh = _anfrage("https://api.mistral.ai/v1/models", methode="GET")
     if status != 200:
-        raise RuntimeError(f"Modellliste {d['name']}: {status} {roh[:200]}")
-    liste = json.loads(roh).get("data", [])
-    return modelle_filtern(liste) if dienst == "mistral" else modelle_filtern_groq(liste)
-
-
-def modelle_filtern_groq(liste):
-    raus = []
-    for m in liste:
-        kennung = m.get("id", "")
-        if not m.get("active", True):
-            continue
-        if re.search(r"whisper|tts|orpheus|playai|guard|embed", kennung):
-            continue
-        raus.append(kennung)
-    return sorted(raus)
+        raise RuntimeError(f"Modellliste: {status} {roh[:200]}")
+    return modelle_filtern(json.loads(roh).get("data", []))
 
 
 def modelle_filtern(liste):
@@ -343,20 +325,16 @@ class Bremse:
         if rest > 0:
             time.sleep(rest)
 
-    def merken(self, modell, kopf, tokens=0):
-        """Mistral nennt Anfragen und Tokens je Minute samt Kosten der Anfrage in
-        Kopfzeilen; Groq nennt nur das Token-Fenster je Minute (x-ratelimit-limit-tokens;
-        x-ratelimit-limit-requests ist dort die Tagesgrenze), die Kosten kommen aus usage."""
-        k = {str(a).lower(): b for a, b in (kopf or {}).items()}
-
-        def zahl(name):
-            try:
-                return float(k.get(name) or 0)
-            except (TypeError, ValueError):
-                return 0.0
-        rpm = zahl("x-ratelimit-limit-req-minute")
-        tpm = zahl("x-ratelimit-limit-tokens-minute") or zahl("x-ratelimit-limit-tokens")
-        kosten = zahl("x-ratelimit-tokens-query-cost") or float(tokens or 0)
+    def merken(self, modell, kopf):
+        try:
+            rpm = float(kopf.get("x-ratelimit-limit-req-minute") or 0)
+        except ValueError:
+            rpm = 0
+        try:
+            tpm = float(kopf.get("x-ratelimit-limit-tokens-minute") or 0)
+            kosten = float(kopf.get("x-ratelimit-tokens-query-cost") or 0)
+        except ValueError:
+            tpm = kosten = 0
         with self.lock:
             self.zuletzt[modell] = time.monotonic()
             ab = 0.0
@@ -369,30 +347,15 @@ class Bremse:
 
 
 def mistral_frage(modell, text, bremse):
-    """Rueckgabe: {roh, geparst, usage, dauer_s, status, hinweise} (Mistral; der 8-K-Strom ruft das)."""
-    return frage("mistral", modell, text, bremse)
-
-
-def frage(dienst, modell, text, bremse):
-    """Ein Modell eines Dienstes liest den Text; Rueckgabe wie mistral_frage."""
-    d = DIENSTE[dienst]
+    """Rueckgabe: {roh, geparst, usage, dauer_s, status, hinweise}."""
     hinweise = []
     schema_aktiv = True
     for versuch in range(8):
         koerper = {
-            "model": modell, "temperature": 0,
+            "model": modell, "temperature": 0, "max_tokens": 700,
             "messages": [{"role": "system", "content": AUFTRAG},
                          {"role": "user", "content": text}],
         }
-        if dienst == "groq":
-            koerper["max_completion_tokens"] = 4096  # die gpt-oss denken in einem eigenen Kanal vor
-            if modell.startswith("openai/gpt-oss"):
-                koerper["reasoning_effort"] = "low"
-            if "qwen" in modell:
-                koerper["reasoning_format"] = "hidden"
-                koerper["reasoning_effort"] = "none"
-        else:
-            koerper["max_tokens"] = 700
         if schema_aktiv:
             koerper["response_format"] = {"type": "json_schema", "json_schema": {
                 "name": "ergebnis", "strict": True, "schema": SCHEMA}}
@@ -400,22 +363,12 @@ def frage(dienst, modell, text, bremse):
             koerper["response_format"] = {"type": "json_object"}
         bremse.warten(modell)
         t0 = time.time()
-        status, kopf, roh = _anfrage(d["basis"] + "/chat/completions", koerper, key=d["key"])
+        status, kopf, roh = _anfrage("https://api.mistral.ai/v1/chat/completions", koerper)
         dauer = time.time() - t0
-        tokens = 0
-        if status == 200:
-            try:
-                tokens = (json.loads(roh).get("usage") or {}).get("total_tokens", 0)
-            except Exception:
-                tokens = 0
-        bremse.merken(modell, kopf, tokens)
+        bremse.merken(modell, kopf)
         if status == 429 or status >= 500:
             hinweise.append(f"{status} beim Versuch {versuch + 1}")
-            try:
-                pause = float({str(a).lower(): b for a, b in (kopf or {}).items()}.get("retry-after") or 0)
-            except (TypeError, ValueError):
-                pause = 0
-            time.sleep(min(120, pause) if pause > 0 else (20 if status == 429 else 10))
+            time.sleep(20 if status == 429 else 10)
             continue
         if status in (400, 422) and schema_aktiv:
             hinweise.append(f"{status} mit Schema, weiter mit json_object")
@@ -556,7 +509,7 @@ def faelle_sammeln(hoechstens, ausgabe, log=print):
     return faelle
 
 
-def messen(faelle, modelle, ausgabe, log=print, dienst="mistral"):
+def messen(faelle, modelle, ausgabe, log=print):
     bremse = Bremse()
     ergebnisse = {}
 
@@ -565,7 +518,7 @@ def messen(faelle, modelle, ausgabe, log=print, dienst="mistral"):
         os.makedirs(ordner, exist_ok=True)
         liste = []
         for fall in faelle:
-            r = frage(dienst, modell, fall["text"], bremse)
+            r = mistral_frage(modell, fall["text"], bremse)
             b = bewerte(fall, r.get("geparst"), r.get("status", 200))
             u = r.get("usage") or {}
             p = preis(modell)
@@ -586,8 +539,8 @@ def messen(faelle, modelle, ausgabe, log=print, dienst="mistral"):
     return ergebnisse
 
 
-def bericht(ergebnisse, faelle, ausgabe, dienst="mistral"):
-    zeilen = [f"# Messung der KI-Vorabwerte: {DIENSTE[dienst]['name']} liest 8-K-Pressemitteilungen", "",
+def bericht(ergebnisse, faelle, ausgabe):
+    zeilen = ["# Messung der KI-Vorabwerte: Mistral liest 8-K-Pressemitteilungen", "",
               f"Faelle: {len(faelle)}; Stand {dt.datetime.now(dt.timezone.utc):%Y-%m-%d %H:%M} UTC; "
               f"Text je Fall auf {TEXT_ZEICHEN} Zeichen gekuerzt.", ""]
     zusammen = {}
@@ -622,9 +575,9 @@ def bericht(ergebnisse, faelle, ausgabe, dienst="mistral"):
     return "\n".join(zeilen)
 
 
-def lauf(hoechstens, modelle, ausgabe, dienst="mistral"):
-    if not DIENSTE[dienst]["key"]:
-        print(("MISTRAL_API_KEY" if dienst == "mistral" else "GROQ_API_KEY") + " fehlt (Secret im Actions-Lauf).")
+def lauf(hoechstens, modelle, ausgabe):
+    if not MISTRAL_KEY:
+        print("MISTRAL_API_KEY fehlt (Secret im Actions-Lauf).")
         return 1
     import fundament_lauf as fl
     if not fl.UA:
@@ -636,10 +589,10 @@ def lauf(hoechstens, modelle, ausgabe, dienst="mistral"):
     print(f"{len(faelle)} Faelle.")
     if not faelle:
         return 1
-    modelle = modelle or modelle_laden(dienst)
-    print(f"Dienst {DIENSTE[dienst]['name']}; Modelle:", ", ".join(modelle))
-    ergebnisse = messen(faelle, modelle, ausgabe, dienst=dienst)
-    print(bericht(ergebnisse, faelle, ausgabe, dienst))
+    modelle = modelle or modelle_laden()
+    print("Modelle:", ", ".join(modelle))
+    ergebnisse = messen(faelle, modelle, ausgabe)
+    print(bericht(ergebnisse, faelle, ausgabe))
     return 0
 
 
@@ -707,19 +660,6 @@ def selbsttest() -> int:
     b2 = bewerte(fall, None)
     p("Bewertung ohne JSON: Form kein_json, Werte fehlen", b2["form"] == "kein_json" and b2["umsatz"][0] == "fehlt")
     p("Preisregister findet Familien", preis("mistral-small-2603") == (0.15, 0.6) and preis("ministral-14b-2512") == (0.2, 0.2))
-    gq = modelle_filtern_groq([{"id": "openai/gpt-oss-120b", "active": True}, {"id": "whisper-large-v3", "active": True},
-                               {"id": "canopylabs/orpheus-v1-english", "active": True},
-                               {"id": "meta-llama/llama-guard-4-12b", "active": True},
-                               {"id": "qwen/qwen3.8-27b", "active": True}, {"id": "alt", "active": False}])
-    p("Groq-Modellfilter: Whisper, Sprachausgabe, Wache und Inaktives draussen",
-      gq == ["openai/gpt-oss-120b", "qwen/qwen3.8-27b"], gq)
-    br = Bremse()
-    br.merken("m", {"x-ratelimit-limit-tokens": "8000", "x-ratelimit-limit-requests": "1000"}, tokens=7000)
-    br2 = Bremse()
-    br2.merken("m", {"x-ratelimit-limit-req-minute": "10", "x-ratelimit-limit-tokens-minute": "20000",
-                     "x-ratelimit-tokens-query-cost": "5000"})
-    p("Bremse: Groq-Minutenfenster aus den Tokens der Antwort (7000 von 8000 heisst rund 63 s), Mistral aus Kopfzeilen",
-      62 < br.abstand["m"] < 64 and 17 < br2.abstand["m"] < 19, (br.abstand, br2.abstand))
     if fehler:
         print(f"\n{len(fehler)} FEHLER: {', '.join(fehler)}")
         return 1
@@ -733,14 +673,13 @@ def main():
     ap.add_argument("--lauf", action="store_true")
     ap.add_argument("--hoechstens", type=int, default=30)
     ap.add_argument("--modelle", default="")
-    ap.add_argument("--dienst", default="mistral", choices=sorted(DIENSTE))
     ap.add_argument("--ausgabe", default=AUSGABE)
     a = ap.parse_args()
     if a.selbsttest:
         return selbsttest()
     if a.lauf:
         modelle = [m.strip() for m in a.modelle.split(",") if m.strip()]
-        return lauf(a.hoechstens, modelle, a.ausgabe, a.dienst)
+        return lauf(a.hoechstens, modelle, a.ausgabe)
     ap.print_help()
     return 1
 
