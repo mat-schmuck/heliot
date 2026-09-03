@@ -82,7 +82,7 @@ jobs:
               echo "Gesichert."
               exit 0
             fi
-            git pull --rebase --quiet origin main || true
+            git pull --rebase --quiet -X theirs origin main || { git rebase --abort 2>/dev/null; git pull --rebase --quiet -X theirs origin main || true; }
           done
           echo "Push nach drei Anlaeufen gescheitert."
           exit 1

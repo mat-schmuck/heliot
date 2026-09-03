@@ -68,8 +68,11 @@ def speichern(daten, cik, ticker, accession, filed, report, exhibit, text, quell
         text = text[:TEXT_DECKEL] + "\n[... gekuerzt auf " + str(TEXT_DECKEL) + " Zeichen ...]"
     p = text_pfad(daten, cik, accession)
     os.makedirs(os.path.dirname(p), exist_ok=True)
-    with gzip.open(p, "wt", encoding="utf-8") as f:
-        f.write(text)
+    # mtime 0: derselbe Text ergibt immer dieselben Bytes; sonst legen Strom und Archiv-Portion
+    # dieselbe Datei byte-verschieden an, und Git meldet beim Zusammenfuehren einen add/add-Konflikt
+    with open(p, "wb") as roh:
+        with gzip.GzipFile(fileobj=roh, mode="wb", mtime=0) as gz:
+            gz.write(text.encode("utf-8"))
     meta = {"zeit": _jetzt(), "cik": int(cik), "ticker": ticker, "accession": accession, "filed": filed,
             "report": report, "exhibit": exhibit, "zeichen": len(text), "gekuerzt": gekuerzt, "quelle": quelle}
     os.makedirs(os.path.join(daten, ORDNER), exist_ok=True)
@@ -343,6 +346,11 @@ def selbsttest() -> int:
           b5b["ohne_exhibit"] == 1 and b5b["texte_da"] == 1 and b5b["texte_neu"] == 0, b5b)
         ke._schreibe_json(os.path.join(tmp, "konsens", "firmen_mit_konsens.json"), {"AAPL": {}, "BF-B": {}})
         m = speichern(tmp, 1, "T", "0000000001-26-000001", "2026-01-01", "2025-12-31", "x.htm", "A" * (TEXT_DECKEL + 500))
+        speichern(tmp, 2, "T2", "0000000002-26-000001", "2026-01-01", "2025-12-31", "x.htm", "gleicher Text")
+        b1 = open(text_pfad(tmp, 2, "0000000002-26-000001"), "rb").read()
+        speichern(tmp, 2, "T2", "0000000002-26-000001", "2026-01-01", "2025-12-31", "x.htm", "gleicher Text")
+        b2 = open(text_pfad(tmp, 2, "0000000002-26-000001"), "rb").read()
+        p("Ablage ist byte-gleich bei gleichem Text (kein Zeitstempel im gzip)", b1 == b2 and text_lesen(tmp, 2, "0000000002-26-000001") == "gleicher Text")
         p("Deckel: langer Text wird gekuerzt und als gekuerzt vermerkt",
           m["gekuerzt"] and m["zeichen"] < TEXT_DECKEL + 100 and text_lesen(tmp, 1, "0000000001-26-000001").endswith("Zeichen ...]"), m)
         b6 = lauf(tmp, hoechstens=1, quartale=8, hole=hole, ticker_zu_cik=tzc, log=lambda *_: None,
