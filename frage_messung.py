@@ -183,6 +183,46 @@ def eingabe(frage, tab_text, texte_text):
     return (f"Frage des Nutzers: {frage}\n\n{tab_text}\n\nPressemitteilungen der Firma zu diesen Quartalen:\n\n{texte_text}")
 
 
+def _zahlen(text):
+    """Zahlenwerte eines Textes (Beistrich oder Punkt als Dezimalzeichen, Tausenderzeichen entfernt);
+    Jahreszahlen und Datumsteile werden ausgelassen. Rueckgabe: (werte, prozentwerte)."""
+    import re
+    werte, prozent = set(), set()
+    t = re.sub(r"\d{4}-\d{2}-\d{2}", " ", text)
+    for m in re.finditer(r"(?<![\d.,])(\d{1,3}(?:[.,]\d{3})+|\d+)(?:[.,](\d+))?\s*(Prozent|percent|%)?", t):
+        ganz, nach, pz = m.group(1), m.group(2), m.group(3)
+        # Tausenderzeichen nur, wenn die Gruppen dreistellig sind und ein Dezimalteil folgt oder gar keiner
+        roh = ganz
+        if re.fullmatch(r"\d{1,3}(?:[.,]\d{3})+", ganz):
+            if nach is None and ganz.count(",") + ganz.count(".") == 1 and len(ganz.split(",")[-1] if "," in ganz else ganz.split(".")[-1]) == 3:
+                # 94,930 ist im Deutschen 94 Komma 930 (Milliarden), im Englischen 94.930 tausend: beide Lesarten aufnehmen
+                a = float(ganz.replace(",", ".")) if "," in ganz else float(ganz)
+                b = float(ganz.replace(",", "").replace(".", ""))
+                for w in (a, b):
+                    (prozent if pz else werte).add(round(w, 4))
+                continue
+            roh = ganz.replace(",", "").replace(".", "")
+        try:
+            w = float(roh + ("." + nach if nach else ""))
+        except ValueError:
+            continue
+        if 1990 <= w <= 2035 and nach is None:
+            continue
+        (prozent if pz else werte).add(round(w, 4))
+    return werte, prozent
+
+
+def zahlen_pruefen(antwort, tab_text, texte_text):
+    """Zahlen der Antwort, die weder in der Tabelle noch in den Pressetexten vorkommen
+    (kleine ganze Zahlen bis 31 gelten als Aufzaehlung oder Datum und werden nicht gezaehlt)."""
+    a_w, a_p = _zahlen(antwort)
+    b_w, b_p = _zahlen(tab_text + "\n" + texte_text)
+    belegt = b_w | b_p
+    unbelegt_w = sorted(w for w in a_w if w not in belegt and not (float(w).is_integer() and w <= 31))
+    unbelegt_p = sorted(w for w in a_p if w not in belegt)
+    return {"zahlen_gesamt": len(a_w) + len(a_p), "unbelegt": unbelegt_w, "unbelegt_prozent": unbelegt_p}
+
+
 def modell_fragen(modell, frage_text, bremse):
     import messung_8k as m8k
     koerper = {"model": modell, "temperature": 0, "max_tokens": 3000,
@@ -252,7 +292,8 @@ def lauf(daten, ticker, frage, modelle, quartale=QUARTALE, ausgabe=None, log=pri
     von = (dt.date.fromisoformat(enden[0]) - dt.timedelta(days=10)).isoformat() if enden else "2024-01-01"
     kurse = kurse_laden(ticker, von, dt.date.today().isoformat())
     liste, tab_text = tabelle(zeilen, konsens, kurse, quartale)
-    frage_text = eingabe(frage, tab_text, texte_block(texte))
+    texte_text = texte_block(texte)
+    frage_text = eingabe(frage, tab_text, texte_text)
     log(f"{ticker} CIK {cik}: {len(zeilen)} amtliche Zeilen, {len(konsens)} Konsens-Zeilen, {len(kurse)} Kurstage, "
         f"{len(texte)} Pressetexte, Eingabe {len(frage_text)} Zeichen")
     ausgabe = ausgabe or os.path.join(daten, "messungen", f"frage-{ticker.lower()}-{dt.datetime.now(dt.timezone.utc):%Y%m%d-%H%M}")
@@ -280,12 +321,15 @@ def lauf(daten, ticker, frage, modelle, quartale=QUARTALE, ausgabe=None, log=pri
         meta = {k: v for k, v in r.items() if k != "antwort"}
         meta["kosten_usd"] = None if kosten is None else round(kosten, 5)
         meta["antwort_zeichen"] = len(r.get("antwort") or "")
+        meta["zahlen"] = zahlen_pruefen(r.get("antwort") or "", tab_text, texte_text)
         with io.open(os.path.join(ausgabe, f"meta-{modell}.json"), "w", encoding="utf-8") as f:
             json.dump(meta, f, ensure_ascii=False, indent=1)
         bilanz["modelle"][modell] = meta
+        z = meta["zahlen"]
         log(f"  {modell}: Status {r.get('status')}, {meta['antwort_zeichen']} Zeichen, {r.get('dauer_s')} s, "
             f"Kosten {meta['kosten_usd']} USD, Tokens {u.get('prompt_tokens')}/{u.get('completion_tokens')}, "
-            f"Abbruchgrund {r.get('abbruchgrund')}")
+            f"Abbruchgrund {r.get('abbruchgrund')}; Zahlen {z['zahlen_gesamt']}, unbelegt {z['unbelegt']}, "
+            f"unbelegte Prozent {z['unbelegt_prozent']}")
     with io.open(os.path.join(ausgabe, "bilanz.json"), "w", encoding="utf-8") as f:
         json.dump(bilanz, f, ensure_ascii=False, indent=1)
     log(f"Ablage: {ausgabe}")
@@ -346,6 +390,17 @@ def selbsttest() -> int:
     e = eingabe("Warum?", text, block)
     p("Eingabe: Frage, Tabelle und Texte in dieser Reihenfolge",
       e.index("Frage des Nutzers") < e.index("Zahlentabelle") < e.index("Pressemitteilungen der Firma"))
+    w, pz = _zahlen("Umsatz 94,930 Milliarden, plus 6,1 Prozent, Konsens 0,95, am 31. Oktober 2024, up 8 percent, 1,85 US-Dollar")
+    p("Zahlen lesen: Betraege, Prozente, deutsche und englische Schreibweise, ohne Jahreszahl",
+      {94.93, 0.95, 1.85} <= w and {6.1, 8.0} <= pz and 2024 not in w and 31 in w, (w, pz))
+    z1 = zahlen_pruefen("Das bereinigte Ergebnis lag bei 1,85 US-Dollar, was 13 Prozent ueber dem Vorjahresquartal liegt, "
+                        "Ueberraschung 4,5 Prozent.", text, block)
+    p("Waechter: die erfundene Prozentzahl 13 faellt auf, belegte Zahlen nicht",
+      z1["unbelegt_prozent"] == [13.0] and z1["unbelegt"] == [], z1)
+    z2 = zahlen_pruefen("Umsatz 100,600 Milliarden US-Dollar, ein Plus von 7,0 Prozent; Nettogewinn 25,000 Mrd; "
+                        "Kursreaktion minus 2,97 Prozent. Erstens, zweitens, 3 Punkte.", text, block)
+    p("Waechter: alle Zahlen einer treuen Antwort sind belegt, kleine Aufzaehlungszahlen zaehlen nicht",
+      z2["unbelegt"] == [] and z2["unbelegt_prozent"] == [], z2)
     p("Auftrag verlangt Deutsch, keine Tabellen, Vermutungen gekennzeichnet, Quellen nur die Daten",
       all(w in AUFTRAG for w in ("Deutsch", "ohne Tabellen", "Vermutung", "AUSSCHLIESSLICH", "Safe Harbor")))
     p("Textblock nennt nur das Veroeffentlichungsdatum, kein falsches Quartal", "Quartal bis" not in block and "veroeffentlicht am 2026-07-31" in block)
@@ -365,6 +420,10 @@ def main():
     if a.selbsttest:
         return selbsttest()
     modelle = [m.strip() for m in a.modelle.split(",") if m.strip()]
+    if modelle == ["alle"]:
+        import messung_8k as m8k
+        modelle = m8k.modelle_laden()
+        print("Alle Text-Chat-Modelle der Tagesliste:", ", ".join(modelle))
     lauf(a.daten, a.ticker, a.frage or FRAGE_VORGABE, modelle, a.quartale)
     return 0
 
