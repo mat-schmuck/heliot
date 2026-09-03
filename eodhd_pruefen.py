@@ -53,7 +53,8 @@ def split_faktor(splits, ab_datum):
 
 
 def splits_laden(daten, ticker):
-    p = os.path.join(daten, "eodhd", "splits", f"{ticker}.json.gz")
+    import eodhd_konsens as ek
+    p = os.path.join(daten, "eodhd", "splits", f"{ek.sicherer_name(ticker)}.json.gz")
     if not os.path.exists(p):
         return None
     with gzip.open(p, "rt", encoding="utf-8") as f:

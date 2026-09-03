@@ -64,7 +64,7 @@ jobs:
           python-version: "3.11"
       - name: Abhaengigkeiten
         if: steps.secrets.outputs.da == 'ja'
-        run: pip install requests pandas
+        run: pip install requests pandas yfinance
       - name: Selbsttest
         if: steps.secrets.outputs.da == 'ja'
         run: python eodhd_konsens.py --selbsttest

@@ -56,6 +56,39 @@ def eodhd_symbol(ticker):
     return ke.yahoo_ticker(ticker) + ".US"
 
 
+RESERVIERT = {"CON", "PRN", "AUX", "NUL"} | {f"COM{i}" for i in range(1, 10)} | {f"LPT{i}" for i in range(1, 10)}
+
+
+def sicherer_name(ticker):
+    """Dateiname je Ticker. CON, PRN, AUX, NUL, COM1 bis COM9 und LPT1 bis
+    LPT9 sind unter Windows Geraetenamen; git kann eine Datei CON.json.gz
+    dort nicht auschecken (Befund 03.09.2026 am Ticker CON). Solche Ticker
+    bekommen einen Unterstrich angehaengt; der Ticker selbst steht immer im
+    Kopf der Datei."""
+    t = str(ticker).strip().upper()
+    return t + "_" if t in RESERVIERT else t
+
+
+def altlasten_umbenennen(daten, log=print):
+    """Dateien mit reservierten Namen aus frueheren Laeufen umbenennen (laeuft
+    im Actions-Lauf unter Linux, wo die Dateien anfassbar sind)."""
+    n = 0
+    for unter in ("konsens", "roh", "splits"):
+        ordner = os.path.join(daten, "eodhd", unter)
+        if not os.path.isdir(ordner):
+            continue
+        for name in os.listdir(ordner):
+            basis = name.split(".")[0]
+            if basis.upper() in RESERVIERT:
+                neu = os.path.join(ordner, sicherer_name(basis) + name[len(basis):])
+                if not os.path.exists(neu):
+                    os.replace(os.path.join(ordner, name), neu)
+                    n += 1
+    if n:
+        log(f"Dateinamen abgesichert: {n} umbenannt (reservierte Windows-Namen)")
+    return n
+
+
 def _zahl(v):
     if v is None or v == "":
         return None
@@ -208,39 +241,35 @@ def normalisiere(ticker, antwort, zeit):
     return kopf, zeilen
 
 
-def hole_splits(symbol, token, fetcher=None, warte=time.sleep):
-    """Split-Historie einer Firma (Endpunkt splits, 1 API-Call): Liste von
-    {date, split} mit split als Zeichenkette n/m. Noetig, weil EODHD die
-    EPS-History auf die heutige Aktienzahl umrechnet, das amtliche Archiv
-    aber die damals berichtete Zahl fuehrt (gemessen 03.09.2026: Apple
-    0,525 gegen 2,10 = Faktor 4 aus dem Split 2020)."""
-    url = f"https://eodhd.com/api/splits/{symbol}?api_token={token}&fmt=json&from=1990-01-01"
-    for versuch in range(3):
-        if fetcher is not None:
-            status, text, kopf = fetcher("splits:" + symbol)
-        else:
-            import urllib.error
-            import urllib.request
-            try:
-                with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "heliot-eodhd/1.0"}), timeout=60) as r:
-                    status, text, kopf = r.status, r.read().decode("utf-8", "replace"), dict(r.headers)
-            except urllib.error.HTTPError as e:
-                status, text, kopf = e.code, e.read().decode("utf-8", "replace")[:500], dict(e.headers)
-            except Exception as e:  # noqa
-                status, text, kopf = 0, str(e)[:300], {}
-        if status in (401, 402, 403):
-            raise EodhdGesperrt(f"HTTP {status} bei Splits {symbol}: {str(text)[:200]}")
-        if status == 429 or status >= 500 or status == 0:
-            warte(15 if status == 429 else 10)
-            continue
-        break
-    if status == 200:
+def hole_splits(ticker, token=None, fetcher=None, warte=time.sleep):
+    """Split-Historie einer Firma von YAHOO (yfinance, gratis). Der
+    EODHD-Endpunkt splits gehoert nicht zum Fundamentals-Plan (HTTP 403
+    Forbidden, gemessen 03.09.2026). Liefert (status, liste, {}) in der
+    EODHD-Form [{date, split: n/m}], damit split_faktor beides versteht.
+    Noetig, weil EODHD die EPS-History auf die heutige Aktienzahl
+    umrechnet, das amtliche Archiv aber die damals berichtete Zahl fuehrt
+    (Apple 0,525 gegen 2,10 = Faktor 4 aus dem Split 2020)."""
+    if fetcher is not None:
+        status, text, kopf = fetcher("splits:" + ticker)
         try:
             d = json.loads(text) if isinstance(text, str) else text
-            return 200, (d if isinstance(d, list) else []), kopf
         except ValueError:
-            return 200, [], kopf
-    return status, [], kopf
+            d = []
+        return status, (d if isinstance(d, list) else []), kopf
+    try:
+        import yfinance as yf
+        serie = yf.Ticker(ke.yahoo_ticker(ticker)).splits
+    except Exception as e:  # noqa
+        return 0, [], {"fehler": str(e)[:160]}
+    raus = []
+    try:
+        for datum, wert in serie.items():
+            w = float(wert)
+            if w > 0:
+                raus.append({"date": str(datum)[:10], "split": f"{w:.6f}/1.000000"})
+    except Exception:  # noqa
+        pass
+    return 200, raus, {}
 
 
 def split_faktor(splits, ab_datum):
@@ -262,7 +291,8 @@ def split_faktor(splits, ab_datum):
 
 
 def lauf_splits(daten, token, fetcher=None, warte=time.sleep, log=print, hoechstens=0, nur_ohne=True):
-    """Split-Historie fuer alle Firmen mit ok-Stand holen (1 Call je Firma)."""
+    """Split-Historie (Yahoo) fuer alle Firmen mit ok-Stand holen."""
+    altlasten_umbenennen(daten, log=log)
     stand = ke._json(os.path.join(daten, "eodhd", "stand.json"), {})
     firmen = [t for t, s in sorted(stand.items()) if s.get("status") == "ok" and (not nur_ohne or "splits" not in s)]
     if hoechstens:
@@ -272,12 +302,12 @@ def lauf_splits(daten, token, fetcher=None, warte=time.sleep, log=print, hoechst
     log(f"EODHD splits: {len(firmen)} Firma(en)")
     for i, t in enumerate(firmen, 1):
         try:
-            status, splits, kopf = hole_splits(eodhd_symbol(t), token, fetcher=fetcher, warte=warte)
+            status, splits, kopf = hole_splits(t, token, fetcher=fetcher, warte=warte)
         except EodhdGesperrt as e:
             bilanz["abbruch"] = str(e)
             break
         if status == 200:
-            _gz_json(os.path.join(daten, "eodhd", "splits", f"{t}.json.gz"), splits)
+            _gz_json(os.path.join(daten, "eodhd", "splits", f"{sicherer_name(t)}.json.gz"), splits)
             stand[t]["splits"] = len(splits)
             bilanz["ok"] += 1
             if splits:
@@ -341,6 +371,8 @@ def lauf(daten, modus="voll", token=None, hoechstens=0, frische_tage=90, fetcher
         schreiben = (modus == "voll")
     stand_pfad = os.path.join(daten, "eodhd", "stand.json")
     stand = ke._json(stand_pfad, {}) if daten else {}
+    if daten and modus != "probe":
+        altlasten_umbenennen(daten, log=log)
     if modus == "probe":
         firmen = DEMO if token == DEMO_TOKEN else REFERENZ
         status, tarif = konto(token, fetcher=fetcher)
@@ -382,8 +414,8 @@ def lauf(daten, modus="voll", token=None, hoechstens=0, frische_tage=90, fetcher
             eintrag.update({"status": "ok", "trend": n_trend, "history": n_hist, "cik": k.get("cik")})
             bilanz["ok"] += 1
             if schreiben:
-                _gz_json(os.path.join(daten, "eodhd", "roh", f"{t}.json.gz"), antwort)
-                _gz_json(os.path.join(daten, "eodhd", "konsens", f"{t}.json.gz"), {"kopf": k, "zeilen": zeilen})
+                _gz_json(os.path.join(daten, "eodhd", "roh", f"{sicherer_name(t)}.json.gz"), antwort)
+                _gz_json(os.path.join(daten, "eodhd", "konsens", f"{sicherer_name(t)}.json.gz"), {"kopf": k, "zeilen": zeilen})
             if modus == "probe":
                 juengst = [z for z in zeilen if z["art"] == "eps_history" and z.get("eps_ist") is not None]
                 q = [z for z in zeilen if z["art"] == "konsens_trend" and z.get("umfang") == "quartal"]
@@ -475,6 +507,8 @@ def selbsttest() -> int:
     p("Konto: nur Tarif und Zaehler, nie Name oder E-Mail",
       st == 200 and tarif == {"subscriptionType": "Free", "dailyRateLimit": 20, "apiRequests": 3, "apiRequestsDate": "2026-09-03"})
     p("Konto: 401 heisst ungueltiger Schluessel", konto("x", fetcher=lambda s: (401, "Unauthorized", {}))[0] == 401)
+    p("Sichere Dateinamen: CON wird CON_, AAPL bleibt", sicherer_name("con") == "CON_" and sicherer_name("AAPL") == "AAPL"
+      and sicherer_name("LPT3") == "LPT3_" and sicherer_name("CONX") == "CONX")
     sp = [{"date": "2014-06-09", "split": "7.000000/1.000000"}, {"date": "2020-08-31", "split": "4.000000/1.000000"}]
     p("Split-Faktor: nur Splits nach dem Quartalsende zaehlen",
       split_faktor(sp, "2017-06-30") == 4.0 and split_faktor(sp, "2013-12-31") == 28.0 and split_faktor(sp, "2021-01-01") == 1.0)
@@ -568,6 +602,17 @@ def selbsttest() -> int:
           and os.path.exists(os.path.join(tmp, "eodhd", "splits", "AAPL.json.gz")), b4)
         b5 = lauf_splits(tmp, "x", fetcher=fetcher_splits, warte=lambda s: None, log=lambda *_: None)
         p("Splits: zweiter Lauf holt nichts doppelt", b5["firmen"] == 0)
+        os.makedirs(os.path.join(tmp, "eodhd", "konsens"), exist_ok=True)
+        with open(os.path.join(tmp, "eodhd", "konsens", "PRNX.json.gz"), "wb") as f:
+            f.write(b"x")
+        with open(os.path.join(tmp, "eodhd", "konsens", "NUL2.json.gz"), "wb") as f:
+            f.write(b"x")
+        # Ein echter reservierter Name laesst sich unter Windows nicht anlegen; die
+        # Umbenennung wird deshalb an der Namenspruefung und an harmlosen Nachbarn
+        # geprueft (PRNX und NUL2 sind NICHT reserviert und bleiben).
+        n_um = altlasten_umbenennen(tmp, log=lambda *_: None)
+        p("Altlasten: nicht reservierte Nachbarn bleiben unangetastet",
+          n_um == 0 and os.path.exists(os.path.join(tmp, "eodhd", "konsens", "PRNX.json.gz")))
     print("\n" + ("Alles bestanden." if fehler == 0 else f"{fehler} Fehler."))
     return fehler
 
