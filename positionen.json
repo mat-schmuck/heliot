@@ -1437,5 +1437,31 @@
   "schluss_kurs": 365.905,
   "ergebnis_pct": -4.85,
   "ergebnis_r": -1.02
+ },
+ "INSW|1": {
+  "symbol": "INSW",
+  "firma": "International Seaways Inc",
+  "strategie": "Darvas Box",
+  "einstieg": 102.37,
+  "einstieg_datum": "2026-09-03",
+  "einstieg_index": 0,
+  "struktur_stop": 93.13,
+  "aktueller_stop": 93.13,
+  "stop_quelle": "struktur",
+  "hoechstkurs": 102.37,
+  "teilverkauft": false,
+  "halteregel_aktiv": false,
+  "beobachtung": true,
+  "status": "offen",
+  "verlauf": [],
+  "klasse": "darvas",
+  "musterziel": null,
+  "zone": null,
+  "ziel_gemeldet": false,
+  "klimax_gemeldet": [],
+  "weinstein_gemeldet": false,
+  "zahlen_hinweis_gemeldet": false,
+  "sektor_hinweis_gemeldet": false,
+  "wedge_drop_gemeldet": false
  }
 }

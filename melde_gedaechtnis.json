@@ -3,7 +3,7 @@
   "fenster": {
     "MRX|1": "draussen",
     "MRX|3": "draussen",
-    "ASST|1": "drin",
+    "ASST|1": "draussen",
     "DNTH|2": "drin",
     "ECO|1": "drin",
     "ECO|2": "draussen",
@@ -104,7 +104,7 @@
     "BLSH|3": "draussen",
     "BZ|3": "draussen",
     "CNXC|3": "draussen",
-    "ECPG|2": "draussen",
+    "ECPG|2": "drin",
     "FIGS|3": "draussen",
     "FRO|1": "drin",
     "FRO|2": "draussen",
@@ -123,7 +123,7 @@
     "P|2": "draussen",
     "PLPC|2": "drin",
     "PR|2": "draussen",
-    "PSQL|2": "draussen",
+    "PSQL|2": "drin",
     "SE|3": "drin",
     "TIGO|2": "drin",
     "U|3": "draussen",
@@ -177,7 +177,11 @@
     "VLO|1": "drin",
     "VLO|3": "drin",
     "INSW|1": "drin",
-    "INSW|3": "drin"
+    "INSW|3": "drin",
+    "FTI|1": "drin",
+    "IBKR|3": "drin",
+    "TVTX|1": "drin",
+    "TVTX|3": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -298,6 +302,7 @@
     "BEST|LPG|1": "2026-09-03",
     "GAPGO|SNOW|2026-09-03": "2026-09-03",
     "INSW|1": "2026-09-03",
-    "BEST|INSW|1": "2026-09-03"
+    "BEST|INSW|1": "2026-09-03",
+    "UEBER|ASST|1": "2026-09-03"
   }
 }
