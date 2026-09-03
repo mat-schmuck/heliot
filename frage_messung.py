@@ -394,7 +394,7 @@ def selbsttest() -> int:
     p("Zahlen lesen: Betraege, Prozente, deutsche und englische Schreibweise, ohne Jahreszahl",
       {94.93, 0.95, 1.85} <= w and {6.1, 8.0} <= pz and 2024 not in w and 31 in w, (w, pz))
     z1 = zahlen_pruefen("Das bereinigte Ergebnis lag bei 1,85 US-Dollar, was 13 Prozent ueber dem Vorjahresquartal liegt, "
-                        "Ueberraschung 4,5 Prozent.", text, block)
+                        "Ueberraschung 7,5 Prozent.", text, block)
     p("Waechter: die erfundene Prozentzahl 13 faellt auf, belegte Zahlen nicht",
       z1["unbelegt_prozent"] == [13.0] and z1["unbelegt"] == [], z1)
     z2 = zahlen_pruefen("Umsatz 100,600 Milliarden US-Dollar, ein Plus von 7,0 Prozent; Nettogewinn 25,000 Mrd; "
