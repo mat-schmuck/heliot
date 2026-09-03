@@ -385,6 +385,62 @@ def eingabe_mit_nachrichten(frage, tab_text, texte_text, nachrichten_text):
             f"\n\nPressemitteilungen der Firma zu diesen Quartalen:\n\n{texte_text}")
 
 
+MONATE = {"jaenner": 1, "januar": 1, "februar": 2, "maerz": 3, "märz": 3, "april": 4, "mai": 5, "juni": 6, "juli": 7,
+          "august": 8, "september": 9, "oktober": 10, "november": 11, "dezember": 12}
+
+
+def _quartale_im_absatz(absatz, enden):
+    """Periodenenden der Tabelle, die ein Absatz nennt: als ISO-Datum oder als Monat und Jahr
+    (auch mit Tag davor, etwa 28. September 2024). Ein Absatz mit dem Meldedatum eines anderen
+    Quartals trifft dann kein Tabellenquartal."""
+    import re
+    gefunden = set()
+    for e in enden:
+        if e in absatz:
+            gefunden.add(e)
+    for m in re.finditer(r"(?:\d{1,2}\.\s*)?([A-Za-zäöü]+)\s+(20\d{2})", absatz):
+        mon = MONATE.get(m.group(1).lower())
+        if not mon:
+            continue
+        jahr = int(m.group(2))
+        for e in enden:
+            if int(e[:4]) == jahr and int(e[5:7]) == mon:
+                gefunden.add(e)
+    return gefunden
+
+
+def zuordnung_pruefen(antwort, liste):
+    """Stehen die Umsatzzahlen in den Absaetzen zum richtigen Quartal? Rueckgabe
+    {geprueft, fehler: [(genanntes Quartal, Umsatz im Absatz, Quartal dieses Umsatzes)]}."""
+    import re
+    enden = [z["periodenende"] for z in liste if z.get("umsatz_mrd") is not None]
+    umsatz_zu_ende = {}
+    for z in liste:
+        u = z.get("umsatz_mrd")
+        if u is None:
+            continue
+        for form in (f"{u:.3f}", f"{u:.2f}", f"{u:.1f}"):
+            umsatz_zu_ende.setdefault(form.replace(".", ","), z["periodenende"])
+            umsatz_zu_ende.setdefault(form, z["periodenende"])
+    geprueft, fehler = 0, []
+    for absatz in re.split(r"\n\s*\n|\n", antwort):
+        quartale = _quartale_im_absatz(absatz, enden)
+        if len(quartale) != 1:
+            continue
+        q = next(iter(quartale))
+        treffer = set()
+        for form, e in umsatz_zu_ende.items():
+            if re.search(r"(?<![\d,.])" + re.escape(form) + r"(?![\d])", absatz):
+                treffer.add(e)
+        if not treffer:
+            continue
+        geprueft += 1
+        for e in treffer:
+            if e != q:
+                fehler.append((q, e))
+    return {"geprueft": geprueft, "fehler": fehler}
+
+
 def modell_fragen(modell, frage_text, bremse):
     import messung_8k as m8k
     koerper = {"model": modell, "temperature": 0, "max_tokens": 3000,
@@ -499,6 +555,7 @@ def lauf(daten, ticker, frage, modelle, quartale=QUARTALE, ausgabe=None, log=pri
         meta["kosten_usd"] = None if kosten is None else round(kosten, 5)
         meta["antwort_zeichen"] = len(r.get("antwort") or "")
         meta["zahlen"] = zahlen_pruefen(r.get("antwort") or "", tab_text, texte_text + "\n" + ((nachrichten or {}).get("text") or ""))
+        meta["zuordnung"] = zuordnung_pruefen(r.get("antwort") or "", liste)
         with io.open(os.path.join(ausgabe, f"meta-{modell}.json"), "w", encoding="utf-8") as f:
             json.dump(meta, f, ensure_ascii=False, indent=1)
         bilanz["modelle"][modell] = meta
@@ -506,7 +563,8 @@ def lauf(daten, ticker, frage, modelle, quartale=QUARTALE, ausgabe=None, log=pri
         log(f"  {modell}: Status {r.get('status')}, {meta['antwort_zeichen']} Zeichen, {r.get('dauer_s')} s, "
             f"Kosten {meta['kosten_usd']} USD, Tokens {u.get('prompt_tokens')}/{u.get('completion_tokens')}, "
             f"Abbruchgrund {r.get('abbruchgrund')}; Zahlen {z['zahlen_gesamt']}, unbelegt {z['unbelegt']}, "
-            f"unbelegte Prozent {z['unbelegt_prozent']}")
+            f"unbelegte Prozent {z['unbelegt_prozent']}; Quartalszuordnung geprueft {meta['zuordnung']['geprueft']}, "
+            f"Fehlzuordnungen {meta['zuordnung']['fehler']}")
     with io.open(os.path.join(ausgabe, "bilanz.json"), "w", encoding="utf-8") as f:
         json.dump(bilanz, f, ensure_ascii=False, indent=1)
     log(f"Ablage: {ausgabe}")
@@ -616,6 +674,14 @@ def selbsttest() -> int:
     p("Yahoo-Feed leer: Status 204, kein Text", ny2["status"] == 204 and ny2["text"] == "", ny2)
     ny3 = nachrichten_yahoo("AAPL", hole=lambda url: (_ for _ in ()).throw(OSError("kein Netz")))
     p("Yahoo-Feed nicht lesbar: Status 0 mit Hinweis, kein Absturz", ny3["status"] == 0 and ny3["hinweise"], ny3)
+    zu1 = zuordnung_pruefen("Im Quartal bis 2026-06-27 stieg der Umsatz auf 100,600 Milliarden.\n"
+                            "Im Quartal bis 28. Maerz 2026 lag der Umsatz bei 105,0 Milliarden.", liste)
+    p("Zuordnung: richtige Paare aus Datum und Umsatz, ISO und Monatsform", zu1 == {"geprueft": 2, "fehler": []}, zu1)
+    zu2 = zuordnung_pruefen("Im Quartal zum 2026-01-29 meldete Apple einen Umsatz von 143,8 Milliarden.\n"
+                            "Im Quartal zum 2025-12-27 meldete Apple einen Umsatz von 102,5 Milliarden.\n"
+                            "Im Quartal zum 2025-09-27 meldete Apple einen Umsatz von 94,0 Milliarden.", liste)
+    p("Zuordnung: um ein Quartal verschobene Zahlen fallen auf, Meldedatum trifft kein Quartal",
+      zu2["geprueft"] == 2 and zu2["fehler"] == [("2025-12-27", "2025-09-27"), ("2025-09-27", "2025-06-28")], zu2)
     p("Auftrag verlangt Deutsch, keine Tabellen, Vermutungen gekennzeichnet, Quellen nur die Daten",
       all(w in AUFTRAG for w in ("Deutsch", "ohne Tabellen", "Vermutung", "AUSSCHLIESSLICH", "Safe Harbor")))
     p("Textblock nennt nur das Veroeffentlichungsdatum, kein falsches Quartal", "Quartal bis" not in block and "veroeffentlicht am 2026-07-31" in block)
