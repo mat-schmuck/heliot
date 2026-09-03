@@ -118,7 +118,7 @@ def vergleiche(history, amtlich, ab=dt.date(2017, 1, 1), splits=None):
         passend = [a for a in amtlich if abs((a[0] - end).days) <= TOLERANZ_TAGE]
         if not passend:
             zaehler["kein_amtlicher_wert"] += 1
-            faelle.append((end, eps, None, "kein_amtlicher_wert", melde, None))
+            faelle.append((end, eps, None, "kein_amtlicher_wert", melde, None, 1.0))
             continue
         a = min(passend, key=lambda x: abs((x[0] - end).days))
         diff = abs(eps - a[1])
