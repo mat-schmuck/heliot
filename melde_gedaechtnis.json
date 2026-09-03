@@ -175,7 +175,9 @@
     "SNPS|1": "drin",
     "PBT|3": "draussen",
     "VLO|1": "drin",
-    "VLO|3": "drin"
+    "VLO|3": "drin",
+    "INSW|1": "drin",
+    "INSW|3": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -294,6 +296,8 @@
     "BEST|BRC|2": "2026-09-03",
     "LPG|1": "2026-09-03",
     "BEST|LPG|1": "2026-09-03",
-    "GAPGO|SNOW|2026-09-03": "2026-09-03"
+    "GAPGO|SNOW|2026-09-03": "2026-09-03",
+    "INSW|1": "2026-09-03",
+    "BEST|INSW|1": "2026-09-03"
   }
 }
