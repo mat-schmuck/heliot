@@ -12,11 +12,12 @@ on:
   workflow_dispatch:
     inputs:
       modus:
-        description: "probe (fuenf Referenzfirmen, schreibt nichts) oder voll (alle Firmen mit Konsens ins Datenrepo)"
+        description: "probe (fuenf Referenzfirmen, schreibt nichts), voll (alle Firmen mit Konsens ins Datenrepo) oder splits (Split-Historie je Firma, 1 Call, fuer die Gegenprobe)"
         type: choice
         options:
           - probe
           - voll
+          - splits
         default: probe
       hoechstens:
         description: "voll: hoechstens so viele Firmen je Lauf (0 = alle)"
@@ -74,7 +75,7 @@ jobs:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
         run: python eodhd_konsens.py --daten daten --modus "${{ inputs.modus }}" --hoechstens "${{ inputs.hoechstens }}" --frische "${{ inputs.frische }}"
       - name: Ins Datenrepo
-        if: steps.secrets.outputs.da == 'ja' && inputs.modus == 'voll'
+        if: steps.secrets.outputs.da == 'ja' && inputs.modus != 'probe'
         run: |
           cd daten
           git config user.name "heliot-eodhd"
