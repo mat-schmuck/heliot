@@ -36,9 +36,11 @@ WEBSUCHE_AUFTRAG = (
     "Du bist ein Rechercheur fuer Boersennachrichten. Suche im Netz nach Nachrichten und Analystenkommentaren "
     "zu der Firma und beantworte nur diese zwei Fragen aus dem, was du gefunden hast: Erstens, welche Gruende "
     "nennen Nachrichten und Analysten fuer die Kursreaktion nach den juengsten Quartalszahlen? Zweitens, welche "
-    "Gruende nennen sie fuer die Kursentwicklung der letzten Wochen? Nenne zu jeder Aussage die Quelle (Medium "
-    "und Datum). Erfinde nichts; was du nicht findest, sagst du ausdruecklich. Antworte auf Deutsch in ganzen "
-    "Saetzen, ohne Markdown, ohne Tabellen, hoechstens 300 Woerter."
+    "Gruende nennen sie fuer die Kursentwicklung der letzten Wochen? Nenne zu jeder Aussage die Quelle im Klartext, "
+    "also den Namen des Mediums oder der Website und das Datum des Artikels, in Klammern hinter dem Satz; keine "
+    "Fussnoten, keine Verweismarken, keine Zitatnummern. Gib bei Kurszielen ausdruecklich an, ob sie gehoben oder "
+    "gesenkt wurden und von welchem auf welchen Wert. Erfinde nichts; was du nicht findest, sagst du ausdruecklich. "
+    "Antworte auf Deutsch in ganzen Saetzen, ohne Markdown, ohne Tabellen, hoechstens 300 Woerter."
 )
 
 AUFTRAG = (
@@ -288,14 +290,31 @@ def websuche_groq(ticker, name, meldedatum, heute, log=print):
             quellen.append({"typ": w.get("type"), "eingabe": (w.get("arguments") or w.get("input") or "")[:300] if isinstance(w.get("arguments") or w.get("input"), str) else str(w.get("arguments") or w.get("input"))[:300],
                             "ausgabe": (w.get("output") or "")[:2000] if isinstance(w.get("output"), str) else str(w.get("output"))[:2000]})
         time.sleep(WEBSUCHE_ABSTAND_S)
-        return {"text": markdown_weg((nachricht.get("content") or "").strip()), "quellen": quellen, "usage": a.get("usage"),
+        text = markdown_weg((nachricht.get("content") or "").strip())
+        seiten = besuchte_seiten(quellen)
+        if seiten:
+            text += "\nBesuchte Seiten der Suche: " + ", ".join(seiten)
+        return {"text": text, "quellen": quellen, "usage": a.get("usage"),
                 "dauer_s": round(dauer, 1), "status": 200, "hinweise": hinweise, "modell_laut_antwort": a.get("model"),
                 "abbruchgrund": a["choices"][0].get("finish_reason")}
     return {"text": "", "quellen": [], "usage": None, "dauer_s": 0, "status": 0, "hinweise": hinweise + ["aufgegeben"]}
 
 
+def besuchte_seiten(quellen):
+    """Adressen, die das Browser-Werkzeug geoeffnet hat (browser.open mit einer Adresse als id)."""
+    import re
+    raus = []
+    for q in quellen or []:
+        for u in re.findall(r"https?://[^\s\"'}]+", str(q.get("eingabe") or "")):
+            u = u.rstrip(",.")
+            if u not in raus:
+                raus.append(u)
+    return raus
+
+
 def markdown_weg(text):
     import re
+    text = re.sub(r"\u3010[^\u3011]*\u3011", "", text)  # Verweismarken des Browser-Werkzeugs wie 【0†L26-L34】
     text = re.sub(r"\*\*(.*?)\*\*", r"\1", text)
     text = re.sub(r"^\s*#+\s*", "", text, flags=re.M)
     text = re.sub(r"^\s*[-*]\s+", "", text, flags=re.M)
@@ -479,7 +498,7 @@ def lauf(daten, ticker, frage, modelle, quartale=QUARTALE, ausgabe=None, log=pri
         meta = {k: v for k, v in r.items() if k != "antwort"}
         meta["kosten_usd"] = None if kosten is None else round(kosten, 5)
         meta["antwort_zeichen"] = len(r.get("antwort") or "")
-        meta["zahlen"] = zahlen_pruefen(r.get("antwort") or "", tab_text, texte_text)
+        meta["zahlen"] = zahlen_pruefen(r.get("antwort") or "", tab_text, texte_text + "\n" + ((nachrichten or {}).get("text") or ""))
         with io.open(os.path.join(ausgabe, f"meta-{modell}.json"), "w", encoding="utf-8") as f:
             json.dump(meta, f, ensure_ascii=False, indent=1)
         bilanz["modelle"][modell] = meta
@@ -574,6 +593,14 @@ def selbsttest() -> int:
     ohne = websuche_groq("AAPL", "Apple", "2026-07-30", "2026-09-03", log=lambda *_: None) if not GROQ_KEY else {"status": 0, "hinweise": ["GROQ_API_KEY fehlt"]}
     p("Websuche ohne Schluessel: Status 0 mit klarem Hinweis, kein Netzaufruf", ohne["status"] == 0 and "GROQ_API_KEY fehlt" in ohne["hinweise"])
     p("Markdown-Reste verschwinden", markdown_weg("**Schlagzeile:** Test\n- Punkt\n## Kopf") == "Schlagzeile: Test\nPunkt\nKopf", repr(markdown_weg("**Schlagzeile:** Test\n- Punkt\n## Kopf")))
+    p("Verweismarken des Browser-Werkzeugs verschwinden",
+      markdown_weg("Cook warnte \u3010" + "0\u2020L26-L34\u3011\u3010" + "0\u2020L54-L60\u3011. Ende") == "Cook warnte . Ende")
+    bs = besuchte_seiten([{"typ": "browser_search", "eingabe": '{"query": "x"}'},
+                          {"typ": "browser.open", "eingabe": '{"id":"https://www.finbold.com/analyst-apple-2026-09"}'},
+                          {"typ": "browser.open", "eingabe": '{"cursor": 0, "id": 0}'}])
+    p("Besuchte Seiten aus den Werkzeugaufrufen", bs == ["https://www.finbold.com/analyst-apple-2026-09"], bs)
+    zn = zahlen_pruefen("Jefferies senkte das Kursziel auf 263,66 US-Dollar.", text, block + "\nKursziel auf $263,66 gesenkt")
+    p("Waechter: Zahlen aus der Nachrichtenlage gelten als belegt", zn["unbelegt"] == [], zn)
     xml = ("<rss><channel><item><title>Jefferies Revamps Apple Stock Target On Setback</title>"
            "<link>https://finance.yahoo.com/news/jefferies-apple.html</link><pubDate>Thu, 03 Sep 2026 12:05:00 +0000</pubDate></item>"
            "<item><title><![CDATA[Apple faces &#163;2 bn lawsuit in UK]]></title><link>https://www.ft.com/x</link>"
