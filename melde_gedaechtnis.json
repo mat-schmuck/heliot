@@ -152,7 +152,7 @@
     "CLMT|2": "draussen",
     "OII|2": "draussen",
     "TVTX|2": "draussen",
-    "BLSH|2": "drin",
+    "BLSH|2": "draussen",
     "GCT|2": "draussen",
     "INSM|3": "draussen",
     "XMTR|1": "drin",
@@ -187,7 +187,8 @@
     "CLMT|1": "drin",
     "CLMT|3": "drin",
     "CNC|3": "drin",
-    "CRWD|1": "drin"
+    "CRWD|1": "drin",
+    "DELL|3": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -311,6 +312,7 @@
     "BEST|INSW|1": "2026-09-03",
     "UEBER|ASST|1": "2026-09-03",
     "CRWD|1": "2026-09-03",
-    "BEST|CRWD|1": "2026-09-03"
+    "BEST|CRWD|1": "2026-09-03",
+    "UEBER|BLSH|2": "2026-09-03"
   }
 }
