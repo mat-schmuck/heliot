@@ -143,6 +143,26 @@ Aufträge neu angelegt werden:
   Schnappschüssen, deshalb nie zwei Läufe auf einmal anstoßen: Die
   Gruppe hält nur EINEN wartenden Lauf.
 
+- *Heliot Vorabwerte (alle 30 Min, 06:00 bis 20:30 New York)* (Auftrag
+  8379618, angelegt 03.09.2026) — Minuten 0 und 30, Stunden 6 bis 20,
+  Mo bis Fr, **vorabwerte.yml**,
+  Text `{"ref":"fundament-phase1","inputs":{"modus":"strom"}}`.
+- *Heliot Vorabwerte Abgleich (21:00 New York)* (Auftrag 8379652,
+  angelegt 03.09.2026) — `0 21 * * 1-5`, **vorabwerte.yml**,
+  Text `{"ref":"fundament-phase1","inputs":{"modus":"abgleich"}}`.
+
+  Gerhards F15: Der Strom liest die neuesten Ergebnis-8-Ks der Firmen
+  aus dem Konsens-Bestand, lässt die Mistral-Kette (ministral-14b-2512,
+  mistral-medium-2604, mistral-small-2603) die Pressemitteilung
+  auslesen und legt die Werte unübersehbar vorläufig im Datenrepo
+  `heliot-daten` unter `vorabwerte/` ab; der Abgleich ersetzt sie durch
+  die amtliche Erstfassung, sobald der Quartalsbericht im SEC-Archiv
+  steht. Der Ref ist `fundament-phase1`, weil der Zweig nicht in main
+  gemergt ist; die Workflow-Datei liegt zusätzlich auf main, sonst
+  findet der Aufruf sie nicht. Braucht `SEC_USER_AGENT`,
+  `MISTRAL_API_KEY` und `DATEN_TOKEN`; `NTFY_TOPIC` nur für die
+  Ausfall-Meldung. Kein Push je Vorabwert (Mathias, 03.09.2026).
+
 ACHTUNG beim Klonen eines Auftrags: Die Kopie wird **deaktiviert**
 angelegt und muss über „Job aktivieren" scharf geschaltet werden. Der
 Anfragetext der Vorlage wird mitkopiert und muss angepasst werden.
@@ -155,7 +175,11 @@ Seite neu laden und nachsehen, was wirklich angekommen ist.
 selbst ein): `TRADERFOX_USER`, `TRADERFOX_PASS`, `NTFY_TOPIC`,
 `TWELVE_DATA_API_KEY`, `FMP_API_KEY`, `FINNHUB_API_KEY`,
 `SEC_USER_AGENT` (Kontaktkennung für SEC-Abrufe, nie im Quelltext),
-`DATEN_TOKEN` (Schreibzugang auf heliot-daten).
+`DATEN_TOKEN` (Schreibzugang auf heliot-daten), `MISTRAL_API_KEY`
+(Vorabwerte aus 8-K, Gratisstufe 10 USD je 28 Tage) und
+`EODHD_API_KEY` (gekaufte Konsens-Historie, Abo Fundamentals Data Feed,
+von Mathias am 03.09.2026 abgeschlossen; der Vollabzug ist erledigt, das
+Abo wird nur einen Monat gebraucht).
 
 **Zustand, der nur im Actions-Zwischenspeicher lebt:** `session.json`
 (TraderFox-Sitzung, wird bei Bedarf neu erzeugt) und
@@ -169,6 +193,10 @@ doppelt.
   nichts, veröffentlicht `kaufpunkte_aktuell.xlsx` ins Repo.
 - **11:00** (Mo–Fr, 05:00 New York): Konsens einfrieren, Schnappschuss
   vor den Vorbörsen-Meldungen ins Datenrepo heliot-daten.
+- **12:00 bis 02:30, alle 30 Minuten** (Mo–Fr, 06:00 bis 20:30 New
+  York): Vorabwerte aus neuen Ergebnis-8-Ks ins Datenrepo.
+- **03:00** (Di–Sa, 21:00 New York des Vortags): Abgleich der
+  Vorabwerte mit dem amtlichen Archiv.
 - **14:00** (Mo–Fr): Alarm-Bot gleicht ab — entfernt Marken, deren
   Kaufpunkt sich verschoben hat oder deren Muster weggefallen ist — und
   trägt die neuen ein. Zwei Durchgänge, der zweite holt Nachzügler.
