@@ -121,7 +121,7 @@
     "NEO|2": "draussen",
     "NOG|3": "draussen",
     "P|2": "draussen",
-    "PLPC|2": "draussen",
+    "PLPC|2": "drin",
     "PR|2": "draussen",
     "PSQL|2": "draussen",
     "SE|3": "drin",
@@ -171,7 +171,9 @@
     "PATH|1": "drin",
     "LPG|1": "drin",
     "LPG|2": "draussen",
-    "LPG|3": "drin"
+    "LPG|3": "drin",
+    "SNPS|1": "drin",
+    "PBT|3": "draussen"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -290,6 +292,7 @@
     "BRC|2": "2026-09-03",
     "BEST|BRC|2": "2026-09-03",
     "LPG|1": "2026-09-03",
-    "BEST|LPG|1": "2026-09-03"
+    "BEST|LPG|1": "2026-09-03",
+    "GAPGO|SNOW|2026-09-03": "2026-09-03"
   }
 }
