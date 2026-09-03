@@ -21,7 +21,7 @@ import time
 
 FRAGE_VORGABE = ("Apple hat super Zahlen gemeldet, trotzdem ist der Kurs schwach. Warum? "
                  "Zeige mir das Quartal ueber Quartal.")
-MODELLE_VORGABE = ["mistral-medium-2604", "ministral-14b-2512"]
+MODELLE_VORGABE = ["mistral-small-2603", "mistral-medium-2604"]
 QUARTALE = 8
 TEXT_JE_MITTEILUNG = 25000
 KOPF_JE_MITTEILUNG = 12000
