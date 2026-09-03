@@ -198,6 +198,95 @@ def normalisiere(ticker, antwort, zeit):
     return kopf, zeilen
 
 
+def hole_splits(symbol, token, fetcher=None, warte=time.sleep):
+    """Split-Historie einer Firma (Endpunkt splits, 1 API-Call): Liste von
+    {date, split} mit split als Zeichenkette n/m. Noetig, weil EODHD die
+    EPS-History auf die heutige Aktienzahl umrechnet, das amtliche Archiv
+    aber die damals berichtete Zahl fuehrt (gemessen 03.09.2026: Apple
+    0,525 gegen 2,10 = Faktor 4 aus dem Split 2020)."""
+    url = f"https://eodhd.com/api/splits/{symbol}?api_token={token}&fmt=json&from=1990-01-01"
+    for versuch in range(3):
+        if fetcher is not None:
+            status, text, kopf = fetcher("splits:" + symbol)
+        else:
+            import urllib.error
+            import urllib.request
+            try:
+                with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "heliot-eodhd/1.0"}), timeout=60) as r:
+                    status, text, kopf = r.status, r.read().decode("utf-8", "replace"), dict(r.headers)
+            except urllib.error.HTTPError as e:
+                status, text, kopf = e.code, e.read().decode("utf-8", "replace")[:500], dict(e.headers)
+            except Exception as e:  # noqa
+                status, text, kopf = 0, str(e)[:300], {}
+        if status in (401, 402, 403):
+            raise EodhdGesperrt(f"HTTP {status} bei Splits {symbol}: {str(text)[:200]}")
+        if status == 429 or status >= 500 or status == 0:
+            warte(15 if status == 429 else 10)
+            continue
+        break
+    if status == 200:
+        try:
+            d = json.loads(text) if isinstance(text, str) else text
+            return 200, (d if isinstance(d, list) else []), kopf
+        except ValueError:
+            return 200, [], kopf
+    return status, [], kopf
+
+
+def split_faktor(splits, ab_datum):
+    """Produkt aller Splits NACH ab_datum (n/m als Faktor n durch m); damit
+    laesst sich ein damals berichtetes EPS auf die heutige Aktienzahl
+    bringen: damals geteilt durch Faktor."""
+    f = 1.0
+    for s in splits or []:
+        try:
+            if str(s.get("date")) <= str(ab_datum):
+                continue
+            n, m = str(s.get("split")).split("/")
+            n, m = float(n), float(m)
+            if n > 0 and m > 0:
+                f *= n / m
+        except (ValueError, AttributeError, TypeError):
+            continue
+    return f
+
+
+def lauf_splits(daten, token, fetcher=None, warte=time.sleep, log=print, hoechstens=0, nur_ohne=True):
+    """Split-Historie fuer alle Firmen mit ok-Stand holen (1 Call je Firma)."""
+    stand = ke._json(os.path.join(daten, "eodhd", "stand.json"), {})
+    firmen = [t for t, s in sorted(stand.items()) if s.get("status") == "ok" and (not nur_ohne or "splits" not in s)]
+    if hoechstens:
+        firmen = firmen[:hoechstens]
+    bilanz = {"zeit": dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat(), "modus": "splits",
+              "firmen": len(firmen), "ok": 0, "fehler": 0, "mit_splits": 0, "abbruch": None}
+    log(f"EODHD splits: {len(firmen)} Firma(en)")
+    for i, t in enumerate(firmen, 1):
+        try:
+            status, splits, kopf = hole_splits(eodhd_symbol(t), token, fetcher=fetcher, warte=warte)
+        except EodhdGesperrt as e:
+            bilanz["abbruch"] = str(e)
+            break
+        if status == 200:
+            _gz_json(os.path.join(daten, "eodhd", "splits", f"{t}.json.gz"), splits)
+            stand[t]["splits"] = len(splits)
+            bilanz["ok"] += 1
+            if splits:
+                bilanz["mit_splits"] += 1
+        else:
+            bilanz["fehler"] += 1
+        if i % 500 == 0:
+            log(f"  ... {i} von {len(firmen)}")
+            ke._schreibe_json(os.path.join(daten, "eodhd", "stand.json"), stand)
+        warte(ABSTAND_S)
+    ke._schreibe_json(os.path.join(daten, "eodhd", "stand.json"), stand)
+    with io.open(os.path.join(daten, "eodhd", "laeufe.jsonl"), "a", encoding="utf-8") as f:
+        f.write(json.dumps(bilanz, ensure_ascii=False) + "\n")
+    log(f"Ergebnis: {bilanz}")
+    if bilanz["abbruch"]:
+        ke.push("Konsens-Historie: EODHD-Splits abgebrochen", bilanz["abbruch"])
+    return bilanz
+
+
 def _gz_json(pfad, daten):
     os.makedirs(os.path.dirname(pfad), exist_ok=True)
     with gzip.open(pfad, "wt", encoding="utf-8") as f:
@@ -368,6 +457,9 @@ def selbsttest() -> int:
     p("Konto: nur Tarif und Zaehler, nie Name oder E-Mail",
       st == 200 and tarif == {"subscriptionType": "Free", "dailyRateLimit": 20, "apiRequests": 3, "apiRequestsDate": "2026-09-03"})
     p("Konto: 401 heisst ungueltiger Schluessel", konto("x", fetcher=lambda s: (401, "Unauthorized", {}))[0] == 401)
+    sp = [{"date": "2014-06-09", "split": "7.000000/1.000000"}, {"date": "2020-08-31", "split": "4.000000/1.000000"}]
+    p("Split-Faktor: nur Splits nach dem Quartalsende zaehlen",
+      split_faktor(sp, "2017-06-30") == 4.0 and split_faktor(sp, "2013-12-31") == 28.0 and split_faktor(sp, "2021-01-01") == 1.0)
     flach = {"General::Code": "AAPL", "General::CIK": "320193", "Earnings::Trend": _DEMO_ANTWORT["Earnings"]["Trend"],
              "Earnings::History": _DEMO_ANTWORT["Earnings"]["History"]}
     kf, zf = normalisiere("AAPL", flach, "2026-09-03T10:00:00+00:00")
@@ -438,6 +530,21 @@ def selbsttest() -> int:
         b3 = lauf(tmp, "voll", token="x", fetcher=fetcher, warte=lambda s: None, heute=heute,
                   log=lambda *_: None, frische_tage=0, budget_calls=25, wochenlisten=[])
         p("Tagesbudget begrenzt die Firmen je Lauf", b3["abbruch"] and "Tagesbudget" in b3["abbruch"] and b3["calls_geschaetzt"] <= 25)
+
+        def fetcher_splits(symbol):
+            if symbol.startswith("splits:AAPL"):
+                return 200, json.dumps([{"date": "2020-08-31", "split": "4.000000/1.000000"}]), {}
+            return 200, "[]", {}
+        ke._schreibe_json(os.path.join(tmp, "eodhd", "stand.json"),
+                          {"AAPL": {"datum": "2026-09-03", "status": "ok"}, "ALT": {"datum": "2026-09-03", "status": "ok"},
+                           "ZZZZ": {"datum": "2026-09-03", "status": "unbekannt"}})
+        b4 = lauf_splits(tmp, "x", fetcher=fetcher_splits, warte=lambda s: None, log=lambda *_: None)
+        st2 = ke._json(os.path.join(tmp, "eodhd", "stand.json"), {})
+        p("Splits: nur ok-Firmen, Datei je Firma, Zaehler im Stand",
+          b4["ok"] == 2 and b4["mit_splits"] == 1 and st2["AAPL"]["splits"] == 1 and st2["ALT"]["splits"] == 0
+          and os.path.exists(os.path.join(tmp, "eodhd", "splits", "AAPL.json.gz")), b4)
+        b5 = lauf_splits(tmp, "x", fetcher=fetcher_splits, warte=lambda s: None, log=lambda *_: None)
+        p("Splits: zweiter Lauf holt nichts doppelt", b5["firmen"] == 0)
     print("\n" + ("Alles bestanden." if fehler == 0 else f"{fehler} Fehler."))
     return fehler
 
@@ -445,7 +552,7 @@ def selbsttest() -> int:
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--daten", default="")
-    ap.add_argument("--modus", default="probe", choices=["probe", "voll"])
+    ap.add_argument("--modus", default="probe", choices=["probe", "voll", "splits"])
     ap.add_argument("--hoechstens", type=int, default=0)
     ap.add_argument("--frische", type=int, default=90)
     ap.add_argument("--demo", action="store_true")
@@ -458,9 +565,12 @@ def main():
     if not token:
         print("EODHD_API_KEY fehlt (Secret) und --demo nicht gesetzt; nichts zu tun.")
         sys.exit(0)
-    if a.modus == "voll" and not a.daten:
+    if a.modus in ("voll", "splits") and not a.daten:
         print("--daten fehlt.")
         sys.exit(2)
+    if a.modus == "splits":
+        b = lauf_splits(a.daten, token, hoechstens=a.hoechstens)
+        sys.exit(1 if b["abbruch"] else 0)
     b = lauf(a.daten, a.modus, token=token, hoechstens=a.hoechstens, frische_tage=a.frische,
              schreiben=(True if a.schreiben else None))
     sys.exit(1 if (b["abbruch"] and a.modus == "voll" and b["ok"] == 0) else 0)
