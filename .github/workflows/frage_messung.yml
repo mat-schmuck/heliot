@@ -1,0 +1,95 @@
+name: Messung KI-Abfrage (Quartal ueber Quartal)
+
+# Gerhards KI-Abfrage vom iPhone, Messung vor dem Bau: Kann ein Mistral-Modell
+# eine Frage wie "Apple hat super Zahlen, trotzdem ist der Kurs schwach, warum,
+# Quartal ueber Quartal" aus unseren Daten beantworten? Zahlentabelle aus
+# SEC-Archiv, EODHD-Konsens und Yahoo-Kursen, dazu die Pressetexte aus dem
+# Archiv (pressetexte/). Jede Antwort wird im Datenrepo unter messungen/
+# abgelegt. Nur per Hand; laeuft auf dem Branch, von dem es gestartet wird.
+# Braucht die Secrets SEC_USER_AGENT, MISTRAL_API_KEY und DATEN_TOKEN.
+
+on:
+  workflow_dispatch:
+    inputs:
+      ticker:
+        description: "Ticker der Firma (Pressetexte muessen im Archiv liegen)"
+        required: false
+        default: "AAPL"
+      frage:
+        description: "Die Frage (leer = Gerhards Beispielfrage zu Apple)"
+        required: false
+        default: ""
+      modelle:
+        description: "Modelle mit Beistrich getrennt"
+        required: false
+        default: "mistral-medium-2604,ministral-14b-2512"
+      quartale:
+        description: "so viele Quartale zurueck"
+        required: false
+        default: "8"
+
+concurrency:
+  group: frage-messung
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  messung:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Secrets pruefen
+        id: secrets
+        env:
+          DATEN_TOKEN: ${{ secrets.DATEN_TOKEN }}
+          SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
+          MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+        run: |
+          da=ja
+          if [ -z "$DATEN_TOKEN" ]; then echo "Secret DATEN_TOKEN fehlt."; da=nein; fi
+          if [ -z "$SEC_USER_AGENT" ]; then echo "Secret SEC_USER_AGENT fehlt."; da=nein; fi
+          if [ -z "$MISTRAL_API_KEY" ]; then echo "Secret MISTRAL_API_KEY fehlt."; da=nein; fi
+          echo "da=$da" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        if: steps.secrets.outputs.da == 'ja'
+        with:
+          repository: mat-schmuck/heliot-daten
+          token: ${{ secrets.DATEN_TOKEN }}
+          path: daten
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Abhaengigkeiten
+        run: pip install beautifulsoup4 lxml pandas yfinance
+      - name: Selbsttest
+        run: python frage_messung.py --selbsttest
+      - name: Messung
+        if: steps.secrets.outputs.da == 'ja'
+        env:
+          SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
+          MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+        run: python frage_messung.py --daten daten --ticker "${{ inputs.ticker }}" --frage "${{ inputs.frage }}" --modelle "${{ inputs.modelle }}" --quartale "${{ inputs.quartale }}"
+      - name: Ins Datenrepo
+        if: always() && steps.secrets.outputs.da == 'ja'
+        run: |
+          cd daten
+          git config user.name "heliot-frage-messung"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A messungen
+          if git diff --cached --quiet; then
+            echo "Nichts Neues."
+            exit 0
+          fi
+          git commit -q -m "Messung KI-Abfrage ${{ inputs.ticker }} $(date -u +%Y-%m-%d_%H%MZ)"
+          for versuch in 1 2 3; do
+            if git push --quiet origin main; then
+              echo "Gesichert."
+              exit 0
+            fi
+            git pull --rebase --quiet origin main || true
+          done
+          echo "Push nach drei Anlaeufen gescheitert."
+          exit 1

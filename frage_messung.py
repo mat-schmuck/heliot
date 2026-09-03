@@ -1,0 +1,369 @@
+# -*- coding: utf-8 -*-
+"""Messung fuer Gerhards KI-Abfrage: Kann ein Mistral-Modell eine Frage wie
+"Apple hat gute Zahlen, trotzdem ist der Kurs schwach, warum, zeige mir das
+Quartal ueber Quartal" aus UNSEREN Daten beantworten?
+
+Arbeitsteilung: Die Zahlen rechnet dieses Skript selbst (amtliche Quartale aus
+dem SEC-Archiv, Konsens und Ueberraschung aus der EODHD-Historie, Kursreaktion
+um den Meldetag aus den Yahoo-Kursen) und gibt sie dem Modell als fertige
+Tabelle. Die Pressetexte (Archiv pressetexte/) dienen der Deutung. Jede
+Antwort wird als Datei abgelegt (Datenrepo, messungen/frage-<ticker>-<zeit>/),
+damit sie Wort fuer Wort gegengelesen werden kann. Nur im Actions-Lauf
+(Secrets SEC_USER_AGENT, MISTRAL_API_KEY, DATEN_TOKEN).
+"""
+import argparse
+import datetime as dt
+import io
+import json
+import os
+import sys
+import time
+
+FRAGE_VORGABE = ("Apple hat super Zahlen gemeldet, trotzdem ist der Kurs schwach. Warum? "
+                 "Zeige mir das Quartal ueber Quartal.")
+MODELLE_VORGABE = ["mistral-medium-2604", "ministral-14b-2512"]
+QUARTALE = 8
+TEXT_JE_MITTEILUNG = 25000
+KOPF_JE_MITTEILUNG = 12000
+
+AUFTRAG = (
+    "Du bist ein nuechterner Finanzanalyst. Du beantwortest die Frage des Nutzers AUSSCHLIESSLICH aus den "
+    "mitgelieferten Daten: einer Zahlentabelle je Quartal (amtliche Zahlen aus dem SEC-Archiv, Analystenkonsens, "
+    "gemeldetes bereinigtes Ergebnis, Ueberraschung, Kursreaktion um den Meldetag) und den Pressemitteilungen "
+    "der Firma zu diesen Quartalen. Regeln: Alle Zahlen stammen aus der Tabelle; aus den Pressemitteilungen "
+    "nimmst du nur Aussagen des Managements, Segmente, Sondereffekte und den Ausblick, mit Angabe des Quartals. "
+    "Erfinde nichts; was in den Daten nicht steht, nennst du ausdruecklich als fehlend. Vermutungen kennzeichnest "
+    "du mit dem Wort Vermutung. Antworte auf Deutsch, in ganzen Saetzen, ohne Markdown, ohne Tabellen, ohne "
+    "Aufzaehlungszeichen; die Antwort wird mit einem Screenreader vorgelesen. Aufbau: erstens eine Kurzantwort in "
+    "zwei bis drei Saetzen; zweitens Quartal ueber Quartal, je Quartal ein Absatz vom aeltesten zum juengsten, mit "
+    "Umsatz und Ergebnis je Aktie, Veraenderung zum Vorjahresquartal, Konsens und Ueberraschung, Kursreaktion und "
+    "dem, was das Management sagte; drittens deine Deutung, warum der Kurs trotz guter Zahlen schwach sein koennte, "
+    "nur soweit die Daten das hergeben; viertens, was fuer eine sichere Antwort fehlt."
+)
+
+
+# ---------------------------------------------------------------------------
+# Zahlentabelle
+# ---------------------------------------------------------------------------
+
+def _q(zeilen, kennzahl):
+    """{periodenende: wert_erst} der Quartalszeilen einer Kennzahl."""
+    raus = {}
+    for z in zeilen:
+        if z.get("typ") == "Q" and z.get("kennzahl") == kennzahl and z.get("end") and z.get("wert_erst") is not None:
+            raus[str(z["end"])[:10]] = float(z["wert_erst"])
+    return raus
+
+
+def _vorjahr(werte, ende, toleranz=20):
+    try:
+        ziel = dt.date.fromisoformat(ende) - dt.timedelta(days=365)
+    except ValueError:
+        return None
+    best = None
+    for k, v in werte.items():
+        try:
+            d = abs((dt.date.fromisoformat(k) - ziel).days)
+        except ValueError:
+            continue
+        if d <= toleranz and (best is None or d < best[0]):
+            best = (d, v)
+    return best[1] if best else None
+
+
+def konsens_je_quartal(konsens_zeilen):
+    """{periodenende: {eps_ist, eps_konsens, ueberraschung_prozent, meldedatum, zeitpunkt}} aus eps_history."""
+    raus = {}
+    for z in konsens_zeilen or []:
+        if z.get("art") == "eps_history" and z.get("periodenende"):
+            raus[str(z["periodenende"])[:10]] = z
+    return raus
+
+
+def kursreaktion(kurse, meldedatum, zeitpunkt):
+    """Prozent vom Schluss vor der Meldung bis zum ersten Schluss danach.
+    kurse: {datum: schluss} (Handelstage). BeforeMarket: Vortag gegen Meldetag;
+    sonst Meldetag gegen den Handelstag danach."""
+    if not kurse or not meldedatum:
+        return None
+    tage = sorted(kurse)
+    try:
+        m = dt.date.fromisoformat(meldedatum[:10])
+    except ValueError:
+        return None
+    vor_market = (zeitpunkt or "").lower().startswith("before")
+    davor = [t for t in tage if dt.date.fromisoformat(t) < m] if vor_market else [t for t in tage if dt.date.fromisoformat(t) <= m]
+    danach = [t for t in tage if dt.date.fromisoformat(t) >= m] if vor_market else [t for t in tage if dt.date.fromisoformat(t) > m]
+    if not davor or not danach:
+        return None
+    a, b = kurse[davor[-1]], kurse[danach[0]]
+    if not a:
+        return None
+    return round((b / a - 1) * 100, 2)
+
+
+def _mrd(x):
+    return None if x is None else round(x / 1e9, 3)
+
+
+def _pz(neu, alt):
+    if neu is None or alt in (None, 0):
+        return None
+    return round((neu / alt - 1) * 100, 1)
+
+
+def tabelle(zeilen, konsens_zeilen, kurse, quartale=QUARTALE):
+    """Liste je Quartal (aeltestes zuerst) mit allen Angaben, dazu die Textform."""
+    umsatz, gewinn, eps = _q(zeilen, "umsatz"), _q(zeilen, "nettogewinn"), _q(zeilen, "eps_verwaessert")
+    enden = sorted(set(umsatz) | set(eps))[-quartale:]
+    k = konsens_je_quartal(konsens_zeilen)
+    liste = []
+    for e in enden:
+        kk = k.get(e) or {}
+        # Konsens-Periodenenden koennen um wenige Tage abweichen (Apple 28.06. gegen 30.06.)
+        if not kk:
+            for ke_, kv in k.items():
+                try:
+                    if abs((dt.date.fromisoformat(ke_) - dt.date.fromisoformat(e)).days) <= 7:
+                        kk = kv
+                        break
+                except ValueError:
+                    pass
+        z = {"periodenende": e,
+             "umsatz_mrd": _mrd(umsatz.get(e)), "umsatz_vorjahr_prozent": _pz(umsatz.get(e), _vorjahr(umsatz, e)),
+             "nettogewinn_mrd": _mrd(gewinn.get(e)), "nettogewinn_vorjahr_prozent": _pz(gewinn.get(e), _vorjahr(gewinn, e)),
+             "eps_amtlich": eps.get(e), "eps_vorjahr_prozent": _pz(eps.get(e), _vorjahr(eps, e)),
+             "eps_konsens": kk.get("eps_konsens"), "eps_gemeldet_bereinigt": kk.get("eps_ist"),
+             "ueberraschung_prozent": kk.get("ueberraschung_prozent"), "meldedatum": kk.get("meldedatum"),
+             "zeitpunkt": kk.get("zeitpunkt"),
+             "kursreaktion_prozent": kursreaktion(kurse, kk.get("meldedatum"), kk.get("zeitpunkt"))}
+        liste.append(z)
+    return liste, tabelle_text(liste)
+
+
+def _f(x, nach=2):
+    if x is None:
+        return "keine Angabe"
+    return f"{x:.{nach}f}".replace(".", ",")
+
+
+def tabelle_text(liste):
+    zeilen = ["Zahlentabelle je Quartal (aeltestes zuerst). Umsatz und Nettogewinn in Milliarden US-Dollar, amtliche "
+              "Erstfassung aus dem SEC-Archiv; Konsens und gemeldetes bereinigtes Ergebnis je Aktie laut Analystendienst; "
+              "Kursreaktion vom Schluss vor der Meldung bis zum ersten Schluss danach."]
+    for z in liste:
+        zeilen.append(
+            f"Quartal bis {z['periodenende']}: Umsatz {_f(z['umsatz_mrd'], 3)} Mrd ({_f(z['umsatz_vorjahr_prozent'], 1)} Prozent zum Vorjahresquartal); "
+            f"Nettogewinn {_f(z['nettogewinn_mrd'], 3)} Mrd ({_f(z['nettogewinn_vorjahr_prozent'], 1)} Prozent); "
+            f"Ergebnis je Aktie amtlich {_f(z['eps_amtlich'])} ({_f(z['eps_vorjahr_prozent'], 1)} Prozent); "
+            f"Konsens {_f(z['eps_konsens'])}, gemeldet bereinigt {_f(z['eps_gemeldet_bereinigt'])}, "
+            f"Ueberraschung {_f(z['ueberraschung_prozent'], 1)} Prozent; gemeldet am {z['meldedatum'] or 'keine Angabe'} "
+            f"({z['zeitpunkt'] or 'Zeitpunkt unbekannt'}); Kursreaktion {_f(z['kursreaktion_prozent'])} Prozent.")
+    return "\n".join(zeilen)
+
+
+# ---------------------------------------------------------------------------
+# Texte und Auftrag
+# ---------------------------------------------------------------------------
+
+def texte_block(texte, je=TEXT_JE_MITTEILUNG, kopf=KOPF_JE_MITTEILUNG):
+    """texte: [(meta, text)] juengste zuerst; Rueckgabe aeltestes zuerst, gekuerzt."""
+    import messung_8k as m8k
+    teile = []
+    for meta, text in sorted(texte, key=lambda mt: mt[0].get("filed") or ""):
+        t = m8k.text_kuerzen(text, limit=je, kopf=kopf)
+        teile.append(f"=== Pressemitteilung vom {meta.get('filed')} (Quartal bis {meta.get('report')}) ===\n{t}")
+    return "\n\n".join(teile)
+
+
+def eingabe(frage, tab_text, texte_text):
+    return (f"Frage des Nutzers: {frage}\n\n{tab_text}\n\nPressemitteilungen der Firma zu diesen Quartalen:\n\n{texte_text}")
+
+
+def modell_fragen(modell, frage_text, bremse):
+    import messung_8k as m8k
+    koerper = {"model": modell, "temperature": 0, "max_tokens": 3000,
+               "messages": [{"role": "system", "content": AUFTRAG}, {"role": "user", "content": frage_text}]}
+    hinweise = []
+    for versuch in range(6):
+        bremse.warten(modell)
+        t0 = time.time()
+        status, kopf, roh = m8k._anfrage("https://api.mistral.ai/v1/chat/completions", koerper, timeout=600)
+        dauer = time.time() - t0
+        bremse.merken(modell, kopf)
+        if status == 429 or status >= 500:
+            hinweise.append(f"{status} beim Versuch {versuch + 1}")
+            time.sleep(20 if status == 429 else 10)
+            continue
+        if status != 200:
+            return {"antwort": "", "usage": None, "dauer_s": round(dauer, 1), "status": status,
+                    "hinweise": hinweise + [f"HTTP {status}: {roh[:300]}"]}
+        a = json.loads(roh)
+        return {"antwort": (a["choices"][0]["message"].get("content") or "").strip(), "usage": a.get("usage"),
+                "dauer_s": round(dauer, 1), "status": 200, "hinweise": hinweise, "modell_laut_antwort": a.get("model"),
+                "abbruchgrund": a["choices"][0].get("finish_reason")}
+    return {"antwort": "", "usage": None, "dauer_s": 0, "status": 0, "hinweise": hinweise + ["aufgegeben"]}
+
+
+# ---------------------------------------------------------------------------
+# Lauf
+# ---------------------------------------------------------------------------
+
+def kurse_laden(ticker, von, bis):
+    """{datum: schluss} ueber yfinance; leer, wenn nichts kommt."""
+    try:
+        import yfinance as yf
+        df = yf.download(ticker, start=von, end=bis, auto_adjust=True, progress=False)
+        if df is None or df.empty:
+            return {}
+        spalte = df["Close"]
+        if hasattr(spalte, "columns"):
+            spalte = spalte.iloc[:, 0]
+        return {str(i)[:10]: float(v) for i, v in spalte.items() if v == v}
+    except Exception as e:  # noqa
+        print("Kurse nicht geladen:", str(e)[:200])
+        return {}
+
+
+def lauf(daten, ticker, frage, modelle, quartale=QUARTALE, ausgabe=None, log=print):
+    import gzip
+    import messung_8k as m8k
+    import pressetexte as pt
+    import vorabwerte_8k as va
+    import fundament_lauf as fl
+    if not m8k.MISTRAL_KEY:
+        raise RuntimeError("MISTRAL_API_KEY fehlt (Secret im Actions-Lauf).")
+    if not fl.UA:
+        raise RuntimeError("SEC_USER_AGENT fehlt (Secret im Actions-Lauf).")
+    ticker = ticker.upper()
+    cik = fl.ticker_zu_cik().get(ticker)
+    if not cik:
+        raise RuntimeError(f"{ticker}: keine CIK in der SEC-Liste")
+    zeilen = va._zeilen_lader()(cik)
+    kpfad = os.path.join(daten, "eodhd", "konsens", f"{ticker}.json.gz")
+    konsens = json.load(gzip.open(kpfad, "rt", encoding="utf-8")).get("zeilen", []) if os.path.exists(kpfad) else []
+    texte = pt.texte_der_firma(daten, cik, quartale)
+    if not texte:
+        raise RuntimeError(f"{ticker}: keine Pressetexte im Archiv (zuerst pressetexte.yml mit ticker={ticker} laufen lassen)")
+    enden = sorted(_q(zeilen, "umsatz"))[-quartale:]
+    von = (dt.date.fromisoformat(enden[0]) - dt.timedelta(days=10)).isoformat() if enden else "2024-01-01"
+    kurse = kurse_laden(ticker, von, dt.date.today().isoformat())
+    liste, tab_text = tabelle(zeilen, konsens, kurse, quartale)
+    frage_text = eingabe(frage, tab_text, texte_block(texte))
+    log(f"{ticker} CIK {cik}: {len(zeilen)} amtliche Zeilen, {len(konsens)} Konsens-Zeilen, {len(kurse)} Kurstage, "
+        f"{len(texte)} Pressetexte, Eingabe {len(frage_text)} Zeichen")
+    ausgabe = ausgabe or os.path.join(daten, "messungen", f"frage-{ticker.lower()}-{dt.datetime.now(dt.timezone.utc):%Y%m%d-%H%M}")
+    os.makedirs(ausgabe, exist_ok=True)
+    with io.open(os.path.join(ausgabe, "frage.txt"), "w", encoding="utf-8") as f:
+        f.write(frage + "\n")
+    with io.open(os.path.join(ausgabe, "auftrag.txt"), "w", encoding="utf-8") as f:
+        f.write(AUFTRAG + "\n")
+    with io.open(os.path.join(ausgabe, "tabelle.txt"), "w", encoding="utf-8") as f:
+        f.write(tab_text + "\n")
+    with io.open(os.path.join(ausgabe, "tabelle.json"), "w", encoding="utf-8") as f:
+        json.dump(liste, f, ensure_ascii=False, indent=1)
+    with io.open(os.path.join(ausgabe, "eingabe.txt"), "w", encoding="utf-8") as f:
+        f.write(frage_text + "\n")
+    bremse = m8k.Bremse()
+    bilanz = {"zeit": dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat(), "ticker": ticker,
+              "eingabe_zeichen": len(frage_text), "modelle": {}}
+    for modell in modelle:
+        r = modell_fragen(modell, frage_text, bremse)
+        u = r.get("usage") or {}
+        p = m8k.preis(modell)
+        kosten = ((u.get("prompt_tokens", 0) / 1e6 * p[0] + u.get("completion_tokens", 0) / 1e6 * p[1]) if p else None)
+        with io.open(os.path.join(ausgabe, f"antwort-{modell}.txt"), "w", encoding="utf-8") as f:
+            f.write(r.get("antwort") or "")
+        meta = {k: v for k, v in r.items() if k != "antwort"}
+        meta["kosten_usd"] = None if kosten is None else round(kosten, 5)
+        meta["antwort_zeichen"] = len(r.get("antwort") or "")
+        with io.open(os.path.join(ausgabe, f"meta-{modell}.json"), "w", encoding="utf-8") as f:
+            json.dump(meta, f, ensure_ascii=False, indent=1)
+        bilanz["modelle"][modell] = meta
+        log(f"  {modell}: Status {r.get('status')}, {meta['antwort_zeichen']} Zeichen, {r.get('dauer_s')} s, "
+            f"Kosten {meta['kosten_usd']} USD, Tokens {u.get('prompt_tokens')}/{u.get('completion_tokens')}, "
+            f"Abbruchgrund {r.get('abbruchgrund')}")
+    with io.open(os.path.join(ausgabe, "bilanz.json"), "w", encoding="utf-8") as f:
+        json.dump(bilanz, f, ensure_ascii=False, indent=1)
+    log(f"Ablage: {ausgabe}")
+    return bilanz
+
+
+# ---------------------------------------------------------------------------
+# Selbsttest (ohne Netz)
+# ---------------------------------------------------------------------------
+
+def selbsttest() -> int:
+    fehler = 0
+
+    def p(name, ok, extra=""):
+        nonlocal fehler
+        print(f"  {'ok  ' if ok else 'FEHL'} {name}{(' ' + str(extra)) if extra else ''}")
+        if not ok:
+            fehler += 1
+
+    zeilen = []
+    for i, (ende, u, g, e) in enumerate([("2024-06-29", 85.8e9, 21.4e9, 1.40), ("2024-09-28", 94.9e9, 14.7e9, 0.97),
+                                         ("2024-12-28", 124.3e9, 36.3e9, 2.40), ("2025-03-29", 95.4e9, 24.8e9, 1.65),
+                                         ("2025-06-28", 94.0e9, 23.4e9, 1.57), ("2025-09-27", 102.5e9, 27.5e9, 1.85),
+                                         ("2025-12-27", 143.8e9, 42.0e9, 2.84), ("2026-03-28", 105.0e9, 28.0e9, 1.90),
+                                         ("2026-06-27", 100.6e9, 25.0e9, 1.70)]):
+        zeilen += [{"typ": "Q", "kennzahl": "umsatz", "end": ende, "wert_erst": u},
+                   {"typ": "Q", "kennzahl": "nettogewinn", "end": ende, "wert_erst": g},
+                   {"typ": "Q", "kennzahl": "eps_verwaessert", "end": ende, "wert_erst": e}]
+    zeilen.append({"typ": "Y", "kennzahl": "umsatz", "end": "2025-09-27", "wert_erst": 416e9})
+    konsens = [{"art": "eps_history", "periodenende": "2026-06-30", "eps_ist": 1.72, "eps_konsens": 1.60,
+                "ueberraschung_prozent": 7.5, "meldedatum": "2026-07-30", "zeitpunkt": "AfterMarket"},
+               {"art": "eps_history", "periodenende": "2026-03-31", "eps_ist": 1.92, "eps_konsens": 1.85,
+                "ueberraschung_prozent": 3.8, "meldedatum": "2026-04-30", "zeitpunkt": "BeforeMarket"},
+               {"art": "konsens_trend", "periodenende": "2026-09-30", "period": "0q"}]
+    kurse = {"2026-07-29": 200.0, "2026-07-30": 202.0, "2026-07-31": 196.0, "2026-08-03": 198.0,
+             "2026-04-29": 180.0, "2026-04-30": 175.5, "2026-05-01": 176.0}
+    liste, text = tabelle(zeilen, konsens, kurse, 8)
+    p("Tabelle: acht Quartale, aeltestes zuerst, Jahreszeile ausgelassen",
+      len(liste) == 8 and liste[0]["periodenende"] == "2024-09-28" and liste[-1]["periodenende"] == "2026-06-27", [z["periodenende"] for z in liste])
+    j = liste[-1]
+    p("Juengstes Quartal: Umsatz in Mrd, Vorjahresvergleich, Konsens trotz Periodenende 30.06. gegen 27.06. zugeordnet",
+      j["umsatz_mrd"] == 100.6 and j["umsatz_vorjahr_prozent"] == 7.0 and j["eps_konsens"] == 1.60 and j["eps_gemeldet_bereinigt"] == 1.72, j)
+    p("Kursreaktion nach Boersenschluss: Schluss am Meldetag gegen den Tag danach (202 auf 196 = minus 2,97)",
+      j["kursreaktion_prozent"] == -2.97, j["kursreaktion_prozent"])
+    v = [z for z in liste if z["periodenende"] == "2026-03-28"][0]
+    p("Kursreaktion vor Boersenoeffnung: Vortag gegen Meldetag (180 auf 175,5 = minus 2,5)",
+      v["kursreaktion_prozent"] == -2.5, v["kursreaktion_prozent"])
+    a = liste[0]
+    p("Aeltestes Quartal ohne Vorjahr im Ausschnitt: Vergleich fehlt, kein Absturz",
+      a["umsatz_vorjahr_prozent"] is None and a["eps_konsens"] is None, a)
+    p("Textform: deutsche Dezimalzeichen, jede Zeile ein Quartal, Hinweis auf fehlende Angaben",
+      text.count("Quartal bis") == 8 and "100,600 Mrd" in text and "keine Angabe" in text, text[:300])
+    texte = [({"filed": "2026-07-31", "report": "2026-06-27"}, "Neu. " * 3000 + "Net income | 25,000"),
+             ({"filed": "2026-05-01", "report": "2026-03-28"}, "Alt. " * 10)]
+    block = texte_block(texte, je=2000, kopf=800)
+    p("Textblock: aeltestes zuerst, langer Text gekuerzt, Kopfzeile je Mitteilung",
+      block.index("2026-05-01") < block.index("2026-07-31") and len(block) < 4000 and "Net income | 25,000" in block, len(block))
+    e = eingabe("Warum?", text, block)
+    p("Eingabe: Frage, Tabelle und Texte in dieser Reihenfolge",
+      e.index("Frage des Nutzers") < e.index("Zahlentabelle") < e.index("Pressemitteilungen der Firma"))
+    p("Auftrag verlangt Deutsch, keine Tabellen, Vermutungen gekennzeichnet, Quellen nur die Daten",
+      all(w in AUFTRAG for w in ("Deutsch", "ohne Tabellen", "Vermutung", "AUSSCHLIESSLICH")))
+    print("Alles bestanden." if fehler == 0 else f"{fehler} Fehler.")
+    return fehler
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--daten", default="daten")
+    ap.add_argument("--ticker", default="AAPL")
+    ap.add_argument("--frage", default=FRAGE_VORGABE)
+    ap.add_argument("--modelle", default=",".join(MODELLE_VORGABE))
+    ap.add_argument("--quartale", type=int, default=QUARTALE)
+    ap.add_argument("--selbsttest", action="store_true")
+    a = ap.parse_args()
+    if a.selbsttest:
+        return selbsttest()
+    modelle = [m.strip() for m in a.modelle.split(",") if m.strip()]
+    lauf(a.daten, a.ticker, a.frage or FRAGE_VORGABE, modelle, a.quartale)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
