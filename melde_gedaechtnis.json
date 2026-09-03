@@ -19,7 +19,7 @@
     "RNG|3": "draussen",
     "TWST|2": "draussen",
     "VLO|2": "draussen",
-    "ADPT|2": "drin",
+    "ADPT|2": "draussen",
     "ANDG|2": "draussen",
     "ARIS|3": "draussen",
     "ATEX|1": "draussen",
@@ -96,7 +96,7 @@
     "PBF|2": "draussen",
     "PTGX|2": "draussen",
     "TH|3": "draussen",
-    "ANET|2": "drin",
+    "ANET|2": "draussen",
     "ANF|2": "draussen",
     "ARCT|3": "draussen",
     "ARGX|2": "draussen",
@@ -157,7 +157,7 @@
     "INSM|3": "draussen",
     "XMTR|1": "drin",
     "CRM|1": "drin",
-    "URGN|2": "drin",
+    "URGN|2": "draussen",
     "KYMR|3": "drin",
     "NGL|2": "draussen",
     "BRC|3": "drin",
@@ -188,7 +188,12 @@
     "CLMT|3": "drin",
     "CNC|3": "drin",
     "CRWD|1": "drin",
-    "DELL|3": "drin"
+    "DELL|3": "drin",
+    "HPE|1": "draussen",
+    "DELL|1": "drin",
+    "ANDG|1": "drin",
+    "ANDG|3": "drin",
+    "MRX|2": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -313,6 +318,8 @@
     "UEBER|ASST|1": "2026-09-03",
     "CRWD|1": "2026-09-03",
     "BEST|CRWD|1": "2026-09-03",
-    "UEBER|BLSH|2": "2026-09-03"
+    "UEBER|BLSH|2": "2026-09-03",
+    "MRX|2": "2026-09-03",
+    "BEST|MRX|2": "2026-09-03"
   }
 }
