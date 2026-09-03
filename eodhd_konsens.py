@@ -122,11 +122,24 @@ def normalisiere(ticker, antwort, zeit):
             "waehrung": g.get("CurrencyCode"), "geschaeftsjahresende": g.get("FiscalYearEnd"),
             "typ": g.get("Type"), "abgerufen": zeit}
     zeilen = []
-    for datum, t in sorted(((e.get("Trend") or {}).items())):
+    trend = e.get("Trend") or {}
+    # v1.1 teilt den Trend in Quarterly und Annual (gemessen 03.09.2026: Apple
+    # Quarterly 39 Eintraege ab 2017-06-30 SAMT der Quartale am
+    # Geschaeftsjahresende, Annual 11); der alte Endpunkt liefert eine flache
+    # Liste je Datum, in der die Jahreszeile das vierte Quartal verdeckt.
+    if set(trend.keys()) & {"Quarterly", "Annual"}:
+        bloecke = [("quartal", trend.get("Quarterly") or {}), ("jahr", trend.get("Annual") or {})]
+        alt_form = False
+    else:
+        bloecke = [(None, trend)]
+        alt_form = True
+    for umfang, block in bloecke:
+      for datum, t in sorted(block.items()):
         if not isinstance(t, dict):
             continue
         period = t.get("period")
         z = {"art": "konsens_trend", "periodenende": t.get("date") or datum, "period": period,
+             "umfang": umfang or ("jahr" if period in ("0y", "+1y", "-1y") else "quartal"),
              "umsatz_avg": _zahl(t.get("revenueEstimateAvg")), "umsatz_low": _zahl(t.get("revenueEstimateLow")),
              "umsatz_high": _zahl(t.get("revenueEstimateHigh")),
              "umsatz_analysten": _zahl(t.get("revenueEstimateNumberOfAnalysts")),
@@ -141,7 +154,7 @@ def normalisiere(ticker, antwort, zeit):
              "eps_trend_90": _zahl(t.get("epsTrend90daysAgo")),
              "hoch_7": _zahl(t.get("epsRevisionsUpLast7days")), "hoch_30": _zahl(t.get("epsRevisionsUpLast30days")),
              "runter_7": _zahl(t.get("epsRevisionsDownLast7days")), "runter_30": _zahl(t.get("epsRevisionsDownLast30days"))}
-        if period in ("0y", "+1y", "-1y"):
+        if alt_form and period in ("0y", "+1y", "-1y"):
             z["hinweis"] = "jahresende_verdeckt_quartal"
         zeilen.append(z)
     for datum, h in sorted(((e.get("History") or {}).items())):
@@ -229,7 +242,7 @@ def lauf(daten, modus="voll", token=None, hoechstens=0, frische_tage=90, fetcher
                 _gz_json(os.path.join(daten, "eodhd", "konsens", f"{t}.json.gz"), {"kopf": k, "zeilen": zeilen})
             if modus == "probe":
                 juengst = [z for z in zeilen if z["art"] == "eps_history" and z.get("eps_ist") is not None]
-                q = [z for z in zeilen if z["art"] == "konsens_trend" and z.get("period") == "0q"]
+                q = [z for z in zeilen if z["art"] == "konsens_trend" and z.get("umfang") == "quartal"]
                 log(f"  {t}: {k.get('name')} CIK {k.get('cik')} GJ-Ende {k.get('geschaeftsjahresende')}; "
                     f"Trend {n_trend} Zeilen ({(q[0]['periodenende'] if q else '-')} bis {(q[-1]['periodenende'] if q else '-')}), "
                     f"History {n_hist} Zeilen")
@@ -280,11 +293,17 @@ _DEMO_ANTWORT = {
                 "FiscalYearEnd": "September", "Type": "Common Stock"},
     "Earnings": {
         "Trend": {
-            "2017-06-30": {"date": "2017-06-30", "period": "0q", "revenueEstimateAvg": "44885600000.00",
-                           "revenueEstimateNumberOfAnalysts": "36.00", "earningsEstimateAvg": "1.5700",
-                           "epsTrendCurrent": "1.5700", "epsRevisionsUpLast7days": None},
-            "2017-09-30": {"date": "2017-09-30", "period": "0y", "revenueEstimateAvg": "227414000000.00",
-                           "revenueEstimateNumberOfAnalysts": "32.00", "earningsEstimateAvg": "9.0000"},
+            "Quarterly": {
+                "2017-06-30": {"date": "2017-06-30", "period": "0q", "revenueEstimateAvg": "44885600000.00",
+                               "revenueEstimateNumberOfAnalysts": "36.00", "earningsEstimateAvg": "1.5700",
+                               "epsTrendCurrent": "1.5700", "epsRevisionsUpLast7days": None},
+                "2017-09-30": {"date": "2017-09-30", "period": "0q", "revenueEstimateAvg": "50790000000.00",
+                               "revenueEstimateNumberOfAnalysts": "30.00", "earningsEstimateAvg": "1.8700"},
+            },
+            "Annual": {
+                "2017-09-30": {"date": "2017-09-30", "period": "0y", "revenueEstimateAvg": "227414000000.00",
+                               "revenueEstimateNumberOfAnalysts": "32.00", "earningsEstimateAvg": "9.0000"},
+            },
         },
         "History": {
             "2017-12-31": {"reportDate": "2018-02-01", "date": "2017-12-31", "beforeAfterMarket": "AfterMarket",
@@ -309,16 +328,24 @@ def selbsttest() -> int:
     flach = {"General::Code": "AAPL", "General::CIK": "320193", "Earnings::Trend": _DEMO_ANTWORT["Earnings"]["Trend"],
              "Earnings::History": _DEMO_ANTWORT["Earnings"]["History"]}
     kf, zf = normalisiere("AAPL", flach, "2026-09-03T10:00:00+00:00")
-    p("Flache Antwort der Feld-Filter wird entflacht", kf["cik"] == "320193" and len(zf) == 3)
+    p("Flache Antwort der Feld-Filter wird entflacht", kf["cik"] == "320193" and len(zf) == 4)
     kopf, zeilen = normalisiere("AAPL", _DEMO_ANTWORT, "2026-09-03T10:00:00+00:00")
     p("Kopf traegt CIK, Boerse und Geschaeftsjahresende",
       kopf["cik"] == "320193" and kopf["boerse"] == "NASDAQ" and kopf["geschaeftsjahresende"] == "September")
     tr = [z for z in zeilen if z["art"] == "konsens_trend"]
     hi = [z for z in zeilen if z["art"] == "eps_history"]
-    p("Trend: Zahlen aus Zeichenketten, Quartalszeile ohne Hinweis",
-      len(tr) == 2 and tr[0]["umsatz_avg"] == 44885600000.0 and tr[0]["umsatz_analysten"] == 36.0
-      and tr[0]["eps_avg"] == 1.57 and "hinweis" not in tr[0] and tr[0]["hoch_7"] is None)
-    p("Trend: Jahreszeile am Quartalsende traegt den Hinweis", tr[1]["hinweis"] == "jahresende_verdeckt_quartal")
+    p("Trend v1.1: Quartals- und Jahresblock getrennt, Zahlen aus Zeichenketten",
+      len(tr) == 3 and tr[0]["umsatz_avg"] == 44885600000.0 and tr[0]["umsatz_analysten"] == 36.0
+      and tr[0]["eps_avg"] == 1.57 and tr[0]["hoch_7"] is None and tr[0]["umfang"] == "quartal"
+      and tr[1]["umfang"] == "quartal" and tr[1]["periodenende"] == "2017-09-30" and tr[2]["umfang"] == "jahr"
+      and not any("hinweis" in z for z in tr))
+    alt = {"General": _DEMO_ANTWORT["General"], "Earnings": {"Trend": {
+        "2017-06-30": _DEMO_ANTWORT["Earnings"]["Trend"]["Quarterly"]["2017-06-30"],
+        "2017-09-30": _DEMO_ANTWORT["Earnings"]["Trend"]["Annual"]["2017-09-30"]}, "History": {}}}
+    _, za = normalisiere("AAPL", alt, "2026-09-03T10:00:00+00:00")
+    p("Trend alte Form: Jahreszeile am Quartalsende traegt den Hinweis",
+      len(za) == 2 and za[1]["umfang"] == "jahr" and za[1].get("hinweis") == "jahresende_verdeckt_quartal"
+      and "hinweis" not in za[0])
     p("History: EPS ist, Konsens, Ueberraschung, Meldedatum",
       len(hi) == 1 and hi[0]["eps_ist"] == 0.9725 and hi[0]["eps_konsens"] == 0.965
       and hi[0]["ueberraschung_prozent"] == 0.7772 and hi[0]["meldedatum"] == "2018-02-01")
@@ -350,12 +377,12 @@ def selbsttest() -> int:
           b["ok"] == 2 and b["unbekannt"] == 1 and b["fehler"] == 0 and 15 in schlaf, b)
         stand = ke._json(os.path.join(tmp, "eodhd", "stand.json"), {})
         p("Stand: ok mit Zeilenzahlen, unbekannt vermerkt, Datei liegt gepackt",
-          stand["AAPL"]["status"] == "ok" and stand["AAPL"]["trend"] == 2 and stand["ZZZZ"]["status"] == "unbekannt"
+          stand["AAPL"]["status"] == "ok" and stand["AAPL"]["trend"] == 3 and stand["ZZZZ"]["status"] == "unbekannt"
           and os.path.exists(os.path.join(tmp, "eodhd", "konsens", "AAPL.json.gz"))
           and os.path.exists(os.path.join(tmp, "eodhd", "roh", "ALT.json.gz")))
         with gzip.open(os.path.join(tmp, "eodhd", "konsens", "AAPL.json.gz"), "rt", encoding="utf-8") as f:
             d = json.load(f)
-        p("Abgelegte Datei traegt Kopf und Zeilen", d["kopf"]["cik"] == "320193" and len(d["zeilen"]) == 3)
+        p("Abgelegte Datei traegt Kopf und Zeilen", d["kopf"]["cik"] == "320193" and len(d["zeilen"]) == 4)
         p("Lauf-Protokoll geschrieben", os.path.exists(os.path.join(tmp, "eodhd", "laeufe.jsonl")))
 
         def gesperrt(symbol):
