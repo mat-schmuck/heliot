@@ -125,11 +125,15 @@ def neue_8ks(seit_utc, hole, hoechstens_seiten=HOECHSTENS_SEITEN, log=print):
 
 def kopfdaten(text):
     """ITEM INFORMATION und ACCEPTANCE-DATETIME aus der index-headers-Seite."""
-    items = [x.strip() for x in re.findall(r"ITEM INFORMATION:\s*(.+)", text)]
-    m = re.search(r"ACCEPTANCE-DATETIME:\s*(\d{14})", text)
+    # Die SEC schreibt die Kopfdaten teils als SGML-Tags (<ACCEPTANCE-DATETIME>),
+    # teils mit Doppelpunkt; beide Formen gelten.
+    items = [x.strip() for x in re.findall(r"ITEM INFORMATION[>:]\s*(.+)", text)]
+    m = re.search(r"ACCEPTANCE-DATETIME[>:]\s*(\d{14})", text)
+    f = re.search(r"FILED AS OF DATE[>:]\s*(\d{8})", text)
     roh = m.group(1) if m else None
+    filed = f"{f.group(1)[:4]}-{f.group(1)[4:6]}-{f.group(1)[6:]}" if f else None
     return {"items": items, "akzeptanz_et": roh, "akzeptanz_utc": akzeptanz_utc(roh) if roh else None,
-            "ergebnis": any("results of operations" in i.lower() for i in items)}
+            "filed": filed, "ergebnis": any("results of operations" in i.lower() for i in items)}
 
 
 # ---------------------------------------------------------------------------
@@ -264,8 +268,11 @@ def verarbeite(cik, accession, name, filing_utc, hole, frage, kette, log=print, 
     try:
         kopf = kopfdaten(hole(ordner + f"/{accession}-index-headers.htm").decode("utf-8", "replace"))
     except Exception as e:  # noqa
-        kopf = {"items": [], "akzeptanz_et": None, "akzeptanz_utc": None, "ergebnis": None}
+        kopf = {"items": [], "akzeptanz_et": None, "akzeptanz_utc": None, "filed": None, "ergebnis": None}
         eintrag["hinweise"].append(f"Kopfdaten nicht lesbar: {str(e)[:120]}")
+    if not filing_utc and kopf.get("filed"):
+        filing_utc = kopf["filed"] + "T00:00:00+00:00"
+        eintrag["filing_utc"] = filing_utc
     eintrag.update({"items": kopf["items"], "sec_akzeptanz_et": kopf["akzeptanz_et"], "sec_akzeptanz_utc": kopf["akzeptanz_utc"]})
     if kopf["ergebnis"] is False:
         eintrag["status"] = "kein_ergebnis_8k"
@@ -522,6 +529,9 @@ def selbsttest() -> int:
       and k["akzeptanz_utc"] in (None, "2026-07-30T20:31:22+00:00"), k)
     p("Kopfdaten: ohne Results of Operations kein Ergebnis-8-K",
       kopfdaten("ITEM INFORMATION:\tOther Events\n")["ergebnis"] is False)
+    k2 = kopfdaten(_HEADERS)
+    p("Kopfdaten: SGML-Tag-Form der Annahmezeit und das Filing-Datum werden gelesen",
+      k2["akzeptanz_et"] == "20260730163122" and k2["filed"] == "2026-07-30" and k2["ergebnis"], k2)
 
     zeilen = [{"typ": "Q", "kennzahl": "umsatz", "end": "2025-06-30", "wert_erst": 20.31e9},
               {"typ": "Q", "kennzahl": "nettogewinn", "end": "2025-06-30", "wert_erst": 3.175e9},
