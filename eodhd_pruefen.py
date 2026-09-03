@@ -123,20 +123,39 @@ def vergleiche(history, amtlich, ab=dt.date(2017, 1, 1), splits=None):
         a = min(passend, key=lambda x: abs((x[0] - end).days))
         diff = abs(eps - a[1])
         klasse = "exakt" if diff <= EXAKT else ("rundung" if diff <= RUNDUNG else "abweichend")
-        if klasse == "abweichend" and splits:
-            f = split_faktor(splits, end.isoformat())
-            if f != 1.0:
-                adj = a[1] / f
-                d2 = abs(eps - adj)
-                if d2 <= ADJUST_EXAKT:
-                    klasse = "split_adjustiert"
-                elif d2 <= ADJUST_RUNDUNG:
-                    klasse = "rundung"
+        f = split_faktor(splits, end.isoformat()) if splits else 1.0
+        if klasse == "abweichend" and f != 1.0:
+            adj = a[1] / f
+            d2 = abs(eps - adj)
+            if d2 <= ADJUST_EXAKT:
+                klasse = "split_adjustiert"
+            elif d2 <= ADJUST_RUNDUNG:
+                klasse = "rundung"
         zaehler[klasse] += 1
         if melde and a[2] and melde > a[2]:
             zaehler["meldedatum_nach_bericht"] += 1
-        faelle.append((end, eps, a[1], klasse, melde, a[2]))
+        faelle.append((end, eps, a[1], klasse, melde, a[2], f))
     return zaehler, faelle
+
+
+def verhaeltnis_klasse(eps, soll, faktor):
+    """Wie weit liegt EODHD nach der Split-Umrechnung vom amtlichen Wert?
+    Klassen: nahe (bis 10 Prozent), faktor2 (Verhaeltnis um 2 oder 0,5:
+    ein Split fehlt oder ist doppelt), vorzeichen, weit."""
+    try:
+        adj = float(soll) / (faktor or 1.0)
+    except (TypeError, ValueError, ZeroDivisionError):
+        return "unbestimmt"
+    if adj == 0 or eps is None:
+        return "unbestimmt"
+    if (eps < 0) != (adj < 0):
+        return "vorzeichen"
+    v = eps / adj
+    if 0.9 <= v <= 1.1:
+        return "nahe"
+    if 1.85 <= v <= 2.15 or 0.45 <= v <= 0.55:
+        return "faktor2"
+    return "weit"
 
 
 def bericht(daten, parquet_ordner, ab_jahr=2017, ausgabe=None, log=print):
@@ -145,20 +164,40 @@ def bericht(daten, parquet_ordner, ab_jahr=2017, ausgabe=None, log=print):
     je_firma = []
     abweichungen = []
     ab = dt.date(ab_jahr, 1, 1)
+    verh = collections.Counter()
+    ohne_splits = 0
     for ticker, cik, hist in eodhd_history(daten):
-        z, faelle = vergleiche(hist, amt.get(cik, []), ab, splits=splits_laden(daten, ticker))
+        splits = splits_laden(daten, ticker)
+        if splits is None:
+            ohne_splits += 1
+        z, faelle = vergleiche(hist, amt.get(cik, []), ab, splits=splits)
         gesamt.update(z)
         n = sum(v for k, v in z.items() if k != "meldedatum_nach_bericht")
         je_firma.append((ticker, cik, n, z))
-        for end, eps, soll, klasse, melde, filed in faelle:
+        for end, eps, soll, klasse, melde, filed, f in faelle:
             if klasse == "abweichend":
-                abweichungen.append((ticker, end.isoformat(), eps, soll, melde, filed))
+                vk = verhaeltnis_klasse(eps, soll, f)
+                verh[vk] += 1
+                abweichungen.append((ticker, end.isoformat(), eps, soll, melde, filed, vk))
     n = sum(v for k, v in gesamt.items() if k != "meldedatum_nach_bericht")
-    zeilen = [f"EODHD-Gegenprobe: {len(je_firma)} Firmen, {n} Quartale ab {ab_jahr} mit EPS in der History"]
+    zeilen = [f"EODHD-Gegenprobe: {len(je_firma)} Firmen, {n} Quartale ab {ab_jahr} mit EPS in der History; "
+              f"{ohne_splits} Firmen ohne Split-Datei"]
     for k in ("exakt", "split_adjustiert", "rundung", "abweichend", "kein_amtlicher_wert"):
         v = gesamt.get(k, 0)
         zeilen.append(f"  {k}: {v} ({(100.0 * v / n):.1f} Prozent)" if n else f"  {k}: {v}")
     zeilen.append(f"  Meldedatum laut EODHD NACH dem amtlichen Bericht: {gesamt.get('meldedatum_nach_bericht', 0)}")
+    zeilen.append("  Abweichende Quartale nach Verhaeltnis zum amtlichen Wert (nach Split-Umrechnung): "
+                  + ", ".join(f"{k} {v}" for k, v in verh.most_common()))
+    stufen = collections.Counter()
+    for t, c, nn, z in je_firma:
+        geprueft = nn - z.get("kein_amtlicher_wert", 0)
+        if geprueft <= 0:
+            stufen["nichts_pruefbar"] += 1
+            continue
+        q = z.get("abweichend", 0) / geprueft
+        stufen["0 Prozent" if q == 0 else ("bis 10 Prozent" if q <= 0.1 else ("bis 50 Prozent" if q <= 0.5 else "ueber 50 Prozent"))] += 1
+    zeilen.append("  Firmen nach Anteil abweichender Quartale: "
+                  + ", ".join(f"{k} {v}" for k, v in sorted(stufen.items())))
     schlecht = sorted([f for f in je_firma if f[2] and (f[3].get("abweichend", 0) / f[2]) > 0.2],
                       key=lambda f: -(f[3].get("abweichend", 0) / f[2]))
     zeilen.append(f"  Firmen mit mehr als 20 Prozent abweichenden Quartalen: {len(schlecht)}")
@@ -166,16 +205,20 @@ def bericht(daten, parquet_ordner, ab_jahr=2017, ausgabe=None, log=print):
         zeilen.append(f"    {t} (CIK {c}): {z.get('abweichend', 0)} von {nn} abweichend, exakt {z.get('exakt', 0)}, "
                       f"kein amtlicher Wert {z.get('kein_amtlicher_wert', 0)}")
     zeilen.append(f"  Abweichende Quartale insgesamt: {len(abweichungen)}; die ersten 60:")
-    for t, end, eps, soll, melde, filed in abweichungen[:60]:
-        zeilen.append(f"    {t} {end}: EODHD {eps} gegen amtlich {soll} (EODHD-Meldedatum {melde}, Erstfassung eingereicht {filed})")
+    for t, end, eps, soll, melde, filed, vk in abweichungen[:60]:
+        zeilen.append(f"    {t} {end}: EODHD {eps} gegen amtlich {soll} [{vk}] (EODHD-Meldedatum {melde}, Erstfassung eingereicht {filed})")
     text = "\n".join(zeilen)
     log(text)
     if ausgabe:
         with io.open(ausgabe, "w", encoding="utf-8") as f:
             f.write(text + "\n")
-            f.write("\nALLE ABWEICHUNGEN\n")
-            for t, end, eps, soll, melde, filed in abweichungen:
-                f.write(f"{t}\t{end}\t{eps}\t{soll}\t{melde}\t{filed}\n")
+            f.write("\nJE FIRMA (Ticker, CIK, Quartale, exakt, split_adjustiert, rundung, abweichend, kein amtlicher Wert)\n")
+            for t, c, nn, z in je_firma:
+                f.write(f"{t}\t{c}\t{nn}\t{z.get('exakt', 0)}\t{z.get('split_adjustiert', 0)}\t{z.get('rundung', 0)}\t"
+                        f"{z.get('abweichend', 0)}\t{z.get('kein_amtlicher_wert', 0)}\n")
+            f.write("\nALLE ABWEICHUNGEN (Ticker, Quartalsende, EODHD, amtlich, Verhaeltnisklasse, EODHD-Meldedatum, Erstfassung eingereicht)\n")
+            for t, end, eps, soll, melde, filed, vk in abweichungen:
+                f.write(f"{t}\t{end}\t{eps}\t{soll}\t{vk}\t{melde}\t{filed}\n")
     return gesamt, je_firma, abweichungen
 
 
