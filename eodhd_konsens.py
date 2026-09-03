@@ -145,25 +145,33 @@ def normalisiere(ticker, antwort, zeit):
     """Trend und History der Rohantwort in flache Zeilen; General-Angaben in
     einen Kopf."""
     antwort = entflachen(antwort)
-    g = (antwort or {}).get("General") or {}
-    e = (antwort or {}).get("Earnings") or {}
+    # Bei manchen Firmen liefert EODHD statt eines Blocks eine Zeichenkette
+    # (leer oder N/A); der Vollabzug vom 03.09.2026 stuerzte daran nach rund
+    # 1.000 Firmen ab. Alles, was kein Woerterbuch ist, gilt als leer.
+    g = (antwort or {}).get("General")
+    e = (antwort or {}).get("Earnings")
+    g = g if isinstance(g, dict) else {}
+    e = e if isinstance(e, dict) else {}
     kopf = {"ticker": ticker, "eodhd_code": g.get("Code"), "name": g.get("Name"),
             "cik": (str(g.get("CIK")).strip() if g.get("CIK") else None), "boerse": g.get("Exchange"),
             "waehrung": g.get("CurrencyCode"), "geschaeftsjahresende": g.get("FiscalYearEnd"),
             "typ": g.get("Type"), "abgerufen": zeit}
     zeilen = []
-    trend = e.get("Trend") or {}
+    trend = e.get("Trend")
+    trend = trend if isinstance(trend, dict) else {}
     # v1.1 teilt den Trend in Quarterly und Annual (gemessen 03.09.2026: Apple
     # Quarterly 39 Eintraege ab 2017-06-30 SAMT der Quartale am
     # Geschaeftsjahresende, Annual 11); der alte Endpunkt liefert eine flache
     # Liste je Datum, in der die Jahreszeile das vierte Quartal verdeckt.
     if set(trend.keys()) & {"Quarterly", "Annual"}:
-        bloecke = [("quartal", trend.get("Quarterly") or {}), ("jahr", trend.get("Annual") or {})]
+        bloecke = [("quartal", trend.get("Quarterly")), ("jahr", trend.get("Annual"))]
         alt_form = False
     else:
         bloecke = [(None, trend)]
         alt_form = True
     for umfang, block in bloecke:
+      if not isinstance(block, dict):
+          continue
       for datum, t in sorted(block.items()):
         if not isinstance(t, dict):
             continue
@@ -187,7 +195,9 @@ def normalisiere(ticker, antwort, zeit):
         if alt_form and period in ("0y", "+1y", "-1y"):
             z["hinweis"] = "jahresende_verdeckt_quartal"
         zeilen.append(z)
-    for datum, h in sorted(((e.get("History") or {}).items())):
+    history = e.get("History")
+    history = history if isinstance(history, dict) else {}
+    for datum, h in sorted(history.items()):
         if not isinstance(h, dict):
             continue
         zeilen.append({"art": "eps_history", "periodenende": h.get("date") or datum,
@@ -358,7 +368,15 @@ def lauf(daten, modus="voll", token=None, hoechstens=0, frische_tage=90, fetcher
         rest = (kopf or {}).get("X-RateLimit-Remaining") or (kopf or {}).get("x-ratelimit-remaining")
         eintrag = {"datum": heute.isoformat()}
         if status == 200 and isinstance(antwort, dict):
-            k, zeilen = normalisiere(t, antwort, jetzt)
+            try:
+                k, zeilen = normalisiere(t, antwort, jetzt)
+            except Exception as ex:  # noqa
+                # Eine einzelne kaputte Antwort darf den Lauf nicht mehr toeten.
+                stand[t] = {"datum": heute.isoformat(), "status": "fehler", "http": 200, "text": f"normalisieren: {str(ex)[:100]}"}
+                bilanz["fehler"] += 1
+                log(f"  {t}: Antwort nicht normalisierbar: {str(ex)[:120]}")
+                warte(ABSTAND_S)
+                continue
             n_trend = sum(1 for z in zeilen if z["art"] == "konsens_trend")
             n_hist = sum(1 for z in zeilen if z["art"] == "eps_history")
             eintrag.update({"status": "ok", "trend": n_trend, "history": n_hist, "cik": k.get("cik")})
@@ -464,6 +482,11 @@ def selbsttest() -> int:
              "Earnings::History": _DEMO_ANTWORT["Earnings"]["History"]}
     kf, zf = normalisiere("AAPL", flach, "2026-09-03T10:00:00+00:00")
     p("Flache Antwort der Feld-Filter wird entflacht", kf["cik"] == "320193" and len(zf) == 4)
+    kk, zk = normalisiere("KAPUTT", {"General::Code": "KAPUTT", "General::CIK": "1", "Earnings::Trend": "", "Earnings::History": "N/A"}, "2026-09-03T10:00:00+00:00")
+    p("Zeichenketten statt Bloecken (Vollabzug-Absturz 03.09.2026) ergeben leere Zeilen, keinen Fehler",
+      kk["cik"] == "1" and zk == [])
+    kk2, zk2 = normalisiere("KAPUTT2", {"General": "", "Earnings": {"Trend": {"Quarterly": "", "Annual": None}, "History": ""}}, "2026-09-03T10:00:00+00:00")
+    p("Leere Teilbloecke im v1.1-Trend ergeben leere Zeilen", zk2 == [] and kk2["name"] is None)
     kopf, zeilen = normalisiere("AAPL", _DEMO_ANTWORT, "2026-09-03T10:00:00+00:00")
     p("Kopf traegt CIK, Boerse und Geschaeftsjahresende",
       kopf["cik"] == "320193" and kopf["boerse"] == "NASDAQ" and kopf["geschaeftsjahresende"] == "September")
