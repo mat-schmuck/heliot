@@ -1,0 +1,28 @@
+name: Groq Kontingent-Probe
+
+# Prueft, ob eine Websuche ueber groq/compound-mini das Tageskontingent des
+# Grundmodells openai/gpt-oss-120b belastet, das der Podcatcher nutzt (drei
+# Mini-Anfragen, Vergleich der Restmengen in den Kopfzeilen). Nur per Hand;
+# braucht das Secret GROQ_API_KEY. Der Schluessel wird nie ausgegeben.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Abhaengigkeiten
+        run: pip install beautifulsoup4 lxml pandas
+      - name: Probe
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: python groq_probe.py
