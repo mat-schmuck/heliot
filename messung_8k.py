@@ -41,7 +41,8 @@ import threading
 import time
 
 AUSGABE = "messung_8k"
-TEXT_ZEICHEN = 24000
+TEXT_ZEICHEN = 30000
+KOPF_ZEICHEN = 9000
 MISTRAL_KEY = os.environ.get("MISTRAL_API_KEY", "").strip()
 
 # Gemischt: Grosskonzerne, Bank, Versicherer, Immobilien, Mittelstand,
@@ -53,18 +54,30 @@ TICKER = ["AAPL", "MSFT", "NVDA", "AMZN", "GOOGL", "META", "JPM", "PGR", "O",
 
 AUFTRAG = (
     "You are a meticulous financial data extractor. You receive the text of an "
-    "earnings press release filed with the SEC (Form 8-K, Exhibit 99.1). Extract "
-    "ONLY figures for the MOST RECENT fiscal quarter (the three-month period the "
-    "release reports on), never year-to-date, six-month, nine-month or full-year "
-    "figures, and never the prior-year quarter. Prefer GAAP figures; if only "
-    "non-GAAP figures exist for a field, set gaap to false. Fields: "
+    "earnings press release filed with the SEC (Form 8-K, Exhibit 99.1); passages "
+    "may be omitted and marked with [...]. Extract ONLY figures for the MOST RECENT "
+    "fiscal QUARTER, i.e. the three-month period the release reports on. Never use "
+    "year-to-date, six-month, nine-month or full-year columns, never the prior-year "
+    "quarter, and if the release also reports a single month (some insurers do), "
+    "use the QUARTER column, not the month. Fields: "
     "periodenende = last day of that quarter as YYYY-MM-DD; "
-    "umsatz = total revenue or net sales in absolute US dollars (a value stated as "
-    "$94,036 million becomes 94036000000; thousands become units); "
-    "nettogewinn = net income attributable to the company or its common "
-    "shareholders in absolute US dollars (losses negative); "
-    "eps_verwaessert = diluted earnings per share in dollars (losses negative); "
-    "gaap = true if the three figures are GAAP; "
+    "umsatz = TOTAL revenues, the top line of the income statement as the company "
+    "totals it, INCLUDING components such as membership fees, financial services "
+    "revenues, interest income or other income when the company total revenue "
+    "line includes them (prefer a line named total revenues, total net revenues, "
+    "net sales and revenues, revenues and other income over a partial line such "
+    "as net sales or product revenue when both exist); in absolute US dollars "
+    "(a value stated as $94,036 million becomes 94036000000; thousands become "
+    "units); "
+    "nettogewinn = GAAP net income (net earnings, profit) attributable to the "
+    "company or its common shareholders for the quarter, in absolute US dollars, "
+    "losses negative; NEVER operating income, operating profit, earnings from "
+    "operations, segment profit, EBITDA or adjusted figures; if the GAAP quarterly "
+    "net income is not stated, use null; "
+    "eps_verwaessert = GAAP diluted earnings per share for the quarter in dollars, "
+    "losses negative; NOT adjusted or non-GAAP EPS unless no GAAP figure exists, "
+    "in which case set gaap to false; "
+    "gaap = true only if the three figures are GAAP (reported) figures; "
     "beleg_umsatz, beleg_nettogewinn, beleg_eps = the exact text fragment (at most "
     "120 characters) from which each value was taken. Use null for anything the "
     "text does not state. Answer with JSON only, no prose."
@@ -144,6 +157,43 @@ def html_zu_text(html_roh):
     return text.strip()
 
 
+SCHLUESSEL = re.compile(r"net income|net earnings|net \(loss\)|net loss|profit attributable|attributable to|"
+                        r"diluted|total revenue|total net revenue|net sales|revenues|three months ended|"
+                        r"quarter ended|per share", re.I)
+
+
+def text_kuerzen(text, limit=TEXT_ZEICHEN, kopf=KOPF_ZEICHEN, davor=300, danach=900):
+    """Der Anfang der Mitteilung (Ueberschriften, Kernaussagen) plus Fenster um
+    jede Zeile mit Kennzahl-Stichwoertern, damit die Ergebnistabellen auch
+    dann mitkommen, wenn sie hinter langen Erlaeuterungen stehen (UNH, CAT
+    beim ersten Lauf: die GAAP-Tabelle lag jenseits von 24.000 Zeichen).
+    Ausgelassenes ist mit [...] markiert."""
+    if len(text) <= limit:
+        return text
+    fenster = [(0, kopf)]
+    for m in SCHLUESSEL.finditer(text, kopf):
+        fenster.append((max(kopf, m.start() - davor), min(len(text), m.end() + danach)))
+    fenster.sort()
+    zusammen = []
+    for a, b in fenster:
+        if zusammen and a <= zusammen[-1][1]:
+            zusammen[-1] = (zusammen[-1][0], max(zusammen[-1][1], b))
+        else:
+            zusammen.append((a, b))
+    teile, laenge = [], 0
+    for a, b in zusammen:
+        stueck = text[a:b]
+        if laenge + len(stueck) > limit:
+            stueck = stueck[:max(0, limit - laenge)]
+        if not stueck:
+            break
+        teile.append(stueck)
+        laenge += len(stueck)
+        if laenge >= limit:
+            break
+    return "\n[...]\n".join(teile)
+
+
 def exhibit_text(cik, accession):
     import fundament_lauf as fl
     ordner = f"https://www.sec.gov/Archives/edgar/data/{cik}/{accession.replace('-', '')}"
@@ -180,7 +230,7 @@ def amtlich(zeilen, ende):
     return werte, andere
 
 
-def periode_zum_8k(quartalsenden, report_datum, hoechstens_tage=130):
+def periode_zum_8k(quartalsenden, report_datum, hoechstens_tage=75):
     """Das juengste amtlich belegte Quartalsende vor dem Meldedatum."""
     rd = dt.date.fromisoformat(report_datum)
     passend = [e for e in quartalsenden
@@ -196,7 +246,7 @@ def fall_finden(ticker, cik, log=print):
     _, zeilen = fn.normalisiere(firma)
     quartalsenden = sorted({z["end"] for z in zeilen
                             if z["typ"] == "Q" and z["kennzahl"] in ("umsatz", "nettogewinn")})
-    for fd, rd, acc, prim in ergebnis_8ks(submissions(cik))[:6]:
+    for fd, rd, acc, prim in ergebnis_8ks(submissions(cik))[:8]:
         ende = periode_zum_8k(quartalsenden, rd)
         if not ende:
             continue
@@ -210,7 +260,7 @@ def fall_finden(ticker, cik, log=print):
         return {"ticker": ticker, "cik": cik, "8k_datum": fd, "melde_datum": rd,
                 "accession": acc, "exhibit": name, "periodenende": ende,
                 "amtlich": werte, "andere_perioden": andere,
-                "text": text[:TEXT_ZEICHEN], "text_zeichen_voll": len(text)}
+                "text": text_kuerzen(text), "text_zeichen_voll": len(text)}
     return None
 
 
@@ -249,7 +299,7 @@ def modelle_filtern(liste):
         caps = m.get("capabilities", {}) or {}
         if not caps.get("completion_chat", True):
             continue
-        if re.search(r"embed|ocr|moderation|tts|transcribe|realtime|saba|pixtral-12b-2409", kennung):
+        if re.search(r"embed|ocr|moderation|tts|transcribe|realtime|saba|pixtral-12b-2409|^labs-", kennung):
             continue
         gruppe = {kennung} | set(m.get("aliases", []) or [])
         if gruppe & gesehen:
@@ -280,10 +330,20 @@ class Bremse:
             rpm = float(kopf.get("x-ratelimit-limit-req-minute") or 0)
         except ValueError:
             rpm = 0
+        try:
+            tpm = float(kopf.get("x-ratelimit-limit-tokens-minute") or 0)
+            kosten = float(kopf.get("x-ratelimit-tokens-query-cost") or 0)
+        except ValueError:
+            tpm = kosten = 0
         with self.lock:
             self.zuletzt[modell] = time.monotonic()
+            ab = 0.0
             if rpm > 0:
-                self.abstand[modell] = 60.0 / rpm + 0.4
+                ab = 60.0 / rpm * 1.3 + 0.5
+            if tpm > 0 and kosten > 0:
+                ab = max(ab, kosten / tpm * 60.0 * 1.2)
+            if ab > 0:
+                self.abstand[modell] = ab
 
 
 def mistral_frage(modell, text, bremse):
@@ -380,8 +440,12 @@ def vergleiche(soll, ist, andere=None, eps=False):
     return "abweichend", (round((ist - soll) / abs(soll) * 100, 1) if soll else None)
 
 
-def bewerte(fall, geparst):
+def bewerte(fall, geparst, status=200):
     werte, andere = fall["amtlich"], fall["andere_perioden"]
+    if status != 200:
+        b = {k: ("http", status) for k in ("umsatz", "nettogewinn", "eps_verwaessert", "periodenende")}
+        b["form"] = "http"
+        return b
     g = geparst or {}
     b = {}
     b["umsatz"] = vergleiche(werte.get("umsatz"), g.get("umsatz"), andere.get("umsatz"))
@@ -455,7 +519,7 @@ def messen(faelle, modelle, ausgabe, log=print):
         liste = []
         for fall in faelle:
             r = mistral_frage(modell, fall["text"], bremse)
-            b = bewerte(fall, r.get("geparst"))
+            b = bewerte(fall, r.get("geparst"), r.get("status", 200))
             u = r.get("usage") or {}
             p = preis(modell)
             kosten = ((u.get("prompt_tokens", 0) / 1e6 * p[0] + u.get("completion_tokens", 0) / 1e6 * p[1])
@@ -564,6 +628,15 @@ def selbsttest() -> int:
     p("Periode zum 8-K: juengstes belegtes Quartalsende davor",
       periode_zum_8k(quart, "2026-07-30") == "2026-06-30" and periode_zum_8k(quart, "2026-05-01") == "2026-03-31")
     p("Periode zum 8-K: kein Quartal, wenn zu alt", periode_zum_8k(quart, "2026-12-01") is None)
+    p("Periode zum 8-K: 116 Tage sind zu alt (KO- und ANF-Falle des ersten Laufs)",
+      periode_zum_8k(["2026-04-03"], "2026-07-28") is None)
+    lang = "KOPF " * 2000 + "blabla " * 3000 + "Net income | $ | 4,766 | $ | 4,551\n" + "x " * 3000 + "Diluted | $ | 4.79\n" + "y " * 2000
+    gek = text_kuerzen(lang, limit=16000, kopf=3000)
+    p("Kuerzung nimmt Kopf und Kennzahlfenster mit, markiert Auslassungen",
+      gek.startswith("KOPF") and "Net income | $ | 4,766" in gek and "Diluted | $ | 4.79" in gek
+      and "[...]" in gek and len(gek) <= 16100, len(gek))
+    p("HTTP-Fehler wird eigene Klasse",
+      bewerte({"amtlich": {}, "andere_perioden": {}, "periodenende": "2026-06-30"}, None, 403)["form"] == "http")
     sub = {"filings": {"recent": {"form": ["8-K", "10-Q", "8-K"], "filingDate": ["2026-07-31", "2026-08-05", "2026-05-01"],
                                   "reportDate": ["2026-07-30", "", "2026-04-30"],
                                   "accessionNumber": ["a", "b", "c"], "primaryDocument": ["x", "y", "z"],
@@ -574,7 +647,8 @@ def selbsttest() -> int:
              {"id": "mistral-small-2603", "aliases": ["mistral-small-latest"], "capabilities": {"completion_chat": True}},
              {"id": "mistral-embed", "aliases": [], "capabilities": {"completion_chat": False}},
              {"id": "voxtral-mini-transcribe-2602", "aliases": [], "capabilities": {"completion_chat": True}},
-             {"id": "ministral-8b-2512", "aliases": ["ministral-8b-latest"], "capabilities": {"completion_chat": True}}]
+             {"id": "ministral-8b-2512", "aliases": ["ministral-8b-latest"], "capabilities": {"completion_chat": True}},
+             {"id": "labs-leanstral-1-5-1", "aliases": [], "capabilities": {"completion_chat": True}}]
     p("Modellfilter: Aliasgruppen einmal, Einbettung und Transkription draussen",
       modelle_filtern(liste) == ["ministral-8b-2512", "mistral-small-2603"], modelle_filtern(liste))
     fall = {"amtlich": {"umsatz": 94036000000, "nettogewinn": 23434000000, "eps_verwaessert": 1.57},
