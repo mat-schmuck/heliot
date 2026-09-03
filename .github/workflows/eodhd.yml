@@ -75,7 +75,9 @@ jobs:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
         run: python eodhd_konsens.py --daten daten --modus "${{ inputs.modus }}" --hoechstens "${{ inputs.hoechstens }}" --frische "${{ inputs.frische }}"
       - name: Ins Datenrepo
-        if: steps.secrets.outputs.da == 'ja' && inputs.modus != 'probe'
+        # always(): auch nach einem Abbruch wandert das bis dahin Geholte ins
+        # Datenrepo (der Vollabzug vom 03.09.2026 verlor sonst 1.000 Firmen)
+        if: always() && steps.secrets.outputs.da == 'ja' && inputs.modus != 'probe'
         run: |
           cd daten
           git config user.name "heliot-eodhd"
