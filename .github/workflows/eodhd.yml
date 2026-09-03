@@ -1,0 +1,96 @@
+name: Konsens-Historie von EODHD
+
+# Gerhards F7 und F8 (Freigabe 02.09.2026): die gekaufte Konsens-Historie
+# (Umsatz-Konsens je Quartal ab 2017, EPS-Konsens und Ueberraschung je
+# gemeldetem Quartal) aus dem EODHD-Abo ins PRIVATE Datenrepo heliot-daten
+# holen (F17). Nur per Hand oder auf Zuruf; ein Vollabzug aller Firmen mit
+# Konsens kostet rund 57.000 der 100.000 API-Calls, die das Abo je Tag
+# einraeumt. Braucht die Secrets EODHD_API_KEY und DATEN_TOKEN. Der Modus
+# probe fragt fuenf Referenzfirmen ab und schreibt nichts.
+
+on:
+  workflow_dispatch:
+    inputs:
+      modus:
+        description: "probe (fuenf Referenzfirmen, schreibt nichts) oder voll (alle Firmen mit Konsens ins Datenrepo)"
+        type: choice
+        options:
+          - probe
+          - voll
+        default: probe
+      hoechstens:
+        description: "voll: hoechstens so viele Firmen je Lauf (0 = alle)"
+        required: false
+        default: "0"
+      frische:
+        description: "voll: Firmen mit einem ok-Stand juenger als so viele Tage auslassen"
+        required: false
+        default: "90"
+
+concurrency:
+  group: eodhd-konsens
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  eodhd:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - name: Sind die Secrets da?
+        id: secrets
+        env:
+          DATEN_TOKEN: ${{ secrets.DATEN_TOKEN }}
+          EODHD_API_KEY: ${{ secrets.EODHD_API_KEY }}
+        run: |
+          da=ja
+          if [ -z "$DATEN_TOKEN" ]; then echo "Secret DATEN_TOKEN fehlt."; da=nein; fi
+          if [ -z "$EODHD_API_KEY" ]; then echo "Secret EODHD_API_KEY fehlt; ohne Schluessel liefert EODHD nichts."; da=nein; fi
+          echo "da=$da" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+        if: steps.secrets.outputs.da == 'ja'
+      - uses: actions/checkout@v4
+        if: steps.secrets.outputs.da == 'ja'
+        with:
+          repository: mat-schmuck/heliot-daten
+          token: ${{ secrets.DATEN_TOKEN }}
+          path: daten
+      - uses: actions/setup-python@v5
+        if: steps.secrets.outputs.da == 'ja'
+        with:
+          python-version: "3.11"
+      - name: Abhaengigkeiten
+        if: steps.secrets.outputs.da == 'ja'
+        run: pip install requests pandas
+      - name: Selbsttest
+        if: steps.secrets.outputs.da == 'ja'
+        run: python eodhd_konsens.py --selbsttest
+      - name: Abruf
+        if: steps.secrets.outputs.da == 'ja'
+        env:
+          EODHD_API_KEY: ${{ secrets.EODHD_API_KEY }}
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: python eodhd_konsens.py --daten daten --modus "${{ inputs.modus }}" --hoechstens "${{ inputs.hoechstens }}" --frische "${{ inputs.frische }}"
+      - name: Ins Datenrepo
+        if: steps.secrets.outputs.da == 'ja' && inputs.modus == 'voll'
+        run: |
+          cd daten
+          git config user.name "heliot-eodhd"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Nichts Neues."
+            exit 0
+          fi
+          git commit -q -m "EODHD-Konsens-Historie $(date -u +%Y-%m-%d_%H%MZ)"
+          for versuch in 1 2 3; do
+            if git push --quiet origin main; then
+              echo "Gesichert."
+              exit 0
+            fi
+            git pull --rebase --quiet origin main || true
+          done
+          echo "Push nach drei Anlaeufen gescheitert."
+          exit 1
