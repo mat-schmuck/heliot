@@ -24,10 +24,11 @@ FRAGE_SUCHE = ("Welche Schlagzeile gab es in den letzten Tagen zur Apple-Aktie? 
 FRAGE_OHNE = "Antworte nur mit OK."
 
 VARIANTEN = [
-    ("groq/compound-mini", FRAGE_OHNE, 50, None),
-    ("groq/compound-mini", FRAGE_SUCHE, 2000, None),
-    ("groq/compound-mini", FRAGE_SUCHE, 2000, {"tools": [{"type": "web_search"}]}),
-    ("groq/compound", FRAGE_SUCHE, 2000, None),
+    # Eingebautes Werkzeug browser_search am Grundmodell selbst (Doku: tools type browser_search, reasoning_effort low)
+    ("openai/gpt-oss-120b", FRAGE_SUCHE, 2000, {"tools": [{"type": "browser_search"}], "reasoning_effort": "low"}),
+    ("openai/gpt-oss-20b", FRAGE_SUCHE, 2000, {"tools": [{"type": "browser_search"}], "reasoning_effort": "low"}),
+    # compound mit eingeschraenktem Werkzeugsatz (nur Websuche, kein Seitenbesuch)
+    ("groq/compound-mini", FRAGE_SUCHE, 2000, {"compound_custom": {"tools": {"enabled_tools": ["web_search"]}}}),
 ]
 
 
