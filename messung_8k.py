@@ -268,13 +268,15 @@ def fall_finden(ticker, cik, log=print):
 # Mistral
 # ---------------------------------------------------------------------------
 
-def _anfrage(url, koerper=None, methode="POST", timeout=180):
+def _anfrage(url, koerper=None, methode="POST", timeout=180, key=None):
+    """HTTP-Anfrage an einen OpenAI-kompatiblen Dienst; key = anderer Schluessel als Mistral
+    (Groq-Websuche der KI-Abfrage). Groqs Cloudflare weist urllib ohne User-Agent ab."""
     import urllib.request
     import urllib.error
     daten = json.dumps(koerper).encode("utf-8") if koerper is not None else None
     req = urllib.request.Request(url, data=daten, method=methode, headers={
-        "Authorization": "Bearer " + MISTRAL_KEY, "Content-Type": "application/json",
-        "Accept": "application/json"})
+        "Authorization": "Bearer " + (key if key is not None else MISTRAL_KEY), "Content-Type": "application/json",
+        "Accept": "application/json", "User-Agent": "heliot/1.0"})
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:
             return r.status, dict(r.headers), r.read().decode("utf-8")
