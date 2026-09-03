@@ -163,7 +163,15 @@
     "BRC|3": "drin",
     "ZETA|1": "drin",
     "ZETA|3": "drin",
-    "HASI|1": "drin"
+    "HASI|1": "drin",
+    "TEAM|1": "drin",
+    "BRC|2": "drin",
+    "MEI|3": "drin",
+    "TWLO|1": "drin",
+    "PATH|1": "drin",
+    "LPG|1": "drin",
+    "LPG|2": "draussen",
+    "LPG|3": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -277,6 +285,11 @@
     "CRM|1": "2026-09-03",
     "BEST|CRM|1": "2026-09-03",
     "UEBER|RNG|1": "2026-09-03",
-    "UEBER|RNG|3": "2026-09-03"
+    "UEBER|RNG|3": "2026-09-03",
+    "HTF|TEAM|1": "2026-09-03",
+    "BRC|2": "2026-09-03",
+    "BEST|BRC|2": "2026-09-03",
+    "LPG|1": "2026-09-03",
+    "BEST|LPG|1": "2026-09-03"
   }
 }
