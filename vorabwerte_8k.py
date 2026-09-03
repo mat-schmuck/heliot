@@ -188,7 +188,7 @@ def _abw(ist, soll):
     except (TypeError, ValueError):
         return None
     if soll == 0:
-        return None if ist == 0 else float("inf")
+        return None
     return abs(ist - soll) / abs(soll)
 
 
@@ -206,6 +206,8 @@ def plausibilitaet(werte, vorjahr, filing_datum):
         gruende.append("Periodenende fehlt oder unlesbar")
     abw = {}
     if vorjahr:
+        if vorjahr.get("umsatz") == 0 and (werte.get("umsatz") or 0) != 0:
+            gruende.append("Vorjahresquartal ohne Umsatz")
         a = _abw(werte.get("umsatz"), vorjahr.get("umsatz"))
         if a is not None:
             abw["umsatz"] = round(a, 4)
@@ -247,15 +249,28 @@ def abgleich_eintrag(eintrag, amtlich):
 # Verarbeitung eines 8-K
 # ---------------------------------------------------------------------------
 
+def hauptticker(bestand, ticker_zu_cik):
+    """CIK -> Ticker; bei mehreren Tickern derselben Firma (BF-A/BF-B, WLY/WLYB,
+    Vorzugsaktien) gewinnt der Haupt-Ticker, das ist der erste in der SEC-Liste
+    (company_tickers.json ist nach Marktkapitalisierung geordnet)."""
+    rang = {str(k).upper(): i for i, k in enumerate(ticker_zu_cik)}
+    raus, bester = {}, {}
+    for t in bestand:
+        t = str(t).upper()
+        c = ticker_zu_cik.get(t)
+        if not c:
+            continue
+        c = int(c)
+        r = rang.get(t, 10 ** 9)
+        if c not in raus or r < bester[c]:
+            raus[c], bester[c] = t, r
+    return raus
+
+
 def bestand_ciks(daten, ticker_zu_cik):
     """CIK -> Ticker der Firmen mit Konsens (nur diese bekommen Vorabwerte)."""
     bestand = ke._json(os.path.join(daten, "konsens", "firmen_mit_konsens.json"), {})
-    raus = {}
-    for t in bestand:
-        c = ticker_zu_cik.get(str(t).upper())
-        if c:
-            raus[int(c)] = str(t).upper()
-    return raus
+    return hauptticker(bestand, ticker_zu_cik)
 
 
 def verarbeite(cik, accession, name, filing_utc, hole, frage, kette, log=print, firma_laden=None):
@@ -515,6 +530,16 @@ def selbsttest() -> int:
     p("Feed: 8-K/A ausgelassen, CIK und Accession aus dem Link, Zeit in UTC",
       len(e) == 2 and e[0][0] == "0000320193-26-000045" and e[0][1] == 320193 and e[0][2] == "APPLE INC."
       and e[0][4] == "2026-07-30T20:31:22+00:00", e)
+    ht = hauptticker({"WLYB": {}, "WLY": {}, "FCELB": {}, "AAPL": {}},
+                     {"AAPL": 320193, "WLY": 107140, "FCEL": 886128, "WLYB": 107140, "FCELB": 886128})
+    p("Haupt-Ticker je CIK: WLY vor WLYB, FCELB bleibt, wenn FCEL nicht im Bestand ist",
+      ht == {107140: "WLY", 886128: "FCELB", 320193: "AAPL"}, ht)
+    st7, gr7, abw7 = plausibilitaet({"periodenende": "2026-06-30", "umsatz": 450000, "nettogewinn": -20.687e6,
+                                     "eps_verwaessert": -4.88, "gaap": True},
+                                    {"umsatz": 0, "nettogewinn": -14.439e6, "eps_verwaessert": -3.71}, "2026-09-02")
+    p("Vorjahr ohne Umsatz: unsicher mit klarem Grund, keine Unendlich-Zahl in der Ablage",
+      st7 == "unsicher" and any("ohne Umsatz" in g for g in gr7) and abw7.get("umsatz") is None
+      and json.dumps(abw7, allow_nan=False) is not None, (st7, gr7, abw7))
     seiten = []
 
     def hole(url):
