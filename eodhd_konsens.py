@@ -111,6 +111,36 @@ def entflachen(antwort):
     return aus
 
 
+KONTO_FELDER = ("subscriptionType", "dailyRateLimit", "apiRequests", "apiRequestsDate", "extraLimit")
+
+
+def konto(token, fetcher=None):
+    """Der User-Endpunkt sagt, ob der Schluessel gilt und welcher Tarif
+    dahintersteht. Ausgegeben werden NUR Tarif und Zaehler, nie Name oder
+    E-Mail (die Actions-Logs des Repos sind oeffentlich). Liefert
+    (status, tarifdaten)."""
+    url = f"https://eodhd.com/api/user?api_token={token}&fmt=json"
+    if fetcher is not None:
+        status, text, _ = fetcher("user")
+    else:
+        import urllib.error
+        import urllib.request
+        try:
+            with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "heliot-eodhd/1.0"}), timeout=60) as r:
+                status, text = r.status, r.read().decode("utf-8", "replace")
+        except urllib.error.HTTPError as e:
+            status, text = e.code, e.read().decode("utf-8", "replace")[:300]
+        except Exception as e:  # noqa
+            status, text = 0, str(e)[:200]
+    if status != 200:
+        return status, {}
+    try:
+        d = json.loads(text) if isinstance(text, str) else text
+    except ValueError:
+        return status, {}
+    return status, {k: d.get(k) for k in KONTO_FELDER if k in d}
+
+
 def normalisiere(ticker, antwort, zeit):
     """Trend und History der Rohantwort in flache Zeilen; General-Angaben in
     einen Kopf."""
@@ -214,6 +244,13 @@ def lauf(daten, modus="voll", token=None, hoechstens=0, frische_tage=90, fetcher
     stand = ke._json(stand_pfad, {}) if daten else {}
     if modus == "probe":
         firmen = DEMO if token == DEMO_TOKEN else REFERENZ
+        status, tarif = konto(token, fetcher=fetcher)
+        if status == 401:
+            log("Schluessel: UNGUELTIG (HTTP 401 am User-Endpunkt).")
+        elif status == 200:
+            log("Schluessel gueltig; Tarif laut Anbieter: " + json.dumps(tarif, ensure_ascii=False))
+        else:
+            log(f"User-Endpunkt: HTTP {status}, keine Tarifauskunft.")
     else:
         firmen = universum(daten, frische_tage, hoechstens, heute, stand, wochenlisten)
     log(f"EODHD {modus}: {len(firmen)} Firma(en), Frische {frische_tage} Tage, Budget {budget_calls} Calls")
@@ -325,6 +362,12 @@ def selbsttest() -> int:
             fehler += 1
 
     p("Symbol: SEC-Schreibweise BRK.B wird BRK-B.US", eodhd_symbol("brk.b") == "BRK-B.US")
+    st, tarif = konto("x", fetcher=lambda s: (200, json.dumps({"name": "Max", "email": "geheim@example.org",
+                                                             "subscriptionType": "Free", "dailyRateLimit": 20,
+                                                             "apiRequests": 3, "apiRequestsDate": "2026-09-03"}), {}))
+    p("Konto: nur Tarif und Zaehler, nie Name oder E-Mail",
+      st == 200 and tarif == {"subscriptionType": "Free", "dailyRateLimit": 20, "apiRequests": 3, "apiRequestsDate": "2026-09-03"})
+    p("Konto: 401 heisst ungueltiger Schluessel", konto("x", fetcher=lambda s: (401, "Unauthorized", {}))[0] == 401)
     flach = {"General::Code": "AAPL", "General::CIK": "320193", "Earnings::Trend": _DEMO_ANTWORT["Earnings"]["Trend"],
              "Earnings::History": _DEMO_ANTWORT["Earnings"]["History"]}
     kf, zf = normalisiere("AAPL", flach, "2026-09-03T10:00:00+00:00")
