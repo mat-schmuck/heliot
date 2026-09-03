@@ -3,7 +3,7 @@
   "fenster": {
     "MRX|1": "draussen",
     "MRX|3": "draussen",
-    "ASST|1": "draussen",
+    "ASST|1": "drin",
     "DNTH|2": "drin",
     "ECO|1": "drin",
     "ECO|2": "draussen",
@@ -173,7 +173,9 @@
     "LPG|2": "draussen",
     "LPG|3": "drin",
     "SNPS|1": "drin",
-    "PBT|3": "draussen"
+    "PBT|3": "draussen",
+    "VLO|1": "drin",
+    "VLO|3": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -281,7 +283,6 @@
     "BEST|EOG|2": "2026-09-03",
     "HTF|TEAM|2": "2026-09-03",
     "BEST|HTF|TEAM|2": "2026-09-03",
-    "UEBER|ASST|1": "2026-09-03",
     "XMTR|1": "2026-09-03",
     "BEST|XMTR|1": "2026-09-03",
     "CRM|1": "2026-09-03",
