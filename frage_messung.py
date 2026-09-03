@@ -26,8 +26,11 @@ QUARTALE = 8
 TEXT_JE_MITTEILUNG = 25000
 KOPF_JE_MITTEILUNG = 12000
 GROQ_KEY = os.environ.get("GROQ_API_KEY", "").strip()
-WEBSUCHE_MODELL = "groq/compound-mini"   # Groqs System mit eingebauter Websuche; Gratisstufe 30 je Minute, 250 je Tag
-WEBSUCHE_ABSTAND_S = 2.5
+WEBSUCHE_MODELL = "openai/gpt-oss-20b"   # Groqs eingebautes Werkzeug browser_search am Grundmodell; eigenes Kontingent
+WEBSUCHE_ABSTAND_S = 2.5                  # (1.000 je Tag, 8.000 Tokens je Minute), das der Podcatcher nicht nutzt.
+                                          # groq/compound antwortet in der Gratisstufe auf jede Suche mit 413 (Probe 04.09.2026).
+YAHOO_RSS = "https://feeds.finance.yahoo.com/rss/2.0/headline?s={ticker}&region=US&lang=en-US"
+NACHRICHTEN_HOECHSTENS = 20
 
 WEBSUCHE_AUFTRAG = (
     "Du bist ein Rechercheur fuer Boersennachrichten. Suche im Netz nach Nachrichten und Analystenkommentaren "
@@ -259,6 +262,7 @@ def websuche_groq(ticker, name, meldedatum, heute, log=print):
     if not GROQ_KEY:
         return {"text": "", "quellen": [], "usage": None, "dauer_s": 0, "status": 0, "hinweise": ["GROQ_API_KEY fehlt"]}
     koerper = {"model": WEBSUCHE_MODELL, "temperature": 0, "max_completion_tokens": 1500,
+               "tools": [{"type": "browser_search"}], "reasoning_effort": "low",
                "messages": [{"role": "system", "content": WEBSUCHE_AUFTRAG},
                             {"role": "user", "content": websuche_frage(ticker, name, meldedatum, heute)}]}
     hinweise = []
@@ -284,17 +288,81 @@ def websuche_groq(ticker, name, meldedatum, heute, log=print):
             quellen.append({"typ": w.get("type"), "eingabe": (w.get("arguments") or w.get("input") or "")[:300] if isinstance(w.get("arguments") or w.get("input"), str) else str(w.get("arguments") or w.get("input"))[:300],
                             "ausgabe": (w.get("output") or "")[:2000] if isinstance(w.get("output"), str) else str(w.get("output"))[:2000]})
         time.sleep(WEBSUCHE_ABSTAND_S)
-        return {"text": (nachricht.get("content") or "").strip(), "quellen": quellen, "usage": a.get("usage"),
+        return {"text": markdown_weg((nachricht.get("content") or "").strip()), "quellen": quellen, "usage": a.get("usage"),
                 "dauer_s": round(dauer, 1), "status": 200, "hinweise": hinweise, "modell_laut_antwort": a.get("model"),
                 "abbruchgrund": a["choices"][0].get("finish_reason")}
     return {"text": "", "quellen": [], "usage": None, "dauer_s": 0, "status": 0, "hinweise": hinweise + ["aufgegeben"]}
 
 
+def markdown_weg(text):
+    import re
+    text = re.sub(r"\*\*(.*?)\*\*", r"\1", text)
+    text = re.sub(r"^\s*#+\s*", "", text, flags=re.M)
+    text = re.sub(r"^\s*[-*]\s+", "", text, flags=re.M)
+    return text.replace("**", "").replace("`", "").strip()
+
+
+def rss_lesen(xml):
+    """[(datum ISO, titel, quelle)] aus einem RSS-2.0-Feed (Yahoo Finance), ohne Fremdbibliothek."""
+    import email.utils
+    import html
+    import re
+    raus = []
+    for item in re.findall(r"<item>(.*?)</item>", xml, re.S):
+        def feld(name):
+            m = re.search(rf"<{name}>(.*?)</{name}>", item, re.S)
+            return html.unescape(re.sub(r"<!\[CDATA\[(.*?)\]\]>", r"\1", m.group(1), flags=re.S)).strip() if m else ""
+        titel, link, datum = feld("title"), feld("link"), feld("pubDate")
+        try:
+            datum_iso = email.utils.parsedate_to_datetime(datum).date().isoformat()
+        except (TypeError, ValueError):
+            datum_iso = datum[:16]
+        quelle = re.sub(r"^https?://(www\.)?", "", link).split("/")[0] if link else ""
+        if titel:
+            raus.append((datum_iso, titel, quelle))
+    return raus
+
+
+def nachrichten_yahoo(ticker, hole=None, hoechstens=NACHRICHTEN_HOECHSTENS, heute=None):
+    """Schlagzeilen der letzten Tage aus dem Yahoo-Finance-Feed je Ticker (gratis, ohne Schluessel);
+    Rueckfall, wenn die Websuche nichts liefert. Rueckgabe {text, eintraege, status, hinweise}."""
+    if hole is None:
+        def hole(url):
+            import urllib.request
+            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (heliot)"})
+            with urllib.request.urlopen(req, timeout=60) as r:
+                return r.read().decode("utf-8", "replace")
+    try:
+        xml = hole(YAHOO_RSS.format(ticker=ticker))
+    except Exception as e:  # noqa
+        return {"text": "", "eintraege": [], "status": 0, "hinweise": [f"Feed nicht lesbar: {str(e)[:160]}"]}
+    eintraege = rss_lesen(xml)[:hoechstens]
+    heute = heute or dt.date.today().isoformat()
+    zeilen = [f"Schlagzeilen aus dem Yahoo-Finance-Nachrichtenfeed zu {ticker}, Stand {heute}; nur Ueberschriften, "
+              f"keine Volltexte. Zitiere daraus mit Datum und Quelle."]
+    for datum, titel, quelle in eintraege:
+        zeilen.append(f"{datum}: {titel} (Quelle: {quelle or 'Yahoo Finance'})")
+    return {"text": "\n".join(zeilen) if eintraege else "", "eintraege": [{"datum": d, "titel": ti, "quelle": q} for d, ti, q in eintraege],
+            "status": 200 if eintraege else 204, "hinweise": [] if eintraege else ["Feed ohne Eintraege"]}
+
+
+def nachrichtenlage(ticker, name, meldedatum, heute, log=print):
+    """Erst die Websuche ueber Groq, bei Fehlschlag oder leerer Antwort der Yahoo-Feed."""
+    n = websuche_groq(ticker, name, meldedatum, heute, log=log)
+    n["quelle"] = "groq"
+    if n.get("status") == 200 and (n.get("text") or "").strip():
+        return n
+    y = nachrichten_yahoo(ticker, heute=heute)
+    y["quelle"] = "yahoo"
+    y["hinweise"] = (n.get("hinweise") or []) + [f"Websuche Status {n.get('status')}, Rueckfall auf den Yahoo-Feed"] + (y.get("hinweise") or [])
+    return y
+
+
 def eingabe_mit_nachrichten(frage, tab_text, texte_text, nachrichten_text):
     if not nachrichten_text:
         return eingabe(frage, tab_text, texte_text)
-    return (f"Frage des Nutzers: {frage}\n\n{tab_text}\n\nNachrichtenlage (Ergebnis einer Websuche, mit Quellenangaben; "
-            f"daraus darfst du Gruende fuer die Kursentwicklung nennen, jeweils mit Quelle und Datum):\n{nachrichten_text}"
+    return (f"Frage des Nutzers: {frage}\n\n{tab_text}\n\nNachrichtenlage (aktuelle Nachrichten mit Quellenangaben; daraus "
+            f"darfst du Gruende fuer die Kursentwicklung nennen, jeweils mit Quelle und Datum):\n{nachrichten_text}"
             f"\n\nPressemitteilungen der Firma zu diesen Quartalen:\n\n{texte_text}")
 
 
@@ -371,14 +439,12 @@ def lauf(daten, ticker, frage, modelle, quartale=QUARTALE, ausgabe=None, log=pri
     liste, tab_text = tabelle(zeilen, konsens, kurse, quartale)
     texte_text = texte_block(texte)
     nachrichten = None
-    if websuche and GROQ_KEY:
+    if websuche:
         juengst = liste[-1] if liste else {}
         name = konsens_name or ticker
-        nachrichten = websuche_groq(ticker, name, juengst.get("meldedatum"), dt.date.today().isoformat(), log=log)
-        log(f"  Websuche {WEBSUCHE_MODELL}: Status {nachrichten.get('status')}, {len(nachrichten.get('text') or '')} Zeichen, "
-            f"{len(nachrichten.get('quellen') or [])} Werkzeugaufrufe, {nachrichten.get('dauer_s')} s, Hinweise {nachrichten.get('hinweise')}")
-    elif websuche:
-        log("  Websuche uebersprungen: GROQ_API_KEY fehlt")
+        nachrichten = nachrichtenlage(ticker, name, juengst.get("meldedatum"), dt.date.today().isoformat(), log=log)
+        log(f"  Nachrichtenlage ({nachrichten.get('quelle')}): Status {nachrichten.get('status')}, "
+            f"{len(nachrichten.get('text') or '')} Zeichen, Hinweise {nachrichten.get('hinweise')}")
     frage_text = eingabe_mit_nachrichten(frage, tab_text, texte_text, (nachrichten or {}).get("text") or "")
     log(f"{ticker} CIK {cik}: {len(zeilen)} amtliche Zeilen, {len(konsens)} Konsens-Zeilen, {len(kurse)} Kurstage, "
         f"{len(texte)} Pressetexte, Eingabe {len(frage_text)} Zeichen")
@@ -395,14 +461,14 @@ def lauf(daten, ticker, frage, modelle, quartale=QUARTALE, ausgabe=None, log=pri
     with io.open(os.path.join(ausgabe, "eingabe.txt"), "w", encoding="utf-8") as f:
         f.write(frage_text + "\n")
     if nachrichten is not None:
-        with io.open(os.path.join(ausgabe, "nachrichten-groq.txt"), "w", encoding="utf-8") as f:
+        with io.open(os.path.join(ausgabe, "nachrichten.txt"), "w", encoding="utf-8") as f:
             f.write((nachrichten.get("text") or "") + "\n")
-        with io.open(os.path.join(ausgabe, "nachrichten-groq.json"), "w", encoding="utf-8") as f:
+        with io.open(os.path.join(ausgabe, "nachrichten.json"), "w", encoding="utf-8") as f:
             json.dump({k: v for k, v in nachrichten.items() if k != "text"}, f, ensure_ascii=False, indent=1)
     bremse = m8k.Bremse()
     bilanz = {"zeit": dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat(), "ticker": ticker,
               "eingabe_zeichen": len(frage_text), "modelle": {},
-              "websuche": None if nachrichten is None else {k: v for k, v in nachrichten.items() if k not in ("text", "quellen")}}
+              "nachrichten": None if nachrichten is None else {k: v for k, v in nachrichten.items() if k not in ("text", "quellen", "eintraege")}}
     for modell in modelle:
         r = modell_fragen(modell, frage_text, bremse)
         u = r.get("usage") or {}
@@ -507,6 +573,22 @@ def selbsttest() -> int:
       all(w in WEBSUCHE_AUFTRAG for w in ("Quelle", "Datum", "Deutsch", "ohne Markdown", "Erfinde nichts")))
     ohne = websuche_groq("AAPL", "Apple", "2026-07-30", "2026-09-03", log=lambda *_: None) if not GROQ_KEY else {"status": 0, "hinweise": ["GROQ_API_KEY fehlt"]}
     p("Websuche ohne Schluessel: Status 0 mit klarem Hinweis, kein Netzaufruf", ohne["status"] == 0 and "GROQ_API_KEY fehlt" in ohne["hinweise"])
+    p("Markdown-Reste verschwinden", markdown_weg("**Schlagzeile:** Test\n- Punkt\n## Kopf") == "Schlagzeile: Test\nPunkt\nKopf", repr(markdown_weg("**Schlagzeile:** Test\n- Punkt\n## Kopf")))
+    xml = ("<rss><channel><item><title>Jefferies Revamps Apple Stock Target On Setback</title>"
+           "<link>https://finance.yahoo.com/news/jefferies-apple.html</link><pubDate>Thu, 03 Sep 2026 12:05:00 +0000</pubDate></item>"
+           "<item><title><![CDATA[Apple faces &#163;2 bn lawsuit in UK]]></title><link>https://www.ft.com/x</link>"
+           "<pubDate>Wed, 02 Sep 2026 08:00:00 +0000</pubDate></item><item><title></title></item></channel></rss>")
+    rl = rss_lesen(xml)
+    p("Yahoo-Feed lesen: Datum als ISO, Titel entschaerft, Quelle aus dem Link, leere Eintraege weg",
+      rl == [("2026-09-03", "Jefferies Revamps Apple Stock Target On Setback", "finance.yahoo.com"),
+             ("2026-09-02", "Apple faces \u00a32 bn lawsuit in UK", "ft.com")], rl)
+    ny = nachrichten_yahoo("AAPL", hole=lambda url: xml, heute="2026-09-04")
+    p("Yahoo-Nachrichtenlage: Abschnittstext mit Datum und Quelle je Zeile, Status 200",
+      ny["status"] == 200 and len(ny["eintraege"]) == 2 and "2026-09-03: Jefferies" in ny["text"] and "(Quelle: ft.com)" in ny["text"], ny["text"])
+    ny2 = nachrichten_yahoo("AAPL", hole=lambda url: "<rss><channel></channel></rss>")
+    p("Yahoo-Feed leer: Status 204, kein Text", ny2["status"] == 204 and ny2["text"] == "", ny2)
+    ny3 = nachrichten_yahoo("AAPL", hole=lambda url: (_ for _ in ()).throw(OSError("kein Netz")))
+    p("Yahoo-Feed nicht lesbar: Status 0 mit Hinweis, kein Absturz", ny3["status"] == 0 and ny3["hinweise"], ny3)
     p("Auftrag verlangt Deutsch, keine Tabellen, Vermutungen gekennzeichnet, Quellen nur die Daten",
       all(w in AUFTRAG for w in ("Deutsch", "ohne Tabellen", "Vermutung", "AUSSCHLIESSLICH", "Safe Harbor")))
     p("Textblock nennt nur das Veroeffentlichungsdatum, kein falsches Quartal", "Quartal bis" not in block and "veroeffentlicht am 2026-07-31" in block)
