@@ -1,90 +1,76 @@
 {
- "gebaut_am": "2026-09-03 00:01 Wien",
+ "gebaut_am": "2026-09-04 00:01 Wien",
  "universum": 157,
  "aktien": {
   "CDNA": {
    "firma": "Caredx Inc",
-   "vortagesschluss": 49.6,
-   "v50": 1160741.8,
+   "vortagesschluss": 49.86,
+   "v50": 1154640.7,
    "rs_rating": 97,
-   "ueber_52w_tief_pct": 301.0
+   "ueber_52w_tief_pct": 303.1
   },
   "CLMT": {
    "firma": "Calumet Inc",
-   "vortagesschluss": 53.07,
-   "v50": 1170262.0,
+   "vortagesschluss": 53.5,
+   "v50": 1189815.8,
    "rs_rating": 92,
-   "ueber_52w_tief_pct": 231.7
+   "ueber_52w_tief_pct": 223.1
   },
   "CRNX": {
    "firma": "Crinetics Pharmaceuticals Inc",
    "vortagesschluss": 84.95,
-   "v50": 4867938.0,
-   "rs_rating": 94,
-   "ueber_52w_tief_pct": 180.8
+   "v50": 3918003.0,
+   "rs_rating": 93,
+   "ueber_52w_tief_pct": 228.9
   },
   "DELL": {
    "firma": "Dell Technologies Inc",
-   "vortagesschluss": 492.2,
-   "v50": 7129765.4,
+   "vortagesschluss": 516.39,
+   "v50": 7414916.3,
    "rs_rating": 97,
-   "ueber_52w_tief_pct": 346.6
+   "ueber_52w_tief_pct": 368.5
   },
   "ETON": {
    "firma": "Eton Pharmaceuticals Inc",
-   "vortagesschluss": 61.96,
-   "v50": 598404.8,
+   "vortagesschluss": 59.9,
+   "v50": 599673.3,
    "rs_rating": 99,
-   "ueber_52w_tief_pct": 334.2
-  },
-  "LITE": {
-   "firma": "Lumentum Holdings Inc",
-   "vortagesschluss": 870.58,
-   "v50": 4699605.6,
-   "rs_rating": 95,
-   "ueber_52w_tief_pct": 596.5
+   "ueber_52w_tief_pct": 319.8
   },
   "NESR": {
    "firma": "National Energy Services Reunited Corp",
-   "vortagesschluss": 34.74,
-   "v50": 2225913.8,
+   "vortagesschluss": 34.5,
+   "v50": 2204907.8,
    "rs_rating": 91,
-   "ueber_52w_tief_pct": 279.7
-  },
-  "PBF": {
-   "firma": "PBF Energy Inc",
-   "vortagesschluss": 75.48,
-   "v50": 3131923.6,
-   "rs_rating": 91,
-   "ueber_52w_tief_pct": 194.6
+   "ueber_52w_tief_pct": 271.4
   },
   "QMCO": {
    "firma": "Quantum Corp",
-   "vortagesschluss": 22.78,
-   "v50": 1544971.5,
+   "vortagesschluss": 24.3,
+   "v50": 1548191.9,
    "rs_rating": 98,
-   "ueber_52w_tief_pct": 443.7
+   "ueber_52w_tief_pct": 480.0
+  },
+  "RNG": {
+   "firma": "RingCentral Inc",
+   "vortagesschluss": 76.36,
+   "v50": 1982876.4,
+   "rs_rating": 91,
+   "ueber_52w_tief_pct": 216.3
   },
   "TVTX": {
    "firma": "Travere Therapeutics Inc",
-   "vortagesschluss": 67.23,
-   "v50": 1611148.8,
+   "vortagesschluss": 66.54,
+   "v50": 1568989.9,
    "rs_rating": 93,
-   "ueber_52w_tief_pct": 289.3
-  },
-  "TWST": {
-   "firma": "Twist Bioscience Corp",
-   "vortagesschluss": 131.0,
-   "v50": 1699379.5,
-   "rs_rating": 99,
-   "ueber_52w_tief_pct": 462.2
+   "ueber_52w_tief_pct": 241.9
   },
   "XNCR": {
    "firma": "Xencor Inc",
-   "vortagesschluss": 26.9,
-   "v50": 1177432.3,
+   "vortagesschluss": 26.62,
+   "v50": 1205488.3,
    "rs_rating": 95,
-   "ueber_52w_tief_pct": 240.1
+   "ueber_52w_tief_pct": 230.5
   }
  }
 }

@@ -1,13 +1,4 @@
 {
- "SSRM": {
-  "spring_index": 500,
-  "spring_datum": "2026-08-11",
-  "zone_min": 31.690000534057617,
-  "zone_max": 31.690000534057617,
-  "spring_low": 31.264999389648438,
-  "spring_volumen": 2009118.0,
-  "tage_gewartet": 15
- },
  "FROG": {
   "spring_index": 500,
   "spring_datum": "2026-09-02",
@@ -15,6 +6,15 @@
   "zone_max": 89.16000366210938,
   "spring_low": 88.0,
   "spring_volumen": 2203066.0,
+  "tage_gewartet": 1
+ },
+ "FSLY": {
+  "spring_index": 501,
+  "spring_datum": "2026-09-03",
+  "zone_min": 20.68000030517578,
+  "zone_max": 20.68000030517578,
+  "spring_low": 19.760000228881836,
+  "spring_volumen": 3708500.0,
   "tage_gewartet": 0
  }
 }

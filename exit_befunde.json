@@ -1,15 +1,123 @@
 {
- "handelstag": "2026-09-02",
- "gebaut_am": "2026-09-02T22:03:35",
+ "handelstag": "2026-09-03",
+ "gebaut_am": "2026-09-03T22:03:35",
  "befunde": [
   {
    "typ": "klimax_zeichen",
-   "titel": "KLIMAX: PRE",
-   "text": "PRE; Cup & Handle (Wochenbasis); Klimax-Zeichen 5 kanaluebershooting (+6,7 %); Verkauf in die Stärke erwägen; seit Trigger -2,5 % gleich -0,2 R",
-   "symbol": "PRE",
-   "key": "PRE|1",
+   "titel": "KLIMAX: ASST",
+   "text": "ASST; High & Tight Flag, Cup & Handle (Wochenbasis); Klimax-Zeichen 4 ma200 abstand (+82,7 %); Verkauf in die Stärke erwägen; seit Trigger +8,6 % gleich 0,9 R",
+   "symbol": "ASST",
+   "key": "ASST|1",
    "prioritaet": "high",
    "buendeln": false
+  },
+  {
+   "typ": "klimax_zeichen",
+   "titel": "KLIMAX: ASST",
+   "text": "ASST; High & Tight Flag, Cup & Handle (Wochenbasis); Klimax-Zeichen 5 kanaluebershooting (+16,7 %); Verkauf in die Stärke erwägen; seit Trigger +8,6 % gleich 0,9 R",
+   "symbol": "ASST",
+   "key": "ASST|1",
+   "prioritaet": "high",
+   "buendeln": false
+  },
+  {
+   "typ": "klimax_zeichen",
+   "titel": "KLIMAX: CRM",
+   "text": "CRM; Cup & Handle (Wochenbasis); Klimax-Zeichen 5 kanaluebershooting (+11,8 %); Verkauf in die Stärke erwägen; seit Trigger -0,0 % gleich -0,0 R",
+   "symbol": "CRM",
+   "key": "CRM|1",
+   "prioritaet": "high",
+   "buendeln": false
+  },
+  {
+   "typ": "klimax_zeichen",
+   "titel": "KLIMAX: CRNX",
+   "text": "CRNX; Cup & Handle (Wochenbasis); Klimax-Zeichen 4 ma200 abstand (+86,0 %); Verkauf in die Stärke erwägen; seit Trigger +0,1 % gleich 0,0 R",
+   "symbol": "CRNX",
+   "key": "CRNX|1",
+   "prioritaet": "high",
+   "buendeln": false
+  },
+  {
+   "typ": "zonenwechsel",
+   "titel": "Gewinnzonen",
+   "text": "CRNX; Cup & Handle (Wochenbasis); Zone leicht zu stark; seit Trigger +0,1 % gleich 0,0 R",
+   "symbol": "CRNX",
+   "key": "CRNX|1",
+   "prioritaet": "default",
+   "buendeln": true
+  },
+  {
+   "typ": "klimax_zeichen",
+   "titel": "KLIMAX: TEAM",
+   "text": "TEAM; High & Tight Flag, Cup & Handle (Wochenbasis); Klimax-Zeichen 4 ma200 abstand (+78,5 %); Verkauf in die Stärke erwägen; seit Trigger -1,3 % gleich -0,2 R",
+   "symbol": "TEAM",
+   "key": "TEAM|1",
+   "prioritaet": "high",
+   "buendeln": false
+  },
+  {
+   "typ": "klimax_zeichen",
+   "titel": "KLIMAX: TEAM",
+   "text": "TEAM; HTF Innen-Einstieg; Klimax-Zeichen 4 ma200 abstand (+78,5 %); Verkauf in die Stärke erwägen; seit Trigger +0,9 % gleich 0,2 R",
+   "symbol": "TEAM",
+   "key": "TEAM|2",
+   "prioritaet": "high",
+   "buendeln": false
+  },
+  {
+   "typ": "klimax_zeichen",
+   "titel": "KLIMAX: TWLO",
+   "text": "TWLO; Rectangle Top; Klimax-Zeichen 2 groesster tagesgewinn (+6,1 %); Verkauf in die Stärke erwägen; seit Trigger +2,8 % gleich 0,3 R",
+   "symbol": "TWLO",
+   "key": "TWLO|1",
+   "prioritaet": "high",
+   "buendeln": false
+  },
+  {
+   "typ": "zonenwechsel",
+   "titel": "Gewinnzonen",
+   "text": "TWLO; Rectangle Top; Zone leicht zu stark; seit Trigger +2,8 % gleich 0,3 R",
+   "symbol": "TWLO",
+   "key": "TWLO|1",
+   "prioritaet": "default",
+   "buendeln": true
+  },
+  {
+   "typ": "klimax_zeichen",
+   "titel": "KLIMAX: VLO",
+   "text": "VLO; VCP; Klimax-Zeichen 2 groesster tagesgewinn (+1,3 %); Verkauf in die Stärke erwägen; seit Trigger +5,0 % gleich 0,6 R",
+   "symbol": "VLO",
+   "key": "VLO|1",
+   "prioritaet": "high",
+   "buendeln": false
+  },
+  {
+   "typ": "zonenwechsel",
+   "titel": "Gewinnzonen",
+   "text": "VLO; VCP; Zone leicht zu stark; seit Trigger +5,0 % gleich 0,6 R",
+   "symbol": "VLO",
+   "key": "VLO|1",
+   "prioritaet": "default",
+   "buendeln": true
+  },
+  {
+   "typ": "klimax_zeichen",
+   "titel": "KLIMAX: ZETA",
+   "text": "ZETA; Cup & Handle (Wochenbasis); Klimax-Zeichen 2 groesster tagesgewinn (+7,4 %); Verkauf in die Stärke erwägen; seit Trigger +6,0 % gleich 0,6 R",
+   "symbol": "ZETA",
+   "key": "ZETA|1",
+   "prioritaet": "high",
+   "buendeln": false
+  },
+  {
+   "typ": "zonenwechsel",
+   "titel": "Gewinnzonen",
+   "text": "ZETA; Cup & Handle (Wochenbasis); Zone leicht zu stark; seit Trigger +6,0 % gleich 0,6 R",
+   "symbol": "ZETA",
+   "key": "ZETA|1",
+   "prioritaet": "default",
+   "buendeln": true
   }
  ]
 }
