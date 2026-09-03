@@ -326,6 +326,7 @@ def verarbeite(cik, accession, name, filing_utc, hole, frage, kette, log=print, 
         return eintrag
     if kopf["ergebnis"] is None and not re.search(r"item\s+2\.02", text, re.I):
         eintrag["hinweise"].append("Items unbekannt und kein Item 2.02 im Text")
+    eintrag["_text"] = text  # Volltext fuer das Pressetext-Archiv; lauf_strom nimmt ihn heraus
     gekuerzt = m8k.text_kuerzen(text)
     eintrag["text_zeichen"] = len(text)
     antwort, modell_ok = None, None
@@ -438,6 +439,15 @@ def lauf_strom(daten, stunden=6, hoechstens=0, kette=None, hole=None, frage=None
         e = verarbeite(cik, acc, name, upd, hole, frage, kette, log=log, firma_laden=firma_laden)
         e["ticker"] = ciks.get(cik)
         st = e["status"]
+        volltext = e.pop("_text", None)
+        if volltext:
+            try:
+                import pressetexte as pt
+                if not pt.vorhanden(daten, cik, acc):
+                    pt.speichern(daten, cik, e.get("ticker"), acc, (upd or "")[:10],
+                                 (e.get("werte") or {}).get("periodenende"), e.get("exhibit"), volltext, quelle="strom")
+            except Exception as ex:  # noqa
+                log(f"  {e.get('ticker')} {acc}: Pressetext nicht abgelegt: {str(ex)[:120]}")
         if st in ("vorlaeufig", "unsicher", "fehlgeschlagen"):
             ke._schreibe_json(_pfad(daten, e), e)
             _register(daten, e, "vorabwert")
@@ -740,6 +750,7 @@ def main():
         bremse = m8k.Bremse()
         e = verarbeite(a.cik, a.accession, "", None, fl.hole, lambda m, t: m8k.mistral_frage(m, t, bremse), kette,
                        firma_laden=_zeilen_lader())
+        e.pop("_text", None)
         print(json.dumps(e, ensure_ascii=False, indent=1))
         sys.exit(0)
     if not a.daten:

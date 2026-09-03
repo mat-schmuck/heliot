@@ -1,0 +1,88 @@
+name: Pressetexte (Archiv der Ergebnis-Pressemitteilungen)
+
+# Vorstufe zu Gerhards KI-Abfrage "Quartal ueber Quartal": holt fuer die
+# Firmen mit Konsens die juengsten Ergebnis-Pressemitteilungen (Anhang 99.1
+# der 8-Ks mit Item 2.02) als Klartext ins private Datenrepo, Ordner
+# pressetexte. Laeuft in Portionen (hoechstens N Firmen je Lauf, Vorgabe
+# 1200); Firmen mit frischem Stand werden uebersprungen, ein weiterer Lauf
+# setzt fort. Nur per Hand; laeuft auf dem Branch, von dem es gestartet
+# wird. Braucht die Secrets SEC_USER_AGENT und DATEN_TOKEN.
+
+on:
+  workflow_dispatch:
+    inputs:
+      hoechstens:
+        description: "hoechstens so viele Firmen in diesem Lauf (0 = alle)"
+        required: false
+        default: "1200"
+      ticker:
+        description: "nur diese Ticker, mit Beistrich getrennt (leer = alle Firmen mit Konsens)"
+        required: false
+        default: ""
+      quartale:
+        description: "je Firma die juengsten so vielen Ergebnis-8-Ks"
+        required: false
+        default: "8"
+
+concurrency:
+  group: pressetexte
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  archiv:
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    steps:
+      - name: Secrets pruefen
+        id: secrets
+        env:
+          DATEN_TOKEN: ${{ secrets.DATEN_TOKEN }}
+          SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
+        run: |
+          da=ja
+          if [ -z "$DATEN_TOKEN" ]; then echo "Secret DATEN_TOKEN fehlt."; da=nein; fi
+          if [ -z "$SEC_USER_AGENT" ]; then echo "Secret SEC_USER_AGENT fehlt."; da=nein; fi
+          echo "da=$da" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        if: steps.secrets.outputs.da == 'ja'
+        with:
+          repository: mat-schmuck/heliot-daten
+          token: ${{ secrets.DATEN_TOKEN }}
+          path: daten
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Abhaengigkeiten
+        run: pip install beautifulsoup4 lxml pandas
+      - name: Selbsttest
+        run: python pressetexte.py --selbsttest
+      - name: Archiv
+        if: steps.secrets.outputs.da == 'ja'
+        env:
+          SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
+        run: python pressetexte.py --daten daten --hoechstens "${{ inputs.hoechstens }}" --ticker "${{ inputs.ticker }}" --quartale "${{ inputs.quartale }}"
+      - name: Ins Datenrepo
+        if: always() && steps.secrets.outputs.da == 'ja'
+        run: |
+          cd daten
+          git config user.name "heliot-pressetexte"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Nichts Neues."
+            exit 0
+          fi
+          git commit -q -m "Pressetexte $(date -u +%Y-%m-%d_%H%MZ)"
+          for versuch in 1 2 3; do
+            if git push --quiet origin main; then
+              echo "Gesichert."
+              exit 0
+            fi
+            git pull --rebase --quiet origin main || true
+          done
+          echo "Push nach drei Anlaeufen gescheitert."
+          exit 1
