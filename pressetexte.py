@@ -146,7 +146,7 @@ _ANHANG_NAME = re.compile(r"ex(hibit|hbit)?[-_]?99|earnings|press.?r|release|res
 _HAUPTDOKUMENT_NAME = re.compile(r"^[a-z]{1,6}-?\d{8}\.htm|^d\d+d8k\d*\.htm|8-?k\.htm$", re.I)
 
 
-def exhibit(cik, accession, hole, prim=None):
+def exhibit(cik, accession, hole, prim=None, pruefen=True):
     """(Dateiname, Klartext) des Ergebnis-Anhangs eines 8-K, sonst (Name, None) fuer 'leer' oder (None, None);
     Anhaenge heissen ex99, exhibit991, exhbit991 (Tesla), earningsrelease (Booking) - das Hauptdokument (prim,
     sonst am Namensmuster erkannt) nur, wenn sonst nichts da ist. Jeder Kandidat muss Ergebnisinhalt tragen:
@@ -178,7 +178,7 @@ def exhibit(cik, accession, hole, prim=None):
     except UnicodeDecodeError:
         html_roh = roh.decode("latin-1")
     text = m8k.html_zu_text(html_roh)
-    if not ist_ergebnistext_8k(text):
+    if pruefen and not ist_ergebnistext_8k(text):
         return name, None   # Auslieferungsbericht, Deckblatt, Vertrag: kein Ergebnistext
     return name, text
 
@@ -616,10 +616,10 @@ def probe_8k(ticker, hole=None, hoechstens=12, log=print):
             time.sleep(0.2)
             dateien = ", ".join(f"{d.get('name')} {d.get('size')}" for d in index.get("directory", {}).get("item", [])
                                 if d.get("name", "").lower().endswith((".htm", ".html")))
-            name, text = exhibit(cik, acc, hole, prim=prim)
+            name, text = exhibit(cik, acc, hole, prim=prim, pruefen=False)
             time.sleep(0.2)
-            log(f"  {fd} {acc}: Dateien {dateien} -> Wahl {name}, {len(text or '')} Zeichen"
-                + ("" if text else " (kein Ergebnistext)"))
+            log(f"  {fd} {acc}: Dateien {dateien} -> Wahl {name}, {len(text or '')} Zeichen, Kriterien {kriterien(text or '')}, "
+                f"Ergebnistext {'ja' if ist_ergebnistext_8k(text or '') else 'NEIN'}; Kopf: {' '.join((text or '')[:160].split())}")
         except Exception as e:  # noqa
             log(f"  {fd} {acc}: Ordner nicht lesbar: {str(e)[:120]}")
     return achtks
