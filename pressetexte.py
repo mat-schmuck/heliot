@@ -183,15 +183,25 @@ def exhibit(cik, accession, hole, prim=None, pruefen=True):
     return name, text
 
 
+_VERTRAG_KOPF = re.compile(r"credit agreement|purchase agreement|indenture|underwriting agreement|by and among|by and between|"
+                           r"appendix 5b|employment agreement|merger agreement", re.I)
+_ERGEBNISWORT = re.compile(r"revenue|net (income|loss|earnings)|earnings per share|operating income|net sales|financial results|"
+                           r"results of operations|adjusted ebitda", re.I)
+
+
 def ist_ergebnistext_8k(text):
-    """Milde Ergebnispruefung fuer Anhaenge von Item-2.02-8-Ks: genug Betraege und Ergebniswoerter; die
-    Ausschlussliste der 6-K-Pruefung gilt hier nicht (Teslas Deck erwaehnt das Proxy Statement)."""
-    if not text or len(text) < 1500:
+    """Milde Ergebnispruefung fuer Anhaenge von Item-2.02-8-Ks: Ergebniswoerter und ein paar Betraege, kein
+    Vertrag im Kopf. Die 6-K-Kriterien (Musterarten, Trefferdichte) sind fuer kurze Pressemitteilungen zu
+    scharf (Atmos, Monopar, Sable fielen mit 6.000 bis 12.000 Zeichen durch), die 6-K-Ausschlussliste greift
+    hier nicht (Teslas Deck erwaehnt das Proxy Statement). Teslas Auslieferungsbericht (Fahrzeuge, keine
+    Ergebniszahl) und XBRL-Deckblaetter bleiben leer."""
+    if not text or len(text) < 800:
         return False
-    punkte, zahlen, treffer = kriterien(text)
-    if punkte < 3 or zahlen < 5 or treffer < 4:
+    if _VERTRAG_KOPF.search(text[:2500]):
         return False
-    return bool(re.search(r"revenue|net (income|loss|earnings)|earnings per share|operating income|net sales", text, re.I))
+    if not _ERGEBNISWORT.search(text):
+        return False
+    return kriterien(text)[1] >= 3
 
 
 def ist_viewerdatei(name):
