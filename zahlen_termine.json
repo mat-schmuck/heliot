@@ -1,5 +1,5 @@
 {
- "gebaut_am": "2026-09-04 00:03 Wien",
+ "gebaut_am": "2026-09-05 00:03 Wien",
  "ohne_termin": [
   "BLSM",
   "PSQL",
@@ -201,12 +201,11 @@
    ]
   },
   "BRC": {
-   "datum": "2026-09-03",
-   "uhrzeit": "06:00",
+   "datum": "2026-11-17",
+   "uhrzeit": "07:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo",
-    "nasdaq"
+    "yahoo"
    ]
   },
   "BRZE": {
@@ -651,12 +650,11 @@
    ]
   },
   "IOT": {
-   "datum": "2026-09-03",
-   "uhrzeit": "16:00",
-   "lage": "nachboerslich",
+   "datum": "2026-12-03",
+   "uhrzeit": "15:00",
+   "lage": "im_handel",
    "quellen": [
-    "yahoo",
-    "nasdaq"
+    "yahoo"
    ]
   },
   "ITT": {
@@ -893,12 +891,11 @@
    ]
   },
   "PATH": {
-   "datum": "2026-09-03",
-   "uhrzeit": "16:00",
-   "lage": "nachboerslich",
+   "datum": "2026-12-02",
+   "uhrzeit": "15:00",
+   "lage": "im_handel",
    "quellen": [
-    "yahoo",
-    "nasdaq"
+    "yahoo"
    ]
   },
   "PBF": {
@@ -1190,12 +1187,11 @@
    ]
   },
   "VSXY": {
-   "datum": "2026-09-03",
+   "datum": "2026-12-03",
    "uhrzeit": "07:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo",
-    "nasdaq"
+    "yahoo"
    ]
   },
   "WES": {

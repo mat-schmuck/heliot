@@ -1,15 +1,7 @@
 {
- "gebaut_am": "2026-09-03T22:03:39",
- "handelstag": "2026-09-03",
+ "gebaut_am": "2026-09-04T22:03:56",
+ "handelstag": "2026-09-04",
  "geladen": 36,
  "unfertig": [],
- "treffer": [
-  {
-   "etf": "ARKK",
-   "name": "Innovation/Growth",
-   "richtung": "hoch",
-   "volumen_pct": 63.3,
-   "kurs": 87.14
-  }
- ]
+ "treffer": []
 }
