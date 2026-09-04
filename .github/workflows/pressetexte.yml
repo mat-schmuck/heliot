@@ -23,6 +23,10 @@ on:
         description: "je Firma die juengsten so vielen Ergebnis-8-Ks"
         required: false
         default: "8"
+      modus:
+        description: "archiv (8-K), 6k (Ergebnismitteilungen auslaendischer Emittenten ueber die SEC-Volltextsuche) oder probe6k (nur anzeigen, mit ticker)"
+        required: false
+        default: "archiv"
 
 concurrency:
   group: pressetexte
@@ -64,7 +68,7 @@ jobs:
         if: steps.secrets.outputs.da == 'ja'
         env:
           SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
-        run: python pressetexte.py --daten daten --hoechstens "${{ inputs.hoechstens }}" --ticker "${{ inputs.ticker }}" --quartale "${{ inputs.quartale }}"
+        run: python pressetexte.py --daten daten --hoechstens "${{ inputs.hoechstens }}" --ticker "${{ inputs.ticker }}" --quartale "${{ inputs.quartale }}" --modus "${{ inputs.modus }}"
       - name: Ins Datenrepo
         if: always() && steps.secrets.outputs.da == 'ja'
         run: |

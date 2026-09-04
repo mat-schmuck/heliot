@@ -34,6 +34,10 @@ TEXT_DECKEL = 80000
 PAUSE_S = 0.13
 FRISCH_TAGE = 20
 ORDNER = "pressetexte"
+EFTS = ("https://efts.sec.gov/LATEST/search-index?q={q}&forms=6-K&ciks={cik10}&startdt={von}&enddt={bis}")
+SECHS_K_SUCHE = '"quarter" results'   # Volltextsuche der SEC: alle Woerter muessen vorkommen
+SECHS_K_TAGE = 760                    # zwei Jahre, also acht Quartale
+SECHS_K_JE_FILING = 3                 # hoechstens so viele Anhaenge je 6-K laden
 
 
 # ---------------------------------------------------------------------------
@@ -171,6 +175,187 @@ def firmen(daten, ticker_zu_cik, nur=None):
                 bestand[t] = {}
     raus = va.hauptticker(bestand, ticker_zu_cik)
     return sorted(raus.items(), key=lambda kv: kv[1])
+
+
+# ---------------------------------------------------------------------------
+# 6-K (auslaendische Emittenten): Ergebnismitteilungen ohne Item-Kennung
+# ---------------------------------------------------------------------------
+
+def sechs_k_treffer(antwort_json):
+    """Treffer der SEC-Volltextsuche als [{accession, datei, file_type, file_date, period_ending}];
+    nur Anhaenge (EX-99...) oder das Hauptdokument des 6-K."""
+    raus = []
+    for h in (antwort_json.get("hits") or {}).get("hits") or []:
+        kennung = h.get("_id") or ""
+        if ":" not in kennung:
+            continue
+        acc, datei = kennung.split(":", 1)
+        s = h.get("_source") or {}
+        art = (s.get("file_type") or "").upper()
+        if not (art.startswith("EX-99") or art == "6-K"):
+            continue
+        raus.append({"accession": acc, "datei": datei, "file_type": art, "file_date": s.get("file_date"),
+                     "period_ending": s.get("period_ending")})
+    return raus
+
+
+_MUSTER_ERGEBNIS = (
+    re.compile(r"net (income|profit|loss|earnings)|profit (for|after)|EBITDA|operating (income|profit|result)", re.I),
+    re.compile(r"revenue|net sales|turnover|total sales", re.I),
+    re.compile(r"(first|second|third|fourth) quarter|\bQ[1-4]\b|three months|six months|half[- ]year|nine months|"
+               r"full[- ]year|fiscal (year|20\d\d)|interim", re.I),
+    re.compile(r"(per share|per ADS|EPS|earnings per)", re.I),
+)
+
+
+def ist_ergebnismitteilung(text):
+    """(ja/nein, Punkte): Ergebnismitteilung, wenn Ergebnis-, Umsatz- und Periodenwoerter vorkommen
+    und genug Zahlen mit Waehrung darin stehen."""
+    if not text or len(text) < 1500:
+        return False, 0
+    punkte = sum(1 for m in _MUSTER_ERGEBNIS if m.search(text))
+    zahlen = len(re.findall(r"(?:US\$|\$|EUR|€|R\$|CHF|£|¥|USD|BRL)\s?\d[\d,.]*\s?(?:million|billion|mn|bn|m|thousand)?", text))
+    treffer = sum(len(m.findall(text)) for m in _MUSTER_ERGEBNIS[:2])
+    ja = punkte >= 3 and zahlen >= 5 and treffer >= 4
+    return ja, punkte * 10 + min(treffer, 50) + min(zahlen, 50)
+
+
+def sechs_k_ergebnisse(cik, hole, heute, quartale=QUARTALE, log=print, warte=True):
+    """[(filing_datum, period_ending, accession, datei, text)] der juengsten Ergebnis-6-Ks einer Firma:
+    eine Volltextsuche der SEC, dann je Einreichung die Anhaenge, der beste Text je Einreichung,
+    hoechstens einer je Kalendermonat, juengste zuerst."""
+    von = (heute - dt.timedelta(days=SECHS_K_TAGE)).isoformat()
+    url = EFTS.format(q=SECHS_K_SUCHE.replace('"', "%22").replace(" ", "%20"), cik10=f"{int(cik):010d}",
+                      von=von, bis=heute.isoformat())
+    antwort = json.loads(hole(url))
+    if warte:
+        time.sleep(PAUSE_S)
+    treffer = sechs_k_treffer(antwort)
+    je_filing = {}
+    for tr in treffer:
+        je_filing.setdefault(tr["accession"], []).append(tr)
+    kandidaten = []
+    for acc, liste in je_filing.items():
+        anhaenge = [x for x in liste if x["file_type"].startswith("EX-99")] or liste
+        bester = None
+        for x in anhaenge[:SECHS_K_JE_FILING]:
+            ordner = f"https://www.sec.gov/Archives/edgar/data/{int(cik)}/{acc.replace('-', '')}"
+            try:
+                roh = hole(ordner + "/" + x["datei"])
+            except Exception as e:  # noqa
+                log(f"    {acc} {x['datei']}: nicht lesbar: {str(e)[:100]}")
+                continue
+            if warte:
+                time.sleep(PAUSE_S)
+            try:
+                html_roh = roh.decode("utf-8")
+            except UnicodeDecodeError:
+                html_roh = roh.decode("latin-1")
+            import messung_8k as m8k
+            text = m8k.html_zu_text(html_roh)
+            ja, punkte = ist_ergebnismitteilung(text)
+            if ja and (bester is None or punkte > bester[0]):
+                bester = (punkte, x, text)
+        if bester:
+            punkte, x, text = bester
+            kandidaten.append((x["file_date"] or "", x.get("period_ending") or "", acc, x["datei"], text, punkte))
+    kandidaten.sort(key=lambda k: (k[0], k[2]), reverse=True)
+    raus, monate = [], set()
+    for fd, pe, acc, datei, text, punkte in kandidaten:
+        monat = (fd or "")[:7]
+        if monat in monate:
+            continue
+        monate.add(monat)
+        raus.append((fd, pe, acc, datei, text))
+        if len(raus) >= quartale:
+            break
+    return raus
+
+
+def firmen_ohne_8k(daten):
+    """[(cik, ticker)] der Firmen, deren Stand keine Ergebnis-8-Ks kennt (Kandidaten fuer 6-K)."""
+    stand = stand_laden(daten)
+    raus = [(int(cik), s.get("ticker")) for cik, s in stand.items() if not s.get("accessions")]
+    return sorted(raus, key=lambda kv: kv[1] or "")
+
+
+def lauf_6k(daten, hoechstens=0, quartale=QUARTALE, nur=None, hole=None, log=print, jetzt=None, warte=True):
+    if hole is None:
+        import fundament_lauf as fl
+        if not fl.UA:
+            raise RuntimeError("SEC_USER_AGENT fehlt (Secret im Actions-Lauf).")
+        hole = fl.hole
+    jetzt = jetzt or dt.datetime.now(dt.timezone.utc)
+    heute = jetzt.date()
+    stand = stand_laden(daten)
+    liste = firmen_ohne_8k(daten)
+    if nur:
+        gewuenscht = {x.strip().upper() for x in nur if x.strip()}
+        liste = [(c, tck) for c, tck in liste if (tck or "").upper() in gewuenscht]
+    bilanz = {"zeit": jetzt.replace(microsecond=0).isoformat(), "modus": "6k", "firmen_gesamt": len(liste), "firmen": 0,
+              "uebersprungen": 0, "texte_neu": 0, "texte_da": 0, "ohne_ergebnis": 0, "fehler": 0, "abbruch": None}
+    log(f"Firmen ohne Ergebnis-8-K: {len(liste)}; 6-K-Suche ueber die SEC-Volltextsuche, je Firma hoechstens {quartale} Mitteilungen")
+    for cik, ticker in liste:
+        if hoechstens and bilanz["firmen"] >= hoechstens:
+            bilanz["abbruch"] = "Portion voll"
+            break
+        s = stand.get(str(cik)) or {}
+        sk = s.get("sechs_k") or {}
+        if sk.get("zeit") and not nur:
+            try:
+                if (jetzt - dt.datetime.fromisoformat(sk["zeit"])).days < FRISCH_TAGE:
+                    bilanz["uebersprungen"] += 1
+                    continue
+            except ValueError:
+                pass
+        try:
+            ergebnisse = sechs_k_ergebnisse(cik, hole, heute, quartale, log=log, warte=warte)
+        except Exception as e:  # noqa
+            bilanz["fehler"] += 1
+            log(f"  {ticker} {cik}: 6-K-Suche gescheitert: {str(e)[:120]}")
+            continue
+        neu = da = 0
+        for fd, pe, acc, datei, text in ergebnisse:
+            if vorhanden(daten, cik, acc):
+                da += 1
+                continue
+            speichern(daten, cik, ticker, acc, fd, pe, datei, text, quelle="archiv-6k")
+            neu += 1
+        s["sechs_k"] = {"zeit": jetzt.replace(microsecond=0).isoformat(), "accessions": [e[2] for e in ergebnisse]}
+        s.setdefault("ticker", ticker)
+        stand[str(cik)] = s
+        bilanz["firmen"] += 1
+        bilanz["texte_neu"] += neu
+        bilanz["texte_da"] += da
+        if not ergebnisse:
+            bilanz["ohne_ergebnis"] += 1
+        log(f"  {ticker} {cik}: {len(ergebnisse)} Ergebnis-6-Ks, {neu} neu, {da} vorhanden")
+        if bilanz["firmen"] % 100 == 0:
+            stand_schreiben(daten, stand)
+    stand_schreiben(daten, stand)
+    with io.open(os.path.join(daten, ORDNER, "laeufe.jsonl"), "a", encoding="utf-8") as f:
+        f.write(json.dumps(bilanz, ensure_ascii=False) + "\n")
+    log(f"Ergebnis: {bilanz}")
+    return bilanz
+
+
+def probe_6k(ticker, hole=None, jetzt=None, log=print):
+    """Zeigt fuer eine Firma, was die 6-K-Suche findet, ohne zu speichern."""
+    import fundament_lauf as fl
+    if hole is None:
+        if not fl.UA:
+            raise RuntimeError("SEC_USER_AGENT fehlt (Secret im Actions-Lauf).")
+        hole = fl.hole
+    cik = fl.ticker_zu_cik().get(ticker.upper())
+    if not cik:
+        log(f"{ticker}: keine CIK")
+        return []
+    heute = (jetzt or dt.datetime.now(dt.timezone.utc)).date()
+    ergebnisse = sechs_k_ergebnisse(cik, hole, heute, log=log)
+    log(f"{ticker} CIK {cik}: {len(ergebnisse)} Ergebnis-6-Ks")
+    for fd, pe, acc, datei, text in ergebnisse:
+        log(f"  {fd} Periode {pe or '?'} {acc} {datei} {len(text)} Zeichen: {text[:160].replace(chr(10), ' ')}")
+    return ergebnisse
 
 
 # ---------------------------------------------------------------------------
@@ -353,6 +538,42 @@ def selbsttest() -> int:
         p("Ablage ist byte-gleich bei gleichem Text (kein Zeitstempel im gzip)", b1 == b2 and text_lesen(tmp, 2, "0000000002-26-000001") == "gleicher Text")
         p("Deckel: langer Text wird gekuerzt und als gekuerzt vermerkt",
           m["gekuerzt"] and m["zeichen"] < TEXT_DECKEL + 100 and text_lesen(tmp, 1, "0000000001-26-000001").endswith("Zeichen ...]"), m)
+        efts = {"hits": {"hits": [
+            {"_id": "0001193125-26-200001:d1ex991.htm", "_source": {"file_type": "EX-99.1", "file_date": "2026-08-05", "period_ending": "2026-06-30"}},
+            {"_id": "0001193125-26-200001:d1.htm", "_source": {"file_type": "6-K", "file_date": "2026-08-05"}},
+            {"_id": "0001193125-26-100001:d2ex991.htm", "_source": {"file_type": "EX-99.1", "file_date": "2026-05-06", "period_ending": "2026-03-31"}},
+            {"_id": "0001193125-26-100002:d3ex991.htm", "_source": {"file_type": "EX-99.1", "file_date": "2026-05-20", "period_ending": None}},
+            {"_id": "0001193125-26-050001:d4ex992.htm", "_source": {"file_type": "EX-99.2", "file_date": "2026-02-10"}},
+            {"_id": "0001193125-26-000001:graphic.jpg", "_source": {"file_type": "GRAPHIC", "file_date": "2026-01-10"}}]}}
+        tr = sechs_k_treffer(efts)
+        p("6-K-Treffer: Anhaenge und Hauptdokument, keine Grafiken", len(tr) == 5 and tr[0]["accession"] == "0001193125-26-200001", tr)
+        ergebnis_html = ("<html><body><p>Ambev reports second quarter 2026 results. Net revenue reached R$ 20,500 million, up 8%. "
+                         "Net income was R$ 3,200 million; EBITDA R$ 9,100 million; EPS R$ 0.20 per share. "
+                         "Revenue in Brazil US$ 1,100 million, Canada US$ 400 million, R$ 500 million, R$ 600 million, R$ 700 million. "
+                         "Three months ended June 30, 2026.</p>" + "<p>More text about the quarter and revenue.</p>" * 40 + "</body></html>")
+        dividende_html = "<html><body><p>Notice of dividend payment. The board approved a dividend of R$ 0.10 per share payable in July.</p>" + "<p>x</p>" * 300 + "</body></html>"
+        ja, _ = ist_ergebnismitteilung(ergebnis_html)
+        nein, _ = ist_ergebnismitteilung(dividende_html)
+        p("Erkennung: Ergebnismitteilung ja, Dividendenmeldung nein", ja and not nein)
+
+        def hole6(url):
+            if "efts.sec.gov" in url:
+                return json.dumps(efts).encode("utf-8")
+            if "d4ex992" in url or "d3ex991" in url:
+                return dividende_html.encode("utf-8")
+            return ergebnis_html.encode("utf-8")
+        e6 = sechs_k_ergebnisse(1565025, hole6, dt.date(2026, 9, 4), log=lambda *_: None, warte=False)
+        p("6-K-Ergebnisse: je Einreichung der beste Anhang, Dividendenmeldungen verworfen, juengste zuerst",
+          [x[2] for x in e6] == ["0001193125-26-200001", "0001193125-26-100001"] and e6[0][1] == "2026-06-30", [(x[0], x[2]) for x in e6])
+        stand6 = stand_laden(tmp)
+        stand6["1565025"] = {"ticker": "ABEV", "accessions": [], "vollstaendig": True, "zeit": "2026-09-03T00:00:00+00:00"}
+        stand_schreiben(tmp, stand6)
+        b7 = lauf_6k(tmp, hole=hole6, log=lambda *_: None, jetzt=dt.datetime(2026, 9, 4, tzinfo=dt.timezone.utc), warte=False)
+        p("6-K-Lauf: Firma ohne 8-K bekommt ihre Ergebnis-6-Ks, Stand merkt sie",
+          b7["firmen"] == 1 and b7["texte_neu"] == 2 and vorhanden(tmp, 1565025, "0001193125-26-200001")
+          and stand_laden(tmp)["1565025"]["sechs_k"]["accessions"] == ["0001193125-26-200001", "0001193125-26-100001"], b7)
+        b8 = lauf_6k(tmp, hole=hole6, log=lambda *_: None, jetzt=dt.datetime(2026, 9, 5, tzinfo=dt.timezone.utc), warte=False)
+        p("6-K-Lauf am naechsten Tag: uebersprungen", b8["uebersprungen"] == 1 and b8["firmen"] == 0, b8)
         b6 = lauf(tmp, hoechstens=1, quartale=8, hole=hole, ticker_zu_cik=tzc, log=lambda *_: None,
                   jetzt=dt.datetime(2026, 11, 3, tzinfo=dt.timezone.utc), warte=False)
         p("Portion: hoechstens eine Firma je Lauf, Abbruchgrund genannt",
@@ -367,11 +588,19 @@ def main():
     ap.add_argument("--hoechstens", type=int, default=1200)
     ap.add_argument("--quartale", type=int, default=QUARTALE)
     ap.add_argument("--ticker", default="", help="nur diese Ticker, mit Beistrich getrennt")
+    ap.add_argument("--modus", default="archiv", choices=["archiv", "6k", "probe6k"])
     ap.add_argument("--selbsttest", action="store_true")
     a = ap.parse_args()
     if a.selbsttest:
         return selbsttest()
     nur = [t for t in a.ticker.split(",") if t.strip()] or None
+    if a.modus == "probe6k":
+        for tck in (nur or []):
+            probe_6k(tck)
+        return 0
+    if a.modus == "6k":
+        b = lauf_6k(a.daten, hoechstens=a.hoechstens, quartale=a.quartale, nur=nur)
+        return 1 if b["fehler"] and not b["firmen"] else 0
     b = lauf(a.daten, hoechstens=a.hoechstens, quartale=a.quartale, nur=nur)
     return 1 if b["fehler"] and not b["firmen"] else 0
 
