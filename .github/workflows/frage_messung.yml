@@ -33,6 +33,10 @@ on:
         description: "Nachrichtenlage: Websuche ueber Groq (gpt-oss-20b mit browser_search, Secret GROQ_API_KEY), Rueckfall Yahoo-Feed (an oder aus)"
         required: false
         default: "an"
+      probe:
+        description: "leer = Messung; mistral = nur Kleinstanfrage je Modell mit Ratenbegrenzungs-Kopfzeilen (keine Ablage)"
+        required: false
+        default: ""
 
 concurrency:
   group: frage-messung
@@ -78,7 +82,7 @@ jobs:
           SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
           MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-        run: python frage_messung.py --daten daten --ticker "${{ inputs.ticker }}" --frage "${{ inputs.frage }}" --modelle "${{ inputs.modelle }}" --quartale "${{ inputs.quartale }}" --websuche "${{ inputs.websuche }}"
+        run: python frage_messung.py --daten daten --ticker "${{ inputs.ticker }}" --frage "${{ inputs.frage }}" --modelle "${{ inputs.modelle }}" --quartale "${{ inputs.quartale }}" --websuche "${{ inputs.websuche }}" --probe "${{ inputs.probe }}"
       - name: Ins Datenrepo
         if: always() && steps.secrets.outputs.da == 'ja'
         run: |
