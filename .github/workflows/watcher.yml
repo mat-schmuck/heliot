@@ -111,6 +111,9 @@ jobs:
           # damit niemand glaubt, der Wächter hinge noch daran.
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
           NTFY_EMAIL: ${{ secrets.NTFY_EMAIL }}
+          # Adresse der Handels-App: haengt an jede Meldung die
+          # Klick-Adresse mit den Zahlen des Alarms.
+          HANDEL_URL: ${{ secrets.HANDEL_URL }}
         run: |
           if [ ! -f kaufpunkte.xlsx ]; then
             echo "Keine kaufpunkte.xlsx gefunden — erst den Scanner laufen lassen."

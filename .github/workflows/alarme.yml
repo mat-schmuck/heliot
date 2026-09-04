@@ -349,6 +349,9 @@ jobs:
         env:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
           NTFY_EMAIL: ${{ secrets.NTFY_EMAIL }}
+          # Adresse der Handels-App: haengt an jede Meldung die
+          # Klick-Adresse mit den Zahlen des Alarms.
+          HANDEL_URL: ${{ secrets.HANDEL_URL }}
         run: python breakout_watcher.py --testpush
 
       # --- Aufraeumen: einzelne Alarme gezielt entfernen ---
