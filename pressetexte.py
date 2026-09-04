@@ -784,10 +784,10 @@ def selbsttest() -> int:
                 return sub_json(cik, 10)
             if url.endswith("index.json"):
                 acc = re.search(r"/(\d{18})/index", url).group(1)
-                if acc.endswith(("000000", "000001")) and acc.startswith("0000001318"):
+                if acc.endswith(("000009", "000008")) and acc.startswith("0000001318"):
                     return json.dumps({"directory": {"item": [{"name": "tsla-2026.htm", "size": 3000},
                                                                {"name": "R1.htm", "size": 12000}]}}).encode("utf-8")
-                if acc.endswith("000002") and acc.startswith("0000001318"):
+                if acc.endswith("000007") and acc.startswith("0000001318"):
                     return json.dumps({"directory": {"item": [{"name": "pressrelease.htm", "size": 9000},
                                                                {"name": "R1.htm", "size": 12000}]}}).encode("utf-8")
                 return json.dumps({"directory": {"item": [{"name": "a-ex99_1.htm", "size": 5000}]}}).encode("utf-8")
@@ -803,7 +803,7 @@ def selbsttest() -> int:
         p("Leere 8-Ks zaehlen nicht: Tesla bekommt trotz zwei Auslieferungs-8-Ks (Hauptdokument ohne Ergebnis, R1.htm nie) 8 Texte, "
           "das Hauptdokument mit Ergebnisinhalt zaehlt; JPMorgan holt 5 aus der aelteren Liste dazu",
           b7["texte_neu"] == 16 and b7["ohne_exhibit"] == 2 and len(st7["1318"]["accessions"]) == 8 and len(st7["19617"]["accessions"]) == 8
-          and sorted(st7["1318"]["leer"]) == ["0000001318-26-000000", "0000001318-26-000001"]
+          and sorted(st7["1318"]["leer"]) == ["0000001318-26-000008", "0000001318-26-000009"]
           and not any(i["exhibit"] == "R1.htm" for i in idx7) and any(i["exhibit"] == "pressrelease.htm" for i in idx7),
           (b7, {k: (len(v["accessions"]), list(v["leer"])) for k, v in st7.items() if k in ("1318", "19617")}))
         ke._schreibe_json(os.path.join(tmp, "konsens", "firmen_mit_konsens.json"), {"AAPL": {}, "BF-B": {}})
