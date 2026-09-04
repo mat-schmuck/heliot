@@ -35,7 +35,10 @@ PAUSE_S = 0.13
 FRISCH_TAGE = 20
 ORDNER = "pressetexte"
 EFTS = ("https://efts.sec.gov/LATEST/search-index?q={q}&forms=6-K&ciks={cik10}&startdt={von}&enddt={bis}")
-SECHS_K_SUCHE = '"quarter" results'   # Volltextsuche der SEC: alle Woerter muessen vorkommen
+SECHS_K_SUCHEN = ('"quarter" results', '"half-year" results', '"interim" results', '"trading update"',
+                  '"first half" results', '"full year" results')   # Volltextsuche der SEC: alle Woerter muessen vorkommen
+SECHS_K_MAX_ZEICHEN = 400000          # groessere Dokumente sind Berichtshefte oder Hauptversammlungsunterlagen, keine Mitteilungen
+KOPF_BEI_KUERZUNG = 20000             # ueberlange Texte: Kopf plus Fenster um die Kennzahlzeilen statt hartem Schnitt
 SECHS_K_TAGE = 760                    # zwei Jahre, also acht Quartale
 SECHS_K_JE_FILING = 3                 # hoechstens so viele Anhaenge je 6-K laden
 
@@ -69,7 +72,8 @@ def speichern(daten, cik, ticker, accession, filed, report, exhibit, text, quell
     text = (text or "").strip()
     gekuerzt = len(text) > TEXT_DECKEL
     if gekuerzt:
-        text = text[:TEXT_DECKEL] + "\n[... gekuerzt auf " + str(TEXT_DECKEL) + " Zeichen ...]"
+        import messung_8k as m8k
+        text = m8k.text_kuerzen(text, limit=TEXT_DECKEL, kopf=KOPF_BEI_KUERZUNG)
     p = text_pfad(daten, cik, accession)
     os.makedirs(os.path.dirname(p), exist_ok=True)
     # mtime 0: derselbe Text ergibt immer dieselben Bytes; sonst legen Strom und Archiv-Portion
@@ -225,15 +229,21 @@ def sechs_k_ergebnisse(cik, hole, heute, quartale=QUARTALE, log=print, warte=Tru
     eine Volltextsuche der SEC, dann je Einreichung die Anhaenge, der beste Text je Einreichung,
     hoechstens einer je Kalendermonat, juengste zuerst."""
     von = (heute - dt.timedelta(days=SECHS_K_TAGE)).isoformat()
-    url = EFTS.format(q=SECHS_K_SUCHE.replace('"', "%22").replace(" ", "%20"), cik10=f"{int(cik):010d}",
-                      von=von, bis=heute.isoformat())
-    antwort = json.loads(hole(url))
-    if warte:
-        time.sleep(PAUSE_S)
-    treffer = sechs_k_treffer(antwort)
     je_filing = {}
-    for tr in treffer:
-        je_filing.setdefault(tr["accession"], []).append(tr)
+    for suche in SECHS_K_SUCHEN:
+        url = EFTS.format(q=suche.replace('"', "%22").replace(" ", "%20"), cik10=f"{int(cik):010d}",
+                          von=von, bis=heute.isoformat())
+        try:
+            antwort = json.loads(hole(url))
+        except Exception as e:  # noqa
+            log(f"    Volltextsuche {suche}: {str(e)[:100]}")
+            continue
+        if warte:
+            time.sleep(PAUSE_S)
+        for tr in sechs_k_treffer(antwort):
+            liste = je_filing.setdefault(tr["accession"], [])
+            if all(x["datei"] != tr["datei"] for x in liste):
+                liste.append(tr)
     kandidaten = []
     for acc, liste in je_filing.items():
         anhaenge = [x for x in liste if x["file_type"].startswith("EX-99")] or liste
@@ -253,23 +263,26 @@ def sechs_k_ergebnisse(cik, hole, heute, quartale=QUARTALE, log=print, warte=Tru
                 html_roh = roh.decode("latin-1")
             import messung_8k as m8k
             text = m8k.html_zu_text(html_roh)
+            if len(text) > SECHS_K_MAX_ZEICHEN:
+                continue
             ja, punkte = ist_ergebnismitteilung(text)
             if ja and (bester is None or punkte > bester[0]):
                 bester = (punkte, x, text)
         if bester:
             punkte, x, text = bester
             kandidaten.append((x["file_date"] or "", x.get("period_ending") or "", acc, x["datei"], text, punkte))
-    kandidaten.sort(key=lambda k: (k[0], k[2]), reverse=True)
-    raus, monate = [], set()
+    # je Periode nur der beste Text (Pressemitteilung schlaegt Quartalsbericht); ohne belastbare
+    # Periodenangabe (die Volltextsuche setzt sie bei 6-K oft auf das Einreichdatum) zaehlt der Monat
+    kandidaten.sort(key=lambda k: k[5], reverse=True)
+    raus, schluessel = [], set()
     for fd, pe, acc, datei, text, punkte in kandidaten:
-        monat = (fd or "")[:7]
-        if monat in monate:
+        s = pe if (pe and pe != fd) else (fd or "")[:7]
+        if s in schluessel:
             continue
-        monate.add(monat)
-        raus.append((fd, pe, acc, datei, text))
-        if len(raus) >= quartale:
-            break
-    return raus
+        schluessel.add(s)
+        raus.append((fd, pe if (pe and pe != fd) else "", acc, datei, text))
+    raus.sort(key=lambda k: (k[0], k[2]), reverse=True)
+    return raus[:quartale]
 
 
 def firmen_ohne_8k(daten):
@@ -536,17 +549,18 @@ def selbsttest() -> int:
         speichern(tmp, 2, "T2", "0000000002-26-000001", "2026-01-01", "2025-12-31", "x.htm", "gleicher Text")
         b2 = open(text_pfad(tmp, 2, "0000000002-26-000001"), "rb").read()
         p("Ablage ist byte-gleich bei gleichem Text (kein Zeitstempel im gzip)", b1 == b2 and text_lesen(tmp, 2, "0000000002-26-000001") == "gleicher Text")
-        p("Deckel: langer Text wird gekuerzt und als gekuerzt vermerkt",
-          m["gekuerzt"] and m["zeichen"] < TEXT_DECKEL + 100 and text_lesen(tmp, 1, "0000000001-26-000001").endswith("Zeichen ...]"), m)
+        p("Deckel: langer Text wird gekuerzt (Kopf plus Kennzahlfenster) und als gekuerzt vermerkt",
+          m["gekuerzt"] and m["zeichen"] <= TEXT_DECKEL + 200, m)
         efts = {"hits": {"hits": [
             {"_id": "0001193125-26-200001:d1ex991.htm", "_source": {"file_type": "EX-99.1", "file_date": "2026-08-05", "period_ending": "2026-06-30"}},
             {"_id": "0001193125-26-200001:d1.htm", "_source": {"file_type": "6-K", "file_date": "2026-08-05"}},
             {"_id": "0001193125-26-100001:d2ex991.htm", "_source": {"file_type": "EX-99.1", "file_date": "2026-05-06", "period_ending": "2026-03-31"}},
             {"_id": "0001193125-26-100002:d3ex991.htm", "_source": {"file_type": "EX-99.1", "file_date": "2026-05-20", "period_ending": None}},
+            {"_id": "0001193125-26-200009:d9ex991.htm", "_source": {"file_type": "EX-99.1", "file_date": "2026-08-20", "period_ending": "2026-06-30"}},
             {"_id": "0001193125-26-050001:d4ex992.htm", "_source": {"file_type": "EX-99.2", "file_date": "2026-02-10"}},
             {"_id": "0001193125-26-000001:graphic.jpg", "_source": {"file_type": "GRAPHIC", "file_date": "2026-01-10"}}]}}
         tr = sechs_k_treffer(efts)
-        p("6-K-Treffer: Anhaenge und Hauptdokument, keine Grafiken", len(tr) == 5 and tr[0]["accession"] == "0001193125-26-200001", tr)
+        p("6-K-Treffer: Anhaenge und Hauptdokument, keine Grafiken", len(tr) == 6 and tr[0]["accession"] == "0001193125-26-200001", tr)
         ergebnis_html = ("<html><body><p>Ambev reports second quarter 2026 results. Net revenue reached R$ 20,500 million, up 8%. "
                          "Net income was R$ 3,200 million; EBITDA R$ 9,100 million; EPS R$ 0.20 per share. "
                          "Revenue in Brazil US$ 1,100 million, Canada US$ 400 million, R$ 500 million, R$ 600 million, R$ 700 million. "
@@ -556,22 +570,34 @@ def selbsttest() -> int:
         nein, _ = ist_ergebnismitteilung(dividende_html)
         p("Erkennung: Ergebnismitteilung ja, Dividendenmeldung nein", ja and not nein)
 
+        suchen = []
+
         def hole6(url):
             if "efts.sec.gov" in url:
+                suchen.append(url)
                 return json.dumps(efts).encode("utf-8")
             if "d4ex992" in url or "d3ex991" in url:
                 return dividende_html.encode("utf-8")
+            if "d9ex991" in url:
+                return (ergebnis_html * 3).encode("utf-8")  # derselbe Inhalt als Quartalsbericht, schwaecher als die Mitteilung? nein: mehr Treffer
             return ergebnis_html.encode("utf-8")
         e6 = sechs_k_ergebnisse(1565025, hole6, dt.date(2026, 9, 4), log=lambda *_: None, warte=False)
-        p("6-K-Ergebnisse: je Einreichung der beste Anhang, Dividendenmeldungen verworfen, juengste zuerst",
-          [x[2] for x in e6] == ["0001193125-26-200001", "0001193125-26-100001"] and e6[0][1] == "2026-06-30", [(x[0], x[2]) for x in e6])
+        p("6-K-Ergebnisse: alle Suchbegriffe abgefragt, je Periode nur ein Text, Dividendenmeldungen verworfen, juengste zuerst",
+          len(suchen) == len(SECHS_K_SUCHEN) and len(e6) == 2 and {x[1] for x in e6} == {"2026-06-30", "2026-03-31"}
+          and e6[0][2] in ("0001193125-26-200001", "0001193125-26-200009") and e6[1][2] == "0001193125-26-100001",
+          [(x[0], x[1], x[2]) for x in e6])
+        riesig = {"hits": {"hits": [{"_id": "0001193125-26-300001:agm.htm", "_source": {"file_type": "6-K", "file_date": "2026-05-26", "period_ending": "2026-06-30"}}]}}
+        riesen_html = "<html><body>" + "<p>Net revenue R$ 20,500 million in the quarter, net income R$ 3,200 million.</p>" * 6000 + "</body></html>"
+        e7 = sechs_k_ergebnisse(1565025, lambda url: json.dumps(riesig).encode("utf-8") if "efts" in url else riesen_html.encode("utf-8"),
+                                dt.date(2026, 9, 4), log=lambda *_: None, warte=False)
+        p("6-K-Ergebnisse: Riesendokumente (Berichtshefte, Hauptversammlung) werden verworfen", e7 == [], e7)
         stand6 = stand_laden(tmp)
         stand6["1565025"] = {"ticker": "ABEV", "accessions": [], "vollstaendig": True, "zeit": "2026-09-03T00:00:00+00:00"}
         stand_schreiben(tmp, stand6)
         b7 = lauf_6k(tmp, hole=hole6, log=lambda *_: None, jetzt=dt.datetime(2026, 9, 4, tzinfo=dt.timezone.utc), warte=False)
         p("6-K-Lauf: Firma ohne 8-K bekommt ihre Ergebnis-6-Ks, Stand merkt sie",
-          b7["firmen"] == 1 and b7["texte_neu"] == 2 and vorhanden(tmp, 1565025, "0001193125-26-200001")
-          and stand_laden(tmp)["1565025"]["sechs_k"]["accessions"] == ["0001193125-26-200001", "0001193125-26-100001"], b7)
+          b7["firmen"] == 1 and b7["texte_neu"] == 2 and vorhanden(tmp, 1565025, "0001193125-26-100001")
+          and len(stand_laden(tmp)["1565025"]["sechs_k"]["accessions"]) == 2, b7)
         b8 = lauf_6k(tmp, hole=hole6, log=lambda *_: None, jetzt=dt.datetime(2026, 9, 5, tzinfo=dt.timezone.utc), warte=False)
         p("6-K-Lauf am naechsten Tag: uebersprungen", b8["uebersprungen"] == 1 and b8["firmen"] == 0, b8)
         b6 = lauf(tmp, hoechstens=1, quartale=8, hole=hole, ticker_zu_cik=tzc, log=lambda *_: None,
