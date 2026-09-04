@@ -2524,13 +2524,32 @@ def testpush(topic: str) -> int:
     nachweislich geprueft ist. Ohne Kursdaten, ohne Zustandsaenderung."""
     adresse = (os.environ.get("NTFY_EMAIL") or "").strip()
     weg = f"E-Mail an {adresse}" if adresse else "ntfy-App / Browser"
-    text = ("Testnachricht vom Breakout-Wächter.\n\n"
-            "Wenn diese Meldung ankommt, funktioniert die "
-            "Benachrichtigungskette.\n"
+    # PROBEALARM (Mathias, 05.09.2026): Die Testnachricht traegt seither
+    # dieselben Angaben wie ein echter Ausbruch UND die Klick-Adresse der
+    # Handels-App - so laesst sich der ganze Weg bis zur Vorschau bei
+    # DEGIRO ueben, ohne auf einen echten Alarm zu warten.
+    #
+    # Die Zahlen sind bewusst so gewaehlt, dass eine versehentlich
+    # abgeschickte Order NICHT ausfuehrbar waere: Das Limit liegt weit
+    # unter dem Kurs (NBTX stand am 04.09.2026 bei 38,90).
+    probe = [{"art": "kauf", "sym": "NBTX", "firma": "PROBE Nanobiotix ADR",
+              "muster": "Probealarm", "kp": 12.0, "kurs": 12.05,
+              "stop": 10.0, "ziel": 15.0}]
+    klick = handel_adresse(probe)
+    text = ("PROBEALARM, kein echter Kaufpunkt.\n\n"
+            "NBTX (PROBE Nanobiotix ADR); Probealarm\n"
+            "Kaufpunkt 12.00, Kurs 12.05 (+0.4%); Vol BESTÄTIGT, Probe\n"
+            "Stop 10.00, Risk 16.7%; Ziel 15.00 (+24.5%)\n\n"
+            "Das Limit liegt weit unter dem Kurs, die Order wäre also "
+            "nicht ausführbar.\n"
             f"Zustellweg: {weg}\n"
-            f"Gesendet: {datetime.now():%d.%m.%Y %H:%M:%S}")
-    kopf = {"Title": "Testnachricht Breakout-Wächter".encode("utf-8"),
+            + ("Antippen öffnet die Handels-App.\n" if klick
+               else "Ohne HANDEL_URL: Antippen öffnet nichts.\n")
+            + f"Gesendet: {datetime.now():%d.%m.%Y %H:%M:%S}")
+    kopf = {"Title": "PROBEALARM Breakout-Wächter".encode("utf-8"),
             "Priority": "default"}
+    if klick:
+        kopf["Click"] = klick
     kopf.update(email_kopf())
     print(f"    Zustellweg: {weg}")
     try:
