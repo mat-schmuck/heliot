@@ -381,6 +381,9 @@ def _websuche_einzeln(frage_text, log=print):
                 pause = float({str(a).lower(): b for a, b in (kopf or {}).items()}.get("retry-after") or 0)
             except (TypeError, ValueError):
                 pause = 0
+            if pause > 120:
+                hinweise.append(f"Tagesbudget von Groq erschoepft (retry-after {int(pause)} s), kein weiterer Versuch")
+                break
             time.sleep(min(90, pause) if pause > 0 else 15)
             continue
         if status != 200:
