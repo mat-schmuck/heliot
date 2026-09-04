@@ -154,7 +154,12 @@
     "ECO|3": "drin",
     "TECK|3": "drin",
     "TIGO|1": "drin",
-    "ATRO|2": "drin"
+    "ATRO|2": "drin",
+    "BCPC|3": "drin",
+    "MATX|1": "draussen",
+    "SOLS|3": "drin",
+    "PRE|2": "draussen",
+    "MATX|2": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -291,6 +296,8 @@
     "GEWINN|2026-09-03|12": "2026-09-04",
     "IOT|1": "2026-09-04",
     "BEST|IOT|1": "2026-09-04",
-    "GAPGO|IOT|2026-09-04": "2026-09-04"
+    "GAPGO|IOT|2026-09-04": "2026-09-04",
+    "MATX|2": "2026-09-04",
+    "BEST|MATX|2": "2026-09-04"
   }
 }
