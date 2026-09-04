@@ -34,9 +34,9 @@ NACHRICHTEN_HOECHSTENS = 20
 
 WEBSUCHE_AUFTRAG = (
     "Du bist ein Rechercheur fuer Boersennachrichten. Suche im Netz nach Nachrichten und Analystenkommentaren "
-    "zu der Firma und beantworte nur diese zwei Fragen aus dem, was du gefunden hast: Erstens, welche Gruende "
-    "nennen Nachrichten und Analysten fuer die Kursreaktion nach den juengsten Quartalszahlen? Zweitens, welche "
-    "Gruende nennen sie fuer die Kursentwicklung der letzten Wochen? Nenne zu jeder Aussage die Quelle im Klartext, "
+    "zu der Firma und beantworte nur die gestellte Frage aus dem, was du gefunden hast. Achte streng auf die Daten: "
+    "Verwechsle die Reaktion auf die juengsten Quartalszahlen nicht mit Reaktionen auf fruehere Quartale. "
+    "Nenne zu jeder Aussage die Quelle im Klartext, "
     "also den Namen des Mediums oder der Website und das Datum des Artikels, in Klammern hinter dem Satz; keine "
     "Fussnoten, keine Verweismarken, keine Zitatnummern. Gib bei Kurszielen ausdruecklich an, ob sie gehoben oder "
     "gesenkt wurden und von welchem auf welchen Wert. Erfinde nichts; was du nicht findest, sagst du ausdruecklich. "
@@ -60,7 +60,9 @@ AUFTRAG = (
     "nur soweit die Daten das hergeben, und jeder Deutungssatz beginnt mit dem Wort Vermutung; viertens, was fuer "
     "eine sichere Antwort fehlt. Die Standard-Risikohinweise am Ende der Pressemitteilungen (Safe Harbor) sind "
     "kein Inhalt und werden nicht als Aussage des Managements gewertet. Datumsangaben der Quartale nimmst du nur "
-    "aus der Tabelle, nie aus dem Veroeffentlichungsdatum einer Mitteilung."
+    "aus der Tabelle, nie aus dem Veroeffentlichungsdatum einer Mitteilung. Steht bei einem Quartal, dass die "
+    "Ueberraschung nicht belastbar ist, dann sagst du das so und deutest es NICHT als verfehlte oder getroffene "
+    "Erwartung. Jedes Quartal der Tabelle bekommt seinen Absatz, auch wenn Angaben fehlen; dann nennst du, was fehlt."
 )
 
 
@@ -201,9 +203,9 @@ def tabelle_text(liste):
             f"Nettogewinn {_f(z['nettogewinn_mrd'], 3)} Mrd ({_f(z['nettogewinn_vorjahr_prozent'], 1)} Prozent{z.get('nettogewinn_hinweis', '')}); "
             f"Ergebnis je Aktie amtlich {_f(z['eps_amtlich'])} ({_f(z['eps_vorjahr_prozent'], 1)} Prozent{z.get('eps_hinweis', '')}); "
             f"Konsens {_f(z['eps_konsens'])}, gemeldet bereinigt {_f(z['eps_gemeldet_bereinigt'])}, "
-            f"Ueberraschung {_f(z['ueberraschung_prozent'], 1)} Prozent"
-            + (" (Basis fraglich: der Dienst stellt hier den amtlichen Wert einem bereinigten Konsens gegenueber, "
-               "die Ueberraschung ist nicht belastbar)" if z.get("ueberraschung_fraglich") else "")
+            + ("Ueberraschung nicht belastbar (der Analystendienst stellt hier den amtlichen Wert einem bereinigten "
+               "Konsens gegenueber; ob der Konsens getroffen wurde, ist aus diesen Daten nicht zu sagen)"
+               if z.get("ueberraschung_fraglich") else f"Ueberraschung {_f(z['ueberraschung_prozent'], 1)} Prozent")
             + f"; gemeldet am {z['meldedatum'] or 'keine Angabe'} "
             f"({z['zeitpunkt'] or 'Zeitpunkt unbekannt'}); Kursreaktion {_f(z['kursreaktion_prozent'])} Prozent.")
     return "\n".join(zeilen)
@@ -277,21 +279,46 @@ def zahlen_pruefen(antwort, tab_text, texte_text):
     return {"zahlen_gesamt": len(a_w) + len(a_p), "unbelegt": unbelegt_w, "unbelegt_prozent": unbelegt_p}
 
 
-def websuche_frage(ticker, name, meldedatum, heute):
-    return (f"Firma: {name} (Ticker {ticker}). Juengste Quartalszahlen gemeldet am {meldedatum or 'unbekannt'}. "
-            f"Heutiges Datum: {heute}.")
+def websuche_frage(ticker, name, meldedatum, heute, teil="zahlen"):
+    kopf = (f"Firma: {name} (Ticker {ticker}). Juengste Quartalszahlen gemeldet am {meldedatum or 'unbekannt'}. "
+            f"Heutiges Datum: {heute}. ")
+    if teil == "zahlen":
+        return kopf + (f"Frage: Wie hat der Aktienkurs auf genau diese Quartalszahlen vom {meldedatum or 'unbekannt'} "
+                       f"reagiert, und welche Gruende nennen Nachrichten und Analysten dafuer?")
+    return kopf + ("Frage: Welche Gruende nennen Nachrichten und Analysten fuer die Kursentwicklung der Aktie in den "
+                   "letzten Wochen bis heute (Kursziele, Einstufungen, Ereignisse)?")
 
 
 def websuche_groq(ticker, name, meldedatum, heute, log=print):
-    """Nachrichtenlage ueber Groqs compound-mini (eingebaute Websuche). Rueckgabe
+    """Nachrichtenlage ueber Groqs eingebaute Websuche, in zwei getrennten Fragen (Reaktion auf die
+    juengsten Zahlen; letzte Wochen), damit das Modell die Zeitraeume nicht vermischt. Rueckgabe
     {text, quellen, usage, dauer_s, status, hinweise}; ohne Schluessel status 0."""
-    import messung_8k as m8k
     if not GROQ_KEY:
         return {"text": "", "quellen": [], "usage": None, "dauer_s": 0, "status": 0, "hinweise": ["GROQ_API_KEY fehlt"]}
+    teile, quellen, hinweise, dauer, tokens = [], [], [], 0.0, 0
+    status_gesamt, modell_laut = 0, None
+    for teil, titel in (("zahlen", "Reaktion auf die juengsten Quartalszahlen"), ("wochen", "Kursentwicklung der letzten Wochen")):
+        r = _websuche_einzeln(websuche_frage(ticker, name, meldedatum, heute, teil), log=log)
+        hinweise += [f"{teil}: {h}" for h in r.get("hinweise") or []]
+        dauer += r.get("dauer_s") or 0
+        quellen += r.get("quellen") or []
+        tokens += ((r.get("usage") or {}).get("total_tokens") or 0)
+        modell_laut = r.get("modell_laut_antwort") or modell_laut
+        if r.get("status") == 200 and (r.get("text") or "").strip():
+            status_gesamt = 200
+            teile.append(f"{titel}:\n{r['text']}")
+        else:
+            hinweise.append(f"{teil}: Status {r.get('status')}")
+    return {"text": "\n\n".join(teile), "quellen": quellen, "usage": {"total_tokens": tokens}, "dauer_s": round(dauer, 1),
+            "status": status_gesamt, "hinweise": hinweise, "modell_laut_antwort": modell_laut}
+
+
+def _websuche_einzeln(frage_text, log=print):
+    import messung_8k as m8k
     koerper = {"model": WEBSUCHE_MODELL, "temperature": 0, "max_completion_tokens": 1500,
                "tools": [{"type": "browser_search"}], "reasoning_effort": "low",
                "messages": [{"role": "system", "content": WEBSUCHE_AUFTRAG},
-                            {"role": "user", "content": websuche_frage(ticker, name, meldedatum, heute)}]}
+                            {"role": "user", "content": frage_text}]}
     hinweise = []
     for versuch in range(4):
         t0 = time.time()
@@ -447,12 +474,13 @@ def zuordnung_pruefen(antwort, liste):
         for form in (f"{u:.3f}", f"{u:.2f}", f"{u:.1f}"):
             umsatz_zu_ende.setdefault(form.replace(".", ","), z["periodenende"])
             umsatz_zu_ende.setdefault(form, z["periodenende"])
-    geprueft, fehler = 0, []
+    geprueft, fehler, behandelt = 0, [], set()
     for absatz in re.split(r"\n\s*\n|\n", antwort):
         quartale = _quartale_im_absatz(absatz, enden)
         if len(quartale) != 1:
             continue
         q = next(iter(quartale))
+        behandelt.add(q)
         treffer = set()
         for form, e in umsatz_zu_ende.items():
             if re.search(r"(?<![\d,.])" + re.escape(form) + r"(?![\d])", absatz):
@@ -463,7 +491,8 @@ def zuordnung_pruefen(antwort, liste):
         for e in treffer:
             if e != q:
                 fehler.append((q, e))
-    return {"geprueft": geprueft, "fehler": fehler}
+    alle = [z["periodenende"] for z in liste]
+    return {"geprueft": geprueft, "fehler": fehler, "fehlende_quartale": [e for e in alle if e not in behandelt]}
 
 
 def modell_fragen(modell, frage_text, bremse):
@@ -646,8 +675,8 @@ def selbsttest() -> int:
                       {"typ": "Q", "kennzahl": "eps_verwaessert", "end": "2025-05-03", "wert_erst": 0.06}],
                      [{"art": "eps_history", "periodenende": "2025-05-03", "eps_ist": 0.06, "eps_konsens": 0.52,
                        "ueberraschung_prozent": -88.1, "meldedatum": "2025-06-05", "zeitpunkt": "BeforeMarket"}], {}, 8)
-    p("Ueberraschung mit fraglicher Basis (amtlich gleich gemeldet, minus 88 Prozent) wird in der Tabelle gekennzeichnet",
-      l2[0]["ueberraschung_fraglich"] and "Basis fraglich" in t2, t2[-260:])
+    p("Ueberraschung mit fraglicher Basis (amtlich gleich gemeldet, minus 88 Prozent) steht ohne Zahl als nicht belastbar",
+      l2[0]["ueberraschung_fraglich"] and "nicht belastbar" in t2 and "-88,1" not in t2, t2[-260:])
     p("Aeltestes Quartal ohne Vorjahr im Ausschnitt: Vergleich fehlt, kein Absturz",
       a["umsatz_vorjahr_prozent"] is None and a["eps_konsens"] is None, a)
     p("Textform: deutsche Dezimalzeichen, jede Zeile ein Quartal, Hinweis auf fehlende Angaben",
@@ -679,8 +708,9 @@ def selbsttest() -> int:
       en.index("Zahlentabelle") < en.index("Nachrichtenlage") < en.index("Pressemitteilungen der Firma"))
     p("Eingabe ohne Nachrichten bleibt die alte Form", eingabe_mit_nachrichten("Warum?", text, block, "") == eingabe("Warum?", text, block))
     wf = websuche_frage("AAPL", "Apple Inc", "2026-07-30", "2026-09-03")
-    p("Websuche-Frage nennt Firma, Ticker, Meldedatum und heutiges Datum",
-      all(s in wf for s in ("Apple Inc", "AAPL", "2026-07-30", "2026-09-03")), wf)
+    wf2 = websuche_frage("AAPL", "Apple Inc", "2026-07-30", "2026-09-03", "wochen")
+    p("Websuche-Fragen: Zahlen-Teil nennt das Meldedatum als Ziel, Wochen-Teil die letzten Wochen",
+      all(s in wf for s in ("Apple Inc", "AAPL", "2026-07-30", "2026-09-03", "genau diese Quartalszahlen")) and "letzten Wochen" in wf2, wf)
     p("Websuche-Auftrag verlangt Quellen mit Datum, Deutsch, kein Markdown, Erfinden verboten",
       all(w in WEBSUCHE_AUFTRAG for w in ("Quelle", "Datum", "Deutsch", "ohne Markdown", "Erfinde nichts")))
     ohne = websuche_groq("AAPL", "Apple", "2026-07-30", "2026-09-03", log=lambda *_: None) if not GROQ_KEY else {"status": 0, "hinweise": ["GROQ_API_KEY fehlt"]}
@@ -711,14 +741,16 @@ def selbsttest() -> int:
     p("Yahoo-Feed nicht lesbar: Status 0 mit Hinweis, kein Absturz", ny3["status"] == 0 and ny3["hinweise"], ny3)
     zu1 = zuordnung_pruefen("Im Quartal bis 2026-06-27 stieg der Umsatz auf 100,600 Milliarden.\n"
                             "Im Quartal bis 28. Maerz 2026 lag der Umsatz bei 105,0 Milliarden.", liste)
-    p("Zuordnung: richtige Paare aus Datum und Umsatz, ISO und Monatsform", zu1 == {"geprueft": 2, "fehler": []}, zu1)
+    p("Zuordnung: richtige Paare aus Datum und Umsatz, ISO und Monatsform", zu1["geprueft"] == 2 and zu1["fehler"] == [], zu1)
     zu2 = zuordnung_pruefen("Im Quartal zum 2026-01-29 meldete Apple einen Umsatz von 143,8 Milliarden.\n"
                             "Im Quartal zum 2025-12-27 meldete Apple einen Umsatz von 102,5 Milliarden.\n"
                             "Im Quartal zum 2025-09-27 meldete Apple einen Umsatz von 94,0 Milliarden.", liste)
     p("Zuordnung: um ein Quartal verschobene Zahlen fallen auf, Meldedatum trifft kein Quartal",
       zu2["geprueft"] == 2 and zu2["fehler"] == [("2025-12-27", "2025-09-27"), ("2025-09-27", "2025-06-28")], zu2)
+    p("Zuordnung: nicht behandelte Quartale werden genannt",
+      len(zu1["fehlende_quartale"]) == 6 and "2024-09-28" in zu1["fehlende_quartale"] and "2026-06-27" not in zu1["fehlende_quartale"], zu1["fehlende_quartale"])
     p("Auftrag verlangt Deutsch, keine Tabellen, Vermutungen gekennzeichnet, Quellen nur die Daten",
-      all(w in AUFTRAG for w in ("Deutsch", "ohne Tabellen", "Vermutung", "AUSSCHLIESSLICH", "Safe Harbor")))
+      all(w in AUFTRAG for w in ("Deutsch", "ohne Tabellen", "Vermutung", "AUSSCHLIESSLICH", "Safe Harbor", "nicht belastbar", "Jedes Quartal")))
     p("Textblock nennt nur das Veroeffentlichungsdatum, kein falsches Quartal", "Quartal bis" not in block and "veroeffentlicht am 2026-07-31" in block)
     print("Alles bestanden." if fehler == 0 else f"{fehler} Fehler.")
     return fehler
