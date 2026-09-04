@@ -1506,5 +1506,31 @@
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
   "wedge_drop_gemeldet": false
+ },
+ "IOT|1": {
+  "symbol": "IOT",
+  "firma": "Samsara Inc",
+  "strategie": "Cup & Handle (Wochenbasis)",
+  "einstieg": 42.69,
+  "einstieg_datum": "2026-09-04",
+  "einstieg_index": 0,
+  "struktur_stop": 38.43,
+  "aktueller_stop": 38.43,
+  "stop_quelle": "struktur",
+  "hoechstkurs": 42.69,
+  "teilverkauft": false,
+  "halteregel_aktiv": false,
+  "beobachtung": true,
+  "status": "offen",
+  "verlauf": [],
+  "klasse": "standard",
+  "musterziel": 66.78,
+  "zone": null,
+  "ziel_gemeldet": false,
+  "klimax_gemeldet": [],
+  "weinstein_gemeldet": false,
+  "zahlen_hinweis_gemeldet": false,
+  "sektor_hinweis_gemeldet": false,
+  "wedge_drop_gemeldet": false
  }
 }
