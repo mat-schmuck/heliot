@@ -36,6 +36,8 @@ WEBSUCHE_AUFTRAG = (
     "Du bist ein Rechercheur fuer Boersennachrichten. Suche im Netz nach Nachrichten und Analystenkommentaren "
     "zu der Firma und beantworte nur die gestellte Frage aus dem, was du gefunden hast. Achte streng auf die Daten: "
     "Verwechsle die Reaktion auf die juengsten Quartalszahlen nicht mit Reaktionen auf fruehere Quartale. "
+    "Uebersetze das englische billion mit Milliarden und trillion mit Billionen. Arbeite sparsam: hoechstens "
+    "zwei Suchaufrufe und hoechstens eine geoeffnete Seite. "
     "Nenne zu jeder Aussage die Quelle im Klartext, "
     "also den Namen des Mediums oder der Website und das Datum des Artikels, in Klammern hinter dem Satz; keine "
     "Fussnoten, keine Verweismarken, keine Zitatnummern. Gib bei Kurszielen ausdruecklich an, ob sie gehoben oder "
@@ -178,12 +180,18 @@ def tabelle(zeilen, konsens_zeilen, kurse, quartale=QUARTALE):
              "ueberraschung_prozent": kk.get("ueberraschung_prozent"), "meldedatum": kk.get("meldedatum"),
              "zeitpunkt": kk.get("zeitpunkt"),
              "kursreaktion_prozent": kursreaktion(kurse, kk.get("meldedatum"), kk.get("zeitpunkt"))}
-        # Basis der Ueberraschung fraglich: der Dienst fuehrt als gemeldeten Wert den amtlichen, der Konsens
-        # ist aber meist bereinigt (Ciena: minus 88 Prozent Ueberraschung bei GAAP 0,06 gegen Konsens 0,52)
-        z["ueberraschung_fraglich"] = bool(z["eps_amtlich"] is not None and z["eps_gemeldet_bereinigt"] is not None
-                                           and abs(z["eps_amtlich"] - z["eps_gemeldet_bereinigt"]) < 0.005
-                                           and z["ueberraschung_prozent"] is not None and abs(z["ueberraschung_prozent"]) > 25)
         liste.append(z)
+    # Basis der Ueberraschung fraglich: der Dienst fuehrt als gemeldeten Wert den amtlichen, der Konsens ist
+    # aber bereinigt (Ciena: minus 88 Prozent bei GAAP 0,06 gegen Konsens 0,52, das Non-GAAP-Ergebnis war 0,42).
+    # Erkennbar daran, dass die Firma in mindestens einem Quartal einen bereinigten Wert hat, der vom amtlichen
+    # abweicht (Apple: nie, dort stimmen die Ueberraschungen).
+    gleich = lambda z: (z["eps_amtlich"] is not None and z["eps_gemeldet_bereinigt"] is not None
+                        and abs(z["eps_amtlich"] - z["eps_gemeldet_bereinigt"]) < 0.005)
+    firma_bereinigt = any(z["eps_amtlich"] is not None and z["eps_gemeldet_bereinigt"] is not None
+                          and abs(z["eps_amtlich"] - z["eps_gemeldet_bereinigt"]) >= 0.005 for z in liste)
+    for z in liste:
+        z["ueberraschung_fraglich"] = bool(z["ueberraschung_prozent"] is not None and gleich(z)
+                                           and (firma_bereinigt or abs(z["ueberraschung_prozent"]) > 25))
     return liste, tabelle_text(liste)
 
 
@@ -677,6 +685,16 @@ def selbsttest() -> int:
                        "ueberraschung_prozent": -88.1, "meldedatum": "2025-06-05", "zeitpunkt": "BeforeMarket"}], {}, 8)
     p("Ueberraschung mit fraglicher Basis (amtlich gleich gemeldet, minus 88 Prozent) steht ohne Zahl als nicht belastbar",
       l2[0]["ueberraschung_fraglich"] and "nicht belastbar" in t2 and "-88,1" not in t2, t2[-260:])
+    l3, _ = tabelle([{"typ": "Q", "kennzahl": "umsatz", "end": "2025-02-01", "wert_erst": 1.072e9},
+                     {"typ": "Q", "kennzahl": "eps_verwaessert", "end": "2025-02-01", "wert_erst": 0.31},
+                     {"typ": "Q", "kennzahl": "umsatz", "end": "2026-05-02", "wert_erst": 1.571e9},
+                     {"typ": "Q", "kennzahl": "eps_verwaessert", "end": "2026-05-02", "wert_erst": 1.49}],
+                    [{"art": "eps_history", "periodenende": "2025-02-01", "eps_ist": 0.31, "eps_konsens": 0.41, "ueberraschung_prozent": -24.4, "meldedatum": "2025-03-12"},
+                     {"art": "eps_history", "periodenende": "2026-05-02", "eps_ist": 1.64, "eps_konsens": 1.46, "ueberraschung_prozent": 12.3, "meldedatum": "2026-06-04"}], {}, 8)
+    p("Firmenweit: weist die Firma irgendwo bereinigt ungleich amtlich aus, ist auch minus 24 Prozent bei gleichem Wert fraglich, 12,3 bei ungleichem nicht",
+      l3[0]["ueberraschung_fraglich"] and not l3[1]["ueberraschung_fraglich"], [(z["periodenende"], z["ueberraschung_fraglich"]) for z in l3])
+    p("Websuche-Auftrag: Milliarden statt Billionen, sparsame Werkzeugaufrufe",
+      "Milliarden" in WEBSUCHE_AUFTRAG and "hoechstens eine geoeffnete Seite" in WEBSUCHE_AUFTRAG)
     p("Aeltestes Quartal ohne Vorjahr im Ausschnitt: Vergleich fehlt, kein Absturz",
       a["umsatz_vorjahr_prozent"] is None and a["eps_konsens"] is None, a)
     p("Textform: deutsche Dezimalzeichen, jede Zeile ein Quartal, Hinweis auf fehlende Angaben",
