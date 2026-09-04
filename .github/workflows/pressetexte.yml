@@ -27,6 +27,10 @@ on:
         description: "archiv (8-K), 6k (Ergebnismitteilungen auslaendischer Emittenten ueber die SEC-Volltextsuche), probe6k oder probe8k (nur anzeigen, mit ticker)"
         required: false
         default: "archiv"
+      frisch:
+        description: "6k: Firmen mit Stand juenger als so viele Tage ueberspringen (0 = alle neu)"
+        required: false
+        default: "20"
 
 concurrency:
   group: pressetexte
@@ -68,7 +72,7 @@ jobs:
         if: steps.secrets.outputs.da == 'ja'
         env:
           SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
-        run: python pressetexte.py --daten daten --hoechstens "${{ inputs.hoechstens }}" --ticker "${{ inputs.ticker }}" --quartale "${{ inputs.quartale }}" --modus "${{ inputs.modus }}"
+        run: python pressetexte.py --daten daten --hoechstens "${{ inputs.hoechstens }}" --ticker "${{ inputs.ticker }}" --quartale "${{ inputs.quartale }}" --modus "${{ inputs.modus }}" --frisch "${{ inputs.frisch }}"
       - name: Ins Datenrepo
         if: always() && steps.secrets.outputs.da == 'ja'
         run: |
