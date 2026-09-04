@@ -171,23 +171,26 @@ def exhibit(cik, accession, hole, prim=None, pruefen=True):
     if not kandidaten:
         return None, None
     kandidaten.sort(key=lambda d: int(d.get("size") or 0), reverse=True)
-    name = kandidaten[0]["name"]
-    roh = hole(ordner + "/" + name)
-    try:
-        html_roh = roh.decode("utf-8")
-    except UnicodeDecodeError:
-        html_roh = roh.decode("latin-1")
-    text = m8k.html_zu_text(html_roh)
-    if pruefen and not ist_ergebnistext_8k(text):
-        return name, None   # Auslieferungsbericht, Deckblatt, Vertrag: kein Ergebnistext
-    return name, text
+    name = text = None
+    for d in kandidaten[:3]:
+        name = d["name"]
+        roh = hole(ordner + "/" + name)
+        try:
+            html_roh = roh.decode("utf-8")
+        except UnicodeDecodeError:
+            html_roh = roh.decode("latin-1")
+        text = m8k.html_zu_text(html_roh)
+        if not pruefen or ist_ergebnistext_8k(text):
+            return name, text
+    return name, None   # Auslieferungsbericht, Deckblatt, Vertrag, Praesentation: kein Ergebnistext
 
 
 _VERTRAG_KOPF = re.compile(r"credit agreement|purchase agreement|indenture|underwriting agreement|by and among|by and between|"
                            r"appendix 5b|employment agreement|merger agreement", re.I)
 _ERGEBNISWORT = re.compile(r"revenue|net (income|loss|earnings)|earnings per share|operating income|net sales|"
                            r"results of operations|adjusted ebitda|gross (profit|margin)", re.I)
-_BETRAG = re.compile(r"[$€£¥]\s?\d|\d[\d,.]*\s?(million|billion|mn|bn)|US\$|C\$|KRW", re.I)
+_BETRAG = re.compile(r"[$€£¥]\s?\|?\s?\d|\d[\d,.]*\s?(million|billion|mn|bn)|US\$|C\$|KRW|"
+                     r"(dollars|amounts|in) (in )?(thousands|millions)", re.I)
 
 
 def ist_ergebnistext_8k(text):
@@ -869,6 +872,19 @@ def selbsttest() -> int:
             return ergebnis_html2
         w = [exhibit(7, f"0000000007-26-0000{i:02d}", hole3, prim=p) for i, p in
              ((1, "ato-20260805.htm"), (2, "bkng-20260804.htm"), (3, "tsla-20260722.htm"), (4, "tsla-20260702.htm"), (5, "d798492d8k.htm"))]
+
+        def hole4(url):
+            if url.endswith("index.json"):
+                return json.dumps({"directory": {"item": [{"name": "d1ex31.htm", "size": 90000}, {"name": "d1ex991.htm", "size": 30000},
+                                                           {"name": "d1d8k.htm", "size": 20000}]}}).encode("utf-8")
+            if url.endswith("d1ex31.htm"):
+                return ("<html><body>" + "<p>AMENDED AND RESTATED BYLAWS OF EXAMPLE INC. Article I Offices. Section 1.1 Registered Office. "
+                        "The board of directors may fix the number of directors; each director shall hold office until the next annual meeting.</p>" * 40
+                        + "</body></html>").encode("utf-8")
+            return ergebnis_html2
+        k = exhibit(8, "0000000008-26-000001", hole4, prim="d1d8k.htm")
+        p("Anhangwahl: lehnt der groesste Anhang ab (Satzung ohne Betrag), kommt der naechste dran",
+          k[0] == "d1ex991.htm" and bool(k[1]), (k[0], len(k[1] or "")))
         p("Anhangwahl: Atmos exhibit991 statt Hauptdokument, Booking earningsrelease, Tesla-Deck trotz Proxy-Verweis, "
           "Tesla-Auslieferung als EX-99 leer, Kreditvertrag leer",
           [x[0] for x in w] == ["ato20260805exhibit991.htm", "q2-26bkngearningsrelease.htm", "exhibit991.htm", "exhibit99111111.htm", "d798492dex101.htm"]
