@@ -249,6 +249,14 @@ _ERGEBNIS_TITEL = re.compile(r"(announces|reports|posts|delivers|publishes|relea
 _DECKBLATT_ENDE = re.compile(r"Rule 12g3-2\(b\)[^\n]{0,200}|Rule 101\(b\)\(7\)[^\n]{0,60}|Form 40-?\s?F[^\n]{0,40}", re.I)
 
 
+def deckblatt_ende(text):
+    """Position hinter dem 6-K-Formularkopf (0, wenn keiner erkennbar ist)."""
+    ende = 0
+    for m in _DECKBLATT_ENDE.finditer(text[:6000]):
+        ende = m.end()
+    return ende
+
+
 def titelzone(text, laenge=1200):
     """Die ersten Zeichen des eigentlichen Dokuments: bei 6-K-Hauptdokumenten hinter dem Formularkopf
     (der endet mit der Frage nach Rule 12g3-2(b)), sonst der Textanfang; dazu immer der Textanfang selbst
@@ -285,6 +293,11 @@ def ist_ergebnismitteilung(text, dateiname=""):
     Punkte bevorzugen dichte, mittellange Texte mit sprechendem Dateinamen (Pressemitteilung vor Berichtsheft)."""
     if not text or len(text) < 1500:
         return False, 0
+    inhalt = text[deckblatt_ende(text):]
+    if len(inhalt) < 1800:
+        return False, 0
+    if len(inhalt) < 4000 and re.search(r"attached|attachment|enclosed|see exhibit|\(pdf\)|\.pdf", inhalt, re.I):
+        return False, 0   # Formular-6-K, das nur auf den Anhang verweist (Korea Electric: 3.000 Zeichen, Inhalt im PDF)
     if ausschlussgrund(text):
         return False, 0
     if not _MUSTER_ERGEBNIS[2].search(text[:max(6000, len(text) // 3)]):
@@ -293,6 +306,11 @@ def ist_ergebnismitteilung(text, dateiname=""):
     ja = punkte >= 3 and zahlen >= 5 and treffer >= 4
     dichte = treffer * 10000.0 / max(len(text), 1)
     wert = punkte * 10 + min(dichte * 4, 40) + min(zahlen, 30) + textklasse(text, dateiname)[1]
+    titel = titelzone(text, 600)
+    if re.search(r"consolidated", titel, re.I) and not re.search(r"separate|parent.only|standalone|non.?consolidated", titel, re.I):
+        wert += 8
+    if re.search(r"separate (interim )?financial|parent.only|standalone|non.?consolidated", titel, re.I):
+        wert -= 8
     if re.search(r"itr|\d{8}_6k", (dateiname or "").lower()):
         wert -= 10
     if len(text) > 150000:
@@ -779,6 +797,19 @@ def selbsttest() -> int:
         _, mda2 = ist_ergebnismitteilung(ergebnis_html, "a03312025q1mda.htm")
         p("Erkennung: Betraege in Pesos zaehlen; Pressemitteilung vor MD&A vor Abschluss derselben Einreichung",
           ja6 and pr2 > mda2 > fs2, (ja6, pr2, mda2, fs2))
+        verweis_html = ("<html><body><p>FORM 6-K Report of Foreign Private Issuer. Korea Electric Power Corporation. "
+                        "Indicate by check mark whether the registrant files or will file annual reports under cover of "
+                        "Form 20-F or Form 40-F. Form 20-F X Form 40-F</p>"
+                        "<p>KEPCO announces its second quarter results: revenues of KRW 23,456,789 million and net income of "
+                        "KRW 1,234,567 million for the three months ended June 30, 2026, net income per share KRW 1,234. "
+                        "Details are in the attached press release (PDF). Revenues rose, net income rose.</p>" * 2 + "</body></html>")
+        nein7, _ = ist_ergebnismitteilung(verweis_html, "d135312d6k.htm")
+        kons_html = ergebnis_html.replace("<body>", "<body><p>Consolidated Interim Financial Statements</p>", 1)
+        sep_html = ergebnis_html.replace("<body>", "<body><p>Separate Interim Financial Statements</p>", 1)
+        _, kons = ist_ergebnismitteilung(kons_html, "ex99_2.htm")
+        _, sep = ist_ergebnismitteilung(sep_html, "ex99_1.htm")
+        p("Erkennung: Formular-6-K mit blossem Verweis auf den PDF-Anhang nein; Konzernabschluss vor Einzelabschluss",
+          (not nein7) and kons > sep, (nein7, kons, sep))
 
         suchen = []
 
