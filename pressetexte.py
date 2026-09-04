@@ -149,10 +149,12 @@ def exhibit(cik, accession, hole):
     ordner = f"https://www.sec.gov/Archives/edgar/data/{int(cik)}/{accession.replace('-', '')}"
     index = json.loads(hole(ordner + "/index.json"))
     dateien = [d for d in index.get("directory", {}).get("item", [])
-               if d.get("name", "").lower().endswith((".htm", ".html"))]
+               if d.get("name", "").lower().endswith((".htm", ".html")) and not ist_viewerdatei(d.get("name", ""))]
     kandidaten = [d for d in dateien if re.search(r"ex[-_]?99", d["name"].lower())]
+    rueckfall = False
     if not kandidaten:
         kandidaten = [d for d in dateien if not d["name"].lower().startswith("0")]
+        rueckfall = True
     if not kandidaten:
         return None, None
     kandidaten.sort(key=lambda d: int(d.get("size") or 0), reverse=True)
@@ -162,7 +164,35 @@ def exhibit(cik, accession, hole):
         html_roh = roh.decode("utf-8")
     except UnicodeDecodeError:
         html_roh = roh.decode("latin-1")
-    return name, m8k.html_zu_text(html_roh)
+    text = m8k.html_zu_text(html_roh)
+    if rueckfall and (not ist_ergebnismitteilung(text, name)[0]
+                      or not re.search(r"revenue|net (income|loss|earnings)|earnings per share|operating income", text, re.I)):
+        return name, None   # Hauptdokument ohne Ergebnisinhalt (Auslieferungsbericht, Deckblatt): kein Text
+    return name, text
+
+
+def ist_viewerdatei(name):
+    """XBRL-Viewer-Seiten (R1.htm, R2.htm ...) und ihre Begleitdateien: nie ein Anhang."""
+    n = (name or "").lower()
+    return bool(re.fullmatch(r"r\d+\.htm", n)) or n.startswith(("filingsummary", "metalinks"))
+
+
+def ergebnis_8ks_voll(sub, hole, quartale, pause, log=print, ticker=""):
+    """Ergebnis-8-Ks (Item 2.02) aus der juengsten Einreichungsliste; reicht sie nicht fuer die gewuenschten
+    Quartale (Vielfiler wie Banken mit tausenden Prospekten je Jahr), kommen die aelteren Listen dazu."""
+    import messung_8k as m8k
+    raus = list(m8k.ergebnis_8ks(sub))
+    for datei in (sub.get("filings", {}).get("files") or []):
+        if len(raus) >= quartale:
+            break
+        try:
+            alt = json.loads(hole("https://data.sec.gov/submissions/" + datei["name"]))
+            pause()
+        except Exception as e:  # noqa
+            log(f"  {ticker}: aeltere Einreichungsliste {datei.get('name')} nicht lesbar: {str(e)[:120]}")
+            break
+        raus += m8k.ergebnis_8ks({"filings": {"recent": alt}})
+    return sorted(set(raus), reverse=True)
 
 
 def firmen(daten, ticker_zu_cik, nur=None):
@@ -601,15 +631,18 @@ def lauf(daten, hoechstens=1200, quartale=QUARTALE, nur=None, hole=None, ticker_
                 bilanz["fehler"] += 1
                 log(f"  {ticker} {cik}: Einreichungen nicht lesbar: {str(e)[:120]}")
                 continue
-            import messung_8k as m8k
-            achtks = m8k.ergebnis_8ks(sub)[:quartale]
-            geprueft = list((s or {}).get("accessions") or [])
+            achtks_alle = ergebnis_8ks_voll(sub, hole, quartale, pause, log=log, ticker=ticker)
+            leere = dict((s or {}).get("leer") or {})
             neu = da = leer = 0
-            for fd, rd, acc, prim in achtks:
+            achtks = []   # die verwendeten (mit Text); leere 8-Ks zaehlen nicht auf die Quartale
+            for fd, rd, acc, prim in achtks_alle:
+                if len(achtks) >= quartale or leer >= 6:
+                    break
                 if vorhanden(daten, cik, acc):
                     da += 1
+                    achtks.append((fd, rd, acc, prim))
                     continue
-                if acc in geprueft and (s or {}).get("leer", {}).get(acc):
+                if leere.get(acc):
                     leer += 1
                     continue
                 try:
@@ -621,14 +654,13 @@ def lauf(daten, hoechstens=1200, quartale=QUARTALE, nur=None, hole=None, ticker_
                     continue
                 if not text:
                     leer += 1
-                    s = s or {}
-                    s.setdefault("leer", {})[acc] = True
+                    leere[acc] = True
                     continue
                 speichern(daten, cik, ticker, acc, fd, rd, name, text, quelle="archiv")
                 neu += 1
+                achtks.append((fd, rd, acc, prim))
             stand[str(cik)] = {"ticker": ticker, "zeit": jetzt.replace(microsecond=0).isoformat(),
-                               "accessions": [a[2] for a in achtks], "vollstaendig": True,
-                               "leer": (s or {}).get("leer", {})}
+                               "accessions": [a[2] for a in achtks], "vollstaendig": True, "leer": leere}
             bilanz["firmen"] += 1
             bilanz["texte_neu"] += neu
             bilanz["texte_da"] += da
@@ -728,6 +760,52 @@ def selbsttest() -> int:
                    jetzt=dt.datetime(2026, 10, 3, tzinfo=dt.timezone.utc), warte=False)
         p("Ohne Anhang, spaeterer Lauf: das leere 8-K wird nicht erneut abgerufen",
           b5b["ohne_exhibit"] == 1 and b5b["texte_da"] == 1 and b5b["texte_neu"] == 0, b5b)
+        ergebnis_html2 = ("<html><body>" + (
+            "<p>Tesla Reports Second Quarter Results for the three months ended June 30, 2026. "
+            "Total revenues were $28,236 million, up 25%; net income of $1,114 million; earnings per share "
+            "of $0.33; operating cash flow of $4,697 million. Revenue increased, net income decreased. "
+            "Total revenues $28,236 million, gross profit $5,100 million, operating income $1,400 million.</p>"
+            "<table><tr><td>Total revenues</td><td>28,236</td><td>22,496</td></tr>"
+            "<tr><td>Net income</td><td>1,114</td><td>1,172</td></tr></table>" * 8) + "</body></html>").encode("utf-8")
+        liefer_html = ("<html><body>" + (
+            "<p>Tesla produced approximately 410,000 vehicles and delivered approximately 384,000 "
+            "vehicles in the second quarter of 2026. Energy storage deployments were 9.6 GWh.</p>" * 12) + "</body></html>").encode("utf-8")
+
+        def hole2(url):
+            aufrufe.append(url)
+            if "submissions-001.json" in url:
+                return json.dumps(json.loads(sub_json(19617, 8))["filings"]["recent"]).encode("utf-8")
+            if "submissions/CIK" in url:
+                cik = int(re.search(r"CIK(\d+)", url).group(1))
+                if cik == 19617:
+                    j = json.loads(sub_json(cik, 3))
+                    j["filings"]["files"] = [{"name": "CIK0000019617-submissions-001.json"}]
+                    return json.dumps(j).encode("utf-8")
+                return sub_json(cik, 10)
+            if url.endswith("index.json"):
+                acc = re.search(r"/(\d{18})/index", url).group(1)
+                if acc.endswith(("000000", "000001")) and acc.startswith("0000001318"):
+                    return json.dumps({"directory": {"item": [{"name": "tsla-2026.htm", "size": 3000},
+                                                               {"name": "R1.htm", "size": 12000}]}}).encode("utf-8")
+                if acc.endswith("000002") and acc.startswith("0000001318"):
+                    return json.dumps({"directory": {"item": [{"name": "pressrelease.htm", "size": 9000},
+                                                               {"name": "R1.htm", "size": 12000}]}}).encode("utf-8")
+                return json.dumps({"directory": {"item": [{"name": "a-ex99_1.htm", "size": 5000}]}}).encode("utf-8")
+            if url.endswith("R1.htm"):
+                raise AssertionError("Viewerdatei abgerufen")
+            return liefer_html if url.endswith("tsla-2026.htm") else ergebnis_html2
+
+        ke._schreibe_json(os.path.join(tmp, "konsens", "firmen_mit_konsens.json"), {"TSLA": {}, "JPM": {}})
+        b7 = lauf(tmp, hoechstens=0, quartale=8, hole=hole2, ticker_zu_cik={"TSLA": 1318, "JPM": 19617}, log=lambda *_: None,
+                  jetzt=dt.datetime(2026, 9, 5, tzinfo=dt.timezone.utc), warte=False)
+        st7 = stand_laden(tmp)
+        idx7 = index_lesen(tmp)
+        p("Leere 8-Ks zaehlen nicht: Tesla bekommt trotz zwei Auslieferungs-8-Ks (Hauptdokument ohne Ergebnis, R1.htm nie) 8 Texte, "
+          "das Hauptdokument mit Ergebnisinhalt zaehlt; JPMorgan holt 5 aus der aelteren Liste dazu",
+          b7["texte_neu"] == 16 and b7["ohne_exhibit"] == 2 and len(st7["1318"]["accessions"]) == 8 and len(st7["19617"]["accessions"]) == 8
+          and sorted(st7["1318"]["leer"]) == ["0000001318-26-000000", "0000001318-26-000001"]
+          and not any(i["exhibit"] == "R1.htm" for i in idx7) and any(i["exhibit"] == "pressrelease.htm" for i in idx7),
+          (b7, {k: (len(v["accessions"]), list(v["leer"])) for k, v in st7.items() if k in ("1318", "19617")}))
         ke._schreibe_json(os.path.join(tmp, "konsens", "firmen_mit_konsens.json"), {"AAPL": {}, "BF-B": {}})
         m = speichern(tmp, 1, "T", "0000000001-26-000001", "2026-01-01", "2025-12-31", "x.htm", "A" * (TEXT_DECKEL + 500))
         speichern(tmp, 2, "T2", "0000000002-26-000001", "2026-01-01", "2025-12-31", "x.htm", "gleicher Text")

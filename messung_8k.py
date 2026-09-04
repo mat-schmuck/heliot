@@ -199,7 +199,9 @@ def exhibit_text(cik, accession):
     ordner = f"https://www.sec.gov/Archives/edgar/data/{cik}/{accession.replace('-', '')}"
     index = json.loads(fl.hole(ordner + "/index.json"))
     dateien = [d for d in index.get("directory", {}).get("item", [])
-               if d.get("name", "").lower().endswith((".htm", ".html"))]
+               if d.get("name", "").lower().endswith((".htm", ".html"))
+               and not re.fullmatch(r"r\d+\.htm", d.get("name", "").lower())   # XBRL-Viewer-Seiten sind nie ein Anhang
+               and not d.get("name", "").lower().startswith(("filingsummary", "metalinks"))]
     kandidaten = [d for d in dateien if re.search(r"ex[-_]?99", d["name"].lower())]
     if not kandidaten:
         kandidaten = [d for d in dateien if not d["name"].lower().startswith("0")]
