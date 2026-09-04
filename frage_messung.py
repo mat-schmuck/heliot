@@ -19,7 +19,7 @@ import os
 import sys
 import time
 
-FRAGE_VORGABE = ("Apple hat super Zahlen gemeldet, trotzdem ist der Kurs schwach. Warum? "
+FRAGE_VORGABE = ("{firma} hat super Zahlen gemeldet, trotzdem ist der Kurs schwach. Warum? "   # {firma} wird im Lauf durch den Firmennamen ersetzt
                  "Zeige mir das Quartal ueber Quartal.")
 MODELLE_VORGABE = ["ministral-14b-2512"]   # seit 04.09.2026: mistral-small und mistral-medium sind im Kostenlos-Tarif
                                            # gesperrt (429, 0 Anfragen je Minute); ministral-14b las im Apple-Vergleich
@@ -68,7 +68,11 @@ AUFTRAG = (
     "kein Inhalt und werden nicht als Aussage des Managements gewertet. Datumsangaben der Quartale nimmst du nur "
     "aus der Tabelle, nie aus dem Veroeffentlichungsdatum einer Mitteilung. Steht bei einem Quartal, dass die "
     "Ueberraschung nicht belastbar ist, dann sagst du das so und deutest es NICHT als verfehlte oder getroffene "
-    "Erwartung. Jedes Quartal der Tabelle bekommt seinen Absatz, auch wenn Angaben fehlen; dann nennst du, was fehlt."
+    "Erwartung. Jedes Quartal der Tabelle bekommt seinen Absatz, auch wenn Angaben fehlen; dann nennst du, was fehlt. "
+    "Unterscheide amtliche Kennzahlen (IFRS oder US-GAAP) streng von bereinigten (core, adjusted, non-GAAP): Vergleiche "
+    "nie einen amtlichen mit einem bereinigten Wert und nenne bei jeder Marge, welche Art gemeint ist. Quartalswerte "
+    "und Jahreswerte haeltst du auseinander. Ausblick, Prognosen und deren Aenderungen nimmst du nur aus der "
+    "Mitteilung des jeweiligen Quartals, nie aus einer spaeteren."
 )
 
 
@@ -265,6 +269,13 @@ def eingabe(frage, tab_text, texte_text):
     return (f"Frage des Nutzers: {frage}\n\n{tab_text}\n\nPressemitteilungen der Firma zu diesen Quartalen:\n\n{texte_text}")
 
 
+def markdown_zeichen(text):
+    """Zahl der Markdown-Auszeichnungen in einer Antwort (Sternchen, Rauten, Trennlinien): ein Screenreader liest
+    sie mit, der Auftrag verbietet sie; als Messwert je Modell."""
+    import re
+    return len(re.findall(r"\*\*|^\s*#+\s|^\s*---\s*$|^\s*[-*]\s", text or "", flags=re.M))
+
+
 def _zahlen(text):
     """Zahlenwerte eines Textes (Beistrich oder Punkt als Dezimalzeichen, Tausenderzeichen entfernt);
     Jahreszahlen und Datumsteile werden ausgelassen. Rueckgabe: (werte, prozentwerte)."""
@@ -334,6 +345,9 @@ def websuche_groq(ticker, name, meldedatum, heute, log=print):
     teile, quellen, hinweise, dauer, tokens = [], [], [], 0.0, 0
     status_gesamt, modell_laut = 0, None
     for teil, titel in (("zahlen", "Reaktion auf die juengsten Quartalszahlen"), ("wochen", "Kursentwicklung der letzten Wochen")):
+        if teil != "zahlen" and tokens > 4000:
+            log(f"  Websuche: {tokens} Tokens im ersten Teil, warte 62 s auf das Minutenfenster von Groq")
+            time.sleep(62)
         r = _websuche_einzeln(websuche_frage(ticker, name, meldedatum, heute, teil), log=log)
         hinweise += [f"{teil}: {h}" for h in r.get("hinweise") or []]
         dauer += r.get("dauer_s") or 0
@@ -629,6 +643,7 @@ def lauf(daten, ticker, frage, modelle, quartale=QUARTALE, ausgabe=None, log=pri
     konsens_datei = json.load(gzip.open(kpfad, "rt", encoding="utf-8")) if os.path.exists(kpfad) else {}
     konsens = konsens_datei.get("zeilen", [])
     konsens_name = (konsens_datei.get("kopf") or {}).get("name") or ""
+    frage = (frage or "").strip() or FRAGE_VORGABE.replace("{firma}", konsens_name or ticker)
     texte = pt.texte_der_firma(daten, cik, quartale)
     if not texte:
         raise RuntimeError(f"{ticker}: keine Pressetexte im Archiv (zuerst pressetexte.yml mit ticker={ticker} laufen lassen)")
@@ -684,6 +699,7 @@ def lauf(daten, ticker, frage, modelle, quartale=QUARTALE, ausgabe=None, log=pri
         meta["antwort_zeichen"] = len(r.get("antwort") or "")
         meta["zahlen"] = zahlen_pruefen(r.get("antwort") or "", tab_text, texte_text + "\n" + ((nachrichten or {}).get("text") or ""))
         meta["zuordnung"] = zuordnung_pruefen(r.get("antwort") or "", liste)
+        meta["markdown"] = markdown_zeichen(r.get("antwort") or "")
         with io.open(os.path.join(ausgabe, f"meta-{modell}.json"), "w", encoding="utf-8") as f:
             json.dump(meta, f, ensure_ascii=False, indent=1)
         bilanz["modelle"][modell] = meta
@@ -875,7 +891,7 @@ def main():
         import messung_8k as m8k
         modelle = m8k.modelle_laden()
         print("Alle Text-Chat-Modelle der Tagesliste:", ", ".join(modelle))
-    lauf(a.daten, a.ticker, a.frage or FRAGE_VORGABE, modelle, a.quartale, websuche=(a.websuche == "an"))
+    lauf(a.daten, a.ticker, a.frage, modelle, a.quartale, websuche=(a.websuche == "an"))
     return 0
 
 
