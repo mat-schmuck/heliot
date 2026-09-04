@@ -36,6 +36,7 @@ Zustandsdatei:
 """
 
 import argparse
+import base64
 import json
 import os
 import sys
@@ -1689,7 +1690,12 @@ def tagesgeschaeft_wache(topic, quotes, dry_run):
                 + f"{pct:+.1f} %".replace(".", ","))
         titel = ("EXIT Tagesgeschäft: "
                  + ", ".join(e["symbol"] for _, e, _ in raus))
-        if sende(topic, titel, absaetze, "high"):
+        paket = handel_paket([{"ticker": e["symbol"],
+                               "firma": e.get("firma", ""),
+                               "strategie": e.get("strategie", ""),
+                               "kurs": kurs}
+                              for _, e, kurs in raus], art="verkauf")
+        if sende(topic, titel, absaetze, "high", handel_adresse(paket)):
             positionen.speichern(bestand)
     except Exception as e:
         print(f"Tagesgeschäft-Wache fehlgeschlagen: "
@@ -1954,7 +1960,50 @@ def push_abstand_warten(jetzt=None, schlafe=time.sleep) -> float:
     return rest
 
 
-def _sende_eine(topic: str, titel: str, body: str, prio: str) -> bool:
+def handel_paket(treffer: list[dict], art: str = "kauf") -> list[dict]:
+    """Die Zahlen eines Alarms so, wie die Handels-App sie braucht.
+
+    Der Text der Meldung bleibt unveraendert; die App bekommt die Werte
+    zusaetzlich als Daten, damit sie beim Bauen der Order nicht raten muss."""
+    paket = []
+    for t in treffer[:8]:
+        eintrag = {"art": art, "sym": t.get("ticker")}
+        firma = (t.get("firma") or "")[:40]
+        if firma:
+            eintrag["firma"] = firma
+        namen = t.get("strategien") or ([t.get("strategie")] if t.get("strategie") else [])
+        if namen:
+            eintrag["muster"] = ", ".join(STRATEGIE_VOLL.get(n, n) for n in namen)[:60]
+        for feld, schluessel in (("kaufpunkt", "kp"), ("kurs", "kurs"),
+                                 ("stop", "stop"), ("ziel", "ziel")):
+            wert = t.get(feld)
+            if wert is not None:
+                eintrag[schluessel] = round(float(wert), 4)
+        paket.append(eintrag)
+    return paket
+
+
+def handel_adresse(paket: list[dict]) -> str | None:
+    """Die Adresse, die das Antippen der Meldung oeffnet.
+
+    Ohne die Umgebungsvariable HANDEL_URL passiert gar nichts - der
+    Waechter verhaelt sich dann Zeichen fuer Zeichen wie vorher."""
+    basis = (os.environ.get("HANDEL_URL") or "").strip()
+    if not basis or not paket:
+        return None
+    daten = json.dumps(paket, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+    kurz = base64.urlsafe_b64encode(daten).decode("ascii").rstrip("=")
+    return basis + "#a=" + kurz
+
+
+def erster_je_aktie(gruppen: list[list[dict]]) -> list[dict]:
+    """Je Aktie den ersten Kaufpunkt - die App legt eine Order je Aktie
+    vor, nicht je gerissener Marke."""
+    return [g[0] for g in gruppen if g]
+
+
+def _sende_eine(topic: str, titel: str, body: str, prio: str,
+                klick: str | None = None) -> bool:
     global _LETZTER_PUSH
     # KEINE "Tags"-Kopfzeile (Mathias, 13.08.2026: "Entferne bitte alle
     # Emojis aus den Meldungen, Raketen, Diagramme etc. nerven nur").
@@ -1971,6 +2020,10 @@ def _sende_eine(topic: str, titel: str, body: str, prio: str) -> bool:
                   f"nach dem Warten des Push-Sammlers.")
             return False
     kopf = {"Title": titel.encode("utf-8"), "Priority": prio}
+    # Antippen der Meldung oeffnet die Handels-App mit genau diesen
+    # Alarmen - aber nur, wenn HANDEL_URL gesetzt ist.
+    if klick:
+        kopf["Click"] = klick
     kopf.update(email_kopf())
     try:
         r = requests.post(f"https://ntfy.sh/{topic}", data=body.encode("utf-8"),
@@ -1993,7 +2046,8 @@ def _sende_eine(topic: str, titel: str, body: str, prio: str) -> bool:
 HANDELSZEIT_EGAL = False
 
 
-def sende(topic: str, titel: str, absaetze: list[str], prio: str) -> bool:
+def sende(topic: str, titel: str, absaetze: list[str], prio: str,
+          klick: str | None = None) -> bool:
     """Verschickt die Absaetze in so vielen Nachrichten wie noetig.
 
     HIER sitzt die Handelszeit-Sperre (Mathias, 27.07.2026: 'Der Wächter
@@ -2023,7 +2077,7 @@ def sende(topic: str, titel: str, absaetze: list[str], prio: str) -> bool:
     alle_ok = True
     for nr, teil in enumerate(portionen, 1):
         kopf = titel if len(portionen) == 1 else f"{titel} ({nr} von {len(portionen)})"
-        if not _sende_eine(topic, kopf, "\n\n".join(teil), prio):
+        if not _sende_eine(topic, kopf, "\n\n".join(teil), prio, klick):
             alle_ok = False
     return alle_ok
 
@@ -2415,7 +2469,8 @@ def push_nachtrag(topic: str, treffer: list[dict]) -> bool:
         absaetze = [format_aktie(gruppen[0])]
     else:
         absaetze = [format_aktie(g, i) for i, g in enumerate(gruppen, 1)]
-    return sende(topic, titel, absaetze, "high")
+    return sende(topic, titel, absaetze, "high",
+                 handel_adresse(handel_paket(treffer)))
 
 
 def push(topic: str, treffer: list[dict]) -> bool:
@@ -2460,7 +2515,8 @@ def push(topic: str, treffer: list[dict]) -> bool:
              + (f", {len(rest)} offen" if rest else "")
              + tagesanteil_titel(treffer))
     return sende(topic, titel, absaetze,
-                 "high" if bestaetigt else "default")
+                 "high" if bestaetigt else "default",
+                 handel_adresse(handel_paket(erster_je_aktie(bestaetigt + rest))))
 
 
 def testpush(topic: str) -> int:
