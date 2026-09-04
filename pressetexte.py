@@ -212,16 +212,35 @@ _MUSTER_ERGEBNIS = (
 )
 
 
-def ist_ergebnismitteilung(text):
-    """(ja/nein, Punkte): Ergebnismitteilung, wenn Ergebnis-, Umsatz- und Periodenwoerter vorkommen
-    und genug Zahlen mit Waehrung darin stehen."""
+_KEINE_MITTEILUNG = re.compile(r"comments from the officers|reference form|formul[aá]rio de refer|annual report on form 20-F|"
+                               r"proxy statement|notice of (annual|extraordinary) general meeting|shareholders.? meeting|"
+                               r"management proposal|convocation", re.I)
+
+
+def ist_ergebnismitteilung(text, dateiname=""):
+    """(ja/nein, Punkte): Ergebnismitteilung, wenn frueh im Text ein Periodenwort steht, Ergebnis- und
+    Umsatzwoerter samt Waehrungszahlen vorkommen und es keine Hauptversammlungs- oder Berichtsunterlage ist.
+    Punkte bevorzugen dichte, mittellange Texte mit sprechendem Dateinamen (Pressemitteilung vor Berichtsheft)."""
     if not text or len(text) < 1500:
+        return False, 0
+    kopf = text[:6000]
+    if _KEINE_MITTEILUNG.search(kopf):
+        return False, 0
+    if not _MUSTER_ERGEBNIS[2].search(text[:max(6000, len(text) // 3)]):
         return False, 0
     punkte = sum(1 for m in _MUSTER_ERGEBNIS if m.search(text))
     zahlen = len(re.findall(r"(?:US\$|\$|EUR|€|R\$|CHF|£|¥|USD|BRL)\s?\d[\d,.]*\s?(?:million|billion|mn|bn|m|thousand)?", text))
     treffer = sum(len(m.findall(text)) for m in _MUSTER_ERGEBNIS[:2])
     ja = punkte >= 3 and zahlen >= 5 and treffer >= 4
-    return ja, punkte * 10 + min(treffer, 50) + min(zahlen, 50)
+    dichte = treffer * 10000.0 / max(len(text), 1)
+    wert = punkte * 10 + min(dichte * 4, 40) + min(zahlen, 30)
+    if re.search(r"pr\d|press|release|results|earnings|q[1-4]|quarter", (dateiname or "").lower()):
+        wert += 20
+    if re.search(r"itr|report|\d{8}_6k", (dateiname or "").lower()):
+        wert -= 10
+    if len(text) > 150000:
+        wert -= 20
+    return ja, round(wert, 1)
 
 
 def sechs_k_ergebnisse(cik, hole, heute, quartale=QUARTALE, log=print, warte=True):
@@ -265,21 +284,22 @@ def sechs_k_ergebnisse(cik, hole, heute, quartale=QUARTALE, log=print, warte=Tru
             text = m8k.html_zu_text(html_roh)
             if len(text) > SECHS_K_MAX_ZEICHEN:
                 continue
-            ja, punkte = ist_ergebnismitteilung(text)
+            ja, punkte = ist_ergebnismitteilung(text, x["datei"])
             if ja and (bester is None or punkte > bester[0]):
                 bester = (punkte, x, text)
         if bester:
             punkte, x, text = bester
             kandidaten.append((x["file_date"] or "", x.get("period_ending") or "", acc, x["datei"], text, punkte))
-    # je Periode nur der beste Text (Pressemitteilung schlaegt Quartalsbericht); ohne belastbare
-    # Periodenangabe (die Volltextsuche setzt sie bei 6-K oft auf das Einreichdatum) zaehlt der Monat
+    # je Einreichmonat nur der beste Text (Pressemitteilung schlaegt Berichtsheft); die Periodenangabe der
+    # Volltextsuche ist bei 6-K unzuverlaessig (oft das Einreichdatum oder ein fremdes Quartal) und dient nur
+    # als Hinweis, wenn sie vom Einreichdatum abweicht
     kandidaten.sort(key=lambda k: k[5], reverse=True)
-    raus, schluessel = [], set()
+    raus, monate = [], set()
     for fd, pe, acc, datei, text, punkte in kandidaten:
-        s = pe if (pe and pe != fd) else (fd or "")[:7]
-        if s in schluessel:
+        monat = (fd or "")[:7]
+        if monat in monate:
             continue
-        schluessel.add(s)
+        monate.add(monat)
         raus.append((fd, pe if (pe and pe != fd) else "", acc, datei, text))
     raus.sort(key=lambda k: (k[0], k[2]), reverse=True)
     return raus[:quartale]
@@ -566,9 +586,13 @@ def selbsttest() -> int:
                          "Revenue in Brazil US$ 1,100 million, Canada US$ 400 million, R$ 500 million, R$ 600 million, R$ 700 million. "
                          "Three months ended June 30, 2026.</p>" + "<p>More text about the quarter and revenue.</p>" * 40 + "</body></html>")
         dividende_html = "<html><body><p>Notice of dividend payment. The board approved a dividend of R$ 0.10 per share payable in July.</p>" + "<p>x</p>" * 300 + "</body></html>"
-        ja, _ = ist_ergebnismitteilung(ergebnis_html)
+        ja, pr = ist_ergebnismitteilung(ergebnis_html, "abevpr2q26_6k.htm")
         nein, _ = ist_ergebnismitteilung(dividende_html)
-        p("Erkennung: Ergebnismitteilung ja, Dividendenmeldung nein", ja and not nein)
+        hv_html = "<html><body><p>EXHIBIT A.I - COMMENTS FROM THE OFFICERS (as Item 2 to Exhibit C)</p>" + ergebnis_html
+        nein2, _ = ist_ergebnismitteilung(hv_html, "ex99-1.htm")
+        _, bericht = ist_ergebnismitteilung(ergebnis_html, "abevitr2q26_6k.htm")
+        p("Erkennung: Ergebnismitteilung ja, Dividendenmeldung nein, Hauptversammlungskommentar nein, Pressemitteilung vor Bericht",
+          ja and not nein and not nein2 and pr > bericht, (pr, bericht))
 
         suchen = []
 
