@@ -24,7 +24,7 @@ on:
         required: false
         default: "8"
       modus:
-        description: "archiv (8-K), 6k (Ergebnismitteilungen auslaendischer Emittenten ueber die SEC-Volltextsuche) oder probe6k (nur anzeigen, mit ticker)"
+        description: "archiv (8-K), 6k (Ergebnismitteilungen auslaendischer Emittenten ueber die SEC-Volltextsuche), probe6k oder probe8k (nur anzeigen, mit ticker)"
         required: false
         default: "archiv"
 
