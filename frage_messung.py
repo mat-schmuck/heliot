@@ -359,7 +359,8 @@ def _websuche_einzeln(frage_text, log=print):
         status, kopf, roh = m8k._anfrage("https://api.groq.com/openai/v1/chat/completions", koerper, key=GROQ_KEY)
         dauer = time.time() - t0
         if status == 429 or status >= 500:
-            hinweise.append(f"{status} beim Versuch {versuch + 1}" + (f": {roh[:160]}" if versuch == 0 and roh else ""))
+            hinweise.append(f"{status} beim Versuch {versuch + 1}" + (f": {roh[:160]}" if versuch == 0 and roh else "")
+                            + (f" | {ratenkopf(kopf)}" if versuch == 0 else ""))
             try:
                 pause = float({str(a).lower(): b for a, b in (kopf or {}).items()}.get("retry-after") or 0)
             except (TypeError, ValueError):
@@ -529,6 +530,38 @@ def zuordnung_pruefen(antwort, liste):
     return {"geprueft": geprueft, "fehler": fehler, "fehlende_quartale": [e for e in alle if e not in behandelt]}
 
 
+def ratenkopf(kopf):
+    """Die Ratenbegrenzungs-Kopfzeilen einer Antwort (x-ratelimit-...), ohne alles andere."""
+    return {k: v for k, v in (kopf or {}).items() if "ratelimit" in str(k).lower() or str(k).lower() == "retry-after"}
+
+
+def probe_mistral(modelle, log=print):
+    """Kleinstanfrage je Modell: Status, Ratenbegrenzungs-Kopfzeilen, Fehlertext, Verbrauch. Klaert, ob eine
+    Abweisung an der Anfragegroesse liegt (dann geht die kleine Anfrage durch) oder am Konto oder Minutenlimit."""
+    import messung_8k as m8k
+    raus = {}
+    for modell in modelle:
+        koerper = {"model": modell, "temperature": 0, "max_tokens": 5,
+                   "messages": [{"role": "user", "content": "Antworte nur mit OK."}]}
+        t0 = time.time()
+        status, kopf, roh = m8k._anfrage("https://api.mistral.ai/v1/chat/completions", koerper, timeout=60)
+        dauer = round(time.time() - t0, 1)
+        antwort = ""
+        usage = None
+        if status == 200:
+            try:
+                a = json.loads(roh)
+                antwort = (a["choices"][0]["message"].get("content") or "").strip()
+                usage = a.get("usage")
+            except Exception:  # noqa
+                pass
+        raus[modell] = {"status": status, "dauer_s": dauer, "antwort": antwort[:40], "usage": usage,
+                        "kopf": ratenkopf(kopf), "fehler": roh[:300] if status != 200 else ""}
+        log(f"  {modell}: Status {status} in {dauer} s, Antwort {antwort[:40]!r}, Verbrauch {usage}, "
+            f"Kopfzeilen {ratenkopf(kopf)}" + (f", Fehler {roh[:300]}" if status != 200 else ""))
+    return raus
+
+
 def modell_fragen(modell, frage_text, bremse):
     import messung_8k as m8k
     koerper = {"model": modell, "temperature": 0, "max_tokens": 3000,
@@ -541,7 +574,8 @@ def modell_fragen(modell, frage_text, bremse):
         dauer = time.time() - t0
         bremse.merken(modell, kopf)
         if status == 429 or status >= 500:
-            hinweise.append(f"{status} beim Versuch {versuch + 1}" + (f": {roh[:160]}" if versuch == 0 and roh else ""))
+            hinweise.append(f"{status} beim Versuch {versuch + 1}" + (f": {roh[:160]}" if versuch == 0 and roh else "")
+                            + (f" | {ratenkopf(kopf)}" if versuch == 0 else ""))
             time.sleep(20 if status == 429 else 10)
             continue
         if status != 200:
@@ -824,10 +858,17 @@ def main():
     ap.add_argument("--quartale", type=int, default=QUARTALE)
     ap.add_argument("--websuche", default="an", choices=["an", "aus"])
     ap.add_argument("--selbsttest", action="store_true")
+    ap.add_argument("--probe", default="", help="mistral: Kleinstanfrage je Modell mit Ratenbegrenzungs-Kopfzeilen, sonst nichts")
     a = ap.parse_args()
     if a.selbsttest:
         return selbsttest()
     modelle = [m.strip() for m in a.modelle.split(",") if m.strip()]
+    if a.probe == "mistral":
+        import messung_8k as m8k
+        if not m8k.MISTRAL_KEY:
+            raise RuntimeError("MISTRAL_API_KEY fehlt (Secret im Actions-Lauf).")
+        probe_mistral(modelle)
+        return 0
     if modelle == ["alle"]:
         import messung_8k as m8k
         modelle = m8k.modelle_laden()
