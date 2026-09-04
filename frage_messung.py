@@ -21,7 +21,9 @@ import time
 
 FRAGE_VORGABE = ("Apple hat super Zahlen gemeldet, trotzdem ist der Kurs schwach. Warum? "
                  "Zeige mir das Quartal ueber Quartal.")
-MODELLE_VORGABE = ["mistral-small-2603", "mistral-medium-2604"]
+MODELLE_VORGABE = ["ministral-14b-2512"]   # seit 04.09.2026: mistral-small und mistral-medium sind im Kostenlos-Tarif
+                                           # gesperrt (429, 0 Anfragen je Minute); ministral-14b las im Apple-Vergleich
+                                           # ebenso fehlerfrei (49 Zahlen, 0 unbelegt) wie small (76, 0) und medium (93, 0)
 QUARTALE = 8
 TEXT_JE_MITTEILUNG = 25000
 KOPF_JE_MITTEILUNG = 12000
