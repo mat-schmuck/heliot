@@ -25,6 +25,8 @@ MODELLE_VORGABE = ["mistral-small-2603", "mistral-medium-2604"]
 QUARTALE = 8
 TEXT_JE_MITTEILUNG = 25000
 KOPF_JE_MITTEILUNG = 12000
+EINGABE_MAX_ZEICHEN = 170000   # darueber weist Mistral die Anfrage mit 429 ab (Alcon: 207.000 Zeichen scheiterten
+                               # sechsmal, Ciena mit 181.000 lief); dann werden die Texte je Mitteilung halbiert
 GROQ_KEY = os.environ.get("GROQ_API_KEY", "").strip()
 WEBSUCHE_MODELL = "openai/gpt-oss-20b"   # Groqs eingebautes Werkzeug browser_search am Grundmodell; eigenes Kontingent
 WEBSUCHE_ABSTAND_S = 2.5                  # (1.000 je Tag, 8.000 Tokens je Minute), das der Podcatcher nicht nutzt.
@@ -97,6 +99,30 @@ def _vorjahr(werte, ende, toleranz=20):
     return best[1] if best else None
 
 
+def quartalsraster(amtlich, konsens, quartale=QUARTALE, toleranz=7):
+    """Die juengsten Periodenenden aus amtlichen und Konsens-Perioden zusammen. Eine Konsens-Periode, die
+    hoechstens toleranz Tage neben einer amtlichen liegt, ist dieselbe (Apple 30.06. gegen 28.06.). So bleibt
+    das Raster bei auslaendischen Emittenten, deren amtliches Archiv nur einzelne Quartale kennt, ein
+    Quartalsraster; fehlende amtliche Werte stehen dann als keine Angabe."""
+    enden = set(amtlich)
+    for ke in konsens:
+        try:
+            kd = dt.date.fromisoformat(ke)
+        except ValueError:
+            continue
+        nah = False
+        for a in amtlich:
+            try:
+                if abs((dt.date.fromisoformat(a) - kd).days) <= toleranz:
+                    nah = True
+                    break
+            except ValueError:
+                continue
+        if not nah:
+            enden.add(ke)
+    return sorted(enden)[-quartale:]
+
+
 def konsens_je_quartal(konsens_zeilen):
     """{periodenende: {eps_ist, eps_konsens, ueberraschung_prozent, meldedatum, zeitpunkt}} aus eps_history."""
     raus = {}
@@ -156,8 +182,8 @@ def _vorzeichen_hinweis(neu, alt):
 def tabelle(zeilen, konsens_zeilen, kurse, quartale=QUARTALE):
     """Liste je Quartal (aeltestes zuerst) mit allen Angaben, dazu die Textform."""
     umsatz, gewinn, eps = _q(zeilen, "umsatz"), _q(zeilen, "nettogewinn"), _q(zeilen, "eps_verwaessert")
-    enden = sorted(set(umsatz) | set(eps))[-quartale:]
     k = konsens_je_quartal(konsens_zeilen)
+    enden = quartalsraster(set(umsatz) | set(eps), set(k), quartale)
     liste = []
     for e in enden:
         kk = k.get(e) or {}
@@ -333,7 +359,7 @@ def _websuche_einzeln(frage_text, log=print):
         status, kopf, roh = m8k._anfrage("https://api.groq.com/openai/v1/chat/completions", koerper, key=GROQ_KEY)
         dauer = time.time() - t0
         if status == 429 or status >= 500:
-            hinweise.append(f"{status} beim Versuch {versuch + 1}")
+            hinweise.append(f"{status} beim Versuch {versuch + 1}" + (f": {roh[:160]}" if versuch == 0 and roh else ""))
             try:
                 pause = float({str(a).lower(): b for a, b in (kopf or {}).items()}.get("retry-after") or 0)
             except (TypeError, ValueError):
@@ -515,7 +541,7 @@ def modell_fragen(modell, frage_text, bremse):
         dauer = time.time() - t0
         bremse.merken(modell, kopf)
         if status == 429 or status >= 500:
-            hinweise.append(f"{status} beim Versuch {versuch + 1}")
+            hinweise.append(f"{status} beim Versuch {versuch + 1}" + (f": {roh[:160]}" if versuch == 0 and roh else ""))
             time.sleep(20 if status == 429 else 10)
             continue
         if status != 200:
@@ -570,11 +596,15 @@ def lauf(daten, ticker, frage, modelle, quartale=QUARTALE, ausgabe=None, log=pri
     texte = pt.texte_der_firma(daten, cik, quartale)
     if not texte:
         raise RuntimeError(f"{ticker}: keine Pressetexte im Archiv (zuerst pressetexte.yml mit ticker={ticker} laufen lassen)")
-    enden = sorted(_q(zeilen, "umsatz"))[-quartale:]
+    enden = quartalsraster(set(_q(zeilen, "umsatz")) | set(_q(zeilen, "eps_verwaessert")),
+                           set(konsens_je_quartal(konsens)), quartale)
     von = (dt.date.fromisoformat(enden[0]) - dt.timedelta(days=10)).isoformat() if enden else "2024-01-01"
     kurse = kurse_laden(ticker, von, (dt.date.today() + dt.timedelta(days=1)).isoformat())
     liste, tab_text = tabelle(zeilen, konsens, kurse, quartale)
     texte_text = texte_block(texte)
+    if len(texte_text) + len(tab_text) > EINGABE_MAX_ZEICHEN:
+        texte_text = texte_block(texte, je=KOPF_JE_MITTEILUNG, kopf=KOPF_JE_MITTEILUNG // 2)
+        log(f"  Eingabe ueber {EINGABE_MAX_ZEICHEN} Zeichen: Texte je Mitteilung auf {KOPF_JE_MITTEILUNG} Zeichen gekuerzt")
     nachrichten = None
     if websuche:
         juengst = liste[-1] if liste else {}
@@ -664,6 +694,17 @@ def selbsttest() -> int:
     kurse = {"2026-07-29": 200.0, "2026-07-30": 202.0, "2026-07-31": 196.0, "2026-08-03": 198.0,
              "2026-04-29": 180.0, "2026-04-30": 175.5, "2026-05-01": 176.0}
     liste, text = tabelle(zeilen, konsens, kurse, 8)
+    raster = quartalsraster({"2024-06-30", "2025-06-30", "2023-06-30"},
+                            {"2025-09-30", "2025-12-31", "2026-03-31", "2026-06-30", "2025-06-30", "2025-03-31", "2024-12-31", "2024-09-30", "2024-06-28"}, 8)
+    p("Raster: Konsens-Quartale fuellen die Luecken des amtlichen Archivs, gleiche Perioden nicht doppelt",
+      raster == ["2024-09-30", "2024-12-31", "2025-03-31", "2025-06-30", "2025-09-30", "2025-12-31", "2026-03-31", "2026-06-30"], raster)
+    l_alc, t_alc = tabelle([{"typ": "Q", "kennzahl": "umsatz", "end": "2025-06-30", "wert_erst": 2.596e9}],
+                           [{"art": "eps_history", "periodenende": e, "eps_ist": 0.8, "eps_konsens": 0.77, "ueberraschung_prozent": 3.9, "meldedatum": "2026-08-10"}
+                            for e in ("2025-06-30", "2025-09-30", "2025-12-31", "2026-03-31", "2026-06-30")], {}, 8)
+    p("Tabelle bei lueckenhaftem Archiv: fuenf Quartale, Umsatz nur im amtlich belegten, sonst keine Angabe",
+      [z["periodenende"] for z in l_alc] == ["2025-06-30", "2025-09-30", "2025-12-31", "2026-03-31", "2026-06-30"]
+      and l_alc[0]["umsatz_mrd"] == 2.596 and l_alc[-1]["umsatz_mrd"] is None and l_alc[-1]["eps_konsens"] == 0.77,
+      [(z["periodenende"], z["umsatz_mrd"]) for z in l_alc])
     p("Tabelle: acht Quartale, aeltestes zuerst, Jahreszeile ausgelassen",
       len(liste) == 8 and liste[0]["periodenende"] == "2024-09-28" and liste[-1]["periodenende"] == "2026-06-27", [z["periodenende"] for z in liste])
     j = liste[-1]

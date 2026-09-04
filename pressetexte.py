@@ -213,8 +213,70 @@ _MUSTER_ERGEBNIS = (
 
 
 _KEINE_MITTEILUNG = re.compile(r"comments from the officers|reference form|formul[aá]rio de refer|annual report on form 20-F|"
-                               r"proxy statement|notice of (annual|extraordinary) general meeting|shareholders.? meeting|"
-                               r"management proposal|convocation", re.I)
+                               r"proxy statement|management proposal|convocation", re.I)
+# Hauptversammlungs- und Vollmachtsunterlagen: nur im Titel (die ersten Zeichen nach dem Formularkopf), denn
+# Quartalsberichte verweisen im Text auf das Information Circular, und ein Ergebnistext darf die Hauptversammlung
+# ankuendigen ("announces results and issues notice of annual general meeting")
+_HV_TITEL = re.compile(r"proxy circular|information circular|management proxy|form of proxy|solicitation of prox|"
+                       r"notice of (the )?(\d{4} )?(annual|special|extraordinary)|notice of meeting|meeting brochure|"
+                       r"circular is important|document is important and requires|"
+                       r"(annual|special|extraordinary)( general)?( and special)? meeting of (share|stock)holders", re.I)
+# andere Unterlagen, die Ergebnis- und Periodenwoerter samt Betraegen tragen, aber keine Ergebnismitteilung sind:
+# Vertraege, Prospekte, technische Berichte, Praesentationen, Verguetungs- und Nachhaltigkeitsberichte
+_UNTERLAGE_TITEL = re.compile(r"technical report|ni 43-101|mineral resource estimate|prospectus supplement|"
+                              r"no securities regulatory authority|filed pursuant to rule 424|execution version|"
+                              r"by and among|by and between|witnesseth|as lenders|administrative agent|"
+                              r"(joint )?bookrunners|credit (agreement|facility) dated|"
+                              r"(share|stock|asset|membership interest|master|securities) purchase agreement|"
+                              r"arrangement agreement|amending agreement|subscription agreement|facility agreement|"
+                              r"term loan facility|declaration of trust|terms and conditions of the notes|"
+                              r"sustainability report|compensation report|corporate governance report|"
+                              r"annual information form|investor presentation|material change report|"
+                              r"business acquisition report|pro forma condensed", re.I)
+# Ergebnistitel: Mitteilung, Bericht oder Abschluss. Steht er im Titel VOR einem Unterlagen- oder
+# Hauptversammlungswort, ist der Text eine Ergebnisunterlage, die nur darauf verweist (Berichte nennen das
+# Information Circular und die Annual Information Form; TAL kuendigt im Ergebnistitel die Hauptversammlung an).
+# Steht das Unterlagenwort zuerst, ist es der Titel des Dokuments (Circulars nennen spaeter Abschluss und MD&A).
+_ERGEBNIS_TITEL = re.compile(r"(announces|reports|posts|delivers|publishes|releases)[^.]{0,80}(results|earnings)|"
+                             r"earnings (release|report)|kessan tanshin|results announcement|financial results|"
+                             r"management.{0,3}s discussion|MD&A|annual report(?!s? under cover)|"
+                             r"(audited|unaudited|condensed|interim|consolidated) (consolidated )?(interim )?financial (statements|information|report)|"
+                             r"(quarterly|interim|half.?year|(first|second|third|fourth) quarter) (report|results|update)|"
+                             r"activit(y|ies) report|returns? to profitab|(revenue|sales)s? (increased?|grew|rose|growth)|"
+                             r"net (income|loss|profit) (of|was|rose|fell|increased|decreased)|"
+                             r"\b[1-4]q ?\d{2}\b|\bq[1-4] ?(fy)?(20)?\d{2}\b|"
+                             r"results for the (period|quarter|year|three|six|nine|twelve|first|second|third|fourth)", re.I)
+_DECKBLATT_ENDE = re.compile(r"Rule 12g3-2\(b\)[^\n]{0,200}|Rule 101\(b\)\(7\)[^\n]{0,60}|Form 40-?\s?F[^\n]{0,40}", re.I)
+
+
+def titelzone(text, laenge=1200):
+    """Die ersten Zeichen des eigentlichen Dokuments: bei 6-K-Hauptdokumenten hinter dem Formularkopf
+    (der endet mit der Frage nach Rule 12g3-2(b)), sonst der Textanfang; dazu immer der Textanfang selbst
+    (Anhaenge tragen ihren Titel in der ersten Zeile)."""
+    kopf = text[:1200]
+    ende = None
+    for m in _DECKBLATT_ENDE.finditer(text[:6000]):
+        ende = m.end()
+    if ende:
+        return kopf + "\n" + text[ende:ende + laenge]
+    return text[:laenge + 1200]
+
+
+def ausschlussgrund(text):
+    """Warum ein Text keine Ergebnismitteilung sein kann (Kopf- und Titelmuster), sonst None."""
+    kopf = text[:6000]
+    a = _KEINE_MITTEILUNG.search(kopf)
+    if a:
+        return "Kopf: " + a.group(0)
+    titel = titelzone(text)
+    kandidaten = [(m.start(), art + ": " + m.group(0)) for art, m in
+                  (("Hauptversammlung", _HV_TITEL.search(titel)), ("Unterlage", _UNTERLAGE_TITEL.search(titel))) if m]
+    if kandidaten:
+        e = _ERGEBNIS_TITEL.search(titel)
+        erster = min(kandidaten)
+        if e is None or erster[0] < e.start():
+            return erster[1]
+    return None
 
 
 def ist_ergebnismitteilung(text, dateiname=""):
@@ -223,8 +285,7 @@ def ist_ergebnismitteilung(text, dateiname=""):
     Punkte bevorzugen dichte, mittellange Texte mit sprechendem Dateinamen (Pressemitteilung vor Berichtsheft)."""
     if not text or len(text) < 1500:
         return False, 0
-    kopf = text[:6000]
-    if _KEINE_MITTEILUNG.search(kopf):
+    if ausschlussgrund(text):
         return False, 0
     if not _MUSTER_ERGEBNIS[2].search(text[:max(6000, len(text) // 3)]):
         return False, 0
@@ -243,7 +304,7 @@ def ist_ergebnismitteilung(text, dateiname=""):
     return ja, round(wert, 1)
 
 
-def sechs_k_ergebnisse(cik, hole, heute, quartale=QUARTALE, log=print, warte=True):
+def sechs_k_ergebnisse(cik, hole, heute, quartale=QUARTALE, log=print, warte=True, ausfuehrlich=False):
     """[(filing_datum, period_ending, accession, datei, text)] der juengsten Ergebnis-6-Ks einer Firma:
     eine Volltextsuche der SEC, dann je Einreichung die Anhaenge, der beste Text je Einreichung,
     hoechstens einer je Kalendermonat, juengste zuerst."""
@@ -259,7 +320,11 @@ def sechs_k_ergebnisse(cik, hole, heute, quartale=QUARTALE, log=print, warte=Tru
             continue
         if warte:
             time.sleep(PAUSE_S)
-        for tr in sechs_k_treffer(antwort):
+        treffer = sechs_k_treffer(antwort)
+        if ausfuehrlich:
+            roh = len(((antwort.get("hits") or {}).get("hits") or []))
+            log(f"    Suche {suche}: {roh} Treffer, davon {len(treffer)} Anhaenge oder Hauptdokumente")
+        for tr in treffer:
             liste = je_filing.setdefault(tr["accession"], [])
             if all(x["datei"] != tr["datei"] for x in liste):
                 liste.append(tr)
@@ -283,8 +348,13 @@ def sechs_k_ergebnisse(cik, hole, heute, quartale=QUARTALE, log=print, warte=Tru
             import messung_8k as m8k
             text = m8k.html_zu_text(html_roh)
             if len(text) > SECHS_K_MAX_ZEICHEN:
+                if ausfuehrlich:
+                    log(f"    {acc} {x['datei']}: {len(text)} Zeichen, zu gross")
                 continue
             ja, punkte = ist_ergebnismitteilung(text, x["datei"])
+            if ausfuehrlich:
+                log(f"    {acc} {x['file_date']} {x['file_type']} {x['datei']}: {len(text)} Zeichen, "
+                    f"{'Mitteilung' if ja else 'keine Mitteilung'}, {punkte} Punkte: {' '.join(text[:110].split())}")
             if ja and (bester is None or punkte > bester[0]):
                 bester = (punkte, x, text)
         if bester:
@@ -384,11 +454,39 @@ def probe_6k(ticker, hole=None, jetzt=None, log=print):
         log(f"{ticker}: keine CIK")
         return []
     heute = (jetzt or dt.datetime.now(dt.timezone.utc)).date()
-    ergebnisse = sechs_k_ergebnisse(cik, hole, heute, log=log)
+    ergebnisse = sechs_k_ergebnisse(cik, hole, heute, log=log, ausfuehrlich=True)
     log(f"{ticker} CIK {cik}: {len(ergebnisse)} Ergebnis-6-Ks")
     for fd, pe, acc, datei, text in ergebnisse:
         log(f"  {fd} Periode {pe or '?'} {acc} {datei} {len(text)} Zeichen: {text[:160].replace(chr(10), ' ')}")
     return ergebnisse
+
+
+def probe_8k(ticker, hole=None, hoechstens=12, log=print):
+    """Zeigt fuer eine Firma die juengsten 8-Ks samt Item-Kennungen und wie viele davon
+    als Ergebnis-8-K (Item 2.02) gelten, ohne zu speichern."""
+    import fundament_lauf as fl
+    import messung_8k as m8k
+    if hole is None:
+        if not fl.UA:
+            raise RuntimeError("SEC_USER_AGENT fehlt (Secret im Actions-Lauf).")
+        hole = fl.hole
+    cik = fl.ticker_zu_cik().get(ticker.upper())
+    if not cik:
+        log(f"{ticker}: keine CIK")
+        return []
+    sub = submissions(cik, hole)
+    r = sub.get("filings", {}).get("recent", {})
+    achtks = [(fd, items, prim, acc) for form, fd, items, prim, acc in zip(r.get("form", []), r.get("filingDate", []),
+              r.get("items", []), r.get("primaryDocument", []), r.get("accessionNumber", [])) if form == "8-K"]
+    ergebnis = m8k.ergebnis_8ks(sub)
+    formen = {}
+    for form in r.get("form", []):
+        formen[form] = formen.get(form, 0) + 1
+    log(f"{ticker} CIK {cik}: {len(achtks)} 8-Ks in der juengsten Liste, {len(ergebnis)} mit Item 2.02; Formulare: "
+        + ", ".join(f"{k} {v}" for k, v in sorted(formen.items(), key=lambda kv: -kv[1])[:8]))
+    for fd, items, prim, acc in achtks[:hoechstens]:
+        log(f"  {fd} Items {items or '?':20s} {acc} {prim}")
+    return achtks
 
 
 # ---------------------------------------------------------------------------
@@ -593,6 +691,32 @@ def selbsttest() -> int:
         _, bericht = ist_ergebnismitteilung(ergebnis_html, "abevitr2q26_6k.htm")
         p("Erkennung: Ergebnismitteilung ja, Dividendenmeldung nein, Hauptversammlungskommentar nein, Pressemitteilung vor Bericht",
           ja and not nein and not nein2 and pr > bericht, (pr, bericht))
+        circular_html = ("<html><body><p>NOTICE OF 2026 ANNUAL GENERAL AND SPECIAL MEETING OF SHAREHOLDERS AND MANAGEMENT "
+                         "INFORMATION CIRCULAR</p><p>Dear Shareholder, you are invited to the meeting. The business of the "
+                         "meeting includes receipt of the audited consolidated financial statements and the management's "
+                         "discussion and analysis for the year, the election of directors and the appointment of auditors.</p>"
+                         + ergebnis_html)
+        nein3, _ = ist_ergebnismitteilung(circular_html, "ex99-2.htm")
+        proxy_html = ergebnis_html.replace("Revenue", "Revenue from enterprise proxy network services", 1)
+        ja2, _ = ist_ergebnismitteilung(proxy_html, "ex99-1.htm")
+        p("Erkennung: Hauptversammlungs-Circular nein, das Wort proxy als Produkt stoert nicht", (not nein3) and ja2, (nein3, ja2))
+        tal_html = ("<html><body><p>TAL Education Group Announces Unaudited Financial Results for the Second Fiscal Quarter "
+                    "and Issues Notice of Annual General Meeting</p>" + ergebnis_html)
+        ja3, _ = ist_ergebnismitteilung(tal_html, "ex99-1.htm")
+        mda_html = ("<html><body><p>Management's Discussion and Analysis for the three months ended June 30, 2026.</p>"
+                    "<p>Further details are in the Information Circular and the Annual Information Form.</p>" + ergebnis_html)
+        ja4, _ = ist_ergebnismitteilung(mda_html, "ex99-2.htm")
+        vertrag_html = ("<html><body><p>Exhibit 99.2 EXECUTION VERSION CREDIT AGREEMENT dated as of May 7, 2026 by and among "
+                        "the Borrower and the Lenders.</p>" + ergebnis_html)
+        nein4, _ = ist_ergebnismitteilung(vertrag_html, "ex99-2.htm")
+        deckblatt = ("<html><body><p>FORM 6-K Report of Foreign Private Issuer. This report on Form 6-K shall be deemed "
+                     "incorporated by reference into the registration statement on Form F-3 and the prospectus therein. "
+                     "Indicate by check mark whether the registrant by furnishing the information is also thereby furnishing "
+                     "the information to the Commission pursuant to Rule 12g3-2(b) under the Securities Exchange Act of 1934. "
+                     "Yes No X</p><p>Quarterly Report</p>" + ergebnis_html)
+        ja5, _ = ist_ergebnismitteilung(deckblatt, "q12026.htm")
+        p("Erkennung: Ergebnis samt Einladung ja, Bericht mit Verweis auf das Circular ja, Kreditvertrag nein, "
+          "Formularkopf mit Prospekt-Floskel stoert nicht", ja3 and ja4 and (not nein4) and ja5, (ja3, ja4, nein4, ja5))
 
         suchen = []
 
@@ -638,7 +762,7 @@ def main():
     ap.add_argument("--hoechstens", type=int, default=1200)
     ap.add_argument("--quartale", type=int, default=QUARTALE)
     ap.add_argument("--ticker", default="", help="nur diese Ticker, mit Beistrich getrennt")
-    ap.add_argument("--modus", default="archiv", choices=["archiv", "6k", "probe6k"])
+    ap.add_argument("--modus", default="archiv", choices=["archiv", "6k", "probe6k", "probe8k"])
     ap.add_argument("--selbsttest", action="store_true")
     a = ap.parse_args()
     if a.selbsttest:
@@ -647,6 +771,10 @@ def main():
     if a.modus == "probe6k":
         for tck in (nur or []):
             probe_6k(tck)
+        return 0
+    if a.modus == "probe8k":
+        for tck in (nur or []):
+            probe_8k(tck)
         return 0
     if a.modus == "6k":
         b = lauf_6k(a.daten, hoechstens=a.hoechstens, quartale=a.quartale, nur=nur)
