@@ -185,8 +185,9 @@ def exhibit(cik, accession, hole, prim=None, pruefen=True):
 
 _VERTRAG_KOPF = re.compile(r"credit agreement|purchase agreement|indenture|underwriting agreement|by and among|by and between|"
                            r"appendix 5b|employment agreement|merger agreement", re.I)
-_ERGEBNISWORT = re.compile(r"revenue|net (income|loss|earnings)|earnings per share|operating income|net sales|financial results|"
-                           r"results of operations|adjusted ebitda", re.I)
+_ERGEBNISWORT = re.compile(r"revenue|net (income|loss|earnings)|earnings per share|operating income|net sales|"
+                           r"results of operations|adjusted ebitda|gross (profit|margin)", re.I)
+_BETRAG = re.compile(r"[$€£¥]\s?\d|\d[\d,.]*\s?(million|billion|mn|bn)|US\$|C\$|KRW", re.I)
 
 
 def ist_ergebnistext_8k(text):
@@ -199,8 +200,8 @@ def ist_ergebnistext_8k(text):
         return False
     if _VERTRAG_KOPF.search(text[:2500]):
         return False
-    if not _ERGEBNISWORT.search(text):
-        return False
+    if not _ERGEBNISWORT.search(text) or not _BETRAG.search(text):
+        return False   # Teslas Auslieferungsbericht nennt Fahrzeugzahlen und kuendigt "financial results" an, ohne einen Betrag
     return kriterien(text)[1] >= 3
 
 
@@ -820,7 +821,8 @@ def selbsttest() -> int:
             "<tr><td>Net income</td><td>1,114</td><td>1,172</td></tr></table>" * 8) + "</body></html>").encode("utf-8")
         liefer_html = ("<html><body>" + (
             "<p>Tesla produced approximately 410,000 vehicles and delivered approximately 384,000 "
-            "vehicles in the second quarter of 2026. Energy storage deployments were 9.6 GWh.</p>" * 12) + "</body></html>").encode("utf-8")
+            "vehicles in the second quarter of 2026. Energy storage deployments were 9.6 GWh. Tesla will post its "
+            "financial results for the second quarter of 2026 after market close on Wednesday, July 22, 2026.</p>" * 12) + "</body></html>").encode("utf-8")
 
         def hole2(url):
             aufrufe.append(url)
