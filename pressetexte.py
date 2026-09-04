@@ -584,6 +584,22 @@ def probe_8k(ticker, hole=None, hoechstens=12, log=print):
         + ", ".join(f"{k} {v}" for k, v in sorted(formen.items(), key=lambda kv: -kv[1])[:8]))
     for fd, items, prim, acc in achtks[:hoechstens]:
         log(f"  {fd} Items {items or '?':20s} {acc} {prim}")
+    import time
+    ergebnis_accs = {acc for _, _, acc, _ in ergebnis}
+    for fd, items, prim, acc in [a for a in achtks if a[3] in ergebnis_accs][:hoechstens]:
+        ordner = f"https://www.sec.gov/Archives/edgar/data/{int(cik)}/{acc.replace('-', '')}"
+        try:
+            index = json.loads(hole(ordner + "/index.json"))
+            time.sleep(0.2)
+            dateien = ", ".join(f"{d.get('name')} {d.get('size')}" for d in index.get("directory", {}).get("item", [])
+                                if d.get("name", "").lower().endswith((".htm", ".html")))
+            name, text = exhibit(cik, acc, hole)
+            time.sleep(0.2)
+            pruefung = ist_ergebnismitteilung(text or "", name or "")
+            log(f"  {fd} {acc}: Dateien {dateien} -> Wahl {name}, {len(text or '')} Zeichen, "
+                f"Ergebnispruefung {'ja' if pruefung[0] else 'nein'} ({pruefung[1]})")
+        except Exception as e:  # noqa
+            log(f"  {fd} {acc}: Ordner nicht lesbar: {str(e)[:120]}")
     return achtks
 
 
@@ -634,9 +650,9 @@ def lauf(daten, hoechstens=1200, quartale=QUARTALE, nur=None, hole=None, ticker_
             achtks_alle = ergebnis_8ks_voll(sub, hole, quartale, pause, log=log, ticker=ticker)
             leere = dict((s or {}).get("leer") or {})
             neu = da = leer = 0
-            achtks = []   # die verwendeten (mit Text); leere 8-Ks zaehlen nicht auf die Quartale
+            achtks = []   # die verwendeten (mit Text); leere 8-Ks zaehlen nicht auf die Quartale (hoechstens ebenso viele geprueft)
             for fd, rd, acc, prim in achtks_alle:
-                if len(achtks) >= quartale or leer >= 6:
+                if len(achtks) >= quartale or leer >= quartale:
                     break
                 if vorhanden(daten, cik, acc):
                     da += 1
