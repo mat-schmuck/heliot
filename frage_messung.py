@@ -129,9 +129,24 @@ def _mrd(x):
 
 
 def _pz(neu, alt):
-    if neu is None or alt in (None, 0):
+    """Veraenderung in Prozent; bei Vorjahr null oder negativ oder Vorzeichenwechsel None,
+    denn minus 153 Prozent fuer den Weg von 17 Millionen Verlust zu 9 Millionen Gewinn
+    ist Unsinn (Ciena, Messung 04.09.2026)."""
+    if neu is None or alt is None or alt <= 0 or neu < 0:
         return None
     return round((neu / alt - 1) * 100, 1)
+
+
+def _vorzeichen_hinweis(neu, alt):
+    if neu is None or alt is None:
+        return ""
+    if alt < 0 and neu >= 0:
+        return " (Vorjahresquartal mit Verlust, jetzt Gewinn)"
+    if alt >= 0 and neu < 0:
+        return " (Vorjahresquartal mit Gewinn, jetzt Verlust)"
+    if alt < 0 and neu < 0:
+        return " (Verlust wie im Vorjahresquartal)"
+    return ""
 
 
 def tabelle(zeilen, konsens_zeilen, kurse, quartale=QUARTALE):
@@ -154,11 +169,18 @@ def tabelle(zeilen, konsens_zeilen, kurse, quartale=QUARTALE):
         z = {"periodenende": e,
              "umsatz_mrd": _mrd(umsatz.get(e)), "umsatz_vorjahr_prozent": _pz(umsatz.get(e), _vorjahr(umsatz, e)),
              "nettogewinn_mrd": _mrd(gewinn.get(e)), "nettogewinn_vorjahr_prozent": _pz(gewinn.get(e), _vorjahr(gewinn, e)),
+             "nettogewinn_hinweis": _vorzeichen_hinweis(gewinn.get(e), _vorjahr(gewinn, e)),
              "eps_amtlich": eps.get(e), "eps_vorjahr_prozent": _pz(eps.get(e), _vorjahr(eps, e)),
+             "eps_hinweis": _vorzeichen_hinweis(eps.get(e), _vorjahr(eps, e)),
              "eps_konsens": kk.get("eps_konsens"), "eps_gemeldet_bereinigt": kk.get("eps_ist"),
              "ueberraschung_prozent": kk.get("ueberraschung_prozent"), "meldedatum": kk.get("meldedatum"),
              "zeitpunkt": kk.get("zeitpunkt"),
              "kursreaktion_prozent": kursreaktion(kurse, kk.get("meldedatum"), kk.get("zeitpunkt"))}
+        # Basis der Ueberraschung fraglich: der Dienst fuehrt als gemeldeten Wert den amtlichen, der Konsens
+        # ist aber meist bereinigt (Ciena: minus 88 Prozent Ueberraschung bei GAAP 0,06 gegen Konsens 0,52)
+        z["ueberraschung_fraglich"] = bool(z["eps_amtlich"] is not None and z["eps_gemeldet_bereinigt"] is not None
+                                           and abs(z["eps_amtlich"] - z["eps_gemeldet_bereinigt"]) < 0.005
+                                           and z["ueberraschung_prozent"] is not None and abs(z["ueberraschung_prozent"]) > 25)
         liste.append(z)
     return liste, tabelle_text(liste)
 
@@ -176,10 +198,13 @@ def tabelle_text(liste):
     for z in liste:
         zeilen.append(
             f"Quartal bis {z['periodenende']}: Umsatz {_f(z['umsatz_mrd'], 3)} Mrd ({_f(z['umsatz_vorjahr_prozent'], 1)} Prozent zum Vorjahresquartal); "
-            f"Nettogewinn {_f(z['nettogewinn_mrd'], 3)} Mrd ({_f(z['nettogewinn_vorjahr_prozent'], 1)} Prozent); "
-            f"Ergebnis je Aktie amtlich {_f(z['eps_amtlich'])} ({_f(z['eps_vorjahr_prozent'], 1)} Prozent); "
+            f"Nettogewinn {_f(z['nettogewinn_mrd'], 3)} Mrd ({_f(z['nettogewinn_vorjahr_prozent'], 1)} Prozent{z.get('nettogewinn_hinweis', '')}); "
+            f"Ergebnis je Aktie amtlich {_f(z['eps_amtlich'])} ({_f(z['eps_vorjahr_prozent'], 1)} Prozent{z.get('eps_hinweis', '')}); "
             f"Konsens {_f(z['eps_konsens'])}, gemeldet bereinigt {_f(z['eps_gemeldet_bereinigt'])}, "
-            f"Ueberraschung {_f(z['ueberraschung_prozent'], 1)} Prozent; gemeldet am {z['meldedatum'] or 'keine Angabe'} "
+            f"Ueberraschung {_f(z['ueberraschung_prozent'], 1)} Prozent"
+            + (" (Basis fraglich: der Dienst stellt hier den amtlichen Wert einem bereinigten Konsens gegenueber, "
+               "die Ueberraschung ist nicht belastbar)" if z.get("ueberraschung_fraglich") else "")
+            + f"; gemeldet am {z['meldedatum'] or 'keine Angabe'} "
             f"({z['zeitpunkt'] or 'Zeitpunkt unbekannt'}); Kursreaktion {_f(z['kursreaktion_prozent'])} Prozent.")
     return "\n".join(zeilen)
 
@@ -510,7 +535,7 @@ def lauf(daten, ticker, frage, modelle, quartale=QUARTALE, ausgabe=None, log=pri
         raise RuntimeError(f"{ticker}: keine Pressetexte im Archiv (zuerst pressetexte.yml mit ticker={ticker} laufen lassen)")
     enden = sorted(_q(zeilen, "umsatz"))[-quartale:]
     von = (dt.date.fromisoformat(enden[0]) - dt.timedelta(days=10)).isoformat() if enden else "2024-01-01"
-    kurse = kurse_laden(ticker, von, dt.date.today().isoformat())
+    kurse = kurse_laden(ticker, von, (dt.date.today() + dt.timedelta(days=1)).isoformat())
     liste, tab_text = tabelle(zeilen, konsens, kurse, quartale)
     texte_text = texte_block(texte)
     nachrichten = None
@@ -613,6 +638,16 @@ def selbsttest() -> int:
     p("Kursreaktion vor Boersenoeffnung: Vortag gegen Meldetag (180 auf 175,5 = minus 2,5)",
       v["kursreaktion_prozent"] == -2.5, v["kursreaktion_prozent"])
     a = liste[0]
+    p("Prozent nur bei gleichem Vorzeichen: Verlust zu Gewinn gibt keine Prozentzahl, aber einen Hinweis",
+      _pz(9e6, -17e6) is None and _pz(-5e6, 4e6) is None and _pz(20e6, 10e6) == 100.0
+      and "Verlust, jetzt Gewinn" in _vorzeichen_hinweis(9e6, -17e6) and _vorzeichen_hinweis(20e6, 10e6) == "")
+    lc = [{"periodenende": "2025-05-03", "eps_amtlich": 0.06, "eps_gemeldet_bereinigt": 0.06, "ueberraschung_prozent": -88.1}]
+    l2, t2 = tabelle([{"typ": "Q", "kennzahl": "umsatz", "end": "2025-05-03", "wert_erst": 1.126e9},
+                      {"typ": "Q", "kennzahl": "eps_verwaessert", "end": "2025-05-03", "wert_erst": 0.06}],
+                     [{"art": "eps_history", "periodenende": "2025-05-03", "eps_ist": 0.06, "eps_konsens": 0.52,
+                       "ueberraschung_prozent": -88.1, "meldedatum": "2025-06-05", "zeitpunkt": "BeforeMarket"}], {}, 8)
+    p("Ueberraschung mit fraglicher Basis (amtlich gleich gemeldet, minus 88 Prozent) wird in der Tabelle gekennzeichnet",
+      l2[0]["ueberraschung_fraglich"] and "Basis fraglich" in t2, t2[-260:])
     p("Aeltestes Quartal ohne Vorjahr im Ausschnitt: Vergleich fehlt, kein Absturz",
       a["umsatz_vorjahr_prozent"] is None and a["eps_konsens"] is None, a)
     p("Textform: deutsche Dezimalzeichen, jede Zeile ein Quartal, Hinweis auf fehlende Angaben",
