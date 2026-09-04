@@ -202,7 +202,7 @@ def exhibit_text(cik, accession):
                if d.get("name", "").lower().endswith((".htm", ".html"))
                and not re.fullmatch(r"r\d+\.htm", d.get("name", "").lower())   # XBRL-Viewer-Seiten sind nie ein Anhang
                and not d.get("name", "").lower().startswith(("filingsummary", "metalinks"))]
-    kandidaten = [d for d in dateien if re.search(r"ex[-_]?99", d["name"].lower())]
+    kandidaten = [d for d in dateien if re.search(r"ex(hibit|hbit)?[-_]?99|earnings|press.?r|release|results", d["name"].lower())]
     if not kandidaten:
         kandidaten = [d for d in dateien if not d["name"].lower().startswith("0")]
     if not kandidaten:

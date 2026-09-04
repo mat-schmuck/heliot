@@ -142,19 +142,32 @@ def submissions(cik, hole):
     return json.loads(hole(f"https://data.sec.gov/submissions/CIK{int(cik):010d}.json"))
 
 
-def exhibit(cik, accession, hole):
-    """(Dateiname, Klartext) des Anhangs 99.1, sonst (None, None); Logik wie
-    messung_8k.exhibit_text, aber mit uebergebenem Abruf (pruefbar ohne Netz)."""
+_ANHANG_NAME = re.compile(r"ex(hibit|hbit)?[-_]?99|earnings|press.?r|release|results", re.I)
+_HAUPTDOKUMENT_NAME = re.compile(r"^[a-z]{1,6}-?\d{8}\.htm|^d\d+d8k\d*\.htm|8-?k\.htm$", re.I)
+
+
+def exhibit(cik, accession, hole, prim=None):
+    """(Dateiname, Klartext) des Ergebnis-Anhangs eines 8-K, sonst (Name, None) fuer 'leer' oder (None, None);
+    Anhaenge heissen ex99, exhibit991, exhbit991 (Tesla), earningsrelease (Booking) - das Hauptdokument (prim,
+    sonst am Namensmuster erkannt) nur, wenn sonst nichts da ist. Jeder Kandidat muss Ergebnisinhalt tragen:
+    Teslas Auslieferungsberichte sind EX-99-Anhaenge von Item-2.02-8-Ks ohne eine einzige Ergebniszahl."""
     import messung_8k as m8k
     ordner = f"https://www.sec.gov/Archives/edgar/data/{int(cik)}/{accession.replace('-', '')}"
     index = json.loads(hole(ordner + "/index.json"))
     dateien = [d for d in index.get("directory", {}).get("item", [])
-               if d.get("name", "").lower().endswith((".htm", ".html")) and not ist_viewerdatei(d.get("name", ""))]
-    kandidaten = [d for d in dateien if re.search(r"ex[-_]?99", d["name"].lower())]
-    rueckfall = False
+               if d.get("name", "").lower().endswith((".htm", ".html")) and not ist_viewerdatei(d.get("name", ""))
+               and not d.get("name", "").lower().startswith("0")]
+
+    def ist_haupt(d):
+        n = d.get("name", "")
+        if prim and n.lower() == str(prim).lower():
+            return True
+        return bool(_HAUPTDOKUMENT_NAME.search(n)) and not _ANHANG_NAME.search(n)
+    kandidaten = [d for d in dateien if _ANHANG_NAME.search(d["name"]) and not ist_haupt(d)]
     if not kandidaten:
-        kandidaten = [d for d in dateien if not d["name"].lower().startswith("0")]
-        rueckfall = True
+        kandidaten = [d for d in dateien if not ist_haupt(d)]
+    if not kandidaten:
+        kandidaten = [d for d in dateien if ist_haupt(d)]
     if not kandidaten:
         return None, None
     kandidaten.sort(key=lambda d: int(d.get("size") or 0), reverse=True)
@@ -165,10 +178,20 @@ def exhibit(cik, accession, hole):
     except UnicodeDecodeError:
         html_roh = roh.decode("latin-1")
     text = m8k.html_zu_text(html_roh)
-    if rueckfall and (not ist_ergebnismitteilung(text, name)[0]
-                      or not re.search(r"revenue|net (income|loss|earnings)|earnings per share|operating income", text, re.I)):
-        return name, None   # Hauptdokument ohne Ergebnisinhalt (Auslieferungsbericht, Deckblatt): kein Text
+    if not ist_ergebnistext_8k(text):
+        return name, None   # Auslieferungsbericht, Deckblatt, Vertrag: kein Ergebnistext
     return name, text
+
+
+def ist_ergebnistext_8k(text):
+    """Milde Ergebnispruefung fuer Anhaenge von Item-2.02-8-Ks: genug Betraege und Ergebniswoerter; die
+    Ausschlussliste der 6-K-Pruefung gilt hier nicht (Teslas Deck erwaehnt das Proxy Statement)."""
+    if not text or len(text) < 1500:
+        return False
+    punkte, zahlen, treffer = kriterien(text)
+    if punkte < 3 or zahlen < 5 or treffer < 4:
+        return False
+    return bool(re.search(r"revenue|net (income|loss|earnings)|earnings per share|operating income|net sales", text, re.I))
 
 
 def ist_viewerdatei(name):
@@ -593,11 +616,10 @@ def probe_8k(ticker, hole=None, hoechstens=12, log=print):
             time.sleep(0.2)
             dateien = ", ".join(f"{d.get('name')} {d.get('size')}" for d in index.get("directory", {}).get("item", [])
                                 if d.get("name", "").lower().endswith((".htm", ".html")))
-            name, text = exhibit(cik, acc, hole)
+            name, text = exhibit(cik, acc, hole, prim=prim)
             time.sleep(0.2)
-            pruefung = ist_ergebnismitteilung(text or "", name or "")
-            log(f"  {fd} {acc}: Dateien {dateien} -> Wahl {name}, {len(text or '')} Zeichen, "
-                f"Ergebnispruefung {'ja' if pruefung[0] else 'nein'} ({pruefung[1]})")
+            log(f"  {fd} {acc}: Dateien {dateien} -> Wahl {name}, {len(text or '')} Zeichen"
+                + ("" if text else " (kein Ergebnistext)"))
         except Exception as e:  # noqa
             log(f"  {fd} {acc}: Ordner nicht lesbar: {str(e)[:120]}")
     return achtks
@@ -662,7 +684,7 @@ def lauf(daten, hoechstens=1200, quartale=QUARTALE, nur=None, hole=None, ticker_
                     leer += 1
                     continue
                 try:
-                    name, text = exhibit(cik, acc, hole)
+                    name, text = exhibit(cik, acc, hole, prim=prim)
                     pause()
                 except Exception as e:  # noqa
                     bilanz["fehler"] += 1
@@ -717,8 +739,11 @@ def selbsttest() -> int:
             "accessionNumber": accs + [f"{cik:010d}-26-999999"], "primaryDocument": ["a.htm"] * (n + 1),
             "items": ["2.02,9.01"] * n + [""]}}}).encode("utf-8")
 
-    html = ("<html><body><p>Apple today announced results.</p><table><tr><td>Net sales</td><td>94,036</td>"
-            "</tr></table><p>Outlook: we expect growth.</p></body></html>").encode("utf-8")
+    html = ("<html><body>" + (
+            "<p>Apple today announced financial results for its fiscal 2026 third quarter ended June 28, 2026. "
+            "Net sales of $94,036 million, up 10 percent; net income of $23,434 million; diluted earnings per share of $1.57. "
+            "Revenue increased, operating income was $29,600 million, gross margin $44,200 million.</p>" * 8)
+            + "<table><tr><td>Net sales</td><td>94,036</td></tr></table><p>Outlook: we expect growth.</p></body></html>").encode("utf-8")
     aufrufe = []
 
     def hole(url):
@@ -810,6 +835,32 @@ def selbsttest() -> int:
             if url.endswith("R1.htm"):
                 raise AssertionError("Viewerdatei abgerufen")
             return liefer_html if url.endswith("tsla-2026.htm") else ergebnis_html2
+
+        def hole3(url):
+            if url.endswith("index.json"):
+                acc = re.search(r"/(\d{18})/index", url).group(1)[-2:]
+                items = {"01": [{"name": "ato-20260805.htm", "size": 34319}, {"name": "ato20260805exhibit991.htm", "size": 19061}, {"name": "R1.htm", "size": 39592}],
+                         "02": [{"name": "bkng-20260804.htm", "size": 66042}, {"name": "q2-26bkngearningsrelease.htm", "size": 37068}],
+                         "03": [{"name": "exhibit991.htm", "size": 52312}, {"name": "tsla-20260722.htm", "size": 27495}],
+                         "04": [{"name": "exhibit99111111.htm", "size": 13243}, {"name": "tsla-20260702.htm", "size": 26572}],
+                         "05": [{"name": "d798492d8k.htm", "size": 42189}, {"name": "d798492dex101.htm", "size": 553885}]}[acc]
+                return json.dumps({"directory": {"item": items}}).encode("utf-8")
+            if url.endswith(("ato-20260805.htm", "bkng-20260804.htm", "tsla-20260722.htm", "tsla-20260702.htm", "d798492d8k.htm", "R1.htm")):
+                raise AssertionError("falsche Datei abgerufen: " + url)
+            if url.endswith("exhibit991.htm") and "tsla" not in url:
+                return ergebnis_html2.replace(b"<body>", b"<body><p>See our 2026 Proxy Statement for details.</p>", 1)
+            if url.endswith("exhibit99111111.htm"):
+                return liefer_html
+            if url.endswith("dex101.htm"):
+                return ("<html><body>" + "<p>CREDIT AGREEMENT dated as of March 29, 2024 among Atmos Energy Corporation, as Borrower, "
+                        "the Lenders party hereto. Section 1.01 Defined Terms. $1,500,000,000 revolving facility.</p>" * 30 + "</body></html>").encode("utf-8")
+            return ergebnis_html2
+        w = [exhibit(7, f"0000000007-26-0000{i:02d}", hole3, prim=p) for i, p in
+             ((1, "ato-20260805.htm"), (2, "bkng-20260804.htm"), (3, "tsla-20260722.htm"), (4, "tsla-20260702.htm"), (5, "d798492d8k.htm"))]
+        p("Anhangwahl: Atmos exhibit991 statt Hauptdokument, Booking earningsrelease, Tesla-Deck trotz Proxy-Verweis, "
+          "Tesla-Auslieferung als EX-99 leer, Kreditvertrag leer",
+          [x[0] for x in w] == ["ato20260805exhibit991.htm", "q2-26bkngearningsrelease.htm", "exhibit991.htm", "exhibit99111111.htm", "d798492dex101.htm"]
+          and all(x[1] for x in w[:3]) and w[3][1] is None and w[4][1] is None, [(x[0], len(x[1] or "")) for x in w])
 
         ke._schreibe_json(os.path.join(tmp, "konsens", "firmen_mit_konsens.json"), {"TSLA": {}, "JPM": {}})
         b7 = lauf(tmp, hoechstens=0, quartale=8, hole=hole2, ticker_zu_cik={"TSLA": 1318, "JPM": 19617}, log=lambda *_: None,
