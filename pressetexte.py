@@ -37,7 +37,7 @@ ORDNER = "pressetexte"
 EFTS = ("https://efts.sec.gov/LATEST/search-index?q={q}&forms=6-K&ciks={cik10}&startdt={von}&enddt={bis}")
 SECHS_K_SUCHEN = ('"quarter" results', '"half-year" results', '"interim" results', '"trading update"',
                   '"first half" results', '"full year" results')   # Volltextsuche der SEC: alle Woerter muessen vorkommen
-SECHS_K_MAX_ZEICHEN = 400000          # groessere Dokumente sind Berichtshefte oder Hauptversammlungsunterlagen, keine Mitteilungen
+SECHS_K_MAX_ZEICHEN = 900000          # darueber liegen Prospekte und Jahresberichte; Abschluesse grosser Konzerne haben bis 760.000
 KOPF_BEI_KUERZUNG = 20000             # ueberlange Texte: Kopf plus Fenster um die Kennzahlzeilen statt hartem Schnitt
 SECHS_K_TAGE = 760                    # zwei Jahre, also acht Quartale
 SECHS_K_JE_FILING = 3                 # hoechstens so viele Anhaenge je 6-K laden
@@ -289,19 +289,65 @@ def ist_ergebnismitteilung(text, dateiname=""):
         return False, 0
     if not _MUSTER_ERGEBNIS[2].search(text[:max(6000, len(text) // 3)]):
         return False, 0
-    punkte = sum(1 for m in _MUSTER_ERGEBNIS if m.search(text))
-    zahlen = len(re.findall(r"(?:US\$|\$|EUR|€|R\$|CHF|£|¥|USD|BRL)\s?\d[\d,.]*\s?(?:million|billion|mn|bn|m|thousand)?", text))
-    treffer = sum(len(m.findall(text)) for m in _MUSTER_ERGEBNIS[:2])
+    punkte, zahlen, treffer = kriterien(text)
     ja = punkte >= 3 and zahlen >= 5 and treffer >= 4
     dichte = treffer * 10000.0 / max(len(text), 1)
-    wert = punkte * 10 + min(dichte * 4, 40) + min(zahlen, 30)
-    if re.search(r"pr\d|press|release|results|earnings|q[1-4]|quarter", (dateiname or "").lower()):
-        wert += 20
-    if re.search(r"itr|report|\d{8}_6k", (dateiname or "").lower()):
+    wert = punkte * 10 + min(dichte * 4, 40) + min(zahlen, 30) + textklasse(text, dateiname)[1]
+    if re.search(r"itr|\d{8}_6k", (dateiname or "").lower()):
         wert -= 10
     if len(text) > 150000:
         wert -= 20
     return ja, round(wert, 1)
+
+
+_WAEHRUNG = (r"US\$|\$|EUR|€|R\$|CHF|£|¥|USD|BRL|Ps\.|MXN|Ch\$|CLP|COP|ARS|AR\$|PEN|S/\.?|KRW|₩|INR|₹|Rs\.?|JPY|TWD|NT\$|"
+             r"HK\$|HKD|RMB|CNY|SGD|S\$|A\$|AUD|C\$|CAD|CA\$|NZ\$|NOK|SEK|DKK|ZAR|TRY|PLN|CZK|HUF|ILS|NIS|EGP|SAR|AED|IDR|Rp|"
+             r"THB|PHP|MYR|RM|VND|GBP|NGN|KES|GHS|QAR|KWD|Bs\.|Bs")
+_ZAHL_MIT_WAEHRUNG = re.compile(r"(?:" + _WAEHRUNG + r")\s?\d[\d,.]*", re.I)
+_ZAHL_MIT_EINHEIT = re.compile(r"\d[\d,.]*\s?(?:million|billion|mn|bn|thousand|crore|lakh)\b", re.I)
+_TAUSENDERZAHL = re.compile(r"(?<![\d.,])\d{1,3}(?:,\d{3}){1,4}(?![\d,])")
+
+
+def kriterien(text):
+    """(punkte, zahlen, treffer): Zahl der Musterarten mit Treffer, Zahl der Betraege (mit Waehrung, mit
+    Einheit oder als Tausenderzahl) und Zahl der Ergebnis- und Umsatzwoerter."""
+    punkte = sum(1 for m in _MUSTER_ERGEBNIS if m.search(text))
+    zahlen = (len(_ZAHL_MIT_WAEHRUNG.findall(text)) + len(_ZAHL_MIT_EINHEIT.findall(text))
+              + len(_TAUSENDERZAHL.findall(text)))
+    treffer = sum(len(m.findall(text)) for m in _MUSTER_ERGEBNIS[:2])
+    return punkte, zahlen, treffer
+
+
+_TITEL_MITTEILUNG = re.compile(r"(announces|reports|posts|delivers|publishes|releases)[^.]{0,80}(results|earnings)|"
+                               r"earnings (release|report)|results announcement|press release|news release|"
+                               r"financial results|trading update", re.I)
+_TITEL_MDA = re.compile(r"management.{0,3}s discussion|MD&A", re.I)
+_TITEL_BERICHT = re.compile(r"(quarterly|interim|half.?year|annual) report|financial statements and review|"
+                            r"(first|second|third|fourth) quarter (20\d\d )?report", re.I)
+
+
+def textklasse(text, dateiname=""):
+    """(Klasse, Rangbonus): Pressemitteilung vor MD&A vor Berichtsheft vor Abschluss. Die Klasse kommt aus dem
+    Dateinamen (pressrelease, mda, fs) oder dem Titel; der Bonus ordnet die Anhaenge einer Einreichung, die
+    Feinpunkte (Dichte, Betraege) entscheiden nur innerhalb einer Klasse."""
+    name = (dateiname or "").lower()
+    # erst der Dateiname (er benennt den Anhang eindeutig: pressrelease, mda, fs), dann der Titel
+    if re.search(r"pr\d|press|release|news|earnings", name):
+        return "mitteilung", 60
+    if re.search(r"mda|md&a|discussion", name):
+        return "mda", 30
+    if re.search(r"fs(?=[0-9_.-]|$)|financial.?statements|finstat|fs", name):
+        return "abschluss", 0
+    if re.search(r"report|itr|review", name):
+        return "bericht", 15
+    titel = titelzone(text, 800)
+    if _TITEL_MITTEILUNG.search(titel):
+        return "mitteilung", 60
+    if _TITEL_MDA.search(titel):
+        return "mda", 30
+    if _TITEL_BERICHT.search(titel):
+        return "bericht", 15
+    return "abschluss", 0
 
 
 def sechs_k_ergebnisse(cik, hole, heute, quartale=QUARTALE, log=print, warte=True, ausfuehrlich=False):
@@ -353,8 +399,11 @@ def sechs_k_ergebnisse(cik, hole, heute, quartale=QUARTALE, log=print, warte=Tru
                 continue
             ja, punkte = ist_ergebnismitteilung(text, x["datei"])
             if ausfuehrlich:
+                k = kriterien(text)
                 log(f"    {acc} {x['file_date']} {x['file_type']} {x['datei']}: {len(text)} Zeichen, "
-                    f"{'Mitteilung' if ja else 'keine Mitteilung'}, {punkte} Punkte: {' '.join(text[:110].split())}")
+                    f"{'Mitteilung' if ja else 'keine Mitteilung'} ({textklasse(text, x['datei'])[0]}, Musterarten {k[0]}, "
+                    f"Betraege {k[1]}, Ergebniswoerter {k[2]}, Ausschluss {ausschlussgrund(text) or '-'}), {punkte} Punkte: "
+                    f"{' '.join(text[:110].split())}")
             if ja and (bester is None or punkte > bester[0]):
                 bester = (punkte, x, text)
         if bester:
@@ -382,7 +431,8 @@ def firmen_ohne_8k(daten):
     return sorted(raus, key=lambda kv: kv[1] or "")
 
 
-def lauf_6k(daten, hoechstens=0, quartale=QUARTALE, nur=None, hole=None, log=print, jetzt=None, warte=True):
+def lauf_6k(daten, hoechstens=0, quartale=QUARTALE, nur=None, hole=None, log=print, jetzt=None, warte=True,
+            frisch_tage=FRISCH_TAGE):
     if hole is None:
         import fundament_lauf as fl
         if not fl.UA:
@@ -404,9 +454,9 @@ def lauf_6k(daten, hoechstens=0, quartale=QUARTALE, nur=None, hole=None, log=pri
             break
         s = stand.get(str(cik)) or {}
         sk = s.get("sechs_k") or {}
-        if sk.get("zeit") and not nur:
+        if sk.get("zeit") and not nur and frisch_tage > 0:
             try:
-                if (jetzt - dt.datetime.fromisoformat(sk["zeit"])).days < FRISCH_TAGE:
+                if (jetzt - dt.datetime.fromisoformat(sk["zeit"])).days < frisch_tage:
                     bilanz["uebersprungen"] += 1
                     continue
             except ValueError:
@@ -717,6 +767,18 @@ def selbsttest() -> int:
         ja5, _ = ist_ergebnismitteilung(deckblatt, "q12026.htm")
         p("Erkennung: Ergebnis samt Einladung ja, Bericht mit Verweis auf das Circular ja, Kreditvertrag nein, "
           "Formularkopf mit Prospekt-Floskel stoert nicht", ja3 and ja4 and (not nein4) and ja5, (ja3, ja4, nein4, ja5))
+        peso_html = ("<html><body><p>Grupo Ejemplo reports second quarter 2026 results. Revenues reached Ps. 236,152 million "
+                     "in the three months ended June 30, 2026, net income was Ps. 12,345 million and EBITDA Ps. 90,123 million; "
+                     "net income per share Ps. 0.45. Revenues in the second quarter grew 7 percent, net income rose 9 percent, "
+                     "total revenues of 1,234 million pesos in Colombia and 987 million pesos in Peru.</p>"
+                     + "<p>The company serves customers in many markets and continues to invest in its network.</p>" * 40
+                     + "</body></html>")
+        ja6, _ = ist_ergebnismitteilung(peso_html, "ex99-1.htm")
+        _, pr2 = ist_ergebnismitteilung(ergebnis_html, "a03312025q1pressrelease.htm")
+        _, fs2 = ist_ergebnismitteilung(ergebnis_html, "a03312025q1fs.htm")
+        _, mda2 = ist_ergebnismitteilung(ergebnis_html, "a03312025q1mda.htm")
+        p("Erkennung: Betraege in Pesos zaehlen; Pressemitteilung vor MD&A vor Abschluss derselben Einreichung",
+          ja6 and pr2 > mda2 > fs2, (ja6, pr2, mda2, fs2))
 
         suchen = []
 
@@ -763,6 +825,7 @@ def main():
     ap.add_argument("--quartale", type=int, default=QUARTALE)
     ap.add_argument("--ticker", default="", help="nur diese Ticker, mit Beistrich getrennt")
     ap.add_argument("--modus", default="archiv", choices=["archiv", "6k", "probe6k", "probe8k"])
+    ap.add_argument("--frisch", type=int, default=FRISCH_TAGE, help="6k: Firmen mit juengerem Stand ueberspringen (0 = alle neu)")
     ap.add_argument("--selbsttest", action="store_true")
     a = ap.parse_args()
     if a.selbsttest:
@@ -777,7 +840,7 @@ def main():
             probe_8k(tck)
         return 0
     if a.modus == "6k":
-        b = lauf_6k(a.daten, hoechstens=a.hoechstens, quartale=a.quartale, nur=nur)
+        b = lauf_6k(a.daten, hoechstens=a.hoechstens, quartale=a.quartale, nur=nur, frisch_tage=a.frisch)
         return 1 if b["fehler"] and not b["firmen"] else 0
     b = lauf(a.daten, hoechstens=a.hoechstens, quartale=a.quartale, nur=nur)
     return 1 if b["fehler"] and not b["firmen"] else 0
