@@ -669,8 +669,15 @@
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
-  "status": "offen",
-  "verlauf": [],
+  "status": "geschlossen",
+  "verlauf": [
+   {
+    "datum": "2026-09-06",
+    "aktion": "stop_raus",
+    "grund": "Schluss 15.82 unter Stop 15.99",
+    "kurs": 15.82
+   }
+  ],
   "klasse": "standard",
   "musterziel": null,
   "zone": "stark",
@@ -682,7 +689,11 @@
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
-  "wedge_drop_gemeldet": false
+  "wedge_drop_gemeldet": false,
+  "schluss_datum": "2026-09-06",
+  "schluss_grund": "Schluss 15.82 unter Stop 15.99",
+  "schluss_kurs": 15.82,
+  "ergebnis_pct": -4.7
  },
  "KRYS|3": {
   "symbol": "KRYS",
@@ -1547,8 +1558,15 @@
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
-  "status": "offen",
-  "verlauf": [],
+  "status": "geschlossen",
+  "verlauf": [
+   {
+    "datum": "2026-09-06",
+    "aktion": "stop_raus",
+    "grund": "Schluss 40.20 unter Stop 40.59",
+    "kurs": 40.2
+   }
+  ],
   "klasse": "standard",
   "musterziel": 66.78,
   "zone": "leicht",
@@ -1557,7 +1575,11 @@
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
-  "wedge_drop_gemeldet": false
+  "wedge_drop_gemeldet": false,
+  "schluss_datum": "2026-09-06",
+  "schluss_grund": "Schluss 40.20 unter Stop 40.59",
+  "schluss_kurs": 40.2,
+  "ergebnis_pct": -5.83
  },
  "IOT|GG-2026-09-04": {
   "symbol": "IOT",
@@ -1596,7 +1618,7 @@
   "strategie": "Shakeout-Spring",
   "einstieg": 20.68,
   "einstieg_datum": "2026-09-04",
-  "einstieg_index": 0,
+  "einstieg_index": 502,
   "struktur_stop": 19.76,
   "aktueller_stop": 19.76,
   "stop_quelle": "struktur",

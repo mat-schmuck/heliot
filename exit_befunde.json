@@ -1,59 +1,23 @@
 {
- "handelstag": "2026-09-04",
- "gebaut_am": "2026-09-04T22:03:52",
+ "handelstag": "2026-09-06",
+ "gebaut_am": "2026-09-06T22:03:52",
  "befunde": [
   {
    "typ": "kapitel11",
-   "titel": "Exit-Regelwerk: HTFL|2",
-   "text": "BEOBACHTUNG: HTFL|2 (Heartflow Inc); Stop gerissen, ganz raus; Kurs 48.91, -4.1 % seit Einstieg; Schluss 48.91 unter Stop 49.20",
-   "symbol": "HTFL|2",
+   "titel": "Exit-Regelwerk: ARCT|1",
+   "text": "BEOBACHTUNG: ARCT|1 (Arcturus Therapeutics Holdings Inc); Stop gerissen, ganz raus; Kurs 15.82, -4.7 % seit Einstieg; Schluss 15.82 unter Stop 15.99",
+   "symbol": "ARCT|1",
    "key": "",
    "prioritaet": "high",
    "buendeln": true
   },
   {
    "typ": "kapitel11",
-   "titel": "Exit-Regelwerk: APPN|2",
-   "text": "BEOBACHTUNG: APPN|2 (Appian Corp); Stop gerissen, ganz raus; Kurs 38.37, -6.3 % seit Einstieg; Schluss 38.37 unter Stop 40.37",
-   "symbol": "APPN|2",
+   "titel": "Exit-Regelwerk: IOT|1",
+   "text": "BEOBACHTUNG: IOT|1 (Samsara Inc); Stop gerissen, ganz raus; Kurs 40.20, -5.8 % seit Einstieg; Schluss 40.20 unter Stop 40.59",
+   "symbol": "IOT|1",
    "key": "",
    "prioritaet": "high",
-   "buendeln": true
-  },
-  {
-   "typ": "klimax_zeichen",
-   "titel": "KLIMAX: ATI",
-   "text": "ATI; Rectangle Top; Klimax-Zeichen 2 groesster tagesgewinn (+3,0 %); Verkauf in die Stärke erwägen; seit Trigger +3,1 % gleich 0,3 R",
-   "symbol": "ATI",
-   "key": "ATI|1",
-   "prioritaet": "high",
-   "buendeln": false
-  },
-  {
-   "typ": "zonenwechsel",
-   "titel": "Gewinnzonen",
-   "text": "ATI; Rectangle Top; Zone leicht zu stark; seit Trigger +3,1 % gleich 0,3 R",
-   "symbol": "ATI",
-   "key": "ATI|1",
-   "prioritaet": "default",
-   "buendeln": true
-  },
-  {
-   "typ": "klimax_zeichen",
-   "titel": "KLIMAX: ELF",
-   "text": "ELF; Cup & Handle (Wochenbasis); Klimax-Zeichen 2 groesster tagesgewinn (+2,1 %); Verkauf in die Stärke erwägen; seit Trigger +0,0 % gleich 0,0 R",
-   "symbol": "ELF",
-   "key": "ELF|1",
-   "prioritaet": "high",
-   "buendeln": false
-  },
-  {
-   "typ": "zonenwechsel",
-   "titel": "Gewinnzonen",
-   "text": "ELF; Cup & Handle (Wochenbasis); Zone leicht zu stark; seit Trigger +0,0 % gleich 0,0 R",
-   "symbol": "ELF",
-   "key": "ELF|1",
-   "prioritaet": "default",
    "buendeln": true
   }
  ]

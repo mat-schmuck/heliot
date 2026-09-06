@@ -1,18 +1,18 @@
 {
- "gebaut_am": "2026-09-05 00:02 Wien",
+ "gebaut_am": "2026-09-07 00:02 Wien",
  "universum": 157,
  "aktien": {
   "CDNA": {
    "firma": "Caredx Inc",
    "vortagesschluss": 50.88,
-   "v50": 1154464.9,
+   "v50": 1154468.0,
    "rs_rating": 97,
    "ueber_52w_tief_pct": 287.8
   },
   "CLMT": {
    "firma": "Calumet Inc",
    "vortagesschluss": 53.13,
-   "v50": 1190959.2,
+   "v50": 1191168.0,
    "rs_rating": 93,
    "ueber_52w_tief_pct": 217.2
   },
@@ -26,56 +26,56 @@
   "DELL": {
    "firma": "Dell Technologies Inc",
    "vortagesschluss": 524.14,
-   "v50": 7411772.6,
+   "v50": 7414738.0,
    "rs_rating": 97,
    "ueber_52w_tief_pct": 375.5
   },
   "ETON": {
    "firma": "Eton Pharmaceuticals Inc",
    "vortagesschluss": 58.45,
-   "v50": 601171.2,
+   "v50": 601812.0,
    "rs_rating": 98,
    "ueber_52w_tief_pct": 309.6
   },
   "LITE": {
    "firma": "Lumentum Holdings Inc",
    "vortagesschluss": 881.255,
-   "v50": 4630123.0,
+   "v50": 4630214.0,
    "rs_rating": 95,
    "ueber_52w_tief_pct": 511.1
   },
   "NESR": {
    "firma": "National Energy Services Reunited Corp",
    "vortagesschluss": 34.75,
-   "v50": 2116767.7,
+   "v50": 2131722.0,
    "rs_rating": 92,
    "ueber_52w_tief_pct": 273.3
   },
   "PSNL": {
    "firma": "Personalis Inc",
    "vortagesschluss": 17.2,
-   "v50": 4343604.9,
+   "v50": 4343606.0,
    "rs_rating": 91,
    "ueber_52w_tief_pct": 247.1
   },
   "QMCO": {
    "firma": "Quantum Corp",
    "vortagesschluss": 24.73,
-   "v50": 1542626.4,
+   "v50": 1542672.0,
    "rs_rating": 99,
    "ueber_52w_tief_pct": 490.2
   },
   "XNCR": {
    "firma": "Xencor Inc",
    "vortagesschluss": 26.61,
-   "v50": 1206396.0,
+   "v50": 1206400.0,
    "rs_rating": 95,
    "ueber_52w_tief_pct": 224.9
   },
   "INBX": {
    "firma": "Inhibrx Biosciences Inc",
    "vortagesschluss": 121.17,
-   "v50": 286006.2,
+   "v50": 286074.0,
    "rs_rating": 91,
    "ueber_52w_tief_pct": 362.7
   }
