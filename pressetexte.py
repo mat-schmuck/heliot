@@ -103,14 +103,20 @@ def index_lesen(daten):
 
 
 def texte_der_firma(daten, cik, hoechstens=QUARTALE):
-    """[(meta, text)] der juengsten Texte einer Firma, juengste zuerst."""
+    """[(meta, text)] der juengsten Texte einer Firma, juengste zuerst.
+
+    Erst lesen, DANN begrenzen: Der Index ist append-only und nennt auch Texte, deren Datei nicht (mehr)
+    liegt. Am 06.09.2026 gemessen: 514 solche Eintraege belegten bei 191 Firmen 326 der acht Plaetze und
+    verdraengten dort echte Texte aus der Eingabe."""
     metas = {}
     for m in index_lesen(daten):
         if int(m.get("cik", -1)) == int(cik):
             metas[m["accession"]] = m
-    liste = sorted(metas.values(), key=lambda m: (m.get("filed") or "", m["accession"]), reverse=True)[:hoechstens]
+    liste = sorted(metas.values(), key=lambda m: (m.get("filed") or "", m["accession"]), reverse=True)
     raus = []
     for m in liste:
+        if len(raus) >= hoechstens:
+            break
         t = text_lesen(daten, cik, m["accession"])
         if t:
             raus.append((m, t))
@@ -792,6 +798,17 @@ def selbsttest() -> int:
         p("Texte der Firma: juengste zuerst, hoechstens 3",
           len(juengste) == 3 and juengste[0][0]["filed"] >= juengste[1][0]["filed"] >= juengste[2][0]["filed"],
           [m["filed"] for m, _ in juengste])
+        # Karteileiche: Index nennt einen Text, dessen Datei nicht liegt - sie darf keinen Platz belegen
+        leiche = text_pfad(tmp, 320193, juengste[0][0]["accession"])
+        with open(leiche, "rb") as f_:
+            gesichert = f_.read()
+        os.remove(leiche)
+        nach = texte_der_firma(tmp, 320193, 3)
+        with open(leiche, "wb") as f_:      # sofort zurueck, sonst holt der naechste Lauf sie neu
+            f_.write(gesichert)
+        p("Karteileiche im Index verdraengt keinen echten Text",
+          len(nach) == 3 and all(m["accession"] != juengste[0][0]["accession"] for m, _ in nach),
+          [m["accession"] for m, _ in nach])
         n1 = len(aufrufe)
         b2 = lauf(tmp, hoechstens=0, quartale=8, hole=hole, ticker_zu_cik=tzc, log=lambda *_: None,
                   jetzt=dt.datetime(2026, 9, 4, tzinfo=dt.timezone.utc), warte=False)
