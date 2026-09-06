@@ -1694,7 +1694,8 @@ def tagesgeschaeft_wache(topic, quotes, dry_run):
                                "firma": e.get("firma", ""),
                                "strategie": e.get("strategie", ""),
                                "kurs": kurs}
-                              for _, e, kurs in raus], art="verkauf")
+                              for _, e, kurs in raus],
+                             art="verkauf", anlass="exit")
         if sende(topic, titel, absaetze, "high", handel_adresse(paket)):
             positionen.speichern(bestand)
     except Exception as e:
@@ -1960,14 +1961,31 @@ def push_abstand_warten(jetzt=None, schlafe=time.sleep) -> float:
     return rest
 
 
-def handel_paket(treffer: list[dict], art: str = "kauf") -> list[dict]:
+def handel_paket(treffer: list[dict], art: str = "kauf",
+                 anlass: str = "neu") -> list[dict]:
     """Die Zahlen eines Alarms so, wie die Handels-App sie braucht.
 
     Der Text der Meldung bleibt unveraendert; die App bekommt die Werte
-    zusaetzlich als Daten, damit sie beim Bauen der Order nicht raten muss."""
+    zusaetzlich als Daten, damit sie beim Bauen der Order nicht raten muss.
+
+    DIE KENNUNG "k" (seit 07.09.2026): Heliot bekommt denselben Alarm auf
+    zwei Wegen - beim Antippen der Meldung und beim Abruf aus dem Kanal.
+    Ohne eine mitgeschickte Kennung vergibt die App je Weg eine eigene,
+    und derselbe Alarm steht zweimal in der Liste. Genommen wird der
+    Meldeschluessel, den der Waechter ohnehin fuehrt (Aktie plus
+    Kaufpunkt-Nummer, ohne Preis), plus der ANLASS: Derselbe Kaufpunkt
+    meldet zweimal - erst der Ausbruch, spaeter der Nachtrag, wenn die
+    Volumenbestaetigung nachzieht. Das sind zwei Ereignisse und sollen in
+    der App auch zwei bleiben.
+
+    Das Datum haelt Alarme derselben Aktie ueber Tage auseinander; der
+    Meldeschluessel selbst gilt eine Woche."""
+    heute = date.today().isoformat()
     paket = []
     for t in treffer[:8]:
         eintrag = {"art": art, "sym": t.get("ticker")}
+        basis = t.get("key") or t.get("ticker") or "?"
+        eintrag["k"] = "%s|%s|%s" % (basis, anlass, heute)
         firma = (t.get("firma") or "")[:40]
         if firma:
             eintrag["firma"] = firma
@@ -2470,7 +2488,7 @@ def push_nachtrag(topic: str, treffer: list[dict]) -> bool:
     else:
         absaetze = [format_aktie(g, i) for i, g in enumerate(gruppen, 1)]
     return sende(topic, titel, absaetze, "high",
-                 handel_adresse(handel_paket(treffer)))
+                 handel_adresse(handel_paket(treffer, anlass="nachtrag")))
 
 
 def push(topic: str, treffer: list[dict]) -> bool:
@@ -2534,7 +2552,10 @@ def testpush(topic: str) -> int:
     # unter dem Kurs (NBTX stand am 04.09.2026 bei 38,90).
     probe = [{"art": "kauf", "sym": "NBTX", "firma": "PROBE Nanobiotix ADR",
               "muster": "Probealarm", "kp": 12.0, "kurs": 12.05,
-              "stop": 10.0, "ziel": 15.0}]
+              "stop": 10.0, "ziel": 15.0,
+              # Eigene Kennung je Probealarm: Zwei Proben hintereinander
+              # sind zwei Alarme und sollen in der App auch zwei bleiben.
+              "k": "probe|%s" % datetime.now().strftime("%Y-%m-%dT%H:%M:%S")}]
     klick = handel_adresse(probe)
     text = ("PROBEALARM, kein echter Kaufpunkt.\n\n"
             "NBTX (PROBE Nanobiotix ADR); Probealarm\n"
