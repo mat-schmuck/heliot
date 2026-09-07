@@ -173,6 +173,12 @@ jobs:
           # jedem Cloud-Lauf weg.
           git add -A -- zahlen_termine.json 2>/dev/null || true
           git add -A -- trigger_logbuch.jsonl 2>/dev/null || true
+          # Was der Scan wegen toter Kursdaten ausgelassen hat (Mathias,
+          # 07.09.2026). Die Gesamtpruefung liest die Datei und nennt die
+          # uebersprungenen Aktien beim Namen; ohne diesen Weg zurueck ins
+          # Repo waere sie nach jedem Cloud-Lauf weg und die Pruefung
+          # wuesste nie, dass ueberhaupt etwas ausgelassen wurde.
+          git add -A -- ausgelassen.json 2>/dev/null || true
           if git diff --cached --quiet; then
             echo "Keine Änderung gegenüber dem letzten Scan."
           else
@@ -185,7 +191,7 @@ jobs:
             # beiseitelegen, hart auf den Serverstand, wieder
             # einspielen, pushen. Die Scan-Ergebnisse DIESES Laufs sind
             # die frischeren, sie duerfen gewinnen.
-            DATEIEN="kaufpunkte_aktuell.xlsx sektor_radar.json ntfy_ids.json fokusliste.json shakeout_warteliste.json positionen.json exit_befunde.json volumenkurven.json zahlen_termine.json trigger_logbuch.jsonl"
+            DATEIEN="kaufpunkte_aktuell.xlsx sektor_radar.json ntfy_ids.json fokusliste.json shakeout_warteliste.json positionen.json exit_befunde.json volumenkurven.json zahlen_termine.json trigger_logbuch.jsonl ausgelassen.json"
             SICHERUNG=$(mktemp -d)
             for f in $DATEIEN; do cp "$f" "$SICHERUNG/" 2>/dev/null || true; done
             for versuch in 1 2 3; do

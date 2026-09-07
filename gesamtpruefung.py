@@ -78,6 +78,24 @@ def pruefe(block, name, bedingung, zusatz=""):
     return bool(bedingung)
 
 
+def nennen(treffer, hoechstens=6):
+    """Nennt die Betroffenen beim Namen statt bloss ihre Anzahl.
+
+    WOZU (Mathias, 07.09.2026): Eine Meldung wie "3 von 419" sagt nicht,
+    WELCHE drei, und genau daran ist der CRNX-Befund vorbeigelaufen. Die
+    uebernommene Crinetics-Aktie stand mit eingefrorenem Kurs in der
+    Mappe und erzeugte drei Kaufpunkte mit hauchduennem Stop; die Zahl
+    allein liess offen, ob das drei verschiedene Aktien sind oder
+    dreimal dieselbe. Mit den Namen davor sieht man den Fall sofort.
+
+    Sind es sehr viele, wird gekuerzt: Eine Zeile, die ueber den Rand
+    laeuft, liest niemand mehr."""
+    if len(treffer) <= hoechstens:
+        return "; ".join(treffer)
+    return ("; ".join(treffer[:hoechstens])
+            + f"; und {len(treffer) - hoechstens} weitere")
+
+
 def ueberschrift(text):
     print(f"\n{'=' * 72}\n{text}\n{'=' * 72}")
 
@@ -257,32 +275,49 @@ def block_d(namen_aus_c=None):
     mappe = WURZEL / "kaufpunkte_aktuell.xlsx"
     if mappe.exists():
         d = pd.read_excel(mappe)
-        ueber = eng = falschherum = ziel_falsch = 0
+        # GESAMMELT WIRD DER FALL, NICHT DIE ZAHL (Mathias, 07.09.2026):
+        # Jeder Treffer traegt Ticker, Kaufpunkt-Nummer, Strategie und die
+        # Werte, an denen er scheitert. Vorher stand hier nur ein Zaehler,
+        # und "3 von 419" verriet nicht, dass alle drei zu CRNX gehoerten.
+        ueber, eng, falschherum, ziel_falsch = [], [], [], []
         paare = 0
         for _, r in d.iterrows():
+            tick = str(r.get("Ticker", "?"))
             for i in (1, 2, 3):
                 kp, st, zl = (r[f"KP{i} Preis"], r[f"KP{i} Stop"],
                               r.get(f"KP{i} Ziel"))
                 if pd.isna(kp) or pd.isna(st) or kp <= 0:
                     continue
                 paare += 1
+                strat = r.get(f"KP{i} Strategie")
+                wo = f"{tick} KP{i}"
+                if isinstance(strat, str) and strat:
+                    wo += f" ({strat})"
                 risk = (kp - st) / kp * 100
                 if risk > 10 + 1e-6:
-                    ueber += 1
+                    ueber.append(f"{wo}: {risk:.2f} % Risiko")
                 if st >= kp:
-                    falschherum += 1
-                if risk < 0.05:
-                    eng += 1
+                    falschherum.append(
+                        f"{wo}: Stop {st:.2f} nicht unter Kaufpunkt {kp:.2f}")
+                # NUR positive Risiken (Befund beim Umbau, 07.09.2026):
+                # Bei einem Stop UEBER dem Kaufpunkt ist risk negativ und
+                # damit ebenfalls kleiner als 0,05 — dieselbe Zeile stand
+                # dann unter zwei Namen. Der Fall hat seine eigene
+                # Pruefung eine Zeile darueber.
+                if 0 <= risk < 0.05:
+                    eng.append(f"{wo}: Kaufpunkt {kp:.2f}, Stop {st:.2f}, "
+                               f"also nur {risk:.3f} % Risiko")
                 if zl is not None and not pd.isna(zl) and zl <= kp:
-                    ziel_falsch += 1
-        pruefe("D", "Kein Kaufpunkt ueber dem Zehn-Prozent-Deckel",
-               ueber == 0, f"{ueber} von {paare}")
-        pruefe("D", "Kein Stop ueber oder auf dem Kaufpunkt",
-               falschherum == 0, f"{falschherum} von {paare}")
-        pruefe("D", "Kein Ziel unter dem Kaufpunkt",
-               ziel_falsch == 0, f"{ziel_falsch} von {paare}")
-        pruefe("D", "Kein sinnlos enger Stop (unter 0,05 %)",
-               eng == 0, f"{eng} von {paare}")
+                    ziel_falsch.append(
+                        f"{wo}: Ziel {zl:.2f} nicht ueber Kaufpunkt {kp:.2f}")
+        for _name, _treffer in (
+                ("Kein Kaufpunkt ueber dem Zehn-Prozent-Deckel", ueber),
+                ("Kein Stop ueber oder auf dem Kaufpunkt", falschherum),
+                ("Kein Ziel unter dem Kaufpunkt", ziel_falsch),
+                ("Kein sinnlos enger Stop (unter 0,05 %)", eng)):
+            pruefe("D", _name, not _treffer,
+                   f"{len(_treffer)} von {paare}"
+                   + (": " + nennen(_treffer) if _treffer else ""))
 
     # Die Namen in der Mappe muessen der Waechter und das Exit-Regelwerk kennen
     if mappe.exists():
@@ -1490,6 +1525,48 @@ def block_h():
                (WURZEL / datei).exists()
                and isinstance(json.loads((WURZEL / datei).read_text(
                    encoding="utf-8")), (dict, list)))
+    # WAS DER LETZTE SCAN AUSGELASSEN HAT (Mathias, 07.09.2026).
+    # Der Scanner ueberspringt Aktien ohne lebendige Kurse, ehe ein
+    # Detektor sie zu sehen bekommt (siehe pattern_scanner.lebendig).
+    # Damit ein stillgelegter Wert nicht bloss unbemerkt aus der Mappe
+    # verschwindet, wird hier nachgelesen, WELCHE es waren und warum.
+    # Das ist eine Auskunft, kein Mangel: Ausgelassen zu haben ist genau
+    # das gewuenschte Verhalten. Ein Mangel waere nur, wenn eine solche
+    # Aktie danach trotzdem mit Kaufpunkten in der Mappe stuende, denn
+    # dann bewachte der Waechter einen Wert, den der Scanner aufgegeben
+    # hat.
+    try:
+        import pattern_scanner as _psa
+        _ausgelassen = WURZEL / _psa.AUSGELASSEN_DATEI
+    except Exception:
+        _ausgelassen = WURZEL / "ausgelassen.json"
+    if _ausgelassen.exists():
+        try:
+            _a = json.loads(_ausgelassen.read_text(encoding="utf-8"))
+            _liste = _a.get("aktien") or []
+            _zeilen = [f"{x.get('ticker')} ({x.get('grund')})"
+                       for x in _liste]
+            pruefe("H", "Ausgelassene Aktien des letzten Scans benannt",
+                   True,
+                   (f"Stand {_a.get('stand')}, {len(_liste)} von "
+                    f"{_a.get('liste')}: " + nennen(_zeilen)) if _liste
+                   else f"Stand {_a.get('stand')}, keine ausgelassen")
+            _in_mappe = []
+            if _liste and (WURZEL / "kaufpunkte_aktuell.xlsx").exists():
+                import pandas as _pdh
+                _m = _pdh.read_excel(WURZEL / "kaufpunkte_aktuell.xlsx")
+                _in_mappe = sorted(
+                    {str(x.get("ticker")) for x in _liste}
+                    & set(_m["Ticker"].astype(str)))
+            pruefe("H", "Keine ausgelassene Aktie steht noch in der Mappe",
+                   not _in_mappe, ", ".join(_in_mappe))
+        except Exception as e:
+            pruefe("H", f"{_ausgelassen.name} lesbar", False,
+                   f"{type(e).__name__}: {e}")
+    else:
+        pruefe("H", "Ausgelassene Aktien des letzten Scans benannt", True,
+               f"{_ausgelassen.name} entsteht mit dem naechsten Nachtscan")
+
     # positionen.json DARF fehlen, solange keine Position offen ist —
     # die Datei entsteht erst beim ersten Einstieg. Geprueft wird
     # deshalb, ob das Laden sauber durchlaeuft, nicht ob die Datei da ist.

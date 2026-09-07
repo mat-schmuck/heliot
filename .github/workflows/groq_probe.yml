@@ -11,6 +11,15 @@ on:
 permissions:
   contents: read
 
+# Doppellauf-Sperre (Mathias, 07.09.2026): Die Probe misst, wie viel
+# vom Groq-Tageskontingent uebrig ist. Zwei Laeufe zugleich wuerden
+# einander die Restmengen wegmessen und dabei selbst Kontingent
+# verbrauchen; das Ergebnis waere wertlos. cancel-in-progress bleibt
+# false, damit ein bereits laufender Lauf zu Ende messen darf.
+concurrency:
+  group: groq-probe
+  cancel-in-progress: false
+
 jobs:
   probe:
     runs-on: ubuntu-latest
