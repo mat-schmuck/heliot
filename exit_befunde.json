@@ -1,24 +1,5 @@
 {
- "handelstag": "2026-09-06",
- "gebaut_am": "2026-09-06T22:03:52",
- "befunde": [
-  {
-   "typ": "kapitel11",
-   "titel": "Exit-Regelwerk: ARCT|1",
-   "text": "BEOBACHTUNG: ARCT|1 (Arcturus Therapeutics Holdings Inc); Stop gerissen, ganz raus; Kurs 15.82, -4.7 % seit Einstieg; Schluss 15.82 unter Stop 15.99",
-   "symbol": "ARCT|1",
-   "key": "",
-   "prioritaet": "high",
-   "buendeln": true
-  },
-  {
-   "typ": "kapitel11",
-   "titel": "Exit-Regelwerk: IOT|1",
-   "text": "BEOBACHTUNG: IOT|1 (Samsara Inc); Stop gerissen, ganz raus; Kurs 40.20, -5.8 % seit Einstieg; Schluss 40.20 unter Stop 40.59",
-   "symbol": "IOT|1",
-   "key": "",
-   "prioritaet": "high",
-   "buendeln": true
-  }
- ]
+ "handelstag": "2026-09-07",
+ "gebaut_am": "2026-09-07T22:05:36",
+ "befunde": []
 }
