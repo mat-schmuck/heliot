@@ -329,6 +329,77 @@ def fetch_history(ticker: str, api_key: str, limiter: RateLimiter) -> pd.DataFra
     return df
 
 
+# Von den letzten Zeilen duerfen hoechstens so viele ohne Umsatz oder ohne
+# Kursspanne sein; und so alt darf die juengste Zeile hoechstens werden.
+LEBEND_FENSTER = 5
+LEBEND_STUMM_MAX = 1
+LEBEND_ALTER_MAX = 8
+
+
+def lebendig(df: pd.DataFrame, heute=None) -> tuple:
+    """Wird diese Aktie ueberhaupt noch gehandelt? Liefert (ja, Grund).
+
+    WOZU (Befund vom 07.09.2026): Crinetics Pharmaceuticals wurde am
+    01.09.2026 von Vertex uebernommen, 85,00 Dollar je Aktie in bar, und
+    von der Nasdaq genommen. Yahoo lieferte danach noch zwei Zeilen mit
+    Volumen NULL und Spanne NULL (Kurs eingefroren bei 84,95) und ab dem
+    03.09. gar keine mehr. Der Nachtscan vom 06.09. baute daraus DREI
+    Kaufpunkte, mit Stops zwei bis elf Cent darunter.
+
+    DAS IST KEIN ZUFALL, und deshalb faengt die Pruefung es grundsaetzlich
+    ab: Eine abgeschlossene Baruebernahme sieht im Chart aus wie eine
+    perfekte High and Tight Flag. Der Kurs sprang am 03.08. von 42,03 auf
+    85 - das sind 102 Prozent, ein lehrbuchmaessiger Fahnenmast - und
+    stand seither bewegungslos auf dem Angebotspreis, also in der engsten
+    denkbaren Flagge. Beim Innen-Einstieg schlaegt es am haertesten durch,
+    weil dort der Kaufpunkt das Tageshoch plus einen Cent und der Stop das
+    Tagestief minus einen Cent ist: Bei einer Kerze ohne Spanne bleiben
+    genau zwei Cent Risiko. Und weil dieser Detektor ausdruecklich den
+    ENGSTEN Tag der Flagge sucht, greift er systematisch nach der
+    kaputtesten Zeile.
+
+    ZWEI KRITERIEN, beide am echten Bestand gemessen (07.09.2026: alle
+    157 Aktien der damaligen Mappe ueber Yahoo nachgesehen, 156 lebendig,
+    nur CRNX auffaellig):
+
+    (1) Von den letzten fuenf Zeilen mehr als eine ohne Umsatz ODER ohne
+        Kursspanne. Eine Aktie, die ein Screener ausgibt, hat das nie;
+        eine stillgelegte hat es immer.
+    (2) Die juengste Zeile aelter als acht Kalendertage. Ein langes
+        Wochenende samt Feiertag sind vier Tage, acht lassen Luft und
+        fangen trotzdem jede Reihe, die dauerhaft steht.
+
+    Im Zweifel gilt die Aktie als LEBENDIG - ein faelschlich
+    ausgelassener Wert kostet einen Kaufpunkt, ein faelschlich
+    behaltener nur eine Zeile in der Mappe."""
+    if df is None or len(df) == 0:
+        return False, "keine Kurszeilen"
+
+    fenster = df.tail(LEBEND_FENSTER)
+    stumm = 0
+    for _, z in fenster.iterrows():
+        try:
+            vol = float(z.get("volume") or 0.0)
+            spanne = float(z["high"]) - float(z["low"])
+        except (TypeError, ValueError):
+            continue
+        if vol <= 0 or spanne <= 0:
+            stumm += 1
+    if stumm > LEBEND_STUMM_MAX:
+        return False, (f"{stumm} der letzten {len(fenster)} Handelstage ohne "
+                       f"Umsatz oder ohne Kursspanne")
+
+    try:
+        jung = pd.to_datetime(df["datetime"].iloc[-1]).date()
+    except Exception:
+        return True, ""
+    alter = ((heute or date.today()) - jung).days
+    if alter > LEBEND_ALTER_MAX:
+        return False, (f"juengste Kurszeile vom {jung:%d.%m.%Y}, also "
+                       f"{alter} Tage alt")
+    return True, ""
+
+
 def add_indicators(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
     c = df["close"]
@@ -929,6 +1000,10 @@ def wiener_zeit():
         return datetime.now().strftime("%Y-%m-%d %H:%M") + " (Zone unbekannt)"
 
 
+# Was der letzte Scan wegen toter Kursdaten ausgelassen hat.
+AUSGELASSEN_DATEI = "ausgelassen.json"
+
+
 def _json_lesen(pfad, vorgabe):
     try:
         with open(pfad, encoding="utf-8-sig") as f:
@@ -1471,10 +1546,22 @@ def main():
 
     # 1. Durchlauf: Daten holen + RS-Rohscore
     loaded, raw_rs = {}, {}
+    ausgelassen = []
     for i, (ticker, company) in enumerate(tickers, 1):
         print(f"[{i}/{len(tickers)}] {ticker} …")
         df = fetch_history(ticker, api_key, limiter)
         if df is None:
+            continue
+        # Stillgelegte Aktien fliegen HIER heraus, vor jedem Detektor:
+        # Was gar nicht erst geladen wird, kann auch keinen Kaufpunkt in
+        # die Mappe, keine Zeile in die Fokusliste und keinen Eintrag ins
+        # Logbuch schreiben (siehe lebendig()).
+        lebt, grund = lebendig(df)
+        if not lebt:
+            ausgelassen.append({"ticker": ticker, "firma": company,
+                                "grund": grund})
+            print(f"  ⛔ {ticker}: keine lebendigen Kurse mehr — "
+                  f"übersprungen ({grund})")
             continue
         loaded[ticker] = (df, company)
         s = rs_score(df)
@@ -1612,6 +1699,18 @@ def main():
     n_green = sum(1 for r in rows if r["res"]["pattern_count"] >= 1)
     n_tt = sum(1 for r in rows if r["res"]["tt_pass"])
     print(f"Treffer: {n_green} mit aktivem Muster, {n_tt} bestehen das Trend Template.")
+
+    # Die ausgelassenen Aktien bleiben nachlesbar: Die Gesamtpruefung
+    # liest die Datei und meldet sie beim Namen, damit ein stillgelegter
+    # Wert nicht bloss unbemerkt aus der Mappe verschwindet.
+    _json_schreiben(AUSGELASSEN_DATEI,
+                    {"stand": date.today().isoformat(),
+                     "liste": len(tickers), "aktien": ausgelassen})
+    if ausgelassen:
+        print(f"\nOhne lebendige Kurse, deshalb nicht gerechnet "
+              f"({len(ausgelassen)}):")
+        for a in ausgelassen:
+            print(f"  {a['ticker']} ({a['firma']}): {a['grund']}")
 
     if args.ntfy:
         push_ntfy(args.ntfy, rows)
