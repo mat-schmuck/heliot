@@ -52,6 +52,12 @@ jobs:
           # die IP mit Fremden. Mit dem eingebauten Token sind es 1000 je
           # Stunde und Repository — erst damit ist ein enger Takt möglich.
           GITHUB_TOKEN: ${{ github.token }}
+          # Fuer den Handelskalender (handelskalender.py): An einem
+          # Boersenfeiertag soll der Hueter GAR KEINE Wache mehr
+          # anstossen. Ohne diesen Schluessel bleibt es beim alten
+          # Verhalten, also Wachen, die von selbst feststellen, dass es
+          # nichts zu bewachen gibt (Mathias, 07.09.2026).
+          TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
         run: python3 waechter_noetig.py
 
       # Gestartet wird NUR, wenn gar nichts da ist — weder ein laufender

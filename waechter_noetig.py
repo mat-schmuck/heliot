@@ -40,6 +40,8 @@ import os
 import sys
 from datetime import datetime
 
+import handelskalender  # Fragt den Datenanbieter, ob heute gehandelt wird
+
 # Laeufe in diesen Zustaenden gelten als "da" — auch die wartenden.
 LEBT = ("queued", "in_progress", "waiting", "requested", "pending")
 
@@ -69,9 +71,8 @@ def ny_jetzt():
 
 def handelszeit(jetzt=None):
     """Regulaerer Handel in New York? 09:30 bis 16:00, Montag bis
-    Freitag. Feiertage kennt die Pruefung nicht — an einem Feiertag
-    startet sie hoechstens eine Wache, die von selbst feststellt, dass
-    nichts zu tun ist."""
+    Freitag. Diese Pruefung sieht nur auf die Uhr; ob heute ueberhaupt
+    gehandelt wird, klaert entscheide() beim Datenanbieter."""
     j = jetzt or ny_jetzt()
     if j.weekday() >= 5:
         return False
@@ -90,8 +91,25 @@ def wache_da(laeufe):
     return any(r.get("status") in LEBT for r in laeufe)
 
 
-def entscheide(laeufe, jetzt=None):
-    """Rueckgabe: (noetig, dauerwache, begruendung)."""
+def entscheide(laeufe, jetzt=None, handelstag=None):
+    """Rueckgabe: (noetig, dauerwache, begruendung).
+
+    handelstag ist True, False oder None. None heisst: beim
+    Datenanbieter nachfragen (im Pruefzweig wird der Wert gestellt,
+    damit der Selbsttest ohne Netz auskommt).
+
+    DIE REIHENFOLGE IST ABSICHT (Mathias, 07.09.2026): Der Kalender wird
+    ZULETZT gefragt, also erst dann, wenn wirklich eine Wache gestartet
+    wuerde. An einem gewoehnlichen Handelstag laeuft die Dauerwache, der
+    Hueter kommt gar nicht bis hierher und fragt den Anbieter nie. Nur an
+    einem Feiertag, an dem keine Wache da ist, kostet es einen Abruf je
+    Anstoss — und genau dort spart es die Leerlaeufe.
+
+    WOZU (Befund vom Labor Day, 07.09.2026): Nachdem sich die Wache um
+    10:15 New Yorker Zeit mit "keine heutigen Kurse" beendet hatte,
+    stiess der Hueter alle paar Minuten eine neue an. Jede stellte binnen
+    einer Minute dasselbe fest und endete wieder; bis zum Abend waren es
+    rund achtzig Leerlaeufe."""
     j = jetzt or ny_jetzt()
     if not handelszeit(j):
         return False, 0, "außerhalb der Handelszeit"
@@ -101,6 +119,10 @@ def entscheide(laeufe, jetzt=None):
     rest = restminuten(j)
     if rest < MINDESTREST:
         return False, 0, f"nur noch {rest} Minuten bis zum Schluss"
+    if handelstag is None:
+        handelstag = handelskalender.handelstag(j)
+    if handelstag is False:
+        return False, 0, handelskalender.kein_handel_text()
     return True, rest, f"KEINE Wache da, {rest} Minuten bis zum Schluss"
 
 
@@ -159,47 +181,62 @@ def selbsttest() -> int:
 
     # --- Der Kern: was zaehlt als "Wache ist da"? ------------------------
     laeuft = [{"status": "in_progress", "conclusion": None}]
-    n, d, g = entscheide(laeuft, mitten)
+    n, d, g = entscheide(laeuft, mitten, True)
     p("Läuft eine Wache, wird nichts gestartet", not n, g)
 
     # DER FALL, um den es Mathias ging: Die Schlussstunden-Wache wartet
     # hinter der Tagwache. Sie darf NICHT verdraengt werden.
     wartet = [{"status": "in_progress", "conclusion": None},
               {"status": "pending", "conclusion": None}]
-    n, d, g = entscheide(wartet, mitten)
+    n, d, g = entscheide(wartet, mitten, True)
     p("Eine WARTENDE Schlussstunden-Wache zählt als vorhanden", not n, g)
 
     nur_wartend = [{"status": "queued", "conclusion": None}]
-    n, d, g = entscheide(nur_wartend, mitten)
+    n, d, g = entscheide(nur_wartend, mitten, True)
     p("Auch ein Lauf, der nur auf einen Rechner wartet, zählt", not n, g)
 
     fertig = [{"status": "completed", "conclusion": "failure"},
               {"status": "completed", "conclusion": "success"}]
-    n, d, g = entscheide(fertig, mitten)
+    n, d, g = entscheide(fertig, mitten, True)
     p("Nur fertige Läufe: es wird gestartet", n, g)
     p("Dauerwache reicht genau bis zum Schluss", d == 300, f"{d} Minuten")
 
-    n, d, g = entscheide([], mitten)
+    n, d, g = entscheide([], mitten, True)
     p("Gar keine Läufe: es wird gestartet", n and d == 300, g)
 
     # DIE LETZTEN MINUTEN SIND DIE WICHTIGSTEN: Ab 15:54 New Yorker Zeit
     # prueft der Waechter die Schlussbestaetigung fuer Gap and Go. Ein
     # Neustart muss dort noch moeglich sein (Mathias, 07.08.2026).
-    n, d, g = entscheide(fertig, datetime(2026, 8, 7, 15, 54, tzinfo=NY))
+    n, d, g = entscheide(fertig, datetime(2026, 8, 7, 15, 54, tzinfo=NY), True)
     p("Um 15:54 wird noch gestartet — Gap-and-Go-Schlussfenster",
       n and d == 6, g)
 
-    n, d, g = entscheide(fertig, datetime(2026, 8, 7, 15, 58, tzinfo=NY))
+    n, d, g = entscheide(fertig, datetime(2026, 8, 7, 15, 58, tzinfo=NY), True)
     p("Zwei Minuten vor Schluss: gerade noch", n and d == 2, g)
 
-    n, d, g = entscheide(fertig, datetime(2026, 8, 7, 15, 59, tzinfo=NY))
+    n, d, g = entscheide(fertig, datetime(2026, 8, 7, 15, 59, tzinfo=NY), True)
     p("Eine Minute vor Schluss lohnt nicht mehr (28 s Rüstzeit)", not n, g)
 
-    n, d, g = entscheide(fertig, datetime(2026, 8, 7, 15, 50, tzinfo=NY))
+    n, d, g = entscheide(fertig, datetime(2026, 8, 7, 15, 50, tzinfo=NY), True)
     p("Zehn Minuten vor Schluss selbstverständlich", n and d == 10, g)
 
-    n, d, g = entscheide(fertig, datetime(2026, 8, 7, 3, 0, tzinfo=NY))
+    n, d, g = entscheide(fertig, datetime(2026, 8, 7, 3, 0, tzinfo=NY), True)
     p("Nachts wird nichts gestartet", not n, g)
+
+    # --- Boersenfeiertag (Mathias, 07.09.2026) --------------------------
+    n, d, g = entscheide(fertig, mitten, False)
+    p("Am Börsenfeiertag wird KEINE Wache gestartet", not n, g)
+
+    n, d, g = entscheide(fertig, mitten, True)
+    p("Am Handelstag wird gestartet", n and d == 300, g)
+
+    # Ohne Auskunft des Anbieters bleibt es beim alten Verhalten: Eine
+    # Wache wird gestartet, sie stellt dann selbst fest, dass es keine
+    # heutigen Kurse gibt. Lieber ein Leerlauf als ein blinder Tag.
+    handelskalender.vergessen()
+    n, d, g = entscheide(fertig, mitten,
+                         handelskalender.handelstag(mitten, api_key=""))
+    p("Ohne Auskunft des Anbieters wird gestartet wie bisher", n, g)
 
     print(f"\n{len(fehler)} Fehler." if fehler else "\nAlles bestanden.")
     return 1 if fehler else 0

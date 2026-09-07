@@ -62,6 +62,7 @@ import sektor_radar    # Dreht eine ganze Branche? Rechnet der Nachtlauf, meldet
 import zahlen_termine  # Wer heute Abend berichtet, wird vermerkt — die EINZIGE Volumenrechnung
 import positionen      # Kapitel 11/12: Bestand samt Beobachtungen
 import beobachtungen   # Kapitel 12: Trigger werden Beobachtungen
+import handelskalender  # Fragt den Datenanbieter, ob heute ueberhaupt gehandelt wird
 from config import CFG, hoechstens, mind_erreicht, pruefe_config
 from kurs_cache import KursCache, Kurswert
 from yahoo_ws import YahooWebSocket
@@ -515,17 +516,36 @@ def markt_offen(jetzt=None) -> tuple:
     volle Boersenhandel abgedeckt, ohne dass jemand zweimal im Jahr
     Zeitangaben nachziehen muss.
 
-    Boersenfeiertage kennt diese Pruefung NICHT - an solchen Tagen laeuft
-    der Waechter, findet aber unveraenderte Kurse und meldet nichts."""
+    BOERSENFEIERTAGE kennt diese Pruefung seit 07.09.2026, und zwar ueber
+    den DATENANBIETER statt ueber eine selbstgepflegte Tabelle (Mathias'
+    Entscheid; Modul handelskalender.py). Vorher lief der Waechter am
+    Feiertag an, meldete "Boersenstatus offen" und schickte um 09:30 die
+    Befunde des Nachtlaufs hinaus, ehe der erste Kursabruf ueberhaupt
+    zeigte, dass es keinen Handel gibt (Labor Day, 07.09.2026).
+
+    Sagt der Anbieter nichts, fehlt der Schluessel oder ist er nicht
+    erreichbar, bleibt es beim alten Verhalten: Dann faengt
+    pruefe_handelstag den Feiertag weiterhin an den fehlenden Tageszeilen
+    ab. Ein falsches "geschlossen" kostete einen ganzen Handelstag,
+    deshalb wird nur eine EINDEUTIGE Auskunft beachtet."""
     try:
         from zoneinfo import ZoneInfo
         ny = ZoneInfo("America/New_York")
     except Exception:
         return True, "Zeitzone nicht verfügbar — Prüfung übersprungen"
 
+    gestellt = jetzt is not None
     jetzt = (jetzt or datetime.now(ny)).astimezone(ny)
     if jetzt.weekday() >= 5:
         return False, f"Wochenende in New York ({jetzt:%A})"
+
+    # Der Kalender wird NUR im echten Betrieb gefragt. Wer eine Uhrzeit
+    # uebergibt, prueft die Uhrenlogik (gesamtpruefung.py) und soll dabei
+    # nicht ins Netz greifen. Die Auskunft selbst wird je Tag einmal
+    # geholt und danach gemerkt, der Prueftakt von zwei Sekunden kostet
+    # also keinen einzigen zusaetzlichen Abruf.
+    if not gestellt and handelskalender.handelstag(jetzt) is False:
+        return False, handelskalender.kein_handel_text()
 
     beginn = jetzt.replace(hour=9, minute=30, second=0, microsecond=0)
     ende = jetzt.replace(hour=16, minute=0, second=0, microsecond=0)
@@ -540,7 +560,10 @@ def markt_offen(jetzt=None) -> tuple:
 def sekunden_bis_eroeffnung(jetzt=None):
     """Sekunden bis zum heutigen Handelsbeginn in New York.
 
-    Liefert None am Wochenende, nach der Eroeffnung oder ohne Zeitzone.
+    Liefert None am Wochenende, nach der Eroeffnung oder ohne Zeitzone —
+    und seit 07.09.2026 auch an einem Tag, an dem der Datenanbieter gar
+    keinen Handel meldet. Ohne diese Ergaenzung haette der Waechter am
+    Feiertag brav auf eine Glocke gewartet, die nie laeutet.
     Gebraucht fuer die Eroeffnungs-Abdeckung: GitHub feuert Zeitplaene oft
     5-15 Minuten verspaetet — ein Lauf, der kurz VOR der Glocke startet,
     wartet damit bis zur Eroeffnung, statt sich schlafen zu legen."""
@@ -549,8 +572,11 @@ def sekunden_bis_eroeffnung(jetzt=None):
         ny = ZoneInfo("America/New_York")
     except Exception:
         return None
+    gestellt = jetzt is not None
     jetzt = (jetzt or datetime.now(ny)).astimezone(ny)
     if jetzt.weekday() >= 5:
+        return None
+    if not gestellt and handelskalender.handelstag(jetzt) is False:
         return None
     beginn = jetzt.replace(hour=9, minute=30, second=0, microsecond=0)
     diff = (beginn - jetzt).total_seconds()
