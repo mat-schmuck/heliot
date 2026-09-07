@@ -178,6 +178,7 @@ def exhibit(cik, accession, hole, prim=None, pruefen=True):
         return None, None
     kandidaten.sort(key=lambda d: int(d.get("size") or 0), reverse=True)
     name = text = None
+    geladen = []
     for d in kandidaten[:3]:
         name = d["name"]
         roh = hole(ordner + "/" + name)
@@ -188,7 +189,15 @@ def exhibit(cik, accession, hole, prim=None, pruefen=True):
         text = m8k.html_zu_text(html_roh)
         if not pruefen or ist_ergebnistext_8k(text):
             return name, text
-    return name, None   # Auslieferungsbericht, Deckblatt, Vertrag, Praesentation: kein Ergebnistext
+        geladen.append((name, text))
+    # Zweiter Durchgang, milde Pruefung: Eine Praesentation oder eine Mitschrift faellt nur, wenn ein
+    # anderer Anhang derselben Einreichung die Mitteilung traegt. Liegt nur sie da, ist sie besser als
+    # nichts. Am Archiv gemessen (06.09.2026): Alle 21 Praesentationen und 28 Mitschriften, die der Lauf
+    # eingesammelt hatte, standen NEBEN der Pressemitteilung derselben Periode.
+    for name_z, text_z in geladen:
+        if ist_ergebnistext_8k(text_z, streng=False):
+            return name_z, text_z
+    return name, None   # Auslieferungsbericht, Deckblatt, Vertrag: kein Ergebnistext
 
 
 _VERTRAG_KOPF = re.compile(r"credit agreement|purchase agreement|indenture|underwriting agreement|by and among|by and between|"
@@ -199,18 +208,274 @@ _BETRAG = re.compile(r"[$€£¥]\s?\|?\s?\d|\d[\d,.]*\s?(million|billion|mn|bn)
                      r"(dollars|amounts|in) (in )?(thousands|millions)", re.I)
 
 
-def ist_ergebnistext_8k(text):
-    """Milde Ergebnispruefung fuer Anhaenge von Item-2.02-8-Ks: Ergebniswoerter und ein paar Betraege, kein
-    Vertrag im Kopf. Die 6-K-Kriterien (Musterarten, Trefferdichte) sind fuer kurze Pressemitteilungen zu
-    scharf (Atmos, Monopar, Sable fielen mit 6.000 bis 12.000 Zeichen durch), die 6-K-Ausschlussliste greift
-    hier nicht (Teslas Deck erwaehnt das Proxy Statement). Teslas Auslieferungsbericht (Fahrzeuge, keine
-    Ergebniszahl) und XBRL-Deckblaetter bleiben leer."""
+# ---------------------------------------------------------------------------
+# Ballastarten der 8-K-Anhaenge (gemessen an allen 31.860 Archivtexten, 06.09.2026)
+# ---------------------------------------------------------------------------
+# Die milde Pruefung allein liess 339 Texte durch, die keine Ergebnismitteilung sind: 166 XBRL-Deckblaetter
+# und Formularhuellen, 58 Vertraege und Prospekte, 28 Telefonkonferenz-Mitschriften, 28 Terminankuendigungen,
+# 21 Praesentationen, dazu Uebernahme-, Finanzierungs-, Ausschuettungs- und Personalmeldungen. Geprueft wird
+# die TITELZONE, nicht der ganze Text: "cautionary statement", "safe harbor" und "good morning" stehen in
+# jeder Pressemitteilung, die eine Telefonkonferenz ankuendigt, und der Haftungsausschluss jeder Earnings
+# Presentation verweist auf den "Annual Report on Form 10-K".
+_B_KOPFZEILE = re.compile(r"^(EX-[\d.]+[\w.]*|\d+|Document|Exhibit\s*[\d.]+|[A-Za-z0-9_\-]+\.htm[l]?|"
+                          r"false|true|6-K|8-K)$", re.I)
+_B_TRANSKRIPT = re.compile(
+    r"\btranscript\b|corporate participants\b|conference call script\b|prepared remarks\b|"
+    r"callstreet\.com|streetevents|transcriptionwing|call participants\s+executives\b|"
+    r"earnings (conference )?call\b.{0,40}\b(script|transcript|remarks)", re.I)
+_B_PRAESENTATION = re.compile(
+    r"\b(investor|corporate|company|earnings|analyst|shareholder|business)\s+(presentation|deck)\b|"
+    r"\b(investor|analyst)\s+day\b|\binvestor\s+update\b|"
+    r"\b(presentation|deck)\b.{0,25}\b(q[1-4]|first|second|third|fourth)\s+quarter|"
+    r"\bslide\s+(deck|presentation)|\bthis presentation contains\b|"
+    r"\bj\.?p\.?\s*morgan\s+healthcare\s+conference\b", re.I)
+_B_HUELLE = re.compile(
+    r"^[a-z0-9_\-]{2,20}\s*\|\s*(false|true)\b|^\s*(8-K|6-K|FORM 8-K|FORM 6-K)\s*\|\s*(false|true)\b|"
+    r"\|\s*(iso4217:|xbrli:|us-gaap:|srt:|ifrs-full:|http://fasb\.org)", re.I)
+_B_FORMULAR = re.compile(
+    r"pursuant to section 13 or 15\(d\)|check the appropriate box below|"
+    r"written communications pursuant to rule 425|securities registered pursuant to section 12\(b\)", re.I)
+_B_TERMIN = re.compile(
+    r"(to host|will host|schedules?|announces? (the )?date (of|for)|will (report|release|announce)|"
+    r"to (report|release|announce)|invites? you to)[^.\n]{0,80}"
+    r"(earnings (release|call|conference|results)|conference call|quarter(ly)? results|"
+    r"financial results|webcast|results (call|conference))|"
+    r"conference call (and webcast )?(on|scheduled|to discuss)|earnings release and conference call", re.I)
+_B_VERTRAG = re.compile(
+    r"^(execution (version|copy))|"
+    r"\b(underwriting|purchase|credit|merger|arrangement|subscription|facility|loan|"
+    r"placement agency|securities purchase|at the market offering|equity distribution)\s+agreement\b|"
+    r"\bindenture\b|\bwitnesseth\b|^\s*by and (among|between)\b|"
+    r"preliminary (offering memorandum|prospectus supplement)|excerpts? from (the )?preliminary|"
+    r"^\s*risk factors\s*$|^\s*capitalization\s*$|no securities regulatory authority|"
+    r"filed pursuant to rule 424|amendment to (the )?(loan|credit)", re.I)
+_B_BERICHTSWERK = re.compile(
+    r"\bannual (integrated )?report\b|\bintegrated (annual )?report\b|remuneration report|"
+    r"compensation report|sustainability report|corporate governance report|annual information form|"
+    r"\bpillar 3\b|\bby-?laws\b|code of (business )?conduct|proxy (statement|circular)|"
+    r"information circular|notice of (the )?(\d{4} )?(annual|special|extraordinary)|"
+    r"management proxy|form of proxy|technical report|ni 43-101|mineral resource estimate", re.I)
+_B_PROFORMA = re.compile(r"(unaudited )?pro forma (condensed )?(combined |consolidated )?(condensed )?financial", re.I)
+_B_UNTERLAGE_KOPF = re.compile(r"\b(presentation|deck|transcript)\b", re.I)
+_B_VORAB = re.compile(
+    r"\bpre-?announce|\bpre-?release\b|\bpreliminary\b|\bestimates? of (certain )?(financial )?results\b|"
+    r"\bestimated (fourth|third|second|first) quarter\b|provides? (an )?update on[^.\n]{0,30}(results|revenue)", re.I)
+_B_PERSONAL = re.compile(
+    r"(names?|appoints?|announces?|elects?|promotes?|welcomes?)[^.\n]{0,70}"
+    r"\b(chief (executive|financial|operating|technology|medical|legal|commercial|accounting) officer|"
+    r"\bceo\b|\bcfo\b|\bcoo\b|president|chair(man|person|woman)?|board of directors|"
+    r"general counsel|to (its|the) board)\b|"
+    r"\b(ceo|cfo|coo|chief \w+ officer|president|chair(man)?)\b[^.\n]{0,40}"
+    r"(transition|retire|retirement|succession|departure|resignation|steps? down|to (leave|depart))|"
+    r"leadership (transition|change)|management (transition|change)", re.I)
+_B_UEBERNAHME = re.compile(
+    r"\b(to acquire|acquisition of|acquires\b|completes? (the )?acquisition|agreement to acquire|"
+    r"to be acquired|to merge\b|merger (agreement|with|of equals)|definitive (merger )?agreement|"
+    r"to divest|divestiture|to separate\b|separation of|to sell\b|sale of\b|"
+    r"enters? into (a )?(definitive|binding)|completes? (the )?(merger|combination|sale|separation|spin))", re.I)
+_B_FINANZIERUNG = re.compile(
+    r"\b(public offering|private placement|registered direct offering|announces? pricing|"
+    r"prices?\b[^.\n]{0,40}offering|senior (secured )?notes\b|convertible (senior )?notes\b|"
+    r"refinanc\w+|credit facility|at-the-market|equity financing|raises? \$[\d.]|"
+    r"launch(es)? (of )?(a )?(\$[\d.]+ ?\w* )?offering|closes? (\$[\d.]+ ?\w* )?(public |private )?"
+    r"(offering|placement|financing)|upsized? offering|notes? offering)", re.I)
+_B_AUSSCHUETTUNG = re.compile(
+    r"\b(declares?|announces?|approves?|increases?|raises?)[^.\n]{0,50}"
+    r"\b(quarterly |monthly |special |cash )?(dividend|distribution)\b|"
+    r"\b(share|stock) repurchase (program|authorization)\b|\bbuyback\b", re.I)
+_B_ERGEBNISTITEL = re.compile(
+    r"(announces?|reports?|posts?|delivers?|publishes?|releases?|provides?)[^.\n]{0,90}"
+    r"\b(results|earnings|financial (results|performance|highlights|update)|revenue|net (income|loss|sales))|"
+    r"\bearnings (release|report|results)\b|\bfinancial results\b|results announcement|kessan tanshin|"
+    r"(first|second|third|fourth)[- ]quarter[^.\n]{0,40}(results|earnings)|"
+    r"(quarterly|interim|half.?year|annual)\s+(report|results)|"
+    r"management.{0,3}s discussion|\bMD&A\b|"
+    r"(audited|unaudited|condensed|interim|consolidated)\s+(consolidated\s+)?(interim\s+)?"
+    r"financial (statements|information|report)|"
+    r"results for the (period|quarter|year|three|six|nine|twelve)|"
+    r"\b(revenue|sales|net income|net loss|ebitda)\b[^.\n]{0,30}\b(increased?|decreased?|grew|rose|fell|of \$)", re.I)
+# Nennt der Titel einen Berichtszeitraum samt Bericht, ist es der Quartalsbericht der Firma, gleich wie er
+# heisst: Tamboran "2Q FY25 Result Presentation", NOVAGOLD "Files Second Quarter Report".
+_B_PERIODENBERICHT = re.compile(
+    r"\b(q[1-4]|[1-4]q|first|second|third|fourth|full[- ]year|half[- ]year|interim|annual|fy\s?\d{2})\b"
+    r"[^|]{0,45}\b(report|results|result|statement|letter|update|earnings|activities|financial)", re.I)
+_B_HART = ("huelle", "vertrag", "termin", "berichtswerk", "proforma")
+_B_WEICH = ("transkript", "praesentation", "tabelle", "vorab", "personal", "uebernahme", "finanzierung",
+            "ausschuettung")
+
+_ZEILEN_BETRAG = re.compile(r"[$€£¥]\s?\|?\s?[\d(]|\bUS\$|\bC\$|\bR\$|\bKRW\b|\bNT\$|"
+                            r"\d[\d,.]*\s?(million|billion|mn|bn|crore|lakh)\b|\|\s*\(?[\d,]{3,}", re.I)
+_KENNZAHLEN = (
+    re.compile(r"\b(total )?(revenue|net sales|turnover|net revenues?|sales)\b", re.I),
+    re.compile(r"\bnet (income|loss|profit|earnings)\b|\bprofit (before|after) tax\b|\bnet result\b", re.I),
+    re.compile(r"\bearnings per share\b|\b(diluted|basic) eps\b|\beps\b|\bper (diluted )?share\b", re.I),
+    re.compile(r"\boperating (income|profit|loss|margin)\b|\bebit\b", re.I),
+    re.compile(r"\b(adjusted )?ebitda\b", re.I),
+    re.compile(r"\bgross (profit|margin)\b", re.I),
+    re.compile(r"\b(free )?cash flow\b|\bcash (provided|used) by operating\b", re.I),
+)
+_PERIODENANGABE = re.compile(
+    r"(three|six|nine|twelve|3|6|9|12)[\s-]+months?\s+(ended|ending)|"
+    r"(quarter|half[\s-]?year|fiscal year|full year|year)\s+(ended|ending)|"
+    r"\b(first|second|third|fourth)\s+quarter\b|\bq[1-4]\s?(fy)?\s?(20)?\d{2}\b|\b[1-4]q\s?\d{2}\b|"
+    r"\bfy\s?(20)?\d{2}\b|for the (quarter|period|year|three|six|nine|twelve)", re.I)
+
+
+def kennzahldichte(text):
+    """(Zahl verschiedener Ergebniskennzahlen mit Betrag in DERSELBEN Zeile, Periodenangabe vorhanden).
+    Das ist die sicherste Sperre gegen Fehlloeschungen: Ein Text mit echten Quartalszahlen faellt nie
+    durch, gleich wie seine Ueberschrift lautet (ING "posts net result", SAP "Quarterly Statement",
+    Virco "Reports $700,000 First Quarter Profit")."""
+    gefunden = set()
+    for zeile in text.split("\n"):
+        if not _ZEILEN_BETRAG.search(zeile):
+            continue
+        for i, muster in enumerate(_KENNZAHLEN):
+            if i not in gefunden and muster.search(zeile):
+                gefunden.add(i)
+        if len(gefunden) == len(_KENNZAHLEN):
+            break
+    return len(gefunden), bool(_PERIODENANGABE.search(text))
+
+
+def _titelzeilen_8k(text, n=14, zeichen=700):
+    """Die ersten echten Zeilen des Anhangs ohne EDGAR-Kopfzeilen."""
+    zeilen = []
+    for z in text.split("\n"):
+        zs = z.strip()
+        if not zs or _B_KOPFZEILE.match(zs):
+            continue
+        zeilen.append(zs)
+        if len(zeilen) >= n or sum(len(x) for x in zeilen) > zeichen:
+            break
+    return zeilen
+
+
+def _tabellenanteil(text):
+    """Anteil der Zeichen in Tabellenzeilen (zwei Trennstriche oder mehr Ziffern als Buchstaben)."""
+    tab = fliess = 0
+    for z in text.split("\n"):
+        zs = z.strip()
+        if not zs:
+            continue
+        ziffern = sum(1 for c in zs if c.isdigit())
+        buchstaben = sum(1 for c in zs if c.isalpha())
+        if zs.count("|") >= 2 or (ziffern and ziffern >= buchstaben):
+            tab += len(zs)
+        else:
+            fliess += len(zs)
+    return tab / max(1, tab + fliess)
+
+
+def ballastarten_8k(text):
+    """(harte, weiche): Was dieser Anhang ausser einer Ergebnismitteilung sein kann. HART traegt nie
+    Quartalszahlen und faellt immer weg (Deckblatt, Vertrag, Terminankuendigung, Berichtswerk,
+    Pro-forma-Rechnung); WEICH kann Zahlen tragen und faellt nur, wenn ein anderer Anhang derselben
+    Einreichung die Mitteilung traegt (Mitschrift, Praesentation, Zahlenbeilage, Vorabmeldung,
+    Personal-, Uebernahme-, Finanzierungs- und Ausschuettungsmeldung)."""
+    zeilen = _titelzeilen_8k(text)
+    titel = " ".join(zeilen)
+    kurz = " ".join(zeilen[:8])
+    # Vertrags- und Berichtswerk-Woerter nur im echten Titelkopf: Pressemitteilungen nennen Kredit- und
+    # Kaufvertraege in ihrem Text, und jede Earnings Presentation verweist auf den Jahresbericht.
+    kopf3 = " ".join(zeilen[:3])
+    arten = set()
+    t_transkript = _B_TRANSKRIPT.search(titel)
+    t_praesentation = _B_PRAESENTATION.search(titel)
+    if t_transkript:
+        arten.add("transkript")
+    if t_praesentation:
+        arten.add("praesentation")
+    if _B_HUELLE.search(titel) or _B_FORMULAR.search(text[:4000]):
+        arten.add("huelle")
+    if _B_TERMIN.search(kurz):
+        arten.add("termin")
+    if _B_VERTRAG.search(kopf3):
+        arten.add("vertrag")
+    if _B_BERICHTSWERK.search(kopf3):
+        arten.add("berichtswerk")
+    if _B_PROFORMA.search(titel):
+        arten.add("proforma")
+    if _B_VORAB.search(kurz):
+        arten.add("vorab")
+    if _B_PERSONAL.search(kurz):
+        arten.add("personal")
+    if _B_UEBERNAHME.search(kurz):
+        arten.add("uebernahme")
+    if _B_FINANZIERUNG.search(kurz):
+        arten.add("finanzierung")
+    if _B_AUSSCHUETTUNG.search(kurz):
+        arten.add("ausschuettung")
+    tabellen = _tabellenanteil(text)
+    if tabellen > 0.6 and len(text.split()) < 900:
+        arten.add("tabelle")
+
+    kennzahlen, periode = kennzahldichte(text)
+    # Entschaerfungen, alle am Archiv gemessen und Text fuer Text gegengelesen:
+    # Ein Transkript hat keine Tabellen. Wo Tabellen stehen, ist es eine Pressemitteilung, die das Wort nur
+    # erwaehnt ("a transcript will be available", "prepared remarks") - DocuSign, Charles River, Autolus.
+    if "transkript" in arten and tabellen >= 0.05:
+        arten.discard("transkript")
+    # Eine Formularhuelle mit viel Text traegt die Meldung IN sich (MBIA schreibt seine Zahlen direkt ins
+    # 8-K statt in einen Anhang), eine Terminankuendigung nennt keine zwei Kennzahlen mit Betrag.
+    if "huelle" in arten and len(text) >= 15000 and kennzahlen >= 2:
+        arten.discard("huelle")
+    if "termin" in arten and (kennzahlen >= 2 or len(text) >= 15000):
+        arten.discard("termin")
+    # Ein Vertrag, ein Satzungstext und eine Pro-forma-Rechnung nennen nie drei verschiedene Kennzahlen mit
+    # Betrag. Wo das doch steht, ist es die Ergebnisunterlage, die den Vertrag nur erwaehnt (Gray Media,
+    # Leggett, Middlesex, NRG, VF Corp, Vestis, Cimpress lagen deswegen auf der Loeschliste).
+    if kennzahlen >= 3:
+        arten -= {"vertrag", "berichtswerk", "proforma"}
+    if "praesentation" in arten:
+        arten -= {"vertrag", "berichtswerk"}
+    # Positionsregel wie im 6-K-Weg: Steht der Ergebnistitel VOR dem Praesentations- oder Mitschrift-Wort,
+    # ist es die Pressemitteilung, die eine Praesentation oder eine Telefonkonferenz nur ankuendigt. Am
+    # Archiv gemessen: CACI, Entergy, International Paper, Kingstone, GE Aerospace, Sonoco und Distribution
+    # Solutions Group melden ihre Quartalszahlen und nennen im selben Kopf die Investorenpraesentation.
+    # Steht das Wort selbst im Titelkopf ("Q2 2024 Earnings Presentation", "Investor Presentation"), ist es
+    # die Unterlage und kein Ergebnistitel rettet sie; nur weiter hinten Genanntes ist eine blosse Erwaehnung.
+    # Geprueft werden dabei nur die KURZEN Zeilen des Kopfes: Ein Titel ist kurz ("Earnings Presentation
+    # Third Quarter 2024"), ein Satz mit demselben Wort ist Fliesstext und nur eine Erwaehnung (Kaltura:
+    # "Kaltura released an updated investors presentation that showcases ...", 110 Zeichen).
+    titelkopf = " ".join(z for z in zeilen[:3] if len(z) <= 90)
+    eigen = [m.start() for art, m in (("transkript", t_transkript), ("praesentation", t_praesentation))
+             if m and art in arten]
+    if eigen and not _B_UNTERLAGE_KOPF.search(titelkopf):
+        e = _B_ERGEBNISTITEL.search(titel)
+        if e and e.start() < min(eigen):
+            arten -= {"transkript", "praesentation"}
+
+    hart = arten & set(_B_HART)
+    weich = arten & set(_B_WEICH)
+    # Bei Mitschrift und Praesentation sind Ergebnistitel und Zahlen KEIN Schutz: "Q2 2026 Earnings Call"
+    # und "Q3 Earnings Presentation" heissen so und tragen Zahlen. Sonst schuetzt eine dichte Zahlenlage
+    # oder ein Periodenbericht-Titel vor jedem Verdacht.
+    if not (weich & {"transkript", "praesentation"}):
+        if (kennzahlen >= 3 and periode) or _B_PERIODENBERICHT.search(titel):
+            return set(), set()
+        if _B_ERGEBNISTITEL.search(titel) and not hart:
+            return set(), set()
+    return hart, weich
+
+
+def ist_ergebnistext_8k(text, streng=True):
+    """Ergebnispruefung fuer Anhaenge von Item-2.02-8-Ks: Ergebniswoerter und ein paar Betraege, kein
+    Vertrag im Kopf, keine Ballastart. Die 6-K-Kriterien (Musterarten, Trefferdichte) sind fuer kurze
+    Pressemitteilungen zu scharf (Atmos, Monopar, Sable fielen mit 6.000 bis 12.000 Zeichen durch), die
+    6-K-Ausschlussliste greift hier nicht (Teslas Deck erwaehnt das Proxy Statement). Teslas
+    Auslieferungsbericht (Fahrzeuge, keine Ergebniszahl) und XBRL-Deckblaetter bleiben leer.
+    streng=False laesst die weichen Arten durch: Sie sind besser als gar kein Text, wenn die Einreichung
+    keinen anderen Anhang hat."""
     if not text or len(text) < 800:
         return False
     if _VERTRAG_KOPF.search(text[:2500]):
         return False
     if not _ERGEBNISWORT.search(text) or not _BETRAG.search(text):
         return False   # Teslas Auslieferungsbericht nennt Fahrzeugzahlen und kuendigt "financial results" an, ohne einen Betrag
+    hart, weich = ballastarten_8k(text)
+    if hart or (streng and weich):
+        return False
     return kriterien(text)[1] >= 3
 
 
@@ -906,6 +1171,61 @@ def selbsttest() -> int:
           "Tesla-Auslieferung als EX-99 leer, Kreditvertrag leer",
           [x[0] for x in w] == ["ato20260805exhibit991.htm", "q2-26bkngearningsrelease.htm", "exhibit991.htm", "exhibit99111111.htm", "d798492dex101.htm"]
           and all(x[1] for x in w[:3]) and w[3][1] is None and w[4][1] is None, [(x[0], len(x[1] or "")) for x in w])
+
+        # --- Ballastarten (Messung am Archiv 06.09.2026) --------------------------------------
+        zahlen = ("Revenue | $1,234.5 | $1,100.2\nNet income | $234.1 | $198.7\nEarnings per share | $1.23 | $1.05\n"
+                  "Adjusted EBITDA | $410.9 | $377.4\nGross profit | $700.1 | $640.3\n"
+                  "Three months ended June 30, 2026 compared with the prior year.\n")
+        satz = ("The company delivered solid operating income and net sales in the quarter, and management "
+                "reaffirmed its outlook for the full year ahead. " * 12)
+        mitteilung = "Example Inc. Announces Second Quarter 2026 Financial Results\n" + zahlen + satz
+        huelle = ("example-20260805 | false\nFORM 8-K\nCheck the appropriate box below if the Form 8-K filing is "
+                  "intended to simultaneously satisfy the filing obligation of the registrant.\n"
+                  "Securities registered pursuant to Section 12(b) of the Act: revenue $1.2 million 3,456 7,890\n" + satz)
+        # Vorbild: "FSK Announces Earnings Release and Conference Call Schedule for Third Quarter 2025" - das
+        # Berichtswort steht VOR dem Zeitraum, es ist also kein Periodenbericht-Titel (der wuerde schuetzen).
+        termin = ("Example Inc. Announces Date of Fourth Quarter Conference Call\n"
+                  "Example Inc. today said it will host a conference call on August 5, 2026 at 5:00 p.m. Eastern "
+                  "Time. A replay will be available on the investor page; net sales of $1,234.5 million were "
+                  "previously indicated for the period. 12,345 6,789 4,321\n" + satz)
+        transkript = ("Example Inc. Q2 2026 Earnings Call Transcript\nCorporate Participants: Jane Doe, Chief "
+                      "Executive Officer.\nGood morning. Revenue in the quarter was $1,234.5 million, and net income "
+                      "reached $234.1 million, while operating income of $310.4 million was ahead of plan. " + satz)
+        praesentation = "Example Inc. Second Quarter 2026 Earnings Presentation\n" + zahlen + satz
+        uebernahme = "Example Inc. to Acquire Muster Corp and Reports Second Quarter 2026 Results\n" + zahlen + satz
+        p("Filter: Deckblatt, Terminankuendigung und Mitschrift kommen nicht mehr durch, die Mitteilung schon",
+          ist_ergebnistext_8k(mitteilung) and not ist_ergebnistext_8k(huelle)
+          and not ist_ergebnistext_8k(termin) and not ist_ergebnistext_8k(transkript),
+          [ist_ergebnistext_8k(t) for t in (mitteilung, huelle, termin, transkript)])
+        p("Filter: Deckblatt und Terminankuendigung sind hart, Mitschrift und Praesentation nur weich",
+          ballastarten_8k(huelle)[0] == {"huelle"} and ballastarten_8k(termin)[0] == {"termin"}
+          and ballastarten_8k(transkript) == (set(), {"transkript"})
+          and ballastarten_8k(praesentation) == (set(), {"praesentation"}),
+          [ballastarten_8k(t) for t in (huelle, termin, transkript, praesentation)])
+        p("Filter: eine Praesentation faellt nur streng, mild ist sie besser als gar kein Text",
+          not ist_ergebnistext_8k(praesentation) and ist_ergebnistext_8k(praesentation, streng=False),
+          (ist_ergebnistext_8k(praesentation), ist_ergebnistext_8k(praesentation, streng=False)))
+        p("Filter: die Zahlenlage schuetzt - eine Mitteilung mit Uebernahme im Titel bleibt eine Mitteilung",
+          ist_ergebnistext_8k(uebernahme) and kennzahldichte(uebernahme)[0] >= 3,
+          (ballastarten_8k(uebernahme), kennzahldichte(uebernahme)))
+
+        def html(t):
+            return ("<html><body>" + "".join(f"<p>{z}</p>" for z in t.split("\n")) + "</body></html>").encode("utf-8")
+
+        def hole5(url):
+            if url.endswith("index.json"):
+                acc = re.search(r"/(\d{18})/index", url).group(1)[-2:]
+                items = {"01": [{"name": "ex991praesentation.htm", "size": 90000},
+                                {"name": "ex992release.htm", "size": 20000}],
+                         "02": [{"name": "ex991praesentation.htm", "size": 90000}]}[acc]
+                return json.dumps({"directory": {"item": items}}).encode("utf-8")
+            return html(praesentation if "praesentation" in url else mitteilung)
+        z1 = exhibit(9, "0000000009-26-000001", hole5)
+        z2 = exhibit(9, "0000000009-26-000002", hole5)
+        p("Anhangwahl: liegt die Mitteilung daneben, gewinnt sie gegen die groessere Praesentation; "
+          "liegt nur die Praesentation da, wird sie genommen",
+          z1[0] == "ex992release.htm" and bool(z1[1]) and z2[0] == "ex991praesentation.htm" and bool(z2[1]),
+          (z1[0], len(z1[1] or ""), z2[0], len(z2[1] or "")))
 
         ke._schreibe_json(os.path.join(tmp, "konsens", "firmen_mit_konsens.json"), {"TSLA": {}, "JPM": {}})
         b7 = lauf(tmp, hoechstens=0, quartale=8, hole=hole2, ticker_zu_cik={"TSLA": 1318, "JPM": 19617}, log=lambda *_: None,
