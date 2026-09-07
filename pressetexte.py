@@ -256,7 +256,7 @@ _B_BERICHTSWERK = re.compile(
     r"information circular|notice of (the )?(\d{4} )?(annual|special|extraordinary)|"
     r"management proxy|form of proxy|technical report|ni 43-101|mineral resource estimate", re.I)
 _B_PROFORMA = re.compile(r"(unaudited )?pro forma (condensed )?(combined |consolidated )?(condensed )?financial", re.I)
-_B_UNTERLAGE_KOPF = re.compile(r"\b(presentation|deck|transcript)\b", re.I)
+_B_UNTERLAGE_KOPF = re.compile(r"\b(presentation|deck|slides|transcript|script)\b", re.I)
 _B_VORAB = re.compile(
     r"\bpre-?announce|\bpre-?release\b|\bpreliminary\b|\bestimates? of (certain )?(financial )?results\b|"
     r"\bestimated (fourth|third|second|first) quarter\b|provides? (an )?update on[^.\n]{0,30}(results|revenue)", re.I)
