@@ -190,6 +190,12 @@ def handelstag(jetzt=None, api_key=None, hole=None) -> bool:
 
     _gemerkt.update(tag=heute, antwort=antwort, zeitpunkt=time.time(),
                     grund=grund)
+    # EINE Zeile je Tag und Lauf, damit im Actions-Protokoll nachlesbar
+    # ist, ob der Anbieter ueberhaupt geantwortet hat. Ohne sie sieht ein
+    # gewoehnlicher Handelstag genauso aus wie einer, an dem der
+    # Schluessel fehlt oder der Dienst schweigt.
+    wort = {True: "ja", False: "NEIN", None: "keine Auskunft"}[antwort]
+    print(f"Handelskalender: wird heute gehandelt? {wort} ({grund})")
     return antwort
 
 
