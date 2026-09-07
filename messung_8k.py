@@ -296,6 +296,23 @@ def modelle_laden():
     return modelle_filtern(json.loads(roh).get("data", []))
 
 
+def modell_fenster():
+    """{Kennung: Kontextfenster in Token} aus der Modellliste des Dienstes; das Feld heisst
+    dort max_context_length (API-Referenz GET /v1/models). Aliasnamen zeigen auf denselben Wert."""
+    status, _, roh = _anfrage("https://api.mistral.ai/v1/models", methode="GET")
+    if status != 200:
+        raise RuntimeError(f"Modellliste: {status} {roh[:200]}")
+    raus = {}
+    for m in json.loads(roh).get("data", []):
+        fenster = m.get("max_context_length")
+        if not fenster:
+            continue
+        for k in {m.get("id") or ""} | set(m.get("aliases") or []):
+            if k:
+                raus[k] = int(fenster)
+    return raus
+
+
 def modelle_filtern(liste):
     raus, gesehen = [], set()
     for m in liste:

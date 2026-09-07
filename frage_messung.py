@@ -25,10 +25,23 @@ MODELLE_VORGABE = ["ministral-14b-2512"]   # seit 04.09.2026: mistral-small und 
                                            # gesperrt (429, 0 Anfragen je Minute); ministral-14b las im Apple-Vergleich
                                            # ebenso fehlerfrei (49 Zahlen, 0 unbelegt) wie small (76, 0) und medium (93, 0)
 QUARTALE = 8
-TEXT_JE_MITTEILUNG = 25000
-KOPF_JE_MITTEILUNG = 12000
-EINGABE_MAX_ZEICHEN = 170000   # darueber weist Mistral die Anfrage mit 429 ab (Alcon: 207.000 Zeichen scheiterten
-                               # sechsmal, Ciena mit 181.000 lief); dann werden die Texte je Mitteilung halbiert
+TEXT_JE_MITTEILUNG = 25000     # je Mitteilung, solange die ganze Eingabe ins Kontextfenster passt
+KOPF_JE_MITTEILUNG = 12000     # kleinste Stufe und Rueckfallwert
+EINGABE_MAX_ZEICHEN = 170000   # nur noch Rueckfall, wenn das Kontextfenster nicht abrufbar ist.
+                               # RICHTIGSTELLUNG 07.09.2026: Die frueher hier stehende Begruendung
+                               # ("Alcon: 207.000 Zeichen scheiterten sechsmal") war ein Fehlschluss.
+                               # Derselbe Alcon-Lauf scheiterte am selben Tag auch mit 101.194 Zeichen,
+                               # und zwar bei denselben zwei Modellen: mistral-small und mistral-medium
+                               # sind im Kostenlos-Tarif gesperrt (429, 0 Anfragen je Minute). Mit
+                               # ministral-14b lief Alcon mit 102.306 Zeichen anstandslos. Nicht die
+                               # Groesse wurde abgewiesen, sondern die Modellwahl. Die echte Grenze ist
+                               # das Kontextfenster in TOKEN; Zeichen sind ein schlechtes Mass, weil je
+                               # Token 1,89 bis 3,50 Zeichen kommen (36 echte Laeufe): JPM brauchte fuer
+                               # 105.981 Zeichen 56.060 Token, Microsoft fuer 165.341 Zeichen 56.185 -
+                               # zahlenlastige Tabellen sind fast doppelt so dicht wie Fliesstext.
+ANTWORT_TOKENS = 3000          # max_tokens der Anfrage; Prompt und Antwort teilen sich das Fenster
+RESERVE_TOKENS = 2000          # Sicherheitsabstand im Fenster
+ZEICHEN_JE_TOKEN = 1.9         # konservativ der kleinste der 36 gemessenen Werte
 GROQ_KEY = os.environ.get("GROQ_API_KEY", "").strip()
 WEBSUCHE_MODELL = "openai/gpt-oss-20b"   # Groqs eingebautes Werkzeug browser_search am Grundmodell; eigenes Kontingent
 WEBSUCHE_ABSTAND_S = 2.5                  # (1.000 je Tag, 8.000 Tokens je Minute), das der Podcatcher nicht nutzt.
@@ -254,6 +267,60 @@ def tabelle_text(liste):
 # ---------------------------------------------------------------------------
 # Texte und Auftrag
 # ---------------------------------------------------------------------------
+
+def eingabe_grenze(modelle, log=print):
+    """Zeichengrenze fuer die ganze Eingabe, errechnet aus dem KLEINSTEN Kontextfenster der
+    verwendeten Modelle (Prompt und Antwort teilen es sich). Ist die Modellliste nicht
+    abrufbar, gilt EINGABE_MAX_ZEICHEN."""
+    import messung_8k as m8k
+    try:
+        fenster = m8k.modell_fenster()
+    except Exception as e:  # noqa
+        log(f"  Kontextfenster nicht abrufbar ({str(e)[:80]}), Rueckfall {EINGABE_MAX_ZEICHEN} Zeichen")
+        return EINGABE_MAX_ZEICHEN
+    bekannt = [fenster[m] for m in modelle if m in fenster]
+    if not bekannt:
+        log(f"  Kontextfenster fuer {modelle} nicht gelistet, Rueckfall {EINGABE_MAX_ZEICHEN} Zeichen")
+        return EINGABE_MAX_ZEICHEN
+    tokens = min(bekannt) - ANTWORT_TOKENS - RESERVE_TOKENS
+    grenze = max(int(tokens * ZEICHEN_JE_TOKEN), KOPF_JE_MITTEILUNG)
+    log(f"  Kontextfenster {min(bekannt)} Token, davon fuer die Eingabe {tokens}; "
+        f"Grenze {grenze} Zeichen (gerechnet mit {ZEICHEN_JE_TOKEN} Zeichen je Token)")
+    return grenze
+
+
+def texte_passend(texte, umfeld_zeichen, grenze, log=print):
+    """Textblock, der den verfuegbaren Platz AUSSCHOEPFT: die groesste Laenge je Mitteilung,
+    mit der die ganze Eingabe noch unter die Grenze passt, ueber eine binaere Suche gefunden.
+    Mitteilungen, die kuerzer sind als ihr Anteil, verbrauchen ihn nicht - der Rest kommt damit
+    von selbst den langen zugute. Frueher sprang die Kuerzung pauschal auf KOPF_JE_MITTEILUNG,
+    gleich wie knapp es war: gemessen blieben so im Schnitt 70.000 der erlaubten Zeichen leer."""
+    def passt(je):
+        b = texte_block(texte, je=je, kopf=je // 2)
+        return b, len(b) + umfeld_zeichen <= grenze
+
+    block, ok = passt(TEXT_JE_MITTEILUNG)
+    if ok:
+        return block
+    unten, oben, bester = 2000, TEXT_JE_MITTEILUNG, None
+    block_unten, ok_unten = passt(unten)
+    if not ok_unten:
+        log(f"  Eingabe bleibt ueber {grenze} Zeichen, auch bei {unten} Zeichen je Mitteilung")
+        return block_unten
+    bester, je_bester = block_unten, unten
+    for _ in range(8):
+        mitte = (unten + oben) // 2
+        if mitte <= unten or mitte >= oben:
+            break
+        b, ok = passt(mitte)
+        if ok:
+            unten, bester, je_bester = mitte, b, mitte
+        else:
+            oben = mitte
+    log(f"  Eingabe ueber {grenze} Zeichen: Texte je Mitteilung auf {je_bester} Zeichen gekuerzt "
+        f"(Eingabe damit {len(bester) + umfeld_zeichen} Zeichen)")
+    return bester
+
 
 def texte_block(texte, je=TEXT_JE_MITTEILUNG, kopf=KOPF_JE_MITTEILUNG):
     """texte: [(meta, text)] juengste zuerst; Rueckgabe aeltestes zuerst, gekuerzt."""
@@ -655,10 +722,7 @@ def lauf(daten, ticker, frage, modelle, quartale=QUARTALE, ausgabe=None, log=pri
     von = (dt.date.fromisoformat(enden[0]) - dt.timedelta(days=10)).isoformat() if enden else "2024-01-01"
     kurse = kurse_laden(ticker, von, (dt.date.today() + dt.timedelta(days=1)).isoformat())
     liste, tab_text = tabelle(zeilen, konsens, kurse, quartale)
-    texte_text = texte_block(texte)
-    if len(texte_text) + len(tab_text) > EINGABE_MAX_ZEICHEN:
-        texte_text = texte_block(texte, je=KOPF_JE_MITTEILUNG, kopf=KOPF_JE_MITTEILUNG // 2)
-        log(f"  Eingabe ueber {EINGABE_MAX_ZEICHEN} Zeichen: Texte je Mitteilung auf {KOPF_JE_MITTEILUNG} Zeichen gekuerzt")
+    # Die Nachrichten kommen VOR den Texten: sie zaehlen zur Eingabe und gehoeren in die Rechnung.
     nachrichten = None
     if websuche:
         juengst = liste[-1] if liste else {}
@@ -666,7 +730,12 @@ def lauf(daten, ticker, frage, modelle, quartale=QUARTALE, ausgabe=None, log=pri
         nachrichten = nachrichtenlage(ticker, name, juengst.get("meldedatum"), dt.date.today().isoformat(), log=log)
         log(f"  Nachrichtenlage ({nachrichten.get('quelle')}): Status {nachrichten.get('status')}, "
             f"{len(nachrichten.get('text') or '')} Zeichen, Hinweise {nachrichten.get('hinweise')}")
-    frage_text = eingabe_mit_nachrichten(frage, tab_text, texte_text, (nachrichten or {}).get("text") or "")
+    nachrichten_text = (nachrichten or {}).get("text") or ""
+    grenze = eingabe_grenze(modelle, log=log)
+    # alles ausser den Pressetexten: Auftrag, Frage, Tabelle, Nachrichten samt Ueberschriften
+    umfeld = len(eingabe_mit_nachrichten(frage, tab_text, "", nachrichten_text)) + len(AUFTRAG)
+    texte_text = texte_passend(texte, umfeld, grenze, log=log)
+    frage_text = eingabe_mit_nachrichten(frage, tab_text, texte_text, nachrichten_text)
     log(f"{ticker} CIK {cik}: {len(zeilen)} amtliche Zeilen, {len(konsens)} Konsens-Zeilen, {len(kurse)} Kurstage, "
         f"{len(texte)} Pressetexte, Eingabe {len(frage_text)} Zeichen")
     ausgabe = ausgabe or os.path.join(daten, "messungen", f"frage-{ticker.lower()}-{dt.datetime.now(dt.timezone.utc):%Y%m%d-%H%M}")
@@ -866,6 +935,23 @@ def selbsttest() -> int:
     p("Auftrag verlangt Deutsch, keine Tabellen, Vermutungen gekennzeichnet, Quellen nur die Daten",
       all(w in AUFTRAG for w in ("Deutsch", "ohne Tabellen", "Vermutung", "AUSSCHLIESSLICH", "Safe Harbor", "nicht belastbar", "Jedes Quartal")))
     p("Textblock nennt nur das Veroeffentlichungsdatum, kein falsches Quartal", "Quartal bis" not in block and "veroeffentlicht am 2026-07-31" in block)
+
+    # Grenzrechnung: schoepft den Platz aus, statt pauschal auf eine kleine Stufe zu springen
+    lang = [({"filed": f"2026-0{i + 1}-15"}, ("Umsatz von 100,%d Mio USD im Quartal.\n" % i) + ("Fuelltext. " * 4000))
+            for i in range(8)]
+    viel = texte_passend(lang, 5000, 400000, log=lambda *_: None)
+    p("Reicht der Platz, gilt die volle Stufe je Mitteilung",
+      viel == texte_block(lang, je=TEXT_JE_MITTEILUNG, kopf=TEXT_JE_MITTEILUNG // 2), len(viel))
+    knapp = texte_passend(lang, 5000, 120000, log=lambda *_: None)
+    p("Ist der Platz knapp, bleibt die Eingabe darunter", len(knapp) + 5000 <= 120000, len(knapp) + 5000)
+    alt_pauschal = texte_block(lang, je=KOPF_JE_MITTEILUNG, kopf=KOPF_JE_MITTEILUNG // 2)
+    p("und schoepft mehr aus als der frueher pauschale Sprung auf 12.000 Zeichen",
+      len(knapp) > len(alt_pauschal), f"neu {len(knapp)}, alt {len(alt_pauschal)}")
+    eng = texte_passend(lang, 5000, 20000, log=lambda *_: None)
+    p("Reicht selbst die kleinste Stufe nicht, kommt trotzdem ein Block zurueck", bool(eng), len(eng))
+    p("Ohne abrufbares Kontextfenster gilt die Rueckfallgrenze",
+      eingabe_grenze(["gibtsnicht-2512"], log=lambda *_: None) == EINGABE_MAX_ZEICHEN)
+
     print("Alles bestanden." if fehler == 0 else f"{fehler} Fehler.")
     return fehler
 
