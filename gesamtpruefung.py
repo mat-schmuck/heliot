@@ -763,7 +763,10 @@ def block_e():
                 "nr": 1}).startswith(bw.HTF_MARKE))
     _gesendet = []
     _alt_sende = bw.sende
-    bw.sende = lambda topic, titel, absaetze, prio="default": (
+    # klick kam mit der Handels-App dazu (07.09.2026); ohne diesen
+    # Platzhalter bricht Block E ab, und alles danach wird nicht
+    # mehr geprueft.
+    bw.sende = lambda topic, titel, absaetze, prio="default", klick=None: (
         _gesendet.append((titel, list(absaetze))) or True)
     try:
         bw.push("probe", [fremd, kp2, kp1])
