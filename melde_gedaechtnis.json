@@ -51,7 +51,7 @@
     "LXP|1": "draussen",
     "MCK|3": "draussen",
     "MLYS|1": "draussen",
-    "PSIX|1": "drin",
+    "PSIX|1": "draussen",
     "RBLX|1": "drin",
     "RVTY|2": "draussen",
     "SNX|1": "drin",
@@ -264,7 +264,10 @@
     "ASX|3": "drin",
     "CXW|2": "drin",
     "SMMT|2": "drin",
-    "KEYS|1": "drin"
+    "KEYS|1": "drin",
+    "ACA|2": "drin",
+    "DELL|1": "drin",
+    "DELL|3": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -346,6 +349,7 @@
     "BEST|ASX|1": "2026-09-08",
     "HTF|HTFL|2": "2026-09-08",
     "BEST|HTF|HTFL|2": "2026-09-08",
-    "UEBER|MLYS|3": "2026-09-08"
+    "UEBER|MLYS|3": "2026-09-08",
+    "UEBER|PSIX|1": "2026-09-08"
   }
 }
