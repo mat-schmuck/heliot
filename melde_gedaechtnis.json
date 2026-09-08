@@ -245,8 +245,8 @@
     "ALNY|2": "drin",
     "MPC|3": "drin",
     "PSX|3": "drin",
-    "BUUU|1": "drin",
-    "BUUU|3": "drin",
+    "BUUU|1": "draussen",
+    "BUUU|3": "draussen",
     "KALU|3": "drin"
   },
   "gemeldet": {
@@ -319,6 +319,8 @@
     "UEBER|SEI|3": "2026-09-08",
     "VOR|1": "2026-09-08",
     "BEST|VOR|1": "2026-09-08",
-    "UEBER|SMTC|1": "2026-09-08"
+    "UEBER|SMTC|1": "2026-09-08",
+    "UEBER|BUUU|1": "2026-09-08",
+    "UEBER|BUUU|3": "2026-09-08"
   }
 }
