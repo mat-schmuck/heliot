@@ -1505,7 +1505,10 @@ def block_h():
     # gar nicht gibt — genau so am 11.08.2026 passiert (34,8 Stunden
     # gemeldet, in Wahrheit lief der Nachtscan puenktlich).
     import subprocess as sp
-    sp.run(["git", "fetch", "-q", "origin", "main"], cwd=WURZEL,
+    # ALLE Zweige holen, nicht nur main: Der Listen-Abgleich weiter
+    # unten vergleicht die Wochenlisten der Arbeitszweige mit denen von
+    # main, und ein zweiter Abruf waere dafuer Verschwendung.
+    sp.run(["git", "fetch", "-q", "origin"], cwd=WURZEL,
            capture_output=True, text=True)
     r = sp.run(["git", "log", "-1", "--format=%ct", "origin/main", "--",
                 "kaufpunkte_aktuell.xlsx"],
@@ -1518,6 +1521,61 @@ def block_h():
                f"{alter.total_seconds()/3600:.1f} Stunden")
     except Exception:
         pruefe("H", "Alter der Kaufpunkte-Mappe feststellbar", False)
+
+    # DIESELBEN WOCHENLISTEN AUF ALLEN ZWEIGEN (Mathias, 08.09.2026).
+    # Die Listen sind Nutzerdaten, liegen aber im Code-Repo und damit je
+    # Zweig getrennt. Wer sie von Hand auf dem Arbeitszweig einspielt,
+    # laesst main mit der alten Liste zurueck (genau so geschehen am
+    # 07.09.2026: Der Nachtscan lief noch ueber 159 Aktien, waehrend auf
+    # fundament-phase1 laengst 243 standen); wer nur ueber die
+    # Heliot-Seite hochlaedt, traf frueher NUR main.
+    #
+    # Der Upload schreibt seit 08.09.2026 auf jeden Zweig der Liste
+    # LISTEN_ZWEIGE. Diese Pruefung ist das Netz darunter: Sie greift
+    # auch dann noch, wenn ein neuer Zweig dazukommt und niemand ihn
+    # eingetragen hat. Genannt werden die Ticker, nicht bloss die Zahl.
+    import io as _io
+    import pandas as _pdz
+    _listen_zweige = ("main", "fundament-phase1")
+    for _datei in ("finviz_3.csv", "darvas.csv"):
+        _stand = {}
+        for _z in _listen_zweige:
+            _r = sp.run(["git", "show", f"origin/{_z}:{_datei}"],
+                        cwd=WURZEL, capture_output=True)
+            if _r.returncode != 0:
+                continue          # Dieser Zweig fuehrt die Datei nicht
+            try:
+                _stand[_z] = set(_pdz.read_csv(_io.BytesIO(_r.stdout))
+                                 ["Ticker"].astype(str).str.upper())
+            except Exception:
+                _stand[_z] = None
+        if len(_stand) < 2:
+            pruefe("H", f"{_datei}: alle Zweige fuehren dieselbe Liste",
+                   True, "nur ein Zweig fuehrt diese Datei")
+            continue
+        _haupt = _listen_zweige[0]
+        _abw = []
+        for _z, _t in _stand.items():
+            if _z == _haupt:
+                continue
+            if _t is None or _stand.get(_haupt) is None:
+                _abw.append(f"{_z}: nicht lesbar")
+                continue
+            if _t != _stand[_haupt]:
+                _teile = []
+                _fehlt = sorted(_stand[_haupt] - _t)
+                _extra = sorted(_t - _stand[_haupt])
+                if _fehlt:
+                    _teile.append(f"fehlen auf {_z}: " + nennen(_fehlt))
+                if _extra:
+                    _teile.append(f"nur auf {_z}: " + nennen(_extra))
+                _abw.append(", ".join(_teile))
+        _zahlen = "; ".join(
+            f"{_z}: {len(_t) if _t is not None else '?'}"
+            for _z, _t in _stand.items())
+        pruefe("H", f"{_datei}: alle Zweige fuehren dieselbe Liste",
+               not _abw,
+               _zahlen + ((" | " + " | ".join(_abw)) if _abw else ""))
 
     for datei in ("volumenkurven.json", "fokusliste.json",
                   "shakeout_warteliste.json"):

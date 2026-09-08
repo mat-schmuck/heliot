@@ -430,6 +430,23 @@ with tab_scan:
 LISTEN_DATEI = "finviz_3.csv"     # REPO ist oben beim Aktuellen Scan definiert
 DARVAS_DATEI = "darvas.csv"
 
+# JEDER ZWEIG, DER EINE WOCHENLISTE FUEHRT (Mathias, 08.09.2026).
+# main ist der Standardzweig, von dem Nachtscan und Waechter laufen;
+# fundament-phase1 ist der Arbeitszweig, auf dem messung_8k.py die
+# Listen ueber dasselbe Modul listen.py liest.
+#
+# WOZU: Bis dahin schrieb der Upload OHNE Angabe eines Zweigs, und
+# GitHub legt das auf dem Standardzweig ab. Auf jedem anderen Zweig
+# blieb die alte Liste liegen, ohne dass irgendwo etwas gemeldet worden
+# waere. Ein Lauf, der von dort gestartet wird, haette still die
+# falschen Aktien gescannt, und genau das faellt niemandem auf.
+#
+# SICHERUNGSZWEIGE GEHOEREN NICHT HIERHER: stand-vor-umbau soll den
+# alten Stand bewahren, nicht mitwandern. Wer einen neuen Arbeitszweig
+# anlegt, traegt ihn hier ein; vergisst er es, meldet es die
+# Gesamtpruefung (Block H, "alle Zweige fuehren dieselbe Liste").
+LISTEN_ZWEIGE = ("main", "fundament-phase1")
+
 # ZWEI LISTEN seit 14.08.2026 (Gerhard): "Die Darvas-Tradingstrategie
 # bekommt eine eigene Liste. Das Tradingmuster Darvas soll in Zukunft
 # ausschliesslich auf diese Liste angewandt werden. Die Darvasliste soll
@@ -486,28 +503,64 @@ def pruefe_wochenliste(rohdaten: bytes) -> tuple[str, list[str]]:
 
 
 def wochenliste_einspielen(rohdaten: bytes, token: str, anzahl: int,
-                           ziel: str = None) -> str:
-    """Ersetzt die Zielliste im Repo. Liefert '' bei Erfolg, sonst Fehler."""
+                           ziel: str = None) -> tuple:
+    """Ersetzt die Zielliste auf JEDEM Zweig, der sie fuehrt.
+
+    Liefert (fehler, geschrieben): fehler ist leer, wenn alles geklappt
+    hat, geschrieben nennt die Zweige, auf denen die Liste jetzt steht.
+
+    DREI FAELLE, und alle drei werden dem Nutzer gesagt:
+      * Ein Zweig fuehrt die Datei gar nicht (GET liefert 404): Er wird
+        uebersprungen und gilt NICHT als Fehler. Die Liste wird dort
+        auch nicht angelegt, denn wer sie nicht fuehrt, braucht sie
+        nicht.
+      * Ein Zweig scheitert: Er wird beim Namen genannt, und was schon
+        geschrieben wurde, steht trotzdem in der Rueckgabe. Niemand soll
+        glauben, es sei nichts passiert, wenn die halbe Arbeit getan ist.
+      * Kein einziger Zweig hat es genommen: harter Fehler.
+    """
     import base64
     import requests
     kopf = {"Authorization": f"Bearer {token}",
             "Accept": "application/vnd.github+json"}
     ziel = ziel or LISTEN_DATEI
     url = f"https://api.github.com/repos/{REPO}/contents/{ziel}"
-    try:
-        alt = requests.get(url, headers=kopf, timeout=20)
-        sha = alt.json().get("sha") if alt.status_code == 200 else None
-        daten = {"message": f"{ziel}: {anzahl} Aktien (Upload über Heliot)",
-                 "content": base64.b64encode(rohdaten).decode()}
-        if sha:
-            daten["sha"] = sha
-        antwort = requests.put(url, headers=kopf, json=daten, timeout=30)
-        if antwort.status_code in (200, 201):
-            return ""
-        return (f"GitHub antwortete mit Code {antwort.status_code}: "
-                f"{antwort.json().get('message', 'ohne Begründung')}")
-    except Exception as e:
-        return f"Netzwerkfehler beim Hochladen: {e}"
+    inhalt = base64.b64encode(rohdaten).decode()
+    geschrieben, gescheitert = [], []
+    for zweig in LISTEN_ZWEIGE:
+        try:
+            alt = requests.get(url, headers=kopf, timeout=20,
+                               params={"ref": zweig})
+            if alt.status_code == 404:
+                continue          # Zweig oder Datei gibt es dort nicht
+            sha = alt.json().get("sha") if alt.status_code == 200 else None
+            daten = {"message": f"{ziel}: {anzahl} Aktien (Upload über Heliot)",
+                     "content": inhalt, "branch": zweig}
+            if sha:
+                daten["sha"] = sha
+            antwort = requests.put(url, headers=kopf, json=daten, timeout=30)
+            if antwort.status_code in (200, 201):
+                geschrieben.append(zweig)
+            else:
+                grund = "ohne Begründung"
+                try:
+                    grund = antwort.json().get("message", grund)
+                except Exception:
+                    pass
+                gescheitert.append(f"{zweig} (Code {antwort.status_code}: "
+                                   f"{grund})")
+        except Exception as e:
+            gescheitert.append(f"{zweig} ({type(e).__name__}: {e})")
+    bericht = ", ".join(geschrieben)
+    if not geschrieben:
+        return (("Auf keinem Zweig geschrieben: " + "; ".join(gescheitert))
+                if gescheitert else
+                ("Kein bekannter Zweig führt " + ziel + "."), "")
+    if gescheitert:
+        return ("Nur teilweise übernommen. Geschrieben auf " + bericht
+                + "; NICHT geschrieben auf " + "; ".join(gescheitert),
+                bericht)
+    return "", bericht
 
 
 @st.cache_data(ttl=300, show_spinner=False)
@@ -585,16 +638,19 @@ with tab_upload:
                 if fehler:
                     st.error("NICHT übernommen: " + fehler)
                 else:
-                    fehler = wochenliste_einspielen(roh, github_token,
-                                                    len(ticker), ziel_datei)
+                    fehler, zweige = wochenliste_einspielen(
+                        roh, github_token, len(ticker), ziel_datei)
+                    # Der Zaehler wird auch bei einem Teilerfolg geleert:
+                    # Auf mindestens einem Zweig steht die neue Liste.
+                    if zweige:
+                        aktuelle_listengroesse.clear()
                     if fehler:
-                        st.error("Hochladen fehlgeschlagen: " + fehler)
+                        st.error("Hochladen: " + fehler)
                     else:
-                        st.success(f"Übernommen in {ziel_datei}: "
-                                   f"{len(ticker)} Aktien "
+                        st.success(f"Übernommen in {ziel_datei} auf "
+                                   f"{zweige}: {len(ticker)} Aktien "
                                    f"(die ersten: {', '.join(ticker[:5])}). "
                                    "Ab dem nächsten nächtlichen Scan aktiv.")
-                        aktuelle_listengroesse.clear()
 
 
 # --- Regelwerk -------------------------------------------------------------
