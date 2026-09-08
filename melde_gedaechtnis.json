@@ -201,7 +201,7 @@
     "CVE|1": "drin",
     "SWKS|1": "drin",
     "ALNY|3": "drin",
-    "DNTH|2": "drin",
+    "DNTH|2": "draussen",
     "BLTE|1": "drin",
     "VSAT|1": "drin",
     "TECK|1": "drin",
@@ -228,7 +228,7 @@
     "FCFS|1": "drin",
     "ASX|1": "drin",
     "VOR|1": "drin",
-    "MLYS|3": "drin",
+    "MLYS|3": "draussen",
     "LB|1": "draussen",
     "LB|3": "draussen",
     "CACI|2": "draussen",
@@ -256,7 +256,9 @@
     "TWIN|2": "drin",
     "TATT|3": "drin",
     "CIFR|2": "drin",
-    "HTFL|2": "drin"
+    "HTFL|2": "drin",
+    "IREN|2": "drin",
+    "HNGE|1": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -337,6 +339,7 @@
     "ASX|1": "2026-09-08",
     "BEST|ASX|1": "2026-09-08",
     "HTF|HTFL|2": "2026-09-08",
-    "BEST|HTF|HTFL|2": "2026-09-08"
+    "BEST|HTF|HTFL|2": "2026-09-08",
+    "UEBER|MLYS|3": "2026-09-08"
   }
 }
