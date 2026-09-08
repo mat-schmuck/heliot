@@ -50,7 +50,7 @@
     "IDYA|2": "drin",
     "LXP|1": "draussen",
     "MCK|3": "draussen",
-    "MLYS|1": "drin",
+    "MLYS|1": "draussen",
     "PSIX|1": "drin",
     "RBLX|1": "drin",
     "RVTY|2": "draussen",
@@ -87,7 +87,7 @@
     "ATRO|2": "drin",
     "AUGO|3": "draussen",
     "BETA|3": "draussen",
-    "CBRS|3": "draussen",
+    "CBRS|3": "drin",
     "CMDB|1": "drin",
     "CMDB|2": "draussen",
     "CMDB|3": "drin",
@@ -225,7 +225,12 @@
     "NX|1": "drin",
     "NX|3": "drin",
     "RS|1": "drin",
-    "FCFS|1": "drin"
+    "FCFS|1": "drin",
+    "ASX|1": "drin",
+    "VOR|1": "drin",
+    "MLYS|3": "drin",
+    "LB|1": "draussen",
+    "LB|3": "draussen"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -294,6 +299,8 @@
     "R2GX|FTH|2026-09-08": "2026-09-08",
     "RS|1": "2026-09-08",
     "BEST|RS|1": "2026-09-08",
-    "UEBER|SEI|3": "2026-09-08"
+    "UEBER|SEI|3": "2026-09-08",
+    "VOR|1": "2026-09-08",
+    "BEST|VOR|1": "2026-09-08"
   }
 }
