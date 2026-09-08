@@ -245,9 +245,10 @@
     "ALNY|2": "drin",
     "MPC|3": "drin",
     "PSX|3": "drin",
-    "BUUU|1": "draussen",
-    "BUUU|3": "draussen",
-    "KALU|3": "drin"
+    "BUUU|1": "drin",
+    "BUUU|3": "drin",
+    "KALU|3": "drin",
+    "LITE|1": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -322,6 +323,8 @@
     "UEBER|SMTC|1": "2026-09-08",
     "UEBER|BUUU|1": "2026-09-08",
     "UEBER|BUUU|3": "2026-09-08",
-    "UEBER|SMTC|2": "2026-09-08"
+    "UEBER|SMTC|2": "2026-09-08",
+    "LITE|1": "2026-09-08",
+    "BEST|LITE|1": "2026-09-08"
   }
 }
