@@ -2313,5 +2313,31 @@
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
   "wedge_drop_gemeldet": false
+ },
+ "RS|1": {
+  "symbol": "RS",
+  "firma": "Reliance Inc",
+  "strategie": "EMA Crossback",
+  "einstieg": 404.37,
+  "einstieg_datum": "2026-09-08",
+  "einstieg_index": 0,
+  "struktur_stop": 394.29,
+  "aktueller_stop": 394.29,
+  "stop_quelle": "struktur",
+  "hoechstkurs": 404.37,
+  "teilverkauft": false,
+  "halteregel_aktiv": false,
+  "beobachtung": true,
+  "status": "offen",
+  "verlauf": [],
+  "klasse": "standard",
+  "musterziel": null,
+  "zone": null,
+  "ziel_gemeldet": false,
+  "klimax_gemeldet": [],
+  "weinstein_gemeldet": false,
+  "zahlen_hinweis_gemeldet": false,
+  "sektor_hinweis_gemeldet": false,
+  "wedge_drop_gemeldet": false
  }
 }

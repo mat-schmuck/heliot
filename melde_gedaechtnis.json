@@ -112,7 +112,7 @@
     "MSTR|3": "draussen",
     "NX|2": "draussen",
     "PAYP|3": "draussen",
-    "SEI|3": "drin",
+    "SEI|3": "draussen",
     "SLAB|2": "drin",
     "TDS|3": "draussen",
     "TWLO|2": "draussen",
@@ -224,7 +224,8 @@
     "TDS|2": "drin",
     "NX|1": "drin",
     "NX|3": "drin",
-    "RS|1": "drin"
+    "RS|1": "drin",
+    "FCFS|1": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -292,6 +293,7 @@
     "BEST|TECK|1": "2026-09-08",
     "R2GX|FTH|2026-09-08": "2026-09-08",
     "RS|1": "2026-09-08",
-    "BEST|RS|1": "2026-09-08"
+    "BEST|RS|1": "2026-09-08",
+    "UEBER|SEI|3": "2026-09-08"
   }
 }
