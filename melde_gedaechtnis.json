@@ -51,7 +51,7 @@
     "LXP|1": "draussen",
     "MCK|3": "draussen",
     "MLYS|1": "draussen",
-    "PSIX|1": "draussen",
+    "PSIX|1": "drin",
     "RBLX|1": "draussen",
     "RVTY|2": "draussen",
     "SNX|1": "drin",
@@ -115,7 +115,7 @@
     "SEI|3": "draussen",
     "SLAB|2": "drin",
     "TDS|3": "draussen",
-    "TWLO|2": "drin",
+    "TWLO|2": "draussen",
     "VCTR|2": "draussen",
     "VIRT|2": "draussen",
     "WCC|3": "draussen",
@@ -345,7 +345,6 @@
     "HTF|HTFL|2": "2026-09-08",
     "BEST|HTF|HTFL|2": "2026-09-08",
     "UEBER|MLYS|3": "2026-09-08",
-    "UEBER|RBLX|1": "2026-09-08",
-    "UEBER|PSIX|1": "2026-09-08"
+    "UEBER|RBLX|1": "2026-09-08"
   }
 }
