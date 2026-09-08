@@ -5,7 +5,7 @@
     "CGAU|3": "draussen",
     "GEO|3": "drin",
     "SMTC|1": "draussen",
-    "SMTC|2": "drin",
+    "SMTC|2": "draussen",
     "BE|1": "draussen",
     "BE|2": "draussen",
     "BIIB|2": "drin",
@@ -321,6 +321,7 @@
     "BEST|VOR|1": "2026-09-08",
     "UEBER|SMTC|1": "2026-09-08",
     "UEBER|BUUU|1": "2026-09-08",
-    "UEBER|BUUU|3": "2026-09-08"
+    "UEBER|BUUU|3": "2026-09-08",
+    "UEBER|SMTC|2": "2026-09-08"
   }
 }
