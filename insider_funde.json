@@ -1,11 +1,11 @@
 {
- "stand": "2026-09-07",
+ "stand": "2026-09-08",
  "funde": [
   {
    "ticker": "MAIR",
    "status": "pfad_a",
-   "marktkap": 12994615296.0,
-   "stichtag": "2026-09-07",
+   "marktkap": 13017193472.0,
+   "stichtag": "2026-09-08",
    "zeilen": [
     "MAIR; Großkauf; Marktwert 13,0 Mrd $",
     "Größter Einzelkauf 219,0 Mio $ am 25.08.; BERTARELLI ERNESTO, Insider"
@@ -15,10 +15,10 @@
   {
    "ticker": "RSG",
    "status": "pfad_a",
-   "marktkap": 68196696064.0,
-   "stichtag": "2026-09-07",
+   "marktkap": 67804741632.0,
+   "stichtag": "2026-09-08",
    "zeilen": [
-    "RSG; Großkauf; Marktwert 68,2 Mrd $",
+    "RSG; Großkauf; Marktwert 67,8 Mrd $",
     "Größter Einzelkauf 51,8 Mio $ am 27.08.; CASCADE INVESTMENT, L.L.C., Insider"
    ],
    "kennung": "RSG|pfad_a|0"
