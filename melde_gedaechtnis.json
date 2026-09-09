@@ -114,7 +114,7 @@
     "DELL|2": "draussen",
     "DELL|3": "drin",
     "DK|2": "draussen",
-    "ECPG|2": "draussen",
+    "ECPG|2": "drin",
     "HPE|3": "draussen",
     "KYMR|3": "drin",
     "MPC|2": "draussen",
@@ -350,6 +350,8 @@
     "NRIX|2": "2026-09-09",
     "BEST|NRIX|2": "2026-09-09",
     "HNGE|1": "2026-09-09",
-    "BEST|HNGE|1": "2026-09-09"
+    "BEST|HNGE|1": "2026-09-09",
+    "PSIX|2": "2026-09-09",
+    "BEST|PSIX|2": "2026-09-09"
   }
 }

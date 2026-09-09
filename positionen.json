@@ -2805,5 +2805,31 @@
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
   "wedge_drop_gemeldet": false
+ },
+ "HNGE|1": {
+  "symbol": "HNGE",
+  "firma": "Hinge Health Inc",
+  "strategie": "Cup & Handle (Wochenbasis)",
+  "einstieg": 93.14,
+  "einstieg_datum": "2026-09-09",
+  "einstieg_index": 0,
+  "struktur_stop": 83.83,
+  "aktueller_stop": 83.83,
+  "stop_quelle": "struktur",
+  "hoechstkurs": 93.14,
+  "teilverkauft": false,
+  "halteregel_aktiv": false,
+  "beobachtung": true,
+  "status": "offen",
+  "verlauf": [],
+  "klasse": "standard",
+  "musterziel": 125.24,
+  "zone": null,
+  "ziel_gemeldet": false,
+  "klimax_gemeldet": [],
+  "weinstein_gemeldet": false,
+  "zahlen_hinweis_gemeldet": false,
+  "sektor_hinweis_gemeldet": false,
+  "wedge_drop_gemeldet": false
  }
 }
