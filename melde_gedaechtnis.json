@@ -136,7 +136,7 @@
     "BETA|3": "drin",
     "BFH|2": "drin",
     "CBIO|3": "draussen",
-    "CHEF|2": "drin",
+    "CHEF|2": "draussen",
     "CNK|2": "drin",
     "CON|2": "drin",
     "CPAY|2": "drin",
@@ -219,7 +219,9 @@
     "LB|1": "draussen",
     "LB|3": "draussen",
     "MPC|1": "drin",
-    "NRIX|2": "drin"
+    "NRIX|2": "drin",
+    "SLAB|2": "drin",
+    "HNGE|1": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -346,6 +348,8 @@
     "WTTR|2": "2026-09-09",
     "BEST|WTTR|2": "2026-09-09",
     "NRIX|2": "2026-09-09",
-    "BEST|NRIX|2": "2026-09-09"
+    "BEST|NRIX|2": "2026-09-09",
+    "HNGE|1": "2026-09-09",
+    "BEST|HNGE|1": "2026-09-09"
   }
 }
