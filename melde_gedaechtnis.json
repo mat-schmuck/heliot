@@ -176,13 +176,21 @@
     "VCTR|2": "draussen",
     "VIRT|2": "drin",
     "VIST|3": "draussen",
-    "WCC|3": "drin",
+    "WCC|3": "draussen",
     "WFRD|3": "draussen",
     "ZBIO|3": "draussen",
     "TWIN|3": "drin",
     "GH|3": "drin",
     "SLDE|2": "draussen",
-    "CRWD|2": "drin"
+    "CRWD|2": "drin",
+    "OSCR|3": "drin",
+    "CVE|1": "drin",
+    "MPC|3": "drin",
+    "CVE|3": "drin",
+    "CGON|3": "drin",
+    "FTH|2": "draussen",
+    "AYA|1": "drin",
+    "AYA|3": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -299,6 +307,10 @@
     "TIGO|1": "2026-09-09",
     "BEST|TIGO|1": "2026-09-09",
     "CRWD|2": "2026-09-09",
-    "BEST|CRWD|2": "2026-09-09"
+    "BEST|CRWD|2": "2026-09-09",
+    "OSCR|3": "2026-09-09",
+    "BEST|OSCR|3": "2026-09-09",
+    "AYA|1": "2026-09-09",
+    "BEST|AYA|1": "2026-09-09"
   }
 }
