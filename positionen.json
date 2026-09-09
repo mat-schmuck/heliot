@@ -2831,5 +2831,31 @@
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
   "wedge_drop_gemeldet": false
+ },
+ "PSIX|2": {
+  "symbol": "PSIX",
+  "firma": "Power Solutions International Inc",
+  "strategie": "Rectangle Top",
+  "einstieg": 43.24,
+  "einstieg_datum": "2026-09-09",
+  "einstieg_index": 0,
+  "struktur_stop": 38.92,
+  "aktueller_stop": 38.92,
+  "stop_quelle": "struktur",
+  "hoechstkurs": 43.24,
+  "teilverkauft": false,
+  "halteregel_aktiv": false,
+  "beobachtung": true,
+  "status": "offen",
+  "verlauf": [],
+  "klasse": "standard",
+  "musterziel": 51.63,
+  "zone": null,
+  "ziel_gemeldet": false,
+  "klimax_gemeldet": [],
+  "weinstein_gemeldet": false,
+  "zahlen_hinweis_gemeldet": false,
+  "sektor_hinweis_gemeldet": false,
+  "wedge_drop_gemeldet": false
  }
 }
