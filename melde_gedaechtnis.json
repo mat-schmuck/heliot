@@ -84,7 +84,7 @@
     "PCVX|3": "drin",
     "REGN|2": "draussen",
     "RGLD|3": "draussen",
-    "RIOT|3": "draussen",
+    "RIOT|3": "drin",
     "RS|3": "drin",
     "RVTY|2": "draussen",
     "SMMT|1": "drin",
@@ -179,7 +179,7 @@
     "WCC|3": "draussen",
     "WFRD|3": "draussen",
     "ZBIO|3": "draussen",
-    "TWIN|3": "drin",
+    "TWIN|3": "draussen",
     "GH|3": "drin",
     "SLDE|2": "draussen",
     "CRWD|2": "drin",
@@ -240,9 +240,13 @@
     "CLMT|1": "drin",
     "CLMT|3": "drin",
     "TXG|3": "drin",
-    "PLSE|1": "draussen",
-    "PLSE|3": "draussen",
-    "MGRT|2": "drin"
+    "PLSE|1": "drin",
+    "PLSE|3": "drin",
+    "MGRT|2": "drin",
+    "FCFS|2": "drin",
+    "TXG|1": "drin",
+    "TWIN|2": "drin",
+    "COKE|3": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -377,6 +381,8 @@
     "ATKR|1": "2026-09-09",
     "BEST|ATKR|1": "2026-09-09",
     "UEBER|PLSE|1": "2026-09-09",
-    "UEBER|PLSE|3": "2026-09-09"
+    "UEBER|PLSE|3": "2026-09-09",
+    "TNK|1": "2026-09-09",
+    "BEST|TNK|1": "2026-09-09"
   }
 }
