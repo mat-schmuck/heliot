@@ -211,7 +211,8 @@
     "MGRT|3": "draussen",
     "ODTX|2": "draussen",
     "LXP|1": "draussen",
-    "AGMB|3": "draussen"
+    "AGMB|3": "draussen",
+    "WTTR|2": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -334,6 +335,8 @@
     "AYA|1": "2026-09-09",
     "BEST|AYA|1": "2026-09-09",
     "CXW|2": "2026-09-09",
-    "BEST|CXW|2": "2026-09-09"
+    "BEST|CXW|2": "2026-09-09",
+    "WTTR|2": "2026-09-09",
+    "BEST|WTTR|2": "2026-09-09"
   }
 }
