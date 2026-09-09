@@ -1,139 +1,148 @@
 {
- "handelstag": "2026-09-08",
- "gebaut_am": "2026-09-08T22:05:47",
+ "handelstag": "2026-09-09",
+ "gebaut_am": "2026-09-09T22:04:46",
  "befunde": [
   {
    "typ": "kapitel11",
-   "titel": "Exit-Regelwerk: HTFL|2",
-   "text": "BEOBACHTUNG: HTFL|2 (Heartflow Inc); Stop gerissen, ganz raus; Kurs 47.75, -4.3 % seit Einstieg; Schluss 47.75 unter Stop 48.86",
-   "symbol": "HTFL|2",
+   "titel": "Exit-Regelwerk: RNG|2",
+   "text": "BEOBACHTUNG: RNG|2 (RingCentral Inc); Stop gerissen, ganz raus; Kurs 69.64, -0.2 % seit Einstieg; Schluss 69.64 unter Stop 73.12",
+   "symbol": "RNG|2",
    "key": "",
    "prioritaet": "high",
    "buendeln": true
   },
   {
    "typ": "kapitel11",
-   "titel": "Exit-Regelwerk: WFRD|1",
-   "text": "BEOBACHTUNG: WFRD|1 (Weatherford International plc); Stop gerissen, ganz raus; Kurs 93.70, -2.9 % seit Einstieg; Schluss 93.70 unter Stop 94.12",
-   "symbol": "WFRD|1",
+   "titel": "Exit-Regelwerk: RNG|1",
+   "text": "BEOBACHTUNG: RNG|1 (RingCentral Inc); Stop gerissen, ganz raus; Kurs 69.64, -1.1 % seit Einstieg; Schluss 69.64 unter Stop 70.17",
+   "symbol": "RNG|1",
+   "key": "",
+   "prioritaet": "high",
+   "buendeln": true
+  },
+  {
+   "typ": "kapitel11",
+   "titel": "Exit-Regelwerk: HTFL|1",
+   "text": "BEOBACHTUNG: HTFL|1 (Heartflow Inc); Stop gerissen, ganz raus; Kurs 46.67, -8.8 % seit Einstieg; Schluss 46.67 unter Stop 47.12",
+   "symbol": "HTFL|1",
+   "key": "",
+   "prioritaet": "high",
+   "buendeln": true
+  },
+  {
+   "typ": "kapitel11",
+   "titel": "Exit-Regelwerk: PRE|1",
+   "text": "BEOBACHTUNG: PRE|1 (Prenetics Global Limited); Stop gerissen, ganz raus; Kurs 24.27, -9.1 % seit Einstieg; Schluss 24.27 unter Stop 24.53",
+   "symbol": "PRE|1",
+   "key": "",
+   "prioritaet": "high",
+   "buendeln": true
+  },
+  {
+   "typ": "kapitel11",
+   "titel": "Exit-Regelwerk: XMTR|1",
+   "text": "BEOBACHTUNG: XMTR|1 (Xometry Inc); Stop gerissen, ganz raus; Kurs 85.59, -9.4 % seit Einstieg; Schluss 85.59 unter Stop 89.25",
+   "symbol": "XMTR|1",
+   "key": "",
+   "prioritaet": "high",
+   "buendeln": true
+  },
+  {
+   "typ": "kapitel11",
+   "titel": "Exit-Regelwerk: VOR|1",
+   "text": "BEOBACHTUNG: VOR|1 (Vor Biopharma Inc); Stop gerissen, ganz raus; Kurs 23.24, -7.7 % seit Einstieg; Schluss 23.24 unter Stop 23.41",
+   "symbol": "VOR|1",
+   "key": "",
+   "prioritaet": "high",
+   "buendeln": true
+  },
+  {
+   "typ": "kapitel11",
+   "titel": "Exit-Regelwerk: TIGO|1",
+   "text": "BEOBACHTUNG: TIGO|1 (Millicom International Cellular SA); Stop gerissen, ganz raus; Kurs 93.57, -2.6 % seit Einstieg; Schluss 93.57 unter Stop 93.83",
+   "symbol": "TIGO|1",
    "key": "",
    "prioritaet": "high",
    "buendeln": true
   },
   {
    "typ": "klimax_zeichen",
-   "titel": "KLIMAX: BLTE",
-   "text": "BLTE; EMA Crossback; Klimax-Zeichen 5 kanaluebershooting (+7,6 %); Verkauf in die Stärke erwägen; seit Trigger -0,5 % gleich -0,1 R",
-   "symbol": "BLTE",
-   "key": "BLTE|1",
+   "titel": "KLIMAX: BHVN",
+   "text": "BHVN; EMA Crossback; Klimax-Zeichen 2 groesster tagesgewinn (+1,9 %); Verkauf in die Stärke erwägen; seit Trigger -6,5 % gleich -0,9 R",
+   "symbol": "BHVN",
+   "key": "BHVN|1",
+   "prioritaet": "high",
+   "buendeln": false
+  },
+  {
+   "typ": "wedge_drop",
+   "titel": "Wedge Drop: BHVN",
+   "text": "BHVN; EMA Crossback; erster Schluss unter der 10er- und 20er-Tageslinie nach der Überdehnung (Kell Wedge Drop); Ausstieg oder harte Straffung; seit Trigger -6,5 % gleich -0,9 R",
+   "symbol": "BHVN",
+   "key": "BHVN|1",
    "prioritaet": "high",
    "buendeln": false
   },
   {
    "typ": "klimax_zeichen",
-   "titel": "KLIMAX: ECPG",
-   "text": "ECPG; Rectangle Top; Klimax-Zeichen 2 groesster tagesgewinn (+1,6 %); Verkauf in die Stärke erwägen; seit Trigger +4,9 % gleich 0,8 R",
-   "symbol": "ECPG",
-   "key": "ECPG|1",
-   "prioritaet": "high",
-   "buendeln": false
-  },
-  {
-   "typ": "zonenwechsel",
-   "titel": "Gewinnzonen",
-   "text": "ECPG; Rectangle Top; Zone leicht zu stark; seit Trigger +4,9 % gleich 0,8 R",
-   "symbol": "ECPG",
-   "key": "ECPG|1",
-   "prioritaet": "default",
-   "buendeln": true
-  },
-  {
-   "typ": "zonenwechsel",
-   "titel": "Gewinnzonen",
-   "text": "FSLY; Shakeout-Spring; Zone leicht zu mittel; seit Trigger +3,9 % gleich 0,9 R",
-   "symbol": "FSLY",
-   "key": "FSLY|SPRING-2026-09-04",
-   "prioritaet": "default",
-   "buendeln": true
-  },
-  {
-   "typ": "ziel_erreicht",
-   "titel": "GEWINN-Ziel erreicht: FSLY",
-   "text": "FSLY; Shakeout-Spring; Musterziel 20.68 erreicht; Teilverkauf oder harte Straffung; seit Trigger +3,9 % gleich 0,9 R",
-   "symbol": "FSLY",
-   "key": "FSLY|SPRING-2026-09-04",
+   "titel": "KLIMAX: EOG",
+   "text": "EOG; Rectangle Top; Klimax-Zeichen 2 groesster tagesgewinn (+1,1 %); Verkauf in die Stärke erwägen; seit Trigger -0,8 % gleich -0,1 R",
+   "symbol": "EOG",
+   "key": "EOG|2",
    "prioritaet": "high",
    "buendeln": false
   },
   {
    "typ": "klimax_zeichen",
    "titel": "KLIMAX: HPE",
-   "text": "HPE; Rectangle Top; Klimax-Zeichen 2 groesster tagesgewinn (+7,7 %); Verkauf in die Stärke erwägen; seit Trigger +9,7 % gleich 1,0 R",
+   "text": "HPE; Rectangle Top; Klimax-Zeichen 4 ma200 abstand (+75,2 %); Verkauf in die Stärke erwägen; seit Trigger +15,3 % gleich 1,5 R",
    "symbol": "HPE",
    "key": "HPE|1",
    "prioritaet": "high",
    "buendeln": false
   },
   {
-   "typ": "zonenwechsel",
-   "titel": "Gewinnzonen",
-   "text": "HPE; Rectangle Top; Zone leicht zu stark; seit Trigger +9,7 % gleich 1,0 R",
+   "typ": "ziel_erreicht",
+   "titel": "GEWINN-Ziel erreicht: HPE",
+   "text": "HPE; Rectangle Top; Musterziel 58.47 erreicht; Teilverkauf oder harte Straffung; seit Trigger +15,3 % gleich 1,5 R",
    "symbol": "HPE",
    "key": "HPE|1",
-   "prioritaet": "default",
-   "buendeln": true
-  },
-  {
-   "typ": "klimax_zeichen",
-   "titel": "KLIMAX: PBF",
-   "text": "PBF; Rectangle Top; Klimax-Zeichen 4 ma200 abstand (+72,6 %); Verkauf in die Stärke erwägen; seit Trigger +2,7 % gleich 0,3 R",
-   "symbol": "PBF",
-   "key": "PBF|1",
    "prioritaet": "high",
    "buendeln": false
   },
   {
    "typ": "klimax_zeichen",
-   "titel": "KLIMAX: PRE",
-   "text": "PRE; Cup & Handle (Wochenbasis); Klimax-Zeichen 2 groesster tagesgewinn (+0,7 %); Verkauf in die Stärke erwägen; seit Trigger -4,1 % gleich -0,4 R",
-   "symbol": "PRE",
-   "key": "PRE|1",
+   "titel": "KLIMAX: TEAM",
+   "text": "TEAM; High & Tight Flag, Cup & Handle (Wochenbasis); Klimax-Zeichen 2 groesster tagesgewinn (+0,7 %); Verkauf in die Stärke erwägen; seit Trigger -9,9 % gleich -1,6 R",
+   "symbol": "TEAM",
+   "key": "TEAM|1",
    "prioritaet": "high",
    "buendeln": false
   },
   {
    "typ": "klimax_zeichen",
-   "titel": "KLIMAX: SCCO",
-   "text": "SCCO; Rectangle Top; Klimax-Zeichen 2 groesster tagesgewinn (+4,9 %); Verkauf in die Stärke erwägen; seit Trigger +3,3 % gleich 0,3 R",
-   "symbol": "SCCO",
-   "key": "SCCO|1",
+   "titel": "KLIMAX: TEAM",
+   "text": "TEAM; HTF Innen-Einstieg; Klimax-Zeichen 2 groesster tagesgewinn (+0,7 %); Verkauf in die Stärke erwägen; seit Trigger -7,8 % gleich -1,9 R",
+   "symbol": "TEAM",
+   "key": "TEAM|2",
    "prioritaet": "high",
    "buendeln": false
   },
   {
-   "typ": "zonenwechsel",
-   "titel": "Gewinnzonen",
-   "text": "SCCO; Rectangle Top; Zone leicht zu stark; seit Trigger +3,3 % gleich 0,3 R",
-   "symbol": "SCCO",
-   "key": "SCCO|1",
-   "prioritaet": "default",
-   "buendeln": true
-  },
-  {
    "typ": "klimax_zeichen",
-   "titel": "KLIMAX: SNDK",
-   "text": "SNDK; EMA Crossback; Klimax-Zeichen 4 ma200 abstand (+71,8 %); Verkauf in die Stärke erwägen; seit Trigger -0,1 % gleich -0,0 R",
-   "symbol": "SNDK",
-   "key": "SNDK|1",
+   "titel": "KLIMAX: YPF",
+   "text": "YPF; Rectangle Top; Klimax-Zeichen 2 groesster tagesgewinn (+2,9 %); Verkauf in die Stärke erwägen; seit Trigger +2,0 % gleich 0,2 R",
+   "symbol": "YPF",
+   "key": "YPF|1",
    "prioritaet": "high",
    "buendeln": false
   },
   {
    "typ": "zonenwechsel",
    "titel": "Gewinnzonen",
-   "text": "VLO; VCP; Zone leicht zu stark; seit Trigger +8,5 % gleich 1,1 R",
-   "symbol": "VLO",
-   "key": "VLO|1",
+   "text": "YPF; Rectangle Top; Zone leicht zu stark; seit Trigger +2,0 % gleich 0,2 R",
+   "symbol": "YPF",
+   "key": "YPF|1",
    "prioritaet": "default",
    "buendeln": true
   }

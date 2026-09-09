@@ -1,5 +1,5 @@
 {
- "gebaut_am": "2026-09-09 00:05 Wien",
+ "gebaut_am": "2026-09-10 00:04 Wien",
  "ohne_termin": [
   "AGMB",
   "BLSM",
@@ -8,7 +8,9 @@
   "CBIO",
   "ELLO",
   "FRNM",
-  "MGRT"
+  "MGRT",
+  "RNG",
+  "TECK"
  ],
  "nur_nasdaq": [],
  "uneinig": [],
@@ -1453,14 +1455,6 @@
     "yahoo"
    ]
   },
-  "RNG": {
-   "datum": "2026-11-05",
-   "uhrzeit": "15:00",
-   "lage": "im_handel",
-   "quellen": [
-    "yahoo"
-   ]
-  },
   "ROKU": {
    "datum": "2026-11-05",
    "uhrzeit": "15:00",
@@ -1641,14 +1635,6 @@
    "datum": "2026-11-09",
    "uhrzeit": "15:00",
    "lage": "im_handel",
-   "quellen": [
-    "yahoo"
-   ]
-  },
-  "TECK": {
-   "datum": "2026-10-22",
-   "uhrzeit": "08:00",
-   "lage": "vorboerslich",
    "quellen": [
     "yahoo"
    ]
