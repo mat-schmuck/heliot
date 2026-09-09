@@ -39,7 +39,7 @@
     "PRE|2": "draussen",
     "PSNL|2": "draussen",
     "QMCO|2": "draussen",
-    "URGN|2": "drin",
+    "URGN|2": "draussen",
     "AMR|3": "draussen",
     "ARIS|3": "draussen",
     "ARW|3": "drin",
@@ -114,7 +114,7 @@
     "DELL|2": "draussen",
     "DELL|3": "drin",
     "DK|2": "draussen",
-    "ECPG|2": "drin",
+    "ECPG|2": "draussen",
     "HPE|3": "draussen",
     "KYMR|3": "drin",
     "MPC|2": "draussen",
@@ -190,7 +190,28 @@
     "CGON|3": "drin",
     "FTH|2": "draussen",
     "AYA|1": "drin",
-    "AYA|3": "drin"
+    "AYA|3": "drin",
+    "PSX|3": "drin",
+    "BSTZ|2": "drin",
+    "BSTZ|3": "draussen",
+    "CNR|3": "draussen",
+    "AGCO|3": "draussen",
+    "KALU|2": "drin",
+    "PSX|1": "drin",
+    "ALNY|3": "drin",
+    "ANF|1": "drin",
+    "ANF|3": "drin",
+    "BIIB|3": "drin",
+    "HSIC|3": "drin",
+    "IDYA|2": "drin",
+    "IDYA|3": "drin",
+    "PSIX|2": "drin",
+    "NX|2": "draussen",
+    "ATRO|2": "drin",
+    "MGRT|3": "draussen",
+    "ODTX|2": "draussen",
+    "LXP|1": "draussen",
+    "AGMB|3": "draussen"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -311,6 +332,8 @@
     "OSCR|3": "2026-09-09",
     "BEST|OSCR|3": "2026-09-09",
     "AYA|1": "2026-09-09",
-    "BEST|AYA|1": "2026-09-09"
+    "BEST|AYA|1": "2026-09-09",
+    "CXW|2": "2026-09-09",
+    "BEST|CXW|2": "2026-09-09"
   }
 }
