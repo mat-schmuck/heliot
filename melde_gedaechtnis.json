@@ -10,7 +10,7 @@
     "ERO|3": "draussen",
     "ETON|1": "draussen",
     "ETON|3": "draussen",
-    "NRIX|3": "drin",
+    "NRIX|3": "draussen",
     "RNG|3": "draussen",
     "SMTC|1": "drin",
     "WTTR|1": "drin",
@@ -64,7 +64,7 @@
     "EXPD|3": "drin",
     "FIVE|2": "draussen",
     "FLR|2": "draussen",
-    "FRPT|3": "drin",
+    "FRPT|3": "draussen",
     "HALO|3": "draussen",
     "HBM|3": "draussen",
     "HCC|3": "draussen",
@@ -172,7 +172,7 @@
     "TARS|2": "draussen",
     "TDS|3": "draussen",
     "TITN|2": "draussen",
-    "TWLO|2": "drin",
+    "TWLO|2": "draussen",
     "VCTR|2": "draussen",
     "VIRT|2": "drin",
     "VIST|3": "draussen",
@@ -212,7 +212,14 @@
     "ODTX|2": "draussen",
     "LXP|1": "draussen",
     "AGMB|3": "draussen",
-    "WTTR|2": "drin"
+    "WTTR|2": "drin",
+    "VOYA|2": "drin",
+    "AMD|2": "drin",
+    "PSIX|1": "drin",
+    "LB|1": "draussen",
+    "LB|3": "draussen",
+    "MPC|1": "drin",
+    "NRIX|2": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -337,6 +344,8 @@
     "CXW|2": "2026-09-09",
     "BEST|CXW|2": "2026-09-09",
     "WTTR|2": "2026-09-09",
-    "BEST|WTTR|2": "2026-09-09"
+    "BEST|WTTR|2": "2026-09-09",
+    "NRIX|2": "2026-09-09",
+    "BEST|NRIX|2": "2026-09-09"
   }
 }
