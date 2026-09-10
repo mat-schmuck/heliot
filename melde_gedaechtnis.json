@@ -103,7 +103,7 @@
     "AAMI|2": "draussen",
     "BE|3": "draussen",
     "BUUU|2": "draussen",
-    "CAKE|2": "draussen",
+    "CAKE|2": "drin",
     "CHEF|2": "drin",
     "CLMT|1": "drin",
     "CLMT|2": "draussen",
@@ -182,7 +182,7 @@
     "ATTO|2": "draussen",
     "VIRT|2": "drin",
     "MD|3": "drin",
-    "PAYP|1": "draussen",
+    "PAYP|1": "drin",
     "LB|1": "draussen",
     "LB|3": "draussen",
     "RAMP|2": "drin",
@@ -219,7 +219,8 @@
     "SUN|1": "drin",
     "DINO|1": "drin",
     "DINO|3": "drin",
-    "TVTX|1": "drin"
+    "TVTX|1": "drin",
+    "VIST|2": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -398,7 +399,6 @@
     "SEB|1": "2026-09-10",
     "BEST|SEB|1": "2026-09-10",
     "UEBER|MGRT|2": "2026-09-10",
-    "UEBER|SWKS|1": "2026-09-10",
-    "UEBER|PAYP|1": "2026-09-10"
+    "UEBER|SWKS|1": "2026-09-10"
   }
 }
