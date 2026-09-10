@@ -29,7 +29,7 @@
     "DINO|2": "draussen",
     "DK|2": "draussen",
     "FTH|2": "draussen",
-    "GKOS|3": "drin",
+    "GKOS|3": "draussen",
     "HNGE|3": "drin",
     "MAN|2": "draussen",
     "NRIX|2": "drin",
@@ -69,7 +69,7 @@
     "EXPD|3": "drin",
     "FRPT|3": "drin",
     "HALO|3": "draussen",
-    "HBM|3": "drin",
+    "HBM|3": "draussen",
     "HOOD|3": "draussen",
     "HP|2": "draussen",
     "IAG|3": "draussen",
@@ -128,7 +128,7 @@
     "AUGO|3": "draussen",
     "CBIO|3": "draussen",
     "CNK|2": "drin",
-    "CON|2": "drin",
+    "CON|2": "draussen",
     "CPAY|2": "drin",
     "CRCL|3": "draussen",
     "DGX|2": "drin",
@@ -169,7 +169,23 @@
     "EE|3": "drin",
     "MD|1": "drin",
     "URGN|3": "drin",
-    "PCVX|3": "drin"
+    "PCVX|3": "drin",
+    "CXW|2": "drin",
+    "BIIB|3": "drin",
+    "ADPT|3": "drin",
+    "NGL|3": "draussen",
+    "AMR|3": "draussen",
+    "WHD|2": "draussen",
+    "WTTR|1": "drin",
+    "CMDB|2": "draussen",
+    "HCC|3": "draussen",
+    "ATTO|2": "draussen",
+    "VIRT|2": "drin",
+    "MD|3": "drin",
+    "PAYP|1": "drin",
+    "LB|1": "draussen",
+    "LB|3": "draussen",
+    "RAMP|2": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -340,6 +356,8 @@
     "PARR|1": "2026-09-10",
     "BEST|PARR|1": "2026-09-10",
     "MD|1": "2026-09-10",
-    "BEST|MD|1": "2026-09-10"
+    "BEST|MD|1": "2026-09-10",
+    "RAMP|2": "2026-09-10",
+    "BEST|RAMP|2": "2026-09-10"
   }
 }
