@@ -206,7 +206,8 @@
     "MATX|2": "drin",
     "FROG|3": "drin",
     "DNTH|2": "drin",
-    "IDYA|3": "drin"
+    "IDYA|3": "drin",
+    "MGRT|2": "draussen"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -383,6 +384,7 @@
     "TBBB|1": "2026-09-10",
     "BEST|TBBB|1": "2026-09-10",
     "SEB|1": "2026-09-10",
-    "BEST|SEB|1": "2026-09-10"
+    "BEST|SEB|1": "2026-09-10",
+    "UEBER|MGRT|2": "2026-09-10"
   }
 }

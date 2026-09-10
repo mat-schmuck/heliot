@@ -3255,5 +3255,31 @@
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
   "wedge_drop_gemeldet": false
+ },
+ "SEB|1": {
+  "symbol": "SEB",
+  "firma": "Seaboard Corp",
+  "strategie": "EMA Crossback",
+  "einstieg": 4346.04,
+  "einstieg_datum": "2026-09-10",
+  "einstieg_index": 0,
+  "struktur_stop": 4222.47,
+  "aktueller_stop": 4222.47,
+  "stop_quelle": "struktur",
+  "hoechstkurs": 4346.04,
+  "teilverkauft": false,
+  "halteregel_aktiv": false,
+  "beobachtung": true,
+  "status": "offen",
+  "verlauf": [],
+  "klasse": "standard",
+  "musterziel": null,
+  "zone": null,
+  "ziel_gemeldet": false,
+  "klimax_gemeldet": [],
+  "weinstein_gemeldet": false,
+  "zahlen_hinweis_gemeldet": false,
+  "sektor_hinweis_gemeldet": false,
+  "wedge_drop_gemeldet": false
  }
 }
