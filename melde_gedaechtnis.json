@@ -155,7 +155,7 @@
     "PRE|2": "draussen",
     "ROKU|2": "drin",
     "SCCO|2": "drin",
-    "SENEA|2": "draussen",
+    "SENEA|2": "drin",
     "SLAB|2": "drin",
     "SLDE|2": "draussen",
     "TARS|2": "draussen",
@@ -182,7 +182,7 @@
     "ATTO|2": "draussen",
     "VIRT|2": "drin",
     "MD|3": "drin",
-    "PAYP|1": "drin",
+    "PAYP|1": "draussen",
     "LB|1": "draussen",
     "LB|3": "draussen",
     "RAMP|2": "drin",
@@ -398,6 +398,7 @@
     "SEB|1": "2026-09-10",
     "BEST|SEB|1": "2026-09-10",
     "UEBER|MGRT|2": "2026-09-10",
-    "UEBER|SWKS|1": "2026-09-10"
+    "UEBER|SWKS|1": "2026-09-10",
+    "UEBER|PAYP|1": "2026-09-10"
   }
 }
