@@ -133,9 +133,19 @@ def vereinen(sicherung, pfad=DATEI):
         with open(p, encoding="utf-8-sig") as f:
             return [z.rstrip("\n") for z in f if z.strip()]
 
+    def gueltig(z):
+        try:
+            return isinstance(json.loads(z), dict)
+        except ValueError:
+            return False
+
     da, meine = zeilen(pfad), zeilen(sicherung)
     bekannt = set(da)
-    neu = [z for z in meine if z not in bekannt]
+    # NUR ECHTE EINTRAEGE (Befund 10.09.2026): Eine Stash-Kollision im
+    # Waechterlauf hatte Konfliktmarken in die Sicherung geschrieben, und
+    # dieser Schritt hat sie am 18.08. und am 31.08.2026 mit ins Repo
+    # gelegt. Was keine JSON-Zeile ist, wird nicht angehaengt.
+    neu = [z for z in meine if z not in bekannt and gueltig(z)]
     if neu:
         with open(pfad, "a", encoding="utf-8") as f:
             for z in neu:
@@ -302,6 +312,23 @@ def selbsttest() -> int:
            vereinen(meine, server) == 0 and len(lies(server)) == 3)
     pruefe("Fehlende Sicherung ist kein Fehler",
            vereinen(os.path.join(ordner, "gibtsnicht.jsonl"), server) == 0)
+
+    # Konfliktmarken einer Stash-Kollision (18.08. und 31.08.2026) duerfen
+    # nie ins Logbuch wandern, die echte Zeile dazwischen dagegen schon.
+    with open(meine, "a", encoding="utf-8") as f:
+        f.write("<<<<<<< Updated upstream\n=======\n")
+    protokolliere({"ticker": "NACH", "strategie": "zwischen den Marken"},
+                  pfad=meine)
+    with open(meine, "a", encoding="utf-8") as f:
+        f.write(">>>>>>> Stashed changes\n")
+    n = vereinen(meine, server)
+    with open(server, encoding="utf-8") as f:
+        roh = f.read()
+    pruefe("Konfliktmarken wandern nicht mit, die echte Zeile schon",
+           n == 1 and "<<<<<<<" not in roh and ">>>>>>>" not in roh
+           and "=======" not in roh
+           and [e["ticker"] for e in lies(server)]
+           == ["SRV", "GEM", "MEIN", "NACH"], f"n={n}")
 
     print(f"\n{len(fehler)} Fehler." if fehler else "\nAlles bestanden.")
     return 1 if fehler else 0

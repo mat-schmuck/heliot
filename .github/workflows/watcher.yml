@@ -69,7 +69,17 @@ jobs:
     permissions:
       contents: write
     steps:
+      # DEN NEUESTEN STAND HOLEN, nicht den beim Ausloesen (Befund
+      # 10.09.2026). Ohne ref checkt actions/checkout den Commit aus, der
+      # beim Anstossen galt. Die Schlussstunde wird um 15:26 New Yorker Zeit
+      # angestossen, der Endkommit der Tagwache kommt aber erst um 15:28.
+      # Die Schlussstunde arbeitete deshalb auf einem Stand ohne ihn, und
+      # ihre erste Sicherung im Lauf geriet am 18.08. und am 31.08.2026 in
+      # eine Stash-Kollision: Konfliktmarken im Trigger-Logbuch. Mit ref
+      # holt der Schritt die Spitze des Zweigs, wenn der Auftrag startet.
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
 
       - uses: actions/setup-python@v5
         with:

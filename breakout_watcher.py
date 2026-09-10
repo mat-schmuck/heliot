@@ -737,7 +737,9 @@ def _repo_sichern(state: dict, sofort: bool = False):
     _repo_stand["zeit"] = jetzt
     try:
         Path(REPO_STATE).write_text(json.dumps(state, indent=2))
+        import shutil
         import subprocess
+        import tempfile
         g = ["git", "-c", "user.name=breakout-watcher",
              "-c", "user.email=actions@users.noreply.github.com"]
         subprocess.run(g + ["add", REPO_STATE, "positionen.json"],
@@ -747,8 +749,42 @@ def _repo_sichern(state: dict, sofort: bool = False):
                            capture_output=True, timeout=30)
         if r.returncode != 0:
             return                     # nichts zu committen
-        subprocess.run(g + ["pull", "--rebase", "--autostash", "origin",
-                            "main"], capture_output=True, timeout=60)
+        # KEINE STASH-KOLLISION MEHR (Befund 10.09.2026, belegt am 18.08.
+        # und am 31.08.2026). Logbuch und ntfy-Kennungen haengt der Lauf nur
+        # an, ins Repo gehen sie erst mit dem Endkommit. Lagen sie beim Pull
+        # veraendert herum, stellte --autostash sie beiseite und spielte sie
+        # nach dem Rebase zurueck. Hatte der Serverstand dieselbe Datei
+        # inzwischen ebenfalls verlaengert, schrieb Git Konfliktmarken
+        # hinein, und zwar OHNE Fehlercode; der Endkommit legte sie ins
+        # Repo. Deshalb stehen beide Dateien beim Pull auf dem letzten
+        # Commit und werden danach wieder vereint, Zeile fuer Zeile und
+        # Kennung fuer Kennung, wie im Endkommit des Workflows.
+        ablage = tempfile.mkdtemp(prefix="waechter_sicherung_")
+        beiseite = {}
+        for datei in (trigger_logbuch.DATEI, str(ntfy_verlauf.VERLAUF_DATEI)):
+            if Path(datei).exists():
+                beiseite[datei] = shutil.copy(
+                    datei, os.path.join(ablage, Path(datei).name))
+        try:
+            for datei in beiseite:
+                subprocess.run(g + ["checkout", "--", datei],
+                               capture_output=True, timeout=30)
+            pull = subprocess.run(g + ["pull", "--rebase", "--autostash",
+                                       "origin", "main"],
+                                  capture_output=True, timeout=60)
+            if pull.returncode != 0:
+                # Ein haengengebliebenes Rebase legte jede weitere
+                # Sicherung dieses Laufs lahm. Also zurueck auf den eigenen
+                # Commit; den Rest holt der Endkommit nach.
+                subprocess.run(g + ["rebase", "--abort"],
+                               capture_output=True, timeout=30)
+        finally:
+            if trigger_logbuch.DATEI in beiseite:
+                trigger_logbuch.vereinen(beiseite[trigger_logbuch.DATEI])
+            ntfy_datei = str(ntfy_verlauf.VERLAUF_DATEI)
+            if ntfy_datei in beiseite:
+                ntfy_verlauf.vereine(beiseite[ntfy_datei])
+            shutil.rmtree(ablage, ignore_errors=True)
         p = subprocess.run(g + ["push", "origin", "main"],
                            capture_output=True, timeout=60)
         if p.returncode != 0:

@@ -1246,6 +1246,87 @@ def block_e():
         encoding="utf-8")
     pruefe("E", "Der Endkommit des Laufs sichert das Melde-Gedächtnis mit",
            "melde_gedaechtnis.json" in quelle_w)
+    pruefe("E", "Die Schlussstunde checkt den neuesten Stand aus, nicht "
+           "den beim Anstossen", "ref: ${{ github.ref }}" in quelle_w)
+
+    # DIE STASH-KOLLISION NACHGESTELLT (Befund 10.09.2026, im Repo am
+    # 18.08. und am 31.08.2026). Ein Probe-Repo mit Server, einer
+    # Schlussstunde auf altem Stand und dem Endkommit der Tagwache
+    # dazwischen. Die alte Fassung von _repo_sichern schrieb dabei
+    # Konfliktmarken ins Logbuch. Jetzt muessen alle drei Zeilen und alle
+    # drei Kennungen sauber drinstehen und das Gedaechtnis am Server liegen.
+    import shutil as _sh
+    import tempfile as _tf
+
+    def _git(*a, ort=None):
+        return subprocess.run(
+            ["git", "-c", "user.name=probe", "-c", "user.email=probe",
+             "-c", "core.autocrlf=false", *a],
+            cwd=ort, capture_output=True, text=True, timeout=60)
+
+    _ort_vorher, _stand_vorher = os.getcwd(), dict(bw._repo_stand)
+    _probe = _tf.mkdtemp(prefix="stashprobe_")
+    _ok, _befund = False, ""
+    try:
+        _server = os.path.join(_probe, "server.git")
+        _git("init", "-q", "--bare", "-b", "main", _server)
+        _start = os.path.join(_probe, "start")
+        _git("clone", "-q", _server, _start)
+        for _name, _inhalt in (("trigger_logbuch.jsonl", '{"n": 1}\n'),
+                               ("ntfy_ids.json", '["a"]'),
+                               ("melde_gedaechtnis.json", "{}"),
+                               ("positionen.json", "{}")):
+            pathlib.Path(_start, _name).write_text(_inhalt, encoding="utf-8")
+        _git("add", ".", ort=_start)
+        _git("commit", "-q", "-m", "Start", ort=_start)
+        _git("push", "-q", "origin", "HEAD:main", ort=_start)
+        _teil2 = os.path.join(_probe, "schlussstunde")
+        _teil1 = os.path.join(_probe, "tagwache")
+        for _ziel in (_teil2, _teil1):
+            _git("clone", "-q", _server, _ziel)
+        with open(os.path.join(_teil1, "trigger_logbuch.jsonl"), "a",
+                  encoding="utf-8") as _f:
+            _f.write('{"n": 2}\n')
+        pathlib.Path(_teil1, "ntfy_ids.json").write_text('["a", "b"]',
+                                                          encoding="utf-8")
+        _git("commit", "-q", "-am", "Endkommit der Tagwache", ort=_teil1)
+        _git("push", "-q", "origin", "main", ort=_teil1)
+        with open(os.path.join(_teil2, "trigger_logbuch.jsonl"), "a",
+                  encoding="utf-8") as _f:
+            _f.write('{"n": 3}\n')
+        pathlib.Path(_teil2, "ntfy_ids.json").write_text('["a", "c"]',
+                                                          encoding="utf-8")
+        os.chdir(_teil2)
+        bw._repo_stand.update({"keys": None, "zeit": 0.0})
+        bw._repo_sichern({"fenster_tag": "2026-09-10", "fenster": {},
+                          "gemeldet": {"PROBE|Rectangle Top": "2026-09-10"}},
+                         sofort=True)
+        _log = pathlib.Path("trigger_logbuch.jsonl").read_text(
+            encoding="utf-8")
+        _zeilen = [z for z in _log.splitlines() if z.strip()]
+        _marken = any(z.startswith(("<<<<<<<", ">>>>>>>")) or z == "======="
+                      for z in _zeilen)
+        _status = _git("status", "--porcelain", ort=_teil2).stdout.strip()
+        _stash = _git("stash", "list", ort=_teil2).stdout.strip()
+        _am_server = _git("--git-dir", _server, "show",
+                          "main:melde_gedaechtnis.json").stdout
+        _ids = json.loads(pathlib.Path("ntfy_ids.json").read_text(
+            encoding="utf-8"))
+        _ok = (not _marken and "UU" not in _status and not _stash
+               and sorted(json.loads(z)["n"] for z in _zeilen) == [1, 2, 3]
+               and sorted(_ids) == ["a", "b", "c"]
+               and "PROBE|Rectangle Top" in _am_server)
+        _befund = (f"{len(_zeilen)} Zeilen, Marken {_marken}, Kennungen "
+                   f"{sorted(_ids)}, Stash {_stash!r}")
+    except Exception as _e:
+        _befund = f"{type(_e).__name__}: {_e}"
+    finally:
+        os.chdir(_ort_vorher)
+        bw._repo_stand.clear()
+        bw._repo_stand.update(_stand_vorher)
+        _sh.rmtree(_probe, ignore_errors=True)
+    pruefe("E", "Stash-Kollision nachgestellt: Die Sicherung im Lauf legt "
+           "keine Konfliktmarken ab und verliert keine Zeile", _ok, _befund)
 
     # DIE EINTRITTSKARTE: kam der Kaufpunkt von UNTEN? (Mathias,
     # 14.08.2026). Ohne sie meldet der Waechter Ruecksetzer-Marken, unter
