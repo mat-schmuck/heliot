@@ -1,16 +1,21 @@
 {
- "stand": "2026-09-09",
+ "stand": "2026-09-10",
  "liste": 243,
  "aktien": [
   {
    "ticker": "APGE",
    "firma": "Apogee Therapeutics Inc",
-   "grund": "juengste Kurszeile vom 17.07.2026, also 54 Tage alt"
+   "grund": "juengste Kurszeile vom 17.07.2026, also 55 Tage alt"
   },
   {
    "ticker": "CRNX",
    "firma": "Crinetics Pharmaceuticals Inc",
    "grund": "2 der letzten 5 Handelstage ohne Umsatz oder ohne Kursspanne"
+  },
+  {
+   "ticker": "ELLO",
+   "firma": "Ellomay Capital Ltd",
+   "grund": "3 der letzten 5 Handelstage ohne Umsatz oder ohne Kursspanne"
   }
  ]
 }

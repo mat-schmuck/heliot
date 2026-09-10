@@ -1,139 +1,132 @@
 {
- "gebaut_am": "2026-09-10 00:02 Wien",
- "universum": 240,
+ "gebaut_am": "2026-09-11 00:03 Wien",
+ "universum": 239,
  "aktien": {
-  "AMD": {
-   "firma": "Advanced Micro Devices Inc",
-   "vortagesschluss": 521.095,
-   "v50": 24461512.4,
-   "rs_rating": 92,
-   "ueber_52w_tief_pct": 247.7
-  },
-  "ASX": {
-   "firma": "ASE Technology Holding CoLtd ADR",
-   "vortagesschluss": 41.2,
-   "v50": 8533524.3,
-   "rs_rating": 91,
-   "ueber_52w_tief_pct": 276.9
-  },
   "CDNA": {
    "firma": "Caredx Inc",
-   "vortagesschluss": 50.03,
-   "v50": 1154593.2,
-   "rs_rating": 94,
+   "vortagesschluss": 50.02,
+   "v50": 1173876.8,
+   "rs_rating": 95,
    "ueber_52w_tief_pct": 281.3
   },
   "CLMT": {
    "firma": "Calumet Inc",
-   "vortagesschluss": 55.69,
-   "v50": 1178618.6,
+   "vortagesschluss": 56.44,
+   "v50": 1185510.4,
    "rs_rating": 94,
-   "ueber_52w_tief_pct": 226.1
+   "ueber_52w_tief_pct": 230.4
   },
   "DELL": {
    "firma": "Dell Technologies Inc",
-   "vortagesschluss": 535.25,
-   "v50": 7300341.3,
+   "vortagesschluss": 506.62,
+   "v50": 7279397.8,
    "rs_rating": 96,
-   "ueber_52w_tief_pct": 385.6
+   "ueber_52w_tief_pct": 359.6
   },
   "ETON": {
    "firma": "Eton Pharmaceuticals Inc",
-   "vortagesschluss": 58.83,
-   "v50": 583798.5,
+   "vortagesschluss": 57.88,
+   "v50": 580561.9,
    "rs_rating": 95,
-   "ueber_52w_tief_pct": 312.3
+   "ueber_52w_tief_pct": 305.6
   },
   "LITE": {
    "firma": "Lumentum Holdings Inc",
-   "vortagesschluss": 988.98,
-   "v50": 4573886.3,
+   "vortagesschluss": 935.7,
+   "v50": 4568279.1,
    "rs_rating": 94,
-   "ueber_52w_tief_pct": 584.3
+   "ueber_52w_tief_pct": 547.5
   },
   "MU": {
    "firma": "Micron Technology Inc",
-   "vortagesschluss": 1027.77,
-   "v50": 37531777.0,
-   "rs_rating": 98,
-   "ueber_52w_tief_pct": 681.2
+   "vortagesschluss": 977.41,
+   "v50": 37204585.5,
+   "rs_rating": 97,
+   "ueber_52w_tief_pct": 606.5
   },
   "PBF": {
    "firma": "PBF Energy Inc",
-   "vortagesschluss": 76.51,
-   "v50": 2965440.2,
-   "rs_rating": 93,
-   "ueber_52w_tief_pct": 198.6
+   "vortagesschluss": 77.08,
+   "v50": 2982333.0,
+   "rs_rating": 92,
+   "ueber_52w_tief_pct": 200.9
   },
   "QMCO": {
    "firma": "Quantum Corp",
-   "vortagesschluss": 24.24,
-   "v50": 1520034.1,
-   "rs_rating": 95,
-   "ueber_52w_tief_pct": 478.5
+   "vortagesschluss": 23.03,
+   "v50": 1519052.3,
+   "rs_rating": 94,
+   "ueber_52w_tief_pct": 449.6
   },
   "ATTO": {
    "firma": "Attovia Therapeutics Inc",
-   "vortagesschluss": 23.0,
-   "v50": 221658.4,
+   "vortagesschluss": 22.53,
+   "v50": 228955.9,
    "rs_rating": 99,
-   "ueber_52w_tief_pct": 22999900.7
+   "ueber_52w_tief_pct": 22529900.7
   },
   "BE": {
    "firma": "Bloom Energy Corp",
-   "vortagesschluss": 269.28,
-   "v50": 14959655.2,
+   "vortagesschluss": 258.49,
+   "v50": 14899543.5,
    "rs_rating": 93,
-   "ueber_52w_tief_pct": 417.8
+   "ueber_52w_tief_pct": 330.8
   },
   "BUUU": {
    "firma": "BUUU Group Ltd",
-   "vortagesschluss": 38.29,
-   "v50": 76544.6,
+   "vortagesschluss": 38.92,
+   "v50": 75613.3,
    "rs_rating": 98,
-   "ueber_52w_tief_pct": 630.0
+   "ueber_52w_tief_pct": 582.8
   },
   "FTH": {
    "firma": "Faeth Therapeutics Inc",
-   "vortagesschluss": 36.12,
-   "v50": 283696.4,
-   "rs_rating": 97,
-   "ueber_52w_tief_pct": 384.8
+   "vortagesschluss": 39.0,
+   "v50": 290135.9,
+   "rs_rating": 98,
+   "ueber_52w_tief_pct": 423.5
   },
   "MGRT": {
    "firma": "Mega Fortune Co Ltd",
-   "vortagesschluss": 118.0,
-   "v50": 19767.9,
+   "vortagesschluss": 120.7,
+   "v50": 19746.5,
    "rs_rating": 99,
-   "ueber_52w_tief_pct": 3481.2
+   "ueber_52w_tief_pct": 3329.0
   },
   "NESR": {
    "firma": "National Energy Services Reunited Corp",
-   "vortagesschluss": 34.7,
-   "v50": 1998024.4,
+   "vortagesschluss": 33.82,
+   "v50": 1955186.9,
    "rs_rating": 91,
-   "ueber_52w_tief_pct": 264.8
+   "ueber_52w_tief_pct": 255.5
   },
   "PLSE": {
    "firma": "Pulse Biosciences Inc",
-   "vortagesschluss": 52.97,
-   "v50": 447987.0,
+   "vortagesschluss": 54.43,
+   "v50": 460453.7,
    "rs_rating": 96,
-   "ueber_52w_tief_pct": 321.7
+   "ueber_52w_tief_pct": 333.4
   },
   "SNDK": {
    "firma": "Sandisk Corp",
-   "vortagesschluss": 1764.17,
-   "v50": 14548047.5,
+   "vortagesschluss": 1692.59,
+   "v50": 14492783.3,
    "rs_rating": 99,
-   "ueber_52w_tief_pct": 2435.8
+   "ueber_52w_tief_pct": 2249.8
+  },
+  "TVTX": {
+   "firma": "Travere Therapeutics Inc",
+   "vortagesschluss": 67.51,
+   "v50": 1445164.7,
+   "rs_rating": 91,
+   "ueber_52w_tief_pct": 206.1
   },
   "TXG": {
    "firma": "10x Genomics Inc",
-   "vortagesschluss": 67.29,
-   "v50": 2962717.2,
+   "vortagesschluss": 66.38,
+   "v50": 2955258.3,
    "rs_rating": 97,
-   "ueber_52w_tief_pct": 503.0
+   "ueber_52w_tief_pct": 494.8
   }
  }
 }
