@@ -63,6 +63,7 @@ import zahlen_termine  # Wer heute Abend berichtet, wird vermerkt — die EINZIG
 import positionen      # Kapitel 11/12: Bestand samt Beobachtungen
 import beobachtungen   # Kapitel 12: Trigger werden Beobachtungen
 import handelskalender  # Fragt den Datenanbieter, ob heute ueberhaupt gehandelt wird
+import gewinnzonen_lauf  # Kapitel 12: Nachtbefunde zum Handelsstart mit heutigen Kursen nachrechnen
 from config import CFG, hoechstens, mind_erreicht, pruefe_config
 from kurs_cache import KursCache, Kurswert
 from yahoo_ws import YahooWebSocket
@@ -715,7 +716,7 @@ def load_state() -> dict:
 _repo_stand = {"keys": None, "zeit": 0.0}
 
 
-def _repo_sichern(state: dict):
+def _repo_sichern(state: dict, sofort: bool = False):
     """Das Melde-Gedaechtnis SOFORT ins Repo — best effort.
 
     Der Actions-Cache sichert erst am Laufende und kommt fuer die
@@ -726,7 +727,11 @@ def _repo_sichern(state: dict):
     und KEIN Abbruch — im Zweifel greift der Endkommit des Workflows."""
     keys = frozenset(state.get("gemeldet", {}))
     jetzt = time.time()
-    if keys == _repo_stand["keys"] or jetzt - _repo_stand["zeit"] < 60:
+    # sofort (seit 10.09.2026, Nachtbefunde): ohne die Minutendrossel, weil
+    # die Melde-Merker in positionen.json stehen und der Endkommit des
+    # Workflows diese Datei nicht sichert.
+    if keys == _repo_stand["keys"] or (not sofort
+                                       and jetzt - _repo_stand["zeit"] < 60):
         return
     _repo_stand["keys"] = keys
     _repo_stand["zeit"] = jetzt
@@ -753,12 +758,12 @@ def _repo_sichern(state: dict):
         print(f"  Melde-Gedächtnis: Repo-Sicherung übersprungen ({e}).")
 
 
-def save_state(state: dict):
+def save_state(state: dict, sofort: bool = False):
     try:
         STATE_FILE.write_text(json.dumps(state, indent=2))
     except Exception as e:
         print(f"Zustand konnte nicht gespeichert werden: {e}")
-    _repo_sichern(state)
+    _repo_sichern(state, sofort)
 
 
 # ---------------------------------------------------------------------------
@@ -921,7 +926,13 @@ def fetch_quotes_yahoo(tickers: list[str]) -> dict:
     td_budget = TD_JE_RUNDE
     for t in unique:
         try:
-            roh_df = roh[t] if len(unique) > 1 else roh
+            # AUCH EIN EINZELNER TICKER kommt verschachtelt (Befund
+            # 09.09.2026, nachgemessen mit yfinance 1.5.1): Die Spalten
+            # heissen dann (Ticker, Feld). Die fruehere Weiche "nur bei
+            # mehreren Tickern auspacken" liess den Einzelabruf des Nasdaq
+            # fuer Red-to-Green deshalb IMMER leer ausgehen.
+            roh_df = (roh[t] if isinstance(roh.columns, pd.MultiIndex)
+                      else roh)
             df, verbraucht = hohle_kerze_fuellen(t, roh_df, td_budget)
             td_budget -= verbraucht
             if df.empty:
@@ -968,6 +979,10 @@ def fetch_quotes_yahoo(tickers: list[str]) -> dict:
                        if len(df) >= 2 else df.head(0))
             if len(vortage):
                 eintrag["prev_close"] = float(vortage["Close"].iloc[-1])
+                # Von welchem Tag stammt dieser Vortagesschluss? Damit
+                # prueft der Waechter, ob die Nachtbefunde zu den heutigen
+                # Kursen gehoeren (Mathias, 10.09.2026).
+                eintrag["prev_datum"] = vortage.index[-1].date()
                 # WAR fest auf 10 verdrahtet, waehrend der Ausbruch schon
                 # gegen ein anderes Fenster rechnete. Genau solche stillen
                 # Uneinheitlichkeiten sollte Gerhards Umbau vom 28.07.2026
@@ -1329,6 +1344,9 @@ R2G_INDEX = "^IXIC"                  # Nasdaq Composite, der Regime-Schalter
 _r2g_fokus: dict = {}                # {Ticker: {firma, vortagesschluss, v50}}
 _r2g_verlauf: dict = {}              # {Ticker: [Punkte des Tages]}
 _r2g_regime = None                   # None = heute noch nicht geprueft
+_r2g_naechster_versuch = 0.0         # time.monotonic() des naechsten Abrufs
+_r2g_fehlversuche = 0
+R2G_MAX_FEHLVERSUCHE = 30            # eine halbe Stunde lang je Minute ein Versuch
 
 
 def r2g_fokusliste_laden(pfad="fokusliste.json") -> dict:
@@ -1355,15 +1373,36 @@ def r2g_regime_pruefen():
     Ohne diesen Markt-Gap gibt es keinen Red-to-Green-Handel — dann
     bleibt die ganze Strategie den Tag ueber stumm. Das Ergebnis wird
     gemerkt, der Index also nicht in jedem Durchlauf neu abgerufen."""
-    global _r2g_regime
+    global _r2g_regime, _r2g_naechster_versuch, _r2g_fehlversuche
     if _r2g_regime is not None:
         return _r2g_regime
+    # EIN FEHLVERSUCH SCHALTET NICHT MEHR DEN GANZEN TAG STUMM (Befund
+    # 09.09.2026). Bis dahin genuegte ein leerer Abruf, und das Regime
+    # stand bis zum Abend auf stumm. Jetzt wird je Datentakt einmal neu
+    # gefragt, hoechstens R2G_MAX_FEHLVERSUCHE Mal.
+    jetzt = time.monotonic()
+    if jetzt < _r2g_naechster_versuch:
+        return False
+    _r2g_naechster_versuch = jetzt + TAKT
     q = fetch_quotes_yahoo([R2G_INDEX]).get(R2G_INDEX) or {}
     eroeffnung, vortag = q.get("open"), q.get("prev_close")
-    if not eroeffnung or not vortag:
-        print("  Red-to-Green: Nasdaq-Eröffnung nicht abrufbar — "
-              "Regime bleibt heute stumm.")
-        _r2g_regime = False
+    # NUR DIE HEUTIGE TAGESZEILE ZAEHLT: Direkt nach der Glocke liefert
+    # Yahoo oft noch die gestrige Zeile, und deren Eroeffnung gegen den
+    # Schluss von vorgestern ist nicht die Luecke von heute.
+    heute = heute_ny()
+    von_heute = heute is None or q.get("bar_datum") == heute
+    if not eroeffnung or not vortag or not von_heute:
+        _r2g_fehlversuche += 1
+        grund = ("noch ohne heutige Tageszeile" if eroeffnung and vortag
+                 else "nicht abrufbar")
+        if _r2g_fehlversuche >= R2G_MAX_FEHLVERSUCHE:
+            print(f"  Red-to-Green: Nasdaq-Eröffnung nach "
+                  f"{_r2g_fehlversuche} Versuchen {grund} — Regime bleibt "
+                  f"heute stumm.")
+            _r2g_regime = False
+        elif _r2g_fehlversuche == 1:
+            print(f"  Red-to-Green: Nasdaq-Eröffnung {grund} — neuer "
+                  f"Versuch in {TAKT} Sekunden.")
         return False
     scharf, gap = red_to_green.regime_scharf(eroeffnung, vortag)
     print(f"  Red-to-Green: Nasdaq eröffnet {gap:+.2f} % — "
@@ -1522,6 +1561,9 @@ def format_uebersprungen(t: dict) -> str:
     return "\n".join(zeilen)
 
 
+# SEIT 10.09.2026 NICHT MEHR AUFGERUFEN (Mathias' Regel: nichts vom Vortag).
+# Der Radar rechnet auf Tagesschlusskursen; wie er regelkonform melden soll,
+# ist eine Regelfrage an Gerhard. Die Funktion bleibt fuer seine Antwort.
 def melde_sektor_radar(topic: str, befund: dict, schon_gemeldet: set,
                        state: dict) -> bool:
     """Den Befund des Nachtlaufs EINMAL je Handelstag melden.
@@ -1583,75 +1625,26 @@ def push_wiedereintritt(topic: str, treffer: list[dict]) -> bool:
     return sende(topic, titel, absaetze, "high")
 
 
-def melde_insider(topic: str, funde: list[dict], schon_gemeldet: set,
-                  state: dict) -> list[dict]:
-    """Neue Insider-Funde melden. Rueckgabe: was NOCH offen ist.
-
-    WARUM UEBER DEN WAECHTER und nicht aus dem Scan selbst: dieselbe
-    Entscheidung wie beim Sektor-Radar (Mathias, 27.07.2026). Gemeldet
-    wird ausschliesslich hier und nur zur Handelszeit; die Sperre dafuer
-    sitzt in sende() und gilt fuer jede automatische Meldung.
-
-    Gerhard wollte das bestehende Trigger-Thema, kein eigenes — daran
-    haelt sich das: derselbe Weg wie alle anderen Meldungen."""
-    offen = []
-    for f in funde:
-        key = INSIDER_MARKE + f.get("kennung", f.get("ticker", "?"))
-        if key in schon_gemeldet:
-            continue
-        offen.append((key, f))
-    if not offen:
-        return []
-    absaetze = [f"{i}. " + "\n".join(f["zeilen"])
-                for i, (_, f) in enumerate(offen, 1)]
-    titel = ("Insider-Käufe: " + ", ".join(f["ticker"] for _, f in offen)
-             if len(offen) <= 4
-             else f"Insider-Käufe: {len(offen)} Aktien")
-    if not sende(topic, titel, absaetze, "default"):
-        return [f for _, f in offen]
-    heute_s = date.today().isoformat()
-    for key, _ in offen:
-        schon_gemeldet.add(key)
-        state["gemeldet"][key] = heute_s
-    save_state(state)
-    print(f"Insider-Käufe gemeldet: {len(offen)} Aktien.")
-    # Kapitel 12: Insider-Funde sind marktweit und haben keinen
-    # Chart-Kaufpunkt — Einstieg ist der aktuelle Kurs, Stop der
-    # Kapitel-11-Deckel (kein Strukturpunkt), Klasse insider
-    # (Zeithorizont sechs Monate laut Studienlage).
-    eintraege = []
-    for _, f in offen:
-        try:
-            import yfinance as yf
-            hist = yf.Ticker(f["ticker"]).history(period="1d")
-            preis = float(hist["Close"].iloc[-1]) if len(hist) else None
-        except Exception:
-            preis = None
-        if not preis:
-            print(f"  {f['ticker']}: kein Kurs — Beobachtung entfällt.")
-            continue
-        eintraege.append({
-            "ticker": f["ticker"],
-            "zusatz": "INS-" + date.today().isoformat(),
-            "strategie": "Insider-Kauf", "kaufpunkt": preis,
-            "struktur": None, "ziel": None,
-            "firma": f.get("firma", ""), "klasse": "insider"})
-    beobachtungen_eintragen(eintraege)
-    return []
-
-
-def beobachtungen_eintragen(eintraege):
+def beobachtungen_eintragen(eintraege, einmal_je_muster=False):
     """Kapitel-12-Fuetterung: Trigger werden Beobachtungen.
 
     eintraege: Liste von dicts mit ticker, zusatz, strategie, kaufpunkt,
     struktur, ziel, firma, klasse. Fehler brechen NIE die Meldekette —
-    die Fuetterung ist Zusatznutzen, kein Meldeweg."""
+    die Fuetterung ist Zusatznutzen, kein Meldeweg.
+
+    einmal_je_muster (Ausbrueche, seit 10.09.2026): Steht fuer die Aktie
+    schon eine offene Beobachtung mit einem dieser Muster, auch eine aus
+    der Zeit der Platznummern, entsteht keine zweite."""
     if not eintraege:
         return
     try:
         bestand = positionen.laden()
         neu = []
         for e in eintraege:
+            if einmal_je_muster and beobachtungen.offen_mit_strategie(
+                    bestand, e["ticker"],
+                    str(e.get("strategie", "")).split(",")):
+                continue
             key = beobachtungen.oeffnen(
                 bestand, e["ticker"], e["zusatz"], e.get("strategie", ""),
                 e.get("kaufpunkt"), e.get("struktur"),
@@ -1675,12 +1668,14 @@ def beobachtungen_aus_breakouts(treffer):
         namen = t.get("strategien") or [t.get("strategie")]
         termin = beobachtungen.termin_abstand_tage(t.get("ticker"))
         eintraege.append({
-            "ticker": t.get("ticker"), "zusatz": t.get("nr"),
+            # NACH MUSTER statt nach Platznummer (10.09.2026), siehe
+            # ausbruch_schluessel_alle.
+            "ticker": t.get("ticker"), "zusatz": " + ".join(kp_namen(t)),
             "strategie": ", ".join(str(n) for n in namen if n),
             "kaufpunkt": t.get("kaufpunkt"), "struktur": t.get("stop"),
             "ziel": t.get("ziel"), "firma": t.get("firma", ""),
             "klasse": beobachtungen.klasse_fuer(namen, termin)})
-    beobachtungen_eintragen(eintraege)
+    beobachtungen_eintragen(eintraege, einmal_je_muster=True)
 
 
 def tagesgeschaeft_wache(topic, quotes, dry_run):
@@ -1729,47 +1724,335 @@ def tagesgeschaeft_wache(topic, quotes, dry_run):
               f"{type(e).__name__}: {e}")
 
 
-def melde_exit_befunde(topic, schon_gemeldet, state) -> bool:
-    """Die naechtlichen Kapitel-11/12-Befunde melden (exit_befunde.json,
-    geschrieben vom Nachtscan). Rueckgabe True, wenn nichts mehr offen
-    ist — dieselbe Mechanik wie beim Sektor-Radar: nachts gerechnet,
-    zur Handelszeit gemeldet, jeder Befund genau einmal
-    (GEWINN|<Handelstag>|<Nr> im Melde-Gedaechtnis)."""
-    daten = _staat_aus(BEFUNDE_DATEI)
+# ---------------------------------------------------------------------------
+# NACHTBEFUNDE ZUM HANDELSSTART (Mathias, 10.09.2026)
+# ---------------------------------------------------------------------------
+# Woertlich: "Es darf nie wieder etwas vom Vortag kommen, angezeigte Alarme
+# muessen immer aus den aktuellen Kursen errechnet sein, die zu Handelsstart
+# gelten."
+#
+# BIS DAHIN verschickte der Waechter beim Start die fertigen Texte des
+# Nachtlaufs, NOCH BEVOR er einen einzigen Kurs abgerufen hatte. Am
+# 09.09.2026 waren das zehn Meldungen ab 15:30:21, alle mit dem Schluss vom
+# 08.09. und ohne Datum; der erste Kursabruf begann deshalb erst gegen
+# 15:31:50, die Ausbruchswache war anderthalb Minuten blind.
+#
+# SEITHER:
+#   1. Beim Start geht nichts aus der Nacht hinaus. Zuerst kommen Kursabruf
+#      und Ausbrueche.
+#   2. Jeder Kandidat des Nachtlaufs wird mit dem heutigen Kurs seiner Aktie
+#      nachgerechnet (gewinnzonen_lauf.live_pruefen), sobald es fuer sie
+#      eine Kurszeile mit heutigem Datum gibt. Gemeldet wird nur, was dann
+#      noch gilt, mit Kurs und Stand von heute. Die Insider-Funde bekommen
+#      Marktwert und Einstufung zum heutigen Kurs.
+#   3. Hoechstens EINE solche Meldung je Durchlauf und nur bei freiem
+#      Push-Sammler: Kein Ausbruch wartet auf sie.
+#   4. Was nach Gerhards Regeln einen Schlusskurs braucht (Kapitel-11-Exits,
+#      Klimax-Zeichen 2 und 3, Wedge Drop, Sektor-Radar samt Sektor-Hinweis,
+#      Tagesgeschaeft beendet), wird bis zu seiner Antwort nicht gemeldet:
+#      Aus heutigen Kursen laesst es sich zur Eroeffnung nicht rechnen, und
+#      mit dem Schluss von gestern darf es nicht kommen.
+
+NACHT_MARKE = "GEWINN|"
+INSIDER_MAX_VERSUCHE = 5
+_insider_versuche: dict = {}
+
+
+def nachtbefunde_laden() -> dict:
+    """Was Nachtlauf, Sektor-Radar und Insider-Lauf hinterlassen haben,
+    getrennt nach 'wird nachgerechnet' und 'bleibt zurueckgehalten'."""
+    daten = gewinnzonen_lauf.lies_befunde()
     befunde = daten.get("befunde") or []
-    tag = daten.get("handelstag", "")
-    if not befunde or not tag:
-        return True
-    heute_s = date.today().isoformat()
-    laute, leise = [], []
-    for i, b in enumerate(befunde):
-        key = f"GEWINN|{tag}|{i}"
-        if key in schon_gemeldet:
+    try:
+        fmt = int(daten.get("format") or 1)
+    except (TypeError, ValueError):
+        fmt = 1
+    alt_format = fmt < gewinnzonen_lauf.FORMAT
+    live, zurueck = [], []
+    for b in befunde:
+        if not alt_format and b.get("art") == gewinnzonen_lauf.LIVE:
+            live.append(b)
+        else:
+            zurueck.append(b)
+    radar = sektor_radar.lies() if CFG["sektor_radar"]["melden"] else {}
+    insider = (insider_edgar.lies_funde()
+               if CFG["insider"].get("melden", True) else [])
+    return {"tag": str(daten.get("handelstag") or ""),
+            "alt_format": alt_format and bool(befunde),
+            "live": live, "zurueck": zurueck,
+            "verlaeufe": daten.get("verlaeufe") or {},
+            "radar": radar or {}, "insider": list(insider or []),
+            "offen": []}
+
+
+def nachtbefunde_bericht(nacht: dict):
+    """Eine Zeile je Quelle ins Protokoll: was nachgerechnet wird und was
+    zurueckgehalten bleibt."""
+    tag = nacht["tag"] or "unbekannt"
+    if nacht["alt_format"]:
+        print(f"Nachtbefunde vom {tag}: Ablage im alten Format, also fertige "
+              f"Texte mit dem Schlusskurs des Vortags; "
+              f"{len(nacht['zurueck'])} Befund(e) werden NICHT gemeldet.")
+    elif nacht["live"] or nacht["zurueck"]:
+        print(f"Nachtbefunde vom {tag}: {len(nacht['live'])} werden mit den "
+              f"heutigen Kursen nachgerechnet, {len(nacht['zurueck'])} "
+              f"zurückgehalten (brauchen einen Schlusskurs; Regelfrage an "
+              f"Gerhard).")
+    else:
+        print("Nachtbefunde: keine.")
+    treffer = nacht["radar"].get("treffer") or []
+    if treffer:
+        print(f"Sektor-Radar: {len(treffer)} Dreher vom "
+              f"{nacht['radar'].get('handelstag') or 'unbekannt'} "
+              f"zurückgehalten (auf Schlusskursen gerechnet; Regelfrage an "
+              f"Gerhard).")
+    if nacht["insider"]:
+        print(f"Insider-Käufe: {len(nacht['insider'])} Fund(e) liegen vor; "
+              f"Marktwert und Einstufung werden mit dem heutigen Kurs "
+              f"nachgerechnet.")
+
+
+def nacht_schluessel(b: dict, merker: dict | None = None) -> str:
+    """Der Meldeschluessel eines Nachtbefunds: einmal je Beobachtung und
+    Befund, NICHT je Nacht. Erreicht ein Melde-Merker das Repo einmal nicht,
+    kaeme derselbe Befund sonst am naechsten Tag wieder. Beim Zonenaufstieg
+    zaehlt die erreichte Zone mit: Der spaetere Aufstieg in die naechste
+    Zone ist ein neues Ereignis."""
+    zusatz = b.get("zeichen") or ""
+    if b.get("typ") == "zonenwechsel":
+        zusatz = (merker or {}).get("zone_gemeldet") or ""
+    return f"{NACHT_MARKE}{b.get('typ')}|{b.get('key')}|{zusatz}"
+
+
+def nacht_symbole(nacht: dict) -> set:
+    """Die Aktien, fuer die der Waechter heutige Kurse braucht."""
+    raus = {str(b.get("symbol") or "").upper() for b in nacht["live"]}
+    raus |= {str(f.get("ticker") or "").upper() for f in nacht["insider"]}
+    raus.discard("")
+    return raus
+
+
+def nachtbefunde_offen(nacht: dict, schon_gemeldet: set) -> list:
+    """Was in diesem Lauf noch nachzurechnen ist. Der Zonenaufstieg wird
+    erst nach dem Nachrechnen gegen das Gedaechtnis geprueft, weil die
+    erreichte Zone zum Schluessel gehoert."""
+    offen = []
+    for b in nacht["live"]:
+        if (b.get("typ") != "zonenwechsel"
+                and nacht_schluessel(b) in schon_gemeldet):
             continue
-        (leise if b.get("buendeln") else laute).append((key, b))
-    if not laute and not leise:
-        return True
-    for key, b in laute:
-        if not sende(topic, b.get("titel") or "Gewinnzonen",
-                     [b.get("text", "")], b.get("prioritaet", "high")):
-            return False
-        schon_gemeldet.add(key)
-        state["gemeldet"][key] = heute_s
-        save_state(state)
-    if leise:
-        absaetze = [f"{i}. {b.get('text', '')}"
-                    for i, (_, b) in enumerate(leise, 1)]
-        if not sende(topic, f"Gewinnzonen: {len(leise)} Hinweis(e)",
-                     absaetze, "default"):
-            return False
-        for key, _ in leise:
-            schon_gemeldet.add(key)
-            state["gemeldet"][key] = heute_s
-        save_state(state)
+        offen.append(("gewinn", b))
+    for f in nacht["insider"]:
+        if (INSIDER_MARKE + f.get("kennung", f.get("ticker", "?"))
+                in schon_gemeldet):
+            continue
+        offen.append(("insider", f))
+    return offen
+
+
+def _zahlen_termine() -> dict:
+    try:
+        with open("zahlen_termine.json", encoding="utf-8-sig") as f:
+            return json.load(f).get("aktien", {}) or {}
+    except (OSError, ValueError, AttributeError):
+        return {}
+
+
+def _marktwert_heute(sym: str, kurs: float, heute) -> float | None:
+    """Der Marktwert zum HEUTIGEN Kurs, oder None.
+
+    Yahoo nennt den Marktwert zusammen mit dem Zeitpunkt seines Kurses;
+    der muss von heute sein. Umgerechnet wird auf den Kurs, mit dem der
+    Waechter rechnet, damit Marktwert und Kurs zusammenpassen (gemessen am
+    10.09.2026 waehrend des Handels: marketCap, regularMarketPrice und
+    regularMarketTime kommen fuer RSG und MAIR mit dem Kurs der Minute)."""
+    try:
+        import yfinance as yf
+        info = yf.Ticker(sym).info
+    except Exception:
+        return None
+    mk = info.get("marketCap")
+    preis = info.get("regularMarketPrice")
+    zeit = info.get("regularMarketTime")
+    if not mk or not preis or not zeit:
+        return None
+    try:
+        from zoneinfo import ZoneInfo
+        tag = datetime.fromtimestamp(int(zeit),
+                                     ZoneInfo("America/New_York")).date()
+    except Exception:
+        return None
+    if heute is not None and tag != heute:
+        return None
+    return float(mk) * float(kurs) / float(preis)
+
+
+def _insider_heute(f: dict, sym: str, kurs: float, heute):
+    """Einstufung eines Insider-Funds mit dem Marktwert von heute.
+
+    Rueckgabe: die Meldezeilen; None, wenn mit dem heutigen Marktwert kein
+    Signal mehr besteht; oder "warten", wenn Yahoo den heutigen Marktwert
+    noch nicht nennt (hoechstens INSIDER_MAX_VERSUCHE Mal)."""
+    mk = _marktwert_heute(sym, kurs, heute)
+    if mk is None:
+        _insider_versuche[sym] = _insider_versuche.get(sym, 0) + 1
+        if _insider_versuche[sym] >= INSIDER_MAX_VERSUCHE:
+            print(f"  Insider-Fund {sym}: kein heutiger Marktwert nach "
+                  f"{INSIDER_MAX_VERSUCHE} Versuchen, nicht gemeldet.")
+            return None
+        return "warten"
+    kaeufe = insider_edgar.lies_speicher().get(sym) or []
+    if not kaeufe:
+        return None
+    try:
+        stichtag = date.fromisoformat(str(f.get("stichtag"))[:10])
+    except ValueError:
+        stichtag = None
+    isc = insider_edgar.isc
+    signal = isc.pruefe_insider_signal(kaeufe, mk, stichtag=stichtag,
+                                       cfg=CFG["insider"])
+    if signal["status"] in ("kein_signal", "firma_zu_klein"):
+        return None
+    return isc.meldungszeilen(sym, signal, rollen=insider_edgar.lies_rollen())
+
+
+def nachtbefunde_schritt(topic, nacht, basis, ws, schon_gemeldet, state,
+                         dry_run) -> bool | None:
+    """Ein Durchlauf fuer die Nachtbefunde, siehe oben.
+
+    Rueckgabe: None, wenn nichts gesendet wurde; True nach einer Meldung
+    (oder ihrer Anzeige im Trockenlauf); False, wenn das Senden scheiterte
+    (dann setzt der Aufrufer die Sendesperre)."""
+    offen = nacht["offen"]
+    if not offen or not basis or not push_frei():
+        return None
+    heute = heute_ny() or date.today()
+    haengend = set(KURSE.stale_liste())
+    bestand = positionen.laden()
+    termine = None
+    laut, leise, insider = [], [], []
+    for eintrag in list(offen):
+        art, obj = eintrag
+        sym = str(obj.get("symbol") if art == "gewinn"
+                  else obj.get("ticker") or "").upper()
+        # NUR MIT HEUTIGER KURSZEILE: basis fuehrt ausschliesslich Kurse,
+        # die pruefe_handelstag als heutig durchgelassen hat.
+        q = basis.get(sym)
+        if not q or sym in haengend:
+            continue
+        q = dict(q)
+        ws_kurse_einblenden({sym: q}, ws)
+        kurs = q.get("close")
+        if not kurs or kurs != kurs:
+            continue
+        kurs = float(kurs)
+        if art == "gewinn":
+            b = obj
+            verlauf = nacht["verlaeufe"].get(b.get("key")) or {}
+            daten = verlauf.get("daten") or []
+            letzter = str(daten[-1][0])[:10] if daten else None
+            vortag = q.get("prev_datum")
+            if not letzter or (vortag is not None and str(vortag) != letzter):
+                print(f"  Nachtbefund {b.get('typ')} {sym}: Der Kursverlauf "
+                      f"der Nacht endet am {letzter or 'unbekannt'}, die "
+                      f"heutigen Kurse folgen auf den {vortag}; nicht "
+                      f"gemeldet.")
+                offen.remove(eintrag)
+                continue
+            if termine is None:
+                termine = _zahlen_termine()
+            ergebnis = gewinnzonen_lauf.live_pruefen(
+                b, bestand.get(b.get("key")), verlauf, kurs, heute,
+                hoch=q.get("high"), tief=q.get("low"), termine=termine)
+            if ergebnis is None:
+                print(f"  Nachtbefund {b.get('typ')} {sym}: gilt mit dem Kurs "
+                      f"von heute ({kurs:.2f}) nicht, nicht gemeldet.")
+                offen.remove(eintrag)
+                continue
+            if nacht_schluessel(b, ergebnis[2]) in schon_gemeldet:
+                offen.remove(eintrag)
+                continue
+            (leise if b.get("buendeln") else laut).append(
+                (eintrag, b, ergebnis))
+        else:
+            ergebnis = _insider_heute(obj, sym, kurs, heute)
+            if ergebnis == "warten":
+                continue
+            if ergebnis is None:
+                print(f"  Insider-Fund {sym}: mit dem Marktwert von heute "
+                      f"kein Signal, nicht gemeldet.")
+                offen.remove(eintrag)
+                continue
+            insider.append((eintrag, obj, ergebnis, sym, kurs))
+
+    # EINE Meldung je Durchlauf: erst die lauten Einzelbefunde, dann die
+    # Insider-Kaeufe, zuletzt das Buendel der Zonenaufstiege.
+    gesendet_gewinn, gesendet_insider = [], []
+    if laut:
+        eintrag, b, (titel, text, merker) = laut[0]
+        absaetze, prio = [text], b.get("prioritaet", "high")
+        gesendet_gewinn = [(eintrag, b, merker)]
+    elif insider:
+        titel = ("Insider-Käufe: " + ", ".join(i[3] for i in insider)
+                 if len(insider) <= 4
+                 else f"Insider-Käufe: {len(insider)} Aktien")
+        absaetze = [f"{n}. " + "\n".join(i[2])
+                    for n, i in enumerate(insider, 1)]
+        prio = "default"
+        gesendet_insider = insider
+    elif leise:
+        titel = f"Gewinnzonen: {len(leise)} Hinweis(e)"
+        absaetze = [f"{n}. {erg[1]}" for n, (_, _, erg) in enumerate(leise, 1)]
+        prio = "default"
+        gesendet_gewinn = [(eintrag, b, erg[2]) for eintrag, b, erg in leise]
+    else:
+        return None
+
+    if dry_run:
+        print(f"(Dry-Run) Nachtbefund, heute nachgerechnet: {titel}")
+        for a in absaetze:
+            print("  " + a.replace("\n", "\n  "))
+    elif not sende(topic, titel, absaetze, prio):
+        return False
+    else:
+        heute_s = date.today().isoformat()
+        if gesendet_gewinn:
+            bestand = positionen.laden()
+            for _, b, merker in gesendet_gewinn:
+                e = bestand.get(b.get("key"))
+                if e is not None:
+                    gewinnzonen_lauf.merker_anwenden(e, merker)
+                k = nacht_schluessel(b, merker)
+                schon_gemeldet.add(k)
+                state["gemeldet"][k] = heute_s
+            positionen.speichern(bestand)
+        if gesendet_insider:
+            for _, f, _, _, _ in gesendet_insider:
+                k = INSIDER_MARKE + f.get("kennung", f.get("ticker", "?"))
+                schon_gemeldet.add(k)
+                state["gemeldet"][k] = heute_s
+            # Kapitel 12: Insider-Funde sind marktweit und haben keinen
+            # Chart-Kaufpunkt — Einstieg ist der HEUTIGE Kurs (bis
+            # 10.09.2026 kam er aus history(period="1d") und war in den
+            # ersten Minuten oft noch der Vortagesschluss), Stop der
+            # Kapitel-11-Deckel, Klasse insider (Horizont sechs Monate).
+            beobachtungen_eintragen([{
+                "ticker": sym, "zusatz": "INS-" + heute_s,
+                "strategie": "Insider-Kauf", "kaufpunkt": kurs,
+                "struktur": None, "ziel": None,
+                "firma": f.get("firma", ""), "klasse": "insider"}
+                for _, f, _, sym, kurs in gesendet_insider])
+        # SOFORT ins Repo, ohne die Minutendrossel: Die Melde-Merker stehen
+        # in positionen.json, und die sichert der Endkommit des Laufs nicht.
+        save_state(state, sofort=True)
+        print(f"Nachtbefund gemeldet: {titel}")
+    for eintrag, _, _ in gesendet_gewinn:
+        if eintrag in offen:
+            offen.remove(eintrag)
+    for eintrag, _, _, _, _ in gesendet_insider:
+        if eintrag in offen:
+            offen.remove(eintrag)
     return True
-
-
-BEFUNDE_DATEI = "exit_befunde.json"
 
 
 def push_uebersprungen(topic: str, treffer: list[dict]) -> bool:
@@ -1987,6 +2270,19 @@ def push_abstand_warten(jetzt=None, schlafe=time.sleep) -> float:
     return rest
 
 
+def push_frei(jetzt=None) -> bool:
+    """Ist der Push-Sammler frei, ohne dass gewartet werden muesste?
+
+    Fuer Meldungen, die NICHT vordraengeln sollen (Nachtbefunde, seit
+    10.09.2026): Sie gehen nur hinaus, wenn der Mindestabstand ohnehin
+    abgelaufen ist, und halten die Schleife damit nie an."""
+    abstand = float(CFG.get("push", {}).get("mindestabstand_s", 0) or 0)
+    if _LETZTER_PUSH is None or abstand <= 0:
+        return True
+    jetzt = time.monotonic() if jetzt is None else jetzt
+    return jetzt - _LETZTER_PUSH >= abstand
+
+
 def handel_paket(treffer: list[dict], art: str = "kauf",
                  anlass: str = "neu") -> list[dict]:
     """Die Zahlen eines Alarms so, wie die Handels-App sie braucht.
@@ -2169,29 +2465,70 @@ def tagesanteil_titel(treffer: list[dict]) -> str:
 NACHTRAG_MARKE = "BEST|"
 
 
-def ausbruch_schluessel(t: dict) -> str:
-    """Der Meldeschluessel eines Ausbruchs: Aktie plus Kaufpunkt-Nummer.
+def kp_namen(t: dict) -> list[str]:
+    """Die Muster eines Kaufpunkts, sortiert und ohne Doppel. Liegen zwei
+    Muster auf demselben Preis, sind es beide (siehe
+    _lege_gleiche_preise_zusammen)."""
+    namen = t.get("strategien") or [t.get("strategie")]
+    return sorted({str(n) for n in namen if n}) or ["?"]
+
+
+def ausbruch_schluessel_alle(t: dict) -> list[str]:
+    """Die Meldeschluessel eines Ausbruchs: Aktie plus MUSTER, je Muster
+    einer.
 
     OHNE Preis (Mathias, 27.07.2026): Der Kaufpunkt wandert taeglich mit
     dem Musterdeckel nach oben; steckte er im Schluessel, galte derselbe
     Ausbruch am naechsten Tag als neu.
 
+    NACH MUSTER statt nach Platznummer (Befund 09.09.2026, gebaut
+    10.09.2026): Die Nummer ist nur der Platz in der Mappe, und der
+    wandert, sobald der Nachtscan ein Muster davor setzt. LITE trug am
+    08.09. Rectangle Top auf Platz 1; am 09.09. stand dort Cup & Handle,
+    das Rectangle Top auf Platz 3. Folge in BEIDE Richtungen: Das schon
+    gemeldete Rectangle Top kam als "LITE|3" ein zweites Mal, und der
+    echte Ausbruch aus Cup & Handle blieb unter dem belegten "LITE|1"
+    stumm. Gemessen zeigten am 09.09. 181 von 720 Schluesseln auf einen
+    anderen Kaufpunkt als am Vortag.
+
+    JE MUSTER EIN SCHLUESSEL: Liegen zwei Muster auf demselben Preis,
+    werden beide gesetzt; getrennt sich die Preise spaeter, ist keiner
+    von beiden neu.
+
     High and Tight Flag traegt ein Vorzeichen, damit load_state() ihr die
     taegliche statt der woechentlichen Frist geben kann."""
-    namen = t.get("strategien") or [t.get("strategie")]
+    namen = kp_namen(t)
     # Der Innen-Einstieg gehoert zur selben Flagge und bekommt dieselbe
     # TAEGLICHE Frist (Soreide-Ausbau, 31.08.2026) — sonst waere die
     # engere Marke eine Woche lang stumm, waehrend die Flagge selbst
     # jeden Tag neu melden darf.
     marke = (HTF_MARKE if any(n in ("High & Tight Flag",
                                     "HTF Innen-Einstieg")
-                              for n in namen if n) else "")
-    return f"{marke}{t['ticker']}|{t['nr']}"
+                              for n in namen) else "")
+    return [f"{marke}{t['ticker']}|{n}" for n in namen]
+
+
+def ausbruch_schluessel(t: dict) -> str:
+    """Der erste der Meldeschluessel (fuer Anzeige, Logbuch und die
+    Kennung der Handels-App)."""
+    return ausbruch_schluessel_alle(t)[0]
+
+
+def uebersprungen_schluessel_alle(t: dict) -> list[str]:
+    """Die Meldeschluessel der Meldung 'Kaufpunkt uebersprungen', je
+    Muster einer (siehe ausbruch_schluessel_alle)."""
+    return [f"{UEBERSPRUNGEN_MARKE}{t['ticker']}|{n}" for n in kp_namen(t)]
 
 
 def uebersprungen_schluessel(t: dict) -> str:
     """Der Meldeschluessel der Meldung 'Kaufpunkt uebersprungen'."""
-    return f"{UEBERSPRUNGEN_MARKE}{t['ticker']}|{t['nr']}"
+    return uebersprungen_schluessel_alle(t)[0]
+
+
+def fenster_schluessel(t: dict) -> str:
+    """Wo das Einstiegsfenster eines Kaufpunkts im Tageszustand steht:
+    Aktie plus Muster, wie die Meldeschluessel."""
+    return f"{t['ticker']}|{' + '.join(kp_namen(t))}"
 
 
 def vortagesschluss(item, quote):
@@ -2305,7 +2642,8 @@ def melde_uebersprungen(res, wechsel, schon_gemeldet) -> bool:
     Steht als eigene Funktion hier statt verstreut in der Schleife, aus
     demselben Grund wie melde_stufe(): damit man sie pruefen kann."""
     return (wechsel == "verlassen" and kam_von_unten(res)
-            and uebersprungen_schluessel(res) not in schon_gemeldet)
+            and not any(k in schon_gemeldet
+                        for k in uebersprungen_schluessel_alle(res)))
 
 
 DRIN, DRAUSSEN = "drin", "draussen"
@@ -2377,7 +2715,10 @@ def melde_stufe(res: dict, schon_gemeldet: set) -> str | None:
     Daraus folgt zwingend: hoechstens ZWEI Meldungen je Kaufpunkt und
     Woche. Ein Schluessel, der erst bei Bestaetigung schliesst, haette
     bei zwei Sekunden Prueftakt dreissigmal je Minute gemeldet."""
-    if res["key"] not in schon_gemeldet:
+    # Je Muster ein Schluessel (seit 10.09.2026); einer genuegt.
+    keys = res.get("keys") or [res["key"]]
+    keys_best = res.get("keys_best") or [res["key_best"]]
+    if not any(k in schon_gemeldet for k in keys):
         # SEIT 12.08.2026 (Gerhard): Ohne Volumenbestaetigung melden nur
         # noch die Muster, bei denen das Volumen TEIL des Musters ist.
         # Alle uebrigen bleiben still und kommen erst als Nachtrag, wenn
@@ -2393,7 +2734,8 @@ def melde_stufe(res: dict, schon_gemeldet: set) -> str | None:
         if res["vol_ok"] is False and not darf_unbestaetigt_melden(res):
             return None
         return "neu"
-    if res["vol_ok"] is True and res["key_best"] not in schon_gemeldet:
+    if (res["vol_ok"] is True
+            and not any(k in schon_gemeldet for k in keys_best)):
         return "nachtrag"
     return None
 
@@ -2725,7 +3067,12 @@ def main():
         print(f"  (Gap-and-Go-Universum nicht lesbar: {e})")
         gap_universum = sorted(gewuenscht)
     print(f"Gap and Go wacht zusätzlich über {len(gap_universum)} Aktien.")
-    abruf_ticker = sorted(gewuenscht | set(gap_universum))
+    # NACHTBEFUNDE ZUM HANDELSSTART (Mathias, 10.09.2026): Ihre Aktien
+    # brauchen heutige Kurse, auch wenn sie nicht mehr auf der Liste stehen.
+    nacht = nachtbefunde_laden()
+    nachtbefunde_bericht(nacht)
+    abruf_ticker = sorted(gewuenscht | set(gap_universum)
+                          | nacht_symbole(nacht))
 
     # --- Yahoos Live-Strom fuer ALLE Aktien -----------------------------
     # Loest die dreistufige Staffelung ab (Mathias, 28.07.2026). Die war
@@ -2823,23 +3170,12 @@ def main():
     # Gewinn von Sekundenbruchteilen. Zwei Sekunden sind gegenueber den
     # bisherigen sechs Minuten der Faktor 180 — und der Rest waere
     # Rechenarbeit ohne Nutzen.
-    # SEKTOR-RADAR: einmal lesen, nicht in jeder Runde. Der Waechter
-    # prueft im Zwei-Sekunden-Takt; eine Datei so oft zu lesen waere
-    # Arbeit ohne Gegenwert.
-    insider_offen = (insider_edgar.lies_funde()
-                     if CFG["insider"].get("melden", True) else [])
-    if insider_offen:
-        print(f"Insider-Käufe: {len(insider_offen)} Fund(e) liegen vor.")
-    befunde_offen = True     # Kapitel 11/12: naechtliche Befunde melden
+    # NACHTBEFUNDE (Mathias, 10.09.2026): Offen ist, was nach dem ersten
+    # heutigen Kurs nachgerechnet wird, siehe nachtbefunde_schritt. Einmal
+    # beim Start zusammengestellt, nicht in jeder Runde.
+    nacht["offen"] = nachtbefunde_offen(nacht, schon_gemeldet)
     quotes = {}              # vor dem ersten Datenabruf leer — die
                              # Tagesgeschäft-Wache prüft sonst ins Leere
-    radar_offen = bool(CFG["sektor_radar"]["melden"])
-    radar_befund = sektor_radar.lies() if radar_offen else {}
-    if radar_offen:
-        _n = len(radar_befund.get("treffer") or [])
-        _tag = radar_befund.get("handelstag")
-        print(f"Sektor-Radar: {_n} Dreher vom {_tag or 'unbekannt'} liegen vor."
-              if _n else "Sektor-Radar: kein Dreher zu melden.")
 
     basis = {}                       # letzter Tagesdaten-Stand
     naechster_abruf = 0.0
@@ -2857,18 +3193,12 @@ def main():
             break
 
         laut = jetzt_s >= naechster_abruf
-        # Sektor-Radar, sobald die Boerse offen ist. An den Datentakt
-        # gehaengt (60 s) und nicht an den Prueftakt (2 s): Scheitert der
-        # Push, soll er nicht dreissigmal je Minute wiederholt werden.
-        if radar_offen and offen and laut:
-            radar_offen = not melde_sektor_radar(topic, radar_befund,
-                                                 schon_gemeldet, state)
-        if insider_offen and offen and laut:
-            insider_offen = melde_insider(topic, insider_offen,
-                                          schon_gemeldet, state)
-        if befunde_offen and offen and laut:
-            befunde_offen = not melde_exit_befunde(topic, schon_gemeldet,
-                                                   state)
+        # BIS 10.09.2026 standen hier Sektor-Radar, Insider-Kaeufe und die
+        # Nachtbefunde, und zwar VOR dem ersten Kursabruf. Sie gingen mit
+        # den Zahlen vom Vortagesschluss hinaus und hielten die Ausbrueche
+        # auf (09.09.2026: zehn Pushes, erster Kursabruf gegen 15:31:50).
+        # Seither kommen sie nach den Ausbruechen und aus heutigen Kursen,
+        # siehe nachtbefunde_schritt am Ende des Durchlaufs.
         if offen and laut and not args.dry_run:
             tagesgeschaeft_wache(topic, quotes, args.dry_run)
 
@@ -3024,7 +3354,7 @@ def main():
                 # gewoehnliche Ausbruchsweg ganz - sonst kaeme, wie bei
                 # MNDY am 13.08.2026, zwei Minuten nach "kein Kaufsignal"
                 # ein "Vol BESTAETIGT".
-                fkey = f"{item['ticker']}|{item['nr']}"
+                fkey = fenster_schluessel(item)
                 vorher = fenster.get(fkey)
                 zustand = fenster_zustand(res["ueber_pct"] / 100.0, vorher)
                 wechsel = fenster_wechsel(zustand, vorher)
@@ -3038,7 +3368,8 @@ def main():
                     # Fensterzustand ist oben trotzdem gepflegt.
                     continue
                 if res.get("uebersprungen"):
-                    res["key"] = uebersprungen_schluessel(item)
+                    res["keys"] = uebersprungen_schluessel_alle(res)
+                    res["key"] = res["keys"][0]
                     if melde_uebersprungen(res, wechsel, schon_gemeldet):
                         uebersprungen.append(res)
                     elif (wechsel == "verlassen"
@@ -3076,7 +3407,10 @@ def main():
                 # der woechentlichen. Deckt ein Kaufpunkt mehrere Muster
                 # ab, genuegt eines davon — die kuerzere Frist gewinnt,
                 # der Ausbruch darf dann taeglich neu melden.
-                res["key"] = ausbruch_schluessel(res)
+                # SEIT 10.09.2026 NACH MUSTER statt nach Platznummer, je
+                # Muster ein Schluessel (siehe ausbruch_schluessel_alle).
+                res["keys"] = ausbruch_schluessel_alle(res)
+                res["key"] = res["keys"][0]
                 # ZWEITE STUFE (Mathias, 29.07.2026). Zwei GETRENNTE
                 # Schluessel, genau wie Gap and Go es seit jeher macht:
                 #   res["key"]      — beim ersten Melden gesetzt, egal ob
@@ -3091,7 +3425,8 @@ def main():
                 # Sorge: Ein Schluessel, der erst bei Bestaetigung
                 # schliesst, wuerde bei zwei Sekunden Takt dreissigmal je
                 # Minute melden.
-                res["key_best"] = NACHTRAG_MARKE + res["key"]
+                res["keys_best"] = [NACHTRAG_MARKE + k for k in res["keys"]]
+                res["key_best"] = res["keys_best"][0]
                 treffer.append(res)
                 stufe = melde_stufe(res, schon_gemeldet)
                 if stufe == "neu":
@@ -3177,14 +3512,16 @@ def main():
                 if push(topic, zu_melden):
                     heute_s = date.today().isoformat()
                     for t in zu_melden:
-                        schon_gemeldet.add(t["key"])
-                        state["gemeldet"][t["key"]] = heute_s
+                        for k in t.get("keys") or [t["key"]]:
+                            schon_gemeldet.add(k)
+                            state["gemeldet"][k] = heute_s
                         # War der Ausbruch schon bei der ersten Meldung
                         # bestaetigt, ist der Nachtrag gegenstandslos —
                         # sein Schluessel wird gleich mitgesetzt.
                         if t["vol_ok"] is True:
-                            schon_gemeldet.add(t["key_best"])
-                            state["gemeldet"][t["key_best"]] = heute_s
+                            for k in t.get("keys_best") or [t["key_best"]]:
+                                schon_gemeldet.add(k)
+                                state["gemeldet"][k] = heute_s
                     save_state(state)
                     # Kapitel 12: Jede gemeldete Kaufpunkt-Meldung wird
                     # ab jetzt als Beobachtung im Chart ueberwacht.
@@ -3204,9 +3541,10 @@ def main():
                 # verhielte sich der Trockenlauf anders als der Ernstfall
                 # und waere als Probe wertlos (aufgefallen 28.07.2026).
                 for t in zu_melden:
-                    schon_gemeldet.add(t["key"])
+                    schon_gemeldet.update(t.get("keys") or [t["key"]])
                     if t["vol_ok"] is True:
-                        schon_gemeldet.add(t["key_best"])
+                        schon_gemeldet.update(t.get("keys_best")
+                                              or [t["key_best"]])
 
             # --- Nachtrag: Volumen hat nachgezogen ---------------------
             # Eigener Wortlaut MIT ABSICHT (Mathias, 18.08.2026, nach
@@ -3222,12 +3560,14 @@ def main():
                 if args.dry_run:
                     print("(Dry-Run — kein Nachtrag gesendet)")
                     for t in nachtrag:
-                        schon_gemeldet.add(t["key_best"])
+                        schon_gemeldet.update(t.get("keys_best")
+                                              or [t["key_best"]])
                 elif push_nachtrag(topic, nachtrag):
                     heute_s = date.today().isoformat()
                     for t in nachtrag:
-                        schon_gemeldet.add(t["key_best"])
-                        state["gemeldet"][t["key_best"]] = heute_s
+                        for k in t.get("keys_best") or [t["key_best"]]:
+                            schon_gemeldet.add(k)
+                            state["gemeldet"][k] = heute_s
                     save_state(state)
                 else:
                     sperre_bis = jetzt_s + TAKT
@@ -3254,12 +3594,13 @@ def main():
                 if args.dry_run:
                     print("(Dry-Run — nichts gesendet)")
                     for t in uebersprungen:
-                        schon_gemeldet.add(t["key"])
+                        schon_gemeldet.update(t.get("keys") or [t["key"]])
                 elif push_uebersprungen(topic, uebersprungen):
                     heute_s = date.today().isoformat()
                     for t in uebersprungen:
-                        schon_gemeldet.add(t["key"])
-                        state["gemeldet"][t["key"]] = heute_s
+                        for k in t.get("keys") or [t["key"]]:
+                            schon_gemeldet.add(k)
+                            state["gemeldet"][k] = heute_s
                     save_state(state)
                 else:
                     sperre_bis = jetzt_s + TAKT
@@ -3300,9 +3641,9 @@ def main():
                     # Fenster spaeter wirklich noch einmal, ist das ein
                     # neuer Vorgang und wird wieder gemeldet.
                     for t in wiedereintritt:
-                        k = uebersprungen_schluessel(t)
-                        schon_gemeldet.discard(k)
-                        state["gemeldet"].pop(k, None)
+                        for k in uebersprungen_schluessel_alle(t):
+                            schon_gemeldet.discard(k)
+                            state["gemeldet"].pop(k, None)
                     save_state(state)
                 else:
                     # Nicht angekommen: Der Zustand wird zurueckgedreht,
@@ -3310,7 +3651,7 @@ def main():
                     # auffaellt. Sonst gaelte er als erledigt, ohne dass
                     # jemand davon erfahren haette.
                     for t in wiedereintritt:
-                        fenster[f"{t['ticker']}|{t['nr']}"] = DRAUSSEN
+                        fenster[fenster_schluessel(t)] = DRAUSSEN
                     sperre_bis = jetzt_s + TAKT
 
             # --- Red-to-Green (Regelwerk Kapitel 9) ------------------------
@@ -3492,6 +3833,17 @@ def main():
                             "klasse": "tagesgeschaeft"} for g in gap_neu])
                     else:
                         sperre_bis = jetzt_s + TAKT
+
+            # --- Nachtbefunde, mit den Kursen von heute nachgerechnet ------
+            # (Mathias, 10.09.2026). Bewusst ZULETZT: Was handelbar ist, geht
+            # zuerst hinaus. Hoechstens eine Meldung je Durchlauf und nur bei
+            # freiem Push-Sammler, damit kein Ausbruch auf sie wartet.
+            if nacht["offen"] and jetzt_s >= sperre_bis:
+                if nachtbefunde_schritt(topic, nacht, basis,
+                                        ws if ws_laeuft else None,
+                                        schon_gemeldet, state,
+                                        args.dry_run) is False:
+                    sperre_bis = jetzt_s + TAKT
 
         if ende_dauerwache is None:
             break

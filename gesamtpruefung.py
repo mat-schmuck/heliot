@@ -543,8 +543,150 @@ def block_e():
             pruefe("E", "Befunde liegen fuer den Waechter bereit",
                    _datei.get("handelstag") == "2026-08-28"
                    and len(_datei.get("befunde", [])) == len(_bef))
+
+            # MELDUNGEN ZUM HANDELSSTART (Mathias, 10.09.2026): "Es darf nie
+            # wieder etwas vom Vortag kommen, angezeigte Alarme muessen immer
+            # aus den aktuellen Kursen errechnet sein, die zu Handelsstart
+            # gelten." Der Nachtlauf legt Kandidaten ab, der Waechter rechnet
+            # sie mit dem heutigen Kurs nach.
+            _ziel = next((b for b in _bef if b["typ"] == "ziel_erreicht"), {})
+            pruefe("E", "Nachtlauf: Musterziel ist ein Kandidat ohne fertigen Text",
+                   _ziel.get("art") == _gl.LIVE and not _ziel.get("text")
+                   and _datei.get("format") == _gl.FORMAT)
+            pruefe("E", "Nachtlauf setzt keinen Melde-Merker mehr",
+                   _nach["GEW|1"].get("ziel_gemeldet") is False)
+            pruefe("E", "Tagesgeschaeft-Ende wird zurueckgehalten (Schlusskurs)",
+                   any(b["typ"] == "tagesende" for b in _bef)
+                   and all(b["art"] == _gl.ZURUECK for b in _bef
+                           if b["typ"] == "tagesende"))
+            _v = _datei.get("verlaeufe", {}).get("GEW|1") or {}
+            # Der letzte Tag der Probe-Kursreihe (170 Handelstage ab 02.01.)
+            _letzter = str(_loaded["GEW"][0]["datetime"].iloc[-1])[:10]
+            pruefe("E", "Kandidat traegt Kursverlauf und Haltedauer mit",
+                   len(_v.get("daten", [])) > 150 and _v.get("tage", 0) > 0
+                   and bool(_v.get("daten"))
+                   and _v["daten"][-1][0] == _letzter, _letzter)
+            _eGEW = _nach["GEW|1"]
+            _ober = _gl.live_pruefen(_ziel, _eGEW, _v, 111.0, _dk(2026, 8, 31))
+            _unter = _gl.live_pruefen(_ziel, _eGEW, _v, 109.0, _dk(2026, 8, 31))
+            pruefe("E", "Handelsstart: Ziel gilt nur mit HEUTIGEM Kurs darueber",
+                   _ober is not None and _unter is None)
+            pruefe("E", "Handelsstart: Meldung nennt den heutigen Kurs",
+                   _ober is not None and "Kurs 111,00" in _ober[1]
+                   and _ober[2] == {"ziel_gemeldet": True})
+            _probe_e = {}
+            _gl.merker_anwenden(_probe_e, {"klimax_gemeldet": "4_ma200_abstand"})
+            _gl.merker_anwenden(_probe_e, {"klimax_gemeldet": "4_ma200_abstand"})
+            pruefe("E", "Klimax-Merker wird einmal gesetzt, ohne Doppel",
+                   _probe_e.get("klimax_gemeldet") == ["4_ma200_abstand"])
+
+            # Der Waechter-Schritt selbst, ohne Netz und ohne Push
+            _alt_sende, _alt_save = bw.sende, bw.save_state
+            _alt_heute, _alt_push = bw.heute_ny, bw._LETZTER_PUSH
+            _gesendet_n = []
+            try:
+                bw.sende = lambda topic, titel, absaetze, prio="default", \
+                    klick=None: (_gesendet_n.append((titel, list(absaetze)))
+                                 or True)
+                bw.save_state = lambda state, sofort=False: None
+                bw.heute_ny = lambda: _dk(2026, 8, 31)
+                bw._LETZTER_PUSH = None
+
+                from datetime import timedelta as _tdk
+                _vortag_ok = _dk.fromisoformat(_letzter)
+
+                def _nacht(basis_kurs, vortag=_vortag_ok):
+                    n = {"tag": "2026-08-28", "live": [_ziel], "zurueck": [],
+                         "verlaeufe": {"GEW|1": _v}, "radar": {},
+                         "insider": [], "offen": [("gewinn", _ziel)]}
+                    basis = {"GEW": {"close": basis_kurs, "high": basis_kurs,
+                                     "low": basis_kurs, "prev_datum": vortag}}
+                    return n, basis
+
+                _n1, _b1 = _nacht(111.0)
+                _gem = set()
+                _st = {"gemeldet": {}}
+                _erg = bw.nachtbefunde_schritt("probe", _n1, _b1, None, _gem,
+                                               _st, False)
+                pruefe("E", "Waechter meldet den nachgerechneten Befund",
+                       _erg is True and _gesendet_n
+                       and _gesendet_n[-1][0] == "GEWINN-Ziel erreicht: GEW"
+                       and not _n1["offen"])
+                pruefe("E", "Erst nach dem Senden: Merker in positionen.json "
+                       "und Schluessel im Gedaechtnis",
+                       positionen.laden()["GEW|1"].get("ziel_gemeldet") is True
+                       and "GEWINN|ziel_erreicht|GEW|1|" in _gem)
+                _b0 = positionen.laden()
+                _b0["GEW|1"]["ziel_gemeldet"] = False
+                positionen.speichern(_b0)
+                _gesendet_n.clear()
+                _n2, _b2 = _nacht(109.0)
+                _erg2 = bw.nachtbefunde_schritt("probe", _n2, _b2, None,
+                                                set(), {"gemeldet": {}}, False)
+                pruefe("E", "Gilt er mit dem heutigen Kurs nicht, kommt nichts",
+                       _erg2 is None and not _gesendet_n and not _n2["offen"])
+                _n3, _b3 = _nacht(111.0, vortag=_vortag_ok - _tdk(days=1))
+                _erg3 = bw.nachtbefunde_schritt("probe", _n3, _b3, None,
+                                                set(), {"gemeldet": {}}, False)
+                pruefe("E", "Passt der Nachtlauf nicht zum Vortag der Kurse, "
+                       "kommt nichts",
+                       _erg3 is None and not _gesendet_n and not _n3["offen"])
+                _n4, _b4 = _nacht(111.0)
+                _erg4 = bw.nachtbefunde_schritt("probe", _n4, {}, None,
+                                                set(), {"gemeldet": {}}, False)
+                pruefe("E", "Ohne heutige Kurszeile wartet der Befund",
+                       _erg4 is None and len(_n4["offen"]) == 1)
+                import time as _tmk
+                bw._LETZTER_PUSH = _tmk.monotonic()
+                _erg5 = bw.nachtbefunde_schritt("probe", _n4, _b4, None,
+                                                set(), {"gemeldet": {}}, False)
+                pruefe("E", "Nachtbefunde draengeln nicht vor: bei belegtem "
+                       "Push-Sammler warten sie",
+                       _erg5 is None and len(_n4["offen"]) == 1
+                       and not _gesendet_n)
+            finally:
+                bw.sende, bw.save_state = _alt_sende, _alt_save
+                bw.heute_ny, bw._LETZTER_PUSH = _alt_heute, _alt_push
+
+            # Kapitel 11 (Gerhard: Schlusskurs, nicht Docht)
+            _alt_nl = _gl._kurse_nachladen
+            _gl._kurse_nachladen = lambda symbole: {}
+            try:
+                _m11 = {"symbol": "WFRD|1", "firma": "Weatherford",
+                        "aktion": "stop_raus",
+                        "grund": "Schluss 93.70 unter Stop 94.12",
+                        "kurs": 93.70, "beobachtung": True,
+                        "gewinn_pct": -2.9}
+                _bef11 = _gl.gewinn_durchgang({}, "gibt_es_nicht.xlsx",
+                                              exit_meldungen=[_m11],
+                                              heute=_dk(2026, 8, 28))
+            finally:
+                _gl._kurse_nachladen = _alt_nl
+            pruefe("E", "Kapitel-11-Exit wird zurueckgehalten, nicht gemeldet",
+                   any(b["typ"] == "kapitel11" and b["art"] == _gl.ZURUECK
+                       and b.get("grund") == "schlusskurs" for b in _bef11))
         finally:
             _osk.chdir(_wurzel)
+
+    # KLIMAX-ZEICHEN 1 konnte nie ausloesen (behoben 10.09.2026): Lauf und
+    # Vorlauf hingen an derselben Zahl, hoechstens 15 und zugleich
+    # mindestens 40 Handelstage.
+    _t1 = _pdk.date_range("2026-01-02", periods=120, freq="B")
+    _k1 = [100.0] * 105 + [100.0 * (1 + 0.02 * i) for i in range(1, 16)]
+    _d1 = _pdk.DataFrame({"datetime": _t1.astype(str), "close": _k1,
+                          "high": _k1, "low": _k1})
+    import gewinn_zonen as _gzk
+    pruefe("E", "Klimax-Zeichen 1 loest aus: +30 % in 15 Tagen nach 12 Wochen",
+           "1_klimaxlauf" in _gzk.pruefe_klimax_katalog(
+               _gl._klimax_eingaben(_d1, 60))["ausgeloeste_zeichen"])
+    pruefe("E", "Klimax-Zeichen 1 bleibt still bei nur 6 Wochen Vorlauf",
+           "1_klimaxlauf" not in _gzk.pruefe_klimax_katalog(
+               _gl._klimax_eingaben(_d1, 30))["ausgeloeste_zeichen"])
+    pruefe("E", "Zur Zone am Handelsstart zaehlen nur Klimax 1, 4 und 5",
+           _gl.KLIMAX_LIVE == ("1_klimaxlauf", "4_ma200_abstand",
+                               "5_kanaluebershooting")
+           and "ist_klimax=bool(live_zeichen)" in
+           open("gewinnzonen_lauf.py", encoding="utf-8").read())
 
     # Shakeout-Warteliste ohne Listen-Altlasten (Mathias, 24.08.2026)
     import shakeout as sk
@@ -989,9 +1131,11 @@ def block_e():
     # der seit Tagen weit oben steht, an jedem Morgen aufs Neue. Gemessen
     # an der echten Mappe waeren das 131 Meldungen an einem Morgen.
     quelle_loop = pathlib.Path("breakout_watcher.py").read_text(encoding="utf-8")
+    # Seit 10.09.2026 je Muster ein Schluessel: geprueft wird, ob EINER
+    # davon schon im Gedaechtnis steht.
     pruefe("E", "Übersprungen prüft ZUSÄTZLICH das Wochengedächtnis",
            'wechsel == "verlassen"' in quelle_loop
-           and 'res["key"] not in schon_gemeldet' in quelle_loop)
+           and "for k in uebersprungen_schluessel_alle(res)" in quelle_loop)
     pruefe("E", "Ein Wiedereintritt löst den Wochenriegel wieder",
            "schon_gemeldet.discard(k)" in quelle_loop)
 
@@ -1168,6 +1312,96 @@ def block_e():
     pruefe("E", "Ein bereits gemeldeter Ausbruch unterdrückt sie NICHT",
            bw.melde_uebersprungen(sea, "verlassen",
                                   {bw.ausbruch_schluessel(sea)}))
+
+    # MELDESCHLUESSEL NACH MUSTER (Befund 09.09.2026, gebaut 10.09.2026).
+    # LITE: Rectangle Top stand am 08.09. auf Platz 1, am 09.09. auf Platz 3.
+    _lite = {"ticker": "LITE", "strategie": "Rectangle Top", "nr": 3}
+    pruefe("E", "Meldeschluessel nach Muster, nicht nach Platznummer",
+           bw.ausbruch_schluessel(_lite) == "LITE|Rectangle Top"
+           and bw.ausbruch_schluessel({**_lite, "nr": 1})
+           == bw.ausbruch_schluessel(_lite))
+    _paar = {"ticker": "CRDX", "strategie": "High & Tight Flag", "nr": 1,
+             "strategien": ["High & Tight Flag", "Darvas Box"]}
+    pruefe("E", "Zwei Muster auf einem Preis: je Muster ein Schluessel",
+           bw.ausbruch_schluessel_alle(_paar)
+           == [bw.HTF_MARKE + "CRDX|Darvas Box",
+               bw.HTF_MARKE + "CRDX|High & Tight Flag"])
+    _rk = {"key": "X", "key_best": "Y", "vol_ok": True,
+           "strategie": "Darvas Box",
+           "keys": ["LITE|Cup & Handle", "LITE|Rectangle Top"],
+           "keys_best": ["BEST|LITE|Cup & Handle", "BEST|LITE|Rectangle Top"]}
+    pruefe("E", "Ein gemeldetes Muster genuegt, der Ausbruch gilt als gemeldet",
+           bw.melde_stufe(_rk, {"LITE|Rectangle Top"}) == "nachtrag"
+           and bw.melde_stufe(_rk, {"LITE|Rectangle Top",
+                                    "BEST|LITE|Cup & Handle"}) is None)
+    pruefe("E", "Uebersprungen- und Fenster-Schluessel ebenfalls nach Muster",
+           bw.uebersprungen_schluessel(_lite)
+           == bw.UEBERSPRUNGEN_MARKE + "LITE|Rectangle Top"
+           and bw.fenster_schluessel(_lite) == "LITE|Rectangle Top")
+    import beobachtungen as _bbk
+    _bstk = {}
+    _bbk.oeffnen(_bstk, "LITE", 1, "Rectangle Top", 900.0, 850.0)
+    pruefe("E", "Alte Beobachtung mit Platznummer verhindert eine zweite",
+           _bbk.offen_mit_strategie(_bstk, "lite", ["Rectangle Top"]) == "LITE|1"
+           and _bbk.offen_mit_strategie(_bstk, "LITE", ["Cup & Handle"]) is None)
+
+    # NICHTS AUS DER NACHT VOR DEM ERSTEN KURSABRUF (10.09.2026)
+    _bwq = pathlib.Path("breakout_watcher.py").read_text(encoding="utf-8")
+    _haupt_q = _bwq[_bwq.index("def main():"):]
+    pruefe("E", "Waechter: nichts aus der Nacht vor dem ersten Kursabruf",
+           "melde_exit_befunde(" not in _bwq
+           and "melde_sektor_radar(" not in _haupt_q
+           and "melde_insider(" not in _bwq
+           and _haupt_q.index("fetch_quotes_yahoo(abruf_ticker)")
+           < _haupt_q.index("nachtbefunde_schritt("))
+
+    # EINZELABRUF EINES TICKERS (Befund 09.09.2026): yfinance 1.5 liefert
+    # auch dann verschachtelte Spalten. Nachgestellt ohne Netz.
+    import types as _tyk
+    import pandas as _pdn
+    _ixn = _pdn.date_range("2026-09-08", periods=3, freq="B")
+    _spn = _pdn.MultiIndex.from_product(
+        [["^IXIC"], ["Open", "High", "Low", "Close", "Adj Close", "Volume"]])
+    _rohn = _pdn.DataFrame([[1.0, 2.0, 0.5, 1.5, 1.5, 100.0]] * 3,
+                           index=_ixn, columns=_spn)
+    _alt_yf = sys.modules.get("yfinance")
+    sys.modules["yfinance"] = _tyk.SimpleNamespace(
+        download=lambda *a, **k: _rohn)
+    try:
+        _qn = bw.fetch_quotes_yahoo(["^IXIC"])
+    finally:
+        if _alt_yf is not None:
+            sys.modules["yfinance"] = _alt_yf
+        else:
+            sys.modules.pop("yfinance", None)
+    pruefe("E", "Einzelabruf eines Tickers liefert Kurse (Nasdaq-Regime)",
+           "^IXIC" in _qn and _qn["^IXIC"].get("open") == 1.0
+           and _qn["^IXIC"].get("prev_datum") is not None)
+
+    # RED-TO-GREEN: gestrige Zeile zaehlt nicht, ein Fehlversuch schaltet den
+    # Tag nicht stumm (10.09.2026)
+    from datetime import date as _dr
+    _alt_r = (bw.fetch_quotes_yahoo, bw._r2g_regime,
+              bw._r2g_naechster_versuch, bw._r2g_fehlversuche, bw.heute_ny)
+    try:
+        bw._r2g_regime, bw._r2g_naechster_versuch = None, 0.0
+        bw._r2g_fehlversuche = 0
+        bw.heute_ny = lambda: _dr(2026, 9, 9)
+        bw.fetch_quotes_yahoo = lambda t: {"^IXIC": {
+            "open": 100.0, "prev_close": 103.0, "bar_datum": _dr(2026, 9, 8)}}
+        _r1 = bw.r2g_regime_pruefen()
+        pruefe("E", "Red-to-Green: gestrige Tageszeile zaehlt nicht und "
+               "schaltet den Tag nicht stumm",
+               _r1 is False and bw._r2g_regime is None)
+        bw._r2g_naechster_versuch = 0.0
+        bw.fetch_quotes_yahoo = lambda t: {"^IXIC": {
+            "open": 100.0, "prev_close": 103.0, "bar_datum": _dr(2026, 9, 9)}}
+        bw.r2g_regime_pruefen()
+        pruefe("E", "Red-to-Green: mit heutiger Zeile wird entschieden",
+               bw._r2g_regime is not None)
+    finally:
+        (bw.fetch_quotes_yahoo, bw._r2g_regime, bw._r2g_naechster_versuch,
+         bw._r2g_fehlversuche, bw.heute_ny) = _alt_r
 
     # Die Meldung sagt, dass es ein Wiedereintritt ist und KEIN Ausbruch.
     probe_w = {"ticker": "AAA", "firma": "Alpha AG", "strategie": "Darvas Box",
@@ -1508,7 +1742,9 @@ def block_h():
     # ALLE Zweige holen, nicht nur main: Der Listen-Abgleich weiter
     # unten vergleicht die Wochenlisten der Arbeitszweige mit denen von
     # main, und ein zweiter Abruf waere dafuer Verschwendung.
-    sp.run(["git", "fetch", "-q", "origin"], cwd=WURZEL,
+    # --prune: Ein auf GitHub geloeschter Zweig soll unten nicht mehr als
+    # Zweig mit Wochenliste auftauchen.
+    sp.run(["git", "fetch", "-q", "--prune", "origin"], cwd=WURZEL,
            capture_output=True, text=True)
     r = sp.run(["git", "log", "-1", "--format=%ct", "origin/main", "--",
                 "kaufpunkte_aktuell.xlsx"],
@@ -1531,12 +1767,48 @@ def block_h():
     # Heliot-Seite hochlaedt, traf frueher NUR main.
     #
     # Der Upload schreibt seit 08.09.2026 auf jeden Zweig der Liste
-    # LISTEN_ZWEIGE. Diese Pruefung ist das Netz darunter: Sie greift
-    # auch dann noch, wenn ein neuer Zweig dazukommt und niemand ihn
-    # eingetragen hat. Genannt werden die Ticker, nicht bloss die Zahl.
+    # LISTEN_ZWEIGE (streamlit_app.py). Diese Pruefung ist das Netz
+    # darunter. Genannt werden die Ticker, nicht bloss die Zahl.
+    #
+    # DIE ZWEIGE ZAEHLT SIE SEIT 10.09.2026 SELBST AUF. Bis dahin stand hier
+    # dieselbe feste Liste wie im Upload, und die Kommentare behaupteten,
+    # ein vergessener neuer Arbeitszweig falle hier auf. Das stimmte nicht:
+    # Einen dritten Zweig sah die Pruefung gar nicht an. Jetzt nimmt sie
+    # jeden Zweig auf origin ausser den Sicherungszweigen (Name beginnt mit
+    # stand-, sicherung oder backup, etwa stand-vor-umbau) und meldet jeden
+    # Zweig mit Wochenliste, der in LISTEN_ZWEIGE fehlt.
     import io as _io
+    import re as _reh
+    import ast as _asth
     import pandas as _pdz
-    _listen_zweige = ("main", "fundament-phase1")
+    _refs = sp.run(["git", "for-each-ref", "--format=%(refname)",
+                    "refs/remotes/origin"], cwd=WURZEL, capture_output=True,
+                   text=True).stdout.split()
+    _alle_zweige = sorted({r[len("refs/remotes/origin/"):] for r in _refs
+                           if r.startswith("refs/remotes/origin/")
+                           and not r.endswith("/HEAD")})
+    _sicherung = _reh.compile(r"^(stand-|sicherung|backup)", _reh.IGNORECASE)
+    _listen_zweige = [z for z in _alle_zweige if not _sicherung.match(z)]
+    if "main" in _listen_zweige:          # verglichen wird gegen main
+        _listen_zweige.remove("main")
+        _listen_zweige.insert(0, "main")
+    _upload = ()
+    try:
+        for _knoten in _asth.parse((WURZEL / "streamlit_app.py").read_text(
+                encoding="utf-8")).body:
+            if (isinstance(_knoten, _asth.Assign)
+                    and any(getattr(_zi, "id", "") == "LISTEN_ZWEIGE"
+                            for _zi in _knoten.targets)):
+                _upload = tuple(_asth.literal_eval(_knoten.value))
+    except Exception:
+        _upload = ()
+    _ausgenommen = [z for z in _alle_zweige if z not in _listen_zweige]
+    pruefe("H", "Zweige selbst aufgezaehlt, Sicherungszweige ausgenommen",
+           "main" in _listen_zweige,
+           "geprueft: " + ", ".join(_listen_zweige)
+           + ("; ausgenommen: " + ", ".join(_ausgenommen)
+              if _ausgenommen else ""))
+    _mit_liste = set()
     for _datei in ("finviz_3.csv", "darvas.csv"):
         _stand = {}
         for _z in _listen_zweige:
@@ -1544,6 +1816,7 @@ def block_h():
                         cwd=WURZEL, capture_output=True)
             if _r.returncode != 0:
                 continue          # Dieser Zweig fuehrt die Datei nicht
+            _mit_liste.add(_z)
             try:
                 _stand[_z] = set(_pdz.read_csv(_io.BytesIO(_r.stdout))
                                  ["Ticker"].astype(str).str.upper())
@@ -1576,6 +1849,12 @@ def block_h():
         pruefe("H", f"{_datei}: alle Zweige fuehren dieselbe Liste",
                not _abw,
                _zahlen + ((" | " + " | ".join(_abw)) if _abw else ""))
+    _fehlt_upload = sorted(_mit_liste - set(_upload))
+    pruefe("H", "Jeder Zweig mit Wochenliste steht in LISTEN_ZWEIGE "
+           "(sonst traefe ihn der Upload nicht)",
+           bool(_upload) and not _fehlt_upload,
+           ("fehlen: " + ", ".join(_fehlt_upload)) if _fehlt_upload
+           else "LISTEN_ZWEIGE: " + ", ".join(_upload))
 
     for datei in ("volumenkurven.json", "fokusliste.json",
                   "shakeout_warteliste.json"):

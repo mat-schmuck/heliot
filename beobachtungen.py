@@ -124,6 +124,10 @@ def oeffnen(bestand, ticker, zusatz, strategie, kaufpunkt, struktur_stop,
                        if musterziel is not None and musterziel == musterziel
                        else None),
         "zone": None,
+        # Die zuletzt GEMELDETE Zone (seit 10.09.2026): Der Nachtlauf
+        # fuehrt "zone", der Waechter meldet einen Aufstieg erst, wenn er
+        # mit dem heutigen Kurs noch gilt, und schreibt dann diesen Stand.
+        "zone_gemeldet": None,
         "ziel_gemeldet": False,
         "klimax_gemeldet": [],
         "weinstein_gemeldet": False,
@@ -141,6 +145,28 @@ def offene(bestand):
     return {k: e for k, e in (bestand or {}).items()
             if isinstance(e, dict) and e.get("status") == "offen"
             and e.get("beobachtung")}
+
+
+def offen_mit_strategie(bestand, ticker, strategien):
+    """Der Schluessel einer OFFENEN Beobachtung derselben Aktie mit einem
+    dieser Muster, oder None.
+
+    WOZU (10.09.2026): Beobachtungen aus Ausbruechen hiessen bis dahin
+    "TICKER|Kaufpunkt-Nummer". Die Nummer ist aber nur der Platz in der
+    Mappe und wandert, sobald der Nachtscan ein Muster davor setzt; LITE
+    trug am 08.09. Rectangle Top auf Platz 1 und am 09.09. Cup & Handle.
+    Seither heissen sie nach dem Muster. Damit eine alte Beobachtung mit
+    Nummer nicht neben einer neuen mit Musternamen fuer denselben
+    Kaufpunkt steht, fragt die Fuetterung vorher hier nach."""
+    namen = {str(n).strip() for n in (strategien or []) if n}
+    gross = str(ticker).upper()
+    for k, e in offene(bestand).items():
+        if e.get("symbol") != gross:
+            continue
+        vorhanden = {s.strip() for s in str(e.get("strategie", "")).split(",")}
+        if namen & vorhanden:
+            return k
+    return None
 
 
 def schliessen(eintrag, grund, kurs=None):

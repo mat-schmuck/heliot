@@ -443,8 +443,12 @@ DARVAS_DATEI = "darvas.csv"
 #
 # SICHERUNGSZWEIGE GEHOEREN NICHT HIERHER: stand-vor-umbau soll den
 # alten Stand bewahren, nicht mitwandern. Wer einen neuen Arbeitszweig
-# anlegt, traegt ihn hier ein; vergisst er es, meldet es die
-# Gesamtpruefung (Block H, "alle Zweige fuehren dieselbe Liste").
+# anlegt, traegt ihn hier ein. Vergisst er es, meldet es die
+# Gesamtpruefung (Block H, "Jeder Zweig mit Wochenliste steht in
+# LISTEN_ZWEIGE"): Sie zaehlt die Zweige auf origin seit 10.09.2026 selbst
+# auf und nimmt nur Sicherungszweige aus, deren Name mit stand-, sicherung
+# oder backup beginnt. Bis dahin stand dort dieselbe feste Liste wie hier,
+# und einen dritten Zweig haette sie gar nicht gesehen.
 LISTEN_ZWEIGE = ("main", "fundament-phase1")
 
 # ZWEI LISTEN seit 14.08.2026 (Gerhard): "Die Darvas-Tradingstrategie
