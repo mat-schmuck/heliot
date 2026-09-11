@@ -43,7 +43,7 @@
     "MAN|Fallback: MA50-Pullback": "draussen",
     "NRIX|Fallback: MA50-Pullback": "drin",
     "PBF|Fallback: MA50-Pullback": "draussen",
-    "PTGX|Rectangle Top": "draussen",
+    "PTGX|Rectangle Top": "drin",
     "QMCO|Fallback: MA50-Pullback": "draussen",
     "SMTC|Fallback: MA50-Pullback": "draussen",
     "ALSN|Rectangle Top": "drin",
@@ -228,7 +228,7 @@
     "ARW|Rectangle Top": "drin",
     "DINO|Fallback: 52W-Hoch-Breakout": "drin",
     "SLAB|Fallback: MA50-Pullback": "drin",
-    "HUT|Fallback: MA50-R\u00fcckeroberung": "draussen",
+    "HUT|Fallback: MA50-R\u00fcckeroberung": "drin",
     "MPC|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "MPC|Fallback: 52W-Hoch-Breakout": "drin",
     "BUUU|Fallback: MA50-Pullback": "draussen",
@@ -239,7 +239,9 @@
     "DELL|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "DELL|Fallback: 52W-Hoch-Breakout": "drin",
     "SWKS|Fallback: 52W-Hoch-Breakout": "drin",
-    "NMM|Fallback: 52W-Hoch-Breakout": "drin"
+    "NMM|Fallback: 52W-Hoch-Breakout": "drin",
+    "SNX|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "SEI|Cup & Handle (Wochenbasis)": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -608,6 +610,8 @@
     "UEBER|SWKS|Cup & Handle (Wochenbasis)": "2026-09-11",
     "UEBER|HUT|Fallback: MA50-R\u00fcckeroberung": "2026-09-11",
     "UEBER|AVT|Rectangle Top": "2026-09-11",
-    "UEBER|AVT|EMA Crossback": "2026-09-11"
+    "UEBER|AVT|EMA Crossback": "2026-09-11",
+    "SEI|Cup & Handle (Wochenbasis)": "2026-09-11",
+    "BEST|SEI|Cup & Handle (Wochenbasis)": "2026-09-11"
   }
 }
