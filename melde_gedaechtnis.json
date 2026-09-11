@@ -12,7 +12,7 @@
     "NGL|Fallback: MA50-Pullback": "draussen",
     "RNG|Fallback: MA50-Pullback": "draussen",
     "WTTR|Cup & Handle (Wochenbasis)": "drin",
-    "AVT|EMA Crossback": "drin",
+    "AVT|EMA Crossback": "draussen",
     "AVT|Rectangle Top": "draussen",
     "BSTZ|Rectangle Top": "drin",
     "BSTZ|Fallback: MA50-Pullback": "drin",
@@ -237,7 +237,9 @@
     "ASST|Cup & Handle (Wochenbasis)": "drin",
     "NMM|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "DELL|Fallback: 20-Tage-Hoch (Pivot)": "drin",
-    "DELL|Fallback: 52W-Hoch-Breakout": "drin"
+    "DELL|Fallback: 52W-Hoch-Breakout": "drin",
+    "SWKS|Fallback: 52W-Hoch-Breakout": "drin",
+    "NMM|Fallback: 52W-Hoch-Breakout": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -605,6 +607,7 @@
     "BEST|ARW|Rectangle Top": "2026-09-11",
     "UEBER|SWKS|Cup & Handle (Wochenbasis)": "2026-09-11",
     "UEBER|HUT|Fallback: MA50-R\u00fcckeroberung": "2026-09-11",
-    "UEBER|AVT|Rectangle Top": "2026-09-11"
+    "UEBER|AVT|Rectangle Top": "2026-09-11",
+    "UEBER|AVT|EMA Crossback": "2026-09-11"
   }
 }
