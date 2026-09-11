@@ -206,7 +206,17 @@
     "JXN|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "TNK|Cup & Handle (Wochenbasis)": "drin",
     "TXG|Fallback: 52W-Hoch-Breakout": "drin",
-    "TXG|Fallback: 20-Tage-Hoch (Pivot)": "drin"
+    "TXG|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "TVTX|Fallback: 52W-Hoch-Breakout": "drin",
+    "TVTX|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "CGON|Fallback: MA50-R\u00fcckeroberung": "drin",
+    "VCTR|Fallback: MA50-Pullback": "draussen",
+    "JANX|Fallback: MA50-Pullback": "draussen",
+    "PARR|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "BIIB|Rectangle Top": "drin",
+    "RBLX|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "LPG|Cup & Handle (Wochenbasis)": "drin",
+    "LPG|Fallback: 52W-Hoch-Breakout": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -566,6 +576,8 @@
     "SWKS|Cup & Handle (Wochenbasis)": "2026-09-11",
     "BEST|SWKS|Cup & Handle (Wochenbasis)": "2026-09-11",
     "TNK|Cup & Handle (Wochenbasis)": "2026-09-11",
-    "BEST|TNK|Cup & Handle (Wochenbasis)": "2026-09-11"
+    "BEST|TNK|Cup & Handle (Wochenbasis)": "2026-09-11",
+    "LPG|Cup & Handle (Wochenbasis)": "2026-09-11",
+    "BEST|LPG|Cup & Handle (Wochenbasis)": "2026-09-11"
   }
 }
