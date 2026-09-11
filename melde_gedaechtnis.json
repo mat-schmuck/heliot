@@ -33,15 +33,15 @@
     "CRWD|Fallback: MA50-Pullback": "drin",
     "DINO|Fallback: MA50-Pullback": "draussen",
     "DK|Fallback: MA50-Pullback": "draussen",
-    "ECPG|Rectangle Top": "draussen",
-    "ECPG|Fallback: MA50-Pullback": "draussen",
+    "ECPG|Rectangle Top": "drin",
+    "ECPG|Fallback: MA50-Pullback": "drin",
     "ETON|Cup & Handle (Wochenbasis)": "draussen",
     "ETON|Fallback: MA50-Pullback": "draussen",
     "GKOS|Fallback: MA50-Pullback": "drin",
     "HNGE|Fallback: MA50-Pullback": "drin",
     "LPG|Fallback: MA50-Pullback": "draussen",
     "MAN|Fallback: MA50-Pullback": "draussen",
-    "NRIX|Fallback: MA50-Pullback": "draussen",
+    "NRIX|Fallback: MA50-Pullback": "drin",
     "PBF|Fallback: MA50-Pullback": "draussen",
     "PTGX|Rectangle Top": "draussen",
     "QMCO|Fallback: MA50-Pullback": "draussen",
@@ -211,7 +211,7 @@
     "TVTX|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "CGON|Fallback: MA50-R\u00fcckeroberung": "drin",
     "VCTR|Fallback: MA50-Pullback": "draussen",
-    "JANX|Fallback: MA50-Pullback": "draussen",
+    "JANX|Fallback: MA50-Pullback": "drin",
     "PARR|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "BIIB|Rectangle Top": "drin",
     "RBLX|Fallback: 20-Tage-Hoch (Pivot)": "drin",
@@ -228,11 +228,15 @@
     "ARW|Rectangle Top": "drin",
     "DINO|Fallback: 52W-Hoch-Breakout": "drin",
     "SLAB|Fallback: MA50-Pullback": "drin",
-    "HUT|Fallback: MA50-R\u00fcckeroberung": "drin",
+    "HUT|Fallback: MA50-R\u00fcckeroberung": "draussen",
     "MPC|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "MPC|Fallback: 52W-Hoch-Breakout": "drin",
     "BUUU|Fallback: MA50-Pullback": "draussen",
-    "PSX|Fallback: 20-Tage-Hoch (Pivot)": "drin"
+    "PSX|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "PSX|Fallback: 52W-Hoch-Breakout": "drin",
+    "ASST|Cup & Handle (Wochenbasis)": "drin",
+    "NMM|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "DELL|Fallback: 20-Tage-Hoch (Pivot)": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -598,6 +602,7 @@
     "BEST|DK|Cup & Handle (Wochenbasis)": "2026-09-11",
     "ARW|Rectangle Top": "2026-09-11",
     "BEST|ARW|Rectangle Top": "2026-09-11",
-    "UEBER|SWKS|Cup & Handle (Wochenbasis)": "2026-09-11"
+    "UEBER|SWKS|Cup & Handle (Wochenbasis)": "2026-09-11",
+    "UEBER|HUT|Fallback: MA50-R\u00fcckeroberung": "2026-09-11"
   }
 }
