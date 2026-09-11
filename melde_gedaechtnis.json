@@ -225,7 +225,10 @@
     "KEYS|Rectangle Top": "drin",
     "SNX|Rectangle Top": "drin",
     "DK|Fallback: 52W-Hoch-Breakout": "drin",
-    "ARW|Rectangle Top": "drin"
+    "ARW|Rectangle Top": "drin",
+    "DINO|Fallback: 52W-Hoch-Breakout": "drin",
+    "SLAB|Fallback: MA50-Pullback": "drin",
+    "HUT|Fallback: MA50-R\u00fcckeroberung": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -533,7 +536,6 @@
     "UEBER|SEI|Fallback: MA50-R\u00fcckeroberung": "2026-09-08",
     "UEBER|SMTC|EMA Crossback": "2026-09-08",
     "UEBER|SMTC|Rectangle Top": "2026-09-08",
-    "UEBER|SWKS|Cup & Handle (Wochenbasis)": "2026-09-10",
     "VIST|Rectangle Top": "2026-09-08",
     "VOR|Cup & Handle (Wochenbasis)": "2026-09-08",
     "VOYA|Rectangle Top": "2026-09-08",
