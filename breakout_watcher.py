@@ -1788,6 +1788,10 @@ def tagesgeschaeft_wache(topic, quotes, dry_run):
 #      Tagesgeschaeft beendet), wird bis zu seiner Antwort nicht gemeldet:
 #      Aus heutigen Kursen laesst es sich zur Eroeffnung nicht rechnen, und
 #      mit dem Schluss von gestern darf es nicht kommen.
+#   5. Die Straffungs-Meldungen (Musterziel erreicht, Wedge Drop, Sektor
+#      dreht) sind seit 11.09.2026 auf Gerhards Wunsch abgeschaltet
+#      (config.py, gewinnseite). Sie fallen schon beim Laden heraus, auch
+#      aus einer Ablage, die noch vor dem Abschalten geschrieben wurde.
 
 NACHT_MARKE = "GEWINN|"
 INSIDER_MAX_VERSUCHE = 5
@@ -1798,7 +1802,8 @@ def nachtbefunde_laden() -> dict:
     """Was Nachtlauf, Sektor-Radar und Insider-Lauf hinterlassen haben,
     getrennt nach 'wird nachgerechnet' und 'bleibt zurueckgehalten'."""
     daten = gewinnzonen_lauf.lies_befunde()
-    befunde = daten.get("befunde") or []
+    befunde, abgeschaltet = gewinnzonen_lauf.abgeschaltete_trennen(
+        daten.get("befunde") or [])
     try:
         fmt = int(daten.get("format") or 1)
     except (TypeError, ValueError):
@@ -1818,6 +1823,7 @@ def nachtbefunde_laden() -> dict:
             "live": live, "zurueck": zurueck,
             "verlaeufe": daten.get("verlaeufe") or {},
             "radar": radar or {}, "insider": list(insider or []),
+            "abgeschaltet": len(abgeschaltet),
             "offen": []}
 
 
@@ -1836,6 +1842,10 @@ def nachtbefunde_bericht(nacht: dict):
               f"Gerhard).")
     else:
         print("Nachtbefunde: keine.")
+    if nacht.get("abgeschaltet"):
+        print(f"Nachtbefunde vom {tag}: {nacht['abgeschaltet']} "
+              f"Straffungs-Befund(e) werden nicht gemeldet, die Meldung ist "
+              f"abgeschaltet (Gerhard, bis auf Weiteres).")
     treffer = nacht["radar"].get("treffer") or []
     if treffer:
         print(f"Sektor-Radar: {len(treffer)} Dreher vom "

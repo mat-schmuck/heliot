@@ -522,9 +522,27 @@ def block_e():
             _loaded = {"GEW": (_df(90.0, 0.35), "Gewinn AG"),
                        "TAG": (_df(50.0, 0.01), "Tages AG"),
                        "DRV": (_df(28.0, 0.05), "Darvas AG")}
-            _bef = _gl.gewinn_durchgang(_loaded, "gibt_es_nicht.xlsx",
-                                        exit_meldungen=[],
-                                        heute=_dk(2026, 8, 28))
+            # Die Pruefungen zum Handelsstart unten laufen am Musterziel-
+            # Befund. Der ist seit 11.09.2026 abgeschaltet (Straffungs-
+            # Meldungen, Gerhard); fuer diesen Durchgang wird der Schalter
+            # deshalb kurz eingeschaltet. Das Abschalten selbst wird weiter
+            # unten eigens geprueft.
+            _gs = _gl.CFG.setdefault("gewinnseite", {})
+            _gs_alt = _gs.get("straffungs_meldungen")
+
+            def _straffung(wert):
+                if wert is None:
+                    _gs.pop("straffungs_meldungen", None)
+                else:
+                    _gs["straffungs_meldungen"] = wert
+
+            _straffung(True)
+            try:
+                _bef = _gl.gewinn_durchgang(_loaded, "gibt_es_nicht.xlsx",
+                                            exit_meldungen=[],
+                                            heute=_dk(2026, 8, 28))
+            finally:
+                _straffung(_gs_alt)
             _nach = positionen.laden()
             pruefe("E", "Durchgang: Musterziel-Befund kommt, laut und einzeln",
                    any(b["typ"] == "ziel_erreicht"
@@ -647,6 +665,77 @@ def block_e():
             finally:
                 bw.sende, bw.save_state = _alt_sende, _alt_save
                 bw.heute_ny, bw._LETZTER_PUSH = _alt_heute, _alt_push
+
+            # STRAFFUNGS-MELDUNGEN ABGESCHALTET (Gerhard, 11.09.2026, bis auf
+            # Weiteres): Musterziel erreicht, Wedge Drop und Sektor dreht
+            # werden weder abgelegt noch gemeldet; alles andere bleibt.
+            pruefe("E", "Straffungs-Meldungen: Schalter in config.py steht auf aus",
+                   _gs_alt is False and _gl.straffung_gemeldet() is False)
+            _typen = ["ziel_erreicht", "wedge_drop", "sektor_hinweis",
+                      "zonenwechsel", "klimax_zeichen", "weinstein",
+                      "zeitdeckel", "zahlen_hinweis", "kapitel11", "tagesende"]
+            _bleibt, _weg = _gl.abgeschaltete_trennen(
+                [{"typ": t} for t in _typen])
+            pruefe("E", "Straffungs-Meldungen aus: genau die drei Typen fallen heraus",
+                   sorted(b["typ"] for b in _weg) == sorted(_gl.STRAFFUNG)
+                   and [b["typ"] for b in _bleibt] == _typen[3:])
+            _straffung(True)
+            try:
+                _bleibt_an, _weg_an = _gl.abgeschaltete_trennen(
+                    [{"typ": t} for t in _typen])
+            finally:
+                _straffung(_gs_alt)
+            pruefe("E", "Straffungs-Meldungen an: es faellt nichts heraus",
+                   len(_bleibt_an) == len(_typen) and not _weg_an)
+
+            # Derselbe Durchgang mit abgeschaltetem Schalter: Das Musterziel
+            # ist erreicht und noch nicht gemeldet, der Befund faellt aber
+            # vor dem Ablegen heraus. Die Zone rechnet trotzdem weiter, und
+            # der Melde-Merker bleibt unberuehrt fuer das Wiedereinschalten.
+            _bef_aus = _gl.gewinn_durchgang(_loaded, "gibt_es_nicht.xlsx",
+                                            exit_meldungen=[],
+                                            heute=_dk(2026, 8, 28))
+            _datei_aus = _jsk.load(open("exit_befunde.json", encoding="utf-8"))
+            _nach_aus = positionen.laden()
+            pruefe("E", "Straffungs-Meldungen aus: Nachtlauf legt das Musterziel "
+                   "nicht ab",
+                   not any(b["typ"] in _gl.STRAFFUNG for b in _bef_aus)
+                   and not any(b.get("typ") in _gl.STRAFFUNG
+                               for b in _datei_aus.get("befunde", []))
+                   and len(_datei_aus.get("befunde", [])) == len(_bef_aus))
+            pruefe("E", "Straffungs-Meldungen aus: Zone rechnet weiter, Merker "
+                   "bleibt frei",
+                   _nach_aus["GEW|1"].get("zone") in ("mittel", "stark")
+                   and _nach_aus["GEW|1"].get("ziel_gemeldet") is False)
+            pruefe("E", "Straffungs-Meldungen aus: kein Kursverlauf ohne "
+                   "nachzurechnenden Befund",
+                   all(any(b.get("key") == k and b.get("art") == _gl.LIVE
+                           for b in _datei_aus.get("befunde", []))
+                       for k in _datei_aus.get("verlaeufe", {})))
+
+            # Und der Waechter laesst sie auch aus einer Ablage weg, die noch
+            # vor dem Abschalten geschrieben wurde (so lag CNC am 11.09.).
+            with open("exit_befunde.json", "w", encoding="utf-8") as _fa:
+                _jsk.dump({"format": _gl.FORMAT, "handelstag": "2026-09-10",
+                           "befunde": [
+                               {"typ": "ziel_erreicht", "art": _gl.LIVE,
+                                "symbol": "ZZZ", "key": "ZZZ|1"},
+                               {"typ": "wedge_drop", "art": _gl.ZURUECK,
+                                "symbol": "CNC", "key": "CNC|1"},
+                               {"typ": "sektor_hinweis", "art": _gl.ZURUECK,
+                                "symbol": "SEK", "key": "SEK|1"},
+                               {"typ": "zonenwechsel", "art": _gl.LIVE,
+                                "symbol": "GEW", "key": "GEW|1"},
+                               {"typ": "kapitel11", "art": _gl.ZURUECK,
+                                "symbol": "WFRD|1"}],
+                           "verlaeufe": {}}, _fa)
+            _nl = bw.nachtbefunde_laden()
+            pruefe("E", "Straffungs-Meldungen aus: der Waechter laesst sie auch "
+                   "aus einer aelteren Ablage weg",
+                   [b["typ"] for b in _nl["live"]] == ["zonenwechsel"]
+                   and [b["typ"] for b in _nl["zurueck"]] == ["kapitel11"]
+                   and _nl["abgeschaltet"] == 3
+                   and "ZZZ" not in bw.nacht_symbole(_nl))
 
             # Kapitel 11 (Gerhard: Schlusskurs, nicht Docht)
             _alt_nl = _gl._kurse_nachladen

@@ -435,6 +435,23 @@ CFG = {
         "trail_ma_schnell": 21,       # Stufe C, zügige Bewegungen
         "trail_ma_langsam": 50,       # Stufe C, ruhige Bewegungen
     },
+    # --- Kapitel 12: Meldungen der Gewinnseite ----------------------------
+    # STRAFFUNGS-MELDUNGEN ABGESCHALTET (Gerhards Wunsch über Mathias,
+    # 10. und 11.09.2026, bis auf Weiteres). Betroffen sind genau drei
+    # Befunde, deren Meldung zu einer Straffung rät:
+    #   Musterziel erreicht  "Teilverkauf oder harte Straffung"
+    #   Wedge Drop           "Ausstieg oder harte Straffung"
+    #   Sektor dreht         "Straffung erwägen"
+    # Der Nachtlauf legt sie gar nicht erst ab, und der Wächter meldet sie
+    # auch aus einer älteren Ablage nicht. Die Zone rechnet weiter mit dem
+    # erreichten Musterziel, sie ist keine Meldung. NICHT betroffen:
+    # Kapitel 11 samt "Nachzieh-Linie unterschritten, Rest raus"
+    # (positionen.py), Zonenwechsel, Klimax-Zeichen, Weinstein Stufe 3,
+    # Zeitdeckel und Zahlen-Hinweis. Wieder einschalten heißt True setzen;
+    # gemeldet wird dann nur, was mit den Kursen dieses Tages noch gilt.
+    "gewinnseite": {
+        "straffungs_meldungen": False,
+    },
     # --- Cup & Handle auf Wochenbasis ("Giant Base") ----------------------
     # Gerhards Ergänzung vom 04.08.2026. Sie ERSETZT die bestehende
     # Tages-Erkennung NICHT, sondern läuft daneben.

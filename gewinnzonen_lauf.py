@@ -65,6 +65,16 @@ SEIT 10.09.2026: NACHTS VORRECHNEN, ZUM HANDELSSTART NEU RECHNEN
                       nicht gemeldet, bis Gerhard die Regelfrage
                       beantwortet hat (Dokument vom 10.09.2026).
 
+SEIT 11.09.2026: STRAFFUNGS-MELDUNGEN ABGESCHALTET
+  Gerhard will die drei Befunde, deren Meldung zu einer Straffung raet,
+  bis auf Weiteres nicht gemeldet haben: Musterziel erreicht ("Teilverkauf
+  oder harte Straffung"), Wedge Drop ("Ausstieg oder harte Straffung") und
+  Sektor dreht ("Straffung erwaegen"). Der Schalter steht in config.py
+  (gewinnseite, straffungs_meldungen). Die Regeln selbst rechnen weiter,
+  die Zone zaehlt das erreichte Musterziel weiter mit; nur die Befunde
+  fallen vor dem Ablegen heraus (abgeschaltete_trennen), und der Waechter
+  wendet dieselbe Trennung auf jede Ablage an, auch auf eine aeltere.
+
 Die Befunde landen in exit_befunde.json; jede traegt Typ, Art,
 Prioritaet und ob sie gebuendelt gemeldet wird (gewinn_zonen.
 meldepriorität). Der Waechter merkt gemeldete Kandidaten im
@@ -78,6 +88,7 @@ import exit_regeln
 import gewinn_zonen as gz
 import beobachtungen
 import positionen
+from config import CFG
 
 BEFUNDE_DATEI = "exit_befunde.json"
 
@@ -98,6 +109,29 @@ KLIMAX_LIVE = ("1_klimaxlauf", "4_ma200_abstand", "5_kanaluebershooting")
 VERLAUF_TAGE = 260
 
 RANG = {"leicht": 0, "mittel": 1, "stark": 2}
+
+# Die Befunde, deren Meldung zu einer Straffung raet. Gerhard will sie bis
+# auf Weiteres nicht gemeldet haben (11.09.2026); der Schalter steht in
+# config.py unter gewinnseite, straffungs_meldungen.
+STRAFFUNG = ("ziel_erreicht", "wedge_drop", "sektor_hinweis")
+
+
+def straffung_gemeldet():
+    """Werden die Straffungs-Befunde gemeldet? Gelesen wird bei jedem
+    Aufruf, damit der Schalter ohne Neuladen des Moduls wirkt."""
+    return bool((CFG.get("gewinnseite") or {}).get("straffungs_meldungen",
+                                                    True))
+
+
+def abgeschaltete_trennen(befunde):
+    """Rueckgabe (bleiben, abgeschaltet). Solange die Straffungs-Meldungen
+    aus sind, stehen deren Befunde in der zweiten Liste; sonst ist sie leer.
+    Nachtlauf und Waechter trennen mit genau dieser Funktion."""
+    befunde = list(befunde or [])
+    if straffung_gemeldet():
+        return befunde, []
+    return ([b for b in befunde if b.get("typ") not in STRAFFUNG],
+            [b for b in befunde if b.get("typ") in STRAFFUNG])
 
 
 # ---------------------------------------------------------------------------
@@ -540,6 +574,19 @@ def gewinn_durchgang(loaded, mappe_pfad, exit_meldungen=None, heute=None):
                     verlaeufe[key] = v
 
         positionen.speichern(bestand)
+
+    # Straffungs-Meldungen abgeschaltet (Gerhard, 11.09.2026): Die Befunde
+    # fallen vor dem Ablegen heraus. Ein Kursverlauf bleibt nur fuer eine
+    # Beobachtung stehen, die noch einen nachzurechnenden Befund hat.
+    befunde, abgeschaltet = abgeschaltete_trennen(befunde)
+    if abgeschaltet:
+        mit_live = {b.get("key") for b in befunde if b.get("art") == LIVE}
+        verlaeufe = {k: v for k, v in verlaeufe.items() if k in mit_live}
+        print(f"Kapitel 12: {len(abgeschaltet)} Straffungs-Befund(e) nicht "
+              f"abgelegt, die Meldung ist abgeschaltet (Gerhard, bis auf "
+              f"Weiteres): "
+              + ", ".join(f"{b.get('typ')} {b.get('symbol')}"
+                          for b in abgeschaltet))
 
     inhalt = {"format": FORMAT,
               "handelstag": heute.isoformat(),
