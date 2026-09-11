@@ -67,7 +67,7 @@
     "EE|Fallback: MA50-Pullback": "drin",
     "EQNR|Fallback: MA50-Pullback": "draussen",
     "EXPD|Rectangle Top": "drin",
-    "EXPD|Fallback: MA50-Pullback": "drin",
+    "EXPD|Fallback: MA50-Pullback": "draussen",
     "FCFS|Rectangle Top": "drin",
     "FCFS|Fallback: MA50-Pullback": "draussen",
     "HALO|Fallback: MA50-Pullback": "draussen",
@@ -181,7 +181,7 @@
     "JXN|Fallback: MA50-Pullback": "draussen",
     "NMM|Fallback: MA50-Pullback": "draussen",
     "ROKU|Fallback: MA50-Pullback": "drin",
-    "SENEA|Fallback: MA50-Pullback": "drin",
+    "SENEA|Fallback: MA50-Pullback": "draussen",
     "VOR|Fallback: MA50-Pullback": "draussen",
     "PBF|Cup & Handle (Wochenbasis)": "drin",
     "PBF|Fallback: 52W-Hoch-Breakout": "drin",
@@ -189,7 +189,17 @@
     "CLMT|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "OSCR|Cup & Handle (Wochenbasis)": "drin",
     "OSCR|Darvas Box": "drin",
-    "OSCR|EMA Crossback": "drin"
+    "OSCR|EMA Crossback": "drin",
+    "BFH|Rectangle Top": "drin",
+    "ARWR|Fallback: MA50-R\u00fcckeroberung": "drin",
+    "CNR|Fallback: MA50-Pullback": "draussen",
+    "IAG|Fallback: MA50-Pullback": "draussen",
+    "BETA|Fallback: MA50-R\u00fcckeroberung": "drin",
+    "EFXT|Fallback: MA50-Pullback": "drin",
+    "ASH|Cup & Handle (Wochenbasis)": "drin",
+    "GSAT|Rectangle Top": "drin",
+    "GH|Fallback: MA50-R\u00fcckeroberung": "drin",
+    "SWKS|Cup & Handle (Wochenbasis)": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -541,6 +551,12 @@
     "OSCR|Darvas Box": "2026-09-11",
     "BEST|OSCR|Darvas Box": "2026-09-11",
     "OSCR|EMA Crossback": "2026-09-11",
-    "BEST|OSCR|EMA Crossback": "2026-09-11"
+    "BEST|OSCR|EMA Crossback": "2026-09-11",
+    "BFH|Rectangle Top": "2026-09-11",
+    "BEST|BFH|Rectangle Top": "2026-09-11",
+    "GSAT|Rectangle Top": "2026-09-11",
+    "BEST|GSAT|Rectangle Top": "2026-09-11",
+    "SWKS|Cup & Handle (Wochenbasis)": "2026-09-11",
+    "BEST|SWKS|Cup & Handle (Wochenbasis)": "2026-09-11"
   }
 }
