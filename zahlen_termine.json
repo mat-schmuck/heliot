@@ -1,5 +1,5 @@
 {
- "gebaut_am": "2026-09-11 00:05 Wien",
+ "gebaut_am": "2026-09-12 00:05 Wien",
  "ohne_termin": [
   "AGMB",
   "BLSM",
@@ -1570,7 +1570,8 @@
    "uhrzeit": "08:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "STLD": {

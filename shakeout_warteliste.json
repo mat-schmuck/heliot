@@ -6,7 +6,7 @@
   "zone_max": 210.08999633789062,
   "spring_low": 209.27999877929688,
   "spring_volumen": 464400.0,
-  "tage_gewartet": 3
+  "tage_gewartet": 4
  },
  "AMD": {
   "spring_index": 500,
@@ -15,7 +15,7 @@
   "zone_max": 498.1499938964844,
   "spring_low": 486.5705871582031,
   "spring_volumen": 27979240.0,
-  "tage_gewartet": 2
+  "tage_gewartet": 3
  },
  "SEI": {
   "spring_index": 500,
@@ -24,6 +24,6 @@
   "zone_max": 61.36000061035156,
   "spring_low": 60.45000076293945,
   "spring_volumen": 4992002.0,
-  "tage_gewartet": 2
+  "tage_gewartet": 3
  }
 }
