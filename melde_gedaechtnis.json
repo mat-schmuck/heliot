@@ -199,7 +199,7 @@
     "ASH|Cup & Handle (Wochenbasis)": "drin",
     "GSAT|Rectangle Top": "drin",
     "GH|Fallback: MA50-R\u00fcckeroberung": "drin",
-    "SWKS|Cup & Handle (Wochenbasis)": "drin",
+    "SWKS|Cup & Handle (Wochenbasis)": "draussen",
     "RAMP|EMA Crossback": "drin",
     "AMR|Fallback: MA50-Pullback": "draussen",
     "FROG|Fallback: MA50-R\u00fcckeroberung": "drin",
@@ -228,7 +228,11 @@
     "ARW|Rectangle Top": "drin",
     "DINO|Fallback: 52W-Hoch-Breakout": "drin",
     "SLAB|Fallback: MA50-Pullback": "drin",
-    "HUT|Fallback: MA50-R\u00fcckeroberung": "drin"
+    "HUT|Fallback: MA50-R\u00fcckeroberung": "drin",
+    "MPC|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "MPC|Fallback: 52W-Hoch-Breakout": "drin",
+    "BUUU|Fallback: MA50-Pullback": "draussen",
+    "PSX|Fallback: 20-Tage-Hoch (Pivot)": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -593,6 +597,7 @@
     "DK|Cup & Handle (Wochenbasis)": "2026-09-11",
     "BEST|DK|Cup & Handle (Wochenbasis)": "2026-09-11",
     "ARW|Rectangle Top": "2026-09-11",
-    "BEST|ARW|Rectangle Top": "2026-09-11"
+    "BEST|ARW|Rectangle Top": "2026-09-11",
+    "UEBER|SWKS|Cup & Handle (Wochenbasis)": "2026-09-11"
   }
 }
