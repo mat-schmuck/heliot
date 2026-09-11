@@ -38,7 +38,7 @@
     "ETON|Cup & Handle (Wochenbasis)": "draussen",
     "ETON|Fallback: MA50-Pullback": "draussen",
     "GKOS|Fallback: MA50-Pullback": "drin",
-    "HNGE|Fallback: MA50-Pullback": "drin",
+    "HNGE|Fallback: MA50-Pullback": "draussen",
     "LPG|Fallback: MA50-Pullback": "draussen",
     "MAN|Fallback: MA50-Pullback": "draussen",
     "NRIX|Fallback: MA50-Pullback": "drin",
@@ -88,7 +88,7 @@
     "PCVX|Fallback: MA50-Pullback": "drin",
     "PRE|Fallback: MA50-Pullback": "draussen",
     "RGLD|Fallback: MA50-Pullback": "draussen",
-    "RVTY|Fallback: MA50-Pullback": "drin",
+    "RVTY|Fallback: MA50-Pullback": "draussen",
     "SCCO|Fallback: MA50-Pullback": "drin",
     "SEI|Fallback: MA50-Pullback": "draussen",
     "SMMT|Fallback: MA50-Pullback": "draussen",
@@ -228,7 +228,7 @@
     "ARW|Rectangle Top": "drin",
     "DINO|Fallback: 52W-Hoch-Breakout": "drin",
     "SLAB|Fallback: MA50-Pullback": "drin",
-    "HUT|Fallback: MA50-R\u00fcckeroberung": "drin",
+    "HUT|Fallback: MA50-R\u00fcckeroberung": "draussen",
     "MPC|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "MPC|Fallback: 52W-Hoch-Breakout": "drin",
     "BUUU|Fallback: MA50-Pullback": "draussen",
@@ -241,7 +241,11 @@
     "SWKS|Fallback: 52W-Hoch-Breakout": "drin",
     "NMM|Fallback: 52W-Hoch-Breakout": "drin",
     "SNX|Fallback: 20-Tage-Hoch (Pivot)": "drin",
-    "SEI|Cup & Handle (Wochenbasis)": "drin"
+    "SEI|Cup & Handle (Wochenbasis)": "drin",
+    "SMTC|Cup & Handle (Wochenbasis)": "drin",
+    "LMB|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "EXPD|Fallback: 52W-Hoch-Breakout": "drin",
+    "HTFL|HTF Innen-Einstieg": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -612,6 +616,8 @@
     "UEBER|AVT|Rectangle Top": "2026-09-11",
     "UEBER|AVT|EMA Crossback": "2026-09-11",
     "SEI|Cup & Handle (Wochenbasis)": "2026-09-11",
-    "BEST|SEI|Cup & Handle (Wochenbasis)": "2026-09-11"
+    "BEST|SEI|Cup & Handle (Wochenbasis)": "2026-09-11",
+    "HTF|HTFL|HTF Innen-Einstieg": "2026-09-11",
+    "BEST|HTF|HTFL|HTF Innen-Einstieg": "2026-09-11"
   }
 }
