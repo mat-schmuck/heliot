@@ -157,7 +157,8 @@
     "TITN|Fallback: MA50-Pullback": "draussen",
     "VIRT|Fallback: MA50-Pullback": "drin",
     "WCC|Fallback: MA50-Pullback": "drin",
-    "WFRD|Fallback: MA50-Pullback": "drin"
+    "WFRD|Fallback: MA50-Pullback": "drin",
+    "FIVE|Rectangle Top": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -495,6 +496,8 @@
     "NDSN|Rectangle Top": "2026-09-11",
     "BEST|NDSN|Rectangle Top": "2026-09-11",
     "WSFS|Rectangle Top": "2026-09-11",
-    "BEST|WSFS|Rectangle Top": "2026-09-11"
+    "BEST|WSFS|Rectangle Top": "2026-09-11",
+    "GAPGO|RCUS|2026-09-11": "2026-09-11",
+    "GEWINN|klimax_zeichen|PBF|2|4_ma200_abstand": "2026-09-11"
   }
 }
