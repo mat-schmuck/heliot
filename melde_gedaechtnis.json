@@ -49,7 +49,7 @@
     "ALSN|Rectangle Top": "drin",
     "ANF|Fallback: MA50-Pullback": "draussen",
     "ARIS|Fallback: MA50-Pullback": "draussen",
-    "ARW|Fallback: MA50-Pullback": "drin",
+    "ARW|Fallback: MA50-Pullback": "draussen",
     "ASST|Fallback: MA50-Pullback": "draussen",
     "ATKR|Fallback: MA50-Pullback": "draussen",
     "ATRC|Fallback: MA50-Pullback": "draussen",
@@ -129,7 +129,7 @@
     "CBIO|Fallback: MA50-Pullback": "draussen",
     "CHEF|Fallback: MA50-Pullback": "draussen",
     "CNK|Fallback: MA50-Pullback": "drin",
-    "CON|Fallback: MA50-Pullback": "drin",
+    "CON|Fallback: MA50-Pullback": "draussen",
     "CPAY|Fallback: MA50-Pullback": "draussen",
     "CRCL|Fallback: MA50-Pullback": "draussen",
     "DGX|Fallback: MA50-Pullback": "drin",
@@ -216,7 +216,16 @@
     "BIIB|Rectangle Top": "drin",
     "RBLX|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "LPG|Cup & Handle (Wochenbasis)": "drin",
-    "LPG|Fallback: 52W-Hoch-Breakout": "drin"
+    "LPG|Fallback: 52W-Hoch-Breakout": "drin",
+    "TNK|Fallback: 52W-Hoch-Breakout": "drin",
+    "MATX|Fallback: 52W-Hoch-Breakout": "drin",
+    "DK|Cup & Handle (Wochenbasis)": "drin",
+    "DINO|Cup & Handle (Wochenbasis)": "drin",
+    "TIGO|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "KEYS|Rectangle Top": "drin",
+    "SNX|Rectangle Top": "drin",
+    "DK|Fallback: 52W-Hoch-Breakout": "drin",
+    "ARW|Rectangle Top": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -578,6 +587,10 @@
     "TNK|Cup & Handle (Wochenbasis)": "2026-09-11",
     "BEST|TNK|Cup & Handle (Wochenbasis)": "2026-09-11",
     "LPG|Cup & Handle (Wochenbasis)": "2026-09-11",
-    "BEST|LPG|Cup & Handle (Wochenbasis)": "2026-09-11"
+    "BEST|LPG|Cup & Handle (Wochenbasis)": "2026-09-11",
+    "DK|Cup & Handle (Wochenbasis)": "2026-09-11",
+    "BEST|DK|Cup & Handle (Wochenbasis)": "2026-09-11",
+    "ARW|Rectangle Top": "2026-09-11",
+    "BEST|ARW|Rectangle Top": "2026-09-11"
   }
 }
