@@ -77,8 +77,13 @@ AUFTRAG = (
     "eps_verwaessert = GAAP diluted earnings per share for the quarter in dollars, "
     "losses negative; NOT adjusted or non-GAAP EPS unless no GAAP figure exists, "
     "in which case set gaap to false; "
+    "eps_bereinigt = the ADJUSTED (non-GAAP) diluted earnings per share for the "
+    "quarter in dollars exactly as the company reports it (adjusted EPS, non-GAAP "
+    "EPS, core EPS, operating EPS), losses negative; null if the release states no "
+    "adjusted per-share figure; "
     "gaap = true only if the three figures are GAAP (reported) figures; "
-    "beleg_umsatz, beleg_nettogewinn, beleg_eps = the exact text fragment (at most "
+    "beleg_umsatz, beleg_nettogewinn, beleg_eps, beleg_eps_bereinigt = the exact "
+    "text fragment (at most "
     "120 characters) from which each value was taken. Use null for anything the "
     "text does not state. Answer with JSON only, no prose."
 )
@@ -90,13 +95,16 @@ SCHEMA = {
         "umsatz": {"type": ["number", "null"]},
         "nettogewinn": {"type": ["number", "null"]},
         "eps_verwaessert": {"type": ["number", "null"]},
+        "eps_bereinigt": {"type": ["number", "null"]},
         "gaap": {"type": "boolean"},
         "beleg_umsatz": {"type": ["string", "null"]},
         "beleg_nettogewinn": {"type": ["string", "null"]},
         "beleg_eps": {"type": ["string", "null"]},
+        "beleg_eps_bereinigt": {"type": ["string", "null"]},
     },
-    "required": ["periodenende", "umsatz", "nettogewinn", "eps_verwaessert", "gaap",
-                 "beleg_umsatz", "beleg_nettogewinn", "beleg_eps"],
+    # Antwort 1 (Gerhard, 12.09.2026): das bereinigte EPS wird mitgelesen.
+    "required": ["periodenende", "umsatz", "nettogewinn", "eps_verwaessert", "eps_bereinigt",
+                 "gaap", "beleg_umsatz", "beleg_nettogewinn", "beleg_eps", "beleg_eps_bereinigt"],
     "additionalProperties": False,
 }
 

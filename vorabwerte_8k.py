@@ -254,7 +254,11 @@ def plausibilitaet(werte, vorjahr, filing_datum):
 
 
 def abgleich_eintrag(eintrag, amtlich):
-    """Setzt den amtlichen Wert ein und protokolliert die Abweichung."""
+    """Setzt den amtlichen Wert ein und protokolliert die Abweichung.
+
+    Antwort 3 (Gerhard, 12.09.2026): Eine Abweichung ist nur meldenswert, wenn
+    Umsatz UND Ergebnis je Aktie neben der Vorabzahl liegen (beide ab
+    MELDE_SCHWELLE_PROZENT); ohne amtlichen EPS gibt es keine Meldung."""
     werte = eintrag.get("werte") or {}
     abweichung = {}
     for k in ("umsatz", "nettogewinn", "eps_verwaessert"):
@@ -264,8 +268,120 @@ def abgleich_eintrag(eintrag, amtlich):
     eintrag["status"] = "ersetzt"
     eintrag["amtlich"] = amtlich
     eintrag["abweichung_prozent"] = abweichung
+    eintrag["abweichung_meldenswert"] = abweichung_meldenswert(abweichung)
     eintrag["ersetzt_am"] = dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat()
     return eintrag
+
+
+MELDE_SCHWELLE_PROZENT = 1.0
+IFRS_HINWEIS = "IFRS-Berichterstatter: Zahlen nach IFRS, ungeprueft gegen US-GAAP"
+
+
+def abweichung_meldenswert(abweichung):
+    u, e = abweichung.get("umsatz"), abweichung.get("eps_verwaessert")
+    if u is None or e is None:
+        return False
+    return abs(u) >= MELDE_SCHWELLE_PROZENT and abs(e) >= MELDE_SCHWELLE_PROZENT
+
+
+def ist_ifrs(zeilen):
+    """Antwort 8 (Gerhard, 12.09.2026): Auslaender laufen voll mit, ihre
+    IFRS-Zahlen werden als ungeprueft gekennzeichnet. Erkannt an der Taxonomie
+    der amtlichen Zeilen (ifrs-full)."""
+    return any(str(z.get("taxonomie") or "").lower().startswith("ifrs") for z in zeilen or [])
+
+
+_KONSENS_CACHE = {}
+
+
+def _schnappschuss_zeit(pfad):
+    """2026-09-11_1930Z.jsonl.gz -> 2026-09-11T19:30:00+00:00"""
+    m = re.search(r"(\d{4}-\d{2}-\d{2})_(\d{2})(\d{2})Z", os.path.basename(pfad))
+    return f"{m.group(1)}T{m.group(2)}:{m.group(3)}:00+00:00" if m else None
+
+
+def konsens_vor(daten, ticker, filing_utc):
+    """Antworten 5 und 6 (Gerhard, 12.09.2026): der juengste Konsens-Schnappschuss
+    VOR dem Filing, davon die Zeile des laufenden Quartals (0q). Die
+    Schnappschuesse entstehen zweimal am Tag (09:00 und 19:30 UTC); ein 8-K nach
+    Boersenschluss trifft damit den Konsens des Meldetags, ohne einen Abruf."""
+    if not ticker or not filing_utc:
+        return None
+    try:
+        grenze = dt.datetime.fromisoformat(str(filing_utc).replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if grenze.tzinfo is None:
+        grenze = grenze.replace(tzinfo=dt.timezone.utc)
+    kandidaten = []
+    for p in glob.glob(os.path.join(daten, "konsens", "*", "*.jsonl.gz")):
+        z = _schnappschuss_zeit(p)
+        if z and dt.datetime.fromisoformat(z) < grenze:
+            kandidaten.append((z, p))
+    if not kandidaten:
+        return None
+    z, p = max(kandidaten)
+    if p not in _KONSENS_CACHE:
+        import gzip
+        tabelle = {}
+        with gzip.open(p, "rt", encoding="utf-8") as h:
+            for zeile in h:
+                try:
+                    d = json.loads(zeile)
+                except ValueError:
+                    continue
+                if d.get("periode") == "0q":
+                    tabelle[str(d.get("ticker") or "").upper()] = d
+        _KONSENS_CACHE[p] = tabelle
+    d = _KONSENS_CACHE[p].get(str(ticker).upper())
+    if not d:
+        return None
+    return {"datei": os.path.basename(p), "zeit_utc": d.get("zeit_utc") or z,
+            "periodenende": d.get("periodenende"), "quelle": d.get("quelle"),
+            "umsatz_avg": d.get("umsatz_avg"), "umsatz_analysten": d.get("umsatz_analysten"),
+            "eps_avg": d.get("eps_avg"), "eps_analysten": d.get("eps_analysten")}
+
+
+def _rel(ist, soll):
+    try:
+        ist, soll = float(ist), float(soll)
+    except (TypeError, ValueError):
+        return None
+    if soll == 0:
+        return None
+    return round((ist - soll) / abs(soll) * 100, 2)
+
+
+def ueberraschung(daten, ticker, filing_utc, werte, konsens=None):
+    """Umsatz- und EPS-Ueberraschung gegen den Konsens vor der Meldung, selbst
+    gerechnet (Antwort 5). EPS gegen das bereinigte Ergebnis, weil der
+    Analystenkonsens bereinigt ist; fehlt es, gegen das amtliche mit Vermerk."""
+    k = konsens if konsens is not None else konsens_vor(daten, ticker, filing_utc)
+    if not k:
+        return None
+    raus = {"konsens_datei": k.get("datei"), "konsens_zeit_utc": k.get("zeit_utc"),
+            "konsens_periodenende": k.get("periodenende"), "konsens_quelle": k.get("quelle"),
+            "vermerke": []}
+    pe = werte.get("periodenende")
+    try:
+        tage = abs((dt.date.fromisoformat(str(pe)) - dt.date.fromisoformat(str(k.get("periodenende")))).days)
+        raus["periode_passt"] = tage <= 6
+    except (ValueError, TypeError):
+        raus["periode_passt"] = None
+    if raus["periode_passt"] is False:
+        raus["vermerke"].append(f"Konsens gilt fuer das Quartal bis {k.get('periodenende')}, gemeldet ist {pe}")
+    raus["umsatz_konsens"], raus["umsatz_analysten"] = k.get("umsatz_avg"), k.get("umsatz_analysten")
+    raus["umsatz_prozent"] = _rel(werte.get("umsatz"), k.get("umsatz_avg"))
+    eps_ist, basis = werte.get("eps_bereinigt"), "bereinigt"
+    if eps_ist is None:
+        eps_ist, basis = werte.get("eps_verwaessert"), "amtlich"
+        if eps_ist is not None:
+            raus["vermerke"].append("EPS-Ueberraschung gegen das amtliche Ergebnis je Aktie gerechnet, "
+                                    "der Konsens ist bereinigt")
+    raus["eps_basis"] = basis
+    raus["eps_konsens"], raus["eps_analysten"] = k.get("eps_avg"), k.get("eps_analysten")
+    raus["eps_prozent"] = _rel(eps_ist, k.get("eps_avg"))
+    return raus
 
 
 # ---------------------------------------------------------------------------
@@ -340,8 +456,9 @@ def verarbeite(cik, accession, name, filing_utc, hole, frage, kette, log=print, 
         eintrag["status"] = "fehlgeschlagen"
         return eintrag
     g = antwort["geparst"]
-    werte = {k: g.get(k) for k in ("periodenende", "umsatz", "nettogewinn", "eps_verwaessert", "gaap")}
-    belege = {k: g.get(k) for k in ("beleg_umsatz", "beleg_nettogewinn", "beleg_eps")}
+    werte = {k: g.get(k) for k in ("periodenende", "umsatz", "nettogewinn", "eps_verwaessert", "gaap",
+                                   "eps_bereinigt")}
+    belege = {k: g.get(k) for k in ("beleg_umsatz", "beleg_nettogewinn", "beleg_eps", "beleg_eps_bereinigt")}
     eintrag.update({"modell": modell_ok, "modell_laut_antwort": antwort.get("modell_laut_antwort"),
                     "dauer_s": antwort.get("dauer_s"), "werte": werte, "belege": belege})
     u = antwort.get("usage") or {}
@@ -349,11 +466,16 @@ def verarbeite(cik, accession, name, filing_utc, hole, frage, kette, log=print, 
     if pr and u:
         eintrag["kosten_usd"] = round((u.get("prompt_tokens", 0) * pr[0] + u.get("completion_tokens", 0) * pr[1]) / 1e6, 5)
     vorjahr = {}
+    eintrag["ifrs"] = False
     if firma_laden is not None:
         try:
-            vorjahr = vorjahreswerte(firma_laden(cik), werte.get("periodenende") or "")
+            zeilen = firma_laden(cik)
+            eintrag["ifrs"] = ist_ifrs(zeilen)
+            vorjahr = vorjahreswerte(zeilen, werte.get("periodenende") or "")
         except Exception as e:  # noqa
             eintrag["hinweise"].append(f"Vorjahr nicht pruefbar: {str(e)[:120]}")
+    if eintrag["ifrs"]:
+        eintrag["hinweise"].append(IFRS_HINWEIS)
     status, gruende, abw = plausibilitaet(werte, vorjahr, (filing_utc or "")[:10])
     eintrag.update({"status": status, "vorjahr": vorjahr or None, "abweichung_vorjahr": abw or None,
                     "pruefung": gruende or ["Vorjahresquartal nicht pruefbar"] if not vorjahr and not gruende else gruende})
@@ -373,7 +495,11 @@ def _register(daten, eintrag, art):
                             "ticker": eintrag.get("ticker"), "cik": eintrag.get("cik"), "accession": eintrag.get("accession"),
                             "status": eintrag.get("status"), "periodenende": w.get("periodenende"),
                             "umsatz": w.get("umsatz"), "nettogewinn": w.get("nettogewinn"), "eps": w.get("eps_verwaessert"),
-                            "modell": eintrag.get("modell"), "abweichung_prozent": eintrag.get("abweichung_prozent")},
+                            "modell": eintrag.get("modell"), "abweichung_prozent": eintrag.get("abweichung_prozent"),
+                            "meldenswert": eintrag.get("abweichung_meldenswert"), "eps_bereinigt": w.get("eps_bereinigt"),
+                            "ifrs": eintrag.get("ifrs"),
+                            "ueberraschung_umsatz": (eintrag.get("ueberraschung") or {}).get("umsatz_prozent"),
+                            "ueberraschung_eps": (eintrag.get("ueberraschung") or {}).get("eps_prozent")},
                            ensure_ascii=False) + "\n")
 
 
@@ -439,6 +565,8 @@ def lauf_strom(daten, stunden=6, hoechstens=0, kette=None, hole=None, frage=None
         e = verarbeite(cik, acc, name, upd, hole, frage, kette, log=log, firma_laden=firma_laden)
         e["ticker"] = ciks.get(cik)
         st = e["status"]
+        if st in ("vorlaeufig", "unsicher"):
+            e["ueberraschung"] = ueberraschung(daten, e["ticker"], upd, e.get("werte") or {})
         volltext = e.pop("_text", None)
         if volltext:
             try:
@@ -457,8 +585,13 @@ def lauf_strom(daten, stunden=6, hoechstens=0, kette=None, hole=None, frage=None
         gesehen[acc] = upd
         juengste = max(juengste, upd)
         w = e.get("werte") or {}
+        ue = e.get("ueberraschung") or {}
         log(f"  {e.get('ticker')} {acc} {st}: Umsatz {w.get('umsatz')}, Nettogewinn {w.get('nettogewinn')}, "
-            f"EPS {w.get('eps_verwaessert')}, Periode {w.get('periodenende')}, Modell {e.get('modell')}"
+            f"EPS {w.get('eps_verwaessert')}, bereinigt {w.get('eps_bereinigt')}, Periode {w.get('periodenende')}, "
+            f"Modell {e.get('modell')}"
+            + (f"; Ueberraschung Umsatz {ue.get('umsatz_prozent')} Prozent, EPS {ue.get('eps_prozent')} Prozent "
+               f"({ue.get('eps_basis')}, Konsens {ue.get('konsens_datei')})" if ue else "")
+            + ("; IFRS, ungeprueft" if e.get("ifrs") else "")
             + (f"; {'; '.join(e.get('pruefung') or [])}" if st == "unsicher" else ""))
     # Der Stand wandert nur bis zur juengsten VERARBEITETEN Einreichung, damit
     # ein Abbruch keine 8-Ks verliert; ohne Kandidaten bis zum Feed-Stand.
@@ -480,7 +613,8 @@ def lauf_abgleich(daten, firma_laden=None, log=print, hoechstens_alter_tage=120)
     if firma_laden is None:
         firma_laden = _zeilen_lader()
     bilanz = {"zeit": dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat(), "modus": "abgleich",
-              "offen": 0, "ersetzt": 0, "weiter_offen": 0, "fehler": 0}
+              "offen": 0, "ersetzt": 0, "weiter_offen": 0, "fehler": 0, "meldenswert": 0}
+    meldungen = []
     grenze = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=hoechstens_alter_tage)).isoformat()
     for pfad in sorted(glob.glob(os.path.join(daten, "vorabwerte", "*", "*.json"))):
         e = ke._json(pfad, None)
@@ -504,12 +638,22 @@ def lauf_abgleich(daten, firma_laden=None, log=print, hoechstens_alter_tage=120)
             ke._schreibe_json(pfad, e)
             _register(daten, e, "abgleich")
             bilanz["ersetzt"] += 1
-            log(f"  {e.get('ticker')} {e.get('accession')} ersetzt; Abweichung {e.get('abweichung_prozent')}")
+            if e.get("abweichung_meldenswert"):
+                bilanz["meldenswert"] += 1
+                ab = e.get("abweichung_prozent") or {}
+                meldungen.append(f"{len(meldungen) + 1}. {e.get('ticker')}; Umsatz {ab.get('umsatz'):.1f} Prozent "
+                                 f"daneben; EPS {ab.get('eps_verwaessert'):.1f} Prozent daneben; Quartal bis {pe}")
+            log(f"  {e.get('ticker')} {e.get('accession')} ersetzt; Abweichung {e.get('abweichung_prozent')}"
+                + ("; meldenswert" if e.get("abweichung_meldenswert") else ""))
         else:
             bilanz["weiter_offen"] += 1
     with io.open(os.path.join(daten, "vorabwerte", "laeufe.jsonl"), "a", encoding="utf-8") as f:
         f.write(json.dumps(bilanz, ensure_ascii=False) + "\n")
     log(f"Ergebnis: {bilanz}")
+    # Antwort 3: gemeldet wird nur, wenn Umsatz UND EPS abweichen; ein Bericht
+    # je Lauf, laufende Nummern, Strichpunkt zwischen den Angaben.
+    if meldungen:
+        ke.push("Vorabwerte: amtliche Zahlen weichen von der Pressemitteilung ab", "\n".join(meldungen))
     return bilanz
 
 
@@ -647,9 +791,32 @@ def selbsttest() -> int:
     p("Abgleich: amtlicher Wert eingesetzt, Abweichung in Prozent, EPS ohne Sollwert bleibt None",
       e2["status"] == "ersetzt" and e2["amtlich"]["umsatz"] == 23.609e9 and round(e2["abweichung_prozent"]["umsatz"]) == 68
       and e2["abweichung_prozent"]["nettogewinn"] == 0.0 and "eps_verwaessert" not in e2["abweichung_prozent"])
+    e3 = abgleich_eintrag({"werte": {"umsatz": 100e6, "nettogewinn": 5e6, "eps_verwaessert": 0.50}, "status": "vorlaeufig"},
+                          {"umsatz": 103e6, "nettogewinn": 5e6, "eps_verwaessert": 0.52})
+    e4 = abgleich_eintrag({"werte": {"umsatz": 100e6, "eps_verwaessert": 0.50}, "status": "vorlaeufig"},
+                          {"umsatz": 103e6, "eps_verwaessert": 0.50})
+    p("Antwort 3: Abweichung nur meldenswert, wenn Umsatz UND EPS abweichen; ohne amtlichen EPS nie",
+      e3["abweichung_meldenswert"] is True and e4["abweichung_meldenswert"] is False
+      and e2["abweichung_meldenswert"] is False, (e3["abweichung_prozent"], e4["abweichung_prozent"]))
 
     with tempfile.TemporaryDirectory() as tmp:
         ke._schreibe_json(os.path.join(tmp, "konsens", "firmen_mit_konsens.json"), {"AAPL": {}, "PGR": {}})
+
+        def konsens_datei(name, zeilen):
+            import gzip
+            pfad = os.path.join(tmp, "konsens", "2026", name)
+            os.makedirs(os.path.dirname(pfad), exist_ok=True)
+            with gzip.open(pfad, "wt", encoding="utf-8") as h:
+                for z in zeilen:
+                    h.write(json.dumps(z) + "\n")
+        _k = {"ticker": "AAPL", "periodenende": "2026-06-30", "umsatz_analysten": 20, "eps_analysten": 22, "quelle": "yahoo"}
+        konsens_datei("2026-07-30_1930Z.jsonl.gz",
+                      [dict(_k, zeit_utc="2026-07-30T19:30:00Z", periode="0q", umsatz_avg=90e9, eps_avg=1.5),
+                       dict(_k, zeit_utc="2026-07-30T19:30:00Z", periode="+1q", periodenende="2026-09-30",
+                            umsatz_avg=99e9, eps_avg=1.9)])
+        # nach dem Filing (20:31 UTC): darf nicht zaehlen
+        konsens_datei("2026-07-31_0900Z.jsonl.gz",
+                      [dict(_k, zeit_utc="2026-07-31T09:00:00Z", periode="0q", umsatz_avg=95e9, eps_avg=1.6)])
         aufrufe = []
 
         def hole2(url):
@@ -662,8 +829,10 @@ def selbsttest() -> int:
 
         def frage2(modell, text):
             return {"status": 200, "geparst": {"periodenende": "2026-06-27", "umsatz": 94.036e9, "nettogewinn": 23.434e9,
-                                               "eps_verwaessert": 1.57, "gaap": True, "beleg_umsatz": "Total net sales 94,036",
-                                               "beleg_nettogewinn": "Net income 23,434", "beleg_eps": "Diluted 1.57"},
+                                               "eps_verwaessert": 1.57, "eps_bereinigt": 1.65, "gaap": True,
+                                               "beleg_umsatz": "Total net sales 94,036",
+                                               "beleg_nettogewinn": "Net income 23,434", "beleg_eps": "Diluted 1.57",
+                                               "beleg_eps_bereinigt": "Non-GAAP diluted EPS 1.65"},
                     "usage": {"prompt_tokens": 9000, "completion_tokens": 120}, "dauer_s": 2.1, "hinweise": [],
                     "modell_laut_antwort": modell}
 
@@ -687,6 +856,24 @@ def selbsttest() -> int:
           len(datei) == 1 and (lambda d: d["quelle"] == QUELLE and d["status"] == "vorlaeufig" and d["ticker"] == "AAPL"
                                and d["belege"]["beleg_eps"] == "Diluted 1.57" and d["sec_akzeptanz_et"] == "20260730163122"
                                and d["vorjahr"]["umsatz"] == 85.8e9 and d["modell"] == KETTE[0])(ke._json(datei[0], {})))
+        d1 = ke._json(datei[0], {})
+        ue = d1.get("ueberraschung") or {}
+        p("Antwort 1: das bereinigte EPS wird mitgelesen und belegt",
+          d1["werte"].get("eps_bereinigt") == 1.65 and d1["belege"].get("beleg_eps_bereinigt") == "Non-GAAP diluted EPS 1.65")
+        p("Antworten 5 und 6: Ueberraschung selbst gerechnet gegen den juengsten Konsens VOR dem Filing, EPS bereinigt",
+          ue.get("konsens_datei") == "2026-07-30_1930Z.jsonl.gz" and ue.get("umsatz_prozent") == 4.48
+          and ue.get("eps_prozent") == 10.0 and ue.get("eps_basis") == "bereinigt" and ue.get("periode_passt") is True
+          and not ue.get("vermerke"), ue)
+        ue2 = ueberraschung(tmp, "AAPL", "2026-07-30T20:31:22+00:00",
+                            {"periodenende": "2026-03-28", "umsatz": 90e9, "eps_verwaessert": 1.5})
+        p("Ueberraschung: falsches Quartal und amtliche EPS-Basis werden vermerkt",
+          ue2 and ue2["periode_passt"] is False and ue2["eps_basis"] == "amtlich" and len(ue2["vermerke"]) == 2
+          and ue2["umsatz_prozent"] == 0.0 and ue2["eps_prozent"] == 0.0, ue2)
+        p("Ueberraschung: ohne Konsens-Zeile oder ohne Schnappschuss vor dem Filing kein Wert",
+          ueberraschung(tmp, "PGR", "2026-07-30T20:31:22+00:00", {}) is None
+          and ueberraschung(tmp, "AAPL", "2026-07-30T10:00:00+00:00", {}) is None)
+        p("Antwort 8: US-GAAP-Firma ohne IFRS-Kennzeichnung, IFRS-Zeilen werden erkannt",
+          d1.get("ifrs") is False and ist_ifrs([{"taxonomie": "ifrs-full"}]) and not ist_ifrs(firma2(320193)))
         stand = ke._json(os.path.join(tmp, "vorabwerte", "stand.json"), {})
         p("Strom: Stand und Register geschrieben",
           stand.get("zuletzt") == "2026-07-30T20:31:22+00:00" and "0000320193-26-000045" in stand.get("gesehen", {})
@@ -723,6 +910,8 @@ def selbsttest() -> int:
           and os.path.exists(os.path.join(tmp, "vorabwerte", "abgleich.jsonl")), b4)
         b5 = lauf_abgleich(tmp, firma_laden=firma3, log=lambda *_: None)
         p("Abgleich: ersetzte Eintraege werden nicht erneut geprueft", b5["offen"] == 0)
+        p("Antwort 3: der abweichende Nettogewinn allein ist nicht meldenswert",
+          b4["meldenswert"] == 0 and d4["abweichung_meldenswert"] is False)
     print("\n" + ("Alles bestanden." if fehler == 0 else f"{fehler} Fehler."))
     return fehler
 
