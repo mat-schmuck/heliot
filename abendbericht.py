@@ -326,7 +326,8 @@ def bauen(rs, sek, gruen, gedaechtnis, schlussnah, befunde_nacht, heute, holen_a
         kopf.append(f"RS nicht verfuegbar: {rs.get('grund') or rs.get('status')}")
     else:
         u = rs.get("universum") or {}
-        kopf.append(f"RS gegen {u.get('im_universum', '?')} Nasdaq-Aktien gerechnet, Abdeckung "
+        kopf.append(f"RS gegen {u.get('bezug_anzahl') or u.get('im_universum', '?')} Stammaktien des "
+                    f"US-Markts gerechnet, Abdeckung "
                     f"{_z((u.get('abdeckung') or 0) * 100, 1)} Prozent")
         pl = rs.get("plausibilitaet") or {}
         if pl and not pl.get("ok"):

@@ -56,7 +56,7 @@ import positionen     # offene Positionen samt Exit-Regelwerk
 import gewinnzonen_lauf  # Kapitel 12: Gewinnzonen je offener Beobachtung
 import red_to_green   # Kapitel 9: Fokusliste fuer den Live-Waechter
 import sektor_radar    # die 36 Branchen-ETFs (Volumenkurven auch fuer sie, M1)
-import rs_universum    # R1 bis R6 (Gerhard, 12.09.2026): RS gegen das Nasdaq-Universum
+import rs_universum    # R1 bis R6 (Gerhard, 12.09.2026): RS gegen den ganzen US-Markt
 import sektor_rangliste  # R12 bis R17: die 36 ETFs nach Faber-Mittel
 import ibd_ratings     # R20 bis R22: EPS, SMR, A/D, Composite als Naeherung
 import abendbericht    # R7: der Bericht nach Handelsschluss

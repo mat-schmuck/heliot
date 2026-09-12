@@ -1,37 +1,51 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-RS-UNIVERSUM: relative Staerke gegen alle Nasdaq-Aktien
-========================================================
+RS-UNIVERSUM: relative Staerke gegen den ganzen US-Markt
+=========================================================
 Gerhards Antworten vom 12.09.2026 auf die Recherche (R1 bis R6, Teil 5,
-Teil 6, Luecken 1, 3, 5 und 6). Grundsatz, woertlich: "Die relative
+Teil 6, Luecken 1, 3, 5 und 6), am selben Abend ergaenzt um drei Antworten
+auf den IBD-Abgleich (ueber Mathias): Vergleichsbasis ist der GANZE
+US-Markt, die Schwellen sind nur noch Kennzeichnung, jede Einzelrendite
+wird nach oben gekappt. Grundsatz, woertlich: "Die relative
 Staerke, die Sektor-Raenge und die IBD-Ratings sind ENTSCHEIDUNGSHILFEN,
 keine Filter." Dieses Modul rechnet, es filtert nichts; die einzige
 Ausnahme bleibt die Fokusliste von Kapitel 9 (red_to_green, RS ueber 90).
 
 WAS GERECHNET WIRD
-  R1  Universum: alle Aktien der Nasdaq aus dem amtlichen Symbolverzeichnis
-      der Nasdaq (nasdaqlisted.txt; ETFs und Test-Titel sind dort
+  R1  Universum: alle Stammaktien der Nasdaq (nasdaqlisted.txt) und seit
+      12.09.2026 abends auch von NYSE und NYSE American (otherlisted.txt,
+      Exchange N und A; ETFs und Test-Titel sind in beiden Verzeichnissen
       gekennzeichnet). Optionsscheine, Einheiten, Rechte, Vorzugsaktien,
-      Anleihen und SPACs bleiben draussen (Namensfilter); ADRs bleiben
-      drin (Antwort 8: Auslaender laufen ueberall voll mit).
+      Anleihen und SPACs bleiben draussen (Namensfilter; Vorzugsaktien
+      tragen bei NYSE ein Dollarzeichen im Symbol, Optionsscheine,
+      Einheiten und Rechte enden auf .W, .U und .R); ADRs bleiben drin
+      (Antwort 8: Auslaender laufen ueberall voll mit).
   R2  Schwellen: Mindestkurs 15 Dollar und Tagesumsatz von 10 Millionen
-      Dollar im 50-Tage-Schnitt. Was darunter liegt, gehoert nicht zur
-      Vergleichsbasis, steht aber mit Grund in der Ablage.
+      Dollar im 50-Tage-Schnitt. Seit 12.09.2026 abends NUR KENNZEICHNUNG
+      ("im Universum"): Die Vergleichsbasis fuer das Perzentil sind ALLE
+      Stammaktien mit voller Historie, auch die unter den Schwellen; sie
+      stehen mit Grund unter "ausserhalb", bekommen aber ebenso einen RS.
   R3  Klassische IBD-Formel: 40 Prozent auf die juengsten drei Monate,
       je 20 Prozent auf die drei davor (config.lookback); der Rohwert
       kommt aus red_to_green.rs_rohwert, die EINE Stelle dieser Formel.
+      Seit 12.09.2026 abends wird jede Einzelrendite nach oben bei plus 50
+      Prozent gekappt (config.lookback.rs_kappung). GEMESSEN: Ohne
+      Kappung stand AAOI bei RS 97 und SNDK bei 99, IBD nannte 55 und 87;
+      mit Kappung und dem ganzen US-Markt als Bezug liegen dreizehn
+      oeffentliche IBD-Werte innerhalb von 5 Punkten (mittlerer Fehler
+      1,3); ohne NYSE im Bezug waren es bis zu 13 Punkte daneben.
   R4  Anzeige schlicht "RS 93"; R6 mit dem Zusatz "sehr gut" ab 85.
   R5  Dazu die RS-Linie (Kurs geteilt durch SPY beziehungsweise QQQ) mit
       dem Hinweis, ob sie auf einem 52-Wochen-Hoch steht.
   Teil 5  Zwei Stufen getrennt: RS-Linien-Hoch WAEHREND eines Kurs-Hochs
       und RS-Linien-Hoch OBWOHL der Kurs keines hat (IBDs blauer Punkt).
-  Luecke 5  Listen-Aktien bekommen IMMER einen RS-Wert, GEGEN das
-      Universum gerechnet, nicht als Teil davon: Der Wert ist der Anteil
-      der Universumsaktien mit kleinerem Rohwert; steht die Listenaktie
-      selbst im Universum, wird sie fuer ihren eigenen Rang ausgenommen.
-      So aendert keine Listenaktie die Verteilung des Universums, und die
-      15 Listenaktien unter den Schwellen bekommen trotzdem einen Wert.
+  Luecke 5  Listen-Aktien bekommen IMMER einen RS-Wert, GEGEN den Bezug
+      gerechnet, nicht als Teil davon: Der Wert ist der Anteil der
+      Bezugsaktien mit kleinerem Rohwert; steht die Listenaktie selbst im
+      Bezug, wird sie fuer ihren eigenen Rang ausgenommen (das gilt seit
+      12.09.2026 abends fuer JEDE Aktie: Rang ohne sich selbst). So aendert
+      keine Listenaktie die Verteilung des Bezugs.
 
 DIE VIER ZUVERLAESSIGKEITSREGELN (Teil 6)
   1. Mindestabdeckung: Liefert der Kursabruf fuer weniger als 95 Prozent
@@ -56,10 +70,12 @@ FESTLEGUNGEN (Luecke 6)
 
 Aufruf:
   python rs_universum.py --bauen            im Nachtscan, schreibt rs_universum.json
+                                            (rund sechs Minuten fuer rund 6.600 Symbole)
   python rs_universum.py --selbsttest       ohne Netz
 """
 
 import argparse
+import bisect
 import csv
 import io
 import json
@@ -91,10 +107,30 @@ AUSSCHLUSS = re.compile(
 def nasdaq_liste(text=None, holen=None, leise=True):
     """Alle Stammaktien der Nasdaq aus dem amtlichen Symbolverzeichnis.
 
-    Rueckgabe: (Liste von {symbol, name, markt}, {Grund: Anzahl}). Der
-    Text kann uebergeben werden (Selbsttest); sonst wird er geholt."""
+    Rueckgabe: (Liste von {symbol, name, markt, boerse}, {Grund: Anzahl}).
+    Der Text kann uebergeben werden (Selbsttest); sonst wird er geholt."""
     if text is None:
         text = (holen or _text_holen)(CFGU["quelle"])
+    return _verzeichnis(text, "Symbol", lambda z: "Nasdaq", leise, "Nasdaq-Verzeichnis")
+
+
+def andere_liste(text=None, holen=None, leise=True):
+    """Alle Stammaktien von NYSE und NYSE American aus otherlisted.txt
+    (Exchange N und A laut config; Arca, BATS und IEX bleiben draussen).
+    Vorzugsaktien tragen dort ein Dollarzeichen im Symbol, Optionsscheine,
+    Einheiten und Rechte enden auf .W, .U und .R."""
+    if text is None:
+        text = (holen or _text_holen)(CFGU["quelle_andere"])
+    boersen = dict(CFGU["andere_boersen"])
+    return _verzeichnis(text, "ACT Symbol",
+                        lambda z: boersen.get(str(z.get("Exchange") or "").strip()),
+                        leise, "NYSE-Verzeichnis")
+
+
+_SYMBOL = re.compile(r"[A-Z]{1,6}(\.[A-Z])?")
+
+
+def _verzeichnis(text, symbol_spalte, boerse_von, leise, titel):
     zeilen = list(csv.DictReader(io.StringIO(text), delimiter="|"))
     liste, gruende = [], {}
 
@@ -102,20 +138,25 @@ def nasdaq_liste(text=None, holen=None, leise=True):
         gruende[grund] = gruende.get(grund, 0) + 1
 
     for z in zeilen:
-        sym = str(z.get("Symbol") or "").strip()
+        sym = str(z.get(symbol_spalte) or "").strip()
         if not sym or sym.startswith("File Creation"):
             continue
+        boerse = boerse_von(z)
+        if not boerse:
+            raus("andere Boerse"); continue
         name = str(z.get("Security Name") or "").strip()
         if str(z.get("ETF") or "").strip().upper() == "Y":
             raus("ETF"); continue
         if str(z.get("Test Issue") or "").strip().upper() == "Y":
             raus("Test-Titel"); continue
+        if "$" in sym or re.search(r"\.(W|U|R)$", sym) or not _SYMBOL.fullmatch(sym):
+            raus("kein Stammtitel (Symbol: Vorzug, Optionsschein, Einheit, Recht)"); continue
         if AUSSCHLUSS.search(name):
             raus("kein Stammtitel (Optionsschein, Einheit, Recht, Vorzug, Anleihe, SPAC)"); continue
-        liste.append({"symbol": sym, "name": name,
+        liste.append({"symbol": sym, "name": name, "boerse": boerse,
                       "markt": str(z.get("Market Category") or "").strip()})
     if not leise:
-        print(f"  Nasdaq-Verzeichnis: {len(zeilen)} Zeilen, {len(liste)} Stammaktien; "
+        print(f"  {titel}: {len(zeilen)} Zeilen, {len(liste)} Stammaktien; "
               + "; ".join(f"{k} {v}" for k, v in gruende.items()))
     return liste, gruende
 
@@ -160,6 +201,22 @@ def kurse_holen(symbole, block=None, zeitraum=None, download=None, leise=True):
             except Exception as e2:  # noqa
                 if not leise:
                     print(f"  Block {i // block + 1}: erneut gescheitert ({type(e2).__name__})")
+    if download is None:
+        fehlend = [s for s in symbole if s not in raus]
+        # Yahoo laesst in grossen Bloecken gelegentlich STILL Symbole aus
+        # (gemessen 12.09.2026: 45 Prozent eines NYSE-Abrufs in 300er-
+        # Bloecken, ohne Fehlermeldung). Fehlendes einmal in kleinen
+        # Bloecken nachholen; was dann noch fehlt, ist wirklich nicht da.
+        # Fehlt ALLES, ist Yahoo weg, dann wird nicht verdoppelt.
+        if fehlend and len(fehlend) < len(symbole):
+            vorher = len(raus)
+            for i in range(0, len(fehlend), 50):
+                try:
+                    raus.update(_yahoo_block(fehlend[i:i + 50], zeitraum))
+                except Exception:  # noqa
+                    continue
+            if not leise:
+                print(f"  Nachgeladen: {len(raus) - vorher} von {len(fehlend)} zunaechst fehlenden Symbolen")
     if not leise:
         print(f"  Kurse fuer {len(raus)} von {len(symbole)} Symbolen in {time.time() - t0:.0f} s")
     return raus
@@ -283,6 +340,32 @@ def perzentil(rohwerte, eigener):
     return red_to_green.rs_rating_perzentil(rohwerte, eigener)
 
 
+def _perzentile(werte):
+    """{Rohwert: Perzentil} fuer alle Werte des Bezugs, jeder Wert gegen
+    die anderen (ohne sich selbst): Anteil der strikt kleineren mal 100,
+    geklemmt auf 1 bis 99, gerundet. Dieselbe Festlegung wie perzentil,
+    nur in einem Durchgang fuer tausende Werte."""
+    s = sorted(werte)
+    n = len(s) - 1
+    if n <= 0:
+        return {}
+    return {v: round(max(1, min(99, bisect.bisect_left(s, v) / n * 100))) for v in set(s)}
+
+
+def _perzentil_ohne(sortiert, eigener, x):
+    """Rang von x gegen die sortierten Rohwerte des Bezugs; steht die Aktie
+    selbst im Bezug (eigener = ihr Bezugswert), zaehlt der nicht mit."""
+    n = len(sortiert)
+    kleinere = bisect.bisect_left(sortiert, x)
+    if eigener is not None:
+        n -= 1
+        if eigener < x:
+            kleinere -= 1
+    if n <= 0:
+        return None
+    return round(max(1, min(99, kleinere / n * 100)))
+
+
 def plausibilitaet(perzentile):
     """Sind die Perzentile 1 bis 99 ungefaehr gleichverteilt? Je Dezil
     sollen zwischen 5 und 15 Prozent der Aktien liegen."""
@@ -311,7 +394,12 @@ def selbsttest_kuenstlich(rohwerte_universum, schritt=0.01):
     liegen. Rueckgabe dict mit ok, erwartet, ist, perzentil."""
     closes = kuenstliche_aktie(schritt=schritt)
     ist = red_to_green.rs_rohwert(closes)
-    erwartet = sum(g * ((1.0 + schritt) ** t - 1.0)
+    kap = red_to_green.RS_KAPPUNG
+
+    def rendite(t):
+        r = (1.0 + schritt) ** t - 1.0
+        return min(kap, r) if kap is not None else r
+    erwartet = sum(g * rendite(t)
                    for t, g in zip(CFG["lookback"]["rs_quartale"], CFG["lookback"]["rs_gewichte"]))
     rechnung_ok = ist is not None and abs(ist - erwartet) < 1e-9
     p = perzentil(rohwerte_universum, ist) if rohwerte_universum and ist is not None else None
@@ -352,13 +440,17 @@ def _verlauf_fortschreiben(alt_eintrag, tag, rs, hoechstens):
 
 
 def bauen(loaded=None, pfad=DATEI, holen_liste=None, holen_kurse=None, leise=False, alt=None,
-          liste_text=None, jetzt=None):
+          liste_text=None, liste_text_andere=None, jetzt=None):
     """Der naechtliche Lauf. loaded: {Ticker: (df, Firma)} des Nachtscans,
-    dessen Aktien GEGEN das Universum gerechnet werden (Luecke 5)."""
+    dessen Aktien GEGEN den Bezug gerechnet werden (Luecke 5)."""
     cfg = CFGU
     t0 = time.time()
     liste, gruende = nasdaq_liste(text=liste_text, holen=holen_liste, leise=leise)
+    liste2, gruende2 = andere_liste(text=liste_text_andere, holen=holen_liste, leise=leise)
+    bekannt = {e["symbol"] for e in liste}
+    liste = liste + [e for e in liste2 if e["symbol"] not in bekannt]
     symbole = [e["symbol"] for e in liste]
+    boerse_von = {e["symbol"]: e["boerse"] for e in liste}
     indizes_namen = list(cfg["indizes"]) + [cfg["markt_index"]]
     kurse = (holen_kurse or kurse_holen)(symbole + indizes_namen, leise=leise) if holen_kurse is None \
         else holen_kurse(symbole + indizes_namen)
@@ -372,16 +464,19 @@ def bauen(loaded=None, pfad=DATEI, holen_liste=None, holen_kurse=None, leise=Fal
         status, grund = "nicht verfuegbar", (f"Abdeckung {abdeckung * 100:.1f} Prozent unter "
                                              f"{float(cfg['mindest_abdeckung']) * 100:.0f} Prozent")
 
-    # Kennzahlen und Zugehoerigkeit zum Universum (R2 und Historie)
+    # Kennzahlen. "aktien" = ueber den Schwellen (Kennzeichnung R2),
+    # "ausserhalb" = darunter oder ohne Historie. Zum BEZUG des Perzentils
+    # gehoeren beide Gruppen, sobald ein Rohwert da ist.
     aktien, ausserhalb = {}, {}
     for e in liste:
         s = e["symbol"]
         k = kurse.get(s)
         if not k or len(k["close"]) < min_tage:
-            ausserhalb[s] = {"grund": "keine Kurse", "name": e["name"]}
+            ausserhalb[s] = {"grund": "keine Kurse", "name": e["name"], "boerse": e["boerse"], "roh": None}
             continue
         kz = kennzahlen(k, indizes, cfg)
         kz["name"] = e["name"]
+        kz["boerse"] = e["boerse"]
         if kz["kurs"] is None or kz["kurs"] < float(cfg["mindestkurs"]):
             kz["grund"] = f"Kurs unter {float(cfg['mindestkurs']):.0f} Dollar"
             ausserhalb[s] = kz
@@ -395,30 +490,39 @@ def bauen(loaded=None, pfad=DATEI, holen_liste=None, holen_kurse=None, leise=Fal
             ausserhalb[s] = kz
             continue
         aktien[s] = kz
-    rohwerte = [kz["roh"] for kz in aktien.values()]
+    bezug = {s: kz for gruppe in (aktien, ausserhalb) for s, kz in gruppe.items() if kz.get("roh") is not None}
+    rohwerte = [kz["roh"] for kz in bezug.values()]
+    roh_bezug = {s: kz["roh"] for s, kz in bezug.items()}
+    ad_bezug = {s: kz["ad_roh"] for s, kz in bezug.items() if kz.get("ad_roh") is not None}
     probe = selbsttest_kuenstlich(rohwerte) if rohwerte else {"ok": False, "grund": "keine Rohwerte"}
     if status == "ok" and not probe.get("ok"):
         status, grund = "nicht verfuegbar", "Selbsttest der kuenstlichen Aktie fehlgeschlagen"
     tag = (jetzt or date.today()).isoformat()
-    handelstag = max((kz["letzter_tag"] for kz in aktien.values() if kz.get("letzter_tag")), default=None)
+    handelstag = max((kz["letzter_tag"] for kz in bezug.values() if kz.get("letzter_tag")), default=None)
     alt = alt if alt is not None else lies(pfad)
     alt_aktien = (alt or {}).get("aktien", {}) if isinstance(alt, dict) else {}
-    ad_werte = [kz["ad_roh"] for kz in aktien.values() if kz.get("ad_roh") is not None]
-    for s, kz in aktien.items():
-        rs = perzentil(rohwerte, kz["roh"]) if status == "ok" else None
+    raenge = _perzentile(rohwerte) if status == "ok" else {}
+    ad_raenge = _perzentile(list(ad_bezug.values())) if status == "ok" else {}
+    for s, kz in bezug.items():
+        rs = raenge.get(kz["roh"]) if status == "ok" else None
         kz["rs"] = rs
-        kz["ad_rang"] = (perzentil(ad_werte, kz["ad_roh"])
-                         if (status == "ok" and kz.get("ad_roh") is not None and ad_werte) else None)
-        kz["rs_verlauf"] = _verlauf_fortschreiben(alt_aktien.get(s), handelstag or tag, rs, int(cfg["rs_verlauf_tage"]))
+        kz["ad_rang"] = ad_raenge.get(kz["ad_roh"]) if (status == "ok" and s in ad_bezug) else None
+        if s in aktien:
+            # Der Verlauf (Aenderung zur Vorwoche in den Berichten) nur fuer
+            # die Titel ueber den Schwellen; sonst wuechse die Datei um das
+            # Sechsfache, und die Berichte nennen nur diese Titel.
+            kz["rs_verlauf"] = _verlauf_fortschreiben(alt_aktien.get(s), handelstag or tag, rs, int(cfg["rs_verlauf_tage"]))
         kz["roh"] = round(kz["roh"], 6)
-    plaus = plausibilitaet([kz["rs"] for kz in aktien.values()]) if status == "ok" else {"ok": False, "grund": status, "dezile": []}
+    plaus = plausibilitaet([kz["rs"] for kz in bezug.values()]) if status == "ok" else {"ok": False, "grund": status, "dezile": []}
     if status == "ok" and not plaus["ok"]:
         # Kein Grund, die Werte zu verwerfen (das waere eine Vermutung), aber
         # ein Befund, der gemeldet wird.
         grund = "Plausibilitaet: " + plaus["grund"]
 
-    # Listen-Aktien GEGEN das Universum (Luecke 5)
+    # Listen-Aktien GEGEN den Bezug (Luecke 5)
     listen_ergebnis = {}
+    sortiert = sorted(rohwerte)
+    ad_sortiert = sorted(ad_bezug.values())
     for t, wert in (loaded or {}).items():
         try:
             df = wert[0] if isinstance(wert, tuple) else wert
@@ -429,16 +533,16 @@ def bauen(loaded=None, pfad=DATEI, holen_liste=None, holen_kurse=None, leise=Fal
         kz = kennzahlen(k, indizes, cfg)
         kz["firma"] = firma
         kz["im_universum"] = t in aktien
-        if status == "ok" and kz["roh"] is not None:
-            basis = [aktien[s]["roh"] for s in aktien if s != t]
-            kz["rs"] = perzentil(basis, kz["roh"]) if basis else None
+        kz["im_bezug"] = t in bezug
+        kz["boerse"] = boerse_von.get(t)
+        if status == "ok" and kz["roh"] is not None and sortiert:
+            kz["rs"] = _perzentil_ohne(sortiert, roh_bezug.get(t), kz["roh"])
         else:
             kz["rs"] = None
         if kz["roh"] is not None:
             kz["roh"] = round(kz["roh"], 6)
-        kz["ad_rang"] = (perzentil([aktien[s]["ad_roh"] for s in aktien if s != t and aktien[s].get("ad_roh") is not None],
-                                   kz["ad_roh"])
-                         if (status == "ok" and kz.get("ad_roh") is not None) else None)
+        kz["ad_rang"] = (_perzentil_ohne(ad_sortiert, ad_bezug.get(t), kz["ad_roh"])
+                         if (status == "ok" and kz.get("ad_roh") is not None and ad_sortiert) else None)
         alt_l = ((alt or {}).get("listen", {}) if isinstance(alt, dict) else {}).get(t)
         kz["rs_verlauf"] = _verlauf_fortschreiben(alt_l, handelstag or tag, kz["rs"], int(cfg["rs_verlauf_tage"]))
         listen_ergebnis[t] = kz
@@ -453,18 +557,33 @@ def bauen(loaded=None, pfad=DATEI, holen_liste=None, holen_kurse=None, leise=Fal
         if len(idx["close"]) >= 2:
             markt_info[n.lower() + "_pct"] = round((idx["close"][-1] / idx["close"][-2] - 1) * 100, 2)
 
+    je_boerse = {}
+    for e in liste:
+        je_boerse.setdefault(e["boerse"], {"verzeichnis": 0, "geladen": 0, "im_bezug": 0, "im_universum": 0})
+        je_boerse[e["boerse"]]["verzeichnis"] += 1
+    for s in geladen:
+        je_boerse[boerse_von[s]]["geladen"] += 1
+    for s in bezug:
+        je_boerse[boerse_von[s]]["im_bezug"] += 1
+    for s in aktien:
+        je_boerse[boerse_von[s]]["im_universum"] += 1
+    kap = red_to_green.RS_KAPPUNG
     inhalt = {
         "gebaut_am": datetime.now().isoformat(timespec="seconds"),
         "handelstag": handelstag,
         "status": status, "grund": grund,
-        "bezug": "Nasdaq",
-        "hinweis": (f"RS-Werte beziehen sich auf die {len(aktien)} Nasdaq-Aktien des Universums "
-                    f"(Kurs ab {float(cfg['mindestkurs']):.0f} Dollar, Tagesumsatz ab "
-                    f"{float(cfg['mindest_dollarvolumen']) / 1e6:.0f} Millionen Dollar im 50-Tage-Schnitt, "
-                    f"mindestens 253 Schlusskurse); Kurse splitbereinigt, nicht dividendenbereinigt."),
-        "universum": {"quelle": cfg["quelle"], "verzeichnis": len(liste), "ausgeschlossen": gruende,
+        "bezug": "US-Markt",
+        "hinweis": (f"RS-Werte beziehen sich auf alle {len(bezug)} Stammaktien von Nasdaq, NYSE und "
+                    f"NYSE American mit mindestens 253 Schlusskursen"
+                    + (f"; jede Einzelrendite ist nach oben bei plus {kap * 100:.0f} Prozent gekappt" if kap else "")
+                    + f". 'Im Universum' heisst nur: Kurs ab {float(cfg['mindestkurs']):.0f} Dollar und Tagesumsatz "
+                    f"ab {float(cfg['mindest_dollarvolumen']) / 1e6:.0f} Millionen Dollar im 50-Tage-Schnitt, das ist "
+                    f"eine Kennzeichnung, keine Vergleichsbasis. Kurse splitbereinigt, nicht dividendenbereinigt."),
+        "universum": {"quelle": cfg["quelle"], "quelle_andere": cfg["quelle_andere"], "verzeichnis": len(liste),
+                      "ausgeschlossen": gruende, "ausgeschlossen_andere": gruende2,
                       "geladen": len(geladen), "abdeckung": round(abdeckung, 4),
                       "mindest_abdeckung": float(cfg["mindest_abdeckung"]),
+                      "bezug_anzahl": len(bezug), "je_boerse": je_boerse, "kappung": kap,
                       "im_universum": len(aktien), "ausserhalb": len(ausserhalb),
                       "gruende_ausserhalb": _zaehle(v.get("grund") for v in ausserhalb.values()),
                       "dauer_s": round(time.time() - t0)},
@@ -474,7 +593,9 @@ def bauen(loaded=None, pfad=DATEI, holen_liste=None, holen_kurse=None, leise=Fal
     }
     _schreiben(pfad, inhalt)
     if not leise:
-        print(f"RS-Universum: {len(aktien)} Aktien im Universum, {len(ausserhalb)} ausserhalb, "
+        print(f"RS-Universum: Bezug {len(bezug)} Stammaktien ("
+              + ", ".join(f"{b} {z['im_bezug']}" for b, z in je_boerse.items())
+              + f"), {len(aktien)} ueber den Schwellen, {len(ausserhalb)} darunter oder ohne Historie, "
               f"Abdeckung {abdeckung * 100:.1f} Prozent, Status {status}"
               + (f" ({grund})" if grund else "") + f"; Listen {len(listen_ergebnis)}; "
               f"Selbsttest {'ok' if probe.get('ok') else 'FEHL'}; Plausibilitaet "
@@ -504,11 +625,16 @@ def lies(pfad=DATEI):
 
 
 def eintrag(ticker, daten=None):
-    """Der Eintrag einer Aktie fuer Anzeigen: erst die Listen, dann das
-    Universum; None, wenn unbekannt."""
+    """Der Eintrag einer Aktie fuer Anzeigen: erst die Listen, dann die
+    Titel ueber den Schwellen, dann die darunter (die haben seit 12.09.2026
+    abends ebenfalls einen RS); None, wenn unbekannt oder ohne Wert."""
     d = daten if daten is not None else lies()
     t = str(ticker or "").upper()
-    return (d.get("listen") or {}).get(t) or (d.get("aktien") or {}).get(t)
+    e = (d.get("listen") or {}).get(t) or (d.get("aktien") or {}).get(t)
+    if e:
+        return e
+    a = (d.get("ausserhalb") or {}).get(t)
+    return a if (a and a.get("rs") is not None) else None
 
 
 def anzeige(ticker, daten=None):
@@ -572,13 +698,38 @@ def selbsttest() -> int:
       [e["symbol"] for e in liste] == ["AAPL", "AACG", "BRK.B"] and gruende.get("ETF") == 1
       and gruende.get("Test-Titel") == 1, f"{[e['symbol'] for e in liste]} {gruende}")
     p("Yahoo-Schreibweise: BRK.B wird BRK-B", yahoo_symbol("BRK.B") == "BRK-B")
+    text_andere = ("ACT Symbol|Security Name|Exchange|CQS Symbol|ETF|Round Lot Size|Test Issue|NASDAQ Symbol\n"
+                   "IBM|International Business Machines Corporation Common Stock|N|IBM|N|100|N|IBM\n"
+                   "BRK.B|Berkshire Hathaway Inc. Class B|N|BRK.B|N|100|N|BRK=B\n"
+                   "SPY|SPDR S&P 500 ETF Trust|P|SPY|Y|100|N|SPY\n"
+                   "ETFX|Irgendein Fonds|N|ETFX|Y|100|N|ETFX\n"
+                   "AHT$D|Ashford Hospitality Trust Inc 8.45% Series D Cumulative Preferred Stock|N|AHTpD|N|100|N|AHT-D\n"
+                   "ACHR.W|Archer Aviation Inc. Warrants|N|ACHR.WS|N|100|N|ACHR+\n"
+                   "BE|Bloom Energy Corporation Class A Common Stock|N|BE|N|100|N|BE\n"
+                   "LODE|Comstock Inc. Common Stock|A|LODE|N|100|N|LODE\n"
+                   "ZTST|Test Title|N|ZTST|N|100|Y|ZTST\n"
+                   "File Creation Time: 0911202621:31|||||||\n")
+    liste2, gruende2 = andere_liste(text=text_andere)
+    p("NYSE-Verzeichnis: Stammaktien von NYSE und NYSE American bleiben, Arca, ETF, Vorzug, Optionsschein, Test fallen",
+      [(e["symbol"], e["boerse"]) for e in liste2] == [("IBM", "NYSE"), ("BRK.B", "NYSE"), ("BE", "NYSE"), ("LODE", "NYSE American")]
+      and gruende2.get("andere Boerse") == 1 and gruende2.get("ETF") == 1 and gruende2.get("Test-Titel") == 1
+      and gruende2.get("kein Stammtitel (Symbol: Vorzug, Optionsschein, Einheit, Recht)") == 2,
+      f"{[e['symbol'] for e in liste2]} {gruende2}")
+    flach = [100.0] * 253
+    hoch = flach[:-1] + [400.0]
+    mittel = flach[:-1] + [130.0]
+    p("Kappung: jede Einzelrendite zaehlt hoechstens plus 50 Prozent, darunter bleibt sie wie sie ist",
+      red_to_green.RS_KAPPUNG == 0.5 and abs(red_to_green.rs_rohwert(hoch) - 0.5) < 1e-12
+      and abs(red_to_green.rs_rohwert(mittel) - 0.3) < 1e-12,
+      f"{red_to_green.rs_rohwert(hoch)} {red_to_green.rs_rohwert(mittel)}")
 
     p("Gleichstand: gleiche Rohwerte bekommen denselben Rang, der Anteil zaehlt nur strikt kleinere",
       perzentil([0.1, 0.2, 0.2, 0.3], 0.2) == perzentil([0.1, 0.2, 0.2, 0.3], 0.2) == 25
       and perzentil([0.1, 0.2, 0.3], 0.3) == 67 and perzentil([0.5, 0.6], 0.1) == 1)
     probe = selbsttest_kuenstlich([0.1, 0.2, 0.3])
-    p("Kuenstliche Aktie: Rohwert exakt vorgerechnet, Perzentil oben",
-      probe["ok"] and abs(probe["ist"] - probe["erwartet"]) < 1e-9 and probe["perzentil"] == 99,
+    p("Kuenstliche Aktie: Rohwert exakt vorgerechnet (mit Kappung 0,5), Perzentil oben",
+      probe["ok"] and abs(probe["ist"] - probe["erwartet"]) < 1e-9 and probe["perzentil"] == 99
+      and abs(probe["erwartet"] - 0.5) < 1e-12,
       f"{probe['ist']:.6f} gegen {probe['erwartet']:.6f}, Perzentil {probe['perzentil']}")
     p("Kuenstliche Aktie faellt durch, wenn das Universum staerker ist",
       not selbsttest_kuenstlich([5.0, 6.0, 7.0])["ok"])
@@ -605,12 +756,15 @@ def selbsttest() -> int:
       and abs(ad_naeherung([100.0 + (i % 2) for i in range(71)], [100.0] * 71)) < 0.02
       and ad_naeherung([1.0] * 10, [1.0] * 10) is None)
 
-    # Ganzer Lauf mit synthetischem Universum
+    # Ganzer Lauf mit synthetischem Universum: 240 Nasdaq- und 60 NYSE-Titel
     import tempfile
+
+    def nam(vorne, i):
+        return f"{vorne}{chr(65 + i // 26)}{chr(65 + i % 26)}"
     zeilen = ["Symbol|Security Name|Market Category|Test Issue|Financial Status|Round Lot Size|ETF|NextShares"]
     reihen = {}
     for i in range(240):
-        s = f"S{i:03d}"
+        s = nam("S", i)
         zeilen.append(f"{s}|Firma {i} - Common Stock|Q|N|N|100|N|N")
         reihen[s] = _reihe(i, drift=0.0002 + (i % 12) * 0.0002)
     zeilen.append("BILLIG|Billig - Common Stock|Q|N|N|100|N|N")
@@ -621,62 +775,87 @@ def selbsttest() -> int:
     for n in ("SPY", "QQQ", "^IXIC"):
         reihen[n] = _reihe(1000 + len(n), drift=0.0003)
     text2 = "\n".join(zeilen) + "\n"
+    zeilen3 = ["ACT Symbol|Security Name|Exchange|CQS Symbol|ETF|Round Lot Size|Test Issue|NASDAQ Symbol"]
+    for i in range(60):
+        s = nam("N", i)
+        zeilen3.append(f"{s}|Firma NYSE {i} Common Stock|{'A' if i % 10 == 0 else 'N'}|{s}|N|100|N|{s}")
+        reihen[s] = _reihe(500 + i, drift=0.0002 + (i % 12) * 0.0002)
+    text3 = "\n".join(zeilen3) + "\n"
+    saf = nam("S", 5)
 
     def holen(symbole):
         return {s: reihen[s] for s in symbole if s in reihen}
 
     import pandas as pd
-    df_liste = pd.DataFrame({"datetime": reihen["S005"]["daten"], "open": reihen["S005"]["close"],
-                             "high": reihen["S005"]["high"], "low": reihen["S005"]["low"],
-                             "close": reihen["S005"]["close"], "volume": reihen["S005"]["volume"]})
+    df_liste = pd.DataFrame({"datetime": reihen[saf]["daten"], "open": reihen[saf]["close"],
+                             "high": reihen[saf]["high"], "low": reihen[saf]["low"],
+                             "close": reihen[saf]["close"], "volume": reihen[saf]["volume"]})
     df_fremd = pd.DataFrame({"datetime": reihen["BILLIG"]["daten"], "open": reihen["BILLIG"]["close"],
                              "high": reihen["BILLIG"]["high"], "low": reihen["BILLIG"]["low"],
                              "close": reihen["BILLIG"]["close"], "volume": reihen["BILLIG"]["volume"]})
     pfad = os.path.join(tempfile.mkdtemp(), "rs.json")
-    inhalt = bauen(loaded={"S005": (df_liste, "Firma 5"), "BILLIG": (df_fremd, "Billig")}, pfad=pfad,
-                   holen_kurse=holen, liste_text=text2, leise=True, alt={}, jetzt=date(2026, 9, 12))
+    inhalt = bauen(loaded={saf: (df_liste, "Firma 5"), "BILLIG": (df_fremd, "Billig")}, pfad=pfad,
+                   holen_kurse=holen, liste_text=text2, liste_text_andere=text3, leise=True, alt={},
+                   jetzt=date(2026, 9, 12))
     u = inhalt["universum"]
-    p("Lauf: Universum ohne Billig, Jung und Fehlt; Abdeckung zaehlt Fehlt als nicht geladen",
-      inhalt["status"] == "ok" and u["im_universum"] == 240 and "BILLIG" in inhalt["ausserhalb"]
+    p("Lauf: 300 Titel ueber den Schwellen (240 Nasdaq, 60 NYSE); Billig, Jung und Fehlt darunter; "
+      "Abdeckung zaehlt Fehlt als nicht geladen",
+      inhalt["status"] == "ok" and u["im_universum"] == 300 and "BILLIG" in inhalt["ausserhalb"]
       and "JUNG" in inhalt["ausserhalb"] and inhalt["ausserhalb"]["FEHLT"]["grund"] == "keine Kurse"
-      and abs(u["abdeckung"] - round(242 / 243, 4)) < 1e-9, f"{inhalt['status']} {u}")
+      and abs(u["abdeckung"] - round(302 / 303, 4)) < 1e-9
+      and u["je_boerse"]["NYSE"]["im_universum"] == 54 and u["je_boerse"]["NYSE American"]["im_universum"] == 6,
+      f"{inhalt['status']} {u}")
+    p("Bezug: Titel unter den Schwellen zaehlen mit und bekommen einen RS, ohne Historie nicht",
+      u["bezug_anzahl"] == 301 and inhalt["ausserhalb"]["BILLIG"]["rs"] is not None
+      and inhalt["ausserhalb"]["JUNG"].get("rs") is None and u["kappung"] == 0.5,
+      f"{u['bezug_anzahl']} {inhalt['ausserhalb']['BILLIG'].get('rs')}")
     rs_werte = [a["rs"] for a in inhalt["aktien"].values()]
     p("A/D-Rang je Aktie im Universum und fuer die Listenaktien vorhanden",
       all(1 <= a["ad_rang"] <= 99 for a in inhalt["aktien"].values())
-      and inhalt["listen"]["S005"]["ad_rang"] is not None and inhalt["listen"]["BILLIG"]["ad_rang"] is not None)
+      and inhalt["listen"][saf]["ad_rang"] is not None and inhalt["listen"]["BILLIG"]["ad_rang"] is not None)
     p("Perzentile liegen zwischen 1 und 99, Plausibilitaet ok, Selbsttest ok",
       min(rs_werte) >= 1 and max(rs_werte) <= 99 and inhalt["plausibilitaet"]["ok"] and inhalt["selbsttest"]["ok"],
       f"{inhalt['plausibilitaet']} {inhalt['selbsttest']['perzentil']}")
+    p("Rang ohne sich selbst: die beste Aktie des Bezugs bekommt 99, die schlechteste 1",
+      max(rs_werte) == 99 and min(a["rs"] for a in inhalt["ausserhalb"].values() if a.get("rs") is not None) >= 1)
     l = inhalt["listen"]
-    p("Listen-Aktie im Universum: eigener Wert ohne sich selbst gerechnet, gleich dem Universumswert",
-      l["S005"]["im_universum"] is True and l["S005"]["rs"] is not None
-      and abs(l["S005"]["rs"] - inhalt["aktien"]["S005"]["rs"]) <= 1, f"{l['S005']['rs']} gegen {inhalt['aktien']['S005']['rs']}")
-    p("Listen-Aktie unter der Schwelle bekommt trotzdem einen Wert gegen das Universum (Luecke 5)",
-      l["BILLIG"]["im_universum"] is False and l["BILLIG"]["rs"] is not None, l["BILLIG"].get("rs"))
+    p("Listen-Aktie im Bezug: eigener Wert ohne sich selbst gerechnet, gleich dem Bezugswert",
+      l[saf]["im_universum"] is True and l[saf]["im_bezug"] is True and l[saf]["rs"] is not None
+      and l[saf]["rs"] == inhalt["aktien"][saf]["rs"] and l[saf]["boerse"] == "Nasdaq",
+      f"{l[saf]['rs']} gegen {inhalt['aktien'][saf]['rs']}")
+    p("Listen-Aktie unter der Schwelle bekommt einen Wert gegen den Bezug, gleich ihrem Wert unter 'ausserhalb' (Luecke 5)",
+      l["BILLIG"]["im_universum"] is False and l["BILLIG"]["im_bezug"] is True and l["BILLIG"]["rs"] is not None
+      and l["BILLIG"]["rs"] == inhalt["ausserhalb"]["BILLIG"]["rs"], l["BILLIG"].get("rs"))
+    p("Eintrag fuer Anzeigen findet auch Titel unter den Schwellen, aber keine ohne Wert",
+      eintrag("BILLIG", inhalt) is not None and eintrag("JUNG", inhalt) is None and eintrag("FEHLT", inhalt) is None)
     p("Markt: Nasdaq mit Tagesveraenderung und Rot-Kennzeichen",
       "rot" in inhalt["markt"] and "spy_pct" in inhalt["markt"])
-    p("Anzeige aus der Datei: RS und Linien", anzeige("S005", lies(pfad)).startswith("RS "))
-    p("Verlauf wird fortgeschrieben", len(l["S005"]["rs_verlauf"]) == 1)
-    inhalt2 = bauen(loaded={}, pfad=pfad, holen_kurse=holen, liste_text=text2, leise=True,
+    p("Anzeige aus der Datei: RS und Linien", anzeige(saf, lies(pfad)).startswith("RS "))
+    p("Verlauf wird fortgeschrieben, nur fuer Titel ueber den Schwellen",
+      len(l[saf]["rs_verlauf"]) == 1 and "rs_verlauf" in inhalt["aktien"][saf]
+      and "rs_verlauf" not in inhalt["ausserhalb"]["BILLIG"])
+    inhalt2 = bauen(loaded={}, pfad=pfad, holen_kurse=holen, liste_text=text2, liste_text_andere=text3, leise=True,
                     alt=lies(pfad), jetzt=date(2026, 9, 13))
     p("Zweiter Lauf am selben Handelstag ersetzt den Tageswert statt ihn zu verdoppeln",
-      len(inhalt2["aktien"]["S005"]["rs_verlauf"]) == 1)
+      len(inhalt2["aktien"][saf]["rs_verlauf"]) == 1)
 
     def holen_luecke(symbole):
-        return {s: reihen[s] for s in symbole if s in reihen and not s.startswith("S1")}
-    inhalt3 = bauen(loaded={}, pfad=pfad, holen_kurse=holen_luecke, liste_text=text2, leise=True, alt={})
+        return {s: reihen[s] for s in symbole if s in reihen and s[1:2] not in "DEFG"}
+    inhalt3 = bauen(loaded={}, pfad=pfad, holen_kurse=holen_luecke, liste_text=text2, liste_text_andere=text3,
+                    leise=True, alt={})
     p("Regel 1: unter 95 Prozent Abdeckung gibt es kein RS, sondern 'nicht verfuegbar'",
       inhalt3["status"] == "nicht verfuegbar" and all(a["rs"] is None for a in inhalt3["aktien"].values())
       and "Abdeckung" in inhalt3["grund"], inhalt3["grund"])
-    p("Anzeige nennt den Grund", "nicht verfügbar" in anzeige("S005", inhalt3))
-    p("Hinweis fuer die App nennt den Nasdaq-Bezug", "Nasdaq" in inhalt["hinweis"] and inhalt["bezug"] == "Nasdaq")
+    p("Anzeige nennt den Grund", "nicht verfügbar" in anzeige(saf, inhalt3))
+    p("Hinweis fuer die App nennt den US-Markt, NYSE und die Kappung",
+      inhalt["bezug"] == "US-Markt" and "NYSE" in inhalt["hinweis"] and "gekappt" in inhalt["hinweis"])
 
     print(f"\n{len(fehler)} Fehler." if fehler else "\nAlles bestanden.")
     return 1 if fehler else 0
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="RS-Universum (Nasdaq) rechnen.")
+    ap = argparse.ArgumentParser(description="RS-Universum (Nasdaq, NYSE, NYSE American) rechnen.")
     ap.add_argument("--bauen", action="store_true")
     ap.add_argument("--ausgabe", default=DATEI)
     ap.add_argument("--selbsttest", action="store_true")

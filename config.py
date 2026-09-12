@@ -268,6 +268,12 @@ CFG = {
         "jahr_tage": 252,            # 52 Wochen
         "rs_quartale": [63, 126, 189, 252],   # RS-Rating-Fenster
         "rs_gewichte": [0.40, 0.20, 0.20, 0.20],
+        # Kappung jeder Einzelrendite nach oben (Gerhard, 12.09.2026 abends,
+        # dritte Antwort auf den IBD-Abgleich): plus 50 Prozent je Zeitraum,
+        # damit ein Vervielfacher aus dem Vorjahr nicht alles ueberstrahlt.
+        # GEMESSEN 12.09.2026: dreizehn oeffentliche IBD-Werte innerhalb von
+        # 5 Punkten getroffen; 0,45 bis 0,55 gleich gut, ab 0,7 bricht es ein.
+        "rs_kappung": 0.50,
         "crash_historie_tage": 1000, # ~4 Jahre für Crash-Strategie
     },
 
@@ -759,15 +765,26 @@ CFG = {
         "schlussnahe_minute": 945,
     },
 
-    # --- Relative Staerke gegen das Nasdaq-Universum (R1 bis R6, Teil 6) ---
-    # Gerhards Antworten vom 12.09.2026. Reine Anzeige, kein Filter (die
-    # einzige Ausnahme bleibt die Fokusliste in red_to_green, RS ueber 90).
+    # --- Relative Staerke gegen den ganzen US-Markt (R1 bis R6, Teil 6) ---
+    # Gerhards Antworten vom 12.09.2026, am selben Abend ergaenzt um drei
+    # Antworten auf den IBD-Abgleich (ueber Mathias): Vergleichsbasis ist
+    # der GANZE US-Markt, die Schwellen sind nur noch Kennzeichnung, jede
+    # Einzelrendite wird gekappt (lookback.rs_kappung). Reine Anzeige, kein
+    # Filter (die einzige Ausnahme bleibt die Fokusliste in red_to_green,
+    # RS ueber 90).
     "rs_universum": {
-        # R1: alle Aktien der Nasdaq aus dem amtlichen Symbolverzeichnis.
+        # R1: alle Stammaktien aus den amtlichen Symbolverzeichnissen der
+        # Nasdaq (nasdaqlisted.txt) und der uebrigen Boersen (otherlisted.txt;
+        # N = NYSE, A = NYSE American; Arca, BATS und IEX fuehren praktisch
+        # nur ETFs und bleiben draussen).
         "quelle": "https://www.nasdaqtrader.com/dynamic/SymDir/nasdaqlisted.txt",
+        "quelle_andere": "https://www.nasdaqtrader.com/dynamic/SymDir/otherlisted.txt",
+        "andere_boersen": {"N": "NYSE", "A": "NYSE American"},
         # R2: Mindestkurs 15 Dollar, Tagesumsatz 10 Millionen Dollar im
         # 50-Tage-Schnitt; ETFs und Fonds draussen, SPACs erst nach der
-        # Uebernahme. Was darunter liegt, gehoert nicht zur Vergleichsbasis.
+        # Uebernahme. Seit 12.09.2026 abends NUR KENNZEICHNUNG ("im
+        # Universum"): Die Vergleichsbasis fuer das Perzentil sind ALLE
+        # Stammaktien mit voller Historie, auch die unter den Schwellen.
         "mindestkurs": 15.0,
         "mindest_dollarvolumen": 10_000_000.0,
         "dollarvolumen_tage": 50,
@@ -787,8 +804,12 @@ CFG = {
         # Abruf ueber Yahoo in Bloecken. GEMESSEN 12.09.2026: 4.331
         # Nasdaq-Symbole in 300er-Bloecken, 14 Monate, 97 Sekunden, 4.328
         # mit Kursen (99,9 Prozent), keine Drosselung; 14 Monate decken
-        # 252 Handelstage plus Reserve.
-        "abruf_block": 300,
+        # 252 Handelstage plus Reserve. NACHGEMESSEN 12.09.2026 abends: Ein
+        # NYSE-Abruf in 300er-Bloecken verlor STILL 45 Prozent der Symbole
+        # (1.103 gewoehnliche Titel wie IBM und MCD, ohne Fehlermeldung), in
+        # 100er-Bloecken kam alles; dazu laedt kurse_holen still Fehlendes
+        # einmal in 50er-Bloecken nach.
+        "abruf_block": 100,
         "abruf_zeitraum": "14mo",
         # Wie viele Handelstage RS-Verlauf je Aktie mitgefuehrt werden
         # (fuer "Aenderung zur Vorwoche" in den Berichten).
@@ -955,6 +976,8 @@ def pruefe_config():
         "RS-Gewichte müssen in Summe 1,0 ergeben"
     assert len(CFG["lookback"]["rs_quartale"]) == len(CFG["lookback"]["rs_gewichte"]), \
         "RS: gleich viele Quartale wie Gewichte"
+    assert 0.0 < float(CFG["lookback"]["rs_kappung"]) <= 5.0, \
+        "RS-Kappung: eine Rendite-Obergrenze je Zeitraum, als Bruchteil (0,5 heisst plus 50 Prozent)"
     assert CFG["volumen"]["fenster_tage"] > 0
     # Gerhards Antworten vom 12.09.2026
     u = CFG["rs_universum"]

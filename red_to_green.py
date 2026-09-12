@@ -134,10 +134,20 @@ def _ema(werte, spanne):
 
 RS_QUARTALE = (63, 126, 189, 252)
 RS_GEWICHTE = (0.40, 0.20, 0.20, 0.20)
+# Kappung jeder Einzelrendite nach oben (Gerhard, 12.09.2026 abends, dritte
+# Antwort auf den IBD-Abgleich): Ohne sie ueberstrahlt ein Vervielfacher
+# aus dem Vorjahr alles, und eine Aktie mit minus 39 Prozent im juengsten
+# Quartal stand bei RS 97, wo IBD 55 nennt. Mit der Kappung bei plus 50
+# Prozent je Zeitraum und dem ganzen US-Markt als Bezug treffen wir
+# dreizehn oeffentliche IBD-Werte innerhalb von 5 Punkten (gemessen
+# 12.09.2026; 0,45 bis 0,55 gleich gut, ab 0,7 bricht es ein). Eine
+# Kappung nach unten aendert nichts und gibt es deshalb nicht.
+RS_KAPPUNG = float(_ALLE["lookback"].get("rs_kappung") or 0.0) or None
 
 
 def rs_rohwert(schluss_serie):
-    """Gewichtete Rendite über die vier IBD-Quartale, das letzte doppelt."""
+    """Gewichtete Rendite über die vier IBD-Quartale, das letzte doppelt;
+    jede Einzelrendite nach oben bei RS_KAPPUNG gekappt."""
     if len(schluss_serie) < max(RS_QUARTALE) + 1:
         return None
     heute = float(schluss_serie[-1])
@@ -146,7 +156,10 @@ def rs_rohwert(schluss_serie):
         start = float(schluss_serie[-1 - tage])
         if start <= 0:
             return None
-        rohwert += gewicht * (heute / start - 1)
+        rendite = heute / start - 1
+        if RS_KAPPUNG is not None:
+            rendite = min(RS_KAPPUNG, rendite)
+        rohwert += gewicht * rendite
     return rohwert
 
 
