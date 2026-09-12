@@ -160,6 +160,14 @@ jobs:
           # ist Vereinen hier gefahrlos.
           LOGBUCH=/tmp/trigger_meines.jsonl
           cp trigger_logbuch.jsonl "$LOGBUCH" 2>/dev/null || : > "$LOGBUCH"
+          # R9 und M6 (Gerhard, 12.09.2026): die gruenen Minuten des Tages und
+          # die um 15:45 gemeldeten Befunde ueberleben den harten Reset
+          # genauso; der Lauf committet sie zwar schon selbst, der Endkommit
+          # holt nach, was dort scheiterte.
+          GRUEN=/tmp/gruen_meine.json
+          cp gruen_minuten.json "$GRUEN" 2>/dev/null || : > "$GRUEN"
+          SCHLUSSNAH=/tmp/schlussnah_meine.json
+          cp schlussnahe_gemeldet.json "$SCHLUSSNAH" 2>/dev/null || : > "$SCHLUSSNAH"
           for versuch in 1 2 3; do
             git fetch --quiet origin main
             git reset --hard --quiet FETCH_HEAD
@@ -172,6 +180,10 @@ jobs:
             # Meldung, aber falls ein Push dort scheiterte, holt es
             # dieser Endkommit nach.
             git add -A -- melde_gedaechtnis.json 2>/dev/null || true
+            [ -s "$GRUEN" ] && cp "$GRUEN" gruen_minuten.json
+            [ -s "$SCHLUSSNAH" ] && cp "$SCHLUSSNAH" schlussnahe_gemeldet.json
+            git add -A -- gruen_minuten.json 2>/dev/null || true
+            git add -A -- schlussnahe_gemeldet.json 2>/dev/null || true
             if git diff --cached --quiet; then
               echo "Keine neuen Meldungen zu merken."
               break

@@ -65,7 +65,7 @@ jobs:
       - name: Abhängigkeiten
         if: steps.pruefung.outputs.noetig == 'ja'
         run: |
-          pip install requests pandas numpy scipy openpyxl yfinance playwright
+          pip install requests pandas numpy scipy openpyxl yfinance playwright pyarrow
           playwright install chromium --with-deps
 
       # Nur die SESSION kommt aus dem Cache. Das Gesetzt-Gedaechtnis
@@ -86,6 +86,14 @@ jobs:
         if: steps.pruefung.outputs.noetig == 'ja'
         env:
           TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
+          # ABENDBERICHT (Gerhard, R7, 12.09.2026): Der Nachtscan schickt
+          # nach dem Kapitel-12-Lauf einen Bericht, niedrige Prioritaet,
+          # einmal je Handelstag. Kein Alarm; die Alarme bleiben beim
+          # Waechter zur Handelszeit.
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          # IBD-Ratings (R20 bis R22): Die Zuordnung Ticker zu CIK kommt
+          # vom SEC-Verzeichnis; der Abruf braucht den User-Agent.
+          SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
         # Sendefenster 00:00-01:59 Wiener Zeit (Mathias, 24.07.2026):
         # Der GEWOLLTE Push ist der des Mitternachtslaufs, den cron-job.org
         # um 18:00 New York anstoesst (in der Parallel-Sitzung vom 23.07.
@@ -179,6 +187,12 @@ jobs:
           # Repo waere sie nach jedem Cloud-Lauf weg und die Pruefung
           # wuesste nie, dass ueberhaupt etwas ausgelassen wurde.
           git add -A -- ausgelassen.json 2>/dev/null || true
+          # GERHARDS ANTWORTEN VOM 12.09.2026: RS-Universum, Sektor-Rangliste,
+          # Ratings, das Gedaechtnis des Abendberichts und die Pruefung der
+          # schlussnahen Befunde (M6). Der Waechter liest sie am Morgen.
+          for f in rs_universum.json sektor_rangliste.json ibd_ratings.json abendbericht_gedaechtnis.json schlussnahe_gemeldet.json; do
+            git add -A -- "$f" 2>/dev/null || true
+          done
           if git diff --cached --quiet; then
             echo "Keine Änderung gegenüber dem letzten Scan."
           else
@@ -191,7 +205,7 @@ jobs:
             # beiseitelegen, hart auf den Serverstand, wieder
             # einspielen, pushen. Die Scan-Ergebnisse DIESES Laufs sind
             # die frischeren, sie duerfen gewinnen.
-            DATEIEN="kaufpunkte_aktuell.xlsx sektor_radar.json ntfy_ids.json fokusliste.json shakeout_warteliste.json positionen.json exit_befunde.json volumenkurven.json zahlen_termine.json trigger_logbuch.jsonl ausgelassen.json"
+            DATEIEN="kaufpunkte_aktuell.xlsx sektor_radar.json ntfy_ids.json fokusliste.json shakeout_warteliste.json positionen.json exit_befunde.json volumenkurven.json zahlen_termine.json trigger_logbuch.jsonl ausgelassen.json rs_universum.json sektor_rangliste.json ibd_ratings.json abendbericht_gedaechtnis.json schlussnahe_gemeldet.json"
             SICHERUNG=$(mktemp -d)
             for f in $DATEIEN; do cp "$f" "$SICHERUNG/" 2>/dev/null || true; done
             for versuch in 1 2 3; do

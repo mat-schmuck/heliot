@@ -55,6 +55,11 @@ import ntfy_verlauf   # merkt sich jede verschickte Meldung fuer den Freitags-Pu
 import positionen     # offene Positionen samt Exit-Regelwerk
 import gewinnzonen_lauf  # Kapitel 12: Gewinnzonen je offener Beobachtung
 import red_to_green   # Kapitel 9: Fokusliste fuer den Live-Waechter
+import sektor_radar    # die 36 Branchen-ETFs (Volumenkurven auch fuer sie, M1)
+import rs_universum    # R1 bis R6 (Gerhard, 12.09.2026): RS gegen das Nasdaq-Universum
+import sektor_rangliste  # R12 bis R17: die 36 ETFs nach Faber-Mittel
+import ibd_ratings     # R20 bis R22: EPS, SMR, A/D, Composite als Naeherung
+import abendbericht    # R7: der Bericht nach Handelsschluss
 import shakeout       # Kapitel 10: Spring samt Sekundaertest-Warteliste
 import trigger_logbuch  # schreibt jedes Signal mit, gekauft oder nicht
 import volumen        # IBD Volume % Change, Kurve je Aktie
@@ -1329,6 +1334,32 @@ def analyze(df: pd.DataFrame, rs_percentile: float | None,
 # Excel-Output (farbcodiert)
 # ---------------------------------------------------------------------------
 
+_LOGBUCH_ZUSATZ: dict = {}
+
+
+def _logbuch_zusatz(ticker) -> dict:
+    """Punkt 4 (Gerhard, 12.09.2026): Sektorrang und Ratings je Signal im
+    Trigger-Logbuch. Die Dateien schreibt derselbe Nachtlauf kurz davor."""
+    if not _LOGBUCH_ZUSATZ:
+        _LOGBUCH_ZUSATZ["sektor"] = sektor_rangliste.lies()
+        _LOGBUCH_ZUSATZ["ratings"] = ibd_ratings.lies()
+    raus = {}
+    try:
+        import listen
+        import beobachtungen
+        etf = beobachtungen.sektor_etf_fuer(listen.sektor_von(ticker))
+        z = next((x for x in (_LOGBUCH_ZUSATZ["sektor"].get("liste") or [])
+                  if x.get("etf") == etf), None)
+        raus.update({"sektor_etf": etf, "sektor_rang": (z or {}).get("rang")})
+        e = ((_LOGBUCH_ZUSATZ["ratings"].get("aktien") or {})
+             .get(str(ticker or "").upper()) or {})
+        raus.update({"ibd_eps": e.get("eps"), "ibd_smr": e.get("smr"),
+                     "ibd_ad": e.get("ad"), "ibd_composite": e.get("composite")})
+    except Exception:
+        pass
+    return raus
+
+
 def write_excel(rows: list[dict], out_path: str):
     from openpyxl import Workbook
     from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
@@ -1343,7 +1374,7 @@ def write_excel(rows: list[dict], out_path: str):
     ws = wb.active
     ws.title = "Kaufpunkte"
     headers = ["Ticker", "Firma", "Kurs", "52W-Hoch", "52W-Tief", "Abst. 52W-Hoch",
-               "RS-Rank", "Trend Template", "Umsatzwachstum", "Gewinnwachstum",
+               "RS-Rank", "RS Nasdaq", "Trend Template", "Umsatzwachstum", "Gewinnwachstum",
                "KP1 Strategie", "KP1 Preis", "KP1 Abst.", "KP1 Stop", "KP1 Ziel", "KP1 Status",
                "KP2 Strategie", "KP2 Preis", "KP2 Abst.", "KP2 Stop", "KP2 Ziel", "KP2 Status",
                "KP3 Strategie", "KP3 Preis", "KP3 Abst.", "KP3 Stop", "KP3 Ziel", "KP3 Status",
@@ -1367,6 +1398,8 @@ def write_excel(rows: list[dict], out_path: str):
                 round(r["hi52"], 2), round(r["lo52"], 2),
                 f"{(r['close'] / r['hi52'] - 1) * 100:+.1f}%",
                 round(r["rs"]) if r["rs"] is not None else "n/a",
+                # R4 (Gerhard, 12.09.2026): RS gegen das Nasdaq-Universum
+                row.get("rs_nasdaq", "n/a"),
                 f"✓ 8/8" if r["tt_pass"] else f"✗ {r['tt_count']}/8"]
 
         # Fundamentaldaten laut Regelwerk. Fehlt der Wert, steht "n/a" —
@@ -1605,13 +1638,42 @@ def main():
     # Kapitel 9: die Fokusliste fuer den Live-Waechter von morgen.
     fokusliste_schreiben(loaded)
 
+    # RS-UNIVERSUM, SEKTOR-RANGLISTE UND RATINGS (Gerhard, 12.09.2026):
+    # Entscheidungshilfen, keine Filter. Faellt eines aus, wird der Scan
+    # nicht rot; die Datei traegt dann "nicht verfuegbar".
+    rs_daten = None
+    try:
+        rs_daten = rs_universum.bauen(loaded=loaded)
+    except Exception as e:
+        print(f"  RS-Universum fehlgeschlagen ({type(e).__name__}: {e}); "
+              f"RS nicht verfuegbar.")
+    try:
+        sektor_rangliste.bauen()
+    except Exception as e:
+        print(f"  Sektor-Rangliste fehlgeschlagen ({type(e).__name__}: {e}).")
+    try:
+        ibd_ratings.bauen([t for t, _ in tickers], rs_daten or rs_universum.lies(),
+                          user_agent=(os.environ.get("SEC_USER_AGENT") or "").strip() or None)
+    except Exception as e:
+        print(f"  IBD-Ratings fehlgeschlagen ({type(e).__name__}: {e}).")
+    rs_ok = bool(rs_daten) and rs_daten.get("status") == "ok"
+    for row in rows:
+        e = rs_universum.eintrag(row["ticker"], rs_daten) if rs_ok else None
+        row["rs_nasdaq"] = (e or {}).get("rs") if e else "n/a"
+        if row["rs_nasdaq"] is None:
+            row["rs_nasdaq"] = "n/a"
+
     # VOLUMENKURVEN, eine je Aktie (Gerhard, 06.08.2026). Sie gehören
     # hierher und nicht in den Wächter: Seine Vorgabe lautet "einmal pro
     # Tag und Aktie, dann zwischenspeichern", und der Nachtlauf ist genau
     # dieser eine Zeitpunkt. Der Wächter zur Eröffnung hätte sonst
     # hunderte Abrufe zu erledigen, während jede Sekunde zählt.
     try:
-        volumen.baue_kurven(sorted({t for t, _ in tickers}))
+        # AUCH DIE 36 SEKTOR-ETFs (M1, 12.09.2026): Der Waechter rechnet den
+        # Sektor-Radar gegen 15:45 mit hochgerechnetem Volumen, und dafuer
+        # braucht jeder ETF seine eigene Kurve.
+        volumen.baue_kurven(sorted({t for t, _ in tickers}
+                                   | set(sektor_radar.ETF_UNIVERSE)))
     except Exception as e:
         print(f"  ⚠ Volumenkurven konnten nicht gebaut werden "
               f"({type(e).__name__}: {e}) — die betroffenen Aktien gelten "
@@ -1651,7 +1713,9 @@ def main():
           "strategie": p["strategie"], "kaufpunkt": p.get("kaufpunkt"),
           "stop": p.get("stop"), "ziel": p.get("ziel"),
           "status": p.get("status", ""),
-          "rs": r["res"].get("rs"), "trend_template": r["res"].get("tt_pass"),
+          "rs": r["res"].get("rs"), "rs_nasdaq": r.get("rs_nasdaq"),
+          **_logbuch_zusatz(r["ticker"]),
+          "trend_template": r["res"].get("tt_pass"),
           "zyklus": r["res"].get("zyklus"),
           "schluss": r["res"].get("close")}
          for r in rows if r["res"]["pattern_count"] >= 1
@@ -1696,6 +1760,16 @@ def main():
                                           exit_meldungen=exit_meldungen)
     except Exception as e:
         print(f"Kapitel 12 fehlgeschlagen: {type(e).__name__}: {e}")
+
+    # ABENDBERICHT (Gerhard, R7, 12.09.2026): eine Meldung nach dem Schluss,
+    # als Bericht gekennzeichnet, niedrige Prioritaet, einmal je Handelstag.
+    # Prueft zugleich die um 15:45 gemeldeten Befunde gegen den Schluss (M6).
+    # Die Regel "gemeldet wird nur vom Waechter zur Handelszeit" gilt fuer
+    # Alarme; dieser Bericht ist keiner, und Gerhards Regel ist die neuere.
+    try:
+        abendbericht.lauf(topic=(os.environ.get("NTFY_TOPIC") or "").strip() or None)
+    except Exception as e:
+        print(f"Abendbericht fehlgeschlagen: {type(e).__name__}: {e}")
     n_green = sum(1 for r in rows if r["res"]["pattern_count"] >= 1)
     n_tt = sum(1 for r in rows if r["res"]["tt_pass"])
     print(f"Treffer: {n_green} mit aktivem Muster, {n_tt} bestehen das Trend Template.")

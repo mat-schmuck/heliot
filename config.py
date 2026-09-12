@@ -336,7 +336,11 @@ CFG = {
     # --- Strategie-Schwellen ---
     "gap_and_go": {
         "gap_min": 0.07,             # ≥ 7 %
-        "schluss_position_min": 0.80,# oberes Fünftel
+        "schluss_position_min": 0.80,
+        # W2 (Gerhard, 12.09.2026): Der Folgetags-Einstieg nach einem
+        # Luecken-Bestaetigungstag gilt nur bis 3 Prozent ueber dem
+        # Kaufpunkt, enger als das allgemeine Einstiegsfenster von 5.
+        "einstieg_grenze": 0.03,# oberes Fünftel
         # WELCHE FLAT BASE GILT (Mathias, 03.08.2026): "original" oder "A".
         # Umschalten heißt: diese eine Zeile ändern, sonst nichts.
         #
@@ -698,6 +702,24 @@ CFG = {
         # sondern die Auskunft, dass etwas passiert ist. Auf False setzen,
         # wenn nur noch handelbare Ausbrueche gemeldet werden sollen.
         "melde_uebersprungene": True,
+        # ZWISCHENLOESUNG ZU FRAGE M4 (Mathias, 11.09.2026): Ein Ausbruch
+        # wird nur noch gemeldet, wenn er HEUTE passiert ist - lag der
+        # Schlusskurs des Vortags schon ueber dem Kaufpunkt, war der Riss
+        # gestern, und die Meldung waere ein Vortagesalarm in neuem Kleid.
+        # GEMESSEN am Trigger-Logbuch 09. bis 11.09.2026: 12 von 57
+        # Ausbruechen lagen schon mit dem Vortagesschluss ueber dem
+        # Kaufpunkt, und jeder davon wurde in den ersten Minuten nach der
+        # Eroeffnung gemeldet (MATX, ALSN und OOMA am 11.09.; FCFS, PBF,
+        # FIVE und PTGX am 10.09.; ASH, KEYS, OSCR, LITE und CXW am 09.09.).
+        # Fehlt der Vortagesschluss, wird wie bisher gemeldet - nur ein
+        # BEKANNTER Vortagesschluss ueber dem Kaufpunkt schweigt.
+        # GERHARD HAT ENTSCHIEDEN (M4, 12.09.2026): Moeglichkeit 2. Der
+        # Fensterzustand bleibt ueber Nacht erhalten, ein Wiedereintritt
+        # laeuft nur ueber die Totzone; ein Vortagesschluss ueber dem
+        # Kaufpunkt schweigt damit von selbst, ohne diese Zwischenloesung.
+        # Und W1: Die "Bestaetigung am Folgetag" wird innerhalb des
+        # Einstiegsfensters (bis 5 Prozent) gemeldet, nicht unterdrueckt.
+        "nur_frische_ausbrueche": False,
         # WIEDEREINTRITT (Mathias, 13.08.2026): Faellt der Kurs wieder ins
         # Einstiegsfenster zurueck, wird das gemeldet - "das Fenster ist
         # das Fenster". Damit ein Kurs, der genau auf der Grenze liegt,
@@ -729,6 +751,98 @@ CFG = {
         # ist eine andere: Ein einzelner Auftrag darf höchstens 6 Stunden
         # laufen — deshalb die Zweiteilung der Wache.
         "actions_minuten_warnung": 1700,
+        # M1 (Gerhard, 12.09.2026), Variante A: Die Schlusskurs-Befunde
+        # (Zeitdeckel, Klimax, Zonen, 8-EMA-Hinweis, Sektor-Radar) werden
+        # gegen 15:45 New York mit den Handelskursen gerechnet und VOR
+        # 16:00 gemeldet, mit dem Hinweis "Schluss noch offen". Minute des
+        # Handelstags, ab der das geschieht (945 = 15:45).
+        "schlussnahe_minute": 945,
+    },
+
+    # --- Relative Staerke gegen das Nasdaq-Universum (R1 bis R6, Teil 6) ---
+    # Gerhards Antworten vom 12.09.2026. Reine Anzeige, kein Filter (die
+    # einzige Ausnahme bleibt die Fokusliste in red_to_green, RS ueber 90).
+    "rs_universum": {
+        # R1: alle Aktien der Nasdaq aus dem amtlichen Symbolverzeichnis.
+        "quelle": "https://www.nasdaqtrader.com/dynamic/SymDir/nasdaqlisted.txt",
+        # R2: Mindestkurs 15 Dollar, Tagesumsatz 10 Millionen Dollar im
+        # 50-Tage-Schnitt; ETFs und Fonds draussen, SPACs erst nach der
+        # Uebernahme. Was darunter liegt, gehoert nicht zur Vergleichsbasis.
+        "mindestkurs": 15.0,
+        "mindest_dollarvolumen": 10_000_000.0,
+        "dollarvolumen_tage": 50,
+        # Luecke 6: unter 252 Handelstagen Historie "nicht verfuegbar".
+        "historie_tage": 252,
+        # Teil 6, Regel 1: Liefert der Abruf weniger als 95 Prozent des
+        # Universums, gibt es KEIN RS, sondern "nicht verfuegbar".
+        "mindest_abdeckung": 0.95,
+        # R6: Zusatz "sehr gut" ab 85.
+        "sehr_gut_ab": 85,
+        # R5: RS-Linie gegen SPY und QQQ mit Hinweis auf ein neues Hoch.
+        "indizes": ["SPY", "QQQ"],
+        # R8: "Roter Markt" heisst nur der Nasdaq, und rot erst ab
+        # mindestens 0,5 Prozent Minus.
+        "markt_index": "^IXIC",
+        "rot_ab_pct": 0.005,
+        # Abruf ueber Yahoo in Bloecken. GEMESSEN 12.09.2026: 4.331
+        # Nasdaq-Symbole in 300er-Bloecken, 14 Monate, 97 Sekunden, 4.328
+        # mit Kursen (99,9 Prozent), keine Drosselung; 14 Monate decken
+        # 252 Handelstage plus Reserve.
+        "abruf_block": 300,
+        "abruf_zeitraum": "14mo",
+        # Wie viele Handelstage RS-Verlauf je Aktie mitgefuehrt werden
+        # (fuer "Aenderung zur Vorwoche" in den Berichten).
+        "rs_verlauf_tage": 30,
+    },
+
+    # --- Sektor-Rangliste der 36 Branchen-ETFs (R12 bis R17) -------------
+    "sektor_rangliste": {
+        # R13: Faber-Mittel ueber 1, 3, 6, 9 und 12 Monate (Handelstage).
+        "monate_tage": [21, 63, 126, 189, 252],
+        # Rang vor 3 und vor 6 Wochen, wie IBD es zeigt.
+        "rang_zurueck_tage": [15, 30],
+        # R15: Aufsteiger = Eintritt in die ersten fuenf oder Aufstieg um
+        # mindestens fuenf Raenge binnen drei Wochen.
+        "aufsteiger_top": 5,
+        "aufsteiger_raenge": 5,
+        "aufsteiger_fenster_tage": 15,
+        # R14: fruehe Aufsteiger-Meldung auf Drei-Monats-Basis, getrennt.
+        "frueh_fenster_tage": 63,
+        # R16: RS-Linie gegen beide Indizes, Aenderung ueber 1, 4, 12 Wochen.
+        "linie_wochen": [1, 4, 12],
+        "indizes": ["SPY", "QQQ"],
+    },
+
+    # --- Abendbericht (R7, R9, R10, R11, Teil 5) --------------------------
+    "abendbericht": {
+        # R7: eigene Meldung abends nach Handelsschluss, als Bericht
+        # gekennzeichnet, niedrige Prioritaet.
+        "melden": True,
+        "prioritaet": "low",
+        # R11: Universum-Kandidaten ab RS 96, getrennt von den Listen.
+        "rs_bericht_ab": 96,
+        # Teil 5: RS-Linien-Hoch je Aktie hoechstens einmal in zehn
+        # Handelstagen.
+        "rs_linien_sperre_tage": 10,
+        # R9: "gruen bei rotem Markt" heisst Schluss im Plus UND mindestens
+        # 80 Prozent der Handelsminuten im Plus; bis der Minutenanteil
+        # gebaut ist, gilt der Schluss allein.
+        "gruen_minuten_anteil": 0.80,
+        # R10: neue Hochs in drei Stufen (52 Wochen, 20 Tage, RS-Linie).
+        "hoch_20_tage": 20,
+    },
+
+    # --- IBD-Ratings als Naeherung (R20 bis R22, W4) ----------------------
+    "ibd_ratings": {
+        "anzeigen": True,
+        # R22: Notengrenzen nach der IBD-Kaufregel: A und B obere 40 Prozent,
+        # C die Mitte, D und E untere 40 Prozent (Perzentil ab dem die Note
+        # gilt).
+        "noten": {"A": 80, "B": 60, "C": 40, "D": 20},
+        # Antwort 11: acht gekuerzte Quartale.
+        "quartale": 8,
+        # W7: 14-Wochen-Quartale auf 13 Wochen umrechnen, mit Kennzeichnung.
+        "wochen_13_umrechnen": True,
     },
 }
 
@@ -842,6 +956,21 @@ def pruefe_config():
     assert len(CFG["lookback"]["rs_quartale"]) == len(CFG["lookback"]["rs_gewichte"]), \
         "RS: gleich viele Quartale wie Gewichte"
     assert CFG["volumen"]["fenster_tage"] > 0
+    # Gerhards Antworten vom 12.09.2026
+    u = CFG["rs_universum"]
+    assert 0.0 < u["mindest_abdeckung"] <= 1.0, "RS-Universum: Mindestabdeckung zwischen 0 und 1"
+    assert 1 <= u["sehr_gut_ab"] <= 99, "RS-Universum: 'sehr gut' braucht ein Perzentil 1 bis 99"
+    assert u["historie_tage"] >= max(CFG["lookback"]["rs_quartale"]), \
+        "RS-Universum: die Historie muss das laengste RS-Quartal decken"
+    assert u["mindestkurs"] > 0 and u["mindest_dollarvolumen"] > 0
+    n = CFG["ibd_ratings"]["noten"]
+    assert n["A"] > n["B"] > n["C"] > n["D"] > 0, "IBD-Noten: Grenzen muessen fallen (A ueber B ueber C ueber D)"
+    assert CFG["gap_and_go"]["einstieg_grenze"] <= CFG["betrieb"]["nachlauf_grenze"], \
+        "W2: die engere Einstiegsgrenze darf das allgemeine Fenster nicht ueberschreiten"
+    assert 570 <= CFG["betrieb"]["schlussnahe_minute"] <= 959, \
+        "M1: schlussnahe Minute muss im Handelstag liegen (570 bis 959)"
+    assert CFG["sektor_rangliste"]["aufsteiger_fenster_tage"] in CFG["sektor_rangliste"]["rang_zurueck_tage"], \
+        "Sektor-Rangliste: das Aufsteiger-Fenster muss einer der Rueckblick-Tage sein"
     return True
 
 

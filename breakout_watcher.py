@@ -64,6 +64,7 @@ import positionen      # Kapitel 11/12: Bestand samt Beobachtungen
 import beobachtungen   # Kapitel 12: Trigger werden Beobachtungen
 import handelskalender  # Fragt den Datenanbieter, ob heute ueberhaupt gehandelt wird
 import gewinnzonen_lauf  # Kapitel 12: Nachtbefunde zum Handelsstart mit heutigen Kursen nachrechnen
+import gewinn_zonen as gz  # Kapitel 12: Klimax-Katalog fuer die schlussnahen Befunde (M1, 12.09.2026)
 from config import CFG, hoechstens, mind_erreicht, pruefe_config
 from kurs_cache import KursCache, Kurswert
 from yahoo_ws import YahooWebSocket
@@ -359,6 +360,20 @@ NACHLAUF_GRENZE = CFG["betrieb"].get("nachlauf_grenze", 0.05)
 # wieder als "im Einstiegsfenster" gilt. Siehe fenster_zustand().
 WIEDEREINTRITT_TOTZONE = CFG["betrieb"].get("wiedereintritt_totzone", 0.01)
 MELDE_UEBERSPRUNGENE = CFG["betrieb"].get("melde_uebersprungene", True)
+# Nur Ausbrueche melden, die HEUTE gerissen wurden (Frage M4 an Gerhard,
+# 11.09.2026). Die Begruendung steht bei riss_schon_gestern().
+NUR_FRISCHE_AUSBRUECHE = CFG["betrieb"].get("nur_frische_ausbrueche", True)
+# GERHARDS ANTWORTEN VOM 12.09.2026 (Werte in config.py):
+#   M1  Schlussnahe Befunde ab Minute 945 (15:45 New York) mit Handelskursen.
+#   R9  Gruene Minuten je Aktie fuer den Abendbericht ("gruen bei rotem Markt").
+#   M6  Die um 15:45 gemeldeten Befunde stehen in einer Datei, der Nachtlauf
+#       prueft sie mit dem Schluss nach und der Abendbericht meldet Ruecknahmen.
+SCHLUSSNAHE_MINUTE = int(CFG["betrieb"].get("schlussnahe_minute", 945))
+GRUEN_DATEI = "gruen_minuten.json"
+SCHLUSSNAH_DATEI = "schlussnahe_gemeldet.json"
+SCHLUSSNAH_MARKE = "SCHLUSSNAH|"
+SEKTORAUF_MARKE = "SEKTORAUF|"
+TEIL_MARKE = "TEIL|"
 # Eigenes Vorzeichen im Meldeschluessel: Ein uebersprungener Kaufpunkt
 # ist ein ANDERES Ereignis als ein sauberer Ausbruch und darf dessen
 # Gedaechtnis nicht belegen.
@@ -450,6 +465,9 @@ GAP_MIN = _GAP["gap_min"]                    # Eroeffnung >= 7 % ueber Vortagess
 GAP_VOL_FAKTOR = _VOL["gap_and_go_faktor"]   # Tagesvolumen >= 5x Ø10-Tage
 GAP_FRUEH_FAKTOR = 3.0      # erste halbe Stunde: >= 300 % des zeitueblichen
 GAP_SCHLUSS_POS = _GAP["schluss_position_min"]
+# W2 (Gerhard, 12.09.2026): Der Folgetags-Einstieg gilt nur bis 3 Prozent
+# ueber dem Kaufpunkt des Luecken-Tages.
+GAP_EINSTIEG_GRENZE = float(_GAP.get("einstieg_grenze", 0.03))
 
 # FLAT BASE — welche Fassung gilt, steht in config.py und NUR dort.
 #
@@ -612,6 +630,22 @@ SEKTOR_MARKE = "SEKTOR|"
 # wird, derselbe Stand aber nicht.
 INSIDER_MARKE = "INSIDER|"
 
+# LUECKEN-BESTAETIGUNGSTAG: DER KAUF GEHOERT DEM FOLGETAG (Mathias,
+# 11.09.2026). Unter diesem Schluessel steht im Zustand die Warteliste der
+# gemeldeten Luecken-Tage; die ganze Begruendung steht bei gapgo_vormerken().
+GAPGO_WARTEN = "gapgo_warten"
+# Der Einstieg am Folgetag ist eine EIGENE Meldung und braucht daher einen
+# eigenen Merker im Melde-Gedaechtnis.
+GAPGO_EIN_MARKE = "GAPGOIN|"
+GAPGO_UEBER_MARKE = "GAPGOUEBER|"   # W2: Einstieg ueber der 3-Prozent-Grenze
+# Wie lange ein vorgemerktes Signal hoechstens auf seinen Einstiegstag
+# wartet, in Kalendertagen. VIER, damit ein Freitagssignal seinen ersten
+# Handelstag auch dann noch findet, wenn der Montag ein Feiertag ist.
+# Gehandelt wird ausschliesslich am ERSTEN Wachtag nach dem Signal (Feld
+# "pruef"); die Tagezahl ist nur der Schutz gegen Eintraege, die liegen
+# bleiben, weil der Waechter einen Tag nicht gelaufen ist.
+GAPGO_WARTE_TAGE = 4
+
 
 def htf_grenze() -> str:
     """Grenze fuer das TAEGLICHE Gedaechtnis der High and Tight Flag.
@@ -671,6 +705,85 @@ def _gemeldet_filtern(gemeldet: dict, heute: str) -> dict:
     return raus
 
 
+def _zahl(wert):
+    """Eine Zahl aus dem Zustand, oder None."""
+    try:
+        return float(wert)
+    except (TypeError, ValueError):
+        return None
+
+
+def _warten_vereinen(alt, neu: dict) -> dict:
+    """Zwei Staende EINES vorgemerkten Luecken-Tages zusammenfuehren.
+
+    Dieselbe Not wie beim Melde-Gedaechtnis (siehe load_state): Cache und
+    Repo-Fassung koennen auseinanderlaufen, und Verlieren ist teurer als
+    Behalten. Der juengere Luecken-Tag loest den aelteren ab; beim selben
+    Tag gilt der HOEHERE Kaufpunkt (er wird im Tagesverlauf nachgezogen),
+    der juengere Stop, die erfolgte Schlussbestaetigung und der FRUEHERE
+    Pruef-Tag (ein spaeterer wuerde den Verfall hinausschieben)."""
+    if not isinstance(neu, dict):
+        return alt if isinstance(alt, dict) else {}
+    if not isinstance(alt, dict) or not alt:
+        return dict(neu)
+    a, n = str(alt.get("signal") or ""), str(neu.get("signal") or "")
+    if n > a:
+        return dict(neu)
+    if n < a:
+        return dict(alt)
+    zus = dict(alt)
+    zus.update({k: v for k, v in neu.items() if v is not None})
+    kp = [x for x in (_zahl(alt.get("kp")), _zahl(neu.get("kp")))
+          if x is not None]
+    if kp:
+        zus["kp"] = max(kp)
+    zus["bestaetigt"] = (bool(alt.get("bestaetigt"))
+                         or bool(neu.get("bestaetigt")))
+    pruef = sorted(str(p) for p in (alt.get("pruef"), neu.get("pruef")) if p)
+    if pruef:
+        zus["pruef"] = pruef[0]
+    return zus
+
+
+def _warten_filtern(warten: dict) -> dict:
+    """Vorgemerkte Luecken-Tage, die noch handelbar sind.
+
+    Alles, was laenger als GAPGO_WARTE_TAGE Kalendertage her ist, fliegt;
+    ein Eintrag aus der ZUKUNFT (Zeitzonen-Wirrwarr) ebenso."""
+    heute = heute_ny() or date.today()
+    raus = {}
+    for t, e in (warten or {}).items():
+        if not isinstance(e, dict):
+            continue
+        try:
+            tage = (heute - date.fromisoformat(str(e.get("signal")))).days
+        except (TypeError, ValueError):
+            continue
+        if 0 <= tage <= GAPGO_WARTE_TAGE:
+            raus[str(t).upper()] = e
+    return raus
+
+
+def _warten_laden() -> dict:
+    """Die Warteliste aus BEIDEN Zustandsquellen, vereint und gefiltert."""
+    warten = {}
+    for quelle in (REPO_STATE, STATE_FILE):
+        for t, e in (_staat_aus(quelle).get(GAPGO_WARTEN) or {}).items():
+            k = str(t).upper()
+            warten[k] = _warten_vereinen(warten.get(k), e)
+    return _warten_filtern(warten)
+
+
+def gapgo_warte_symbole() -> set:
+    """Aktien, die auf ihren Einstiegstag warten.
+
+    Sie brauchen HEUTIGE Kurse, auch wenn die Mappe sie inzwischen nicht
+    mehr fuehrt: Der Scanner schreibt sie jede Nacht neu, und ohne Kurs
+    gaebe es am Einstiegstag nichts zu pruefen. Dieselbe Vorsorge wie
+    nacht_symbole() fuer die Nachtbefunde."""
+    return set(_warten_laden())
+
+
 def load_state() -> dict:
     """Melde-Gedaechtnis im Wochen-Rhythmus des Freitags-Putzes.
 
@@ -707,10 +820,22 @@ def load_state() -> dict:
         gemeldet.update(g)
         # DAS FENSTER-GEDAECHTNIS gilt nur fuer DIESEN Handelstag
         # (Mathias, 13.08.2026) — gestrige Zustaende sagen nichts mehr.
-        if data.get("fenster_tag") == heute:
+        # M4, MOEGLICHKEIT 2 (Gerhard, 12.09.2026): Der Fensterzustand
+        # bleibt UEBER NACHT erhalten, ein Wiedereintritt laeuft nur ueber
+        # die Totzone; das erhaelt die acht echten Faelle aus W1. Er
+        # verfaellt erst mit dem Freitags-Putz, wie die Meldungen, weil
+        # dann die neue Wochenliste gilt. (Bis 12.09.2026 galt er nur fuer
+        # den laufenden Handelstag.)
+        if str(data.get("fenster_tag") or "") > letzter_putz():
             fenster.update(data.get("fenster", {}))
+    # DIE WARTELISTE der Luecken-Bestaetigungstage muss den TAGESWECHSEL
+    # ueberleben, denn ihr Einstieg liegt im Folgetag. Sie kommt aus
+    # denselben zwei Quellen und wird hier ausdruecklich mitgeladen: Dieses
+    # Dict wird frisch gebaut, ein nicht genannter Schluessel waere beim
+    # naechsten Speichern weg.
     return {"fenster_tag": heute, "fenster": fenster,
-            "gemeldet": _gemeldet_filtern(gemeldet, heute)}
+            "gemeldet": _gemeldet_filtern(gemeldet, heute),
+            GAPGO_WARTEN: _warten_laden()}
 
 
 _repo_stand = {"keys": None, "zeit": 0.0}
@@ -725,13 +850,29 @@ def _repo_sichern(state: dict, sofort: bool = False):
     Checkout vor. Gedrosselt auf eine Sicherung je 60 Sekunden und nur
     bei veraenderter Meldungsmenge; jeder Fehler ist eine Protokollzeile
     und KEIN Abbruch — im Zweifel greift der Endkommit des Workflows."""
-    keys = frozenset(state.get("gemeldet", {}))
+    # DIE WARTELISTE ZAEHLT MIT (11.09.2026): Ein vorgemerkter Luecken-Tag
+    # aendert die MELDUNGS-Menge nicht, muss aber ins Repo — sein Einstieg
+    # wird erst am Folgetag geprueft, und der Actions-Cache ist zwischen
+    # zwei Laeufen desselben Tages veraltet (siehe load_state).
+    keys = frozenset(state.get("gemeldet", {})) | frozenset(
+        "%s|%s|%s" % (t, e.get("signal"), e.get("kp"))
+        for t, e in (state.get(GAPGO_WARTEN) or {}).items()
+        if isinstance(e, dict))
     jetzt = time.time()
     # sofort (seit 10.09.2026, Nachtbefunde): ohne die Minutendrossel, weil
     # die Melde-Merker in positionen.json stehen und der Endkommit des
     # Workflows diese Datei nicht sichert.
-    if keys == _repo_stand["keys"] or (not sofort
-                                       and jetzt - _repo_stand["zeit"] < 60):
+    # BEI "sofort" ZAEHLT AUCH EINE UNVERAENDERTE MELDUNGS-MENGE (Befund
+    # 12.09.2026): Ein EXIT der Tagesgeschaeft-Wache legt keinen neuen
+    # Melde-Merker an, er schliesst nur eine Beobachtung in
+    # positionen.json. Die Menge blieb damit gleich, der Abbruch hier
+    # griff, und der Endkommit des Workflows sichert positionen.json
+    # nicht: Der geschlossene Zustand war nach dem Lauf weg. Belegt am
+    # Fall RCUS — die Exit-Meldung ging am 11.09.2026 um 15:47 hinaus, die
+    # Beobachtung stand danach im Repo weiter OFFEN und haette denselben
+    # Ausstieg am naechsten Handelstag erneut gemeldet.
+    if (not sofort and (keys == _repo_stand["keys"]
+                        or jetzt - _repo_stand["zeit"] < 60)):
         return
     _repo_stand["keys"] = keys
     _repo_stand["zeit"] = jetzt
@@ -742,7 +883,12 @@ def _repo_sichern(state: dict, sofort: bool = False):
         import tempfile
         g = ["git", "-c", "user.name=breakout-watcher",
              "-c", "user.email=actions@users.noreply.github.com"]
-        subprocess.run(g + ["add", REPO_STATE, "positionen.json"],
+        # R9 und M6 (12.09.2026): gruene Minuten und die um 15:45 gemeldeten
+        # Befunde gehen denselben Weg; nur vorhandene Dateien, sonst weist
+        # git add den ganzen Aufruf ab.
+        dateien = [d for d in (REPO_STATE, "positionen.json", GRUEN_DATEI,
+                               SCHLUSSNAH_DATEI) if Path(d).exists()]
+        subprocess.run(g + ["add"] + dateien,
                        capture_output=True, timeout=30)
         r = subprocess.run(g + ["commit", "-m",
                                 "Melde-Gedächtnis (im Lauf gesichert)"],
@@ -794,11 +940,52 @@ def _repo_sichern(state: dict, sofort: bool = False):
         print(f"  Melde-Gedächtnis: Repo-Sicherung übersprungen ({e}).")
 
 
+_GRUEN: dict = {}
+
+
+def gruen_laden(heute_s: str) -> dict:
+    """R9 (Gerhard, 12.09.2026): Je Aktie, in wie vielen Datenabrufen des
+    Tages der Kurs ueber dem Vortagesschluss lag (ein Abruf je Minute). Der
+    Abendbericht braucht "mindestens 80 Prozent der Minuten im Plus". Die
+    Schlussstunde uebernimmt die Zaehlung der Tagwache aus dem Repo."""
+    global _GRUEN
+    d = _staat_aus(GRUEN_DATEI)
+    if str(d.get("tag") or "") == heute_s and isinstance(d.get("aktien"), dict):
+        _GRUEN = d
+    else:
+        _GRUEN = {"tag": heute_s, "aktien": {}}
+    return _GRUEN
+
+
+def gruen_zaehlen(quotes: dict):
+    if not _GRUEN:
+        return
+    aktien = _GRUEN.setdefault("aktien", {})
+    for t, q in quotes.items():
+        c, p = q.get("close"), q.get("prev_close")
+        if not c or not p or c != c or p != p:
+            continue
+        z = aktien.setdefault(str(t).upper(), [0, 0])
+        z[1] += 1
+        if float(c) > float(p):
+            z[0] += 1
+
+
+def gruen_schreiben():
+    if not _GRUEN:
+        return
+    try:
+        Path(GRUEN_DATEI).write_text(json.dumps(_GRUEN))
+    except Exception as e:
+        print(f"Gruene Minuten nicht gespeichert: {e}")
+
+
 def save_state(state: dict, sofort: bool = False):
     try:
         STATE_FILE.write_text(json.dumps(state, indent=2))
     except Exception as e:
         print(f"Zustand konnte nicht gespeichert werden: {e}")
+    gruen_schreiben()
     _repo_sichern(state, sofort)
 
 
@@ -1019,12 +1206,20 @@ def fetch_quotes_yahoo(tickers: list[str]) -> dict:
                 # prueft der Waechter, ob die Nachtbefunde zu den heutigen
                 # Kursen gehoeren (Mathias, 10.09.2026).
                 eintrag["prev_datum"] = vortage.index[-1].date()
+                # R18, R19 (Gerhard, 12.09.2026): die 8er- und die 21er-
+                # Exponentiallinie auf Tagesbasis bis GESTERN; den heutigen
+                # Wert schreibt ema_felder() aus dem Live-Kurs fort.
+                if len(vortage) >= 21:
+                    eintrag["ema8_vortag"] = float(
+                        vortage["Close"].ewm(span=8, adjust=False).mean().iloc[-1])
+                    eintrag["ema21_vortag"] = float(
+                        vortage["Close"].ewm(span=21, adjust=False).mean().iloc[-1])
                 # WAR fest auf 10 verdrahtet, waehrend der Ausbruch schon
                 # gegen ein anderes Fenster rechnete. Genau solche stillen
                 # Uneinheitlichkeiten sollte Gerhards Umbau vom 28.07.2026
                 # beenden — jetzt zieht auch Gap and Go seinen Massstab aus
                 # config.py.
-                eintrag["vol10"] = float(
+                eintrag["vol50"] = float(
                     vortage["Volume"].tail(VOL_FENSTER).mean())
                 for feld, spalte in (("open", "Open"), ("high", "High"),
                                      ("low", "Low")):
@@ -1117,6 +1312,97 @@ def fetch_quotes(tickers: list[str], api_key: str, batch_size: int = 8,
 # Breakout-Prüfung
 # ---------------------------------------------------------------------------
 
+def ema_felder(q: dict) -> dict:
+    """R18 (Gerhard, 12.09.2026, NUR ANZEIGE): EMA 8 und 21 auf Tagesbasis,
+    heute aus dem Live-Kurs fortgeschrieben (EMA = a mal Kurs plus (1 minus a)
+    mal EMA von gestern, a = 2 durch (n plus 1))."""
+    try:
+        kurs = float(q.get("close") or 0)
+        e8, e21 = q.get("ema8_vortag"), q.get("ema21_vortag")
+        if not kurs or e8 is None or e21 is None:
+            return {}
+        return {"ema8": 2.0 / 9.0 * kurs + 7.0 / 9.0 * float(e8),
+                "ema21": 2.0 / 22.0 * kurs + 20.0 / 22.0 * float(e21)}
+    except (TypeError, ValueError):
+        return {}
+
+
+def ema_lage_text(t: dict) -> str:
+    e8, e21 = t.get("ema8"), t.get("ema21")
+    if e8 is None or e21 is None:
+        return ""
+    return ("EMA 8 über 21 auf Tagesbasis" if e8 > e21
+            else "EMA 8 unter 21 auf Tagesbasis")
+
+
+_ZUSATZ: dict = {}
+
+
+def _zusatz_daten() -> dict:
+    """RS-Universum, Sektor-Rangliste und Ratings, einmal je Lauf gelesen
+    (die Dateien schreibt der Nachtscan ins Repo)."""
+    if not _ZUSATZ:
+        import importlib
+        for name, modul in (("rs", "rs_universum"), ("sektor", "sektor_rangliste"),
+                            ("ratings", "ibd_ratings")):
+            try:
+                m = importlib.import_module(modul)
+                _ZUSATZ[name] = (m, m.lies())
+            except Exception as e:
+                print(f"  {modul}: nicht verfügbar ({type(e).__name__})")
+                _ZUSATZ[name] = None
+    return _ZUSATZ
+
+
+def zusatz_zeile(ticker) -> str:
+    """R4 bis R6, R16, R20 (Gerhard, 12.09.2026): RS, Sektorrang und Ratings
+    als EINE Zeile in jeder Meldung. Entscheidungshilfe, kein Filter."""
+    d = _zusatz_daten()
+    teile = []
+    try:
+        if d.get("rs"):
+            z = d["rs"][0].anzeige(ticker, d["rs"][1])
+            if z:
+                teile.append(z)
+        if d.get("sektor"):
+            z = d["sektor"][0].sektor_zeile(ticker, d["sektor"][1])
+            if z:
+                teile.append(z)
+        if d.get("ratings"):
+            z = d["ratings"][0].zeile(ticker, d["ratings"][1])
+            if z:
+                teile.append(z)
+    except Exception as e:
+        print(f"  Zusatzzeile {ticker}: {type(e).__name__}: {e}")
+    return "; ".join(teile)
+
+
+def zusatz_logbuch(ticker) -> dict:
+    """Punkt 4 (Gerhard, 12.09.2026): RS-Wert, Sektorrang und Ratings
+    wandern mit jedem Signal ins Trigger-Logbuch."""
+    d = _zusatz_daten()
+    raus = {}
+    try:
+        if d.get("rs"):
+            e = d["rs"][0].eintrag(ticker, d["rs"][1]) or {}
+            raus.update({"rs_nasdaq": e.get("rs"),
+                         "rs_linie_spy_hoch": e.get("linie_spy_hoch")})
+        if d.get("sektor"):
+            import listen
+            etf = beobachtungen.sektor_etf_fuer(listen.sektor_von(ticker))
+            z = next((x for x in (d["sektor"][1].get("liste") or [])
+                      if x.get("etf") == etf), None)
+            raus.update({"sektor_etf": etf, "sektor_rang": (z or {}).get("rang")})
+        if d.get("ratings"):
+            e = ((d["ratings"][1].get("aktien") or {})
+                 .get(str(ticker or "").upper()) or {})
+            raus.update({"ibd_eps": e.get("eps"), "ibd_smr": e.get("smr"),
+                         "ibd_ad": e.get("ad"), "ibd_composite": e.get("composite")})
+    except Exception:
+        pass
+    return raus
+
+
 def pruefe_breakout(item: dict, quote: dict) -> dict | None:
     """Prüft, ob der Kaufpunkt gerissen wurde. Gibt Treffer-Info zurück oder None."""
     kurs = quote["close"]
@@ -1155,7 +1441,7 @@ def pruefe_breakout(item: dict, quote: dict) -> dict | None:
                 "vol_noetig": VOL_FAKTOR.get(item["strategie"],
                                              VOL_FAKTOR_FALLBACK),
                 "vol_anteil": None, "vol_roh": quote.get("volume"),
-                "vol_nicht_verifizierbar": False}
+                "vol_nicht_verifizierbar": False, **ema_felder(quote)}
 
     faktor = VOL_FAKTOR.get(item["strategie"], VOL_FAKTOR_FALLBACK)
     vol, avg = quote["volume"], quote["avg_volume"]
@@ -1193,6 +1479,18 @@ def pruefe_breakout(item: dict, quote: dict) -> dict | None:
         **item,
         "kurs": kurs,
         "ueber_pct": ueber * 100,
+        # FUER riss_schon_gestern() UND fallback_ohne_riss(): Lag der Kurs
+        # gestern noch unter dem Kaufpunkt? Bis 12.09.2026 stand der
+        # Vortagesschluss NUR am uebersprungenen Treffer (oben), der
+        # gewoehnliche trug ihn nicht. fallback_ohne_riss() fragte hier
+        # also einen fehlenden Wert ab und hielt damit JEDE Ausweich-Marke
+        # fuer "heute nicht gerissen" - sie konnte im Meldefenster gar
+        # nicht mehr melden. GEMESSEN am Trigger-Logbuch: Seit dem Einbau
+        # der Ausweich-Marken am 19.08.2026 stammen ALLE 37 Fallback-
+        # Eintraege aus dem Weg "uebersprungen", kein einziger aus dem
+        # gewoehnlichen Ausbruchsweg - genau die Meldungen, die der
+        # AEHR-Befund vom 19.08. haben wollte, blieben still.
+        "vortagesschluss": vortagesschluss(item, quote),
         "vol_ratio": vol_ratio,
         "vol_pct": None if vol_ratio is None else (vol_ratio - 1) * 100,
         "vol_noetig": faktor,
@@ -1200,6 +1498,7 @@ def pruefe_breakout(item: dict, quote: dict) -> dict | None:
         "vol_nicht_verifizierbar": nicht_pruefbar,
         "vol_roh": vol,
         "vol_anteil": anteil,
+        **ema_felder(quote),
     }
 
 
@@ -1277,9 +1576,9 @@ def pruefe_gap_and_go(ticker: str, q: dict):
     halbiert. Der Zusatz x 0,97 ist also KEINE Risikodeckelung, sondern
     ein Mindestabstand fuer Tage mit kleiner Spanne."""
     open_, high, low = q.get("open"), q.get("high"), q.get("low")
-    prev, vol10 = q.get("prev_close"), q.get("vol10")
+    prev, vol50 = q.get("prev_close"), q.get("vol50")
     kurs, vol = q.get("close"), q.get("volume")
-    if None in (open_, high, low, prev, kurs, vol) or not vol10 or prev <= 0:
+    if None in (open_, high, low, prev, kurs, vol) or not vol50 or prev <= 0:
         return None
     gap = open_ / prev - 1
     if not mind_erreicht(gap, GAP_MIN):
@@ -1311,7 +1610,7 @@ def pruefe_gap_and_go(ticker: str, q: dict):
     # verschiedene SCHWELLEN kennt (drei- statt fuenffach vor 10:00 NY),
     # nicht zwei verschiedene Messgroessen. Bis Gerhard das klaert, bleibt
     # es so, wie es das Regelwerk beschreibt.
-    tages_ratio = volumen.verhaeltnis(vol, vol10,
+    tages_ratio = volumen.verhaeltnis(vol, vol50,
                                       volumen.minute_seit_eroeffnung(),
                                       volumen.kurve_fuer(ticker))
     if tages_ratio is None:
@@ -1341,10 +1640,10 @@ def pruefe_gap_and_go(ticker: str, q: dict):
     # im Median 11,5 % und im Aeussersten 46 % entfernt.
     stop, stop_quelle = exit_regeln.berechne_initialen_stop(kp, low - 0.01)
     bestaetigt = (kurz_vor_schluss and mind_erreicht(pos, GAP_SCHLUSS_POS)
-                  and mind_erreicht(vol / vol10, GAP_VOL_FAKTOR))
+                  and mind_erreicht(vol / vol50, GAP_VOL_FAKTOR))
     return {"ticker": ticker, "gap": gap, "frueh": in_frueh_phase,
             "frueh_ratio": frueh_ratio, "tages_ratio": tages_ratio,
-            "roh_ratio": vol / vol10, "pos": pos, "kp": kp, "stop": stop,
+            "roh_ratio": vol / vol50, "pos": pos, "kp": kp, "stop": stop,
             "stop_quelle": stop_quelle,
             "bestaetigt": bestaetigt, "base_spanne": q.get("base_spanne"),
             "flat_base": q.get("flat_base"), "kurs": kurs}
@@ -1557,6 +1856,70 @@ def format_gapgo(g: dict) -> str:
         zeilen.append(f"Schlussbestätigung (oberes Fünftel + "
                       f"{GAP_VOL_FAKTOR:.0f} mal Volumen) folgt zum "
                       f"Handelsende")
+    z = zusatz_zeile(g.get("ticker"))
+    if z:
+        zeilen.append(z)
+    return "\n".join(zeilen)
+
+
+def _datum_de(iso) -> str:
+    """Ein ISO-Datum lesbar, fuer die Meldungstexte."""
+    try:
+        return date.fromisoformat(str(iso)).strftime("%d.%m.%Y")
+    except (TypeError, ValueError):
+        return str(iso or "")
+
+
+def format_gapgo_einstieg(g: dict) -> str:
+    """Der Einstieg am FOLGETAG eines Luecken-Bestaetigungstages.
+
+    BEWUSST EINE EIGENE MELDUNG. Die Meldung des Luecken-Tages ist kein
+    Kaufsignal, sie nennt den Kaufpunkt fuer den Folgetag (format_gapgo
+    schreibt "Kaufpunkt (Folgetag)"); gekauft wird nach Kapitel 7 erst,
+    wenn der Folgetag dieses Hoch ueberschreitet. Zu diesem Ereignis kam
+    bis 11.09.2026 GAR KEINE Meldung mehr: Der Waechter legte schon am
+    Luecken-Tag eine Beobachtung an und meldete danach nur den Ausstieg."""
+    einstieg, stop = float(g["einstieg"]), float(g["stop"])
+    zeilen = [kopfzeile(g["ticker"], g.get("firma", ""),
+                        f"{GAP_NAME} Einstieg"),
+              f"Kaufpunkt {float(g['kaufpunkt']):.2f} vom Lücken-Tag "
+              f"{_datum_de(g.get('signal'))} überschritten, Kurs "
+              f"{float(g['kurs']):.2f}",
+              f"Einstieg {einstieg:.2f}, Stop {stop:.2f}"]
+    if einstieg > 0:
+        zeilen[-1] += (f"; Risiko bis Stop "
+                       f"{(einstieg - stop) / einstieg * 100:.1f}%")
+    if not g.get("bestaetigt"):
+        zeilen.append("Der Lücken-Tag hatte keine Schlussbestätigung, "
+                      "oberes Fünftel und Volumen fehlten zum Handelsende")
+    z = zusatz_zeile(g.get("ticker"))
+    if z:
+        zeilen.append(z)
+    vermerk = termin_nachsatz(g.get("ticker"))
+    if vermerk:
+        zeilen.insert(1, vermerk)
+    return "\n".join(zeilen)
+
+
+def format_gapgo_uebersprungen(g: dict) -> str:
+    """W2 (Gerhard, 12.09.2026): Der Folgetag hat das Hoch des Luecken-Tages
+    ueberschritten, aber der Einstieg laege ueber der 3-Prozent-Grenze.
+    AUSDRUECKLICH KEIN Kaufsignal, wie bei format_uebersprungen."""
+    einstieg, kp = float(g["einstieg"]), float(g["kaufpunkt"])
+    pct = (einstieg / kp - 1) * 100 if kp else 0.0
+    zeilen = [kopfzeile(g["ticker"], g.get("firma", ""),
+                        f"{GAP_NAME} Einstieg ÜBERSPRUNGEN"),
+              f"Kaufpunkt {kp:.2f} vom Lücken-Tag {_datum_de(g.get('signal'))} "
+              f"überschritten, Einstieg wäre {einstieg:.2f} und liegt "
+              f"{pct:.1f}% darüber, über der Grenze von "
+              f"{GAP_EINSTIEG_GRENZE * 100:.0f}%",
+              "Kein Einstieg mehr, daher kein Kaufsignal"]
+    z = zusatz_zeile(g.get("ticker"))
+    if z:
+        zeilen.append(z)
+    vermerk = termin_nachsatz(g.get("ticker"))
+    if vermerk:
+        zeilen.insert(1, vermerk)
     return "\n".join(zeilen)
 
 
@@ -1714,7 +2077,7 @@ def beobachtungen_aus_breakouts(treffer):
     beobachtungen_eintragen(eintraege, einmal_je_muster=True)
 
 
-def tagesgeschaeft_wache(topic, quotes, dry_run):
+def tagesgeschaeft_wache(topic, quotes, dry_run, state=None):
     """Intraday-Wache der Tagesgeschaeft-Beobachtungen (Kapitel 12):
     Faellt der Kurs zurueck unter die Exit-Linie (bei Red-to-Green der
     Vortagesschluss, bei Gap and Go der Muster-Stop), kommt SOFORT die
@@ -1755,9 +2118,226 @@ def tagesgeschaeft_wache(topic, quotes, dry_run):
                              art="verkauf", anlass="exit")
         if sende(topic, titel, absaetze, "high", handel_adresse(paket)):
             positionen.speichern(bestand)
+            # UND SOFORT INS REPO: Ein geschlossener Exit steht nur in
+            # positionen.json; ohne diese Zeile war er nach dem Lauf weg
+            # und derselbe Ausstieg kam am naechsten Handelstag erneut
+            # (Befund 12.09.2026, siehe _repo_sichern).
+            if state is not None:
+                save_state(state, sofort=True)
     except Exception as e:
         print(f"Tagesgeschäft-Wache fehlgeschlagen: "
               f"{type(e).__name__}: {e}")
+
+
+def _handelstage_seit(datum, heute) -> int | None:
+    try:
+        d = date.fromisoformat(str(datum)[:10])
+    except (TypeError, ValueError):
+        return None
+    n, lauf = 0, d
+    while lauf < heute:
+        lauf += timedelta(days=1)
+        if lauf.weekday() < 5:
+            n += 1
+    return n
+
+
+def teilverkauf_wache(topic, quotes, dry_run, state, schon_gemeldet):
+    """M2 (Gerhard, 12.09.2026): Der Teilverkauf (Stufe B des Exit-Regelwerks,
+    ab plus 20 Prozent seit Einstieg) wird IM HANDEL gemeldet, sobald der
+    Kurs die Schwelle erreicht, nicht erst mit dem Schluss. Die Halteregel
+    fuer Schnellstarter gilt weiter (solange sie laeuft, kein Teilverkauf).
+    Eine REGEL-Meldung, laut; danach traegt die Beobachtung teilverkauft,
+    genau wie nach dem Nachtlauf, und zwar einmal je Beobachtung."""
+    if dry_run or not quotes:
+        return
+    try:
+        ex = CFG["exit"]
+        heute = heute_ny() or date.today()
+        bestand = positionen.laden()
+        faellig = []
+        for key, e in beobachtungen.offene(bestand).items():
+            if e.get("klasse") == "darvas" or e.get("teilverkauft"):
+                continue
+            q = quotes.get(e.get("symbol"))
+            kurs = q.get("close") if q else None
+            if not kurs or kurs != kurs or not e.get("einstieg"):
+                continue
+            gewinn = float(kurs) / float(e["einstieg"]) - 1
+            if not mind_erreicht(gewinn, ex["teilverkauf_ab_pct"]):
+                continue
+            if e.get("halteregel_aktiv"):
+                seit = _handelstage_seit(e.get("einstieg_datum"), heute)
+                if seit is not None and seit < int(ex["halteregel_tage"]):
+                    continue
+            k = TEIL_MARKE + key
+            if k in schon_gemeldet:
+                continue
+            faellig.append((key, e, float(kurs), gewinn, k))
+        if not faellig:
+            return
+        absaetze = []
+        for i, (key, e, kurs, gewinn, k) in enumerate(faellig, 1):
+            absaetze.append(
+                f"{i}. REGEL: {meldungskopf(e['symbol'], e.get('firma', ''))}; "
+                f"{e.get('strategie', '')}; Teilverkauf fällig, "
+                + f"{gewinn * 100:+.1f} %".replace(".", ",")
+                + f" seit Einstieg im Handel erreicht; "
+                f"{ex['teilverkauf_anteil'] * 100:.0f} % verkaufen; "
+                f"Kurs {kurs:.2f}, Einstieg {float(e['einstieg']):.2f}")
+        titel = "REGEL Teilverkauf: " + ", ".join(e["symbol"] for _, e, _, _, _ in faellig)
+        paket = handel_paket([{"ticker": e["symbol"], "firma": e.get("firma", ""),
+                               "strategie": e.get("strategie", ""), "kurs": kurs,
+                               "key": k} for _, e, kurs, _, k in faellig],
+                             art="verkauf", anlass="teilverkauf")
+        if sende(topic, titel, absaetze, "high", handel_adresse(paket)):
+            heute_s = date.today().isoformat()
+            for key, e, kurs, gewinn, k in faellig:
+                e["teilverkauft"] = True
+                e.setdefault("verlauf", []).append({
+                    "datum": heute_s, "aktion": "teilverkauf",
+                    "grund": f"+{gewinn * 100:.1f} % im Handel erreicht (M2)",
+                    "kurs": round(kurs, 4)})
+                schon_gemeldet.add(k)
+                state["gemeldet"][k] = heute_s
+            positionen.speichern(bestand)
+            save_state(state, sofort=True)
+    except Exception as e:
+        print(f"Teilverkauf-Wache fehlgeschlagen: {type(e).__name__}: {e}")
+
+
+# ---------------------------------------------------------------------------
+# LUECKEN-BESTAETIGUNGSTAG: DIE BEOBACHTUNG BEGINNT ERST AM FOLGETAG
+# (Mathias, 11.09.2026)
+# ---------------------------------------------------------------------------
+# DER FALL RCUS vom 11.09.2026: Um 15:31 meldete der Waechter den
+# Luecken-Bestaetigungstag, und die Kapitel-12-Fuetterung eroeffnete im
+# selben Augenblick eine Tagesgeschaeft-Beobachtung mit Einstieg 26,48 und
+# Stop 26,14. Gekauft wird nach Kapitel 7 aber erst am FOLGETAG ueber dem
+# Hoch des Luecken-Tages. Um 15:47 fiel der Kurs unter 26,14, und es kam
+# "EXIT Tagesgeschaeft: RCUS" — ein Ausstieg aus einer Position, die es nie
+# gegeben hat.
+#
+# DIE REGEL IST BELEGT, nicht geschaetzt: gapgo_erfolg.py, die eigene
+# Rueckblick-Messung, rechnet mit Kaufpunkt = Hoch des Luecken-Tages plus
+# einem Cent, prueft ihn am Tag i + 1 und setzt den Einstieg auf
+# max(Eroeffnung des Folgetags, Kaufpunkt). Genau das macht
+# gapgo_einstiege_pruefen().
+#
+# ZWEI FOLGEN DARAUS:
+#   1. Die Meldung des Luecken-Tages legt KEINE Beobachtung mehr an,
+#      sondern einen Eintrag in der Warteliste des Zustands.
+#   2. Kaufpunkt und Stop werden bis zum Handelsschluss NACHGEZOGEN. Sie
+#      haengen am Tageshoch und Tagestief, und die wandern: Bei RCUS stand
+#      in der Beobachtung der Wert aus der ERSTEN Minute (26,48).
+def gapgo_vormerken(state: dict, g: dict, anlegen: bool = True) -> bool:
+    """Ein Luecken-Tag wandert in die Warteliste, nicht in die
+    Beobachtungen. Rueckgabe: Hat sich der Zustand geaendert?
+
+    anlegen=False zieht einen SCHON vorhandenen Eintrag desselben Tages
+    nach und legt keinen neuen an — so gerufen in jedem Durchlauf, damit
+    Kaufpunkt und Stop dem Tageshoch und Tagestief folgen. Mit
+    anlegen=True entsteht der Eintrag; das geschieht nur nach einer
+    erfolgreich verschickten Meldung.
+
+    EIN EINTRAG VON GESTERN WIRD NIE UEBERSCHRIEBEN: Er wartet auf seinen
+    Einstieg und bekaeme sonst den Kaufpunkt von heute."""
+    warten = state.setdefault(GAPGO_WARTEN, {})
+    t = str(g.get("ticker") or "").upper()
+    kp, stop = _zahl(g.get("kp")), _zahl(g.get("stop"))
+    if not t or kp is None or stop is None:
+        return False
+    heute = (heute_ny() or date.today()).isoformat()
+    e = warten.get(t)
+    if not isinstance(e, dict) or str(e.get("signal")) != heute:
+        if not anlegen:
+            return False
+        warten[t] = {"signal": heute, "kp": kp, "stop": stop,
+                     "firma": g.get("firma", ""),
+                     "bestaetigt": bool(g.get("bestaetigt"))}
+        return True
+    alt_kp = _zahl(e.get("kp"))
+    neu_kp = kp if alt_kp is None else max(alt_kp, kp)
+    best = bool(e.get("bestaetigt")) or bool(g.get("bestaetigt"))
+    if (neu_kp, stop, best) == (alt_kp, _zahl(e.get("stop")),
+                               bool(e.get("bestaetigt"))):
+        return False
+    e["kp"], e["stop"], e["bestaetigt"] = neu_kp, stop, best
+    return True
+
+
+def gapgo_einstiege_pruefen(state: dict, quotes: dict) -> tuple:
+    """AM FOLGETAG: Wer sein Hoch von gestern ueberschreitet, wird JETZT
+    gekauft. Rueckgabe: (Einstiege zum Melden, Zustand geaendert).
+
+    Der Einstieg ist max(Eroeffnung, Kaufpunkt) — genau die Rechnung der
+    Rueckblick-Messung: Eroeffnet die Aktie ueber dem Kaufpunkt, kauft man
+    zur Eroeffnung und nicht zum guenstigeren Wunschpreis.
+
+    VERFALL: Gehandelt wird nur am ERSTEN Wachtag nach dem Signal (die
+    Messung prueft genau den Tag i + 1). Wer seinen Kaufpunkt an diesem
+    Tag nicht erreicht, verfaellt; ebenso alles, was laenger als
+    GAPGO_WARTE_TAGE liegen bleibt.
+
+    ENTFERNT WIRD HIER NUR, WAS VERFAELLT. Einen Einstieg traegt erst der
+    Aufrufer aus, und zwar nach erfolgreicher Meldung — sonst waere er bei
+    einer Sendesperre still verloren."""
+    warten = state.get(GAPGO_WARTEN)
+    if not isinstance(warten, dict) or not warten:
+        return [], False
+    heute = heute_ny() or date.today()
+    heute_s = heute.isoformat()
+    einstiege, geaendert = [], False
+    for t, e in list(warten.items()):
+        if not isinstance(e, dict):
+            warten.pop(t, None)
+            geaendert = True
+            continue
+        signal = str(e.get("signal") or "")
+        if signal == heute_s:
+            continue                   # der Luecken-Tag laeuft noch
+        try:
+            tage = (heute - date.fromisoformat(signal)).days
+        except ValueError:
+            warten.pop(t, None)
+            geaendert = True
+            continue
+        pruef = str(e.get("pruef") or "")
+        if tage > GAPGO_WARTE_TAGE or (pruef and pruef != heute_s):
+            kp_txt = _zahl(e.get("kp"))
+            kp_txt = "?" if kp_txt is None else f"{kp_txt:.2f}"
+            grund = ("am Folgetag nicht erreicht" if pruef
+                     else f"seit {tage} Tagen kein Wachtag")
+            print(f"  {t}: {GAP_NAME} vom {_datum_de(signal)} verfallen, "
+                  f"Kaufpunkt {kp_txt} {grund}.")
+            warten.pop(t, None)
+            geaendert = True
+            continue
+        if pruef != heute_s:
+            e["pruef"] = heute_s       # heute ist der Einstiegstag
+            geaendert = True
+        q = quotes.get(t) or {}
+        kurs, kp, stop = (_zahl(q.get("close")), _zahl(e.get("kp")),
+                          _zahl(e.get("stop")))
+        if kurs is None or kp is None or stop is None or kp <= 0:
+            continue
+        if kurs < kp:
+            continue                   # das Hoch von gestern steht noch
+        eroeffnung = _zahl(q.get("open"))
+        einstieg = max(eroeffnung, kp) if eroeffnung else kp
+        # W2 (Gerhard, 12.09.2026): Der Folgetags-Einstieg gilt nur bis
+        # 3 Prozent ueber dem Kaufpunkt (config gap_and_go.einstieg_grenze).
+        # Darueber ist es KEIN Einstieg, sondern die Auskunft, dass die
+        # Aktie davongelaufen ist; der Eintrag verfaellt nach der Meldung.
+        ueber = einstieg > kp * (1.0 + GAP_EINSTIEG_GRENZE) + 1e-9
+        einstiege.append({
+            "ticker": t, "firma": e.get("firma", ""),
+            "strategie": "Gap and Go", "signal": signal,
+            "kaufpunkt": kp, "einstieg": einstieg, "stop": stop,
+            "kurs": kurs, "bestaetigt": bool(e.get("bestaetigt")),
+            "uebersprungen": ueber,
+            "key": f"{GAPGO_UEBER_MARKE if ueber else GAPGO_EIN_MARKE}{t}|{signal}"})
+    return einstiege, geaendert
 
 
 # ---------------------------------------------------------------------------
@@ -2009,7 +2589,8 @@ def nachtbefunde_schritt(topic, nacht, basis, ws, schon_gemeldet, state,
                 termine = _zahlen_termine()
             ergebnis = gewinnzonen_lauf.live_pruefen(
                 b, bestand.get(b.get("key")), verlauf, kurs, heute,
-                hoch=q.get("high"), tief=q.get("low"), termine=termine)
+                hoch=q.get("high"), tief=q.get("low"), termine=termine,
+                schon_symbol=klimax_je_symbol(bestand, sym))
             if ergebnis is None:
                 print(f"  Nachtbefund {b.get('typ')} {sym}: gilt mit dem Kurs "
                       f"von heute ({kurs:.2f}) nicht, nicht gemeldet.")
@@ -2068,6 +2649,8 @@ def nachtbefunde_schritt(topic, nacht, basis, ws, schon_gemeldet, state,
                 e = bestand.get(b.get("key"))
                 if e is not None:
                     gewinnzonen_lauf.merker_anwenden(e, merker)
+                # M5 (Gerhard, 12.09.2026): das Klimax-Zeichen gilt je AKTIE.
+                klimax_symbolweit(bestand, b.get("symbol"), merker)
                 k = nacht_schluessel(b, merker)
                 schon_gemeldet.add(k)
                 state["gemeldet"][k] = heute_s
@@ -2098,6 +2681,327 @@ def nachtbefunde_schritt(topic, nacht, basis, ws, schon_gemeldet, state,
     for eintrag, _, _, _, _ in gesendet_insider:
         if eintrag in offen:
             offen.remove(eintrag)
+    return True
+
+
+def klimax_je_symbol(bestand: dict, sym) -> set:
+    """M5: alle Klimax-Zeichen, die an irgendeiner Beobachtung der Aktie
+    schon als gemeldet stehen."""
+    raus = set()
+    s = str(sym or "").upper()
+    for e in bestand.values():
+        if isinstance(e, dict) and str(e.get("symbol") or "").upper() == s:
+            raus.update(e.get("klimax_gemeldet") or [])
+    return raus
+
+
+def klimax_symbolweit(bestand: dict, sym, merker: dict):
+    """M5: ein gemeldetes Klimax-Zeichen traegt JEDE offene Beobachtung
+    der Aktie, nicht nur die, an der es gemeldet wurde."""
+    z = (merker or {}).get("klimax_gemeldet")
+    if not z:
+        return
+    s = str(sym or "").upper()
+    for e in bestand.values():
+        if (isinstance(e, dict) and e.get("status") == "offen"
+                and str(e.get("symbol") or "").upper() == s):
+            gewinnzonen_lauf.merker_anwenden(e, {"klimax_gemeldet": z})
+
+
+def sektor_morgen(topic, state, schon_gemeldet, dry_run):
+    """R15 (Gerhard, 12.09.2026): JEDEN MORGEN die drei groessten Aufsteiger
+    der Sektor-Rangliste, dazu die Eintritte in die ersten fuenf und die
+    fruehen Aufsteiger auf Drei-Monats-Basis (R14, getrennt). Einmal je
+    Handelstag. Raenge sind Schlusskurs-Raenge des Vortags und werden so
+    benannt; das ist kein Kursalarm, sondern eine Rangfolge."""
+    heute_s = (heute_ny() or date.today()).isoformat()
+    marke = SEKTORAUF_MARKE + heute_s
+    if marke in schon_gemeldet or not push_frei():
+        return None
+    d = _zusatz_daten().get("sektor")
+    if not d or not d[1].get("liste"):
+        schon_gemeldet.add(marke)
+        return None
+    modul, sek = d
+    absaetze = []
+    ga = sek.get("groesste_aufsteiger") or []
+    if ga:
+        absaetze.append("Größte Aufsteiger in drei Wochen:\n" + "\n".join(
+            f"{i}. {modul.text_fuer(z, mit_linie=False)}; plus {z['aenderung_3w']} Ränge"
+            for i, z in enumerate(ga, 1)))
+    else:
+        absaetze.append("Keine Aufsteiger in drei Wochen")
+    ereignisse = ([modul.aufsteiger_text(m) for m in (sek.get("aufsteiger") or [])]
+                  + [modul.aufsteiger_text(m) for m in (sek.get("frueh") or [])])
+    if ereignisse:
+        absaetze.append("Neu unter den ersten fünf oder frühe Aufsteiger auf "
+                        "Drei-Monats-Basis:\n"
+                        + "\n".join(f"{i}. {x}" for i, x in enumerate(ereignisse, 1)))
+    top = [z for z in sek["liste"] if z.get("rang")][:5]
+    absaetze.append("Spitze nach Faber-Mittel: " + ", ".join(
+        f"{z['rang']} {z['etf']} {z.get('name', '')}".strip() for z in top))
+    stand = _datum_de(sek.get("handelstag"))
+    absaetze.append(f"Anzeige, kein Filter; Ränge nach dem Schluss vom {stand}")
+    titel = f"Sektor-Aufsteiger, Stand Schluss {stand}"
+    if dry_run:
+        print(f"(Dry-Run) {titel}")
+        for a in absaetze:
+            print("  " + a.replace("\n", "\n  "))
+        schon_gemeldet.add(marke)
+        return True
+    if sende(topic, titel, absaetze, "default"):
+        schon_gemeldet.add(marke)
+        state["gemeldet"][marke] = heute_s
+        save_state(state)
+        return True
+    return False
+
+
+def sektor_radar_hochgerechnet(minuten) -> list:
+    """M1 (Gerhard, 12.09.2026): der Sektor-Radar gegen 15:45 mit dem auf
+    den ganzen Tag HOCHGERECHNETEN Volumen (eigene Kurve je ETF, gebaut vom
+    Nachtscan). Ohne Kurve ist ein ETF nicht verifizierbar und bleibt still."""
+    import pandas as pd
+    daten = sektor_radar.lade_etf_kurse(leise=True)
+    heute = heute_ny() or date.today()
+    v50_tage = int(getattr(sektor_radar, "V50_TAGE", 50))
+    treffer = []
+    for etf, df in daten.items():
+        try:
+            close = sektor_radar._spalte(df, "close")
+            vol = sektor_radar._spalte(df, "volume")
+            letzter = pd.to_datetime(sektor_radar._datumsspalte(df).iloc[-1]).date()
+            if letzter != heute:
+                continue                  # keine heutige Zeile
+            richtung = sektor_radar.pruefe_umkehr(close)
+            if richtung is None:
+                continue
+            kurve = volumen.kurve_fuer(etf)
+            if kurve is None or len(df) < v50_tage + 2:
+                continue                  # nicht verifizierbar
+            v50 = float(vol.iloc[-(v50_tage + 1):-1].mean())
+            pct = volumen.volume_pct_change(float(vol.iloc[-1]), v50, kurve, minuten)
+            if pct is None or pct < sektor_radar.VOL_PCT_SCHWELLE:
+                continue
+            ma = close.rolling(sektor_radar.MA_TAGE).mean()
+            i = sektor_radar.BESTAETIGUNG_ABSTAND + 1
+            heute_ab = float(close.iloc[-1] - ma.iloc[-1])
+            vorher = float(close.iloc[-i] - ma.iloc[-i]) if len(close) >= i else 0.0
+            haelt = heute_ab > vorher if richtung == "hoch" else heute_ab < vorher
+            if not haelt:
+                continue
+            treffer.append({"etf": etf, "name": sektor_radar.ETF_UNIVERSE.get(etf, etf),
+                            "richtung": richtung, "volumen_pct": round(pct, 1),
+                            "kurs": round(float(close.iloc[-1]), 2)})
+        except Exception:
+            continue
+    return treffer
+
+
+def schlussnahe_befunde(topic, nacht, basis, ws, state, schon_gemeldet,
+                        dry_run):
+    """M1, VARIANTE A (Gerhard, 12.09.2026): Was nach den Regeln einen
+    Schlusskurs braucht, wird ab 15:45 New York mit den Handelskursen
+    gerechnet und VOR 16:00 gemeldet, mit dem Vermerk "Schluss noch offen":
+    das Exit-Regelwerk (REGEL), die Klimax-Zeichen (alle fuenf, M3 und M5
+    beachtet), Wedge Drop (REGEL, nur wenn die Straffungs-Meldungen an
+    sind), Weinstein Stufe 3, der 8-EMA-Hinweis (R19, INFORMATION), das
+    Ende der Tagesgeschaefte und der Sektor-Radar mit hochgerechnetem
+    Volumen. Der Nachtlauf prueft mit dem echten Schluss nach; faellt die
+    Bestaetigung, meldet der Abendbericht die RUECKNAHME (M6). Einmal je
+    Handelstag; die gemeldeten Befunde stehen in SCHLUSSNAH_DATEI."""
+    minuten = ny_minuten()
+    if minuten is None or minuten < SCHLUSSNAHE_MINUTE or not basis:
+        return None
+    heute = heute_ny() or date.today()
+    heute_s = heute.isoformat()
+    marke = SCHLUSSNAH_MARKE + heute_s
+    if marke in schon_gemeldet:
+        return None
+    bestand = positionen.laden()
+    offen = beobachtungen.offene(bestand)
+    haengend = set(KURSE.stale_liste())
+    kurse = {}
+    for key, e in offen.items():
+        sym = str(e.get("symbol") or "").upper()
+        if sym in kurse or sym in haengend:
+            continue
+        q = basis.get(sym)
+        if not q:
+            continue
+        q = dict(q)
+        ws_kurse_einblenden({sym: q}, ws)
+        k = q.get("close")
+        if k and k == k:
+            kurse[sym] = q
+    eintraege = []
+
+    # 1. Exit-Regelwerk an einer KOPIE des Bestands (Buchfuehrung erst nachts)
+    try:
+        import copy
+        kopie = copy.deepcopy(bestand)
+        schluss = {s: float(q["close"]) for s, q in kurse.items()}
+        idx = 0
+        for e in offen.values():
+            seit = _handelstage_seit(e.get("einstieg_datum"), heute) or 0
+            idx = max(idx, int(e.get("einstieg_index") or 0) + seit)
+        for m in positionen.pruefe_bestand(kopie, schluss, idx):
+            if m.get("aktion") == "teilverkauf":
+                continue                  # M2 meldet den im Handel selbst
+            eintraege.append({"praefix": "REGEL", "typ": "kapitel11",
+                              "key": m["symbol"], "symbol": m["symbol"],
+                              "zeichen": None,
+                              "text": "REGEL: " + positionen.melde_text(m)})
+    except Exception as ex:
+        print(f"  Schlussnah, Exit-Regelwerk: {type(ex).__name__}: {ex}")
+
+    # 2. je Beobachtung mit heutigem Kurs
+    verlaeufe = nacht.get("verlaeufe") or {}
+    straffung = gewinnzonen_lauf.straffung_gemeldet()
+    for key, e in sorted(offen.items()):
+        sym = str(e.get("symbol") or "").upper()
+        q = kurse.get(sym)
+        if not q:
+            continue
+        kurs = float(q["close"])
+        klasse = e.get("klasse", "standard")
+        stand = gewinnzonen_lauf._stand_text(e, kurs, mit_kurs=True)
+        strategie = e.get("strategie", "")
+        if klasse == "tagesgeschaeft":
+            eintraege.append({"praefix": "INFORMATION", "typ": "tagesende",
+                              "key": key, "symbol": sym, "zeichen": None,
+                              "text": f"INFORMATION: {sym}; {strategie}; "
+                                      f"Tagesgeschäft endet mit dem Schluss; " + stand})
+            continue
+        if klasse == "darvas":
+            continue
+        verlauf = verlaeufe.get(key)
+        daten = (verlauf or {}).get("daten") or []
+        letzter = str(daten[-1][0])[:10] if daten else None
+        vortag = q.get("prev_datum")
+        if not letzter or (vortag is not None and str(vortag) != letzter):
+            continue                      # Verlauf passt nicht zu heute
+        try:
+            df = gewinnzonen_lauf._df_live(verlauf, heute, kurs, q.get("high"), q.get("low"))
+            tage = int(verlauf.get("tage", 0)) + 1
+            ema8 = gewinnzonen_lauf.ema8_aus(df)
+            if ema8 is not None and kurs < ema8:
+                eintraege.append({"praefix": "INFORMATION", "typ": "ema8_hinweis",
+                                  "key": key, "symbol": sym, "zeichen": None,
+                                  "text": f"INFORMATION: {sym}; {strategie}; Kurs "
+                                          f"{kurs:.2f} unter der 8-Tage-EMA {ema8:.2f}; "
+                                          f"reiner Hinweis, kein Ausstiegssignal; " + stand})
+            schon = klimax_je_symbol(bestand, sym)
+            klimax = gz.pruefe_klimax_katalog(gewinnzonen_lauf._klimax_eingaben(df, tage))
+            zone_vorab = gewinnzonen_lauf.zone_ohne_klimax(e, kurs)
+            for z in klimax["ausgeloeste_zeichen"]:
+                if z in schon or gewinnzonen_lauf.zeichen_2_zu_frueh(z, zone_vorab):
+                    continue
+                k = nacht_schluessel({"typ": "klimax_zeichen", "key": key, "zeichen": z})
+                if k in schon_gemeldet:
+                    continue
+                wert = klimax["details"][z].get("wert_pct")
+                wert_teil = (f" ({wert:+.1f} %)".replace(".", ",") if wert is not None else "")
+                eintraege.append({"praefix": "INFORMATION", "typ": "klimax_zeichen",
+                                  "key": key, "symbol": sym, "zeichen": z,
+                                  "live": z in gewinnzonen_lauf.KLIMAX_LIVE,
+                                  "text": f"INFORMATION: {sym}; {strategie}; Klimax-Zeichen "
+                                          f"{z.replace('_', ' ')}{wert_teil}; Verkauf in die "
+                                          f"Stärke erwägen; " + stand})
+            ziel = e.get("musterziel")
+            zone = gz.klassifiziere_zone(
+                e["einstieg"], e.get("struktur_stop") or e["aktueller_stop"], kurs,
+                musterziel_erreicht=bool(ziel) and kurs >= float(ziel),
+                ist_klimax=bool(klimax["ausgeloeste_zeichen"]))["zone"]
+            if straffung and zone == "stark" and not e.get("wedge_drop_gemeldet"):
+                try:
+                    import kell_zyklus
+                    phase = kell_zyklus.klassifiziere(df)
+                except Exception:
+                    phase = None
+                if phase == "Wedge Drop":
+                    eintraege.append({"praefix": "REGEL", "typ": "wedge_drop",
+                                      "key": key, "symbol": sym, "zeichen": None,
+                                      "text": f"REGEL: {sym}; {strategie}; Kurs unter der "
+                                              f"10er- und 20er-Tageslinie nach der Überdehnung "
+                                              f"(Kell Wedge Drop); Ausstieg oder harte "
+                                              f"Straffung; " + stand})
+            if zone == "stark" and not e.get("weinstein_gemeldet"):
+                k = nacht_schluessel({"typ": "weinstein", "key": key})
+                if k not in schon_gemeldet:
+                    w3, _det = gz.pruefe_weinstein_stufe3(gewinnzonen_lauf._ma30w_serie(df))
+                    if w3:
+                        eintraege.append({"praefix": "INFORMATION", "typ": "weinstein",
+                                          "key": key, "symbol": sym, "zeichen": None,
+                                          "text": f"INFORMATION: {sym}; {strategie}; 30-Wochen-"
+                                                  f"Linie flacht ab (Weinstein Stufe 3); " + stand})
+        except Exception as ex:
+            print(f"  Schlussnah {sym}: {type(ex).__name__}: {ex}")
+
+    # 3. Sektor-Radar mit hochgerechnetem Volumen
+    try:
+        for tr in sektor_radar_hochgerechnet(minuten):
+            eintraege.append({"praefix": "INFORMATION", "typ": "sektor_radar",
+                              "key": tr["etf"], "symbol": tr["etf"], "zeichen": tr["richtung"],
+                              "text": f"INFORMATION: Sektor-Radar {tr['etf']} ({tr['name']}) "
+                                      f"dreht nach {'oben' if tr['richtung'] == 'hoch' else 'unten'}; "
+                                      f"Volumen hochgerechnet {tr['volumen_pct']:+.0f}% gegenüber "
+                                      f"dem 50-Tage-Schnitt; Kurs {tr['kurs']:.2f}"})
+    except Exception as ex:
+        print(f"  Schlussnah, Sektor-Radar: {type(ex).__name__}: {ex}")
+
+    ny = f"{minuten // 60}:{minuten % 60:02d}"          # ny_minuten() zaehlt Tagesminuten
+    ablage = {"handelstag": heute_s, "gemeldet_um_ny": ny,
+              "befunde": [{k: v for k, v in x.items() if k != "live"} for x in eintraege]}
+    if not eintraege:
+        print(f"Schlussnahe Befunde ({ny} New York): keine.")
+        if not dry_run:
+            Path(SCHLUSSNAH_DATEI).write_text(json.dumps(ablage, ensure_ascii=False, indent=1),
+                                              encoding="utf-8")
+        schon_gemeldet.add(marke)
+        state["gemeldet"][marke] = heute_s
+        if not dry_run:
+            save_state(state, sofort=True)
+        return None
+    absaetze = [f"{i}. {x['text']}; Schluss noch offen" for i, x in enumerate(eintraege, 1)]
+    absaetze.append(f"Gerechnet um {ny} New York mit den Handelskursen; der Nachtlauf "
+                    f"prüft mit dem Schluss nach, Rücknahmen kommen im Abendbericht.")
+    prio = "high" if any(x["praefix"] == "REGEL" for x in eintraege) else "default"
+    titel = f"Schlussnahe Befunde {_datum_de(heute_s)}, Schluss noch offen: {len(eintraege)}"
+    if dry_run:
+        print(f"(Dry-Run) {titel}")
+        for a in absaetze:
+            print("  " + a)
+        schon_gemeldet.add(marke)
+        return True
+    if not sende(topic, titel, absaetze, prio):
+        return False
+    Path(SCHLUSSNAH_DATEI).write_text(json.dumps(ablage, ensure_ascii=False, indent=1),
+                                      encoding="utf-8")
+    for x in eintraege:
+        if x["typ"] == "klimax_zeichen" and x.get("live"):
+            # Aus dem Kurs rechenbar, also sofort als gemeldet vermerkt
+            # (Zeichen 2 und 3 erst nach der Bestaetigung durch den Schluss).
+            klimax_symbolweit(bestand, x["symbol"], {"klimax_gemeldet": x["zeichen"]})
+            k = nacht_schluessel({"typ": "klimax_zeichen", "key": x["key"], "zeichen": x["zeichen"]})
+            schon_gemeldet.add(k)
+            state["gemeldet"][k] = heute_s
+        elif x["typ"] == "weinstein":
+            e = bestand.get(x["key"])
+            if e is not None:
+                e["weinstein_gemeldet"] = True
+            k = nacht_schluessel({"typ": "weinstein", "key": x["key"]})
+            schon_gemeldet.add(k)
+            state["gemeldet"][k] = heute_s
+        elif x["typ"] == "wedge_drop":
+            e = bestand.get(x["key"])
+            if e is not None:
+                e["wedge_drop_gemeldet"] = True
+    positionen.speichern(bestand)
+    schon_gemeldet.add(marke)
+    state["gemeldet"][marke] = heute_s
+    save_state(state, sofort=True)
+    print(f"Schlussnahe Befunde gemeldet: {titel}")
     return True
 
 
@@ -2167,6 +3071,8 @@ def format_treffer(t: dict, kopfzusatz: str = "") -> str:
     # Angaben, wie ueberall.
     namen = t.get("strategien") or [t["strategie"]]
     strategie = ", ".join(STRATEGIE_VOLL.get(n, n) for n in namen)
+    if t.get("folgetag") and not kopfzusatz:
+        kopfzusatz = "Bestätigung am Folgetag"          # W1
     zeilen = [
         kopfzeile(t["ticker"], t.get("firma", ""),
                   f"{strategie}; {kopfzusatz}" if kopfzusatz else strategie),
@@ -2185,6 +3091,11 @@ def format_treffer(t: dict, kopfzusatz: str = "") -> str:
         schluss.append(f"Ziel {t['ziel']:.2f} (+{chance:.1f}%)")
     if schluss:
         zeilen.append("; ".join(schluss))
+    # R18 (nur Anzeige) sowie R4 bis R6, R16 und R20 (Gerhard, 12.09.2026):
+    # EMA-Lage, RS, Sektorrang und Ratings. Entscheidungshilfe, kein Filter.
+    for z in (ema_lage_text(t), zusatz_zeile(t.get("ticker"))):
+        if z:
+            zeilen.append(z)
     # ZAHLEN-TERMIN (Gerhard, 12.08.2026). Ein Ausbruch am Nachmittag ist
     # etwas anderes, wenn dieselbe Firma zwei Stunden spaeter berichtet —
     # dann entscheidet ueber Nacht nicht das Muster, sondern die Zahl.
@@ -2650,6 +3561,43 @@ def kam_von_unten(res) -> bool:
     return float(vortag) < float(kp)
 
 
+def riss_schon_gestern(res) -> bool:
+    """Wurde dieser Kaufpunkt schon GESTERN gerissen? Dann ist die heutige
+    Meldung keine neue.
+
+    MATHIAS BEFUND vom 11.09.2026, Frage M4 an Gerhard: Um 15:31 kamen
+    MATX, ALSN und OOMA als frische Ausbrueche - bei allen drei lag schon
+    der Schlusskurs des Vortags UEBER dem Kaufpunkt. Nachgemessen am
+    Trigger-Logbuch traf das auf 12 von 57 Ausbruechen der Tage 09. bis
+    11.09.2026 zu, und jeder davon wurde in den ersten Minuten nach der
+    Eroeffnung gemeldet. DREI Wege fuehren dorthin: Der Kaufpunkt wurde
+    gestern gerissen, blieb ohne Volumenbestaetigung und damit still; der
+    Nachtscan setzte einen neuen Kaufpunkt UNTER den Schlusskurs; oder
+    dieselbe Aktie kam unter einer zweiten Platznummer noch einmal (das
+    ist seit 10.09.2026 behoben).
+
+    Eine solche Meldung ist ein Vortagesalarm in neuem Kleid, und genau
+    den soll es nicht geben (Mathias, 10.09.2026: "Es darf nie wieder
+    etwas vom Vortag kommen"). Der NACHTRAG bleibt unberuehrt: Wurde der
+    Ausbruch am Tag des Risses gemeldet, darf die Volumenbestaetigung
+    weiter nachziehen - dort steht der Schluessel schon im Gedaechtnis.
+
+    OHNE VORTAGESSCHLUSS wird GEMELDET, also genau umgekehrt zu
+    kam_von_unten(). Dort geht es um Ruecksetzer-Marken, die bauartbedingt
+    unter dem Kurs liegen (114 gegen 6 am 14.08.2026) - im Zweifel
+    schweigen ist die richtige Richtung. Hier geht es um echte Ausbrueche;
+    ein breiter Ausfall des Kursabrufs darf nicht dazu fuehren, dass der
+    Waechter ueberhaupt nichts mehr meldet.
+
+    ZWISCHENLOESUNG bis zu Gerhards Antwort auf M4; abschaltbar ueber
+    config.py, betrieb.nur_frische_ausbrueche."""
+    vortag = res.get("vortagesschluss")
+    kp = res.get("kaufpunkt")
+    if vortag is None or kp is None:
+        return False
+    return float(vortag) >= float(kp)
+
+
 def fallback_ohne_riss(res: dict) -> bool:
     """True, wenn eine reine AUSWEICH-Marke heute gar nicht gerissen
     wurde - dann wird sie in KEINEM Meldeweg angefasst.
@@ -2765,6 +3713,22 @@ def melde_stufe(res: dict, schon_gemeldet: set) -> str | None:
     keys = res.get("keys") or [res["key"]]
     keys_best = res.get("keys_best") or [res["key_best"]]
     if not any(k in schon_gemeldet for k in keys):
+        # ZWISCHENLOESUNG M4 (Mathias, 11.09.2026): Ein Ausbruch, der
+        # schon gestern gerissen wurde, ist heute keine neue Meldung.
+        # Steht ausdruecklich VOR der Volumenpruefung: Sonst kaeme
+        # derselbe Fall morgen als Nachtrag wieder.
+        if riss_schon_gestern(res):
+            if NUR_FRISCHE_AUSBRUECHE:
+                return None
+            # W1 (Gerhard, 12.09.2026): "Bestaetigung am Folgetag" wird
+            # GEMELDET, nicht unterdrueckt; aber nur MIT Volumenbestaetigung
+            # (sonst ist es keine Bestaetigung) und nur innerhalb des
+            # Einstiegsfensters bis 5 Prozent, das der Fensterzustand davor
+            # prueft. M4, Moeglichkeit 2: Der Fensterzustand bleibt ueber
+            # Nacht (load_state), der Wiedereintritt laeuft ueber die Totzone.
+            if res["vol_ok"] is not True:
+                return None
+            res["folgetag"] = True
         # SEIT 12.08.2026 (Gerhard): Ohne Volumenbestaetigung melden nur
         # noch die Muster, bei denen das Volumen TEIL des Musters ist.
         # Alle uebrigen bleiben still und kommen erst als Nachtrag, wenn
@@ -3117,8 +4081,11 @@ def main():
     # brauchen heutige Kurse, auch wenn sie nicht mehr auf der Liste stehen.
     nacht = nachtbefunde_laden()
     nachtbefunde_bericht(nacht)
+    # WER AUF SEINEN EINSTIEGSTAG WARTET, BRAUCHT EBENSO HEUTIGE KURSE
+    # (Mathias, 11.09.2026): Die Mappe wird jede Nacht neu geschrieben, ein
+    # vorgemerkter Luecken-Tag kann also aus dem Universum gefallen sein.
     abruf_ticker = sorted(gewuenscht | set(gap_universum)
-                          | nacht_symbole(nacht))
+                          | nacht_symbole(nacht) | gapgo_warte_symbole())
 
     # --- Yahoos Live-Strom fuer ALLE Aktien -----------------------------
     # Loest die dreistufige Staffelung ab (Mathias, 28.07.2026). Die war
@@ -3193,6 +4160,7 @@ def main():
 
     state = load_state()
     schon_gemeldet = set(state["gemeldet"])
+    gruen_laden((heute_ny() or date.today()).isoformat())      # R9
     # Was in DIESEM Lauf schon im Trigger-Logbuch steht. Getrennt von
     # schon_gemeldet, das erst ein erfolgreicher Push fuellt.
     _im_logbuch = set()
@@ -3246,7 +4214,9 @@ def main():
         # Seither kommen sie nach den Ausbruechen und aus heutigen Kursen,
         # siehe nachtbefunde_schritt am Ende des Durchlaufs.
         if offen and laut and not args.dry_run:
-            tagesgeschaeft_wache(topic, quotes, args.dry_run)
+            tagesgeschaeft_wache(topic, quotes, args.dry_run, state)
+            # M2 (Gerhard, 12.09.2026): Teilverkauf im Handel ab plus 20 Prozent.
+            teilverkauf_wache(topic, quotes, args.dry_run, state, schon_gemeldet)
 
         if not laut:
             if not basis:
@@ -3363,6 +4333,7 @@ def main():
                 quotes.pop(t, None)
 
         if laut:
+            gruen_zaehlen(quotes)         # R9: ein Abruf je Minute
             print(f"{len(gewuenscht & set(quotes))} von {len(gewuenscht)} "
                   f"Kaufpunkt-Quotes erhalten ({len(quotes)} Aktien gesamt).")
         if not quotes:
@@ -3543,6 +4514,8 @@ def main():
                      "ueber_pct": t.get("ueber_pct"),
                      "gemeldet": t["key"] in _melde_schluessel,
                      "zahlen_karenz": bool(t.get("zahlen_karenz")),
+                     "folgetag": bool(t.get("folgetag")),
+                     **zusatz_logbuch(t.get("ticker")),
                      "trockenlauf": bool(args.dry_run)},
                     quelle="waechter")
 
@@ -3749,6 +4722,7 @@ def main():
                               "kaufpunkt": t.get("kurs"),
                               "vortagesschluss": t.get("vortagesschluss"),
                               "minute": t.get("minute"),
+                              **zusatz_logbuch(t.get("ticker")),
                               "gemeldet": True} for t in r2g_neu],
                             quelle="waechter/kapitel9")
                         beobachtungen_eintragen([{
@@ -3819,11 +4793,118 @@ def main():
                     else:
                         sperre_bis = jetzt_s + TAKT
 
+            # --- Einstiege am Folgetag (Regelwerk Kapitel 7) ---------------
+            # Die Warteliste der gemeldeten Luecken-Tage; die Begruendung
+            # steht bei gapgo_vormerken(). Bewusst VOR dem Gap-Block: Wer
+            # heute einsteigt, soll seine Meldung vor den neuen Luecken
+            # bekommen. Und bewusst eine EIGENE Meldung: Der Luecken-Tag
+            # nennt nur den Kaufpunkt fuer morgen, gekauft wird heute.
+            gap_ein, gap_ein_neu = gapgo_einstiege_pruefen(state, quotes)
+            if gap_ein_neu:
+                save_state(state)
+            gap_ein = [g for g in gap_ein if g["key"] not in schon_gemeldet]
+            gap_ueber = [g for g in gap_ein if g.get("uebersprungen")]
+            gap_ein = [g for g in gap_ein if not g.get("uebersprungen")]
+            # W2 (Gerhard, 12.09.2026): ueber der 3-Prozent-Grenze ist es kein
+            # Einstieg; eine Auskunft, kein Kaufsignal, keine Beobachtung.
+            if gap_ueber:
+                print(f"\n{GAP_NAME}: {len(gap_ueber)} Einstieg(e) am Folgetag "
+                      f"ÜBERSPRUNGEN (über {GAP_EINSTIEG_GRENZE * 100:.0f} %)")
+                for g in gap_ueber:
+                    print("  " + format_gapgo_uebersprungen(g).replace("\n", "\n  ") + "\n")
+                if args.dry_run:
+                    for g in gap_ueber:
+                        schon_gemeldet.add(g["key"])
+                elif jetzt_s < sperre_bis:
+                    pass
+                else:
+                    titel = (f"{GAP_NAME} Einstieg übersprungen: "
+                             + ", ".join(g["ticker"] for g in gap_ueber))
+                    if sende(topic, titel,
+                             [format_gapgo_uebersprungen(g) for g in gap_ueber],
+                             "default"):
+                        warten = state.get(GAPGO_WARTEN) or {}
+                        for g in gap_ueber:
+                            schon_gemeldet.add(g["key"])
+                            state["gemeldet"][g["key"]] = date.today().isoformat()
+                            warten.pop(g["ticker"], None)
+                        trigger_logbuch.protokolliere_viele(
+                            [{"ticker": g["ticker"], "firma": g.get("firma", ""),
+                              "strategie": "Gap and Go",
+                              "stufe": "Einstieg am Folgetag übersprungen",
+                              "kurs": g.get("kurs"), "kaufpunkt": g.get("kaufpunkt"),
+                              "einstieg": g.get("einstieg"), "stop": g.get("stop"),
+                              **zusatz_logbuch(g["ticker"]),
+                              "gemeldet": True} for g in gap_ueber],
+                            quelle="waechter/kapitel7")
+                        save_state(state)
+                    else:
+                        sperre_bis = jetzt_s + TAKT
+            if gap_ein:
+                print(f"\n🟢 {GAP_NAME}: {len(gap_ein)} Einstieg(e) "
+                      f"am Folgetag")
+                for g in gap_ein:
+                    print("  " + format_gapgo_einstieg(g)
+                          .replace("\n", "\n  ") + "\n")
+                if args.dry_run:
+                    print("(Dry-Run — kein Einstiegs-Push)")
+                    for g in gap_ein:   # sonst alle zwei Sekunden erneut
+                        schon_gemeldet.add(g["key"])
+                elif jetzt_s < sperre_bis:
+                    pass                # Sendesperre nach Fehlschlag
+                else:
+                    titel = (f"Einstieg {GAP_NAME}: "
+                             + ", ".join(g["ticker"] for g in gap_ein))
+                    # Fuer die Handels-App ist ab jetzt der EINSTIEG der
+                    # Kaufpunkt; im Text stehen beide Zahlen.
+                    paket = handel_paket([{**g, "kaufpunkt": g["einstieg"]}
+                                          for g in gap_ein],
+                                         art="kauf", anlass="einstieg")
+                    if sende(topic, titel,
+                             [format_gapgo_einstieg(g) for g in gap_ein],
+                             "high", handel_adresse(paket)):
+                        warten = state.get(GAPGO_WARTEN) or {}
+                        for g in gap_ein:
+                            schon_gemeldet.add(g["key"])
+                            state["gemeldet"][g["key"]] = date.today().isoformat()
+                            warten.pop(g["ticker"], None)
+                        trigger_logbuch.protokolliere_viele(
+                            [{"ticker": g["ticker"],
+                              "firma": g.get("firma", ""),
+                              "strategie": "Gap and Go",
+                              "stufe": "Einstieg am Folgetag",
+                              "kurs": g.get("kurs"),
+                              "kaufpunkt": g.get("einstieg"),
+                              "stop": g.get("stop"),
+                              **zusatz_logbuch(g["ticker"]),
+                              "gemeldet": True} for g in gap_ein],
+                            quelle="waechter/kapitel7")
+                        # ERST JETZT die Beobachtung: Der Einstieg ist
+                        # erfolgt, damit hat die Exit-Wache etwas zu
+                        # bewachen. Der Schluessel nennt weiter den
+                        # Luecken-Tag, damit beides zusammenfindet.
+                        beobachtungen_eintragen([{
+                            "ticker": g["ticker"],
+                            "zusatz": f"GG-{g['signal']}",
+                            "strategie": "Gap and Go",
+                            "kaufpunkt": g["einstieg"],
+                            "struktur": g.get("stop"),
+                            "ziel": None, "firma": g.get("firma", ""),
+                            "klasse": "tagesgeschaeft"} for g in gap_ein])
+                        # SICHERN GANZ ZULETZT, ohne die Minutendrossel
+                        # (Muster der Nachtbefunde): Erst jetzt steht die
+                        # frische Beobachtung in positionen.json, und die
+                        # sichert der Endkommit des Laufs nicht.
+                        save_state(state, sofort=True)
+                    else:
+                        sperre_bis = jetzt_s + TAKT
+
             # --- Gap and Go (Regelwerk Kapitel 7) --------------------------
             # Zwei Meldestufen je Aktie und Tag: 'im Aufbau', sobald alle
             # live pruefbaren Pflichtkriterien stehen, und 'BESTÄTIGT' zum
             # Handelsende (Schluss im oberen Fuenftel + 5x Volumen roh).
             gap_neu = []
+            gap_geaendert = False
             for gt in gap_universum:
                 q = quotes.get(gt)
                 if not q:
@@ -3832,10 +4913,17 @@ def main():
                 if not g:
                     continue
                 g["firma"] = firmen.get(gt, "")
+                # KAUFPUNKT UND STOP NACHZIEHEN, solange der Luecken-Tag
+                # laeuft. Legt KEINEN Eintrag an — das tut erst die
+                # verschickte Meldung.
+                if gapgo_vormerken(state, g, anlegen=False):
+                    gap_geaendert = True
                 stufe = "GAPGOFIX|" if g["bestaetigt"] else "GAPGO|"
                 g["key"] = f"{stufe}{gt}|{date.today().isoformat()}"
                 if g["key"] not in schon_gemeldet:
                     gap_neu.append(g)
+            if gap_geaendert:
+                save_state(state)
             if gap_neu:
                 print(f"\n🚀 Gap and Go: {len(gap_neu)} Meldung(en)")
                 for g in gap_neu:
@@ -3867,18 +4955,27 @@ def main():
                               "kurs": g.get("kurs"),
                               "kaufpunkt": g.get("kp"),
                               "stop": g.get("stop"),
+                              **zusatz_logbuch(g["ticker"]),
                               "gemeldet": True} for g in gap_neu],
                             quelle="waechter/kapitel7")
-                        beobachtungen_eintragen([{
-                            "ticker": g["ticker"],
-                            "zusatz": f"GG-{date.today().isoformat()}",
-                            "strategie": "Gap and Go",
-                            "kaufpunkt": g.get("kp"),
-                            "struktur": g.get("stop"),
-                            "ziel": None, "firma": g.get("firma", ""),
-                            "klasse": "tagesgeschaeft"} for g in gap_neu])
+                        # KEINE BEOBACHTUNG AM LUECKEN-TAG (Mathias,
+                        # 11.09.2026, Fall RCUS): Bis hierher entstand
+                        # sofort eine Tagesgeschaeft-Beobachtung mit
+                        # Einstieg zum Kaufpunkt, und ihr Stop schlug am
+                        # SELBEN Tag zu — ein Ausstieg aus einer Position,
+                        # die es nie gab. Gekauft wird erst am Folgetag,
+                        # bis dahin wartet das Signal; die Begruendung
+                        # steht bei gapgo_vormerken().
+                        for g in gap_neu:
+                            gapgo_vormerken(state, g)
+                        save_state(state)
                     else:
                         sperre_bis = jetzt_s + TAKT
+
+            # --- R15 (Gerhard, 12.09.2026): morgens die Sektor-Aufsteiger ----
+            if offen and laut and basis and jetzt_s >= sperre_bis:
+                if sektor_morgen(topic, state, schon_gemeldet, args.dry_run) is False:
+                    sperre_bis = jetzt_s + TAKT
 
             # --- Nachtbefunde, mit den Kursen von heute nachgerechnet ------
             # (Mathias, 10.09.2026). Bewusst ZULETZT: Was handelbar ist, geht
@@ -3889,6 +4986,14 @@ def main():
                                         ws if ws_laeuft else None,
                                         schon_gemeldet, state,
                                         args.dry_run) is False:
+                    sperre_bis = jetzt_s + TAKT
+
+            # --- M1 (Gerhard, 12.09.2026): schlussnahe Befunde ab 15:45 ----
+            if offen and basis and jetzt_s >= sperre_bis:
+                if schlussnahe_befunde(topic, nacht, basis,
+                                       ws if ws_laeuft else None,
+                                       state, schon_gemeldet,
+                                       args.dry_run) is False:
                     sperre_bis = jetzt_s + TAKT
 
         if ende_dauerwache is None:

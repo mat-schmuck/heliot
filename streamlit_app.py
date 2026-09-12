@@ -371,6 +371,11 @@ with tab_scan:
     else:
         if scan_info:
             st.caption(f"Stand: {scan_info}.")
+        # R1 (Gerhard, 12.09.2026): der Nasdaq-Bezug steht in der App.
+        st.caption("RS Nasdaq: relative Stärke gegen alle Nasdaq-Aktien (Kurs ab "
+                   "15 Dollar, Tagesumsatz ab 10 Millionen Dollar im 50-Tage-Schnitt, "
+                   "mindestens 253 Schlusskurse); Entscheidungshilfe, kein Filter. "
+                   "RS-Rank dagegen ist das Perzentil innerhalb der Wochenliste.")
 
         treffer_zeilen = []
         for _, z in df_scan.iterrows():
@@ -396,6 +401,7 @@ with tab_scan:
             with st.container(border=True):
                 st.markdown(f"**{z['Ticker']} — {z.get('Firma', '')}**")
                 st.write(f"Kurs {_zahl(z.get('Kurs'))} $; "
+                         f"RS Nasdaq {z.get('RS Nasdaq', 'n/a')}; "
                          f"Trend Template {z.get('Trend Template', '?')}; "
                          f"Umsatzwachstum {z.get('Umsatzwachstum', '?')}")
                 for k, s in muster:
@@ -690,6 +696,8 @@ Konsolidierung ≤ 35 Kalendertage und eng. Selten, aber stark.
 - **RS-Rank ist hier nur geschätzt.** Bei einer Einzelabfrage fehlt die Vergleichsgruppe,
 deshalb rechnet das Tool aus dem gewichteten Momentum eine Schätzung. Der Batch-Scanner
 (`pattern_scanner.py`) bildet echte Perzentile innerhalb deiner Liste — der ist genauer.
+Seit 12.09.2026 rechnet der Nachtscan zusätzlich **RS Nasdaq** gegen alle Nasdaq-Aktien
+(Karte „Aktueller Scan“); das ist die Zahl, die IBDs RS-Rating am nächsten kommt.
 - **Kaufpunkt ≠ Kaufsignal.** Die Volumen-Bestätigung am Ausbruchstag prüft dieses Tool
 nicht — dafür ist der Breakout-Wächter da.
 - **Kursdaten sind 15 Minuten gecacht**, um API-Calls zu sparen.

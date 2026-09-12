@@ -187,8 +187,51 @@ def _gewinnzonen():
             f"{len(d.get('befunde', []))} Befund(e)", krank)
 
 
+def _rs_universum():
+    """Teil 6, Regel 2 (Gerhard, 12.09.2026): Meldung, wenn an einem
+    Handelstag nicht gerechnet wurde. Dazu Regel 1 (Abdeckung) und Regel 3
+    (Plausibilitaet), die das Modul selbst in die Datei schreibt."""
+    d = _json("rs_universum.json")
+    if not d:
+        return ("RS-Universum", None, "noch nie gerechnet", True)
+    tag = str(d.get("handelstag") or "")[:10]
+    her = _handelstage_her(tag)
+    u = d.get("universum") or {}
+    pl = d.get("plausibilitaet") or {}
+    lage = (f"{u.get('im_universum', 0)} Aktien im Universum, Abdeckung "
+            f"{round((u.get('abdeckung') or 0) * 100, 1)} Prozent, Status {d.get('status')}"
+            + ("" if pl.get("ok") else "; Plausibilitaet nicht bestanden"))
+    krank = (her is None or her > 1 or d.get("status") != "ok" or not pl.get("ok"))
+    return ("RS-Universum", f"Handelstag {tag or 'unbekannt'}", lage, krank)
+
+
+def _sektor_rangliste():
+    d = _json("sektor_rangliste.json")
+    if not d:
+        return ("Sektor-Rangliste", None, "noch nie gerechnet", True)
+    tag = str(d.get("handelstag") or "")[:10]
+    her = _handelstage_her(tag)
+    n = len(d.get("liste") or [])
+    krank = her is None or her > 1 or n < 30
+    return ("Sektor-Rangliste", f"Handelstag {tag or 'unbekannt'}", f"{n} ETFs gereiht", krank)
+
+
+def _ratings():
+    d = _json("ibd_ratings.json")
+    if not d:
+        return ("IBD-Ratings", None, "noch nie gerechnet", True)
+    gebaut = str(d.get("gebaut_am") or "")[:10]
+    her = _handelstage_her(gebaut)
+    a = d.get("aktien") or {}
+    mit = sum(1 for e in a.values() if isinstance(e, dict) and e.get("composite") is not None)
+    krank = her is None or her > 1 or d.get("status") != "ok" or mit == 0
+    return ("IBD-Ratings", f"gerechnet {gebaut or 'nie'}",
+            f"{len(a)} Ticker, {mit} mit Composite, Status {d.get('status')}"
+            + (f" ({d.get('grund')})" if d.get("grund") else ""), krank)
+
+
 PRUEFUNGEN = [_nachtscan, _volumenkurven, _waechter, _sektor, _insider,
-              _termine, _gewinnzonen]
+              _termine, _gewinnzonen, _rs_universum, _sektor_rangliste, _ratings]
 
 
 def pruefe():

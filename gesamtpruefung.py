@@ -154,7 +154,10 @@ def block_b():
                     "scan_noetig", "waechter_noetig", "sektor_radar",
                     "insider_scanner", "insider_edgar", "listen",
                     "earnings_pullback", "kell_zyklus", "ema_crossback",
-                    "konsens_einfrieren"]
+                    "konsens_einfrieren",
+                    # Gerhards Antworten vom 12.09.2026
+                    "rs_universum", "sektor_rangliste", "abendbericht",
+                    "ibd_ratings"]
     for name in mit_schalter:
         r = subprocess.run([sys.executable, f"{name}.py", "--selbsttest"],
                            capture_output=True, text=True, cwd=WURZEL,
@@ -388,8 +391,9 @@ def block_e():
            ie.indextage(_d(2026, 8, 24), 2) == [_d(2026, 8, 21), _d(2026, 8, 24)])
     # Lebenszeichen-Waechter (Mathias, 26.08.2026, nach dem Ausfall)
     import lebenszeichen as lz
-    pruefe("E", "Lebenszeichen prueft alle sieben Kapitel",
-           len(lz.pruefe()) == 7)
+    # Seit 12.09.2026 zehn Kapitel: RS-Universum, Sektor-Rangliste, Ratings
+    pruefe("E", "Lebenszeichen prueft alle zehn Kapitel",
+           len(lz.pruefe()) == 10)
     from datetime import date as _dt
     pruefe("E", "Handelstage statt Kalendertage (Montag schlaegt nicht an)",
            # Freitag auf Montag ist EIN Handelstag, nicht drei Kalendertage
@@ -628,7 +632,8 @@ def block_e():
                                                _st, False)
                 pruefe("E", "Waechter meldet den nachgerechneten Befund",
                        _erg is True and _gesendet_n
-                       and _gesendet_n[-1][0] == "GEWINN-Ziel erreicht: GEW"
+                       # Punkt 6 (Gerhard, 12.09.2026): INFORMATION-Praefix
+                       and _gesendet_n[-1][0] == "INFORMATION: GEWINN-Ziel erreicht: GEW"
                        and not _n1["offen"])
                 pruefe("E", "Erst nach dem Senden: Merker in positionen.json "
                        "und Schluessel im Gedaechtnis",
@@ -707,11 +712,15 @@ def block_e():
                    "bleibt frei",
                    _nach_aus["GEW|1"].get("zone") in ("mittel", "stark")
                    and _nach_aus["GEW|1"].get("ziel_gemeldet") is False)
-            pruefe("E", "Straffungs-Meldungen aus: kein Kursverlauf ohne "
-                   "nachzurechnenden Befund",
-                   all(any(b.get("key") == k and b.get("art") == _gl.LIVE
-                           for b in _datei_aus.get("befunde", []))
-                       for k in _datei_aus.get("verlaeufe", {})))
+            # M1 (Gerhard, 12.09.2026): JEDE offene Beobachtung traegt ihren
+            # Kursverlauf, der Waechter rechnet um 15:45 alle Schlussbefunde
+            # nach; ein Verlauf ohne Beobachtung gibt es nicht.
+            pruefe("E", "Straffungs-Meldungen aus: Kursverlauf fuer die offene "
+                   "Beobachtung liegt bei, keiner ohne Beobachtung (M1)",
+                   bool(_datei_aus.get("verlaeufe", {}).get("GEW|1"))
+                   and all(k in _nach_aus or any(b.get("key") == k
+                                                 for b in _datei_aus.get("befunde", []))
+                           for k in _datei_aus.get("verlaeufe", {})))
 
             # Und der Waechter laesst sie auch aus einer Ablage weg, die noch
             # vor dem Abschalten geschrieben wurde (so lag CNC am 11.09.).

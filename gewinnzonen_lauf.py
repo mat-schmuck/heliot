@@ -90,7 +90,28 @@ import beobachtungen
 import positionen
 from config import CFG
 
+# GERHARDS ANTWORTEN VOM 12.09.2026, hier umgesetzt:
+#   M3  Klimax-Zeichen 2 (groesster Tagesgewinn) erst ab Zone mittel, also
+#       ab einem Mindestgewinn seit Einstieg; in Zone leicht bleibt es still.
+#   M5  ALLE Klimax-Zeichen je AKTIE nur einmal, nicht je Beobachtung
+#       (dieselbe Aktie kann mehrere Beobachtungen tragen, ASC|1 und ASC|2).
+#   M1  Die zurueckgehaltenen Schlusskurs-Befunde (Klimax 2 und 3, Wedge
+#       Drop, Sektor-Hinweis, Exit-Regelwerk, 8-EMA-Hinweis) rechnet der
+#       Waechter gegen 15:45 New York mit den Handelskursen nach und meldet
+#       sie mit dem Vermerk "Schluss noch offen". Dafuer bekommt JEDE offene
+#       Beobachtung ihren Kursverlauf mit (verlaeufe), nicht nur die
+#       Live-Kandidaten.
+#   M6  Der Nachtlauf legt die Befunde mit dem echten Schluss neu ab; der
+#       Abendbericht vergleicht sie mit den um 15:45 gemeldeten und meldet
+#       RUECKNAHMEN.
+#   R19 Der 8-EMA-Hinweis (Schluss unter der 8-Tage-Exponentiallinie) ist
+#       ein reiner Hinweis, klar von echten Ausstiegssignalen getrennt.
+#   Punkt 6  Jede Meldung traegt vorn REGEL (Exit-Regelwerk, Zeitdeckel,
+#       Wedge Drop) oder INFORMATION (Klimax, Zonen, Weinstein, Zahlen,
+#       Sektor, 8-EMA).
 BEFUNDE_DATEI = "exit_befunde.json"
+REGEL = "REGEL: "
+INFO = "INFORMATION: "
 
 # Ablageformat. 2 heisst: Kandidaten statt fertiger Texte (seit 10.09.2026).
 # Eine Ablage ohne diese Angabe stammt aus der Zeit davor und traegt Texte
@@ -157,6 +178,8 @@ def _prio(typ):
         "sektor_hinweis": {"prioritaet": "default", "buendeln": True},
         "kapitel11": {"prioritaet": "high", "buendeln": True},
         "tagesende": {"prioritaet": "default", "buendeln": True},
+        # R19: der 8-EMA-Hinweis ist Information, gebuendelt und leise.
+        "ema8_hinweis": {"prioritaet": "default", "buendeln": True},
     }
     if typ in eigene:
         return eigene[typ]
@@ -287,6 +310,31 @@ def _klimax_eingaben(df, tage_gehalten):
         obere_kanallinie=kanal)
 
 
+def ema8_aus(df):
+    """Die 8-Tage-Exponentiallinie auf Tagesbasis (R18, R19)."""
+    try:
+        closes = df["close"].astype(float)
+        if len(closes) < 9:
+            return None
+        return float(closes.ewm(span=8, adjust=False).mean().iloc[-1])
+    except Exception:
+        return None
+
+
+def zone_ohne_klimax(e, kurs):
+    """Die Zone einer Beobachtung ohne den Klimax-Einfluss (fuer M3)."""
+    ziel = e.get("musterziel")
+    return gz.klassifiziere_zone(
+        e["einstieg"], e.get("struktur_stop") or e["aktueller_stop"], kurs,
+        musterziel_erreicht=bool(ziel) and kurs >= float(ziel),
+        ist_klimax=False)["zone"]
+
+
+def zeichen_2_zu_frueh(zeichen, zone):
+    """M3 (Gerhard, 12.09.2026): Zeichen 2 nur ab Zone mittel."""
+    return zeichen == "2_groesster_tagesgewinn" and zone == "leicht"
+
+
 def _ma30w_serie(df):
     """Die 30-Wochen-Linie fuer Weinsteins Stufe-3-Pruefung."""
     try:
@@ -385,8 +433,8 @@ def gewinn_durchgang(loaded, mappe_pfad, exit_meldungen=None, heute=None):
     for m in (exit_meldungen or []):
         text = positionen.melde_text(m) if hasattr(positionen, "melde_text") \
             else str(m)
-        befunde.append(_befund("kapitel11", "Exit-Regelwerk: "
-                               + str(m.get("symbol", "")), text,
+        befunde.append(_befund("kapitel11", REGEL + "Exit-Regelwerk: "
+                               + str(m.get("symbol", "")), REGEL + text,
                                symbol=str(m.get("symbol", "")),
                                art=ZURUECK, grund="schlusskurs"))
 
@@ -396,6 +444,14 @@ def gewinn_durchgang(loaded, mappe_pfad, exit_meldungen=None, heute=None):
         fehlend = {e["symbol"] for e in offen.values()
                    if e["symbol"] not in loaded}
         nachgeladen = _kurse_nachladen(fehlend)
+
+        # M5 (Gerhard, 12.09.2026): Ein Klimax-Zeichen gilt je AKTIE als
+        # gemeldet, sobald es an irgendeiner Beobachtung dieser Aktie steht.
+        zeichen_je_symbol = {}
+        for e2 in bestand.values():
+            if isinstance(e2, dict) and e2.get("symbol"):
+                zeichen_je_symbol.setdefault(e2["symbol"], set()).update(
+                    e2.get("klimax_gemeldet") or [])
 
         for key, e in sorted(offen.items()):
             sym = e["symbol"]
@@ -409,7 +465,6 @@ def gewinn_durchgang(loaded, mappe_pfad, exit_meldungen=None, heute=None):
                 continue
             kurs = float(df["close"].iloc[-1])
             e["hoechstkurs"] = max(float(e.get("hoechstkurs", kurs)), kurs)
-            vorher = len(befunde)
 
             # Handelstage seit Einstieg, aus der Historie (nicht Kalender)
             if "datetime" in df.columns:
@@ -434,8 +489,8 @@ def gewinn_durchgang(loaded, mappe_pfad, exit_meldungen=None, heute=None):
                 beobachtungen.schliessen(e, "Handelsschluss (Tagesgeschäft)",
                                          kurs)
                 befunde.append(_befund(
-                    "tagesende", "Tagesgeschäft beendet",
-                    f"{sym}; {e.get('strategie', '')}; "
+                    "tagesende", INFO + "Tagesgeschäft beendet",
+                    INFO + f"{sym}; {e.get('strategie', '')}; "
                     + _stand_text(e, kurs), symbol=sym, key=key,
                     art=ZURUECK, grund="schlusskurs"))
                 continue
@@ -460,8 +515,15 @@ def gewinn_durchgang(loaded, mappe_pfad, exit_meldungen=None, heute=None):
             #    Die Merker setzt der Waechter nach dem Senden.
             eingaben = _klimax_eingaben(df, tage)
             klimax = gz.pruefe_klimax_katalog(eingaben)
+            # M3 (Gerhard, 12.09.2026): Zeichen 2 erst ab Zone mittel, also
+            # ab einem Mindestgewinn seit Einstieg. Die Zone dafuer OHNE
+            # den Klimax selbst, sonst zoege das Zeichen sich selbst hoch.
+            zone_vorab = zone_ohne_klimax(e, kurs)
             for zeichen in klimax["ausgeloeste_zeichen"]:
-                if zeichen in e.get("klimax_gemeldet", []):
+                if (zeichen in e.get("klimax_gemeldet", [])
+                        or zeichen in zeichen_je_symbol.get(sym, set())):
+                    continue
+                if zeichen_2_zu_frueh(zeichen, zone_vorab):
                     continue
                 if zeichen in KLIMAX_LIVE:
                     befunde.append(_befund("klimax_zeichen", "", "",
@@ -472,8 +534,8 @@ def gewinn_durchgang(loaded, mappe_pfad, exit_meldungen=None, heute=None):
                 wert_teil = (f" ({wert:+.1f} %)".replace(".", ",")
                              if wert is not None else "")
                 befunde.append(_befund(
-                    "klimax_zeichen", f"KLIMAX: {sym}",
-                    f"{sym}; {e.get('strategie', '')}; Klimax-Zeichen "
+                    "klimax_zeichen", INFO + f"KLIMAX: {sym}",
+                    INFO + f"{sym}; {e.get('strategie', '')}; Klimax-Zeichen "
                     f"{zeichen.replace('_', ' ')}{wert_teil}; Verkauf in "
                     f"die Stärke erwägen; " + _stand_text(e, kurs),
                     symbol=sym, key=key, art=ZURUECK, zeichen=zeichen,
@@ -533,8 +595,8 @@ def gewinn_durchgang(loaded, mappe_pfad, exit_meldungen=None, heute=None):
                     phase = None
                 if phase == "Wedge Drop":
                     befunde.append(_befund(
-                        "wedge_drop", f"Wedge Drop: {sym}",
-                        f"{sym}; {e.get('strategie', '')}; erster Schluss "
+                        "wedge_drop", REGEL + f"Wedge Drop: {sym}",
+                        REGEL + f"{sym}; {e.get('strategie', '')}; erster Schluss "
                         f"unter der 10er- und 20er-Tageslinie nach der "
                         f"Überdehnung (Kell Wedge Drop); Ausstieg oder "
                         f"harte Straffung; " + _stand_text(e, kurs),
@@ -561,17 +623,33 @@ def gewinn_durchgang(loaded, mappe_pfad, exit_meldungen=None, heute=None):
                     etf = None
                 if etf and etf in dreher:
                     befunde.append(_befund(
-                        "sektor_hinweis", "Sektor dreht",
-                        f"{sym}; eigener Sektor-ETF {etf} hat nach unten "
+                        "sektor_hinweis", INFO + "Sektor dreht",
+                        INFO + f"{sym}; eigener Sektor-ETF {etf} hat nach unten "
                         f"gedreht, Beobachtung in Zone stark; Straffung "
                         f"erwägen; " + _stand_text(e, kurs),
                         symbol=sym, key=key, art=ZURUECK,
                         grund="schlusskurs"))
 
-            if any(b.get("art") == LIVE for b in befunde[vorher:]):
-                v = _verlauf(df, tage)
-                if v:
-                    verlaeufe[key] = v
+            # 9) R19 (Gerhard, 12.09.2026): Schluss unter der 8-Tage-EMA ist
+            #    ein reiner HINWEIS, kein Ausstiegssignal, und wird als
+            #    solcher gekennzeichnet. Ein Schluss: zurueckgehalten; der
+            #    Waechter rechnet ihn gegen 15:45 mit dem Handelskurs nach.
+            ema8 = ema8_aus(df)
+            if ema8 is not None and kurs < ema8:
+                befunde.append(_befund(
+                    "ema8_hinweis", INFO + f"8-EMA-Hinweis: {sym}",
+                    INFO + f"{sym}; {e.get('strategie', '')}; Schluss "
+                    f"{kurs:.2f} unter der 8-Tage-EMA {ema8:.2f}; reiner "
+                    f"Hinweis, kein Ausstiegssignal; " + _stand_text(e, kurs),
+                    symbol=sym, key=key, art=ZURUECK, grund="schlusskurs"))
+
+            # M1 (12.09.2026): JEDE offene Beobachtung bekommt ihren
+            # Kursverlauf mit, nicht nur die Live-Kandidaten; der Waechter
+            # rechnet gegen 15:45 alle Schlusskurs-Befunde mit den
+            # Handelskursen nach.
+            v = _verlauf(df, tage)
+            if v:
+                verlaeufe[key] = v
 
         positionen.speichern(bestand)
 
@@ -580,8 +658,6 @@ def gewinn_durchgang(loaded, mappe_pfad, exit_meldungen=None, heute=None):
     # Beobachtung stehen, die noch einen nachzurechnenden Befund hat.
     befunde, abgeschaltet = abgeschaltete_trennen(befunde)
     if abgeschaltet:
-        mit_live = {b.get("key") for b in befunde if b.get("art") == LIVE}
-        verlaeufe = {k: v for k, v in verlaeufe.items() if k in mit_live}
         print(f"Kapitel 12: {len(abgeschaltet)} Straffungs-Befund(e) nicht "
               f"abgelegt, die Meldung ist abgeschaltet (Gerhard, bis auf "
               f"Weiteres): "
@@ -633,7 +709,7 @@ def _df_live(verlauf, heute, kurs, hoch=None, tief=None):
 
 
 def live_pruefen(befund, eintrag, verlauf, kurs, heute, hoch=None, tief=None,
-                 termine=None):
+                 termine=None, schon_symbol=()):
     """Einen Kandidaten des Nachtlaufs mit dem HEUTIGEN Kurs nachrechnen.
 
     Dieselben Regeln wie nachts (gewinn_zonen), nur mit dem Kurs von heute
@@ -660,8 +736,8 @@ def live_pruefen(befund, eintrag, verlauf, kurs, heute, hoch=None, tief=None,
         # Die Tageszaehlung ist erreicht und bleibt es; neu gerechnet wird
         # der Stand, mit dem die Meldung hinausgeht.
         klasse = eintrag.get("klasse", "standard")
-        return (f"Zeitdeckel erreicht: {sym}",
-                f"{sym}; {strategie}; Zeitdeckel der Klasse {klasse} "
+        return (REGEL + f"Zeitdeckel erreicht: {sym}",
+                REGEL + f"{sym}; {strategie}; Zeitdeckel der Klasse {klasse} "
                 f"erreicht; Gewinn sichern oder These erneuern; " + stand,
                 {})
 
@@ -681,20 +757,21 @@ def live_pruefen(befund, eintrag, verlauf, kurs, heute, hoch=None, tief=None,
     if typ == "ziel_erreicht":
         if not ziel_da or eintrag.get("ziel_gemeldet"):
             return None
-        return (f"GEWINN-Ziel erreicht: {sym}",
-                f"{sym}; {strategie}; Musterziel {float(ziel):.2f} erreicht; "
+        return (INFO + f"GEWINN-Ziel erreicht: {sym}",
+                INFO + f"{sym}; {strategie}; Musterziel {float(ziel):.2f} erreicht; "
                 f"Teilverkauf oder harte Straffung; " + stand,
                 {"ziel_gemeldet": True})
 
     if typ == "klimax_zeichen":
         z = befund.get("zeichen")
-        if z not in live_zeichen or z in eintrag.get("klimax_gemeldet", []):
-            return None
+        if (z not in live_zeichen or z in eintrag.get("klimax_gemeldet", [])
+                or z in (schon_symbol or ())):
+            return None      # M5: je Aktie nur einmal
         wert = klimax["details"][z].get("wert_pct")
         wert_teil = (f" ({wert:+.1f} %)".replace(".", ",")
                      if wert is not None else "")
-        return (f"KLIMAX: {sym}",
-                f"{sym}; {strategie}; Klimax-Zeichen {z.replace('_', ' ')}"
+        return (INFO + f"KLIMAX: {sym}",
+                INFO + f"{sym}; {strategie}; Klimax-Zeichen {z.replace('_', ' ')}"
                 f"{wert_teil}; Verkauf in die Stärke erwägen; " + stand,
                 {"klimax_gemeldet": z})
 
@@ -703,8 +780,8 @@ def live_pruefen(befund, eintrag, verlauf, kurs, heute, hoch=None, tief=None,
         if (von not in RANG or zonen["gewinn_pct"] <= 0
                 or RANG[zone] <= RANG[von]):
             return None
-        return ("Gewinnzonen",
-                f"{sym}; {strategie}; Zone {von} zu {zone}; " + stand,
+        return (INFO + "Gewinnzonen",
+                INFO + f"{sym}; {strategie}; Zone {von} zu {zone}; " + stand,
                 {"zone_gemeldet": zone})
 
     if typ == "weinstein":
@@ -713,8 +790,8 @@ def live_pruefen(befund, eintrag, verlauf, kurs, heute, hoch=None, tief=None,
         w3, _det = gz.pruefe_weinstein_stufe3(_ma30w_serie(df))
         if not w3:
             return None
-        return (f"Stufe 3: {sym}",
-                f"{sym}; {strategie}; 30-Wochen-Linie flacht ab (Weinstein "
+        return (INFO + f"Stufe 3: {sym}",
+                INFO + f"{sym}; {strategie}; 30-Wochen-Linie flacht ab (Weinstein "
                 f"Stufe 3); " + stand,
                 {"weinstein_gemeldet": True})
 
@@ -726,8 +803,8 @@ def live_pruefen(befund, eintrag, verlauf, kurs, heute, hoch=None, tief=None,
                                                     heute=heute)
         if abstand is None or not 0 <= abstand <= 5:
             return None
-        return (f"Zahlen voraus: {sym}",
-                f"{sym}; Quartalszahlen in {abstand} Tag(en) bei Zone "
+        return (INFO + f"Zahlen voraus: {sym}",
+                INFO + f"{sym}; Quartalszahlen in {abstand} Tag(en) bei Zone "
                 f"{zone}; Gewinn vor Zahlen sichern erwägen; " + stand,
                 {"zahlen_hinweis_gemeldet": True})
 
