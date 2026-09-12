@@ -1,0 +1,124 @@
+name: EODHD-Vollabzug (bis zum Ende des Abos)
+
+# Mathias, 12.09.2026, nach Gerhards Antwort vom selben Tag: "Lade alle
+# Daten von EODHD herunter, die wir noch brauchen bzw. in Zukunft noch
+# brauchen koennen. Extrahiere wirklich alles, was mit unserem Zugang
+# moeglich ist." Das Abo (Fundamentals Data Feed) endet am 03.10.2026.
+# Der Lauf holt Tag fuer Tag so viel, wie das Tagesbudget (100.000 Calls,
+# Zaehler ab Mitternacht GMT) hergibt, in der Vorrangfolge delistete Firmen,
+# Boersenaktien, Freiverkehr, ETFs, Fonds, Uebriges, Indizes, Makro. Die
+# Rohdaten gehen als Release-Anhaenge ins PRIVATE Datenrepo heliot-daten
+# (lizenziert, nie weitergegeben); das Register liegt dort im Dateibaum.
+# Das Skript liegt auf dem Zweig fundament-phase1 wie die uebrigen
+# Fundament-Skripte; dieser Ablauf checkt ihn ausdruecklich aus, damit auch
+# der Zeitplan (der immer vom Hauptzweig startet) das Skript findet.
+# Braucht die Secrets EODHD_API_KEY und DATEN_TOKEN; NTFY_TOPIC fuer die
+# Bilanz. Bewusst KEIN Artefakt mit Rohdaten: Artefakte eines oeffentlichen
+# Repos kann jeder angemeldete Nutzer laden.
+
+on:
+  schedule:
+    # 00:20 UTC, kurz nach dem Zuruecksetzen des Tageszaehlers. GitHubs
+    # Zeitplan verspaetet sich oft um Stunden; bei einem Lauf, der ohnehin
+    # bis zu fuenf Stunden dauert, ist das unerheblich.
+    - cron: "20 0 * * *"
+  workflow_dispatch:
+    inputs:
+      modus:
+        description: "inventur (zaehlen, Listen und Kalender holen, Groessen messen), voll (Fundamentals je Symbol in Vorrangfolge) oder trends (Konsens aller aktiven Aktien, 1 Call je 100 Symbole)"
+        type: choice
+        options:
+          - inventur
+          - voll
+          - trends
+        default: voll
+      stufen:
+        description: "voll: Stufen mit Beistrich (delisted_stock,stock_boerse,stock_otc,etf,fund,sonstige,delisted_rest,index,makro); leer = alle in Vorrangfolge"
+        required: false
+        default: ""
+      hoechstens:
+        description: "hoechstens so viele Abrufe in diesem Lauf (0 = bis Budget oder Zeit)"
+        required: false
+        default: "0"
+      zeitgrenze:
+        description: "voll: Minuten, nach denen keine neuen Abrufe mehr beginnen (Archiv und Upload folgen danach)"
+        required: false
+        default: "300"
+
+concurrency:
+  group: eodhd-voll
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  eodhd_voll:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - name: Sind die Secrets da?
+        id: secrets
+        env:
+          DATEN_TOKEN: ${{ secrets.DATEN_TOKEN }}
+          EODHD_API_KEY: ${{ secrets.EODHD_API_KEY }}
+        run: |
+          da=ja
+          if [ -z "$DATEN_TOKEN" ]; then echo "Secret DATEN_TOKEN fehlt."; da=nein; fi
+          if [ -z "$EODHD_API_KEY" ]; then echo "Secret EODHD_API_KEY fehlt; ohne Schluessel liefert EODHD nichts."; da=nein; fi
+          echo "da=$da" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+        if: steps.secrets.outputs.da == 'ja'
+        with:
+          ref: fundament-phase1
+      - uses: actions/checkout@v4
+        if: steps.secrets.outputs.da == 'ja'
+        with:
+          repository: mat-schmuck/heliot-daten
+          token: ${{ secrets.DATEN_TOKEN }}
+          path: daten
+      - uses: actions/setup-python@v5
+        if: steps.secrets.outputs.da == 'ja'
+        with:
+          python-version: "3.11"
+      - name: Abhaengigkeiten
+        if: steps.secrets.outputs.da == 'ja'
+        run: pip install requests
+      - name: Selbsttest
+        if: steps.secrets.outputs.da == 'ja'
+        run: python eodhd_voll.py --selbsttest
+      - name: Abzug
+        if: steps.secrets.outputs.da == 'ja'
+        env:
+          EODHD_API_KEY: ${{ secrets.EODHD_API_KEY }}
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          # gh legt die Releases im Datenrepo an; das Token darf dort schreiben.
+          GH_TOKEN: ${{ secrets.DATEN_TOKEN }}
+          MODUS: ${{ github.event.inputs.modus || 'voll' }}
+          STUFEN: ${{ github.event.inputs.stufen || '' }}
+          HOECHSTENS: ${{ github.event.inputs.hoechstens || '0' }}
+          ZEITGRENZE: ${{ github.event.inputs.zeitgrenze || '300' }}
+        run: python eodhd_voll.py --daten daten --modus "$MODUS" --stufen "$STUFEN" --hoechstens "$HOECHSTENS" --zeitgrenze-min "$ZEITGRENZE"
+      - name: Register ins Datenrepo
+        # always(): auch nach einem Abbruch wandert das Register mit dem
+        # bis dahin Geholten ins Datenrepo.
+        if: always() && steps.secrets.outputs.da == 'ja'
+        run: |
+          cd daten
+          git config user.name "heliot-eodhd-voll"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A -- eodhd_voll
+          if git diff --cached --quiet; then
+            echo "Nichts Neues."
+            exit 0
+          fi
+          git commit -q -m "EODHD-Vollabzug $(date -u +%Y-%m-%d_%H%MZ)"
+          for versuch in 1 2 3; do
+            if git push --quiet origin main; then
+              echo "Gesichert."
+              exit 0
+            fi
+            git pull --rebase --quiet -X theirs origin main || { git rebase --abort 2>/dev/null; git pull --rebase --quiet -X theirs origin main || true; }
+          done
+          echo "Push nach drei Anlaeufen gescheitert."
+          exit 1
