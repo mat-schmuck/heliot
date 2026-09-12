@@ -1,0 +1,80 @@
+name: Nachschlage-Daten bauen
+
+# RS-Universum, Sektor-Rangliste und IBD-Ratings auf Zuruf frisch bauen
+# und ins Repo legen (Mathias, 13.09.2026). Im Alltag schreibt sie der
+# Nachtscan (scanner.yml); dieser Ablauf fuellt sie ausserhalb des Scans,
+# etwa nach einem Umbau oder am Wochenende, damit "Aktie nachschlagen" in
+# der Heliot-App nicht bis zum naechsten Scan wartet. Er sendet nichts und
+# setzt keine Alarme. Die Listen-Aktien des Nachtscans ("listen") bleiben
+# leer, bis der naechste Scan laeuft; das Nachschlagen findet jede Aktie
+# ueber "aktien" und "ausserhalb".
+on:
+  workflow_dispatch:
+
+# Dieselbe Gruppe wie der Scanner: Beide schreiben dieselben Dateien und
+# duerfen sich nie ueberschneiden. Ohne Abbrechen: Ein zweiter Anstoss
+# wartet, statt den laufenden zu zerschiessen.
+concurrency:
+  group: pattern-scanner
+  cancel-in-progress: false
+
+jobs:
+  bauen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Abhaengigkeiten
+        run: pip install requests pandas numpy scipy yfinance pyarrow
+
+      # Rund sechs Minuten fuer rund 6.600 Symbole (gemessen 13.09.2026:
+      # 5.667 Symbole in 129 s, Rechnung 132 s).
+      - name: RS-Universum gegen den ganzen US-Markt
+        run: python rs_universum.py --bauen
+
+      - name: Sektor-Rangliste der 36 ETFs
+        run: python sektor_rangliste.py --bauen
+
+      # Die Zuordnung Ticker zu CIK kommt vom SEC-Verzeichnis; der Abruf
+      # braucht den User-Agent aus dem Secret (SEC-Abrufe nur hier, nie
+      # in der App).
+      - name: IBD-Ratings aus dem SEC-Fundament
+        env:
+          SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
+        run: python ibd_ratings.py --bauen
+
+      # KONFLIKTFEST IN DREI ANLAEUFEN, dasselbe Muster wie im Scanner:
+      # eigene Ergebnisse beiseitelegen, hart auf den Serverstand, wieder
+      # einspielen, pushen.
+      - name: Ins Repo legen
+        run: |
+          git config user.name "pattern-scanner"
+          git config user.email "actions@users.noreply.github.com"
+          DATEIEN="rs_universum.json sektor_rangliste.json ibd_ratings.json"
+          SICHERUNG=$(mktemp -d)
+          for f in $DATEIEN; do cp "$f" "$SICHERUNG/" 2>/dev/null || true; done
+          for versuch in 1 2 3; do
+            git fetch --quiet origin main
+            git reset --hard --quiet FETCH_HEAD
+            for f in $DATEIEN; do
+              [ -f "$SICHERUNG/$f" ] && cp "$SICHERUNG/$f" "$f"
+            done
+            for f in $DATEIEN; do git add -A -- "$f" 2>/dev/null || true; done
+            if git diff --cached --quiet; then
+              echo "Keine Aenderung gegenueber dem Stand im Repo."
+              break
+            fi
+            git commit -q -m "Nachschlage-Daten: RS-Universum, Sektor-Rangliste, IBD-Ratings"
+            if git push --quiet origin main; then
+              echo "Veroeffentlicht (Versuch $versuch)."
+              break
+            fi
+            echo "Jemand war schneller (Versuch $versuch von 3), noch einmal."
+          done

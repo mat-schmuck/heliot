@@ -157,7 +157,9 @@ def block_b():
                     "konsens_einfrieren",
                     # Gerhards Antworten vom 12.09.2026
                     "rs_universum", "sektor_rangliste", "abendbericht",
-                    "ibd_ratings"]
+                    "ibd_ratings",
+                    # Nachschlagen (Mathias, 13.09.2026)
+                    "nachschlagen"]
     for name in mit_schalter:
         r = subprocess.run([sys.executable, f"{name}.py", "--selbsttest"],
                            capture_output=True, text=True, cwd=WURZEL,

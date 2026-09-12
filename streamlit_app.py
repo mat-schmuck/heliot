@@ -27,6 +27,7 @@ import pandas as pd
 import streamlit as st
 
 import exit_regeln
+import nachschlagen
 import pattern_scanner as ps
 
 st.set_page_config(page_title="Chart-Screening-Tool", page_icon="📈", layout="wide")
@@ -204,6 +205,74 @@ if not api_key:
                "Für eine Rückfallebene könnte TWELVE_DATA_API_KEY "
                "unter Settings → Secrets hinterlegt werden.")
 
+# --- Aktie nachschlagen (Mathias, 13.09.2026) -----------------------------
+# GANZ OBEN, vor den Registerkarten: das Suchfeld, darunter alles als Text
+# in eigenen Absaetzen mit Zwischenueberschriften, damit VoiceOver am
+# iPhone von Ueberschrift zu Ueberschrift springen kann. Keine Tabellen,
+# keine Spalten, keine Kennzahlkaesten. Die Zahlen kommen aus den
+# Nachtdateien im Repo (RS, Ratings, Sektor-Rangliste, Volumenkurven) und
+# live von Yahoo (Kurs, Volumen); gerechnet wird in nachschlagen.py, das
+# ohne Netz pruefbar ist.
+
+
+@st.cache_data(ttl=600, show_spinner=False)
+def nachschlag_dateien():
+    return {n: nachschlagen.lade_datei(n) for n in nachschlagen.DATEIEN}
+
+
+@st.cache_data(ttl=60, show_spinner=False)
+def nachschlag_live(ticker: str):
+    return nachschlagen.live_daten(ticker)
+
+
+@st.cache_data(ttl=6 * 3600, show_spinner=False)
+def nachschlag_kurve(ticker: str):
+    return nachschlagen.kurve_fuer(ticker, nachschlag_dateien().get("volumenkurven.json"))
+
+
+@st.cache_data(ttl=24 * 3600, show_spinner=False)
+def nachschlag_sektor(ticker: str):
+    return nachschlagen.sektor_name_fuer(ticker)
+
+
+st.markdown("### Aktie nachschlagen")
+nachschlag_eingabe = st.text_input("Kürzel oder Firmenname eingeben, dann Eingabetaste",
+                                   key="nachschlag_eingabe", placeholder="z. B. AAOI oder Apple").strip()
+if nachschlag_eingabe:
+    nachschlag_daten = nachschlag_dateien()
+    nachschlag_ticker, nachschlag_kandidaten = nachschlagen.finde(nachschlag_eingabe,
+                                                                  nachschlag_daten.get("rs_universum.json"))
+    if nachschlag_ticker is None:
+        if nachschlag_kandidaten:
+            st.markdown("Mehrere Aktien passen. Bitte das Kürzel eingeben:")
+            for k, n in nachschlag_kandidaten:
+                st.markdown(f"{k}, {n}")
+        else:
+            st.markdown("Nichts gefunden. Bitte Kürzel oder Namen prüfen.")
+    else:
+        with st.spinner(f"Hole Kurs und Volumen für {nachschlag_ticker} …"):
+            try:
+                nachschlag_live_werte = nachschlag_live(nachschlag_ticker)
+            except Exception:
+                nachschlag_live_werte = None
+            try:
+                nachschlag_k, nachschlag_kq = nachschlag_kurve(nachschlag_ticker)
+            except Exception:
+                nachschlag_k, nachschlag_kq = None, "keine"
+            try:
+                nachschlag_s, nachschlag_sq = nachschlag_sektor(nachschlag_ticker)
+            except Exception:
+                nachschlag_s, nachschlag_sq = None, "keine"
+        for ueberschrift, saetze in nachschlagen.bericht(
+                nachschlag_ticker, nachschlag_daten.get("rs_universum.json"), nachschlag_daten.get("ibd_ratings.json"),
+                nachschlag_daten.get("sektor_rangliste.json"), live=nachschlag_live_werte, kurve=nachschlag_k,
+                kurve_quelle=nachschlag_kq, sektor_name=nachschlag_s, sektor_quelle=nachschlag_sq):
+            st.markdown(f"#### {ueberschrift}")
+            for satz in saetze:
+                st.markdown(satz)
+
+st.markdown("---")
+
 tab_einzel, tab_liste, tab_scan, tab_upload, tab_info = st.tabs(
     ["🔍 Einzelabfrage", "📋 Liste / CSV", "🌙 Aktueller Scan",
      "📅 Wochenliste", "ℹ️ Regelwerk"])
@@ -371,10 +440,12 @@ with tab_scan:
     else:
         if scan_info:
             st.caption(f"Stand: {scan_info}.")
-        # R1 (Gerhard, 12.09.2026): der Nasdaq-Bezug steht in der App.
-        st.caption("RS Nasdaq: relative Stärke gegen alle Nasdaq-Aktien (Kurs ab "
-                   "15 Dollar, Tagesumsatz ab 10 Millionen Dollar im 50-Tage-Schnitt, "
-                   "mindestens 253 Schlusskurse); Entscheidungshilfe, kein Filter. "
+        # R1 bis R3 (Gerhard, 12.09.2026, ergaenzt am selben Abend): der
+        # Bezug steht in der App. Die Spalte heisst aus Bestandsgruenden
+        # weiter "RS Nasdaq", gerechnet wird gegen den ganzen US-Markt.
+        st.caption("RS: relative Stärke gegen alle Stammaktien des US-Markts (Nasdaq, NYSE, "
+                   "NYSE American, mindestens 253 Schlusskurse), jede Einzelrendite bei plus "
+                   "50 Prozent gekappt; Entscheidungshilfe, kein Filter. "
                    "RS-Rank dagegen ist das Perzentil innerhalb der Wochenliste.")
 
         treffer_zeilen = []
@@ -401,7 +472,7 @@ with tab_scan:
             with st.container(border=True):
                 st.markdown(f"**{z['Ticker']} — {z.get('Firma', '')}**")
                 st.write(f"Kurs {_zahl(z.get('Kurs'))} $; "
-                         f"RS Nasdaq {z.get('RS Nasdaq', 'n/a')}; "
+                         f"RS {z.get('RS Nasdaq', 'n/a')}; "
                          f"Trend Template {z.get('Trend Template', '?')}; "
                          f"Umsatzwachstum {z.get('Umsatzwachstum', '?')}")
                 for k, s in muster:
@@ -696,8 +767,9 @@ Konsolidierung ≤ 35 Kalendertage und eng. Selten, aber stark.
 - **RS-Rank ist hier nur geschätzt.** Bei einer Einzelabfrage fehlt die Vergleichsgruppe,
 deshalb rechnet das Tool aus dem gewichteten Momentum eine Schätzung. Der Batch-Scanner
 (`pattern_scanner.py`) bildet echte Perzentile innerhalb deiner Liste — der ist genauer.
-Seit 12.09.2026 rechnet der Nachtscan zusätzlich **RS Nasdaq** gegen alle Nasdaq-Aktien
-(Karte „Aktueller Scan“); das ist die Zahl, die IBDs RS-Rating am nächsten kommt.
+Seit 12.09.2026 rechnet der Nachtscan zusätzlich **RS** gegen alle Stammaktien des US-Markts
+(Karte „Aktueller Scan“ und „Aktie nachschlagen“ oben), jede Einzelrendite bei plus 50 Prozent
+gekappt; an dreizehn öffentlichen IBD-Werten gemessen liegt sie innerhalb von 5 Punkten.
 - **Kaufpunkt ≠ Kaufsignal.** Die Volumen-Bestätigung am Ausbruchstag prüft dieses Tool
 nicht — dafür ist der Breakout-Wächter da.
 - **Kursdaten sind 15 Minuten gecacht**, um API-Calls zu sparen.

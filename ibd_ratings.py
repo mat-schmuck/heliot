@@ -321,10 +321,27 @@ def bewerten_firma(reihen, quartale=None, heute=None):
     quelle_amtlich = all(e[3] == "amtlich" for e in eps[-quartale:]) if eps else True
     if eps and not quelle_amtlich:
         vermerke.append("einzelne Quartale aus dem Jahreswert berechnet (Viertes Quartal gleich Jahr minus neun Monate)")
+    # Die Zahlen hinter dem Wachstum, fuers Nachschlagen (Mathias, 13.09.2026):
+    # juengstes Quartal, Vorquartal und Vorjahresquartal fuer Umsatz und
+    # Gewinn je Aktie. Umsatz in ganzen Dollar, wie die SEC ihn fuehrt.
     return {"eps_roh": eps_roh, "sales_roh": sales_roh, "marge": marge, "roe": roe,
             "quartale": n_q, "ifrs": ifrs, "vermerke": vermerke, "jahreswachstum": jahres,
             "eps_juengst": juengste[-1][1] if juengste else None,
-            "eps_ende": juengste[-1][0] if juengste else None}
+            "eps_ende": juengste[-1][0] if juengste else None,
+            "eps_vorquartal": juengste[-2][1] if len(juengste) >= 2 else None,
+            "eps_vorjahr": vorjahr(eps_13, juengste[-1][0]) if juengste else None,
+            "umsatz_juengst": ums[-1][1] if ums else None,
+            "umsatz_ende": ums[-1][0] if ums else None,
+            "umsatz_vorquartal": ums[-2][1] if len(ums) >= 2 else None,
+            "umsatz_vorjahr": vorjahr(ums, ums[-1][0]) if ums else None}
+
+
+def wachstum_pct(neu, alt):
+    """Prozent fuer die Anzeige, nur bei positiver Basis; sonst None (die
+    Anzeige sagt dann, dass die Basis bei null oder im Minus lag)."""
+    if neu is None or alt is None or alt <= 0:
+        return None
+    return round((float(neu) / float(alt) - 1.0) * 100.0, 1)
 
 
 # ---------------------------------------------------------------------------
@@ -339,7 +356,8 @@ def _hochnaehe(abst_pct):
 
 def bauen(ticker_liste, rs_daten, user_agent=None, jahre=None, kennzahlen=None, zuordnung=None,
           pfad=DATEI, leise=False, heute=None):
-    """Ratings fuer die Ticker der Listen und des Nasdaq-Universums.
+    """Ratings fuer die Ticker der Listen und des ganzen Bezugs (seit
+    13.09.2026 auch die Titel unter den Schwellen, fuers Nachschlagen).
     kennzahlen (DataFrame) und zuordnung ({ticker: cik}) ersetzen die
     Abrufe im Selbsttest."""
     heute = heute or date.today()
@@ -385,11 +403,13 @@ def bauen(ticker_liste, rs_daten, user_agent=None, jahre=None, kennzahlen=None, 
 
     listen = (rs_daten or {}).get("listen") or {}
     aktien = (rs_daten or {}).get("aktien") or {}
-    alle_ticker = sorted(set(t.upper() for t in ticker_liste) | set(listen) | set(aktien))
+    aussen = {t: e for t, e in ((rs_daten or {}).get("ausserhalb") or {}).items()
+              if isinstance(e, dict) and e.get("rs") is not None}
+    alle_ticker = sorted(set(t.upper() for t in ticker_liste) | set(listen) | set(aktien) | set(aussen))
     vor = {}
     for t in alle_ticker:
         cik = zuordnung.get(t)
-        e = listen.get(t) or aktien.get(t) or {}
+        e = listen.get(t) or aktien.get(t) or aussen.get(t) or {}
         rs = e.get("rs")
         ad = e.get("ad_rang")
         r = roh.get(cik) if cik else None
@@ -401,6 +421,12 @@ def bauen(ticker_liste, rs_daten, user_agent=None, jahre=None, kennzahlen=None, 
                    "ifrs": bool((r or {}).get("ifrs")), "basis": "amtlich",
                    "vermerke": list((r or {}).get("vermerke") or []),
                    "eps_juengst": (r or {}).get("eps_juengst"), "eps_ende": (r or {}).get("eps_ende")}
+        for feld in ("eps_vorquartal", "eps_vorjahr", "umsatz_juengst", "umsatz_ende", "umsatz_vorquartal", "umsatz_vorjahr"):
+            eintrag[feld] = (r or {}).get(feld)
+        eintrag["eps_wachstum_vj_pct"] = wachstum_pct(eintrag["eps_juengst"], eintrag["eps_vorjahr"])
+        eintrag["eps_wachstum_vq_pct"] = wachstum_pct(eintrag["eps_juengst"], eintrag["eps_vorquartal"])
+        eintrag["umsatz_wachstum_vj_pct"] = wachstum_pct(eintrag["umsatz_juengst"], eintrag["umsatz_vorjahr"])
+        eintrag["umsatz_wachstum_vq_pct"] = wachstum_pct(eintrag["umsatz_juengst"], eintrag["umsatz_vorquartal"])
         if cik is None:
             eintrag["vermerke"].append("keine SEC-Zuordnung fuer diesen Ticker")
         elif r is None:
@@ -551,6 +577,15 @@ def selbsttest() -> int:
     p("Firma 1: acht Quartale sichtbar, EPS-Wachstum rund plus 50 Prozent, 13-Wochen-Vermerk, Jahreswachstum als Vermerk",
       r1["quartale"] == 8 and r1["eps_roh"] is not None and 0.4 < r1["eps_roh"] < 0.8
       and any("13 Wochen" in v for v in r1["vermerke"]) and r1["jahreswachstum"] is not None, r1)
+    p("Nachschlagen: Umsatz juengst, Vorquartal und Vorjahr mit Quartalsende; Wachstum zum Vorjahr rund 46 Prozent, "
+      "EPS-Vorjahr 2,48",
+      r1["umsatz_juengst"] is not None and r1["umsatz_vorquartal"] is not None and r1["umsatz_vorjahr"] is not None
+      and abs(wachstum_pct(r1["umsatz_juengst"], r1["umsatz_vorjahr"]) - 46.4) < 0.2
+      and abs(wachstum_pct(r1["umsatz_juengst"], r1["umsatz_vorquartal"]) - 10.0) < 0.2
+      and r1["eps_vorjahr"] == 2.48 and str(r1["umsatz_ende"]).startswith("2026-06"),
+      {k: r1[k] for k in ("umsatz_juengst", "umsatz_vorquartal", "umsatz_vorjahr", "umsatz_ende", "eps_vorjahr", "eps_vorquartal")})
+    p("Wachstum in Prozent nur bei positiver Basis", wachstum_pct(150, 100) == 50.0 and wachstum_pct(1.0, -0.5) is None
+      and wachstum_pct(1.0, 0) is None and wachstum_pct(None, 1) is None)
     r3 = bewerten_firma(_reihen(df[df.cik == 3]), heute=heute)
     p("W5 Bank: Nettoertraege statt Umsatz, mit Vermerk", any(v.startswith("Bank") for v in r3["vermerke"]) and r3["sales_roh"] is not None, r3["vermerke"])
     r4 = bewerten_firma(_reihen(df[df.cik == 4]), heute=heute)
@@ -564,14 +599,22 @@ def selbsttest() -> int:
           "aktien": {"CCC": {"rs": 50, "ad_rang": 50, "abst_52w_hoch_pct": -10.0},
                      "DDD": {"rs": 60, "ad_rang": 55, "abst_52w_hoch_pct": -5.0},
                      "EEE": {"rs": 70, "ad_rang": 80, "abst_52w_hoch_pct": -3.0},
-                     "FFF": {"rs": 40}}}
-    zu = {"AAA": 1, "BBB": 2, "CCC": 3, "DDD": 4, "EEE": 5}
+                     "FFF": {"rs": 40}},
+          "ausserhalb": {"GGG": {"rs": 30, "ad_rang": 40, "abst_52w_hoch_pct": -40.0, "grund": "Kurs unter 15 Dollar"},
+                         "HHH": {"grund": "keine Kurse"}}}
+    zu = {"AAA": 1, "BBB": 2, "CCC": 3, "DDD": 4, "EEE": 5, "GGG": 1}
     import tempfile
     pfad = os.path.join(tempfile.mkdtemp(), "r.json")
     inhalt = bauen([], rs, kennzahlen=df, zuordnung=zu, pfad=pfad, leise=True, heute=heute)
     a = inhalt["aktien"]
     p("Ratings gebaut: Firma 1 vor Firma 2 beim EPS-Rang, Noten vergeben (Wachser mindestens C, Schrumpfer D oder E)",
       a["AAA"]["eps"] > a["BBB"]["eps"] and a["AAA"]["smr"] in "ABC" and a["BBB"]["smr"] in "DE", {t: (e["eps"], e["smr"]) for t, e in a.items()})
+    p("Titel unter den Schwellen mit RS werden gerechnet (GGG), ohne RS nicht (HHH)",
+      "GGG" in a and a["GGG"]["eps"] is not None and a["GGG"]["composite"] is not None and "HHH" not in a,
+      {k: a[k].get("composite") for k in a})
+    p("Wachstumszahlen stehen im Eintrag, Prozent gerundet",
+      a["AAA"]["umsatz_juengst"] is not None and abs(a["AAA"]["umsatz_wachstum_vj_pct"] - 46.4) < 0.2
+      and a["AAA"]["eps_wachstum_vj_pct"] is not None, {k: a["AAA"][k] for k in ("umsatz_wachstum_vj_pct", "eps_wachstum_vj_pct")})
     p("Composite: AAA hoechster, BBB niedrigster; FFF ohne Zuordnung und ohne A/D bekommt keines und nennt, was fehlt",
       a["AAA"]["composite"] > a["BBB"]["composite"] and a["FFF"]["composite"] is None
       and "EPS" in a["FFF"]["composite_fehlt"] and "A/D" in a["FFF"]["composite_fehlt"], a["FFF"])
