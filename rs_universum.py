@@ -279,6 +279,20 @@ def _hoch(werte, fenster):
     return teil[-1] >= max(teil)
 
 
+def _abstand(werte, fenster):
+    """Abstand des letzten Werts zum Hoch der letzten fenster Werte in
+    Prozent, auf eine Stelle gerundet, 0,0 auf dem Hoch, negativ darunter.
+    None, wenn die Reihe kuerzer ist als das Fenster (dieselbe Regel wie
+    _hoch, damit Text und Kennzeichen nie auseinanderlaufen)."""
+    if len(werte) < fenster:
+        return None
+    teil = werte[-fenster:]
+    hoch = max(teil)
+    if hoch <= 0:
+        return None
+    return round((teil[-1] / hoch - 1) * 100, 1) or 0.0
+
+
 def kennzahlen(k, indizes, cfg=None):
     """Alle Groessen einer Aktie fuer Anzeige und Berichte."""
     cfg = cfg or CFGU
@@ -304,6 +318,9 @@ def kennzahlen(k, indizes, cfg=None):
         linie = _linie(k, idx)
         kurz = name.lstrip("^").lower()
         e[f"linie_{kurz}_hoch"] = _hoch(linie, 252)
+        # Abstand zum Linienhoch in Prozent (Gerhard, 13.09.2026): 'kein Hoch'
+        # sagte nicht, wie knapp die Linie darunter steht
+        e[f"linie_{kurz}_abst_pct"] = _abstand(linie, 252)
         # Aenderung der Linie ueber eine Woche, fuer die Sortierung der Berichte
         e[f"linie_{kurz}_1w"] = (round((linie[-1] / linie[-6] - 1) * 100, 2)
                                 if len(linie) >= 6 and linie[-6] > 0 else None)
@@ -419,13 +436,24 @@ def rs_text(rs, cfg=None):
 
 
 def linien_text(e):
-    """R5: die RS-Linie gegen beide Indizes, kurz. Nur wenn die Werte da sind."""
+    """R5: die RS-Linie gegen beide Indizes, kurz. Nur wenn die Werte da sind.
+    Seit 13.09.2026 steht statt 'kein Hoch' der Abstand zum Linienhoch in
+    Prozent (Gerhard: bitte bauen); eine Ablage ohne das Feld, etwa vor dem
+    naechsten Nachtlauf, bekommt den alten Wortlaut."""
     teile = []
     for kurz, name in (("spy", "SPY"), ("qqq", "QQQ")):
         h = e.get(f"linie_{kurz}_hoch")
         if h is None:
             continue
-        teile.append(f"RS-Linie gegen {name} auf 52-Wochen-Hoch" if h else f"RS-Linie gegen {name} kein Hoch")
+        if h:
+            teile.append(f"RS-Linie gegen {name} auf 52-Wochen-Hoch")
+            continue
+        a = e.get(f"linie_{kurz}_abst_pct")
+        if a is None:
+            teile.append(f"RS-Linie gegen {name} kein Hoch")
+            continue
+        z = f"{abs(float(a)):.1f}".replace(".", ",")
+        teile.append(f"RS-Linie gegen {name} {z} Prozent unter dem 52-Wochen-Hoch")
     return "; ".join(teile)
 
 
@@ -747,6 +775,20 @@ def selbsttest() -> int:
     p("Kennzahlen: 52-Wochen-Hoch, 20-Tage-Hoch, RS-Linie auf Hoch, Dollarvolumen",
       kz["kurs_52w_hoch"] is True and kz["kurs_20t_hoch"] is True and kz["linie_spy_hoch"] is True
       and kz["dv50"] > 0 and kz["roh"] is not None and kz["tage"] == 300, kz)
+    kz3 = kennzahlen({**kd, "close": k[:250] + [k[249] * 0.9] * 50}, {"SPY": idx})
+    kz4 = kennzahlen({"daten": kd["daten"][:100], "close": k[:100], "high": kd["high"][:100],
+                      "low": kd["low"][:100], "volume": [1e6] * 100}, {"SPY": idx})
+    p("RS-Linie: Abstand null auf dem Hoch, minus 10 Prozent nach einem Rueckgang, kein Wert bei kurzer Reihe",
+      kz["linie_spy_abst_pct"] == 0.0 and kz3["linie_spy_abst_pct"] == -10.0 and kz3["linie_spy_hoch"] is False
+      and kz4["linie_spy_abst_pct"] is None and kz4["linie_spy_hoch"] is None,
+      f"{kz['linie_spy_abst_pct']} {kz3['linie_spy_abst_pct']} {kz4['linie_spy_abst_pct']}")
+    p("Linientext: Hoch, Abstand mit Beistrich, alter Wortlaut ohne Feld, leer ohne Wert",
+      linien_text({"linie_spy_hoch": True, "linie_qqq_hoch": False, "linie_qqq_abst_pct": -1.5})
+      == "RS-Linie gegen SPY auf 52-Wochen-Hoch; RS-Linie gegen QQQ 1,5 Prozent unter dem 52-Wochen-Hoch"
+      and linien_text({"linie_spy_hoch": False}) == "RS-Linie gegen SPY kein Hoch"
+      and linien_text({"linie_spy_hoch": False, "linie_spy_abst_pct": 0.0}) == "RS-Linie gegen SPY 0,0 Prozent unter dem 52-Wochen-Hoch"
+      and linien_text({}) == "",
+      linien_text({"linie_spy_hoch": True, "linie_qqq_hoch": False, "linie_qqq_abst_pct": -1.5}))
     kurz = {"daten": kd["daten"][:100], "close": k[:100], "high": kd["high"][:100], "low": kd["low"][:100], "volume": [1e6] * 100}
     kz2 = kennzahlen(kurz, {})
     p("Zu kurze Historie: kein Rohwert, kein 52-Wochen-Hoch", kz2["roh"] is None and kz2["kurs_52w_hoch"] is None)

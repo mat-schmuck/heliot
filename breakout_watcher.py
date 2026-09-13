@@ -1386,7 +1386,8 @@ def zusatz_logbuch(ticker) -> dict:
         if d.get("rs"):
             e = d["rs"][0].eintrag(ticker, d["rs"][1]) or {}
             raus.update({"rs_nasdaq": e.get("rs"),
-                         "rs_linie_spy_hoch": e.get("linie_spy_hoch")})
+                         "rs_linie_spy_hoch": e.get("linie_spy_hoch"),
+                         "rs_linie_spy_abst_pct": e.get("linie_spy_abst_pct")})
         if d.get("sektor"):
             import listen
             etf = beobachtungen.sektor_etf_fuer(listen.sektor_von(ticker))
