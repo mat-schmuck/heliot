@@ -5,9 +5,10 @@ name: Nachschlage-Daten bauen
 # Nachtscan (scanner.yml); dieser Ablauf fuellt sie ausserhalb des Scans,
 # etwa nach einem Umbau oder am Wochenende, damit "Aktie nachschlagen" in
 # der Heliot-App nicht bis zum naechsten Scan wartet. Er sendet nichts und
-# setzt keine Alarme. Die Listen-Aktien des Nachtscans ("listen") bleiben
-# leer, bis der naechste Scan laeuft; das Nachschlagen findet jede Aktie
-# ueber "aktien" und "ausserhalb".
+# setzt keine Alarme. Die Listen-Aktien ("listen") kommen seit Etappe 0
+# (Gerhard, 13.09.2026) aus der Mappe kaufpunkte_aktuell.xlsx des letzten
+# Nachtscans; vorher blieb das Feld bis zum naechsten Scan leer, und die
+# Berichte fanden die Aktien der Wochenliste nicht.
 on:
   workflow_dispatch:
 
@@ -31,8 +32,9 @@ jobs:
         with:
           python-version: "3.12"
 
+      # openpyxl liest die Mappe kaufpunkte_aktuell.xlsx (Listen-Aktien).
       - name: Abhaengigkeiten
-        run: pip install requests pandas numpy scipy yfinance pyarrow
+        run: pip install requests pandas numpy scipy yfinance pyarrow openpyxl
 
       # Rund sechs Minuten fuer rund 6.600 Symbole (gemessen 13.09.2026:
       # 5.667 Symbole in 129 s, Rechnung 132 s).

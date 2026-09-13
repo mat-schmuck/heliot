@@ -276,6 +276,11 @@ STATE_FILE = Path("watcher_state.json")
 # Dieselbe Struktur, im REPO eingecheckt — die uebergabefeste Fassung
 # des Melde-Gedaechtnisses (siehe load_state/_repo_sichern).
 REPO_STATE = "melde_gedaechtnis.json"
+# MARKTAMPEL-ZEILE (Etappe 0, Gerhard 13.09.2026): Unter diesem Schluessel
+# steht im Zustand der New Yorker Handelstag, dessen erste Meldung die Ampel
+# schon getragen hat; siehe ampel_voranstellen().
+AMPEL_TAG = "ampel_tag"
+_AMPEL = {"tag": None, "vortag": None}
 
 # Volumen-Faktor je Strategie (Vielfaches des Ø20-Tage-Volumens)
 # Alle Schwellwerte kommen seit 28.07.2026 aus config.py — der EINEN
@@ -811,9 +816,12 @@ def load_state() -> dict:
     # Ausbrueche kamen doppelt. Der Checkout dagegen ist beim Start
     # frisch und enthaelt alles, was der Vorgaenger IM Lauf committet
     # hat. Union statt Vorrang: Verlieren ist teurer als Behalten.
-    gemeldet, fenster = {}, {}
+    gemeldet, fenster, ampel_tag = {}, {}, ""
     for quelle in (REPO_STATE, STATE_FILE):
         data = _staat_aus(quelle)
+        # Der juengere Ampel-Tag gewinnt: Hat die Tagwache die Zeile schon
+        # gesendet, stellt die Schlussstunde sie nicht noch einmal voran.
+        ampel_tag = max(ampel_tag, str(data.get(AMPEL_TAG) or ""))
         g = data.get("gemeldet", {})
         if isinstance(g, list):        # Altes Tagesformat einmalig
             g = {k: data.get("tag", heute) for k in g}
@@ -835,7 +843,8 @@ def load_state() -> dict:
     # naechsten Speichern weg.
     return {"fenster_tag": heute, "fenster": fenster,
             "gemeldet": _gemeldet_filtern(gemeldet, heute),
-            GAPGO_WARTEN: _warten_laden()}
+            GAPGO_WARTEN: _warten_laden(),
+            AMPEL_TAG: ampel_tag or None}
 
 
 _repo_stand = {"keys": None, "zeit": 0.0}
@@ -858,6 +867,10 @@ def _repo_sichern(state: dict, sofort: bool = False):
         "%s|%s|%s" % (t, e.get("signal"), e.get("kp"))
         for t, e in (state.get(GAPGO_WARTEN) or {}).items()
         if isinstance(e, dict))
+    # DER AMPEL-TAG ZAEHLT EBENSO (Etappe 0, 13.09.2026): Die erste Meldung
+    # des Tages traegt die Marktampel; ohne Sicherung im Repo stellte die
+    # Schlussstunde sie ein zweites Mal voran.
+    keys = keys | {"AMPEL|" + str(state.get(AMPEL_TAG) or "")}
     jetzt = time.time()
     # sofort (seit 10.09.2026, Nachtbefunde): ohne die Minutendrossel, weil
     # die Melde-Merker in positionen.json stehen und der Endkommit des
@@ -981,6 +994,11 @@ def gruen_schreiben():
 
 
 def save_state(state: dict, sofort: bool = False):
+    # Den Tag, dessen erste Meldung die Marktampel getragen hat, in den
+    # Zustand uebernehmen (sende() merkt ihn in _AMPEL, weil nicht jeder
+    # Sendeweg den Zustand kennt).
+    if _AMPEL["tag"] and _AMPEL["tag"] > str(state.get(AMPEL_TAG) or ""):
+        state[AMPEL_TAG] = _AMPEL["tag"]
     try:
         STATE_FILE.write_text(json.dumps(state, indent=2))
     except Exception as e:
@@ -3344,6 +3362,45 @@ def _sende_eine(topic: str, titel: str, body: str, prio: str,
 HANDELSZEIT_EGAL = False
 
 
+def kurs_vortag_merken(quotes: dict):
+    """Der letzte abgeschlossene Handelstag laut den heutigen Kurszeilen.
+
+    Yahoo liefert je Aktie das Datum der Vortageszeile (prev_datum). Der
+    haeufigste Wert ist der Schluss, dem die Marktampel gelten muss; so
+    faellt eine veraltete Ampel auf, auch nach einem Feiertag, ohne dass
+    ein Kalender gepflegt werden muss (dasselbe Mittel wie bei den
+    Nachtbefunden, siehe nachtbefunde_schritt)."""
+    from collections import Counter
+    zaehler = Counter(str(q.get("prev_datum")) for q in (quotes or {}).values()
+                      if isinstance(q, dict) and q.get("prev_datum"))
+    if zaehler:
+        _AMPEL["vortag"] = zaehler.most_common(1)[0][0]
+
+
+def ampel_voranstellen(absaetze: list[str]) -> tuple:
+    """Stellt der ERSTEN Meldung des Handelstags die Marktampel voran.
+
+    ETAPPE 0 (Gerhard, 13.09.2026: "Etappe 0 braucht gar keine Entscheidung
+    von mir: die Marktampel-Zeile, ..."), vorgesehen seit Baustein 4 des
+    Einbau-Papiers: "der Waechter stellt die Farbe als eine Zeile an den
+    Anfang der ERSTEN Meldung des Tages". Die Zeile informiert nur; keine
+    Meldung wird ihretwegen zurueckgehalten oder veraendert.
+
+    Rueckgabe: (Absaetze, Tag). Tag ist das ISO-Datum des New Yorker
+    Handelstags, wenn die Zeile vorangestellt wurde, sonst None. Gemerkt
+    wird der Tag erst, wenn die Meldung wirklich angenommen wurde (sende)."""
+    heute = heute_ny()
+    if heute is None or _AMPEL["tag"] == heute.isoformat():
+        return absaetze, None
+    try:
+        import marktampel
+        zeile = marktampel.zeile(marktampel.lese(), _AMPEL["vortag"])
+    except Exception as e:
+        zeile = ("Marktampel nicht verfügbar; die Ablage ist nicht lesbar "
+                 f"({type(e).__name__}).")
+    return [zeile] + list(absaetze), heute.isoformat()
+
+
 def sende(topic: str, titel: str, absaetze: list[str], prio: str,
           klick: str | None = None) -> bool:
     """Verschickt die Absaetze in so vielen Nachrichten wie noetig.
@@ -3371,12 +3428,17 @@ def sende(topic: str, titel: str, absaetze: list[str], prio: str,
                   f"Der Treffer bleibt offen und wird zum nächsten "
                   f"Handelsbeginn gemeldet.")
             return False
+    absaetze, ampel_tag = ampel_voranstellen(absaetze)
     portionen = _portionen(absaetze)
     alle_ok = True
     for nr, teil in enumerate(portionen, 1):
         kopf = titel if len(portionen) == 1 else f"{titel} ({nr} von {len(portionen)})"
         if not _sende_eine(topic, kopf, "\n\n".join(teil), prio, klick):
             alle_ok = False
+        elif ampel_tag and nr == 1:
+            # Die Zeile steht in der ersten Nachricht; ist die angenommen,
+            # hat der Tag seine Ampel.
+            _AMPEL["tag"] = ampel_tag
     return alle_ok
 
 
@@ -4174,6 +4236,7 @@ def main():
 
     state = load_state()
     schon_gemeldet = set(state["gemeldet"])
+    _AMPEL["tag"] = state.get(AMPEL_TAG)          # Etappe 0: Marktampel-Zeile
     gruen_laden((heute_ny() or date.today()).isoformat())      # R9
     # Was in DIESEM Lauf schon im Trigger-Logbuch steht. Getrennt von
     # schon_gemeldet, das erst ein erfolgreicher Push fuellt.
@@ -4308,6 +4371,7 @@ def main():
             # Durchlauf muss wieder vom unveraenderten Tagesstand ausgehen.
             basis = {t: dict(q) for t, q in quotes.items()}
             geaendert = set(basis)      # beim Abruf alles einmal durchrechnen
+            kurs_vortag_merken(basis)   # fuer die Marktampel-Zeile
 
         # Live-Werte ueber die Tagesdaten legen: Kurs, Tagesvolumen UND die
         # Tagesspanne. Das geschieht in JEDEM Durchlauf, also alle zwei

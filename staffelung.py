@@ -39,7 +39,8 @@ Fallen, die beim Bau auffielen):
    yfinance aber bei 2,1 %, wanderte sie je nach Quelle in eine andere
    Stufe. Dieses Modul bekommt deshalb FERTIGE Abstaende uebergeben; der
    Aufrufer ist dafuer verantwortlich, sie je Aktie immer aus derselben
-   Quelle zu bestimmen (config: datenquellen.abstand_fuehrungsquelle).
+   Quelle zu bestimmen (so stand es in config.py unter datenquellen, die
+   am 13.09.2026 als ungelesen entfiel).
 
 5. STUMME WERTE — WISSEN, NICHT HANDELN. Nachgemessen am 28.07.2026
    (feedpruefung.py): Der Gratis-Strom deckt nicht jede Aktie ab.
@@ -48,18 +49,102 @@ Fallen, die beim Bau auffielen):
    Minuten hinauswirft, war kurz gebaut und wurde wieder entfernt: Im
    normalen Handel ist diese Frist viel zu lang, um zu helfen (Mathias,
    28.07.2026). Stattdessen bleiben zehn der 50 Plaetze als Puffer frei
-   (config: websocket_max_werte = 40). Dieses Modul teilt also rein nach
+   (WERTE: websocket_max_werte = 40). Dieses Modul teilt also rein nach
    Abstand zu; wer stumm bleibt, taucht nur im Protokoll auf.
 """
 
-from config import CFG
+# DIE WERTE DER STAFFELUNG (bis 13.09.2026 als Block "staffelung" in config.py).
+# Etappe 0 (Gerhard, 13.09.2026): config.py fuehrt nur noch Einstellwerte, die
+# ein Modul im Betrieb liest. Die Staffelung ist seit 28.07.2026 ausser
+# Betrieb; ihre Zahlen und Messbefunde leben deshalb hier beim Modul weiter,
+# falls je wieder eine Quelle mit harter Symbolgrenze dazukommt.
+# AUSSER BETRIEB seit 28.07.2026. Die Staffelung war nur nötig, solange
+# Finnhubs Gratis-Zugang genau 51 Symbole auf EINER Verbindung trug —
+# dann müssen 265 Aktien um Plätze konkurrieren. Yahoos Live-Strom
+# trägt alle 265 gleichzeitig, also gibt es nichts mehr zu verteilen.
+WERTE = {
+    "stufe1_max_pct": 0.02,      # bis 2 % → schnelle Liste (WebSocket)
+    "stufe1_raus_pct": 0.025,    # Hysterese: erst bei 2,5 % zurückstufen
+    "stufe1_max_werte": 30,      # Finnhub-WebSocket-Limit-sicher
+    "stufe2_max_pct": 0.04,      # 2–4 % → Vorraum (REST-Batch)
+    "stufe2_raus_pct": 0.045,    # Hysterese Vorraum → langsam
+    "stufe2_max_werte": 100,
+    # Gerhards überarbeitete Aufteilung vom 28.07.2026. Der erste
+    # Entwurf (100 Werte alle 20 s per REST) sprengt jeden Gratis-Tarif
+    # um Größenordnungen — Twelve Data erlaubt 800 Abrufe pro TAG,
+    # Finnhub 60 pro Minute, gebraucht würden 300 pro Minute. Statt
+    # dessen werden die freien WebSocket-Plätze ausgenutzt: Der Zugang
+    # trägt rund 50 Symbole, die schnelle Liste belegt 30, die
+    # restlichen ~20 bekommt der OBERE Vorraum — also die Werte knapp
+    # über 2 %, die am ehesten gleich hochkommen. Damit gibt es an der
+    # 2-%-Grenze keinen blinden Fleck, und alles bleibt gratis.
+    # NACHGEMESSEN am 28.07.2026 im laufenden Handel (finnhub_messung.py):
+    # 65 sehr liquide Werte abonniert, GENAU 50 lieferten Ticks, die
+    # übrigen 15 blieben stumm — und der Server sagte es ausdrücklich:
+    # "Subscribing to too many symbols". Die Grenze liegt also exakt bei
+    # 50, nicht ungefähr. Tempo war reichlich: 8552 Ticks in 150
+    # Sekunden, rund 3400 pro Minute über 50 Symbole.
+    # 40 STATT 50 — Mathias' Vorgabe vom 28.07.2026, als BEWUSSTE
+    # Reserve, NICHT als Fehlerbehebung. Die Unterscheidung ist wichtig,
+    # damit später niemand die Zahl mit einer Messung begründet, die es
+    # nicht gibt. Was tatsächlich gemessen wurde (grenztest.py, im
+    # laufenden Handel):
+    #   - Die harte Grenze liegt bei 51: Beim 52. Symbol antwortet der
+    #     Server "Subscribing to too many symbols".
+    #   - Bei GENAU 50 abonnierten Schwergewichten lieferten 49
+    #     Ticks. Der eine Ausfall (Lowe's) schwieg in der Nachprüfung
+    #     auch bei nur 6 Symbolen — also keine Grenzenwirkung.
+    #   - Der Listenwechsel an der Grenze (10 ab, 10 an) klappte
+    #     vollständig: 10 von 10 Neuen kamen an.
+    # Punktgenau an der Grenze zu fahren ginge also technisch. Die
+    # Reserve von zehn Plätzen ist eine Entscheidung für Sicherheits-
+    # abstand, keine Reparatur. Sie liegt damit zwischen Gerhards
+    # Vorgabe (30 am WebSocket, "genug Sicherheitsabstand", Übergabe
+    # vom 28.07.2026) und den 50, die beim Umbau daraus geworden waren,
+    # weil der Vorraum mangels bezahlbarer REST-Abrufe mit auf den
+    # Strom musste.
+    #
+    # DAVON GETRENNT zu sehen sind die Abdeckungslücken: Der
+    # Gratis-Strom trägt nicht jede Aktie. Vodafone, Ovintiv und Lowe's
+    # wurden nachweislich gehandelt und kamen selbst bei fünf
+    # abonnierten Symbolen mit null Ticks an, während Finnhubs eigener
+    # Kursabruf frische Preise lieferte. Das hat mit der Symbolzahl
+    # nichts zu tun und lässt sich mit keiner Platzgrenze beheben.
+    # Betroffen war rund jeder zwanzigste bis zehnte Wert. Diese Werte
+    # laufen über Yahoo weiter und stehen im Protokoll.
+    "websocket_max_werte": 40,
+    "stufe2_takt_sek": 120,      # restlicher Vorraum: REST alle 2 Min
+    "stufe3_takt_sek": 600,      # über 4 %: yfinance alle 10 Min
+}
+
+
+def pruefe_werte(c=None):
+    """Die Pruefungen, die bis 13.09.2026 in config.pruefe_config() standen."""
+    s = c or WERTE
+    assert s["stufe1_max_pct"] < s["stufe1_raus_pct"], \
+        "Hysterese Stufe 1: raus-Grenze muss GRÖSSER als rein-Grenze sein (sonst Flattern)"
+    assert s["stufe2_max_pct"] < s["stufe2_raus_pct"], \
+        "Hysterese Stufe 2: raus-Grenze muss größer als rein-Grenze sein"
+    assert s["stufe1_max_pct"] < s["stufe2_max_pct"], \
+        "Stufe 1 muss näher am Trigger liegen als Stufe 2"
+    assert s["stufe1_max_werte"] <= 50, \
+        "Finnhub-Gratis-WebSocket verträgt exakt 50 Symbole — Stufe 1 darf das nicht sprengen"
+    assert s["stufe1_max_werte"] <= s["websocket_max_werte"], \
+        ("Stufe 1 passt nicht in die WebSocket-Liste — die überzähligen Werte "
+         "würden stillschweigend gekappt, ausgerechnet die nächsten am Kaufpunkt")
+    assert s["websocket_max_werte"] <= 50, \
+        "über 50 Symbole weist Finnhub ab ('Subscribing to too many symbols')"
+    return True
+
+
+pruefe_werte()
 
 
 class Staffelung:
     """Fuehrt die Zuteilung samt Hysterese ueber die Zeit."""
 
     def __init__(self, cfg=None):
-        c = cfg or CFG["staffelung"]
+        c = cfg or WERTE
         self.rein1 = c["stufe1_max_pct"]
         self.raus1 = c["stufe1_raus_pct"]
         self.rein2 = c["stufe2_max_pct"]

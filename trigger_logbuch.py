@@ -56,7 +56,7 @@ _AMPEL_CACHE = "ungeladen"
 
 
 def _ampel():
-    """Die Marktampel-Farbe, einmal je Prozess gelesen.
+    """Die Marktampel-Farbe samt Handelstag, einmal je Prozess gelesen.
 
     SEIT 31.08.2026 (Gerhards Freigabe, Baustein 4): Jede Logbuch-Zeile
     traegt die Farbe des Gesamtmarkts, damit sich die Trefferquote je
@@ -67,9 +67,9 @@ def _ampel():
     if _AMPEL_CACHE == "ungeladen":
         try:
             import marktampel
-            _AMPEL_CACHE = marktampel.lese_farbe()[0]
+            _AMPEL_CACHE = marktampel.lese_farbe()
         except Exception:
-            _AMPEL_CACHE = None
+            _AMPEL_CACHE = (None, None)
     return _AMPEL_CACHE
 
 
@@ -80,9 +80,14 @@ def protokolliere(signal, quelle="", pfad=DATEI):
     uebernommen, wie es kommt — die Merkmale unterscheiden sich je
     Muster, und genau die will man spaeter auswerten koennen."""
     eintrag = {"datum": date.today().isoformat(), "quelle": quelle}
-    ampel = _ampel()
+    ampel, ampel_tag = _ampel()
     if ampel:
         eintrag["ampel"] = ampel
+        # DER SCHLUSS, FUER DEN DIE FARBE GILT (13.09.2026). Der Waechter
+        # las zwei Wochen lang eine Ampel vom 28.08.2026, weil der Nachtscan
+        # sie nicht ins Repo legte; mit dem Tag daneben ist eine veraltete
+        # Farbe in jeder Zeile als solche erkennbar.
+        eintrag["ampel_tag"] = ampel_tag
     # Nur einfache Werte; alles andere waere in JSON nicht haltbar.
     for k, v in signal.items():
         if isinstance(v, (str, int, float, bool)) or v is None:

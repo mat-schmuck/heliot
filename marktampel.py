@@ -100,12 +100,78 @@ def aktualisieren():
 
 def lese_farbe():
     """Die abgelegte Farbe samt Handelstag, oder (None, None)."""
-    try:
-        with open(DATEI, encoding="utf-8-sig") as f:
-            d = json.load(f)
-        return d.get("farbe"), d.get("handelstag")
-    except (OSError, ValueError):
+    d = lese()
+    if not d:
         return None, None
+    return d.get("farbe"), d.get("handelstag")
+
+
+def lese(pfad=DATEI):
+    """Die ganze abgelegte Ampel (Farbe, Handelstag, Indizes), oder None."""
+    try:
+        with open(pfad, encoding="utf-8-sig") as f:
+            d = json.load(f)
+    except (OSError, ValueError):
+        return None
+    return d if isinstance(d, dict) and d.get("farbe") else None
+
+
+FARBWORT = {"gruen": "grün", "gelb": "gelb", "rot": "rot"}
+
+
+def _datum_de(iso):
+    teile = str(iso or "")[:10].split("-")
+    if len(teile) != 3:
+        return str(iso or "unbekannt")
+    return f"{teile[2]}.{teile[1]}.{teile[0]}"
+
+
+def _lage_text(lage):
+    """Schluss gegen die zwei Linien und die Richtung der 50er, knapp."""
+    e21, s50 = lage.get("ueber_ema21"), lage.get("ueber_sma50")
+    if e21 == s50:
+        teile = [("über" if e21 else "unter") + " EMA 21 und SMA 50"]
+    else:
+        teile = [("über" if e21 else "unter") + " EMA 21",
+                 ("über" if s50 else "unter") + " SMA 50"]
+    if not lage.get("ema21_ueber_sma50"):
+        teile.append("EMA 21 unter SMA 50")
+    teile.append("SMA 50 steigt" if lage.get("sma50_steigt")
+                 else "SMA 50 steigt nicht")
+    return ", ".join(teile)
+
+
+def zeile(daten, vortag=None):
+    """Die Ampel als EINE Zeile fuer die erste Meldung des Handelstags.
+
+    ETAPPE 0 (Gerhard, 13.09.2026, "braucht gar keine Entscheidung von
+    mir"), vorgesehen seit Baustein 4 des Einbau-Papiers: "der Waechter
+    stellt die Farbe als eine Zeile an den Anfang der ERSTEN Meldung des
+    Tages". Die Zeile informiert nur, sie unterdrueckt nichts.
+
+    vortag: der letzte abgeschlossene Handelstag laut den heutigen
+    Kurszeilen (ISO-Datum), falls bekannt. Gilt die abgelegte Ampel einem
+    anderen Schluss, steht KEINE Farbe da, sondern der Hinweis, dass sie
+    nicht erneuert wurde. Eine Farbe vom falschen Tag waere schlimmer als
+    keine (Befund 13.09.2026: marktampel.json stand im Repo zwei Wochen
+    auf dem 28.08.2026, weil der Nachtscan sie nicht hochlud).
+
+    Meldungsformat fuer Gerhard und Mathias: kein Gedankenstrich, kein
+    senkrechter Strich, Strichpunkt zwischen den Angaben, Beistrich
+    innerhalb."""
+    if not daten or daten.get("farbe") not in FARBWORT:
+        return "Marktampel nicht verfügbar; es liegt keine Berechnung vor."
+    tag = str(daten.get("handelstag") or "")[:10]
+    if vortag and tag != str(vortag)[:10]:
+        return ("Marktampel nicht verfügbar; die letzte Berechnung gilt dem "
+                f"Schluss vom {_datum_de(tag)}, die heutigen Kurse folgen "
+                f"auf den {_datum_de(vortag)}.")
+    teile = [f"Marktampel {FARBWORT[daten['farbe']]}, Schluss vom "
+             f"{_datum_de(tag)}"]
+    for name, lage in (daten.get("indizes") or {}).items():
+        if isinstance(lage, dict):
+            teile.append(f"{name} {_lage_text(lage)}")
+    return "; ".join(teile)
 
 
 def main():

@@ -946,6 +946,100 @@ def block_e():
     pruefe("E", "Logbuch haengt die Ampelfarbe an jede Zeile",
            "eintrag[\"ampel\"] = ampel" in
            open("trigger_logbuch.py", encoding="utf-8").read())
+    pruefe("E", "Logbuch nennt dazu den Schluss, fuer den die Farbe gilt",
+           "eintrag[\"ampel_tag\"] = ampel_tag" in
+           open("trigger_logbuch.py", encoding="utf-8").read())
+
+    # ETAPPE 0, MARKTAMPEL-ZEILE (Gerhard, 13.09.2026): EINE Zeile am Anfang
+    # der ERSTEN Meldung des Handelstags, ohne Farbe vom falschen Tag.
+    _lage_g = {"ueber_ema21": True, "ueber_sma50": True,
+               "ema21_ueber_sma50": True, "sma50_steigt": True}
+    _amp = {"farbe": "gelb", "handelstag": "2026-09-11",
+            "indizes": {"S&P 500": _lage_g,
+                        "Nasdaq": {**_lage_g, "ueber_ema21": False}}}
+    _z = _ma.zeile(_amp, "2026-09-11")
+    pruefe("E", "Marktampel-Zeile: Farbe, Schluss und beide Indizes",
+           _z == ("Marktampel gelb, Schluss vom 11.09.2026; S&P 500 über "
+                  "EMA 21 und SMA 50, SMA 50 steigt; Nasdaq unter EMA 21, "
+                  "über SMA 50, SMA 50 steigt"), _z)
+    _z_alt = _ma.zeile(_amp, "2026-09-14")
+    pruefe("E", "Marktampel-Zeile: eine Ampel vom falschen Schluss zeigt "
+                "keine Farbe", _z_alt.startswith("Marktampel nicht verfügbar")
+           and "gelb" not in _z_alt and "11.09.2026" in _z_alt
+           and "14.09.2026" in _z_alt, _z_alt)
+    pruefe("E", "Marktampel-Zeile: ohne Ablage ehrlich nicht verfuegbar",
+           _ma.zeile(None).startswith("Marktampel nicht verfügbar"))
+    pruefe("E", "Marktampel-Zeile im Meldungsformat: kein Gedankenstrich, "
+                "kein senkrechter Strich",
+           not any(ch in s for s in (_z, _z_alt, _ma.zeile(None))
+                   for ch in ("—", "–", "|")))
+    # Die Handels-App (Repo heliot-daten, alarmeAusText) liest aeltere
+    # Meldungen aus dem Text: Ein Absatz zaehlt dort nur als Alarm, wenn
+    # hinter Kaufpunkt, Kurs, Stop, Ziel oder Exit-Linie eine Zahl steht.
+    # Die Ampel-Zeile darf deshalb keines dieser Wortpaare tragen.
+    import re as _re_amp
+    pruefe("E", "Marktampel-Zeile wird von der Handels-App nicht als Alarm "
+                "gelesen", not any(_re_amp.search(
+                    r"(Kaufpunkt|Kurs|Stop|Ziel|Exit-Linie)\s+(\(Folgetag\)\s+)?\d", s)
+                    for s in (_z, _z_alt, _ma.zeile(None))))
+    _alt_eine, _alt_heute_a, _alt_lese = bw._sende_eine, bw.heute_ny, _ma.lese
+    _alt_egal, _alt_amp = bw.HANDELSZEIT_EGAL, dict(bw._AMPEL)
+    _bodies, _antwort = [], [True]
+    try:
+        from datetime import date as _dam
+        bw._sende_eine = lambda topic, titel, body, prio, klick=None: (
+            _bodies.append(body) or _antwort[0])
+        bw.heute_ny = lambda: _dam(2026, 9, 14)
+        bw.HANDELSZEIT_EGAL = True
+        _ma.lese = lambda pfad=None: _amp
+        bw._AMPEL.update(tag=None, vortag=None)
+        bw.kurs_vortag_merken({"A": {"prev_datum": _dam(2026, 9, 11)},
+                               "B": {"prev_datum": _dam(2026, 9, 11)},
+                               "C": {"prev_datum": _dam(2026, 9, 10)},
+                               "D": {}})
+        pruefe("E", "Waechter: Vortag der Kurse ist der haeufigste prev_datum",
+               bw._AMPEL["vortag"] == "2026-09-11", bw._AMPEL["vortag"])
+        _antwort[0] = False
+        bw.sende("probe", "Titel", ["1. AAA"], "high")
+        pruefe("E", "Waechter: scheitert die erste Meldung, bleibt der Tag "
+                    "ohne Ampel-Merker", bw._AMPEL["tag"] is None
+               and bool(_bodies) and _bodies[-1].startswith("Marktampel gelb"))
+        _antwort[0] = True
+        _bodies.clear()
+        bw.sende("probe", "Titel", ["1. AAA"], "high")
+        bw.sende("probe", "Titel", ["1. BBB"], "high")
+        pruefe("E", "Waechter: die erste Meldung des Tages traegt die Ampel "
+                    "als eigene Zeile vorn, die zweite nicht",
+               len(_bodies) == 2
+               and _bodies[0] == _z + "\n\n1. AAA" and _bodies[1] == "1. BBB"
+               and bw._AMPEL["tag"] == "2026-09-14", _bodies)
+        _st_a = {"gemeldet": {}}
+        _alt_file, _alt_repo_a = bw.STATE_FILE, bw.REPO_STATE
+        _alt_rs = bw._repo_sichern
+        import tempfile as _tfa
+        with _tfa.TemporaryDirectory() as _oa:
+            try:
+                bw.STATE_FILE = pathlib.Path(_oa) / "cache.json"
+                bw.REPO_STATE = str(pathlib.Path(_oa) / "repo.json")
+                bw._repo_sichern = lambda state, sofort=False: None
+                bw.save_state(_st_a)
+                _gesichert = json.loads(bw.STATE_FILE.read_text())
+                pathlib.Path(bw.REPO_STATE).write_text(
+                    json.dumps({"gemeldet": {}, "ampel_tag": "2026-09-15"}))
+                _geladen = bw.load_state()
+            finally:
+                bw.STATE_FILE, bw.REPO_STATE = _alt_file, _alt_repo_a
+                bw._repo_sichern = _alt_rs
+        pruefe("E", "Waechter: der Ampel-Tag steht im gesicherten Zustand, "
+                    "und beim Laden gewinnt der juengere beider Quellen",
+               _gesichert.get("ampel_tag") == "2026-09-14"
+               and _geladen.get("ampel_tag") == "2026-09-15",
+               f"{_gesichert.get('ampel_tag')} {_geladen.get('ampel_tag')}")
+    finally:
+        bw._sende_eine, bw.heute_ny, _ma.lese = _alt_eine, _alt_heute_a, _alt_lese
+        bw.HANDELSZEIT_EGAL = _alt_egal
+        bw._AMPEL.clear()
+        bw._AMPEL.update(_alt_amp)
     import pattern_scanner as _psk
     pruefe("E", "Earnings-Pullback steht in der Muster-PRIORITY",
            "Earnings-Pullback" in _psk.PRIORITY)
@@ -1915,6 +2009,22 @@ def block_h():
     except Exception as e:
         pruefe("H", "Einstellungen in sich stimmig", False,
                f"{type(e).__name__}: {e}")
+    # ETAPPE 0 (Gerhard, 13.09.2026): config.py fuehrt nur Einstellwerte, die
+    # ein Modul liest. Ein Wert ohne Leser ist eine Falle: Wer ihn aendert,
+    # aendert nichts und glaubt es doch.
+    try:
+        _ohne = config_ohne_leser(WURZEL)
+        pruefe("H", "Jeder Einstellwert in config.py hat einen Leser",
+               not _ohne, nennen(_ohne))
+    except Exception as e:
+        pruefe("H", "Jeder Einstellwert in config.py hat einen Leser", False,
+               f"{type(e).__name__}: {e}")
+    _wf = WURZEL / ".github" / "workflows"
+    pruefe("H", "Nachtscan legt die Marktampel ins Repo (git add und Sicherung)",
+           (_wf / "scanner.yml").read_text(encoding="utf-8").count(
+               "marktampel.json") >= 2)
+    pruefe("H", "Nachschlage-Ablauf kann die Mappe fuer die Listen-Aktien lesen",
+           "openpyxl" in (_wf / "nachschlag_daten.yml").read_text(encoding="utf-8"))
 
     # Datenlage: ist die Mappe frisch genug fuer heute?
     # GEGEN DAS REPO messen, nicht gegen den lokalen Klon. Der kann
@@ -2103,6 +2213,34 @@ def block_h():
     # DIE WOCHENLISTE STEHT HINTER DER ANMELDUNG (Mathias, 13.09.2026).
     ok, zusatz = anmeldeschranke(WURZEL / "streamlit_app.py")
     pruefe("H", "Wochenliste und Gastpasswoerter nur mit vollem Zugang", ok, zusatz)
+
+
+def config_ohne_leser(wurzel) -> list:
+    """Bloecke und Schluessel von config.CFG, die kein Modul ausser config.py
+    und dieser Pruefung ueber ["name"] oder .get("name") anspricht.
+
+    Etappe 0 (Gerhard, 13.09.2026): Am 13.09.2026 waren es 35, darunter
+    ganze Bloecke (bottom_fishing, radar, datenquellen, ntfy, staffelung).
+    Die Pruefung liest den Quelltext; ein Schluessel, der nur ueber eine
+    Variable angesprochen wird, faellt hier auf und muss dann beim Namen
+    gelesen werden."""
+    import re as _re
+    from config import CFG
+    texte = [p.read_text(encoding="utf-8", errors="replace")
+             for p in sorted(pathlib.Path(wurzel).glob("*.py"))
+             if p.name not in ("config.py", "gesamtpruefung.py")]
+
+    def gelesen(name):
+        k = _re.escape(name)
+        muster = _re.compile(r'\[\s*["\']' + k + r'["\']\s*\]|\.get\(\s*["\']' + k + r'["\']')
+        return any(muster.search(t) for t in texte)
+    ohne = []
+    for block, inhalt in CFG.items():
+        if not gelesen(block):
+            ohne.append(block)
+        if isinstance(inhalt, dict):
+            ohne += [f"{block}.{k}" for k in inhalt if not gelesen(k)]
+    return ohne
 
 
 def anmeldeschranke(pfad) -> tuple:

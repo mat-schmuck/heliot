@@ -4,7 +4,7 @@
 CONFIG — zentrale Einstellungen für das GESAMTE System
 ======================================================
 Alle Schwellwerte, Fensterlängen und Parameter an EINER Stelle. Jedes Modul
-(Scanner, Wächter, Radar, Live-Staffelung) liest ausschließlich von hier.
+(Scanner, Wächter, Radar, Berichte) liest ausschließlich von hier.
 
 Warum das der wichtigste Aufräumschritt ist:
   Vorher standen dieselben Werte an mehreren Stellen im Code — z. B. das
@@ -69,10 +69,10 @@ CFG = {
         # Kapitel 7 und 9 bleiben AUSGENOMMEN (Frage G3, bestaetigt):
         # Red-to-Green ist ein Tagesgeschaeft am selben Tag, und der
         # Luecken-Bestaetigungstag IST oft die Zahlen-Reaktion selbst.
-        # Bei Stufe A wirkt die Liste von selbst: Beide Kapitel melden
-        # ueber eigene Formatierer, die den Karenz-Warnkopf nie anhaengen.
-        "ausgenommen": ["Red-to-Green", "Red-to-Green Explosive",
-                        "Lücken-Bestätigungstag"],
+        # Bei Stufe A wirkt das von selbst: Beide Kapitel melden ueber
+        # eigene Formatierer, die den Karenz-Warnkopf nie anhaengen. Die
+        # Liste "ausgenommen" stand bis 13.09.2026 hier; gelesen hat sie
+        # kein Modul (Etappe 0, Gerhard 13.09.2026).
     },
 
     # --- Earnings-Pullback (Gerhards Freigabe vom 31.08.2026) ---
@@ -256,11 +256,7 @@ CFG = {
 
     # --- Gleitende Durchschnitte ---
     "ma": {
-        "kurz": 21,                  # EMA21
-        "mittel": 50,                # EMA50 / MA50
-        "lang_1": 150,               # MA150 (Minervini)
-        "lang_2": 200,               # MA200 (Minervini)
-        "sma_rectangle": 21,         # SMA21-Zusatzfilter Rectangle Top
+        "kurz": 21,                  # Trend Template: Steigung der MA200 ueber 21 Tage
     },
 
     # --- 52-Wochen / Lookbacks ---
@@ -274,69 +270,6 @@ CFG = {
         # GEMESSEN 12.09.2026: dreizehn oeffentliche IBD-Werte innerhalb von
         # 5 Punkten getroffen; 0,45 bis 0,55 gleich gut, ab 0,7 bricht es ein.
         "rs_kappung": 0.50,
-        "crash_historie_tage": 1000, # ~4 Jahre für Crash-Strategie
-    },
-
-    # --- Trigger-Nähe / Live-Kurs-Staffelung (dreistufig) ---
-    # AUSSER BETRIEB seit 28.07.2026. Die Staffelung war nur nötig, solange
-    # Finnhubs Gratis-Zugang genau 51 Symbole auf EINER Verbindung trug —
-    # dann müssen 265 Aktien um Plätze konkurrieren. Yahoos Live-Strom
-    # trägt alle 265 gleichzeitig, also gibt es nichts mehr zu verteilen.
-    # Der Block bleibt samt Messwerten stehen, falls jemals wieder eine
-    # Quelle mit harter Symbolgrenze dazukommt.
-    "staffelung": {
-        "stufe1_max_pct": 0.02,      # bis 2 % → schnelle Liste (WebSocket)
-        "stufe1_raus_pct": 0.025,    # Hysterese: erst bei 2,5 % zurückstufen
-        "stufe1_max_werte": 30,      # Finnhub-WebSocket-Limit-sicher
-        "stufe2_max_pct": 0.04,      # 2–4 % → Vorraum (REST-Batch)
-        "stufe2_raus_pct": 0.045,    # Hysterese Vorraum → langsam
-        "stufe2_max_werte": 100,
-        # Gerhards überarbeitete Aufteilung vom 28.07.2026. Der erste
-        # Entwurf (100 Werte alle 20 s per REST) sprengt jeden Gratis-Tarif
-        # um Größenordnungen — Twelve Data erlaubt 800 Abrufe pro TAG,
-        # Finnhub 60 pro Minute, gebraucht würden 300 pro Minute. Statt
-        # dessen werden die freien WebSocket-Plätze ausgenutzt: Der Zugang
-        # trägt rund 50 Symbole, die schnelle Liste belegt 30, die
-        # restlichen ~20 bekommt der OBERE Vorraum — also die Werte knapp
-        # über 2 %, die am ehesten gleich hochkommen. Damit gibt es an der
-        # 2-%-Grenze keinen blinden Fleck, und alles bleibt gratis.
-        # NACHGEMESSEN am 28.07.2026 im laufenden Handel (finnhub_messung.py):
-        # 65 sehr liquide Werte abonniert, GENAU 50 lieferten Ticks, die
-        # übrigen 15 blieben stumm — und der Server sagte es ausdrücklich:
-        # "Subscribing to too many symbols". Die Grenze liegt also exakt bei
-        # 50, nicht ungefähr. Tempo war reichlich: 8552 Ticks in 150
-        # Sekunden, rund 3400 pro Minute über 50 Symbole.
-        # 40 STATT 50 — Mathias' Vorgabe vom 28.07.2026, als BEWUSSTE
-        # Reserve, NICHT als Fehlerbehebung. Die Unterscheidung ist wichtig,
-        # damit später niemand die Zahl mit einer Messung begründet, die es
-        # nicht gibt. Was tatsächlich gemessen wurde (grenztest.py, im
-        # laufenden Handel):
-        #   - Die harte Grenze liegt bei 51: Beim 52. Symbol antwortet der
-        #     Server "Subscribing to too many symbols".
-        #   - Bei GENAU 50 abonnierten Schwergewichten lieferten 49
-        #     Ticks. Der eine Ausfall (Lowe's) schwieg in der Nachprüfung
-        #     auch bei nur 6 Symbolen — also keine Grenzenwirkung.
-        #   - Der Listenwechsel an der Grenze (10 ab, 10 an) klappte
-        #     vollständig: 10 von 10 Neuen kamen an.
-        # Punktgenau an der Grenze zu fahren ginge also technisch. Die
-        # Reserve von zehn Plätzen ist eine Entscheidung für Sicherheits-
-        # abstand, keine Reparatur. Sie liegt damit zwischen Gerhards
-        # Vorgabe (30 am WebSocket, "genug Sicherheitsabstand", Übergabe
-        # vom 28.07.2026) und den 50, die beim Umbau daraus geworden waren,
-        # weil der Vorraum mangels bezahlbarer REST-Abrufe mit auf den
-        # Strom musste.
-        #
-        # DAVON GETRENNT zu sehen sind die Abdeckungslücken: Der
-        # Gratis-Strom trägt nicht jede Aktie. Vodafone, Ovintiv und Lowe's
-        # wurden nachweislich gehandelt und kamen selbst bei fünf
-        # abonnierten Symbolen mit null Ticks an, während Finnhubs eigener
-        # Kursabruf frische Preise lieferte. Das hat mit der Symbolzahl
-        # nichts zu tun und lässt sich mit keiner Platzgrenze beheben.
-        # Betroffen war rund jeder zwanzigste bis zehnte Wert. Diese Werte
-        # laufen über Yahoo weiter und stehen im Protokoll.
-        "websocket_max_werte": 40,
-        "stufe2_takt_sek": 120,      # restlicher Vorraum: REST alle 2 Min
-        "stufe3_takt_sek": 600,      # über 4 %: yfinance alle 10 Min
     },
 
     # --- Strategie-Schwellen ---
@@ -376,9 +309,6 @@ CFG = {
             # der Kurs muss über MA10 und MA21 liegen.
             "A": {"tage": 25, "max_spanne": 0.15, "ma": [10, 21]},
         },
-        # Alte Schlüssel, damit nichts bricht, was sie noch liest.
-        "flat_base_wochen": 5,
-        "flat_base_max_tiefe": 0.15,
     },
     # --- Kapitel 9: Red-to-Green am Markt-Gap-Tag -------------------------
     # Gerhards Präzisierung vom 02.08.2026 ersetzt die bisherige vage Regel
@@ -390,7 +320,6 @@ CFG = {
         "aktie_gap_min": -0.05,      # Aktie ≥ 5 % runter
         "rs_min": 90,                # RS Rating > 90
         "min_ueber_tief": 0.50,      # ≥ 50 % über 52-Wochen-Tief
-        "wächter_takt_sek": 45,      # Live-Wächter-Schleife
         "ema_kurz": 21,              # Kurs muss über EMA21 …
         "ema_lang": 50,              # … und über EMA50 stehen
         # ANFLUG: Vor der Kreuzung darf das Volumen höchstens im
@@ -523,7 +452,9 @@ CFG = {
         "ma_lang": 200,
         "stage2_min_tage_steigend": 21,   # MA200 seit rund einem Monat steigend
         "min_ueber_52w_tief": 1.00,       # ≥ 100 % über dem 52-Wochen-Tief
-        "lookback_tage": 1000,            # 3 bis 4 Jahre für den Level-Detektor
+        # Ein "lookback_tage" von 1000 stand bis 13.09.2026 hier; gelesen
+        # hat ihn niemand. Der Level-Detektor sieht die Historie, die der
+        # Nachtscan laedt (zwei Jahre, period="2y").
         "swing_order": 5,                 # Fenster für Swing-Punkte (Tage)
         "swing_order_wochen": 2,          # dasselbe auf Wochenbasis
         "cluster_toleranz": 0.02,         # 2 % — Punkte zu einer Zone gruppieren
@@ -608,43 +539,9 @@ CFG = {
         "sprung_abfall_max": 0.2,
     },
 
-    "bottom_fishing": {
-        "rsi_periode": 2,
-        "rsi_kaufzone": 10,
-        "abstand_sma10": -0.09,
-    },
     "darvas": {
         "box_tage": 3,
         "frische_max_tage": 25,
-    },
-
-    # --- Sektor-Radar ---
-    "radar": {
-        "kurz_tage": 3,
-        "mittel_tage": 10,
-        "min_aktien": 3,
-        "schwelle": 0.30,
-        "bestaetigung_tage": 2,
-    },
-
-    # --- Datenquellen-Priorität (Führungsquelle je Zweck) ---
-    "datenquellen": {
-        "kurse_haupt": "yfinance",
-        "kurse_fallback": "finnhub",
-        "kurse_websocket": "finnhub",     # nur Stufe 1
-        "kurse_vorraum": "twelvedata",    # Stufe 2 REST-Batch
-        "fundamental": "fmp",
-        "abstand_fuehrungsquelle": "finnhub",  # EINE Quelle bestimmt Trigger-Abstand
-    },
-
-    # --- ntfy Push (getrennte Topics + Prioritäten gegen Abstumpfen) ---
-    "ntfy": {
-        "topic_trigger": None,       # dringende Trigger — aus ENV NTFY_TOPIC_TRIGGER
-        "topic_radar": None,         # Sektor-Radar (leiser)
-        "topic_health": None,        # täglicher Gesundheits-Check
-        "prio_trigger": "high",
-        "prio_radar": "default",
-        "prio_health": "low",
     },
 
     # --- Betrieb ---
@@ -750,13 +647,10 @@ CFG = {
         # Geteilt wird ausschließlich nach der Zeichenzahl, siehe
         # NTFY_GRENZE in breakout_watcher.py.
         "min_historie_tage": 60,     # weniger Historie → Aktie überspringen
-        # HINWEIS: Das 2000-Minuten-Limit gilt für PRIVATE Repos. heliot ist
-        # öffentlich, dort sind die Actions-Minuten unbegrenzt und kostenlos
-        # (nachgeprüft 27.07.2026). Die Warnung bleibt für den Fall, dass das
-        # Repo je auf privat gestellt wird. Die Grenze, die wirklich beißt,
-        # ist eine andere: Ein einzelner Auftrag darf höchstens 6 Stunden
-        # laufen — deshalb die Zweiteilung der Wache.
-        "actions_minuten_warnung": 1700,
+        # KEIN Einstellwert fuer Actions-Minuten: heliot ist oeffentlich, dort
+        # sind sie unbegrenzt (nachgeprueft 27.07.2026). Die Grenze, die
+        # wirklich beisst, sind sechs Stunden je Auftrag, deshalb die
+        # Zweiteilung der Wache (GITHUB_GRENZE_MIN in breakout_watcher.py).
         # M1 (Gerhard, 12.09.2026), Variante A: Die Schlusskurs-Befunde
         # (Zeitdeckel, Klimax, Zonen, 8-EMA-Hinweis, Sektor-Radar) werden
         # gegen 15:45 New York mit den Handelskursen gerechnet und VOR
@@ -855,7 +749,6 @@ CFG = {
 
     # --- IBD-Ratings als Naeherung (R20 bis R22, W4) ----------------------
     "ibd_ratings": {
-        "anzeigen": True,
         # R22: Notengrenzen nach der IBD-Kaufregel: A und B obere 40 Prozent,
         # C die Mitte, D und E untere 40 Prozent (Perzentil ab dem die Note
         # gilt).
@@ -873,12 +766,7 @@ CFG = {
 # ---------------------------------------------------------------------------
 
 def _aus_env():
-    """Liest ausgewählte ENV-Variablen und überschreibt CFG-Werte.
-    ntfy-Topics kommen IMMER aus der Umgebung (Secrets), nie aus dem Code."""
-    CFG["ntfy"]["topic_trigger"] = os.environ.get("NTFY_TOPIC_TRIGGER") or os.environ.get("NTFY_TOPIC")
-    CFG["ntfy"]["topic_radar"] = os.environ.get("NTFY_TOPIC_RADAR") or os.environ.get("NTFY_TOPIC")
-    CFG["ntfy"]["topic_health"] = os.environ.get("NTFY_TOPIC_HEALTH") or os.environ.get("NTFY_TOPIC")
-
+    """Liest ausgewählte ENV-Variablen und überschreibt CFG-Werte."""
     # Beispielhafte numerische Übersteuerung
     if "SCANNER_VOL_FENSTER" in os.environ:
         try:
@@ -962,20 +850,6 @@ def hoechstens(wert, schwelle):
 def pruefe_config():
     """Wirft AssertionError bei unplausiblen/widersprüchlichen Werten.
     Beim Start jedes Moduls einmal aufrufen — fängt Tippfehler früh."""
-    s = CFG["staffelung"]
-    assert s["stufe1_max_pct"] < s["stufe1_raus_pct"], \
-        "Hysterese Stufe 1: raus-Grenze muss GRÖSSER als rein-Grenze sein (sonst Flattern)"
-    assert s["stufe2_max_pct"] < s["stufe2_raus_pct"], \
-        "Hysterese Stufe 2: raus-Grenze muss größer als rein-Grenze sein"
-    assert s["stufe1_max_pct"] < s["stufe2_max_pct"], \
-        "Stufe 1 muss näher am Trigger liegen als Stufe 2"
-    assert s["stufe1_max_werte"] <= 50, \
-        "Finnhub-Gratis-WebSocket verträgt exakt 50 Symbole — Stufe 1 darf das nicht sprengen"
-    assert s["stufe1_max_werte"] <= s["websocket_max_werte"], \
-        ("Stufe 1 passt nicht in die WebSocket-Liste — die überzähligen Werte "
-         "würden stillschweigend gekappt, ausgerechnet die nächsten am Kaufpunkt")
-    assert s["websocket_max_werte"] <= 50, \
-        "über 50 Symbole weist Finnhub ab ('Subscribing to too many symbols')"
     assert abs(sum(CFG["lookback"]["rs_gewichte"]) - 1.0) < 1e-9, \
         "RS-Gewichte müssen in Summe 1,0 ergeben"
     assert len(CFG["lookback"]["rs_quartale"]) == len(CFG["lookback"]["rs_gewichte"]), \
@@ -1005,7 +879,3 @@ if __name__ == "__main__":
     pruefe_config()
     print("config.py — Selbstprüfung bestanden. Alle Werte konsistent.")
     print(f"  Volumen-Fenster: {CFG['volumen']['fenster_tage']} Tage (einheitlich)")
-    print(f"  Staffelung: Stufe1 ≤{CFG['staffelung']['stufe1_max_pct']*100:.0f}% "
-          f"(max {CFG['staffelung']['stufe1_max_werte']}), "
-          f"Stufe2 ≤{CFG['staffelung']['stufe2_max_pct']*100:.0f}%, "
-          f"Stufe3 alle {CFG['staffelung']['stufe3_takt_sek']}s")

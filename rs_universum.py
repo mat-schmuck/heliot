@@ -69,8 +69,11 @@ FESTLEGUNGEN (Luecke 6)
   fuer die Sektor-ETFs (sektor_radar, pattern_scanner.fetch_history).
 
 Aufruf:
-  python rs_universum.py --bauen            im Nachtscan, schreibt rs_universum.json
-                                            (rund sechs Minuten fuer rund 6.600 Symbole)
+  python rs_universum.py --bauen            ohne Nachtscan (nachschlag_daten.yml), schreibt
+                                            rs_universum.json samt der Aktien der Mappe
+                                            kaufpunkte_aktuell.xlsx als "listen"
+                                            (rund sechs Minuten fuer rund 6.600 Symbole);
+                                            im Nachtscan ruft pattern_scanner bauen() selbst
   python rs_universum.py --selbsttest       ohne Netz
 """
 
@@ -90,6 +93,9 @@ import red_to_green
 
 CFGU = CFG["rs_universum"]
 DATEI = "rs_universum.json"
+# Die Mappe des letzten Nachtscans; ihre Aktien sind die "listen" eines
+# Baus ohne Scan (Etappe 0, Punkt 2).
+MAPPE = "kaufpunkte_aktuell.xlsx"
 
 # Titel, die keine Stammaktien sind (R2: ETFs und Fonds draussen, SPACs
 # erst nach der Uebernahme). ADRs ("American Depositary Shares") bleiben
@@ -468,9 +474,15 @@ def _verlauf_fortschreiben(alt_eintrag, tag, rs, hoechstens):
 
 
 def bauen(loaded=None, pfad=DATEI, holen_liste=None, holen_kurse=None, leise=False, alt=None,
-          liste_text=None, liste_text_andere=None, jetzt=None):
+          liste_text=None, liste_text_andere=None, jetzt=None, listen_ticker=None):
     """Der naechtliche Lauf. loaded: {Ticker: (df, Firma)} des Nachtscans,
-    dessen Aktien GEGEN den Bezug gerechnet werden (Luecke 5)."""
+    dessen Aktien GEGEN den Bezug gerechnet werden (Luecke 5).
+
+    listen_ticker: {Ticker: Firma} fuer einen Lauf OHNE Nachtscan (etwa
+    nachschlag_daten.yml). Dann kommen die Kurse der Listen-Aktien aus
+    demselben Abruf wie das Universum; wer nicht im Verzeichnis steht, wird
+    eigens mitgeholt. Gilt nur, wenn loaded fehlt: Der Nachtscan bringt
+    seine eigenen Kurse mit."""
     cfg = CFGU
     t0 = time.time()
     liste, gruende = nasdaq_liste(text=liste_text, holen=holen_liste, leise=leise)
@@ -480,8 +492,11 @@ def bauen(loaded=None, pfad=DATEI, holen_liste=None, holen_kurse=None, leise=Fal
     symbole = [e["symbol"] for e in liste]
     boerse_von = {e["symbol"]: e["boerse"] for e in liste}
     indizes_namen = list(cfg["indizes"]) + [cfg["markt_index"]]
-    kurse = (holen_kurse or kurse_holen)(symbole + indizes_namen, leise=leise) if holen_kurse is None \
-        else holen_kurse(symbole + indizes_namen)
+    im_verzeichnis = set(symbole) | set(indizes_namen)
+    zusatz = ([t for t in (listen_ticker or {}) if t not in im_verzeichnis]
+              if loaded is None else [])
+    kurse = (holen_kurse or kurse_holen)(symbole + indizes_namen + zusatz, leise=leise) if holen_kurse is None \
+        else holen_kurse(symbole + indizes_namen + zusatz)
     indizes = {n: kurse.get(n) for n in cfg["indizes"] if kurse.get(n)}
     markt = kurse.get(cfg["markt_index"])
     min_tage = int(CFG["betrieb"]["min_historie_tage"])
@@ -551,13 +566,25 @@ def bauen(loaded=None, pfad=DATEI, holen_liste=None, holen_kurse=None, leise=Fal
     listen_ergebnis = {}
     sortiert = sorted(rohwerte)
     ad_sortiert = sorted(ad_bezug.values())
+    listen_kurse = []
     for t, wert in (loaded or {}).items():
         try:
             df = wert[0] if isinstance(wert, tuple) else wert
             firma = wert[1] if isinstance(wert, tuple) and len(wert) > 1 else ""
-            k = aus_scanner_df(df)
+            listen_kurse.append((t, aus_scanner_df(df), firma))
         except Exception:  # noqa
             continue
+    # ETAPPE 0, PUNKT 2 (Gerhard, 13.09.2026): Ein Bau ohne Nachtscan liess
+    # "listen" LEER, bis der naechste Scan lief; die Berichte fanden die
+    # Aktien der Wochenliste dann nicht (belegt an drei Laeufen von
+    # nachschlag_daten.yml am 13.09.2026, jeweils 0 statt 232 Eintraege).
+    # Jetzt kommen sie aus demselben Abruf wie das Universum.
+    if loaded is None:
+        for t, firma in (listen_ticker or {}).items():
+            k = kurse.get(t)
+            if k and k.get("close"):
+                listen_kurse.append((t, k, firma or ""))
+    for t, k, firma in listen_kurse:
         kz = kennzahlen(k, indizes, cfg)
         kz["firma"] = firma
         kz["im_universum"] = t in aktien
@@ -650,6 +677,32 @@ def lies(pfad=DATEI):
         return d if isinstance(d, dict) else {}
     except (OSError, ValueError):
         return {}
+
+
+def listen_aus_mappe(pfad=MAPPE):
+    """Die Aktien der geltenden Wochenliste samt Firma, aus der Mappe des
+    letzten Nachtscans (Blatt "Kaufpunkte"). Fuer einen Bau ohne Scan.
+
+    Die Mappe fuehrt genau die Aktien, die der Nachtscan als "listen"
+    rechnet (am 13.09.2026 verglichen: 232 gegen 232, alle gleich). Nach
+    dem Wochenputz ist sie leer, dann gibt es auch keine Listen-Aktien.
+    Ist sie nicht lesbar, bleibt "listen" leer, wie vor dem 13.09.2026."""
+    try:
+        import pandas as pd
+        df = pd.read_excel(pfad, sheet_name="Kaufpunkte")
+    except Exception as e:  # noqa
+        print(f"  Listen: {pfad} nicht lesbar ({type(e).__name__}), die Listen bleiben leer")
+        return {}
+    raus = {}
+    if "Ticker" not in df.columns:
+        return raus
+    firmen = df["Firma"] if "Firma" in df.columns else [None] * len(df)
+    for t, f in zip(df["Ticker"], firmen):
+        s = str(t).strip().upper() if t == t and t is not None else ""
+        if not s or s == "NAN":
+            continue
+        raus.setdefault(s, str(f).strip() if (f == f and f is not None) else "")
+    return raus
 
 
 def eintrag(ticker, daten=None):
@@ -881,6 +934,36 @@ def selbsttest() -> int:
     p("Zweiter Lauf am selben Handelstag ersetzt den Tageswert statt ihn zu verdoppeln",
       len(inhalt2["aktien"][saf]["rs_verlauf"]) == 1)
 
+    # ETAPPE 0, PUNKT 2 (13.09.2026): Bau OHNE Nachtscan, die Listen kommen
+    # aus der Mappe und ihre Kurse aus demselben Abruf wie das Universum.
+    reihen["ADRX"] = _reihe(777, drift=0.0004)
+    abgerufen = []
+
+    def holen_merken(symbole):
+        abgerufen.extend(symbole)
+        return {s: reihen[s] for s in symbole if s in reihen}
+    inhalt4 = bauen(pfad=pfad, holen_kurse=holen_merken, liste_text=text2, liste_text_andere=text3, leise=True,
+                    alt={}, jetzt=date(2026, 9, 13),
+                    listen_ticker={saf: "Firma 5", "BILLIG": "Billig", "ADRX": "Fremd ADR", "FEHLT": "Fehlt"})
+    l4 = inhalt4["listen"]
+    p("Bau ohne Nachtscan: Listen aus der Mappe, Kurse aus dem Universumsabruf, gleiche Werte wie im Universum",
+      set(l4) == {saf, "BILLIG", "ADRX"} and l4[saf]["rs"] == inhalt4["aktien"][saf]["rs"]
+      and l4[saf]["firma"] == "Firma 5" and l4["BILLIG"]["rs"] == inhalt4["ausserhalb"]["BILLIG"]["rs"],
+      sorted(l4))
+    p("Bau ohne Nachtscan: eine Listen-Aktie ausserhalb des Verzeichnisses wird eigens mitgeholt und gegen den Bezug gerechnet",
+      abgerufen.count("ADRX") == 1 and l4["ADRX"]["im_universum"] is False and l4["ADRX"]["im_bezug"] is False
+      and l4["ADRX"]["rs"] is not None and l4["ADRX"]["boerse"] is None, l4.get("ADRX", {}).get("rs"))
+    inhalt5 = bauen(loaded={}, pfad=pfad, holen_kurse=holen_merken, liste_text=text2, liste_text_andere=text3,
+                    leise=True, alt={}, listen_ticker={saf: "Firma 5"})
+    p("Nachtscan ohne Listen (loaded leer) bleibt ohne Listen, auch wenn eine Mappe da waere",
+      inhalt5["listen"] == {})
+    mappe = os.path.join(tempfile.mkdtemp(), "kp.xlsx")
+    pd.DataFrame({"Ticker": ["aaa", "BBB", None, "AAA"], "Firma": ["Alpha", None, "Leer", "Doppelt"]}).to_excel(
+        mappe, sheet_name="Kaufpunkte", index=False)
+    aus_mappe = listen_aus_mappe(mappe)
+    p("Mappe: Ticker gross, ohne Leerzeilen und Doppel, Firma dabei; fehlende Mappe ergibt keine Listen",
+      aus_mappe == {"AAA": "Alpha", "BBB": ""} and listen_aus_mappe(mappe + ".fehlt") == {}, aus_mappe)
+
     def holen_luecke(symbole):
         return {s: reihen[s] for s in symbole if s in reihen and s[1:2] not in "DEFG"}
     inhalt3 = bauen(loaded={}, pfad=pfad, holen_kurse=holen_luecke, liste_text=text2, liste_text_andere=text3,
@@ -900,12 +983,14 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="RS-Universum (Nasdaq, NYSE, NYSE American) rechnen.")
     ap.add_argument("--bauen", action="store_true")
     ap.add_argument("--ausgabe", default=DATEI)
+    ap.add_argument("--mappe", default=MAPPE,
+                    help="Kaufpunkte-Mappe, deren Aktien als Listen gerechnet werden")
     ap.add_argument("--selbsttest", action="store_true")
     args = ap.parse_args()
     if args.selbsttest:
         return selbsttest()
     if args.bauen:
-        bauen(pfad=args.ausgabe)
+        bauen(pfad=args.ausgabe, listen_ticker=listen_aus_mappe(args.mappe))
         return 0
     ap.print_help()
     return 0

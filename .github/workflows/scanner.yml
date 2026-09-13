@@ -236,7 +236,11 @@ jobs:
           # GERHARDS ANTWORTEN VOM 12.09.2026: RS-Universum, Sektor-Rangliste,
           # Ratings, das Gedaechtnis des Abendberichts und die Pruefung der
           # schlussnahen Befunde (M6). Der Waechter liest sie am Morgen.
-          for f in rs_universum.json sektor_rangliste.json ibd_ratings.json abendbericht_gedaechtnis.json schlussnahe_gemeldet.json; do
+          # DIE MARKTAMPEL (Befund 13.09.2026): Der Scan rechnet sie jede
+          # Nacht, legte sie aber nie ins Repo. Der Waechter las deshalb vom
+          # 31.08. bis 11.09.2026 die Ampel vom 28.08.2026 und schrieb "gruen"
+          # in seine Logbuch-Zeilen, auch an Tagen mit Gelb oder Rot.
+          for f in rs_universum.json sektor_rangliste.json ibd_ratings.json abendbericht_gedaechtnis.json schlussnahe_gemeldet.json marktampel.json; do
             git add -A -- "$f" 2>/dev/null || true
           done
           if git diff --cached --quiet; then
@@ -251,7 +255,7 @@ jobs:
             # beiseitelegen, hart auf den Serverstand, wieder
             # einspielen, pushen. Die Scan-Ergebnisse DIESES Laufs sind
             # die frischeren, sie duerfen gewinnen.
-            DATEIEN="kaufpunkte_aktuell.xlsx sektor_radar.json ntfy_ids.json fokusliste.json shakeout_warteliste.json positionen.json exit_befunde.json volumenkurven.json zahlen_termine.json trigger_logbuch.jsonl ausgelassen.json rs_universum.json sektor_rangliste.json ibd_ratings.json abendbericht_gedaechtnis.json schlussnahe_gemeldet.json"
+            DATEIEN="kaufpunkte_aktuell.xlsx sektor_radar.json ntfy_ids.json fokusliste.json shakeout_warteliste.json positionen.json exit_befunde.json volumenkurven.json zahlen_termine.json trigger_logbuch.jsonl ausgelassen.json rs_universum.json sektor_rangliste.json ibd_ratings.json abendbericht_gedaechtnis.json schlussnahe_gemeldet.json marktampel.json"
             SICHERUNG=$(mktemp -d)
             for f in $DATEIEN; do cp "$f" "$SICHERUNG/" 2>/dev/null || true; done
             for versuch in 1 2 3; do
