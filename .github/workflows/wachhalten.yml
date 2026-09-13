@@ -1,0 +1,48 @@
+name: Heliot wach halten
+
+# Die Heliot-App auf Streamlit Community Cloud schlaeft nach zwoelf Stunden
+# ohne Besuch ein und zeigt dann eine englische Schlafseite mit einem
+# Weckknopf, den wir nicht umbenennen koennen (Mathias, 13.09.2026).
+# Dieser Ablauf besucht die App alle vier Stunden mit einem echten
+# Browser (Playwright, Chromium) und schreibt je Lauf, ob sie wach war
+# oder geweckt werden musste; siehe wachhalten.py.
+#
+# Ein blosser Aufruf der Adresse ohne Browser (curl, cron-job.org) kommt
+# nie bei der App an, er endet in einer Weiterleitung auf den
+# Anmeldeserver von Streamlit (gemessen 13.09.2026). Deshalb der Browser.
+#
+# GitHubs Zeitplan kommt gelegentlich Stunden zu spaet (beim Nachtscan
+# bis zu neun Stunden, deshalb laeuft der ueber cron-job.org). Vier
+# Stunden Abstand lassen dafuer Luft: Erst ein Ausfall von mehr als
+# zwoelf Stunden liesse die App einschlafen, und auch dann weckt sie der
+# naechste Lauf.
+on:
+  schedule:
+    - cron: "17 */4 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: wachhalten
+  cancel-in-progress: false
+
+jobs:
+  besuchen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Playwright samt Chromium
+        run: |
+          pip install playwright
+          playwright install chromium --with-deps
+
+      # Der Befund landet in der Zusammenfassung des Laufs, damit die
+      # Messung ueber zwei Tage ohne Protokoll-Lesen sichtbar ist.
+      - name: App besuchen und Befund festhalten
+        run: |
+          python wachhalten.py | tee -a "$GITHUB_STEP_SUMMARY"
