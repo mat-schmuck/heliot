@@ -498,11 +498,15 @@ with tab_scan:
 # --- Wochenliste -----------------------------------------------------------
 # Gerhard siebt jede Woche den Markt mit seinem Finviz-Screener und liefert
 # eine CSV mit der Spalte 'Ticker' (bestätigt am 22.07.2026: immer CSV, nie
-# Excel). Diese Seite legt die Datei kennwortgeschützt als finviz_3.csv ins
-# Repo — ab dem nächsten nächtlichen Scan arbeitet die Automatik damit.
-# Anzeigen darf jeder, Verändern nur mit Kennwort (Streamlit-Secret
-# UPLOAD_KENNWORT); geschrieben wird über einen GitHub-Token (GITHUB_TOKEN),
-# der NUR auf dieses Repo und NUR auf Dateiinhalte berechtigt ist.
+# Excel). Diese Seite legt die Datei als finviz_3.csv ins Repo; ab dem
+# nächsten nächtlichen Scan arbeitet die Automatik damit.
+# OHNE KENNWORT (Mathias, 13.09.2026): Bis dahin verlangte die Seite das
+# Streamlit-Secret UPLOAD_KENNWORT; das ist herausgenommen, weil niemand
+# wusste, welches Kennwort gemeint war. Geschrieben wird weiter über den
+# GitHub-Token (GITHUB_TOKEN), der NUR auf dieses Repo und NUR auf
+# Dateiinhalte berechtigt ist. FOLGE: Wer die Adresse der App kennt, kann
+# eine Liste einspielen; die einzige Schranke ist pruefe_wochenliste
+# (CSV mit Spalte Ticker, plausible Kuerzel).
 
 LISTEN_DATEI = "finviz_3.csv"     # REPO ist oben beim Aktuellen Scan definiert
 DARVAS_DATEI = "darvas.csv"
@@ -668,10 +672,9 @@ with tab_upload:
              "Die neuen Listen gelten ab dem nächsten nächtlichen Scan.")
 
     try:
-        kennwort_soll = st.secrets.get("UPLOAD_KENNWORT", "")
         github_token = st.secrets.get("GITHUB_TOKEN", "")
     except Exception:
-        kennwort_soll = github_token = ""
+        github_token = ""
 
     anzahl_aktuell = aktuelle_listengroesse(LISTEN_DATEI)
     anzahl_darvas = aktuelle_listengroesse(DARVAS_DATEI)
@@ -684,13 +687,11 @@ with tab_upload:
                    "KEINE Darvas-Kaufpunkte; alle anderen Muster laufen "
                    "normal weiter.")
 
-    if not kennwort_soll or not github_token:
+    if not github_token:
         st.warning("Der Upload ist noch nicht eingerichtet. In den "
-                   "Streamlit-Secrets müssen UPLOAD_KENNWORT und GITHUB_TOKEN "
-                   "hinterlegt sein — bis dahin ist diese Seite nur Anzeige.")
+                   "Streamlit-Secrets muss GITHUB_TOKEN hinterlegt sein; "
+                   "bis dahin ist diese Seite nur Anzeige.")
     else:
-        kennwort = st.text_input("Kennwort", type="password",
-                                 key="upload_kennwort")
         datei = st.file_uploader("CSV mit der Spalte 'Ticker'", type=["csv"],
                                  key="upload_datei")
         # Der Dateiname schlaegt die Liste vor, entschieden wird hier
@@ -708,30 +709,24 @@ with tab_upload:
                        f"{vorschlag}. Bitte oben prüfen.")
         if datei is not None and st.button(f"Liste {ziel_datei} übernehmen",
                                            type="primary"):
-            import hmac
-            import time as zeit
-            if not hmac.compare_digest(kennwort.encode(), kennwort_soll.encode()):
-                zeit.sleep(2)  # Bremse gegen Durchprobieren
-                st.error("Kennwort falsch.")
+            roh = datei.getvalue()
+            fehler, ticker = pruefe_wochenliste(roh)
+            if fehler:
+                st.error("NICHT übernommen: " + fehler)
             else:
-                roh = datei.getvalue()
-                fehler, ticker = pruefe_wochenliste(roh)
+                fehler, zweige = wochenliste_einspielen(
+                    roh, github_token, len(ticker), ziel_datei)
+                # Der Zaehler wird auch bei einem Teilerfolg geleert:
+                # Auf mindestens einem Zweig steht die neue Liste.
+                if zweige:
+                    aktuelle_listengroesse.clear()
                 if fehler:
-                    st.error("NICHT übernommen: " + fehler)
+                    st.error("Hochladen: " + fehler)
                 else:
-                    fehler, zweige = wochenliste_einspielen(
-                        roh, github_token, len(ticker), ziel_datei)
-                    # Der Zaehler wird auch bei einem Teilerfolg geleert:
-                    # Auf mindestens einem Zweig steht die neue Liste.
-                    if zweige:
-                        aktuelle_listengroesse.clear()
-                    if fehler:
-                        st.error("Hochladen: " + fehler)
-                    else:
-                        st.success(f"Übernommen in {ziel_datei} auf "
-                                   f"{zweige}: {len(ticker)} Aktien "
-                                   f"(die ersten: {', '.join(ticker[:5])}). "
-                                   "Ab dem nächsten nächtlichen Scan aktiv.")
+                    st.success(f"Übernommen in {ziel_datei} auf "
+                               f"{zweige}: {len(ticker)} Aktien "
+                               f"(die ersten: {', '.join(ticker[:5])}). "
+                               "Ab dem nächsten nächtlichen Scan aktiv.")
 
 
 # --- Regelwerk -------------------------------------------------------------
