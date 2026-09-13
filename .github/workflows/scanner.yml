@@ -48,6 +48,41 @@ jobs:
       # Quelltext und Bordmittel — kein pip, kein Schluessel.
       - uses: actions/checkout@v4
 
+      # WOCHENPUTZ (Mathias, 13.09.2026): Der Auftrag "Heliot Freitags-Putz"
+      # bei cron-job.org feuert seit dem 29.07.2026 nicht mehr, und er haette
+      # ohnehin nur Alarme und ntfy-Meldungen geraeumt. Die Woche selbst
+      # (Kaufpunkte, Fokusliste, Melde-Gedaechtnis) raeumt wochenputz.py:
+      # Es laeuft bei JEDEM Anstoss mit, tut aber erst nach Freitag 16:02
+      # New York etwas und nur, solange die Wochenliste aelter ist als
+      # dieser Putz. So holt es einen versaeumten Freitag nach, und nach
+      # dem naechsten Upload laesst es alles in Ruhe. Bordmittel genuegen,
+      # deshalb steht es vor setup-python und pip.
+      - name: Wochenputz (nach Freitag 16:02 New York, bis zur neuen Wochenliste)
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          python3 wochenputz.py
+          git config user.name "pattern-scanner"
+          git config user.email "actions@users.noreply.github.com"
+          PUTZ="kaufpunkte_aktuell.xlsx fokusliste.json melde_gedaechtnis.json"
+          for versuch in 1 2 3; do
+            for f in $PUTZ; do git add -A -- "$f" 2>/dev/null || true; done
+            if git diff --cached --quiet; then
+              echo "Wochenputz: nichts einzuchecken."
+              break
+            fi
+            git commit -q -m "Wochenputz: Kaufpunkte, Fokusliste und Melde-Gedächtnis der alten Woche geleert"
+            if git push --quiet origin main; then
+              echo "Wochenputz eingecheckt (Versuch $versuch)."
+              break
+            fi
+            # Jemand war schneller: hart auf den Serverstand und den Putz
+            # erneut anwenden. Er ist datumsgesteuert und damit wiederholbar.
+            git fetch --quiet origin main
+            git reset --hard --quiet FETCH_HEAD
+            python3 wochenputz.py
+          done
+
       - name: Ist der fällige Scan schon erledigt?
         id: pruefung
         env:
@@ -129,6 +164,17 @@ jobs:
         env:
           TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
         run: python sektor_radar.py --bauen
+
+      # Die Wochenregel auch auf die frisch gerechnete Mappe (13.09.2026):
+      # Ist die Wochenliste aelter als der letzte Freitagsputz, wird eine
+      # LEERE Mappe veroeffentlicht und die Fokusliste geleert. Der Scan
+      # selbst laeuft vorher trotzdem, denn Exit-Pruefung, Logbuch,
+      # Volumenkurven und Abendbericht gehoeren zur Nacht, nicht zur Liste.
+      - name: Wochenregel auf die frische Mappe anwenden
+        if: steps.pruefung.outputs.noetig == 'ja'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python wochenputz.py --nach-scan --mappe kaufpunkte.xlsx
 
       - name: Excel als Artifact hochladen
         if: steps.pruefung.outputs.noetig == 'ja'

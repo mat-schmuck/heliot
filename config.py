@@ -894,7 +894,7 @@ _aus_env()
 # Selbstprüfung: fängt Widersprüche in der Config ab
 # ---------------------------------------------------------------------------
 
-def letzter_putz_tag():
+def letzter_putz_tag(jetzt=None):
     """ISO-Datum des jüngsten Freitags-Putzes (Freitag 16:02 New York),
     der bereits VORBEI ist. Steht der heutige Putz noch aus, zählt der
     der Vorwoche.
@@ -902,13 +902,17 @@ def letzter_putz_tag():
     Das ist die WOCHENGRENZE des ganzen Systems: Alarme, Melde-Gedächtnis
     des Wächters und das Gesetzt-Gedächtnis des Bots gelten jeweils bis
     hierher. Die Berechnung stand vorher dreimal im Code — genau die Art
-    stiller Uneinheitlichkeit, die config.py beseitigen soll."""
+    stiller Uneinheitlichkeit, die config.py beseitigen soll.
+
+    jetzt: ein Zeitpunkt mit Zeitzone, fuer Pruefungen und den
+    Wochenputz (wochenputz.py, 13.09.2026); ohne Angabe gilt jetzt."""
     from datetime import datetime, timedelta
     try:
         from zoneinfo import ZoneInfo
-        jetzt = datetime.now(ZoneInfo(CFG["betrieb"]["zeitzone_boerse"]))
+        _ny = ZoneInfo(CFG["betrieb"]["zeitzone_boerse"])
+        jetzt = jetzt.astimezone(_ny) if jetzt else datetime.now(_ny)
     except Exception:
-        jetzt = datetime.now()
+        jetzt = jetzt or datetime.now()
     d = jetzt.date()
     rueck = (d.weekday() - 4) % 7          # Montag=0 … Freitag=4
     freitag = d - timedelta(days=rueck)

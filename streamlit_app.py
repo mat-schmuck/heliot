@@ -458,10 +458,18 @@ with tab_scan:
             if muster:
                 treffer_zeilen.append((z, muster))
         anzahl_muster = sum(len(m) for _, m in treffer_zeilen)
-        st.write(f"Geprüft wurden {len(df_scan)} Aktien. {len(treffer_zeilen)} "
-                 f"davon tragen ein echtes Chartmuster, zusammen "
-                 f"{anzahl_muster} Muster-Kaufpunkte — genau diese überwachen "
-                 "die TraderFox-Alarme und der Breakout-Wächter.")
+        if len(df_scan) == 0:
+            # WOCHENPUTZ (Mathias, 13.09.2026): Nach Freitag 16:02 New York
+            # ist die Mappe leer, bis eine neue Wochenliste hochgeladen und
+            # gescannt ist (wochenputz.py). Das ist gewollt, kein Fehler.
+            st.info("Zurzeit gibt es keine Kaufpunkte: Der Wochenputz hat die "
+                    "alte Woche geleert. Sobald eine neue Wochenliste hochgeladen "
+                    "und gescannt ist, stehen hier wieder Kaufpunkte.")
+        else:
+            st.write(f"Geprüft wurden {len(df_scan)} Aktien. {len(treffer_zeilen)} "
+                     f"davon tragen ein echtes Chartmuster, zusammen "
+                     f"{anzahl_muster} Muster-Kaufpunkte — genau diese überwachen "
+                     "die TraderFox-Alarme und der Breakout-Wächter.")
 
         # Beste zuerst: volle Trend-Template-Punktzahl nach oben
         def _rang(paar):

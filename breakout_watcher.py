@@ -4040,6 +4040,19 @@ def main():
 
     items = load_watchlist(args.xlsx, nur_muster=not args.alle)
     if not items:
+        # WOCHENPUTZ (Mathias, 13.09.2026): Eine LEERE Mappe ist kein
+        # Fehler, sondern der Zustand zwischen Freitag 16:02 New York
+        # und dem Scan der neuen Wochenliste (wochenputz.py). Dann gibt
+        # es nichts zu ueberwachen, und der Lauf endet gruen statt rot.
+        try:
+            _leer = pd.read_excel(args.xlsx, sheet_name="Kaufpunkte").empty
+        except Exception:
+            _leer = False
+        if _leer:
+            print("Die Kaufpunkte-Mappe ist leer: Der Wochenputz hat die "
+                  "alte Woche geleert, die neue Wochenliste steht noch aus. "
+                  "Nichts zu überwachen.")
+            sys.exit(0)
         sys.exit("Keine Kaufpunkte zum Überwachen gefunden.")
     tickers = [i["ticker"] for i in items]
     print(f"{len(items)} Kaufpunkte über {len(set(tickers))} Aktien werden geprüft "
