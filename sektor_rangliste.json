@@ -1,5 +1,5 @@
 {
- "gebaut_am": "2026-09-13T00:04:17",
+ "gebaut_am": "2026-09-13T00:14:35",
  "handelstag": "2026-09-11",
  "geladen": 36,
  "liste": [
@@ -652,58 +652,8 @@
    "linie_qqq_12w": -6.96
   }
  ],
- "aufsteiger": [
-  {
-   "etf": "XOP",
-   "name": "Oil & Gas E&P",
-   "art": "eintritt",
-   "rang": 3,
-   "rang_vor_3w": 7,
-   "aenderung_3w": 4
-  },
-  {
-   "etf": "XLE",
-   "name": "Energy",
-   "art": "eintritt",
-   "rang": 5,
-   "rang_vor_3w": 10,
-   "aenderung_3w": 5
-  },
-  {
-   "etf": "XLE",
-   "name": "Energy",
-   "art": "aufstieg",
-   "rang": 5,
-   "rang_vor_3w": 10,
-   "aenderung_3w": 5
-  },
-  {
-   "etf": "XLF",
-   "name": "Financials",
-   "art": "aufstieg",
-   "rang": 18,
-   "rang_vor_3w": 24,
-   "aenderung_3w": 6
-  },
-  {
-   "etf": "XLC",
-   "name": "Communication Services",
-   "art": "aufstieg",
-   "rang": 26,
-   "rang_vor_3w": 32,
-   "aenderung_3w": 6
-  }
- ],
- "frueh": [
-  {
-   "etf": "SKYY",
-   "name": "Cloud",
-   "art": "frueh",
-   "rang_3m": 4,
-   "rang_3m_vor_1w": 8,
-   "rang": 10
-  }
- ],
+ "aufsteiger": [],
+ "frueh": [],
  "groesste_aufsteiger": [
   {
    "etf": "XLF",
