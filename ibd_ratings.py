@@ -235,18 +235,36 @@ def _reihen(df_firma):
 
 
 def umsatz_reihe(reihen):
-    """W5: der Umsatzbegriff je Branche. Rueckgabe (Reihe, Vermerk)."""
+    """W5: der Umsatzbegriff je Branche. Rueckgabe (Reihe, Vermerk).
+
+    Die Branchenreihe gilt nur, wenn sie das Geschaeft TRAEGT: Fehlt ein
+    gewoehnlicher Umsatz, oder ist die Branchenreihe im juengsten Quartal
+    mindestens halb so gross wie er. Befund 13.09.2026: DELL und HPE weisen
+    neben 25 Milliarden Umsatz auch Mieterloese aus dem Geraeteleasing aus
+    (405 Millionen) und galten deshalb als Immobilienfirmen, mit falschem
+    Umsatzwachstum und falscher SMR-Note. Ein Versicherer oder ein REIT hat
+    keinen groesseren gewoehnlichen Umsatz daneben, fuer sie aendert sich
+    nichts."""
     q = lambda k: (reihen.get(k) or {}).get("Q") or []  # noqa
+    umsatz = q("umsatz")
+
+    def traegt(reihe):
+        if not umsatz:
+            return True
+        letzte_u = umsatz[-1][2]
+        return letzte_u <= 0 or reihe[-1][2] >= 0.5 * letzte_u
+
     if len(q("zinsueberschuss")) >= 4:
         prov = {e[1]: e[2] for e in q("provisionsertrag")}
         reihe = [(e[0], e[1], e[2] + prov.get(e[1], 0.0), e[3], e[4]) for e in q("zinsueberschuss")]
-        return reihe, "Bank: Nettoertraege (Zinsueberschuss plus Provisionsertrag) statt Umsatz"
-    if len(q("praemien_verdient")) >= 4:
+        if traegt(reihe):
+            return reihe, "Bank: Nettoertraege (Zinsueberschuss plus Provisionsertrag) statt Umsatz"
+    if len(q("praemien_verdient")) >= 4 and traegt(q("praemien_verdient")):
         return q("praemien_verdient"), "Versicherer: verdiente Praemien statt Umsatz"
-    if len(q("mieterloese")) >= 4:
+    if len(q("mieterloese")) >= 4 and traegt(q("mieterloese")):
         return q("mieterloese"), "Immobilien: Mieterloese statt Umsatz"
-    if q("umsatz"):
-        return q("umsatz"), ""
+    if umsatz:
+        return umsatz, ""
     return [], "kein Umsatzurteil (kein Umsatz ausgewiesen, etwa Biotech)"
 
 
@@ -567,6 +585,16 @@ def selbsttest() -> int:
     # Firma 4: Biotech ohne Umsatz, EPS negativ, nur 5 Quartale
     zeilen += _quartale(4, "eps_verwaessert", [-0.5, -0.6, -0.4, -0.3, -0.2], start_jahr=2025)
     zeilen += _quartale(4, "nettogewinn", [-5, -6, -4, -3, -2], start_jahr=2025)
+    # Firma 6: Geraetehersteller mit kleinen Mieterloesen aus dem Leasing neben grossem Umsatz (DELL-Fall, 13.09.2026)
+    zeilen += _quartale(6, "eps_verwaessert", [1.0 + 0.1 * i for i in range(14)])
+    zeilen += _quartale(6, "umsatz", [25000 + 500 * i for i in range(14)])
+    zeilen += _quartale(6, "mieterloese", [400 + 5 * i for i in range(14)])
+    zeilen += _quartale(6, "nettogewinn", [1000 + 50 * i for i in range(14)])
+    # Firma 7: REIT, Mieterloese tragen das Geschaeft, daneben ein kleiner sonstiger Umsatz
+    zeilen += _quartale(7, "eps_verwaessert", [0.5 + 0.02 * i for i in range(14)])
+    zeilen += _quartale(7, "umsatz", [30 + i for i in range(14)])
+    zeilen += _quartale(7, "mieterloese", [500 + 10 * i for i in range(14)])
+    zeilen += _quartale(7, "nettogewinn", [100 + 2 * i for i in range(14)])
     # Firma 5: IFRS-Firma
     zeilen += _quartale(5, "eps_verwaessert", [1.0 + 0.2 * i for i in range(14)], tax="ifrs-full")
     zeilen += _quartale(5, "umsatz", [100 + 5 * i for i in range(14)], tax="ifrs-full")
@@ -591,6 +619,12 @@ def selbsttest() -> int:
     r4 = bewerten_firma(_reihen(df[df.cik == 4]), heute=heute)
     p("Antwort 10: Biotech mit fuenf Quartalen bekommt trotzdem einen Wert, Quartalszahl 5, kein Umsatzurteil",
       r4["quartale"] == 5 and r4["eps_roh"] is not None and any("kein Umsatzurteil" in v for v in r4["vermerke"]), r4)
+    r6 = bewerten_firma(_reihen(df[df.cik == 6]), heute=heute)
+    p("W5 mit Wächter: kleine Mieterloese neben grossem Umsatz machen keine Immobilienfirma, der Umsatz gilt",
+      not any(v.startswith("Immobilien") for v in r6["vermerke"]) and r6["umsatz_juengst"] > 25000, r6["vermerke"])
+    r7 = bewerten_firma(_reihen(df[df.cik == 7]), heute=heute)
+    p("W5: beim REIT tragen die Mieterloese das Geschaeft und gelten, mit Vermerk",
+      any(v.startswith("Immobilien") for v in r7["vermerke"]) and r7["umsatz_juengst"] > 500, r7["vermerke"])
     r5 = bewerten_firma(_reihen(df[df.cik == 5]), heute=heute)
     p("Antwort 8: IFRS-Firma laeuft mit und ist als ungeprueft gekennzeichnet", r5["ifrs"] and any("IFRS" in v for v in r5["vermerke"]))
 
