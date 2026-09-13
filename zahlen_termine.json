@@ -1,8 +1,7 @@
 {
- "gebaut_am": "2026-09-13 20:45 Wien",
+ "gebaut_am": "2026-09-14 00:09 Wien",
  "ohne_termin": [
   "ASND",
-  "ASO",
   "MGRT",
   "SUNB"
  ],
@@ -157,6 +156,14 @@
   "ASML": {
    "datum": "2026-10-14",
    "uhrzeit": "08:00",
+   "lage": "vorboerslich",
+   "quellen": [
+    "yahoo"
+   ]
+  },
+  "ASO": {
+   "datum": "2026-12-08",
+   "uhrzeit": "07:00",
    "lage": "vorboerslich",
    "quellen": [
     "yahoo"
@@ -851,7 +858,7 @@
    ]
   },
   "JBHT": {
-   "datum": "2026-10-15",
+   "datum": "2026-10-14",
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [

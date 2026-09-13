@@ -6,7 +6,7 @@
   "zone_max": 210.08999633789062,
   "spring_low": 209.27999877929688,
   "spring_volumen": 464400.0,
-  "tage_gewartet": 5
+  "tage_gewartet": 6
  },
  "AMD": {
   "spring_index": 500,
@@ -15,7 +15,7 @@
   "zone_max": 498.1499938964844,
   "spring_low": 486.5705871582031,
   "spring_volumen": 27979240.0,
-  "tage_gewartet": 4
+  "tage_gewartet": 5
  },
  "SEI": {
   "spring_index": 500,
@@ -24,7 +24,7 @@
   "zone_max": 61.36000061035156,
   "spring_low": 60.45000076293945,
   "spring_volumen": 4992002.0,
-  "tage_gewartet": 4
+  "tage_gewartet": 5
  },
  "SIMO": {
   "spring_index": 500,
@@ -33,7 +33,7 @@
   "zone_max": 275.0,
   "spring_low": 267.8599853515625,
   "spring_volumen": 771100.0,
-  "tage_gewartet": 0
+  "tage_gewartet": 1
  },
  "FEIM": {
   "spring_index": 500,
@@ -42,7 +42,7 @@
   "zone_max": 80.5999984741211,
   "spring_low": 78.31999969482422,
   "spring_volumen": 1552200.0,
-  "tage_gewartet": 0
+  "tage_gewartet": 1
  },
  "SITM": {
   "spring_index": 500,
@@ -51,6 +51,6 @@
   "zone_max": 609.1500244140625,
   "spring_low": 607.8200073242188,
   "spring_volumen": 380000.0,
-  "tage_gewartet": 0
+  "tage_gewartet": 1
  }
 }
