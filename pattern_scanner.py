@@ -1166,7 +1166,7 @@ def exit_durchgang(loaded: dict) -> list[dict]:
     return meldungen
 
 
-def fokusliste_schreiben(loaded: dict) -> int:
+def fokusliste_schreiben(loaded: dict, rs_daten=None) -> int:
     """Kapitel 9: die Bedingungen, die schon am Vorabend feststehen.
 
     Der Waechter kann das morgens nicht selbst rechnen — fuer das
@@ -1179,6 +1179,20 @@ def fokusliste_schreiben(loaded: dict) -> int:
     marktweiten Universum."""
     schluss_je_ticker = {t: df["close"].tolist() for t, (df, _) in loaded.items()}
     ratings = red_to_green.rs_ratings_fuer_universum(schluss_je_ticker)
+    # DAS MARKTWEITE UNIVERSUM IST DA (R1 bis R3, Gerhard 12.09.2026), also
+    # gilt sein RS auch hier; die Naeherung gegen die Kernliste bleibt nur
+    # als Rueckfall fuer Aktien ohne Universumswert. Anlass (13.09.2026):
+    # In einer Liste voller Hochflieger teilten sich 23 von 228 Aktien den
+    # gekappten Spitzen-Rohwert, der Listen-Rang blieb fuer alle bei 90
+    # stehen (strikt kleinere zaehlen, Festlegung aus Luecke 6), und die
+    # Fokusliste war leer, obwohl dieselben Aktien im Universum RS 99 haben.
+    aus_universum = 0
+    if rs_daten:
+        for t in list(ratings):
+            e = rs_universum.eintrag(t, rs_daten)
+            if e and e.get("rs") is not None:
+                ratings[t] = e["rs"]
+                aus_universum += 1
 
     eintraege = {}
     for ticker, (df, company) in loaded.items():
@@ -1200,6 +1214,8 @@ def fokusliste_schreiben(loaded: dict) -> int:
         "universum": len(loaded), "aktien": eintraege,
     })
     _r2g = ZENTRAL["red_to_green"]
+    print(f"  RS-Quelle der Fokusliste: {aus_universum} Aktien aus dem Universum, "
+          f"{len(ratings) - aus_universum} als Naeherung gegen die Liste.")
     print(f"Fokusliste fuer Red-to-Green: {len(eintraege)} von "
           f"{len(loaded)} Aktien (RS ueber {_r2g['rs_min']}, ueber EMA21 "
           f"und EMA50, mindestens {_r2g['min_ueber_tief']*100:.0f} % "
@@ -1635,9 +1651,6 @@ def main():
     # in die Excel-Mappe gehoert.
     shakeout_signale = shakeout_durchgang(loaded)
 
-    # Kapitel 9: die Fokusliste fuer den Live-Waechter von morgen.
-    fokusliste_schreiben(loaded)
-
     # RS-UNIVERSUM, SEKTOR-RANGLISTE UND RATINGS (Gerhard, 12.09.2026):
     # Entscheidungshilfen, keine Filter. Faellt eines aus, wird der Scan
     # nicht rot; die Datei traegt dann "nicht verfuegbar".
@@ -1662,6 +1675,10 @@ def main():
         row["rs_nasdaq"] = (e or {}).get("rs") if e else "n/a"
         if row["rs_nasdaq"] is None:
             row["rs_nasdaq"] = "n/a"
+
+    # Kapitel 9: die Fokusliste fuer den Live-Waechter von morgen. Seit
+    # 13.09.2026 NACH dem RS-Universum, damit sie dessen RS bekommt.
+    fokusliste_schreiben(loaded, rs_daten if rs_ok else None)
 
     # VOLUMENKURVEN, eine je Aktie (Gerhard, 06.08.2026). Sie gehören
     # hierher und nicht in den Wächter: Seine Vorgabe lautet "einmal pro
