@@ -577,7 +577,8 @@ with tab_scan:
         # weiter "RS Nasdaq", gerechnet wird gegen den ganzen US-Markt.
         st.caption("RS: relative Stärke gegen alle Stammaktien des US-Markts (Nasdaq, NYSE, "
                    "NYSE American, mindestens 253 Schlusskurse), jede Einzelrendite bei plus "
-                   "50 Prozent gekappt; Entscheidungshilfe, kein Filter. "
+                   "50 Prozent gekappt; Entscheidungshilfe, kein Filter. Jüngere Titel ab 64 "
+                   "Schlusskursen tragen ein vorläufiges RS aus den vorhandenen Quartalen. "
                    "RS-Rank dagegen ist das Perzentil innerhalb der Wochenliste.")
 
         treffer_zeilen = []

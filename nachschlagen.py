@@ -317,6 +317,11 @@ def ratings_saetze(e, r, ratings):
         s.append(f"RS {int(e['rs'])}" + (", sehr gut" if int(e["rs"]) >= 85 else "")
                  + (f"; vor einer Woche {int(vor)}, Änderung {int(e['rs']) - int(vor):+d}".replace("+", "plus ").replace("-", "minus ")
                     if vor is not None else "") + ".")
+    elif e.get("rs_vorlaeufig") is not None:
+        # Etappe 1, Entscheidung 1 (Gerhard, 13.09.2026): junge Titel
+        s.append(rs_universum.rs_text(e["rs_vorlaeufig"], quartale=e.get("rs_quartale"))
+                 + f"; gerechnet aus den vorhandenen Quartalen gegen den ganzen Bezug, "
+                 f"die Aktie hat erst {e.get('tage')} Schlusskurse.")
     else:
         s.append("RS nicht verfügbar" + (f": {e['grund']}" if e.get("grund") else ", die Aktie steht in keiner Nachtdatei") + ".")
     lt = rs_universum.linien_text(e) if e else ""
@@ -541,7 +546,10 @@ def selbsttest() -> int:
           "ausserhalb": {"BILLG": {"name": "Billig Corp. - Common Stock", "boerse": "NYSE American", "kurs": 3.0, "rs": 12,
                                    "grund": "Kurs unter 15 Dollar"},
                          "APPLD": {"name": "Applied Digital Corporation - Common Stock", "boerse": "Nasdaq", "kurs": 9.0, "rs": 40,
-                                   "grund": "Kurs unter 15 Dollar"}},
+                                   "grund": "Kurs unter 15 Dollar"},
+                         "JUNGX": {"name": "Jungfirma Holdings - Common Stock", "boerse": "Nasdaq", "kurs": 40.0, "tage": 150,
+                                   "roh": None, "roh_vorlaeufig": 0.31, "rs_quartale": 2, "rs_vorlaeufig": 91,
+                                   "grund": "zu kurze Historie (150 Tage)"}},
           "listen": {"AAOI": {"firma": "Applied Optoelectronics", "rs": 58, "im_universum": True}}}
     p("Suche: Kuerzel direkt, Klassen-Schreibweise, Name eindeutig, Name mehrdeutig, unbekanntes Kuerzel",
       finde("aaoi", rs) == ("AAOI", []) and finde("billg", rs)[0] == "BILLG"
@@ -621,6 +629,10 @@ def selbsttest() -> int:
     p("Aktie unter den Schwellen: RS gilt, Grund genannt, Ratings fuer sie nicht gerechnet, Sektor unbekannt",
       "RS 12." in text3 and "Nicht im Universum: Kurs unter 15 Dollar" in text3 and "für diese Aktie nicht gerechnet" in text3
       and "Sektor unbekannt" in text3, text3)
+    text5 = bericht_text(bericht("JUNGX", rs, ratings, sektoren, live=None))
+    p("Junge Aktie (Etappe 1): vorlaeufiges RS mit Kennzeichnung, Quartalen und Zahl der Schlusskurse",
+      "RS 91 vorläufig, zwei Quartale, sehr gut; gerechnet aus den vorhandenen Quartalen gegen den ganzen Bezug, "
+      "die Aktie hat erst 150 Schlusskurse." in text5, text5)
     teile4 = bericht("XYZQ", {}, {}, {}, live=None)
     text4 = bericht_text(teile4)
     p("Ganz ohne Dateien: ehrliche Saetze statt Fehler", "RS nicht verfügbar" in text4 and "Ratings-Datei fehlt" in text4

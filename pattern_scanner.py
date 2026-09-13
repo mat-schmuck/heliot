@@ -1674,7 +1674,10 @@ def main():
         e = rs_universum.eintrag(row["ticker"], rs_daten) if rs_ok else None
         row["rs_nasdaq"] = (e or {}).get("rs") if e else "n/a"
         if row["rs_nasdaq"] is None:
-            row["rs_nasdaq"] = "n/a"
+            # Etappe 1, Entscheidung 1 (Gerhard, 13.09.2026): junge Titel
+            # tragen ein vorlaeufiges RS, in der Mappe gekennzeichnet.
+            v = (e or {}).get("rs_vorlaeufig")
+            row["rs_nasdaq"] = f"{int(v)} vorläufig" if v is not None else "n/a"
 
     # Kapitel 9: die Fokusliste fuer den Live-Waechter von morgen. Seit
     # 13.09.2026 NACH dem RS-Universum, damit sie dessen RS bekommt.

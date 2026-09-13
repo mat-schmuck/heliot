@@ -163,6 +163,40 @@ def rs_rohwert(schluss_serie):
     return rohwert
 
 
+# ETAPPE 1, ENTSCHEIDUNG 1 (Gerhard, 13.09.2026): "Junge Titel ab 63
+# Kurstagen bekommen ein vorlaeufiges RS mit Kennzeichnung, Gewichte auf die
+# vorhandenen Quartale verteilt. [...] IBD rechnet auch ohne volles Jahr."
+# 63 Kurstage heisst 63 Tagesrenditen, also 64 Schlusskurse, weil die
+# juengste Quartalsrendite den Schluss von vor 63 Tagen braucht.
+RS_VORLAEUFIG_AB = min(RS_QUARTALE) + 1
+
+
+def rs_rohwert_vorlaeufig(schluss_serie):
+    """Der Rohwert aus den VORHANDENEN Quartalen fuer Titel mit 64 bis 252
+    Schlusskursen. Die Gewichte der vorhandenen Quartale werden auf 1
+    hochgerechnet: drei Quartale 0,5 und je 0,25; zwei 0,667 und 0,333;
+    eines 1,0. Dieselbe Kappung wie beim vollen Wert.
+
+    Rueckgabe (Rohwert, Zahl der Quartale) oder (None, 0), wenn die Historie
+    zu kurz ist oder schon fuer den vollen Wert reicht."""
+    n = len(schluss_serie)
+    if n < RS_VORLAEUFIG_AB or n >= max(RS_QUARTALE) + 1:
+        return None, 0
+    heute = float(schluss_serie[-1])
+    vorhanden = [(t, g) for t, g in zip(RS_QUARTALE, RS_GEWICHTE) if t <= n - 1]
+    summe = sum(g for _, g in vorhanden)
+    rohwert = 0.0
+    for tage, gewicht in vorhanden:
+        start = float(schluss_serie[-1 - tage])
+        if start <= 0:
+            return None, 0
+        rendite = heute / start - 1
+        if RS_KAPPUNG is not None:
+            rendite = min(RS_KAPPUNG, rendite)
+        rohwert += gewicht / summe * rendite
+    return rohwert, len(vorhanden)
+
+
 def rs_rating_perzentil(alle_rohwerte, eigener):
     """Rang des eigenen Rohwerts gegen ALLE anderen, 1 bis 99.
 
@@ -325,6 +359,25 @@ def selbsttest() -> int:
               aktien_gap(94.0, 100.0)[0] is True)
     pruefe_es("Aktien-Gap greift nicht bei minus 3 %",
               aktien_gap(97.0, 100.0)[0] is False)
+
+    # ETAPPE 1, ENTSCHEIDUNG 1: vorlaeufiger Rohwert junger Titel
+    kurz = [100.0] * 63
+    pruefe_es("Vorlaeufiges RS: 63 Schlusskurse reichen noch nicht",
+              rs_rohwert_vorlaeufig(kurz) == (None, 0))
+    ein_q = [100.0] * 63 + [110.0]
+    roh1, q1 = rs_rohwert_vorlaeufig(ein_q)
+    pruefe_es("Vorlaeufiges RS: 64 Schlusskurse, ein Quartal mit Gewicht 1",
+              q1 == 1 and abs(roh1 - 0.10) < 1e-9, f"{roh1} {q1}")
+    drei_q = [80.0] * 60 + [100.0] * 63 + [120.0] * 67 + [125.0]
+    roh3, q3 = rs_rohwert_vorlaeufig(drei_q)
+    soll3 = 0.5 * (125 / 120 - 1) + 0.25 * (125 / 100 - 1) + 0.25 * min(
+        RS_KAPPUNG or 9e9, 125 / 80 - 1)
+    pruefe_es("Vorlaeufiges RS: drei Quartale mit 0,5 und je 0,25, gekappt",
+              q3 == 3 and abs(roh3 - soll3) < 1e-9, f"{roh3} gegen {soll3}")
+    voll = [100.0] * 253
+    pruefe_es("Vorlaeufiges RS: ab 253 Schlusskursen gilt der volle Wert",
+              rs_rohwert_vorlaeufig(voll) == (None, 0)
+              and rs_rohwert(voll) is not None)
 
     # Fokusliste: steigende Kurse, Tief weit unten, RS 95
     schluss = [50.0 + i * 0.2 for i in range(300)]

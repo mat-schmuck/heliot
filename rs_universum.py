@@ -306,6 +306,9 @@ def kennzahlen(k, indizes, cfg=None):
     kurs = k["close"][-1] if n else None
     vortag = k["close"][-2] if n >= 2 else None
     roh = red_to_green.rs_rohwert(k["close"]) if n >= int(cfg["historie_tage"]) + 1 else None
+    # Etappe 1, Entscheidung 1: junge Titel bekommen den Rohwert aus den
+    # vorhandenen Quartalen, gekennzeichnet und NICHT Teil des Bezugs.
+    roh_v, quartale_v = red_to_green.rs_rohwert_vorlaeufig(k["close"]) if roh is None else (None, 0)
     dvt = int(cfg["dollarvolumen_tage"])
     dv = (sum(c * v for c, v in zip(k["close"][-dvt:], k["volume"][-dvt:])) / min(n, dvt)) if n else None
     hoch52 = _hoch(k["high"], 252)
@@ -320,6 +323,9 @@ def kennzahlen(k, indizes, cfg=None):
          "kurs_52w_hoch": hoch52, "kurs_20t_hoch": hoch20,
          "abst_52w_hoch_pct": round(abst * 100, 1) if abst is not None else None,
          "letzter_tag": k["daten"][-1] if n else None}
+    if roh_v is not None:
+        e["roh_vorlaeufig"] = round(roh_v, 6)
+        e["rs_quartale"] = quartale_v
     for name, idx in (indizes or {}).items():
         linie = _linie(k, idx)
         kurz = name.lstrip("^").lower()
@@ -431,14 +437,28 @@ def selbsttest_kuenstlich(rohwerte_universum, schritt=0.01):
             "perzentil": p, "rechnung_ok": rechnung_ok, "rang_ok": rang_ok}
 
 
-def rs_text(rs, cfg=None):
+def rs_text(rs, cfg=None, quartale=None):
     """Die Anzeige in Meldungen (R4, R6): 'RS 93, sehr gut', 'RS 62' oder
-    'RS nicht verfuegbar'."""
+    'RS nicht verfuegbar'. Mit quartale (Etappe 1, Entscheidung 1) die
+    Kennzeichnung des vorlaeufigen Werts: 'RS 91 vorläufig, drei Quartale'."""
     cfg = cfg or CFGU
     if rs is None:
         return "RS nicht verfügbar"
     zusatz = ", sehr gut" if rs >= int(cfg["sehr_gut_ab"]) else ""
+    if quartale:
+        wort = {1: "ein Quartal", 2: "zwei Quartale", 3: "drei Quartale"}.get(
+            int(quartale), f"{int(quartale)} Quartale")
+        return f"RS {int(rs)} vorläufig, {wort}{zusatz}"
     return f"RS {int(rs)}{zusatz}"
+
+
+def rs_anzeige(e, cfg=None):
+    """Der RS-Text eines Eintrags: der volle Wert, sonst der vorlaeufige
+    samt Kennzeichnung, sonst 'RS nicht verfügbar'."""
+    e = e or {}
+    if e.get("rs") is None and e.get("rs_vorlaeufig") is not None:
+        return rs_text(e["rs_vorlaeufig"], cfg, quartale=e.get("rs_quartale"))
+    return rs_text(e.get("rs"), cfg)
 
 
 def linien_text(e):
@@ -562,9 +582,21 @@ def bauen(loaded=None, pfad=DATEI, holen_liste=None, holen_kurse=None, leise=Fal
         # ein Befund, der gemeldet wird.
         grund = "Plausibilitaet: " + plaus["grund"]
 
+    sortiert = sorted(rohwerte)
+    # ETAPPE 1, ENTSCHEIDUNG 1 (Gerhard, 13.09.2026): Titel mit 64 bis 252
+    # Schlusskursen bekommen ein VORLAEUFIGES RS, gerechnet gegen den vollen
+    # Bezug; selbst gehen sie nicht in den Bezug ein. Es steht in einem
+    # eigenen Feld (rs_vorlaeufig samt rs_quartale), damit nichts, was heute
+    # auf "rs" filtert (Fokusliste, Composite), stillschweigend mitfiltert.
+    vorlaeufig = 0
+    if status == "ok" and sortiert:
+        for kz in ausserhalb.values():
+            if kz.get("roh") is None and kz.get("roh_vorlaeufig") is not None:
+                kz["rs_vorlaeufig"] = _perzentil_ohne(sortiert, None, kz["roh_vorlaeufig"])
+                vorlaeufig += 1
+
     # Listen-Aktien GEGEN den Bezug (Luecke 5)
     listen_ergebnis = {}
-    sortiert = sorted(rohwerte)
     ad_sortiert = sorted(ad_bezug.values())
     listen_kurse = []
     for t, wert in (loaded or {}).items():
@@ -594,6 +626,9 @@ def bauen(loaded=None, pfad=DATEI, holen_liste=None, holen_kurse=None, leise=Fal
             kz["rs"] = _perzentil_ohne(sortiert, roh_bezug.get(t), kz["roh"])
         else:
             kz["rs"] = None
+        if (kz["rs"] is None and status == "ok" and sortiert
+                and kz.get("roh_vorlaeufig") is not None):
+            kz["rs_vorlaeufig"] = _perzentil_ohne(sortiert, None, kz["roh_vorlaeufig"])
         if kz["roh"] is not None:
             kz["roh"] = round(kz["roh"], 6)
         kz["ad_rang"] = (_perzentil_ohne(ad_sortiert, ad_bezug.get(t), kz["ad_roh"])
@@ -633,12 +668,15 @@ def bauen(loaded=None, pfad=DATEI, holen_liste=None, holen_kurse=None, leise=Fal
                     + (f"; jede Einzelrendite ist nach oben bei plus {kap * 100:.0f} Prozent gekappt" if kap else "")
                     + f". 'Im Universum' heisst nur: Kurs ab {float(cfg['mindestkurs']):.0f} Dollar und Tagesumsatz "
                     f"ab {float(cfg['mindest_dollarvolumen']) / 1e6:.0f} Millionen Dollar im 50-Tage-Schnitt, das ist "
-                    f"eine Kennzeichnung, keine Vergleichsbasis. Kurse splitbereinigt, nicht dividendenbereinigt."),
+                    f"eine Kennzeichnung, keine Vergleichsbasis. Titel mit 64 bis 252 Schlusskursen tragen ein "
+                    f"vorläufiges RS aus den vorhandenen Quartalen, gekennzeichnet und nicht Teil des Bezugs. "
+                    f"Kurse splitbereinigt, nicht dividendenbereinigt."),
         "universum": {"quelle": cfg["quelle"], "quelle_andere": cfg["quelle_andere"], "verzeichnis": len(liste),
                       "ausgeschlossen": gruende, "ausgeschlossen_andere": gruende2,
                       "geladen": len(geladen), "abdeckung": round(abdeckung, 4),
                       "mindest_abdeckung": float(cfg["mindest_abdeckung"]),
                       "bezug_anzahl": len(bezug), "je_boerse": je_boerse, "kappung": kap,
+                      "vorlaeufig": vorlaeufig,
                       "im_universum": len(aktien), "ausserhalb": len(ausserhalb),
                       "gruende_ausserhalb": _zaehle(v.get("grund") for v in ausserhalb.values()),
                       "dauer_s": round(time.time() - t0)},
@@ -715,7 +753,9 @@ def eintrag(ticker, daten=None):
     if e:
         return e
     a = (d.get("ausserhalb") or {}).get(t)
-    return a if (a and a.get("rs") is not None) else None
+    # Auch ein vorlaeufiges RS ist ein Wert fuer Anzeigen (Etappe 1); wer
+    # filtert, liest weiter nur "rs".
+    return a if (a and (a.get("rs") is not None or a.get("rs_vorlaeufig") is not None)) else None
 
 
 def anzeige(ticker, daten=None):
@@ -727,7 +767,7 @@ def anzeige(ticker, daten=None):
         return ""
     if d.get("status") != "ok":
         return "RS nicht verfügbar (" + str(d.get("grund") or d.get("status")) + ")"
-    teile = [rs_text(e.get("rs"))]
+    teile = [rs_anzeige(e)]
     lt = linien_text(e)
     if lt:
         teile.append(lt)
@@ -921,8 +961,22 @@ def selbsttest() -> int:
     p("Listen-Aktie unter der Schwelle bekommt einen Wert gegen den Bezug, gleich ihrem Wert unter 'ausserhalb' (Luecke 5)",
       l["BILLIG"]["im_universum"] is False and l["BILLIG"]["im_bezug"] is True and l["BILLIG"]["rs"] is not None
       and l["BILLIG"]["rs"] == inhalt["ausserhalb"]["BILLIG"]["rs"], l["BILLIG"].get("rs"))
-    p("Eintrag fuer Anzeigen findet auch Titel unter den Schwellen, aber keine ohne Wert",
-      eintrag("BILLIG", inhalt) is not None and eintrag("JUNG", inhalt) is None and eintrag("FEHLT", inhalt) is None)
+    p("Eintrag fuer Anzeigen findet auch Titel unter den Schwellen und junge mit vorlaeufigem RS, aber keine ohne Wert",
+      eintrag("BILLIG", inhalt) is not None and eintrag("JUNG", inhalt) is not None
+      and eintrag("FEHLT", inhalt) is None)
+    # ETAPPE 1, ENTSCHEIDUNG 1: vorlaeufiges RS fuer junge Titel
+    jung = inhalt["ausserhalb"]["JUNG"]
+    bezug_roh = sorted(a["roh"] for g in ("aktien", "ausserhalb") for a in inhalt[g].values()
+                       if a.get("roh") is not None)
+    p("Vorlaeufiges RS: junger Titel mit 120 Kurstagen, ein Quartal, gegen den vollen Bezug, nicht selbst im Bezug",
+      jung.get("rs") is None and jung.get("rs_quartale") == 1 and jung.get("rs_vorlaeufig") is not None
+      and jung["rs_vorlaeufig"] == _perzentil_ohne(bezug_roh, None, jung["roh_vorlaeufig"])
+      and u["bezug_anzahl"] == 301 and u["vorlaeufig"] == 1, jung.get("rs_vorlaeufig"))
+    p("Vorlaeufiges RS: die Anzeige kennzeichnet den Wert",
+      anzeige("JUNG", inhalt).startswith(f"RS {jung['rs_vorlaeufig']} vorläufig, ein Quartal"),
+      anzeige("JUNG", inhalt))
+    p("Vorlaeufiges RS: Fokusliste und Composite lesen es nicht, weil sie auf 'rs' schauen",
+      eintrag("JUNG", inhalt).get("rs") is None)
     p("Markt: Nasdaq mit Tagesveraenderung und Rot-Kennzeichen",
       "rot" in inhalt["markt"] and "spy_pct" in inhalt["markt"])
     p("Anzeige aus der Datei: RS und Linien", anzeige(saf, lies(pfad)).startswith("RS "))
