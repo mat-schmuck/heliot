@@ -181,6 +181,17 @@ selbst ein): `TRADERFOX_USER`, `TRADERFOX_PASS`, `NTFY_TOPIC`,
 von Mathias am 03.09.2026 abgeschlossen; der Vollabzug ist erledigt, das
 Abo wird nur einen Monat gebraucht).
 
+**Geheimnisse bei Streamlit** (App heliot.streamlit.app, dort unter
+Settings, Secrets; nur die Namen, die Werte trägt Mathias selbst ein):
+`GITHUB_TOKEN` (fein granuliert, nur heliot, nur Dateiinhalte; damit
+schreibt die Wochenliste), `HELIOT_PASSWORT` (das feste Passwort für den
+vollen Zugang, seit 13.09.2026; Mathias und Gerhard müssen es kennen),
+`GAST_GEHEIMNIS` (lange Zufallszeichenkette für die Gastpasswörter; die
+muss sich niemand merken, geändert macht sie alle ausgegebenen
+Gastpasswörter sofort ungültig) und wahlweise `TWELVE_DATA_API_KEY`.
+`UPLOAD_KENNWORT` liest die App seit 13.09.2026 nicht mehr. Fehlt
+`HELIOT_PASSWORT`, ist die App ohne Anmeldung offen und sagt das oben an.
+
 **Zustand, der nur im Actions-Zwischenspeicher lebt:** `session.json`
 (TraderFox-Sitzung, wird bei Bedarf neu erzeugt) und
 `watcher_state.json` (was der Wächter diese Woche schon gemeldet hat).

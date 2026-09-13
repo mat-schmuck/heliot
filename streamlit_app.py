@@ -15,11 +15,16 @@ Auf Streamlit Community Cloud:
   1. streamlit_app.py + pattern_scanner.py + requirements.txt ins Repo
   2. share.streamlit.io → "New app" → Repo wählen → Main file: streamlit_app.py
   3. Advanced settings → Secrets → TWELVE_DATA_API_KEY = "dein_key"
+  4. Anmeldung (Mathias, 13.09.2026, siehe zugang.py): In den Secrets stehen
+     HELIOT_PASSWORT, das feste Passwort für den vollen Zugang, und
+     GAST_GEHEIMNIS, eine lange Zufallszeichenkette für die Gastpasswörter.
+     Fehlt HELIOT_PASSWORT, bleibt die App offen und sagt das oben an.
 """
 
 import io
 import os
 import re
+import time
 from datetime import datetime
 
 import numpy as np
@@ -29,6 +34,7 @@ import streamlit as st
 import exit_regeln
 import nachschlagen
 import pattern_scanner as ps
+import zugang
 
 st.set_page_config(page_title="Chart-Screening-Tool", page_icon="📈", layout="wide")
 
@@ -195,12 +201,126 @@ st.title("📈 Chart-Screening-Tool")
 st.caption("Darvas Box · Minervini Trend Template · VCP · Cup & Handle · "
            "Rectangle Top · High & Tight Flag")
 
+# --- Anmeldung (Mathias, 13.09.2026) ----------------------------------------
+# Vor allem anderen: Ohne Anmeldung ist nichts zu sehen. Das feste Passwort
+# (Secret HELIOT_PASSWORT) oeffnet alles. Ein Gastpasswort, errechnet aus
+# GAST_GEHEIMNIS (zugang.py), oeffnet 60 bis 70 Minuten lang nur zum Lesen:
+# Aktie nachschlagen, Einzelabfrage, Liste, Aktueller Scan und Regelwerk.
+# Die Wochenliste mit ihrem Schreibzugriff und die Seite fuer
+# Gastpasswoerter werden fuer Gaeste gar nicht gebaut, siehe "Ab hier nur mit
+# vollem Zugang" weiter unten. Streamlit merkt die Anmeldung je
+# Browsersitzung; nach dem Neuladen der Seite wird neu eingegeben.
+#
+# UEBERGANG: Solange HELIOT_PASSWORT in den Secrets fehlt, bleibt die App
+# offen wie bisher und sagt das oben an, damit ein Upload vor dem Eintragen
+# niemanden aussperrt. Lassen sich die Secrets gar nicht lesen, bleibt sie zu.
+
+
+def _secret(name: str):
+    """Wert eines Secrets als Text: "" wenn es fehlt, None wenn die Secrets
+    sich nicht lesen lassen oder der Eintrag kein einfacher Wert ist."""
+    try:
+        wert = st.secrets.get(name, "")
+    except Exception:
+        return None
+    if wert is None:
+        return ""
+    if isinstance(wert, (str, int, float)) and not isinstance(wert, bool):
+        return str(wert)
+    return None
+
+
+@st.cache_resource(show_spinner=False)
+def _anmelde_bremse():
+    """Eine Bremse fuer alle Sitzungen dieses App-Prozesses, siehe zugang.Bremse."""
+    return zugang.Bremse()
+
+
+def _abmelden():
+    for schluessel in ("zugang", "zugang_fehl", "zugang_pause_bis", "gast_erzeugt"):
+        st.session_state.pop(schluessel, None)
+
+
+def anmeldung() -> str:
+    """Liefert "voll", "gast" oder "offen". Ohne gueltige Anmeldung zeigt sie
+    das Anmeldefeld und beendet den Lauf der Seite."""
+    passwort = _secret("HELIOT_PASSWORT")
+    if passwort is None:
+        st.error("Die Zugangsdaten der App lassen sich nicht lesen. Bitte die "
+                 "Streamlit-Secrets prüfen.")
+        st.stop()
+    if not passwort.strip():
+        st.warning("Zugangsschutz noch nicht eingerichtet: In den Streamlit-Secrets "
+                   "fehlt HELIOT_PASSWORT. Bis dahin ist die App ohne Anmeldung offen.")
+        return "offen"
+    jetzt = time.time()
+    stand = st.session_state.get("zugang")
+    if stand and stand.get("rolle") == "gast" and jetzt >= float(stand.get("bis") or 0):
+        _abmelden()
+        st.session_state["zugang_hinweis"] = (
+            f"Der Gastzugang ist um {zugang.uhrzeit_wien(stand['bis'])} Uhr abgelaufen.")
+        stand = None
+    if stand:
+        return stand["rolle"]
+
+    st.markdown("### Anmeldung")
+    hinweis = st.session_state.pop("zugang_hinweis", "")
+    if hinweis:
+        st.info(hinweis)
+    with st.form("anmeldung", clear_on_submit=True):
+        eingabe = st.text_input("Passwort oder Gastpasswort", type="password")
+        senden = st.form_submit_button("Anmelden", type="primary")
+    if senden:
+        bremse = _anmelde_bremse()
+        gesperrt = bremse.gesperrt_bis(jetzt)
+        pause = float(st.session_state.get("zugang_pause_bis") or 0)
+        if not (eingabe or "").strip():
+            st.error("Bitte ein Passwort eingeben.")
+        elif gesperrt:
+            st.error("Zu viele Fehlversuche in den letzten zehn Minuten. Die Anmeldung "
+                     f"ist bis {zugang.uhrzeit_wien(gesperrt)} Uhr gesperrt.")
+        elif jetzt < pause:
+            st.error("Fünf Fehlversuche hintereinander. Bitte eine Minute warten "
+                     "und dann erneut versuchen.")
+        else:
+            rolle_neu, bis = zugang.anmelden(eingabe, passwort,
+                                             _secret("GAST_GEHEIMNIS") or "", jetzt)
+            if rolle_neu:
+                _abmelden()
+                st.session_state["zugang"] = {"rolle": rolle_neu, "bis": bis}
+                st.rerun()
+            anzahl = bremse.fehlversuch(jetzt)
+            zaehler, pause_bis = zugang.sitzung_nach_fehlversuch(
+                int(st.session_state.get("zugang_fehl") or 0), jetzt)
+            st.session_state["zugang_fehl"] = zaehler
+            if pause_bis:
+                st.session_state["zugang_pause_bis"] = pause_bis
+                st.error("Das Passwort stimmt nicht. Das war der fünfte Fehlversuch "
+                         "hintereinander; bitte eine Minute warten.")
+            else:
+                st.error("Das Passwort stimmt nicht.")
+            if anzahl >= zugang.GESAMT_GRENZE:
+                print(f"Anmeldung: {anzahl} Fehlversuche in zehn Minuten, Sperre aktiv")
+    st.stop()
+
+
+rolle = anmeldung()
+if rolle in ("voll", "gast"):
+    if rolle == "gast":
+        st.write("Gastzugang zum Lesen, gültig bis "
+                 f"{zugang.uhrzeit_wien(st.session_state['zugang']['bis'])} Uhr Wiener Zeit.")
+    else:
+        st.write("Angemeldet mit vollem Zugang.")
+    if st.button("Abmelden", key="abmelden"):
+        _abmelden()
+        st.rerun()
+
 # Kursdaten kommen seit der Umstellung von Yahoo und brauchen keinen
 # Schlüssel. Twelve Data ist nur noch Rückfallebene — die App startet
 # deshalb auch ohne. Früher stand hier st.stop(), was den Start ganz
 # verhindert hätte.
 api_key = get_api_key()
-if not api_key:
+if not api_key and rolle != "gast":
     st.caption("Datenquelle: Yahoo (kein Schlüssel nötig). "
                "Für eine Rückfallebene könnte TWELVE_DATA_API_KEY "
                "unter Settings → Secrets hinterlegt werden.")
@@ -273,9 +393,21 @@ if nachschlag_eingabe:
 
 st.markdown("---")
 
-tab_einzel, tab_liste, tab_scan, tab_upload, tab_info = st.tabs(
-    ["🔍 Einzelabfrage", "📋 Liste / CSV", "🌙 Aktueller Scan",
-     "📅 Wochenliste", "ℹ️ Regelwerk"])
+# Gaeste bekommen weder die Wochenliste noch die Seite fuer Gastpasswoerter.
+# Ohne eingerichtetes Passwort gibt es keine Gastpasswoerter, also auch die
+# Seite dafuer nicht.
+tab_upload = tab_gast = None
+if rolle == "gast":
+    tab_einzel, tab_liste, tab_scan, tab_info = st.tabs(
+        ["🔍 Einzelabfrage", "📋 Liste / CSV", "🌙 Aktueller Scan", "ℹ️ Regelwerk"])
+elif rolle == "voll":
+    tab_einzel, tab_liste, tab_scan, tab_upload, tab_gast, tab_info = st.tabs(
+        ["🔍 Einzelabfrage", "📋 Liste / CSV", "🌙 Aktueller Scan",
+         "📅 Wochenliste", "🔑 Gastzugang", "ℹ️ Regelwerk"])
+else:
+    tab_einzel, tab_liste, tab_scan, tab_upload, tab_info = st.tabs(
+        ["🔍 Einzelabfrage", "📋 Liste / CSV", "🌙 Aktueller Scan",
+         "📅 Wochenliste", "ℹ️ Regelwerk"])
 
 # --- Einzelabfrage ---------------------------------------------------------
 with tab_einzel:
@@ -503,6 +635,58 @@ with tab_scan:
             st.dataframe(df_scan, use_container_width=True, hide_index=True)
 
 
+# --- Regelwerk -------------------------------------------------------------
+with tab_info:
+    st.markdown("""
+#### Was das Tool prüft
+
+**1. Darvas Box** — Neues 52-Wochen-Hoch, danach Box aus 3+3 Tagen. Kauf über Box-Top,
+Stop unter Box-Bottom. Nur frische Boxen (Hoch nicht älter als 25 Tage) werden gemeldet.
+
+**2. Minervini Trend Template** — Reiner UND-Filter über 8 Kriterien (MA-Struktur,
+steigender MA200, ≥25 % über 52W-Tief, ≤25 % unter 52W-Hoch, RS ≥ 70). Liefert selbst
+keinen Kaufpunkt, ist aber Voraussetzung fürs VCP.
+
+**3. VCP** — Mindestens 2-3 Kontraktionen mit abnehmender Tiefe plus Volume Dry-Up.
+Kauf über dem Pivot, Stop 8 % darunter (Minervini-Standard).
+
+**4. Cup & Handle** — U-Form über quadratischen Fit geprüft (V-Formen fliegen raus),
+Tiefe 12-50 %, Handle max. 1/3 der Cup-Höhe im oberen Drittel. Ergebnis als
+Toleranz-Score, weil die Formerkennung naturgemäß unscharf ist. Ziel = Breakout + Cup-Höhe.
+
+**5. Rectangle Top** — Mindestens 2 Berührungen oben und unten. Kauf 1 Cent über dem
+Rechteck-Top, zusätzlich muss der Kurs über dem SMA21 liegen (Bulkowskis bestes Setup:
+~75 % Trefferquote). Ziel = Ausbruch + Rechteckhöhe.
+
+**6. High & Tight Flag** — Mast ≥ 90 % Anstieg in unter 42 Tagen, Tief ≥ 1 $,
+Konsolidierung ≤ 35 Kalendertage und eng. Selten, aber stark.
+
+---
+
+#### Grenzen, die du kennen solltest
+
+- **RS-Rank ist hier nur geschätzt.** Bei einer Einzelabfrage fehlt die Vergleichsgruppe,
+deshalb rechnet das Tool aus dem gewichteten Momentum eine Schätzung. Der Batch-Scanner
+(`pattern_scanner.py`) bildet echte Perzentile innerhalb deiner Liste — der ist genauer.
+Seit 12.09.2026 rechnet der Nachtscan zusätzlich **RS** gegen alle Stammaktien des US-Markts
+(Karte „Aktueller Scan“ und „Aktie nachschlagen“ oben), jede Einzelrendite bei plus 50 Prozent
+gekappt; an dreizehn öffentlichen IBD-Werten gemessen liegt sie innerhalb von 5 Punkten.
+- **Kaufpunkt ≠ Kaufsignal.** Die Volumen-Bestätigung am Ausbruchstag prüft dieses Tool
+nicht — dafür ist der Breakout-Wächter da.
+- **Kursdaten sind 15 Minuten gecacht**, um API-Calls zu sparen.
+    """)
+
+
+# --- Ab hier nur mit vollem Zugang -----------------------------------------
+# Gaeste sind hier fertig (Mathias, 13.09.2026): Die Wochenliste schreibt ueber
+# den GitHub-Token ins Repo, und Gastpasswoerter erzeugt nur, wer das feste
+# Passwort kennt. Fuer Gaeste gibt es tab_upload und tab_gast deshalb gar
+# nicht, und der Lauf der Seite endet hier, bevor davon etwas gebaut wird.
+# Die Gesamtpruefung (Block H) achtet darauf, dass das so bleibt.
+if tab_upload is None:
+    st.stop()
+
+
 # --- Wochenliste -----------------------------------------------------------
 # Gerhard siebt jede Woche den Markt mit seinem Finviz-Screener und liefert
 # eine CSV mit der Spalte 'Ticker' (bestätigt am 22.07.2026: immer CSV, nie
@@ -512,9 +696,11 @@ with tab_scan:
 # Streamlit-Secret UPLOAD_KENNWORT; das ist herausgenommen, weil niemand
 # wusste, welches Kennwort gemeint war. Geschrieben wird weiter über den
 # GitHub-Token (GITHUB_TOKEN), der NUR auf dieses Repo und NUR auf
-# Dateiinhalte berechtigt ist. FOLGE: Wer die Adresse der App kennt, kann
-# eine Liste einspielen; die einzige Schranke ist pruefe_wochenliste
-# (CSV mit Spalte Ticker, plausible Kuerzel).
+# Dateiinhalte berechtigt ist. Seit der Anmeldung vom selben Abend gibt es
+# diese Seite nur mit dem festen Passwort (HELIOT_PASSWORT); Gaeste sehen sie
+# nicht. Solange das Passwort nicht eingerichtet ist, bleibt sie offen, und
+# die einzige Schranke ist pruefe_wochenliste (CSV mit Spalte Ticker,
+# plausible Kuerzel).
 
 LISTEN_DATEI = "finviz_3.csv"     # REPO ist oben beim Aktuellen Scan definiert
 DARVAS_DATEI = "darvas.csv"
@@ -737,43 +923,35 @@ with tab_upload:
                                "Ab dem nächsten nächtlichen Scan aktiv.")
 
 
-# --- Regelwerk -------------------------------------------------------------
-with tab_info:
-    st.markdown("""
-#### Was das Tool prüft
-
-**1. Darvas Box** — Neues 52-Wochen-Hoch, danach Box aus 3+3 Tagen. Kauf über Box-Top,
-Stop unter Box-Bottom. Nur frische Boxen (Hoch nicht älter als 25 Tage) werden gemeldet.
-
-**2. Minervini Trend Template** — Reiner UND-Filter über 8 Kriterien (MA-Struktur,
-steigender MA200, ≥25 % über 52W-Tief, ≤25 % unter 52W-Hoch, RS ≥ 70). Liefert selbst
-keinen Kaufpunkt, ist aber Voraussetzung fürs VCP.
-
-**3. VCP** — Mindestens 2-3 Kontraktionen mit abnehmender Tiefe plus Volume Dry-Up.
-Kauf über dem Pivot, Stop 8 % darunter (Minervini-Standard).
-
-**4. Cup & Handle** — U-Form über quadratischen Fit geprüft (V-Formen fliegen raus),
-Tiefe 12-50 %, Handle max. 1/3 der Cup-Höhe im oberen Drittel. Ergebnis als
-Toleranz-Score, weil die Formerkennung naturgemäß unscharf ist. Ziel = Breakout + Cup-Höhe.
-
-**5. Rectangle Top** — Mindestens 2 Berührungen oben und unten. Kauf 1 Cent über dem
-Rechteck-Top, zusätzlich muss der Kurs über dem SMA21 liegen (Bulkowskis bestes Setup:
-~75 % Trefferquote). Ziel = Ausbruch + Rechteckhöhe.
-
-**6. High & Tight Flag** — Mast ≥ 90 % Anstieg in unter 42 Tagen, Tief ≥ 1 $,
-Konsolidierung ≤ 35 Kalendertage und eng. Selten, aber stark.
-
----
-
-#### Grenzen, die du kennen solltest
-
-- **RS-Rank ist hier nur geschätzt.** Bei einer Einzelabfrage fehlt die Vergleichsgruppe,
-deshalb rechnet das Tool aus dem gewichteten Momentum eine Schätzung. Der Batch-Scanner
-(`pattern_scanner.py`) bildet echte Perzentile innerhalb deiner Liste — der ist genauer.
-Seit 12.09.2026 rechnet der Nachtscan zusätzlich **RS** gegen alle Stammaktien des US-Markts
-(Karte „Aktueller Scan“ und „Aktie nachschlagen“ oben), jede Einzelrendite bei plus 50 Prozent
-gekappt; an dreizehn öffentlichen IBD-Werten gemessen liegt sie innerhalb von 5 Punkten.
-- **Kaufpunkt ≠ Kaufsignal.** Die Volumen-Bestätigung am Ausbruchstag prüft dieses Tool
-nicht — dafür ist der Breakout-Wächter da.
-- **Kursdaten sind 15 Minuten gecacht**, um API-Calls zu sparen.
-    """)
+# --- Gastzugang (Mathias, 13.09.2026) ---------------------------------------
+# Nur mit dem festen Passwort. Das Gastpasswort wird gerechnet, nicht
+# gespeichert (zugang.py): Es gilt fuer alle, die es bekommen, und laesst sich
+# vor dem Ablauf nur zuruecknehmen, indem GAST_GEHEIMNIS geaendert wird.
+if tab_gast is not None:
+    with tab_gast:
+        st.markdown("#### Gastpasswort erzeugen")
+        st.write("Ein Gastpasswort öffnet die App für mindestens 60 Minuten zum Lesen: "
+                 "Aktie nachschlagen, Einzelabfrage, Liste, Aktueller Scan und Regelwerk. "
+                 "Die Wochenliste und diese Seite sehen Gäste nicht, verändern können sie "
+                 "nichts. Weitergegeben wird das Passwort von dem, der es erzeugt.")
+        gast_geheimnis = _secret("GAST_GEHEIMNIS") or ""
+        if not gast_geheimnis.strip():
+            st.warning("Gastpasswörter sind noch nicht eingerichtet: In den "
+                       "Streamlit-Secrets fehlt GAST_GEHEIMNIS.")
+        else:
+            if st.button("Gastpasswort erzeugen", type="primary", key="gast_erzeugen"):
+                st.session_state["gast_erzeugt"] = zugang.erzeuge(gast_geheimnis, time.time())
+            erzeugt = st.session_state.get("gast_erzeugt")
+            if erzeugt and time.time() < erzeugt[1]:
+                gast_pw, gast_bis = erzeugt
+                st.markdown(f"Gastpasswort: **{gast_pw}**")
+                st.write("Buchstabe für Buchstabe: " + zugang.buchstabiert(gast_pw))
+                st.write(f"Gültig bis {zugang.uhrzeit_wien(gast_bis)} Uhr Wiener Zeit. "
+                         "Groß- und Kleinschreibung spielt beim Gastpasswort keine Rolle.")
+                st.code(gast_pw, language=None)
+                st.caption("Wer innerhalb derselben zehn Minuten noch einmal erzeugt, "
+                           "bekommt dasselbe Passwort. Vor dem Ablauf lassen sich alle "
+                           "Gastpasswörter nur zurücknehmen, indem GAST_GEHEIMNIS in den "
+                           "Streamlit-Secrets geändert wird.")
+            elif erzeugt:
+                st.info("Das zuletzt erzeugte Gastpasswort ist abgelaufen.")

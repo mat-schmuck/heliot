@@ -159,7 +159,9 @@ def block_b():
                     "rs_universum", "sektor_rangliste", "abendbericht",
                     "ibd_ratings",
                     # Nachschlagen (Mathias, 13.09.2026)
-                    "nachschlagen"]
+                    "nachschlagen",
+                    # Wochenputz und Anmeldung (Mathias, 13.09.2026)
+                    "wochenputz", "zugang"]
     for name in mit_schalter:
         r = subprocess.run([sys.executable, f"{name}.py", "--selbsttest"],
                            capture_output=True, text=True, cwd=WURZEL,
@@ -2097,6 +2099,66 @@ def block_h():
     except Exception as e:
         pruefe("H", "Positionsverwaltung laedt (Datei darf fehlen)", False,
                f"{type(e).__name__}: {e}")
+
+    # DIE WOCHENLISTE STEHT HINTER DER ANMELDUNG (Mathias, 13.09.2026).
+    ok, zusatz = anmeldeschranke(WURZEL / "streamlit_app.py")
+    pruefe("H", "Wochenliste und Gastpasswoerter nur mit vollem Zugang", ok, zusatz)
+
+
+def anmeldeschranke(pfad) -> tuple:
+    """Gaeste duerfen in der Heliot-App nichts veraendern (Mathias,
+    13.09.2026). Geprueft wird am Quelltext, auf oberster Ebene:
+      * Im Zweig fuer Gaeste (if rolle == "gast") werden weder tab_upload
+        noch tab_gast gebaut.
+      * Vor dem ersten "with tab_upload:" steht "if tab_upload is None:" mit
+        st.stop(), damit der Lauf fuer Gaeste dort endet.
+      * Die Seite fuer Gastpasswoerter entsteht nur unter
+        "if tab_gast is not None:", nie auf oberster Ebene.
+    Liefert (ok, Befund)."""
+    import ast as _ast
+    try:
+        baum = _ast.parse(open(pfad, encoding="utf-8").read())
+    except Exception as e:
+        return False, f"nicht lesbar: {type(e).__name__}: {e}"
+    maengel = []
+    schranke = upload = gastseite = None
+    gastzweig = False
+    for i, knoten in enumerate(baum.body):
+        if isinstance(knoten, _ast.If):
+            test = _ast.unparse(knoten.test)
+            if test in ("rolle == 'gast'", 'rolle == "gast"'):
+                gastzweig = True
+                zuweisungen = {n.id for s in knoten.body for n in _ast.walk(s)
+                               if isinstance(n, _ast.Name) and isinstance(n.ctx, _ast.Store)}
+                for name in ("tab_upload", "tab_gast"):
+                    if name in zuweisungen:
+                        maengel.append(f"der Zweig fuer Gaeste baut {name}")
+            if (test == "tab_upload is None" and schranke is None
+                    and "st.stop()" in _ast.unparse(knoten)):
+                schranke = i
+            if test == "tab_gast is not None" and gastseite is None:
+                gastseite = i
+        if isinstance(knoten, _ast.With):
+            ziel = _ast.unparse(knoten.items[0].context_expr)
+            if ziel == "tab_upload" and upload is None:
+                upload = i
+            if ziel == "tab_gast":
+                maengel.append("die Gastseite steht auf oberster Ebene")
+    if not gastzweig:
+        maengel.append("kein Zweig fuer Gaeste gefunden")
+    if schranke is None:
+        maengel.append("keine Schranke 'if tab_upload is None: st.stop()'")
+    if upload is None:
+        maengel.append("kein 'with tab_upload:' gefunden")
+    if schranke is not None and upload is not None and schranke > upload:
+        maengel.append("die Schranke steht erst nach der Wochenliste")
+    if gastseite is None:
+        maengel.append("keine Gastseite unter 'if tab_gast is not None:'")
+    elif schranke is not None and gastseite < schranke:
+        maengel.append("die Gastseite steht vor der Schranke")
+    if maengel:
+        return False, "; ".join(maengel)
+    return True, "Schranke vor der Wochenliste, Gastseite dahinter"
 
 
 def main() -> int:
