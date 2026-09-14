@@ -262,12 +262,15 @@ st.caption("Darvas Box; Minervini Trend Template; VCP; Cup & Handle; Rectangle T
 # weiter unten.
 #
 # ANGEMELDET BLEIBEN (Mathias, 14.09.2026): Streamlit merkt die Anmeldung nur
-# je Browsersitzung. Mit dem Haken "Angemeldet bleiben" setzt die App ein
-# Cookie (zugang.py, Abschnitt ANGEMELDET BLEIBEN), das beim naechsten Oeffnen
-# ueber st.context.cookies gelesen wird. Setzen und Loeschen geschieht per
-# JavaScript (st.html mit unsafe_allow_javascript), denn Streamlit selbst
-# schreibt keine Cookies. Der Inhalt ist nur Buchstaben, Ziffern, Punkt,
-# Unterstrich und Bindestrich; cookie_skript() weist alles andere ab.
+# je Browsersitzung. Mit dem Haken "Angemeldet bleiben" legt die App einen
+# Eintrag im Speicher des Browsers ab (zugang.py, Abschnitt ANGEMELDET
+# BLEIBEN). Lesen, Schreiben und Loeschen erledigt eine unsichtbare
+# Komponente im Browser (zugang.speicher_js); sie meldet den Eintrag beim
+# ersten Lauf einer Sitzung an die App. Ein Cookie ueber st.context.cookies
+# ging nur lokal: Streamlit Community Cloud reicht es nicht an die App durch
+# (gemessen 14.09.2026). Bis die Meldung da ist, steht das Anmeldefeld; ein
+# gueltiger Eintrag meldet einen Augenblick spaeter an. Scheitert die
+# Komponente, bleibt so immer die Anmeldung von Hand.
 #
 # UEBERGANG: Solange HELIOT_PASSWORT in den Secrets fehlt, bleibt die App
 # offen wie bisher und sagt das oben an, damit ein Upload vor dem Eintragen
@@ -307,26 +310,27 @@ def _abmelden_knopf():
     st.session_state["bleiben_loeschen"] = True
 
 
-def _https() -> bool:
-    try:
-        return str(st.context.url or "").startswith("https://")
-    except Exception:  # noqa
-        return False
+# Die Komponente wird bei jedem Lauf mit derselben Definition registriert;
+# Streamlit warnt nur, wenn sich die Definition unterscheidet.
+_bleiben_speicher = st.components.v2.component("heliot_bleiben", js=zugang.speicher_js())
+BLEIBEN_SCHLUESSEL = "bleiben_speicher"
 
 
-def _cookie_wert():
-    """Das Cookie aus der Anfrage, mit der diese Sitzung begann."""
-    try:
-        wert = st.context.cookies.get(zugang.BLEIBEN_COOKIE)
-    except Exception:  # noqa
-        return None
-    return wert if isinstance(wert, str) and wert else None
+def _bleiben_gemeldet():
+    """Rueckruf der Komponente: Der Browser hat gemeldet, was er gespeichert hat."""
+    stand = st.session_state.get(BLEIBEN_SCHLUESSEL) or {}
+    st.session_state["bleiben_gemeldet"] = stand.get("wert") or ""
 
 
-def _cookie_schreiben(wert: str, max_alter_s: int):
-    """Setzt (oder mit leerem Wert und 0 Sekunden loescht) das Cookie im Browser."""
-    skript = zugang.cookie_skript(zugang.BLEIBEN_COOKIE, wert, max_alter_s, _https())
-    st.html(f"<script>{skript}</script>", unsafe_allow_javascript=True)
+def _speicher(auftrag: str, wert: str = ""):
+    """Bindet die Speicher-Komponente ein, genau einmal je Lauf. Nach dem
+    Setzen oder Loeschen kennt die App den Eintrag schon; ein spaeteres
+    Lesen in derselben Sitzung loest deshalb keinen neuen Lauf aus."""
+    if auftrag in ("setzen", "loeschen"):
+        st.session_state["bleiben_gemeldet"] = wert if auftrag == "setzen" else ""
+    _bleiben_speicher(key=BLEIBEN_SCHLUESSEL,
+                      data=zugang.speicher_daten(auftrag, wert, st.session_state.get("bleiben_gemeldet")),
+                      on_wert_change=_bleiben_gemeldet, on_gespeichert_change=lambda: None)
 
 
 def _datum_wien(zeitpunkt: float) -> str:
@@ -352,11 +356,12 @@ def anmeldung() -> str:
     geheimnis = _secret("GAST_GEHEIMNIS") or ""
     jetzt = time.time()
 
-    # Abgemeldet: Cookie loeschen, und in dieser Sitzung meldet das Cookie aus
-    # der Anfrage vom Sitzungsbeginn nicht wieder an.
+    # Abgemeldet: den Eintrag im Browser loeschen, und in dieser Sitzung
+    # meldet ein gespeicherter Eintrag nicht wieder an.
+    auftrag = "lesen"
     if st.session_state.pop("bleiben_loeschen", False):
         st.session_state["bleiben_verworfen"] = True
-        _cookie_schreiben("", 0)
+        auftrag = "loeschen"
 
     stand = st.session_state.get("zugang")
     if stand and stand.get("rolle") == "gast" and jetzt >= float(stand.get("bis") or 0):
@@ -364,13 +369,15 @@ def anmeldung() -> str:
         st.session_state["zugang_hinweis"] = (
             f"Der Gastzugang ist um {zugang.uhrzeit_wien(stand['bis'])} Uhr abgelaufen.")
         st.session_state["bleiben_verworfen"] = True
-        _cookie_schreiben("", 0)
+        auftrag = "loeschen"
         stand = None
 
-    # Angemeldet bleiben: ein gueltiges Cookie meldet an. Ein ungueltiges oder
-    # abgelaufenes wird geloescht und zaehlt nicht als Fehlversuch.
+    # Angemeldet bleiben: ein gueltiger Eintrag meldet an. Ein ungueltiger oder
+    # abgelaufener wird geloescht und zaehlt nicht als Fehlversuch. Gemeldet
+    # hat ihn die Komponente (_bleiben_gemeldet); vor der ersten Meldung
+    # steht dort nichts, dann liest sie weiter unten.
     if not stand and not st.session_state.get("bleiben_verworfen"):
-        wert = _cookie_wert()
+        wert = st.session_state.get("bleiben_gemeldet")
         if wert:
             rolle_c, ende_c = zugang.bleiben_pruefen(wert, passwort, geheimnis, jetzt)
             if rolle_c:
@@ -379,21 +386,25 @@ def anmeldung() -> str:
                 stand = st.session_state["zugang"]
             else:
                 st.session_state["bleiben_verworfen"] = True
-                _cookie_schreiben("", 0)
+                auftrag = "loeschen"
+    elif auftrag == "lesen":
+        auftrag = "ruhe"
 
     if stand:
         if stand.get("bleiben") and zugang.bleiben_moeglich(passwort, geheimnis):
-            # Jede Sitzung stellt das Cookie neu aus: 30 Tage ab dem letzten
+            # Jede Sitzung stellt den Eintrag neu aus: 30 Tage ab dem letzten
             # Oeffnen, ein Gast bis zum Ablauf seines Passworts.
             if not st.session_state.get("bleiben_wert"):
                 ende = zugang.bleiben_ende(stand["rolle"], stand.get("bis"), jetzt)
                 st.session_state["bleiben_wert"] = zugang.bleiben_ausstellen(
                     stand["rolle"], ende, passwort, geheimnis)
                 st.session_state["bleiben_ende"] = ende
-            _cookie_schreiben(st.session_state["bleiben_wert"],
-                              max(0, int(st.session_state["bleiben_ende"] - jetzt)))
+            _speicher("setzen", st.session_state["bleiben_wert"])
+        else:
+            _speicher("loeschen" if auftrag == "loeschen" else "ruhe")
         return stand["rolle"]
 
+    _speicher(auftrag)
     st.markdown("### Anmeldung")
     hinweis = st.session_state.pop("zugang_hinweis", "")
     if hinweis:
@@ -454,7 +465,10 @@ if rolle in ("voll", "gast"):
     else:
         zeile = "Angemeldet mit vollem Zugang."
     if stand_anzeige.get("bleiben") and st.session_state.get("bleiben_ende"):
-        if rolle == "gast":
+        if (st.session_state.get(BLEIBEN_SCHLUESSEL) or {}).get("gespeichert") is False:
+            zeile += (" Dieser Browser lässt die App die Anmeldung nicht speichern; beim nächsten "
+                      "Öffnen ist das Passwort wieder einzugeben.")
+        elif rolle == "gast":
             zeile += " Dieser Browser bleibt bis zum Ablauf angemeldet."
         else:
             zeile += (" Dieser Browser bleibt angemeldet; wird die App bis zum "

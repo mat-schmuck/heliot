@@ -2232,15 +2232,21 @@ def block_h():
            and '"RS (geschätzt)"' not in _app)
     pruefe("H", "Webtool: Nachschlagen haengt an der Adresse (?aktie=)",
            'key="aktie"' in _app and 'bind="query-params"' in _app)
-    pruefe("H", "Webtool: Angemeldet bleiben liest das Cookie, stellt es neu aus und loescht es beim Abmelden",
-           "zugang.bleiben_pruefen(" in _app and "zugang.bleiben_ausstellen(" in _app
-           and '_cookie_schreiben("", 0)' in _app and "on_click=_abmelden_knopf" in _app)
-    # Die Skripte fuer st.html baut die App nicht selbst, sondern ueber
-    # zugang.cookie_skript und nachschlagen.chart_skript; deren Selbsttests
-    # pruefen, dass kein Kleiner-Zeichen darin steht (DOMPurify).
+    # Angemeldet bleiben liest der Browser selbst und meldet es ueber eine
+    # Komponente: Streamlit Community Cloud reicht Cookies nicht an die App
+    # durch (gemessen 14.09.2026), st.context.cookies ging nur lokal.
+    # Geprueft wird der Code ohne Kommentarzeilen, die davon erzaehlen.
+    _app_code = "\n".join(z for z in _app.splitlines() if not z.lstrip().startswith("#"))
+    pruefe("H", "Webtool: Angemeldet bleiben liest den Browserspeicher, stellt ihn neu aus und loescht ihn beim Abmelden",
+           "zugang.bleiben_pruefen(" in _app_code and "zugang.bleiben_ausstellen(" in _app_code
+           and "st.components.v2.component(" in _app_code and '_speicher("setzen"' in _app_code
+           and '"loeschen"' in _app_code and "on_click=_abmelden_knopf" in _app_code
+           and "st.context.cookies" not in _app_code)
+    # Skripte baut die App nicht selbst, sondern ueber zugang.speicher_js und
+    # nachschlagen.chart_skript; deren Selbsttests pruefen sie.
     pruefe("H", "Webtool: Skripte kommen aus den geprueften Bausteinen",
-           "zugang.cookie_skript(" in _app and "nachschlagen.chart_skript(" in _app
-           and "function(" not in _app)
+           "zugang.speicher_js(" in _app and "nachschlagen.chart_skript(" in _app
+           and "function(" not in _app and "document.cookie" not in _app and "localStorage" not in _app)
 
 
 def bildzeichen_im_quelltext(wurzel) -> list:

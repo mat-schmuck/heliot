@@ -55,23 +55,35 @@ ANGEMELDET BLEIBEN (Mathias, 14.09.2026: "Füge bei unserem Webtool unbedingt
 die Möglichkeit hinzu, angemeldet zu bleiben."). Streamlit merkt die
 Anmeldung nur je Browsersitzung; nach dem Neuladen oder in einem neuen Tab
 war sie weg. Wer beim Anmelden "Angemeldet bleiben" anhakt, bekommt deshalb
-ein Cookie im eigenen Browser:
+einen Eintrag im Speicher des eigenen Browsers (localStorage, Name
+heliot_zugang):
   * Inhalt "v1.<rolle>.<ende>.<zufall>.<pruefwert>": Rolle voll oder gast,
     Ende als Unix-Zeit, zwoelf Zufallszeichen und ein HMAC-SHA256 darueber.
-    Das Passwort steht NICHT darin, und das Cookie laesst sich nicht
+    Das Passwort steht NICHT darin, und der Eintrag laesst sich nicht
     faelschen oder verlaengern, ohne beide Secrets zu kennen.
   * Schluessel aus BEIDEN Secrets: Wer HELIOT_PASSWORT oder GAST_GEHEIMNIS
     aendert, meldet damit auf allen Geraeten ab. Ohne GAST_GEHEIMNIS gibt es
     kein Angemeldet-Bleiben; ein Pruefwert, der nur am festen Passwort
     haengt, liesse ein schwaches Passwort offline erraten.
   * Voller Zugang: 30 Tage ab dem letzten Oeffnen der App, jede neue
-    Sitzung stellt das Cookie neu aus. Gastzugang: nie laenger als das
+    Sitzung stellt den Eintrag neu aus. Gastzugang: nie laenger als das
     Gastpasswort gilt.
-  * Safari auf dem iPhone loescht Cookies, die eine Seite selbst setzt,
-    nach sieben Tagen ohne Besuch. Wer die App mindestens einmal in der
-    Woche oeffnet, bleibt angemeldet; sonst wird einmal neu eingegeben.
-  * Ein ungueltiges oder abgelaufenes Cookie zaehlt nicht als Fehlversuch;
-    die App loescht es und zeigt das Anmeldefeld.
+  * Safari auf dem iPhone loescht, was eine Seite selbst im Browser
+    speichert, nach sieben Tagen ohne Besuch. Wer die App mindestens einmal
+    in der Woche oeffnet, bleibt angemeldet; sonst wird einmal neu
+    eingegeben.
+  * Ein ungueltiger oder abgelaufener Eintrag zaehlt nicht als Fehlversuch;
+    die App loescht ihn und zeigt das Anmeldefeld.
+  * WARUM KEIN COOKIE MEHR (gemessen 14.09.2026): Die erste Fassung schrieb
+    ein Cookie und las es ueber st.context.cookies. Lokal ging das, auf
+    Streamlit Community Cloud kommt das Cookie aber nicht bei der App an:
+    Ein ungueltiges Test-Cookie blieb dort stehen, und der Loesch-Baustein,
+    den die App lokal in die Seite schreibt, fehlte in der Cloud ganz. Den
+    Eintrag liest deshalb der Browser selbst und meldet ihn ueber eine
+    unsichtbare Komponente (speicher_js) an die App. localStorage statt
+    Cookie, weil ein Cookie bei jeder Anfrage mitgeschickt wuerde, obwohl
+    der Server es gar nicht bekommt; ein Cookie der ersten Fassung wird beim
+    Lesen uebernommen und geloescht.
 
 Aufruf:
   python zugang.py --selbsttest
@@ -105,11 +117,12 @@ SITZUNG_PAUSE_S = 60
 GESAMT_GRENZE = 20         # Fehlversuche aller Sitzungen im Zeitraum
 GESAMT_ZEITRAUM_S = 600
 
-BLEIBEN_COOKIE = "heliot_zugang"
+BLEIBEN_NAME = "heliot_zugang"   # Name im Browserspeicher, auch das Cookie der ersten Fassung
 BLEIBEN_TAGE = 30          # voller Zugang: so lange ab dem letzten Oeffnen
 BLEIBEN_ROLLEN = ("voll", "gast")
 _BLEIBEN_FORM = re.compile(r"v1\.(voll|gast)\.(\d{10})\.([A-Za-z0-9_-]{12})\.([0-9a-f]{32})")
-_COOKIE_ZEICHEN = re.compile(r"[A-Za-z0-9._-]*")
+_SPEICHER_ZEICHEN = re.compile(r"[A-Za-z0-9._-]*")
+SPEICHER_AUFTRAEGE = ("lesen", "setzen", "loeschen", "ruhe")
 
 
 def gast_passwort(geheimnis: str, fenster: int) -> str:
@@ -232,7 +245,7 @@ def bleiben_moeglich(passwort: str, geheimnis: str) -> bool:
 
 
 def bleiben_ende(rolle: str, gast_bis, jetzt: float) -> float:
-    """Bis wann das Cookie gilt: voller Zugang 30 Tage, Gast bis zum Ablauf."""
+    """Bis wann der Eintrag gilt: voller Zugang 30 Tage, Gast bis zum Ablauf."""
     if rolle == "gast":
         return float(gast_bis)
     return float(jetzt + BLEIBEN_TAGE * 86400)
@@ -240,7 +253,7 @@ def bleiben_ende(rolle: str, gast_bis, jetzt: float) -> float:
 
 def bleiben_ausstellen(rolle: str, ende: float, passwort: str, geheimnis: str,
                        zufall: str = None) -> str:
-    """Der Cookie-Wert fuer eine Rolle bis zum Ende (Unix-Zeit)."""
+    """Der Wert fuers Angemeldet-Bleiben fuer eine Rolle bis zum Ende (Unix-Zeit)."""
     if rolle not in BLEIBEN_ROLLEN:
         raise ValueError("unbekannte Rolle")
     if not bleiben_moeglich(passwort, geheimnis):
@@ -253,7 +266,7 @@ def bleiben_ausstellen(rolle: str, ende: float, passwort: str, geheimnis: str,
 
 
 def bleiben_pruefen(wert, passwort: str, geheimnis: str, jetzt: float) -> tuple:
-    """(Rolle, Ende) fuer einen gueltigen, nicht abgelaufenen Cookie-Wert,
+    """(Rolle, Ende) fuer einen gueltigen, nicht abgelaufenen Wert,
     sonst (None, None). Wirft nie, auch nicht bei Unsinn."""
     if not isinstance(wert, str) or not bleiben_moeglich(passwort, geheimnis):
         return None, None
@@ -272,16 +285,96 @@ def bleiben_pruefen(wert, passwort: str, geheimnis: str, jetzt: float) -> tuple:
     return rolle, ende
 
 
-def cookie_skript(name: str, wert: str, max_alter_s: int, sicher: bool) -> str:
-    """JavaScript, das das Cookie im Browser setzt (max_alter_s 0 loescht).
-    Name und Wert duerfen nur Buchstaben, Ziffern, Punkt, Unterstrich und
-    Bindestrich enthalten; alles andere wird abgewiesen, nichts escaped."""
-    if not name or not _COOKIE_ZEICHEN.fullmatch(name) or not _COOKIE_ZEICHEN.fullmatch(wert or ""):
-        raise ValueError("unerlaubtes Zeichen im Cookie")
-    teile = [f"{name}={wert or ''}", f"Max-Age={max(0, int(max_alter_s))}", "Path=/", "SameSite=Lax"]
-    if sicher:
-        teile.append("Secure")
-    return "document.cookie = " + json.dumps("; ".join(teile)) + ";"
+_SPEICHER_JS = """export default function (component) {
+  const data = component.data || {};
+  const NAME = __NAME__;
+  const ERLAUBT = /^[A-Za-z0-9._-]*$/;
+  const auftrag = data.auftrag || "ruhe";
+
+  function speicherLesen() {
+    try { return window.localStorage.getItem(NAME) || ""; } catch (e) { return ""; }
+  }
+  function speicherSchreiben(wert) {
+    try { window.localStorage.setItem(NAME, wert); return speicherLesen() === wert; } catch (e) { return false; }
+  }
+  function speicherLoeschen() {
+    try { window.localStorage.removeItem(NAME); } catch (e) { }
+  }
+  function altesCookie() {
+    let wert = "";
+    try {
+      const alle = document.cookie || "";
+      for (const teil of alle.split(";")) {
+        const t = teil.trim();
+        if (t.indexOf(NAME + "=") === 0) { wert = t.slice(NAME.length + 1); break; }
+      }
+      if (alle.indexOf(NAME + "=") !== -1) {
+        const sicher = window.location.protocol === "https:" ? "; Secure" : "";
+        document.cookie = NAME + "=; Max-Age=0; Path=/; SameSite=Lax" + sicher;
+      }
+    } catch (e) { }
+    return ERLAUBT.test(wert) ? wert : "";
+  }
+
+  if (auftrag === "setzen") {
+    const wert = String(data.wert || "");
+    if (wert && ERLAUBT.test(wert) && !speicherSchreiben(wert)) {
+      component.setStateValue("gespeichert", false);
+    }
+    altesCookie();
+    return;
+  }
+  if (auftrag === "loeschen") {
+    speicherLoeschen();
+    altesCookie();
+    return;
+  }
+  if (auftrag === "lesen") {
+    let wert = speicherLesen();
+    const alt = altesCookie();
+    if (!wert && alt) { wert = alt; speicherSchreiben(alt); }
+    if (!ERLAUBT.test(wert)) { wert = ""; }
+    if (wert !== data.bekannt) { component.setStateValue("wert", wert); }
+  }
+}
+"""
+
+
+def speicher_js(name: str = BLEIBEN_NAME) -> str:
+    """Das JavaScript der unsichtbaren Komponente, die den Eintrag fuer das
+    Angemeldet-Bleiben im Browser liest, schreibt und loescht
+    (st.components.v2.component, laeuft ohne iframe in der Seite der App).
+
+    Auftraege kommen ueber data (speicher_daten):
+      * lesen: meldet den gespeicherten Wert als Zustand "wert", aber nur,
+        wenn er sich von dem unterscheidet, was die App schon kennt
+        ("bekannt"), sonst gaebe es bei jedem Lauf einen neuen. Ein Cookie
+        der ersten Fassung wird uebernommen und geloescht.
+      * setzen: schreibt den Wert; laesst der Browser das nicht zu, meldet
+        er "gespeichert" = false.
+      * loeschen: loescht den Eintrag und ein altes Cookie.
+      * ruhe: tut nichts.
+    Werte mit anderen Zeichen als Buchstaben, Ziffern, Punkt, Unterstrich und
+    Bindestrich werden weder geschrieben noch gemeldet."""
+    if not name or not _SPEICHER_ZEICHEN.fullmatch(name):
+        raise ValueError("unerlaubtes Zeichen im Namen")
+    return _SPEICHER_JS.replace("__NAME__", json.dumps(name))
+
+
+def speicher_daten(auftrag: str, wert: str = "", bekannt=None) -> dict:
+    """Die data fuer die Komponente aus speicher_js. Einen Wert gibt es nur
+    beim Setzen; bekannt nur beim Lesen, damit sich data bei den anderen
+    Auftraegen nicht von Lauf zu Lauf aendert."""
+    if auftrag not in SPEICHER_AUFTRAEGE:
+        raise ValueError("unbekannter Auftrag")
+    wert = wert or ""
+    if not isinstance(wert, str) or not _SPEICHER_ZEICHEN.fullmatch(wert):
+        raise ValueError("unerlaubtes Zeichen im Wert")
+    if auftrag != "setzen":
+        wert = ""
+    if auftrag != "lesen" or not (isinstance(bekannt, str) and _SPEICHER_ZEICHEN.fullmatch(bekannt)):
+        bekannt = None
+    return {"auftrag": auftrag, "wert": wert, "bekannt": bekannt}
 
 
 def uhrzeit_wien(zeitpunkt: float) -> str:
@@ -405,14 +498,14 @@ def selbsttest():
     p("Voller Zugang gilt 30 Tage", ende_v - jetzt == 30 * 86400)
     p("Gast gilt bis zum Ablauf des Gastpassworts", bleiben_ende("gast", jetzt + 3000, jetzt) == jetzt + 3000)
     wert = bleiben_ausstellen("voll", ende_v, pw_s, g_s, zufall="abcDEF123_-x")
-    p("Cookie-Wert hat die Form v1.rolle.ende.zufall.pruefwert",
+    p("Der Wert hat die Form v1.rolle.ende.zufall.pruefwert",
       bool(_BLEIBEN_FORM.fullmatch(wert)), wert[:30])
-    p("Passwort und Geheimnis stehen nicht im Cookie", pw_s not in wert and g_s not in wert)
-    p("Gueltiges Cookie wird erkannt", bleiben_pruefen(wert, pw_s, g_s, jetzt + 5) == ("voll", ende_v))
+    p("Passwort und Geheimnis stehen nicht im Wert", pw_s not in wert and g_s not in wert)
+    p("Gueltiger Wert wird erkannt", bleiben_pruefen(wert, pw_s, g_s, jetzt + 5) == ("voll", ende_v))
     p("Leerzeichen am Rand stoeren nicht", bleiben_pruefen(" " + wert + " ", pw_s, g_s, jetzt) == ("voll", ende_v))
-    p("Abgelaufenes Cookie wird abgewiesen", bleiben_pruefen(wert, pw_s, g_s, ende_v) == (None, None))
-    p("Anderes Passwort macht das Cookie ungueltig", bleiben_pruefen(wert, pw_s + "x", g_s, jetzt) == (None, None))
-    p("Anderes Geheimnis macht das Cookie ungueltig", bleiben_pruefen(wert, pw_s, g_s + "x", jetzt) == (None, None))
+    p("Abgelaufener Wert wird abgewiesen", bleiben_pruefen(wert, pw_s, g_s, ende_v) == (None, None))
+    p("Anderes Passwort macht den Wert ungueltig", bleiben_pruefen(wert, pw_s + "x", g_s, jetzt) == (None, None))
+    p("Anderes Geheimnis macht den Wert ungueltig", bleiben_pruefen(wert, pw_s, g_s + "x", jetzt) == (None, None))
     gefaelscht = wert.replace("v1.voll.", "v1.gast.")
     p("Umgeschriebene Rolle wird abgewiesen", bleiben_pruefen(gefaelscht, pw_s, g_s, jetzt) == (None, None))
     teile = wert.split(".")
@@ -425,25 +518,47 @@ def selbsttest():
     p("Ein voller Zugang ueber 30 Tage hinaus wird abgewiesen",
       bleiben_pruefen(zu_lang, pw_s, g_s, jetzt) == (None, None))
     gast_wert = bleiben_ausstellen("gast", jetzt + 3000, pw_s, g_s)
-    p("Gast-Cookie gilt bis zum Ablauf und nicht laenger",
+    p("Gast-Wert gilt bis zum Ablauf und nicht laenger",
       bleiben_pruefen(gast_wert, pw_s, g_s, jetzt + 2999) == ("gast", jetzt + 3000)
       and bleiben_pruefen(gast_wert, pw_s, g_s, jetzt + 3000) == (None, None))
     p("Jedes Ausstellen ergibt einen anderen Wert",
       len({bleiben_ausstellen("voll", ende_v, pw_s, g_s) for _ in range(50)}) == 50)
-    js = cookie_skript(BLEIBEN_COOKIE, wert, 3600, True)
-    p("Cookie-Skript setzt Name, Wert, Dauer, Pfad, SameSite und Secure",
-      js.startswith('document.cookie = "heliot_zugang=v1.voll.') and "Max-Age=3600" in js
-      and "Path=/" in js and "SameSite=Lax" in js and "Secure" in js, js[:60])
-    # st.html reinigt mit DOMPurify; ein Skript mit Kleiner-Zeichen kam nicht an.
-    p("Cookie-Skript ohne Kleiner-Zeichen", "<" not in js and "<" not in cookie_skript(BLEIBEN_COOKIE, "", 0, True))
-    p("Loeschen setzt Max-Age=0 und leeren Wert",
-      cookie_skript(BLEIBEN_COOKIE, "", 0, False)
-      == 'document.cookie = "heliot_zugang=; Max-Age=0; Path=/; SameSite=Lax";')
+    js = speicher_js()
+    p("Speicher-Skript ist ein Modul mit Standardfunktion", js.startswith("export default function (component) {"))
+    p("Speicher-Skript liest, schreibt und loescht den Eintrag heliot_zugang",
+      'const NAME = "heliot_zugang";' in js and "localStorage.getItem(NAME)" in js
+      and "localStorage.setItem(NAME, wert)" in js and "localStorage.removeItem(NAME)" in js)
+    p("Speicher-Skript meldet nur die zwei Zustaende gespeichert und wert",
+      re.findall(r'setStateValue\("(\w+)"', js) == ["gespeichert", "wert"])
+    p("Speicher-Skript meldet beim Lesen nur, was die App noch nicht kennt",
+      "if (wert !== data.bekannt)" in js)
+    p("Speicher-Skript prueft die Zeichen jedes Werts",
+      js.count("ERLAUBT.test(") >= 3 and "/^[A-Za-z0-9._-]*$/" in js)
+    p("Speicher-Skript holt nichts aus dem Netz und baut kein HTML",
+      not any(x in js for x in ("fetch(", "XMLHttpRequest", "innerHTML", "eval(", "http:", "import(")))
     try:
-        cookie_skript(BLEIBEN_COOKIE, 'x"; alert(1); "', 10, False)
-        p("Anfuehrungszeichen im Wert werden abgewiesen", False)
+        speicher_js('x"; alert(1); "')
+        p("Speicher-Skript weist fremde Zeichen im Namen ab", False)
     except ValueError:
-        p("Anfuehrungszeichen im Wert werden abgewiesen", True)
+        p("Speicher-Skript weist fremde Zeichen im Namen ab", True)
+    p("Daten: Lesen traegt nur das Bekannte",
+      speicher_daten("lesen", wert, wert) == {"auftrag": "lesen", "wert": "", "bekannt": wert})
+    p("Daten: Setzen traegt den Wert, nicht das Bekannte",
+      speicher_daten("setzen", wert, wert) == {"auftrag": "setzen", "wert": wert, "bekannt": None})
+    p("Daten: Loeschen und Ruhe tragen weder Wert noch Bekanntes",
+      speicher_daten("loeschen", wert, wert) == {"auftrag": "loeschen", "wert": "", "bekannt": None}
+      and speicher_daten("ruhe", "", "") == {"auftrag": "ruhe", "wert": "", "bekannt": None})
+    p("Daten: noch nicht gemeldet heisst bekannt None, leer gemeldet heisst leer",
+      speicher_daten("lesen", "", None)["bekannt"] is None and speicher_daten("lesen", "", "")["bekannt"] == "")
+    p("Daten: fremde Zeichen im Bekannten gelten als nicht gemeldet",
+      speicher_daten("lesen", "", "a b")["bekannt"] is None)
+    abgewiesen = 0
+    for argumente in (("schreiben", "", None), ("setzen", 'x"; alert(1); "', None), ("setzen", "ä", None)):
+        try:
+            speicher_daten(*argumente)
+        except ValueError:
+            abgewiesen += 1
+    p("Daten: unbekannter Auftrag und fremde Zeichen im Wert werden abgewiesen", abgewiesen == 3)
 
     print(f"\n{len(fehler)} Fehler." if fehler else "\nAlles bestanden.")
     return 1 if fehler else 0
