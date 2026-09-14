@@ -22,7 +22,7 @@
     "SMTC|Fallback: MA50-Pullback": "draussen",
     "APA|Fallback: MA50-Pullback": "draussen",
     "ARIS|Fallback: MA50-Pullback": "draussen",
-    "AVT|Fallback: MA50-Pullback": "draussen",
+    "AVT|Fallback: MA50-Pullback": "drin",
     "CGAU|Fallback: MA50-Pullback": "draussen",
     "CHRD|Cup & Handle (Wochenbasis)": "drin",
     "CHRD|Fallback: MA50-Pullback": "draussen",
@@ -36,7 +36,7 @@
     "FTI|Fallback: MA50-Pullback": "drin",
     "FTNT|Fallback: MA50-R\u00fcckeroberung": "drin",
     "HCC|Fallback: MA50-Pullback": "drin",
-    "HNGE|Fallback: MA50-Pullback": "drin",
+    "HNGE|Fallback: MA50-Pullback": "draussen",
     "INSW|Fallback: MA50-Pullback": "draussen",
     "JOE|Rectangle Top": "drin",
     "KNTK|Fallback: MA50-Pullback": "draussen",
@@ -195,7 +195,8 @@
     "BEST|RAPP|Rectangle Top": "2026-09-14",
     "BAND|EMA Crossback": "2026-09-14",
     "BEST|BAND|EMA Crossback": "2026-09-14",
-    "R2GX|CXW|2026-09-14": "2026-09-14"
+    "R2GX|CXW|2026-09-14": "2026-09-14",
+    "SEKTORAUF|2026-09-14": "2026-09-14"
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-09-14"
