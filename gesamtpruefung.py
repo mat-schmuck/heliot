@@ -2274,6 +2274,14 @@ def block_h():
         pruefe("H", "Scanner-Daten: sendet nichts, Analystenwerte nie im oeffentlichen Release",
                "NTFY" not in _text and "ntfy" not in _text and bool(_oeffentlich)
                and "scanner_analysten" not in _oeffentlich and "scanner_kurse" not in _oeffentlich)
+        # Beide Releases sind Vorabversionen und nie "latest": ibd_ratings.py
+        # liest vom latest-Release des oeffentlichen Repos, und im Datenrepo
+        # verdraengte das Scanner-Release beim ersten Bau am 14.09.2026 den
+        # EODHD-Vollabzug von diesem Platz.
+        _anlegen = [z for z in _text.splitlines() if "gh release create scanner-daten" in z]
+        pruefe("H", "Scanner-Daten: beide Releases als Vorabversion, nie latest",
+               len(_anlegen) == 2 and all("--prerelease" in z and "--latest=false" in z for z in _anlegen),
+               f"{len(_anlegen)} Anlage-Zeilen")
     except Exception as e:
         pruefe("H", "Scanner-Daten: Ablauf lesbar", False, f"{type(e).__name__}: {e}")
     _vernetzt = []

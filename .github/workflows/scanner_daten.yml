@@ -22,6 +22,9 @@ name: Scanner-Daten bauen
 #     Release-Anhang "scanner-daten" im PRIVATEN Datenrepo heliot-daten
 #     (Secret DATEN_TOKEN, wie beim eingefrorenen Konsens). Fehlt das Token,
 #     wird trotzdem gebaut und veroeffentlicht, nur ohne diese zwei Dateien.
+#     Auch dort eine Vorabversion: Ohne die Kennzeichnung wurde das Release
+#     beim ersten Bau am 14.09.2026 "latest" und verdraengte den
+#     EODHD-Vollabzug von diesem Platz.
 
 on:
   workflow_run:
@@ -47,7 +50,10 @@ on:
         default: rotation
 
 # Eigene Gruppe: Der Bau darf den Nachtscan nie aufhalten. Ohne Abbrechen:
-# Ein zweiter Anstoss wartet, statt den laufenden zu zerschiessen.
+# Ein zweiter Anstoss wartet, statt den laufenden zu zerschiessen. GitHub
+# haelt je Gruppe nur EINEN wartenden Lauf; kommt ein weiterer dazu, wird der
+# aeltere wartende als "cancelled" beendet und der neue wartet an seiner
+# Stelle. Das ist gewollt und schadet nichts (gemessen 14.09.2026).
 concurrency:
   group: scanner-daten
   cancel-in-progress: false
@@ -164,7 +170,7 @@ jobs:
           GH_TOKEN: ${{ secrets.DATEN_TOKEN }}
         run: |
           if ! gh release view scanner-daten --repo mat-schmuck/heliot-daten >/dev/null 2>&1; then
-            gh release create scanner-daten --repo mat-schmuck/heliot-daten \
+            gh release create scanner-daten --repo mat-schmuck/heliot-daten --prerelease --latest=false \
               --title "Scanner-Daten" \
               --notes "Analystenwerte je Aktie und Tageskurse der letzten drei Jahre fuer den Scanner. Wird jede Nacht ersetzt."
           fi
