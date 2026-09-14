@@ -35,9 +35,11 @@ WIE GERECHNET WIRD (Naeherung, per Mitschreiben zu verfeinern)
               Vorjahr), Nettomarge (juengstes Quartal), Eigenkapitalrendite
               (Jahresgewinn durch Eigenkapital); jede Groesse als Perzentil,
               das Mittel wieder als Perzentil, daraus die Note.
-  A/D         Naeherung aus Kurs und Volumen (rs_universum: 13 Wochen,
-              Volumen an Plus-Tagen gegen Volumen an Minus-Tagen), Note
-              nach demselben Schluessel.
+  A/D         Naeherung aus Kurs und Volumen (rs_universum: 13 Wochen; seit
+              Etappe 2 nach Chaikin, also die Lage des Schlusskurses in der
+              Tagesspanne mit dem Volumen gewichtet, vorher Volumen an
+              Plus-Tagen gegen Volumen an Minus-Tagen), Note nach demselben
+              Schluessel.
   Composite   Wie bei IBD: EPS und RS doppelt, dazu SMR, A/D und die Naehe
               zum 52-Wochen-Hoch; Perzentil gegen alle Aktien mit
               vollstaendigen Bausteinen. Fehlt ein Baustein, gibt es KEIN

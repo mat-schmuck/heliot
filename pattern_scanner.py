@@ -1376,6 +1376,54 @@ def _logbuch_zusatz(ticker) -> dict:
     return raus
 
 
+# ETAPPE 2 (Gerhard, 13.09.2026, Entscheidungen 4 und 5): die technischen
+# Kennzahlen aus rs_universum.json in eigenen Spalten VOR "Notizen", NUR
+# ANZEIGE. Jeder Leser der Mappe greift ueber den Spaltennamen zu; die leere
+# Vorlage des Wochenputzes (kaufpunkte_leer.xlsx) traegt dieselben Spalten,
+# das prueft die Gesamtpruefung.
+TECHNIK_KOEPFE = ["ADR 20 %", "Volatilität Woche %", "Volatilität Monat %", "ATR 14 %", "Up/Down-Vol. 50", "Mansfield RS", "Weinstein-Stufe",
+                  "Momentum Burst", "Lücke %", "Episodic Pivot", "Perf. 1W %", "Perf. 1M %", "Perf. 3M %",
+                  "Perf. 6M %", "Perf. 12M %", "Perf. lfd. Jahr %", "Abst. SMA20 %", "Abst. SMA50 %",
+                  "Abst. SMA200 %", "Abst. 50T-Hoch %", "Abst. 50T-Tief %", "Abst. 52W-Tief %", "Allzeithoch",
+                  "Abst. Allzeithoch %", "Beta", "RSI 14", "RSI 2", "Vol. 3M", "Dollarvol. 20T", "RS Änd. 1W",
+                  "RS Änd. 4W"]
+MAPPEN_KOEPFE = (["Ticker", "Firma", "Kurs", "52W-Hoch", "52W-Tief", "Abst. 52W-Hoch",
+                  "RS-Rank", "RS Nasdaq", "Trend Template", "Umsatzwachstum", "Gewinnwachstum",
+                  "KP1 Strategie", "KP1 Preis", "KP1 Abst.", "KP1 Stop", "KP1 Ziel", "KP1 Status",
+                  "KP2 Strategie", "KP2 Preis", "KP2 Abst.", "KP2 Stop", "KP2 Ziel", "KP2 Status",
+                  "KP3 Strategie", "KP3 Preis", "KP3 Abst.", "KP3 Stop", "KP3 Ziel", "KP3 Status"]
+                 + TECHNIK_KOEPFE + ["Notizen"])
+
+
+def technik_zellen(tk: dict, kurs) -> list:
+    """Die Zellen zu TECHNIK_KOEPFE, in derselben Reihenfolge. Zahlen bleiben
+    Zahlen (Prozentwerte als Prozentpunkte, 12,3 heisst plus 12,3 Prozent),
+    damit sich die Spalten sortieren lassen; fehlt ein Wert, bleibt die
+    Zelle leer."""
+    tk = tk or {}
+
+    def z(name, stellen=1):
+        v = tk.get(name)
+        return round(float(v), stellen) if v is not None else ""
+
+    def janein(name):
+        v = tk.get(name)
+        return "" if v is None else ("ja" if v else "nein")
+
+    def ganz(name):
+        v = tk.get(name)
+        return int(v) if v is not None else ""
+    stufe = tk.get("stufe")
+    atr = tk.get("atr14")
+    return [z("adr20", 2), z("vola5", 2), z("vola21", 2), round(atr / kurs * 100, 2) if (atr and kurs) else "",
+            z("ud50", 2),
+            z("mrs", 1), "" if stufe is None else (int(stufe) if stufe else "nicht eindeutig"),
+            janein("burst"), z("luecke", 1), janein("pivot"), z("perf_1w"), z("perf_1m"), z("perf_3m"),
+            z("perf_6m"), z("perf_12m"), z("perf_ytd"), z("sma20_abst"), z("sma50_abst"), z("sma200_abst"),
+            z("hoch50_abst"), z("tief50_abst"), z("tief52_abst"), z("ath", 2), z("ath_abst"), z("beta", 2),
+            z("rsi14"), z("rsi2"), ganz("vol63"), ganz("dv20"), ganz("rs_1w"), ganz("rs_4w")]
+
+
 def write_excel(rows: list[dict], out_path: str):
     from openpyxl import Workbook
     from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
@@ -1389,12 +1437,7 @@ def write_excel(rows: list[dict], out_path: str):
     wb = Workbook()
     ws = wb.active
     ws.title = "Kaufpunkte"
-    headers = ["Ticker", "Firma", "Kurs", "52W-Hoch", "52W-Tief", "Abst. 52W-Hoch",
-               "RS-Rank", "RS Nasdaq", "Trend Template", "Umsatzwachstum", "Gewinnwachstum",
-               "KP1 Strategie", "KP1 Preis", "KP1 Abst.", "KP1 Stop", "KP1 Ziel", "KP1 Status",
-               "KP2 Strategie", "KP2 Preis", "KP2 Abst.", "KP2 Stop", "KP2 Ziel", "KP2 Status",
-               "KP3 Strategie", "KP3 Preis", "KP3 Abst.", "KP3 Stop", "KP3 Ziel", "KP3 Status",
-               "Notizen"]
+    headers = list(MAPPEN_KOEPFE)
     ws.append(headers)
     for c in ws[1]:
         c.font = Font(bold=True, color="FFFFFF")
@@ -1449,6 +1492,7 @@ def write_excel(rows: list[dict], out_path: str):
                 line += [""] * 6
         if not r["tt_pass"] and r["tt_failed"]:
             notes.append("TT fehlt: " + "; ".join(r["tt_failed"][:3]))
+        line += technik_zellen(row.get("technik"), r["close"])
         line.append(" | ".join(notes))
         ws.append(line)
 
@@ -1457,7 +1501,7 @@ def write_excel(rows: list[dict], out_path: str):
             c.fill = fill
             c.border = thin
 
-    widths = [8, 26, 9, 10, 10, 12, 8, 12, 15, 15] + [18, 9, 9, 9, 9, 30] * 3 + [60]
+    widths = [8, 26, 9, 10, 10, 12, 8, 12, 15, 15] + [18, 9, 9, 9, 9, 30] * 3 + [11] * len(TECHNIK_KOEPFE) + [60]
     for i, w in enumerate(widths, 1):
         ws.column_dimensions[ws.cell(row=1, column=i).column_letter].width = w
     ws.freeze_panes = "C2"
@@ -1471,6 +1515,9 @@ def write_excel(rows: list[dict], out_path: str):
     lg.append([])
     lg.append(["Hinweis", "Alle Breakout-Kaufpunkte gelten nur mit Volumen-Bestätigung "
                           "(Regelwerk). RS-Rank = Perzentil innerhalb der gescannten Liste."])
+    lg.append(["Kennzahlen", "Spalten von ADR 20 bis RS Änd. 4W: technische Kennzahlen aus den Tageskursen, "
+               "Entscheidungshilfen, reine Anzeige, keine davon filtert (Gerhard, 13.09.2026). Prozentwerte in "
+               "Prozentpunkten; Allzeithoch aus der ganzen Kurshistorie; Weinstein-Stufe nach festen Regeln"])
     lg["A1"].fill = HEAD; lg["B1"].fill = HEAD
     lg["A1"].font = Font(bold=True, color="FFFFFF"); lg["B1"].font = Font(bold=True, color="FFFFFF")
     lg["A2"].fill = GREEN; lg["A3"].fill = YELLOW; lg["A4"].fill = GREY
@@ -1671,6 +1718,10 @@ def main():
         print(f"  IBD-Ratings fehlgeschlagen ({type(e).__name__}: {e}).")
     rs_ok = bool(rs_daten) and rs_daten.get("status") == "ok"
     for row in rows:
+        # Etappe 2: die technischen Kennzahlen haengen nicht am RS-Status,
+        # sie kommen aus den Kursen der Listen-Aktie selbst.
+        row["technik"] = ((rs_universum.eintrag(row["ticker"], rs_daten) or {}).get("technik")
+                          if rs_daten else None) or {}
         e = rs_universum.eintrag(row["ticker"], rs_daten) if rs_ok else None
         row["rs_nasdaq"] = (e or {}).get("rs") if e else "n/a"
         if row["rs_nasdaq"] is None:

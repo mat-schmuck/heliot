@@ -163,7 +163,9 @@ def block_b():
                     # Wochenputz und Anmeldung (Mathias, 13.09.2026)
                     "wochenputz", "zugang",
                     # Scanner-Reiter (Mathias, 14.09.2026)
-                    "scanner_daten", "scanner_ansicht", "scanner_noetig"]
+                    "scanner_daten", "scanner_ansicht", "scanner_noetig",
+                    # Etappe 2, technische Kennzahlen (Gerhard, 13.09.2026)
+                    "kennzahlen_technik"]
     for name in mit_schalter:
         r = subprocess.run([sys.executable, f"{name}.py", "--selbsttest"],
                            capture_output=True, text=True, cwd=WURZEL,
@@ -340,6 +342,21 @@ def block_d(namen_aus_c=None):
         unbekannt = sorted(namen - set(ex.STRUKTURPUNKT))
         pruefe("D", "Jeder Name IN DER MAPPE ist dem Exit-Regelwerk bekannt",
                not unbekannt, ", ".join(unbekannt))
+
+    # ETAPPE 2 (Gerhard, 13.09.2026): Die leere Vorlage des Wochenputzes
+    # traegt dieselben Spalten wie die Mappe des Scanners, samt denen der
+    # technischen Kennzahlen. Sonst fehlten sie nach jedem Freitagsputz bis
+    # zum naechsten Scan, und wer nach Spaltennamen liest, faende sie nicht.
+    try:
+        from openpyxl import load_workbook as _lw
+        _kopf = [c.value for c in _lw(WURZEL / "kaufpunkte_leer.xlsx")["Kaufpunkte"][1]]
+        _soll = list(ps.MAPPEN_KOEPFE)
+        pruefe("D", "Leere Mappe des Wochenputzes hat dieselben Spalten wie der Scanner",
+               _kopf == _soll,
+               "" if _kopf == _soll else ("fehlt: " + nennen([k for k in _soll if k not in _kopf])
+                                          if any(k not in _kopf for k in _soll) else "Reihenfolge weicht ab"))
+    except Exception as e:
+        pruefe("D", "Leere Mappe des Wochenputzes lesbar", False, f"{type(e).__name__}: {e}")
 
 
 # ---------------------------------------------------------------------------
@@ -2198,6 +2215,38 @@ def block_h():
     else:
         pruefe("H", "Ausgelassene Aktien des letzten Scans benannt", True,
                f"{_ausgelassen.name} entsteht mit dem naechsten Nachtscan")
+
+    # ETAPPE 2 (Gerhard, 13.09.2026, Entscheidungen 4 und 5): Die Nachtdatei
+    # traegt je Aktie die technischen Kennzahlen, das Allzeithoch fuer das
+    # ganze Universum und den Stand seines letzten vollen Abrufs.
+    _rsd = WURZEL / "rs_universum.json"
+    try:
+        _rs = json.loads(_rsd.read_text(encoding="utf-8")) if _rsd.exists() else {}
+    except Exception as e:
+        _rs = {}
+        pruefe("H", "rs_universum.json lesbar", False, f"{type(e).__name__}: {e}")
+    if _rs and isinstance(_rs.get("allzeithoch"), dict):
+        _mit_kurs = [(t, e) for g in ("aktien", "ausserhalb", "listen")
+                     for t, e in (_rs.get(g) or {}).items() if isinstance(e, dict) and e.get("kurs") is not None]
+        _ohne_tk = [t for t, e in _mit_kurs if not e.get("technik")]
+        pruefe("H", "Technische Kennzahlen fuer jede Aktie mit Kurs", not _ohne_tk,
+               f"{len(_mit_kurs) - len(_ohne_tk)} von {len(_mit_kurs)}" + (": " + nennen(_ohne_tk) if _ohne_tk else ""))
+        _mit_ath = sum(1 for _t, e in _mit_kurs if (e.get("technik") or {}).get("ath") is not None)
+        _ath = _rs["allzeithoch"]
+        pruefe("H", "Allzeithoch fuer mindestens 95 Prozent der Aktien mit Kurs",
+               _mit_kurs and _mit_ath / len(_mit_kurs) >= 0.95,
+               f"{_mit_ath} von {len(_mit_kurs)}; voller Abruf am {_ath.get('voll_am')}, heute {_ath.get('abruf_heute')}, "
+               f"Quellen {_ath.get('quellen')}")
+        try:
+            _alter_ath = (datetime.now(timezone.utc).date() - datetime.fromisoformat(str(_ath.get("voll_am"))[:10]).date()).days
+        except Exception:
+            _alter_ath = None
+        pruefe("H", "Voller Abruf des Allzeithochs nicht aelter als seine Frist plus drei Tage",
+               _alter_ath is not None and _alter_ath <= int(_ath.get("abruf_tage") or 7) + 3,
+               f"{_alter_ath} Tage" if _alter_ath is not None else "noch kein voller Abruf")
+    else:
+        pruefe("H", "Technische Kennzahlen in rs_universum.json", True,
+               "die Datei stammt noch vom Stand vor Etappe 2; der naechste Nachtscan legt sie an")
 
     # positionen.json DARF fehlen, solange keine Position offen ist —
     # die Datei entsteht erst beim ersten Einstieg. Geprueft wird

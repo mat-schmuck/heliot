@@ -13,7 +13,8 @@ Ohne KI; jede Zahl ist gerechnet, nichts ist geraten.
 WOHER DIE ZAHLEN KOMMEN
   Nachtwerte aus dem Repo (der Nachtscan schreibt sie; der Ablauf
   nachschlag_daten.yml baut sie auf Zuruf frisch):
-    rs_universum.json      RS gegen den ganzen US-Markt, Kurs, 52-Wochen-Hoch,
+    rs_universum.json      RS gegen den ganzen US-Markt, Kurs, 52-Wochen-Hoch, seit
+                           Etappe 2 die technischen Kennzahlen je Aktie (technik),
                            RS-Linien, Kennzeichnung "im Universum"
     ibd_ratings.json       EPS, SMR, A/D und Composite als Naeherung aus dem
                            SEC-Fundament (amtlich), dazu Umsatz und Gewinn je
@@ -276,14 +277,16 @@ def sektor_name_fuer(ticker, holen_info=None):
 # Die Saetze
 # ---------------------------------------------------------------------------
 
-def _vorwoche(e):
+def _vorwoche(e, tage=5):
+    """Der RS-Wert am juengsten Verlaufstag, der mindestens tage Kalendertage
+    zurueckliegt: 5 fuer eine Woche, 26 fuer vier Wochen."""
     verlauf = e.get("rs_verlauf") or []
     if len(verlauf) < 2:
         return None
     heute = verlauf[-1][0] if isinstance(verlauf[-1], list) and verlauf[-1] else None
     for tag, wert in reversed(verlauf[:-1]):
         try:
-            if heute and (datetime.fromisoformat(heute) - datetime.fromisoformat(tag)).days >= 5:
+            if heute and (datetime.fromisoformat(heute) - datetime.fromisoformat(tag)).days >= tage:
                 return wert
         except (TypeError, ValueError):
             continue
@@ -314,9 +317,14 @@ def ratings_saetze(e, r, ratings):
     s = []
     if e.get("rs") is not None:
         vor = _vorwoche(e)
+        # Etappe 2, Punkt 15 (Gerhard, 13.09.2026): die Aenderung auch ueber
+        # vier Wochen, dieselbe Regel wie technik.rs_4w in rs_universum.
+        vor4 = _vorwoche(e, 26)
         s.append(f"RS {int(e['rs'])}" + (", sehr gut" if int(e["rs"]) >= 85 else "")
                  + (f"; vor einer Woche {int(vor)}, Änderung {int(e['rs']) - int(vor):+d}".replace("+", "plus ").replace("-", "minus ")
-                    if vor is not None else "") + ".")
+                    if vor is not None else "")
+                 + (f"; vor vier Wochen {int(vor4)}, Änderung {int(e['rs']) - int(vor4):+d}".replace("+", "plus ").replace("-", "minus ")
+                    if vor4 is not None else "") + ".")
     elif e.get("rs_vorlaeufig") is not None:
         # Etappe 1, Entscheidung 1 (Gerhard, 13.09.2026): junge Titel
         s.append(rs_universum.rs_text(e["rs_vorlaeufig"], quartale=e.get("rs_quartale"))
@@ -338,7 +346,8 @@ def ratings_saetze(e, r, ratings):
         return s
     s.append(f"EPS-Rating {int(r['eps'])}." if r.get("eps") is not None else "EPS-Rating nicht verfügbar.")
     s.append(f"SMR-Note {r['smr']}, Rang {int(r['smr_rang'])}." if r.get("smr") else "SMR-Note nicht verfügbar.")
-    s.append(f"A/D-Note {r['ad']}, Rang {int(r['ad_rang'])}, Näherung aus Kurs und Volumen." if r.get("ad")
+    s.append(f"A/D-Note {r['ad']}, Rang {int(r['ad_rang'])}, Näherung aus der Schlusslage in der Tagesspanne und dem Volumen."
+             if r.get("ad")
              else "A/D-Note nicht verfügbar.")
     if r.get("composite") is not None:
         s.append(f"Composite {int(r['composite'])}.")
@@ -381,6 +390,142 @@ def volumen_saetze(live, kurve, kurve_quelle=""):
     if v50:
         s.append(f"50-Tage-Schnitt: {zahl(v50)} Stück je Tag.")
     return s
+
+
+def _vz(x, stellen=1):
+    """'plus 12,3' oder 'minus 4,0' ohne Einheit; None wird 'unbekannt'."""
+    if x is None:
+        return "unbekannt"
+    return ("plus " if float(x) >= 0 else "minus ") + zahl(abs(float(x)), stellen)
+
+
+def monat_text(jjjj_mm):
+    """'2021-03' wird 'März 2021'."""
+    m = re.fullmatch(r"(\d{4})-(\d{2})", str(jjjj_mm or ""))
+    return f"{MONATE[int(m.group(2)) - 1]} {m.group(1)}" if m and 1 <= int(m.group(2)) <= 12 else str(jjjj_mm or "unbekannt")
+
+
+def _dollar_menge(x):
+    """Grosse Dollarbetraege in Worten: '45,6 Millionen Dollar'."""
+    if x is None:
+        return "unbekannt"
+    v = float(x)
+    if v >= 1e9:
+        return f"{zahl(v / 1e9, 1)} Milliarden Dollar"
+    if v >= 1e6:
+        return f"{zahl(v / 1e6, 1)} Millionen Dollar"
+    return f"{zahl(v)} Dollar"
+
+
+def technik_saetze(e):
+    """ETAPPE 2 (Gerhard, 13.09.2026, Entscheidungen 4 und 5): die 16
+    technischen Kennzahlen, je Kennzahl ein Satz, REINE ANZEIGE. Die Werte
+    stehen in rs_universum.json unter technik; gerechnet werden sie in
+    kennzahlen_technik.py. Die RS-Aenderung steht bei den Ratings."""
+    tk = (e or {}).get("technik")
+    if not tk:
+        return ["Keine technischen Kennzahlen: Die Aktie steht in keiner Nachtdatei, oder es gab für sie keine Kurse."]
+    if tk.get("split_verdacht") is not None:
+        sv = float(tk["split_verdacht"])
+        sprung = (f"springt am letzten Handelstag auf das {zahl(sv, 1)}-fache des Vortags" if sv >= 1
+                  else f"fällt am letzten Handelstag auf {zahl(sv * 100, 1)} Prozent des Vortags")
+        return [f"Technische Kennzahlen heute nicht verfügbar: Der Schlusskurs {sprung}, "
+                "das Dollarvolumen bleibt aber ähnlich. Vermutlich ein Split oder Reverse-Split, den die Kursquelle "
+                "noch nicht in die älteren Kurse eingerechnet hat; die Werte wären falsch."]
+    s = []
+    teile = [f"{wort} {prozent(tk[name], 1)}" for name, wort in (
+        ("perf_1w", "eine Woche"), ("perf_1m", "ein Monat"), ("perf_3m", "drei Monate"), ("perf_6m", "sechs Monate"),
+        ("perf_12m", "zwölf Monate"), ("perf_ytd", "seit Jahresbeginn")) if tk.get(name) is not None]
+    s.append("Wertentwicklung: " + ("; ".join(teile) if teile else "nicht berechenbar") + ".")
+    datum = str(tk.get("ath_datum") or "")
+    if tk.get("ath") is None:
+        s.append("Allzeithoch nicht verfügbar.")
+    elif len(datum) == 10 and datum == e.get("letzter_tag"):
+        s.append(f"Die Aktie steht auf ihrem Allzeithoch von {zahl(tk['ath'], 2)} Dollar.")
+    else:
+        wann = f" vom {datum_text(datum)}" if len(datum) == 10 else (f" im {monat_text(datum)}" if len(datum) == 7 else "")
+        s.append(f"Allzeithoch {zahl(tk['ath'], 2)} Dollar{wann}; Abstand {prozent(tk.get('ath_abst'), 1)}.")
+    teile = [f"SMA {n} {prozent(tk.get(f'sma{n}_abst'), 1)}" for n in (20, 50, 200) if tk.get(f"sma{n}_abst") is not None]
+    s.append("Abstand zu den gleitenden Durchschnitten: " + ("; ".join(teile) if teile else "nicht berechenbar") + ".")
+    teile = [f"{wort} {prozent(tk.get(name), 1)}" for name, wort in (
+        ("hoch50_abst", "zum 50-Tage-Hoch"), ("tief50_abst", "zum 50-Tage-Tief"), ("tief52_abst", "zum 52-Wochen-Tief"))
+        if tk.get(name) is not None]
+    s.append("Abstand " + ("; ".join(teile) if teile else "zu Hoch und Tief nicht berechenbar") + ".")
+    s.append(f"ADR nach Qullamaggie, die mittlere Tagesspanne über 20 Tage: {zahl(tk['adr20'], 2)} Prozent."
+             if tk.get("adr20") is not None else "ADR nicht berechenbar.")
+    teile = [f"{wort} {zahl(tk[name], 2)} Prozent" for name, wort in (("vola5", "Woche"), ("vola21", "Monat"))
+             if tk.get(name) is not None]
+    s.append(("Volatilität wie bei Finviz, dieselbe Spanne über 5 und 21 Tage: " + "; ".join(teile) + ".")
+             if teile else "Volatilität nicht berechenbar.")
+    if tk.get("atr14") is not None:
+        kurs = e.get("kurs")
+        s.append(f"ATR 14 nach Wilder: {zahl(tk['atr14'], 2 if tk['atr14'] >= 10 else 4 if tk['atr14'] < 1 else 2)} Dollar"
+                 + (f", das sind {zahl(tk['atr14'] / kurs * 100, 1)} Prozent des Kurses" if kurs else "") + ".")
+    else:
+        s.append("ATR nicht berechenbar.")
+    s.append(f"Up/Down-Volumen über 50 Tage: {zahl(tk['ud50'], 2)}; über 1 überwiegt das Volumen an Plus-Tagen."
+             if tk.get("ud50") is not None else "Up/Down-Volumen über 50 Tage nicht berechenbar.")
+    if tk.get("mrs") is not None:
+        richtung = ""
+        if tk.get("mrs_vorher") is not None:
+            richtung = (", also steigend" if tk["mrs"] > tk["mrs_vorher"]
+                        else ", also fallend" if tk["mrs"] < tk["mrs_vorher"] else ", also unverändert")
+            richtung = f", vor vier Wochen {_vz(tk['mrs_vorher'], 1)}{richtung}"
+        s.append(f"Mansfield RS gegen SPY: {_vz(tk['mrs'], 1)}{richtung}.")
+    else:
+        s.append("Mansfield RS nicht berechenbar, dafür braucht es 52 Wochen gemeinsam mit dem Index.")
+    s.append(weinstein_satz(tk))
+    if tk.get("burst"):
+        s.append(f"Momentum Burst nach Stockbee am letzten Handelstag: {prozent(e.get('pct'), 1)} bei höherem Volumen als am Vortag"
+                 + (f"; Schluss bei {int(tk['schlusslage'])} Prozent der Tagesspanne" if tk.get("schlusslage") is not None else "")
+                 + (f"; Vortag {prozent(tk['vortag_pct'], 1)} bei {zahl(tk.get('vortag_spanne'), 1)} Prozent Spanne"
+                    if tk.get("vortag_pct") is not None else "") + ".")
+    elif tk.get("burst") is False:
+        s.append("Kein Momentum Burst nach Stockbee am letzten Handelstag.")
+    else:
+        s.append("Momentum Burst nicht berechenbar.")
+    teile = []
+    if tk.get("luecke") is not None:
+        teile.append(f"Eröffnungslücke {prozent(tk['luecke'], 1)}")
+    if tk.get("seit_eroeffnung") is not None:
+        teile.append(f"seit Eröffnung {prozent(tk['seit_eroeffnung'], 1)}")
+    if tk.get("vol_faktor") is not None:
+        teile.append(f"Volumen {zahl(tk['vol_faktor'], 1)} mal so hoch wie der 50-Tage-Schnitt")
+    s.append(("Am letzten Handelstag: " + "; ".join(teile) + ".") if teile else "Eröffnungslücke nicht bekannt.")
+    if tk.get("pivot"):
+        s.append("Episodic Pivot: Die Eröffnungslücke liegt bei 10 Prozent oder mehr.")
+    s.append(f"Beta gegen SPY über 252 Tage: {zahl(tk['beta'], 2)}." if tk.get("beta") is not None
+             else "Beta nicht berechenbar, dafür braucht es 252 Tagesrenditen gemeinsam mit dem Index.")
+    teile = [f"RSI {n} bei {zahl(tk[name], 1)}" for n, name in ((14, "rsi14"), (2, "rsi2")) if tk.get(name) is not None]
+    s.append(("; ".join(teile) + ".") if teile else "RSI nicht berechenbar.")
+    teile = []
+    if tk.get("vol63") is not None:
+        teile.append(f"Durchschnittsvolumen über drei Monate {zahl(tk['vol63'])} Stück je Tag")
+    if tk.get("dv20") is not None:
+        teile.append(f"Dollarvolumen über 20 Tage {_dollar_menge(tk['dv20'])} je Tag")
+    s.append(("; ".join(teile) + ".") if teile else "Durchschnittsvolumen nicht berechenbar.")
+    s.append("Reine Anzeige: Keine dieser Kennzahlen filtert.")
+    return s
+
+
+def weinstein_satz(tk):
+    """Die Weinstein-Stufe in einem Satz, mit den Zahlen, auf denen sie steht."""
+    stufe, abst, steig = tk.get("stufe"), tk.get("linie_abst"), tk.get("linie_steig")
+    if stufe is None or abst is None or steig is None:
+        return "Weinstein-Stufe nicht berechenbar, dafür braucht es 34 Wochen Kurse."
+    lage = f"Kurs {zahl(abs(abst), 1)} Prozent {'über' if abst >= 0 else 'unter'} der 30-Wochen-Linie"
+    linie = (f"die Linie steigt in vier Wochen um {zahl(abs(steig), 1)} Prozent" if steig > 0
+             else f"die Linie fällt in vier Wochen um {zahl(abs(steig), 1)} Prozent" if steig < 0
+             else "die Linie ist in vier Wochen unverändert")
+    if stufe == 2:
+        return f"Weinstein-Stufe 2: {lage}, {linie}, Mansfield RS über null und steigend."
+    if stufe == 4:
+        return f"Weinstein-Stufe 4: {lage}, {linie}, Mansfield RS unter null und fallend."
+    if stufe == 3:
+        return f"Weinstein-Stufe 3: 30-Wochen-Linie flach nach einem Anstieg; {lage}."
+    if stufe == 1:
+        return f"Weinstein-Stufe 1: 30-Wochen-Linie flach nach einem Rückgang; {lage}."
+    return f"Weinstein-Stufe nicht eindeutig: {lage}, {linie}."
 
 
 def _begriff(r):
@@ -481,6 +626,10 @@ def stand_saetze(rs, ratings, sektoren):
                  + (f"; Bezug {rs.get('universum', {}).get('bezug_anzahl') or rs.get('universum', {}).get('im_universum')} Stammaktien des US-Markts" if rs.get("universum") else "") + ".")
         if rs.get("status") and rs.get("status") != "ok":
             s.append(f"RS-Status: {rs.get('status')}, {rs.get('grund')}.")
+        ath = rs.get("allzeithoch") or {}
+        if ath.get("voll_am"):
+            s.append(f"Allzeithoch aus der ganzen Kurshistorie, zuletzt vollständig abgerufen am {datum_text(ath['voll_am'])}, "
+                     f"dazwischen jede Nacht fortgeschrieben.")
     else:
         s.append("Keine Nachtwerte vorhanden; der nächste Nachtscan legt sie an.")
     if ratings and ratings.get("gebaut_am"):
@@ -500,6 +649,7 @@ def bericht(ticker, rs, ratings, sektoren, live=None, kurve=None, kurve_quelle="
     return [("Aktie", kopf_saetze(t, e, live)),
             ("Unsere Ratings", ratings_saetze(e, r, ratings)),
             ("Volumen", volumen_saetze(live, kurve, kurve_quelle)),
+            ("Technische Kennzahlen", technik_saetze(e)),
             ("Umsatz und Gewinn", wachstum_saetze(r)),
             ("Sektor", sektor_saetze(sektor_name, sektoren, sektor_quelle)),
             ("Stand", stand_saetze(rs, ratings, sektoren))]
@@ -789,9 +939,21 @@ def selbsttest() -> int:
 
     rs = {"handelstag": "2026-09-11", "gebaut_am": "2026-09-13T00:04:45", "status": "ok",
           "universum": {"bezug_anzahl": 5339, "im_universum": 2017},
+          "allzeithoch": {"voll_am": "2026-09-07"},
           "aktien": {"AAOI": {"name": "Applied Optoelectronics, Inc. - Common Stock", "boerse": "Nasdaq", "kurs": 105.36,
-                              "pct": 2.0, "rs": 58, "abst_52w_hoch_pct": -54.9, "kurs_52w_hoch": False,
-                              "rs_verlauf": [["2026-09-04", 56], ["2026-09-11", 58]], "linie_spy_hoch": False, "linie_qqq_hoch": False},
+                              "pct": 5.2, "rs": 58, "abst_52w_hoch_pct": -54.9, "kurs_52w_hoch": False, "letzter_tag": "2026-09-11",
+                              "rs_verlauf": [["2026-08-12", 51], ["2026-09-04", 56], ["2026-09-11", 58]],
+                              "linie_spy_hoch": False, "linie_qqq_hoch": False,
+                              "technik": {"perf_1w": 2.1, "perf_1m": -3.4, "perf_3m": 12.0, "perf_6m": None, "perf_12m": 150.2,
+                                          "perf_ytd": 44.4, "ath": 233.63, "ath_datum": "2021-03", "ath_abst": -54.9,
+                                          "sma20_abst": 1.2, "sma50_abst": -3.4, "sma200_abst": 12.0, "hoch50_abst": -4.0,
+                                          "tief50_abst": 12.3, "tief52_abst": 80.1, "vola5": 5.12, "vola21": 4.5,
+                                          "adr20": 4.31, "atr14": 4.21,
+                                          "ud50": 1.34, "mrs": 12.3, "mrs_vorher": 8.1, "stufe": 2, "linie_abst": 5.2,
+                                          "linie_steig": 2.13, "burst": True, "schlusslage": 85, "vortag_pct": -0.8,
+                                          "vortag_spanne": 2.1, "luecke": 11.0, "seit_eroeffnung": -0.5, "vol_faktor": 4.2,
+                                          "pivot": True, "beta": 1.35, "rsi14": 62.5, "rsi2": 91.0, "vol63": 1234567,
+                                          "dv20": 45600000, "rs_1w": 2, "rs_4w": 7}},
                      "AAPL": {"name": "Apple Inc. - Common Stock", "boerse": "Nasdaq", "kurs": 230.0, "pct": -0.5, "rs": 70,
                               "letzter_tag": "2026-09-11"}},
           "ausserhalb": {"BILLG": {"name": "Billig Corp. - Common Stock", "boerse": "NYSE American", "kurs": 3.0, "rs": 12,
@@ -851,13 +1013,15 @@ def selbsttest() -> int:
 
     teile = bericht("AAOI", rs, ratings, sektoren, live=live_auf, kurve=kurve, kurve_quelle="Vorrat", sektor_name="Technology", sektor_quelle="Wochenliste")
     text = bericht_text(teile)
-    p("Bericht hat sechs Teile in fester Reihenfolge",
-      [u for u, _ in teile] == ["Aktie", "Unsere Ratings", "Volumen", "Umsatz und Gewinn", "Sektor", "Stand"])
+    p("Bericht hat sieben Teile in fester Reihenfolge",
+      [u for u, _ in teile] == ["Aktie", "Unsere Ratings", "Volumen", "Technische Kennzahlen", "Umsatz und Gewinn", "Sektor",
+                                "Stand"])
     p("Kopf: Kuerzel, Name, Boerse, Kurs live, Abstand zum Hoch",
       "AAOI, Applied Optoelectronics, Inc., Nasdaq." in text and "Kurs 160,00 Dollar" in text and "Abstand zum 52-Wochen-Hoch minus 54,9 Prozent" in text)
     p("Ratings: RS mit Vorwoche, EPS, SMR, A/D, Composite je ein Satz",
-      "RS 58; vor einer Woche 56, Änderung plus 2." in text and "EPS-Rating 87." in text and "SMR-Note B, Rang 65." in text
-      and "A/D-Note C, Rang 48, Näherung" in text and "Composite 91." in text and "Basis amtlich, 8 Quartale." in text, text)
+      "RS 58; vor einer Woche 56, Änderung plus 2; vor vier Wochen 51, Änderung plus 7." in text and "EPS-Rating 87." in text
+      and "SMR-Note B, Rang 65." in text
+      and "A/D-Note C, Rang 48, Näherung aus der Schlusslage in der Tagesspanne und dem Volumen." in text and "Composite 91." in text and "Basis amtlich, 8 Quartale." in text, text)
     p("Wachstum: Prozent zuerst, dann vorher und jetzt in ganzen Zahlen, Quartalsende; EPS-Vorjahr im Minus ohne Prozentwert",
       "Umsatz Wachstum gegenüber dem Vorjahresquartal: plus 25,0 Prozent; vorher 987.654.321 Dollar, jetzt 1.234.567.890 Dollar." in text
       and "gegenüber dem Vorquartal: plus 3,7 Prozent; vorher 1.190.000.000 Dollar" in text
@@ -866,8 +1030,55 @@ def selbsttest() -> int:
       and "vorher minus 0,20 Dollar, jetzt 1,23 Dollar" in text, text)
     p("Sektor: deutscher Name, ETF, Rang von 36, vor drei Wochen, Aufsteiger",
       "Sektor Technologie, ETF XLK: Rang 3 von 36, vor drei Wochen Rang 7." in text and "Aufsteiger: Technology (XLK) neu unter den ersten fünf" in text, text)
-    p("Stand: Handelstag, Bezug, Ratings-Stand, Sektor-Stand", "Nachtwerte vom Handelstag 11.09.2026" in text and "Bezug 5339" in text
+    p("Stand: Handelstag, Bezug, Allzeithoch-Abruf, Ratings-Stand, Sektor-Stand",
+      "Nachtwerte vom Handelstag 11.09.2026" in text and "Bezug 5339" in text
+      and "zuletzt vollständig abgerufen am 07.09.2026" in text
       and "Ratings gebaut 2026-09-13 um 00:10" in text and "Sektor-Rangliste vom Handelstag 11.09.2026" in text)
+    ts = dict(teile)["Technische Kennzahlen"]
+    erwartet_ts = [
+        "Wertentwicklung: eine Woche plus 2,1 Prozent; ein Monat minus 3,4 Prozent; drei Monate plus 12,0 Prozent; "
+        "zwölf Monate plus 150,2 Prozent; seit Jahresbeginn plus 44,4 Prozent.",
+        "Allzeithoch 233,63 Dollar im März 2021; Abstand minus 54,9 Prozent.",
+        "Abstand zu den gleitenden Durchschnitten: SMA 20 plus 1,2 Prozent; SMA 50 minus 3,4 Prozent; SMA 200 plus 12,0 Prozent.",
+        "Abstand zum 50-Tage-Hoch minus 4,0 Prozent; zum 50-Tage-Tief plus 12,3 Prozent; zum 52-Wochen-Tief plus 80,1 Prozent.",
+        "ADR nach Qullamaggie, die mittlere Tagesspanne über 20 Tage: 4,31 Prozent.",
+        "Volatilität wie bei Finviz, dieselbe Spanne über 5 und 21 Tage: Woche 5,12 Prozent; Monat 4,50 Prozent.",
+        "ATR 14 nach Wilder: 4,21 Dollar, das sind 4,0 Prozent des Kurses.",
+        "Up/Down-Volumen über 50 Tage: 1,34; über 1 überwiegt das Volumen an Plus-Tagen.",
+        "Mansfield RS gegen SPY: plus 12,3, vor vier Wochen plus 8,1, also steigend.",
+        "Weinstein-Stufe 2: Kurs 5,2 Prozent über der 30-Wochen-Linie, die Linie steigt in vier Wochen um 2,1 Prozent, "
+        "Mansfield RS über null und steigend.",
+        "Momentum Burst nach Stockbee am letzten Handelstag: plus 5,2 Prozent bei höherem Volumen als am Vortag; "
+        "Schluss bei 85 Prozent der Tagesspanne; Vortag minus 0,8 Prozent bei 2,1 Prozent Spanne.",
+        "Am letzten Handelstag: Eröffnungslücke plus 11,0 Prozent; seit Eröffnung minus 0,5 Prozent; "
+        "Volumen 4,2 mal so hoch wie der 50-Tage-Schnitt.",
+        "Episodic Pivot: Die Eröffnungslücke liegt bei 10 Prozent oder mehr.",
+        "Beta gegen SPY über 252 Tage: 1,35.",
+        "RSI 14 bei 62,5; RSI 2 bei 91,0.",
+        "Durchschnittsvolumen über drei Monate 1.234.567 Stück je Tag; Dollarvolumen über 20 Tage 45,6 Millionen Dollar je Tag.",
+        "Reine Anzeige: Keine dieser Kennzahlen filtert."]
+    p("Technische Kennzahlen (Etappe 2): je Kennzahl ein Satz, deutsche Zahlen, fehlende Werte ausgelassen",
+      ts == erwartet_ts, [x for x in ts if x not in erwartet_ts] or ts)
+    tk_ohne = {"stufe": 0, "linie_abst": -3.4, "linie_steig": 2.1, "burst": False, "ath": 50.0, "ath_datum": "2026-09-11",
+               "mrs": -1.0, "mrs_vorher": None}
+    ts2 = technik_saetze({"technik": tk_ohne, "letzter_tag": "2026-09-11", "kurs": 50.0})
+    p("Technische Kennzahlen: Allzeithoch heute, Stufe nicht eindeutig, kein Burst, fehlende Werte ehrlich",
+      "Die Aktie steht auf ihrem Allzeithoch von 50,00 Dollar." in ts2
+      and "Weinstein-Stufe nicht eindeutig: Kurs 3,4 Prozent unter der 30-Wochen-Linie, die Linie steigt in vier Wochen um 2,1 Prozent." in ts2
+      and "Kein Momentum Burst nach Stockbee am letzten Handelstag." in ts2 and "Mansfield RS gegen SPY: minus 1,0." in ts2
+      and "Beta nicht berechenbar, dafür braucht es 252 Tagesrenditen gemeinsam mit dem Index." in ts2
+      and "Wertentwicklung: nicht berechenbar." in ts2 and not any("Episodic Pivot" in x for x in ts2), ts2)
+    p("Technische Kennzahlen bei Split-Verdacht: nur der Hinweis, keine Kennzahl",
+      technik_saetze({"technik": {"split_verdacht": 13.29}})[0].startswith(
+          "Technische Kennzahlen heute nicht verfügbar: Der Schlusskurs springt am letzten Handelstag auf das 13,3-fache")
+      and len(technik_saetze({"technik": {"split_verdacht": 13.29}})) == 1
+      and "fällt am letzten Handelstag auf 7,7 Prozent des Vortags" in technik_saetze({"technik": {"split_verdacht": 0.0769}})[0],
+      technik_saetze({"technik": {"split_verdacht": 0.0769}}))
+    p("Technische Kennzahlen ohne Werte: ein ehrlicher Satz; Monat in Worten",
+      technik_saetze({}) == ["Keine technischen Kennzahlen: Die Aktie steht in keiner Nachtdatei, oder es gab für sie keine Kurse."]
+      and monat_text("2021-03") == "März 2021" and monat_text("2021-13") == "2021-13"
+      and weinstein_satz({"stufe": 3, "linie_abst": 1.0, "linie_steig": 0.2}).startswith("Weinstein-Stufe 3: 30-Wochen-Linie flach nach einem Anstieg")
+      and weinstein_satz({"stufe": None, "linie_abst": None, "linie_steig": None}).startswith("Weinstein-Stufe nicht berechenbar"))
     p("Kein Gedankenstrich, kein senkrechter Strich, keine Tabelle", "–" not in text and "|" not in text and "—" not in text)
 
     teile2 = bericht("AAPL", rs, ratings, sektoren, live=None, kurve=None, sektor_name="Financial", sektor_quelle="Yahoo")

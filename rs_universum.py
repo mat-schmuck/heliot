@@ -89,6 +89,7 @@ import time
 from datetime import date, datetime
 
 from config import CFG
+import kennzahlen_technik
 import red_to_green
 
 CFGU = CFG["rs_universum"]
@@ -186,8 +187,15 @@ def kurse_holen(symbole, block=None, zeitraum=None, download=None, leise=True):
 
     download(symbolliste) ersetzt yfinance im Selbsttest und muss ein
     dict derselben Form liefern."""
-    block = block or int(CFGU["abruf_block"])
     zeitraum = zeitraum or CFGU["abruf_zeitraum"]
+    return _in_bloecken(symbole, lambda teil: _yahoo_block(teil, zeitraum), block, download, leise, "Kurse")
+
+
+def _in_bloecken(symbole, abruf, block=None, download=None, leise=True, titel="Kurse"):
+    """Ruft abruf(teil) je Block auf und sammelt die Ergebnisse. Ein
+    gescheiterter Block bekommt nach 20 Sekunden einen zweiten Versuch.
+    download ersetzt den Abruf im Selbsttest (ohne Nachladen)."""
+    block = block or int(CFGU["abruf_block"])
     raus = {}
     t0 = time.time()
     for i in range(0, len(symbole), block):
@@ -196,17 +204,17 @@ def kurse_holen(symbole, block=None, zeitraum=None, download=None, leise=True):
             raus.update(download(teil))
             continue
         try:
-            raus.update(_yahoo_block(teil, zeitraum))
+            raus.update(abruf(teil))
         except Exception as e:  # noqa
             if not leise:
-                print(f"  Block {i // block + 1}: Abruf gescheitert ({type(e).__name__}), "
+                print(f"  {titel}, Block {i // block + 1}: Abruf gescheitert ({type(e).__name__}), "
                       f"zweiter Versuch in 20 s")
             time.sleep(20)
             try:
-                raus.update(_yahoo_block(teil, zeitraum))
+                raus.update(abruf(teil))
             except Exception as e2:  # noqa
                 if not leise:
-                    print(f"  Block {i // block + 1}: erneut gescheitert ({type(e2).__name__})")
+                    print(f"  {titel}, Block {i // block + 1}: erneut gescheitert ({type(e2).__name__})")
     if download is None:
         fehlend = [s for s in symbole if s not in raus]
         # Yahoo laesst in grossen Bloecken gelegentlich STILL Symbole aus
@@ -218,13 +226,41 @@ def kurse_holen(symbole, block=None, zeitraum=None, download=None, leise=True):
             vorher = len(raus)
             for i in range(0, len(fehlend), 50):
                 try:
-                    raus.update(_yahoo_block(fehlend[i:i + 50], zeitraum))
+                    raus.update(abruf(fehlend[i:i + 50]))
                 except Exception:  # noqa
                     continue
             if not leise:
-                print(f"  Nachgeladen: {len(raus) - vorher} von {len(fehlend)} zunaechst fehlenden Symbolen")
+                print(f"  {titel}: nachgeladen {len(raus) - vorher} von {len(fehlend)} zunaechst fehlenden Symbolen")
     if not leise:
-        print(f"  Kurse fuer {len(raus)} von {len(symbole)} Symbolen in {time.time() - t0:.0f} s")
+        print(f"  {titel} fuer {len(raus)} von {len(symbole)} Symbolen in {time.time() - t0:.0f} s")
+    return raus
+
+
+def allzeithochs_holen(symbole, block=None, download=None, leise=True):
+    """Punkt 16 der Etappe 2: das Allzeithoch je Symbol aus Yahoos
+    Monatskerzen ueber die ganze Historie. Rueckgabe {Symbol: (Hoch, Monat
+    'JJJJ-MM')}. Splitbereinigt wie die Tageskurse (auto_adjust=False).
+    GEMESSEN 14.09.2026 an denselben 100 Aktien: Das hoechste Monatshoch
+    ist bei allen 100 gleich dem hoechsten Tageshoch aus period=max, der
+    Abruf dauert 2,5 statt 8,9 Sekunden je Block."""
+    return _in_bloecken(symbole, _yahoo_allzeit_block, block, download, leise, "Allzeithoch")
+
+
+def _yahoo_allzeit_block(symbole):
+    import pandas as pd
+    import yfinance as yf
+    roh = yf.download(" ".join(yahoo_symbol(s) for s in symbole), period="max", interval="1mo",
+                      group_by="ticker", progress=False, auto_adjust=False, threads=True, actions=False)
+    raus = {}
+    for s in symbole:
+        try:
+            df = roh[yahoo_symbol(s)] if isinstance(roh.columns, pd.MultiIndex) else roh
+            h = df["High"].dropna()
+            if h.empty:
+                continue
+            raus[s] = (float(h.max()), str(h.idxmax())[:7])
+        except Exception:  # noqa
+            continue
     return raus
 
 
@@ -233,9 +269,12 @@ def _yahoo_block(symbole, zeitraum):
     import yfinance as yf
     # SPLITBEREINIGT, NICHT dividendenbereinigt (auto_adjust=False):
     # Yahoos "Close" traegt die Splits, nur "Adj Close" auch Dividenden.
+    # actions=True liefert Yahoos Split-Meldungen mit (Etappe 2: Erkennung
+    # eines Splits, den Yahoo noch nicht in die aelteren Kurse eingerechnet
+    # hat, siehe kennzahlen_technik.split_verdacht).
     roh = yf.download(" ".join(yahoo_symbol(s) for s in symbole), period=zeitraum,
                       interval="1d", group_by="ticker", progress=False,
-                      auto_adjust=False, threads=True)
+                      auto_adjust=False, threads=True, actions=True)
     raus = {}
     for s in symbole:
         try:
@@ -244,10 +283,15 @@ def _yahoo_block(symbole, zeitraum):
             if df.empty:
                 continue
             raus[s] = {"daten": [d.strftime("%Y-%m-%d") for d in df.index],
+                       # Seit Etappe 2 auch die Eroeffnung (Luecke, seit Eroeffnung)
+                       "open": [float(x) for x in df["Open"].values],
                        "close": [float(x) for x in df["Close"].values],
                        "high": [float(x) for x in df["High"].values],
                        "low": [float(x) for x in df["Low"].values],
                        "volume": [float(x) if x == x else 0.0 for x in df["Volume"].values]}
+            if "Stock Splits" in df.columns:
+                raus[s]["splits"] = {d.strftime("%Y-%m-%d"): float(x)
+                                     for d, x in zip(df.index, df["Stock Splits"].values) if x == x and x}
         except Exception:  # noqa
             continue
     return raus
@@ -257,6 +301,7 @@ def aus_scanner_df(df):
     """Der Kursrahmen des Nachtscans (Spalten datetime, open, high, low,
     close, volume) in dieselbe Form wie kurse_holen."""
     return {"daten": [str(d)[:10] for d in df["datetime"]],
+            "open": [float(x) for x in df["open"]] if "open" in df.columns else [],
             "close": [float(x) for x in df["close"]],
             "high": [float(x) for x in df["high"]],
             "low": [float(x) for x in df["low"]],
@@ -313,7 +358,7 @@ def kennzahlen(k, indizes, cfg=None):
     dv = (sum(c * v for c, v in zip(k["close"][-dvt:], k["volume"][-dvt:])) / min(n, dvt)) if n else None
     hoch52 = _hoch(k["high"], 252)
     hoch20 = _hoch(k["high"], int(CFG["abendbericht"]["hoch_20_tage"]))
-    ad = ad_naeherung(k["close"], k["volume"])
+    ad = ad_naeherung(k["close"], k.get("high"), k.get("low"), k["volume"])
     abst = (kurs / max(k["high"][-252:]) - 1) if n >= 60 and kurs else None
     e = {"kurs": round(kurs, 4) if kurs is not None else None,
          "vortag": round(vortag, 4) if vortag is not None else None,
@@ -336,29 +381,24 @@ def kennzahlen(k, indizes, cfg=None):
         # Aenderung der Linie ueber eine Woche, fuer die Sortierung der Berichte
         e[f"linie_{kurz}_1w"] = (round((linie[-1] / linie[-6] - 1) * 100, 2)
                                 if len(linie) >= 6 and linie[-6] > 0 else None)
+    # ETAPPE 2 (Gerhard, 13.09.2026, Entscheidungen 4 und 5): die 16
+    # technischen Kennzahlen, nur zur Anzeige. RS-Aenderung und Allzeithoch
+    # kommen in bauen() dazu, weil sie Verlauf und Abruf brauchen.
+    e["technik"] = kennzahlen_technik.technik(k, (indizes or {}).get(CFG["technik"]["vergleich_index"]))
     return e
 
 
-def ad_naeherung(closes, volumes, tage=65):
-    """A/D als NAEHERUNG (R20, Gerhard): Ueber 13 Wochen das Volumen an
-    Plus-Tagen gegen das Volumen an Minus-Tagen, minus 1 bis plus 1. IBD
-    rechnet Akkumulation und Distribution aus Kurs und Volumen; genauer
-    laesst es sich ohne deren Daten nicht nachbauen, und das steht in
-    jeder Zeile dabei."""
-    if len(closes) < tage + 1:
-        return None
-    c, v = closes[-tage - 1:], volumes[-tage:]
-    gesamt = sum(x for x in v if x)
-    if not gesamt:
-        return None
-    saldo = 0.0
-    for i in range(1, len(c)):
-        vol = v[i - 1] or 0.0
-        if c[i] > c[i - 1]:
-            saldo += vol
-        elif c[i] < c[i - 1]:
-            saldo -= vol
-    return saldo / gesamt
+def ad_naeherung(closes, highs, lows, volumes, tage=None):
+    """A/D als NAEHERUNG (R20, Gerhard), minus 1 bis plus 1. Seit Etappe 2
+    (Entscheidung 4, Punkt 4 des Recherche-Papiers) nach Chaikin: ueber 13
+    Wochen je Tag die Lage des Schlusskurses in der Tagesspanne, mit dem
+    Tagesvolumen gewichtet und durch das Gesamtvolumen geteilt. Bis dahin
+    zaehlte nur das Volumen an Plus- gegen Minus-Tagen; die Schlusslage in
+    der Spanne nennt IBD in seiner Beschreibung ausdruecklich. Die genaue
+    IBD-Formel ist nicht veroeffentlicht, deshalb bleibt die Kennzeichnung
+    Naeherung in jeder Zeile. Ohne Hoch und Tief gibt es keinen Wert."""
+    return kennzahlen_technik.ad_chaikin(closes, highs or [], lows or [], volumes,
+                                         int(tage or CFG["technik"]["ad_tage"]))
 
 
 def perzentil(rohwerte, eigener):
@@ -487,6 +527,119 @@ def linien_text(e):
 # Bauen
 # ---------------------------------------------------------------------------
 
+def _zeitraum_tage(text):
+    """Ein Yahoo-Zeitraum in Kalendertagen: '14mo' wird 426, '2y' 730. Fuer
+    die Frage, ob die ganze Historie einer Aktie im geladenen Fenster liegt;
+    Unbekanntes gilt als 14 Monate."""
+    m = re.fullmatch(r"(\d+)\s*(mo|y|wk|d)", str(text or "").strip())
+    if not m:
+        return 426
+    return int(round(int(m.group(1)) * {"mo": 30.44, "y": 365.25, "wk": 7, "d": 1}[m.group(2)]))
+
+
+def _alte_eintraege(alt):
+    """{Symbol: Eintrag der Vornacht} fuer die Kette des Allzeithochs, aus
+    allen drei Gruppen; ein Eintrag mit Allzeithoch schlaegt einen ohne."""
+    raus = {}
+    if not isinstance(alt, dict):
+        return raus
+    for gruppe in ("ausserhalb", "aktien", "listen"):
+        for s, e in (alt.get(gruppe) or {}).items():
+            if isinstance(e, dict) and (s not in raus or (e.get("technik") or {}).get("ath") is not None):
+                raus[s] = e
+    return raus
+
+
+def _allzeithoch_abruf(paare, alt_je, alt, tag, holen_kurse, holen_allzeit, leise):
+    """Entscheidet, fuer welche Symbole heute die ganze Historie geholt wird,
+    und holt sie. paare: [(Symbol, Tageskurse)]. Faellig ist der volle Abruf
+    fuer alle, wenn der letzte volle Abruf allzeithoch_abruf_tage oder mehr
+    zurueckliegt; sonst nur fuer die, deren Kette nicht traegt. Ein voller
+    Abruf zaehlt erst als erledigt, wenn er die Mindestabdeckung des
+    Universums erreicht, sonst wird er in der naechsten Nacht wiederholt.
+    Rueckgabe (frisch {Symbol: (Hoch, Monat)}, Stand fuer den Kopf)."""
+    tcfg = CFG["technik"]
+    fenster = _zeitraum_tage(CFGU["abruf_zeitraum"])
+    toleranz = float(tcfg["allzeithoch_split_toleranz"])
+    stand_alt = alt.get("allzeithoch") if isinstance(alt, dict) else None
+    voll_am = stand_alt.get("voll_am") if isinstance(stand_alt, dict) else None
+    try:
+        alter = (date.fromisoformat(tag) - date.fromisoformat(str(voll_am)[:10])).days if voll_am else None
+    except ValueError:
+        alter = None
+    faellig = alter is None or alter >= int(tcfg["allzeithoch_abruf_tage"])
+    if faellig:
+        brauchen = sorted({s for s, _ in paare})
+    else:
+        brauchen = sorted({s for s, k in paare
+                           if kennzahlen_technik.allzeithoch(k, None, alt_je.get(s), toleranz, fenster)[0] is None})
+    abruf = holen_allzeit
+    if abruf is None and holen_kurse is None:
+        def abruf(symbole):
+            return allzeithochs_holen(symbole, leise=leise)
+    frisch = {}
+    if brauchen and abruf is not None:
+        try:
+            frisch = abruf(brauchen) or {}
+        except Exception as e:  # noqa
+            if not leise:
+                print(f"  Allzeithoch: Abruf gescheitert ({type(e).__name__}), heute nur die Kette")
+    erhalten = sum(1 for s in brauchen if s in frisch)
+    voll_ok = bool(faellig and brauchen and erhalten / len(brauchen) >= float(CFGU["mindest_abdeckung"]))
+    return frisch, {"voll_am": tag if voll_ok else voll_am,
+                    "abruf_heute": "voll" if faellig else ("nachgeholt" if brauchen else "keiner"),
+                    "angefragt": len(brauchen), "erhalten": erhalten}
+
+
+def _allzeithoch_setzen(kz, k, frisch, alt_e, zaehler):
+    """Allzeithoch, Datum und Abstand in kz['technik']; zaehlt die Quelle.
+    Bei Verdacht auf einen unbereinigten Split bleibt es weg wie alle anderen
+    Kennzahlen des Tages; die naechste Nacht holt es frisch."""
+    tk = kz.setdefault("technik", {})
+    if tk.get("split_verdacht") is not None:
+        zaehler["split_verdacht"] = zaehler.get("split_verdacht", 0) + 1
+        return
+    ath, datum, quelle = kennzahlen_technik.allzeithoch(
+        k, frisch, alt_e, float(CFG["technik"]["allzeithoch_split_toleranz"]), _zeitraum_tage(CFGU["abruf_zeitraum"]))
+    tk["ath"], tk["ath_datum"] = ath, datum
+    kurs = kz.get("kurs")
+    tk["ath_abst"] = round((kurs / ath - 1) * 100, 1) if (ath and kurs) else None
+    zaehler[quelle or "fehlt"] = zaehler.get(quelle or "fehlt", 0) + 1
+
+
+def _rs_aenderung_setzen(kz):
+    """Punkt 15: RS-Aenderung ueber eine und vier Wochen aus dem Verlauf."""
+    tk = kz.get("technik")
+    if tk is None:
+        return
+    for name, tage in CFG["technik"]["rs_aenderung_tage"].items():
+        tk[f"rs_{name}"] = kennzahlen_technik.rs_aenderung(kz.get("rs_verlauf"), int(tage))
+
+
+def _listen_kurse(loaded, listen_ticker, kurse):
+    """[(Ticker, Tageskurse, Firma)] der Listen-Aktien: aus dem Nachtscan
+    (loaded) oder, bei einem Bau ohne Scan, aus dem Abruf des Universums."""
+    raus = []
+    for t, wert in (loaded or {}).items():
+        try:
+            df = wert[0] if isinstance(wert, tuple) else wert
+            firma = wert[1] if isinstance(wert, tuple) and len(wert) > 1 else ""
+            raus.append((t, aus_scanner_df(df), firma))
+        except Exception:  # noqa
+            continue
+    # ETAPPE 0, PUNKT 2 (Gerhard, 13.09.2026): Ein Bau ohne Nachtscan liess
+    # "listen" LEER, bis der naechste Scan lief; die Berichte fanden die
+    # Aktien der Wochenliste dann nicht (belegt an drei Laeufen von
+    # nachschlag_daten.yml am 13.09.2026, jeweils 0 statt 232 Eintraege).
+    # Jetzt kommen sie aus demselben Abruf wie das Universum.
+    if loaded is None:
+        for t, firma in (listen_ticker or {}).items():
+            k = kurse.get(t)
+            if k and k.get("close"):
+                raus.append((t, k, firma or ""))
+    return raus
+
+
 def _verlauf_fortschreiben(alt_eintrag, tag, rs, hoechstens):
     verlauf = [v for v in (alt_eintrag or {}).get("rs_verlauf", []) if isinstance(v, list) and len(v) == 2 and v[0] != tag]
     verlauf.append([tag, rs])
@@ -494,7 +647,7 @@ def _verlauf_fortschreiben(alt_eintrag, tag, rs, hoechstens):
 
 
 def bauen(loaded=None, pfad=DATEI, holen_liste=None, holen_kurse=None, leise=False, alt=None,
-          liste_text=None, liste_text_andere=None, jetzt=None, listen_ticker=None):
+          liste_text=None, liste_text_andere=None, jetzt=None, listen_ticker=None, holen_allzeit=None):
     """Der naechtliche Lauf. loaded: {Ticker: (df, Firma)} des Nachtscans,
     dessen Aktien GEGEN den Bezug gerechnet werden (Luecke 5).
 
@@ -502,7 +655,11 @@ def bauen(loaded=None, pfad=DATEI, holen_liste=None, holen_kurse=None, leise=Fal
     nachschlag_daten.yml). Dann kommen die Kurse der Listen-Aktien aus
     demselben Abruf wie das Universum; wer nicht im Verzeichnis steht, wird
     eigens mitgeholt. Gilt nur, wenn loaded fehlt: Der Nachtscan bringt
-    seine eigenen Kurse mit."""
+    seine eigenen Kurse mit.
+
+    holen_allzeit(symbolliste) ersetzt den Abruf der ganzen Historie fuer
+    das Allzeithoch (Selbsttest); wer holen_kurse ersetzt und holen_allzeit
+    nicht, bekommt keinen Abruf, nur Kette und Fenster."""
     cfg = CFGU
     t0 = time.time()
     liste, gruende = nasdaq_liste(text=liste_text, holen=holen_liste, leise=leise)
@@ -553,6 +710,26 @@ def bauen(loaded=None, pfad=DATEI, holen_liste=None, holen_kurse=None, leise=Fal
             ausserhalb[s] = kz
             continue
         aktien[s] = kz
+
+    # ETAPPE 2, PUNKT 16 (Gerhard, 13.09.2026): das Allzeithoch fuer das
+    # ganze Universum und die Listen-Aktien. Die ganze Historie kommt alle
+    # allzeithoch_abruf_tage Tage als Monatskerzen; dazwischen wird das Hoch
+    # jede Nacht splitfest fortgeschrieben (kennzahlen_technik.allzeithoch).
+    # Wer keine Kette hat (neu im Verzeichnis, Tag der Vornacht fehlt), wird
+    # noch in derselben Nacht nachgeholt.
+    alt = alt if alt is not None else lies(pfad)
+    alt_je = _alte_eintraege(alt)
+    tag = (jetzt or date.today()).isoformat()
+    listen_kurse = _listen_kurse(loaded, listen_ticker, kurse)
+    ath_paare = [(s, kurse[s]) for gruppe in (aktien, ausserhalb) for s, kz in gruppe.items()
+                 if "technik" in kz and kurse.get(s)] + [(t, k) for t, k, _ in listen_kurse]
+    ath_frisch, ath_stand = _allzeithoch_abruf(ath_paare, alt_je, alt, tag, holen_kurse, holen_allzeit, leise)
+    ath_quellen = {}
+    for gruppe in (aktien, ausserhalb):
+        for s, kz in gruppe.items():
+            if "technik" in kz and kurse.get(s):
+                _allzeithoch_setzen(kz, kurse[s], ath_frisch.get(s), alt_je.get(s), ath_quellen)
+
     bezug = {s: kz for gruppe in (aktien, ausserhalb) for s, kz in gruppe.items() if kz.get("roh") is not None}
     rohwerte = [kz["roh"] for kz in bezug.values()]
     roh_bezug = {s: kz["roh"] for s, kz in bezug.items()}
@@ -560,9 +737,7 @@ def bauen(loaded=None, pfad=DATEI, holen_liste=None, holen_kurse=None, leise=Fal
     probe = selbsttest_kuenstlich(rohwerte) if rohwerte else {"ok": False, "grund": "keine Rohwerte"}
     if status == "ok" and not probe.get("ok"):
         status, grund = "nicht verfuegbar", "Selbsttest der kuenstlichen Aktie fehlgeschlagen"
-    tag = (jetzt or date.today()).isoformat()
     handelstag = max((kz["letzter_tag"] for kz in bezug.values() if kz.get("letzter_tag")), default=None)
-    alt = alt if alt is not None else lies(pfad)
     alt_aktien = (alt or {}).get("aktien", {}) if isinstance(alt, dict) else {}
     raenge = _perzentile(rohwerte) if status == "ok" else {}
     ad_raenge = _perzentile(list(ad_bezug.values())) if status == "ok" else {}
@@ -575,6 +750,7 @@ def bauen(loaded=None, pfad=DATEI, holen_liste=None, holen_kurse=None, leise=Fal
             # die Titel ueber den Schwellen; sonst wuechse die Datei um das
             # Sechsfache, und die Berichte nennen nur diese Titel.
             kz["rs_verlauf"] = _verlauf_fortschreiben(alt_aktien.get(s), handelstag or tag, rs, int(cfg["rs_verlauf_tage"]))
+            _rs_aenderung_setzen(kz)
         kz["roh"] = round(kz["roh"], 6)
     plaus = plausibilitaet([kz["rs"] for kz in bezug.values()]) if status == "ok" else {"ok": False, "grund": status, "dezile": []}
     if status == "ok" and not plaus["ok"]:
@@ -598,26 +774,15 @@ def bauen(loaded=None, pfad=DATEI, holen_liste=None, holen_kurse=None, leise=Fal
     # Listen-Aktien GEGEN den Bezug (Luecke 5)
     listen_ergebnis = {}
     ad_sortiert = sorted(ad_bezug.values())
-    listen_kurse = []
-    for t, wert in (loaded or {}).items():
-        try:
-            df = wert[0] if isinstance(wert, tuple) else wert
-            firma = wert[1] if isinstance(wert, tuple) and len(wert) > 1 else ""
-            listen_kurse.append((t, aus_scanner_df(df), firma))
-        except Exception:  # noqa
-            continue
-    # ETAPPE 0, PUNKT 2 (Gerhard, 13.09.2026): Ein Bau ohne Nachtscan liess
-    # "listen" LEER, bis der naechste Scan lief; die Berichte fanden die
-    # Aktien der Wochenliste dann nicht (belegt an drei Laeufen von
-    # nachschlag_daten.yml am 13.09.2026, jeweils 0 statt 232 Eintraege).
-    # Jetzt kommen sie aus demselben Abruf wie das Universum.
-    if loaded is None:
-        for t, firma in (listen_ticker or {}).items():
-            k = kurse.get(t)
-            if k and k.get("close"):
-                listen_kurse.append((t, k, firma or ""))
     for t, k, firma in listen_kurse:
         kz = kennzahlen(k, indizes, cfg)
+        # Die Kurse des Nachtscans tragen keine Split-Meldungen; hat der
+        # Universumsabruf fuer dasselbe Kuerzel einen unbereinigten Split
+        # erkannt, gilt das auch hier.
+        uni_tk = ((aktien.get(t) or ausserhalb.get(t) or {}).get("technik") or {})
+        if uni_tk.get("split_verdacht") is not None and (uni_tk.get("split_verdacht") != (kz.get("technik") or {}).get("split_verdacht")):
+            kz["technik"] = {"split_verdacht": uni_tk["split_verdacht"]}
+        _allzeithoch_setzen(kz, k, ath_frisch.get(t), alt_je.get(t), ath_quellen)
         kz["firma"] = firma
         kz["im_universum"] = t in aktien
         kz["im_bezug"] = t in bezug
@@ -635,6 +800,7 @@ def bauen(loaded=None, pfad=DATEI, holen_liste=None, holen_kurse=None, leise=Fal
                          if (status == "ok" and kz.get("ad_roh") is not None and ad_sortiert) else None)
         alt_l = ((alt or {}).get("listen", {}) if isinstance(alt, dict) else {}).get(t)
         kz["rs_verlauf"] = _verlauf_fortschreiben(alt_l, handelstag or tag, kz["rs"], int(cfg["rs_verlauf_tage"]))
+        _rs_aenderung_setzen(kz)
         listen_ergebnis[t] = kz
 
     markt_info = {}
@@ -682,6 +848,10 @@ def bauen(loaded=None, pfad=DATEI, holen_liste=None, holen_kurse=None, leise=Fal
                       "dauer_s": round(time.time() - t0)},
         "selbsttest": probe, "plausibilitaet": plaus,
         "markt": markt_info,
+        # Etappe 2, Punkt 16: Stand des Allzeithochs; quellen zaehlt je
+        # Eintrag, woher der Wert kam (abruf, kette, fenster, fehlt).
+        "allzeithoch": {**ath_stand, "quellen": ath_quellen,
+                        "abruf_tage": int(CFG["technik"]["allzeithoch_abruf_tage"])},
         "aktien": aktien, "ausserhalb": ausserhalb, "listen": listen_ergebnis,
     }
     _schreiben(pfad, inhalt)
@@ -885,11 +1055,15 @@ def selbsttest() -> int:
     kurz = {"daten": kd["daten"][:100], "close": k[:100], "high": kd["high"][:100], "low": kd["low"][:100], "volume": [1e6] * 100}
     kz2 = kennzahlen(kurz, {})
     p("Zu kurze Historie: kein Rohwert, kein 52-Wochen-Hoch", kz2["roh"] is None and kz2["kurs_52w_hoch"] is None)
-    p("A/D-Naeherung: nur steigende Tage ergibt plus 1, nur fallende minus 1, Wechsel null",
-      ad_naeherung([1.0 * 1.01 ** i for i in range(70)], [100.0] * 70) == 1.0
-      and ad_naeherung([100.0 * 0.99 ** i for i in range(70)], [100.0] * 70) == -1.0
-      and abs(ad_naeherung([100.0 + (i % 2) for i in range(71)], [100.0] * 71)) < 0.02
-      and ad_naeherung([1.0] * 10, [1.0] * 10) is None)
+    p("A/D-Naeherung nach Chaikin (Etappe 2): Schluss am Hoch plus 1, am Tief minus 1, in der Mitte null, "
+      "ohne Hoch und Tief oder zu kurz kein Wert",
+      ad_naeherung([11.0] * 70, [11.0] * 70, [10.0] * 70, [100.0] * 70) == 1.0
+      and ad_naeherung([10.0] * 70, [11.0] * 70, [10.0] * 70, [100.0] * 70) == -1.0
+      and abs(ad_naeherung([10.5] * 70, [11.0] * 70, [10.0] * 70, [100.0] * 70)) < 1e-12
+      and ad_naeherung([10.5] * 70, None, None, [100.0] * 70) is None
+      and ad_naeherung([1.0] * 10, [1.0] * 10, [1.0] * 10, [1.0] * 10) is None)
+    p("Zeitraum in Kalendertagen: 14 Monate 426, zwei Jahre 730, Unbekanntes 426",
+      _zeitraum_tage("14mo") == 426 and _zeitraum_tage("2y") == 730 and _zeitraum_tage("max") == 426)
 
     # Ganzer Lauf mit synthetischem Universum: 240 Nasdaq- und 60 NYSE-Titel
     import tempfile
@@ -987,6 +1161,98 @@ def selbsttest() -> int:
                     alt=lies(pfad), jetzt=date(2026, 9, 13))
     p("Zweiter Lauf am selben Handelstag ersetzt den Tageswert statt ihn zu verdoppeln",
       len(inhalt2["aktien"][saf]["rs_verlauf"]) == 1)
+
+    # ETAPPE 2 (Gerhard, 13.09.2026, Entscheidungen 4 und 5): technische
+    # Kennzahlen, RS-Aenderung und Allzeithoch
+    tk = inhalt["aktien"][saf]["technik"]
+    p("Technik: jede Aktie mit Kursen traegt die Kennzahlen, auch unter den Schwellen und in den Listen; "
+      "ohne Kurse keine",
+      all("adr20" in a.get("technik", {}) and "rsi14" in a["technik"] for a in inhalt["aktien"].values())
+      and "technik" in inhalt["ausserhalb"]["BILLIG"] and "technik" in l[saf]
+      and "technik" not in inhalt["ausserhalb"]["FEHLT"]
+      and tk["adr20"] is not None and tk["beta"] is not None and tk["mrs"] is not None and tk["stufe"] is not None,
+      tk)
+    p("Technik: ohne Abruf der ganzen Historie gibt es das Allzeithoch nur fuer junge Titel mit ganzer Historie",
+      tk["ath"] is None and inhalt["ausserhalb"]["JUNG"]["technik"]["ath"] == round(max(reihen["JUNG"]["high"]), 2)
+      and inhalt["allzeithoch"]["abruf_heute"] == "voll" and inhalt["allzeithoch"]["erhalten"] == 0
+      and inhalt["allzeithoch"]["voll_am"] is None and inhalt["allzeithoch"]["quellen"].get("fenster") == 1,
+      inhalt["allzeithoch"])
+    reihen_ath = dict(reihen)
+    ath_abgefragt = []
+
+    def holen_reihen(symbole):
+        return {s: reihen_ath[s] for s in symbole if s in reihen_ath}
+
+    def holen_ath(symbole):
+        ath_abgefragt.append(sorted(symbole))
+        return {s: (max(reihen_ath[s]["high"]) * 1.5, "2020-01") for s in symbole if s in reihen_ath}
+    pfad_ath = os.path.join(tempfile.mkdtemp(), "rs_ath.json")
+    i1 = bauen(loaded={saf: (df_liste, "Firma 5")}, pfad=pfad_ath, holen_kurse=holen_reihen, holen_allzeit=holen_ath,
+               liste_text=text2, liste_text_andere=text3, leise=True, alt={}, jetzt=date(2026, 9, 12))
+    e1 = i1["aktien"][saf]["technik"]
+    p("Allzeithoch, erster Lauf: voller Abruf fuer alle mit Kursen samt Listen, Wert mit Monat, Stand gemerkt",
+      len(ath_abgefragt) == 1 and i1["allzeithoch"]["voll_am"] == "2026-09-12"
+      and i1["allzeithoch"]["abruf_heute"] == "voll" and "FEHLT" not in ath_abgefragt[0]
+      and e1["ath"] == round(max(reihen[saf]["high"]) * 1.5, 2) and e1["ath_datum"] == "2020-01"
+      and i1["listen"][saf]["technik"]["ath"] == e1["ath"]
+      and e1["ath_abst"] == round((i1["aktien"][saf]["kurs"] / e1["ath"] - 1) * 100, 1),
+      f"{i1['allzeithoch']} {e1.get('ath')}")
+    # Zweiter Lauf am Folgetag: ein neuer Titel im Verzeichnis und ein Split 2 zu 1
+    gespalten = nam("S", 7)
+    alt_split = reihen_ath[gespalten]
+    reihen_ath[gespalten] = {**alt_split, "close": [x / 2 for x in alt_split["close"]],
+                             "high": [x / 2 for x in alt_split["high"]], "low": [x / 2 for x in alt_split["low"]]}
+    reihen_ath["NEUX"] = _reihe(555)
+    # Yahoo rechnet einen Split erst einen Tag spaeter ein: Die Tage vor dem
+    # letzten Tag der Vornacht sind halbiert, der letzte Tag selbst nicht.
+    spaet = reihen_ath["SAI"]
+    halb_bis = len(spaet["close"]) - 1
+    reihen_ath["SAI"] = {**spaet, "close": [x / 2 for x in spaet["close"][:halb_bis]] + spaet["close"][halb_bis:],
+                         "high": [x / 2 for x in spaet["high"][:halb_bis]] + spaet["high"][halb_bis:],
+                         "low": [x / 2 for x in spaet["low"][:halb_bis]] + spaet["low"][halb_bis:]}
+    text2_neu = text2 + "NEUX|Neu - Common Stock|Q|N|N|100|N|N\n"
+    i2 = bauen(loaded={saf: (df_liste, "Firma 5")}, pfad=pfad_ath, holen_kurse=holen_reihen, holen_allzeit=holen_ath,
+               liste_text=text2_neu, liste_text_andere=text3, leise=True, alt=lies(pfad_ath), jetzt=date(2026, 9, 13))
+    vor = eintrag(gespalten, i1)["technik"]["ath"]
+    nach = eintrag(gespalten, i2)["technik"]["ath"]
+    p("Allzeithoch, Folgetag: kein voller Abruf, nur der neue Titel ohne Kette wird nachgeholt",
+      len(ath_abgefragt) == 2 and ath_abgefragt[1] == ["NEUX", "SAI"] and i2["allzeithoch"]["abruf_heute"] == "nachgeholt"
+      and i2["allzeithoch"]["voll_am"] == "2026-09-12" and eintrag("NEUX", i2)["technik"]["ath"] is not None
+      and i2["aktien"][saf]["technik"]["ath"] == e1["ath"], f"{ath_abgefragt[-1:]} {i2['allzeithoch']}")
+    p("Allzeithoch, Folgetag: nach einem Split 2 zu 1 halbiert die Kette das gespeicherte Hoch",
+      vor is not None and nach is not None and abs(nach - vor / 2) <= 0.011, f"{vor} {nach}")
+    reihen_ath[gespalten] = alt_split
+    reihen_ath["SAI"] = spaet
+
+    def holen_halb(symbole):
+        ath_abgefragt.append(sorted(symbole))
+        return {s: (max(reihen_ath[s]["high"]) * 1.5, "2020-01") for s in list(symbole)[: len(symbole) // 2]}
+    i3 = bauen(loaded={saf: (df_liste, "Firma 5")}, pfad=pfad_ath, holen_kurse=holen_reihen, holen_allzeit=holen_halb,
+               liste_text=text2_neu, liste_text_andere=text3, leise=True, alt=lies(pfad_ath), jetzt=date(2026, 9, 19))
+    p("Allzeithoch, voller Abruf nach sieben Tagen unter der Mindestabdeckung: Stand bleibt, die Kette traegt weiter",
+      i3["allzeithoch"]["abruf_heute"] == "voll" and i3["allzeithoch"]["voll_am"] == "2026-09-12"
+      and i3["allzeithoch"]["erhalten"] < i3["allzeithoch"]["angefragt"]
+      and all(a["technik"]["ath"] is not None for a in i3["aktien"].values()), i3["allzeithoch"])
+    # RS-Aenderung aus dem Verlauf der Vornaechte
+    alt_v = lies(pfad_ath)
+    ht = date.fromisoformat(inhalt["handelstag"])
+    vor13 = date.fromordinal(ht.toordinal() - 13).isoformat()
+    vor30 = date.fromordinal(ht.toordinal() - 30).isoformat()
+    alt_v["aktien"][saf]["rs_verlauf"] = [[vor30, 40], [vor13, 50]]
+    alt_v["listen"][saf]["rs_verlauf"] = [[vor30, 40], [vor13, 50]]
+    i4 = bauen(loaded={saf: (df_liste, "Firma 5")}, pfad=pfad_ath, holen_kurse=holen_reihen, liste_text=text2,
+               liste_text_andere=text3, leise=True, alt=alt_v, jetzt=date(2026, 9, 14))
+    rs4 = i4["aktien"][saf]["rs"]
+    p("RS-Aenderung: eine Woche gegen den Wert von vor 13 Tagen, vier Wochen gegen den von vor 30 Tagen, "
+      "fuer Universum und Listen",
+      i4["aktien"][saf]["technik"]["rs_1w"] == rs4 - 50 and i4["aktien"][saf]["technik"]["rs_4w"] == rs4 - 40
+      and i4["listen"][saf]["technik"]["rs_4w"] == i4["listen"][saf]["rs"] - 40
+      and i4["ausserhalb"]["BILLIG"]["technik"].get("rs_1w") is None,
+      f"{rs4} {i4['aktien'][saf]['technik'].get('rs_1w')} {i4['aktien'][saf]['technik'].get('rs_4w')}")
+    p("Allzeithoch: Split nur im Vortag eingerechnet, die Kette traegt nicht und der Titel wird nachgeholt",
+      "SAI" in ath_abgefragt[1], ath_abgefragt[1])
+    p("Eroeffnung: der Kursrahmen des Nachtscans bringt sie mit",
+      aus_scanner_df(df_liste)["open"] == [float(x) for x in reihen[saf]["close"]])
 
     # ETAPPE 0, PUNKT 2 (13.09.2026): Bau OHNE Nachtscan, die Listen kommen
     # aus der Mappe und ihre Kurse aus demselben Abruf wie das Universum.

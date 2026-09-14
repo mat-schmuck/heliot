@@ -710,6 +710,90 @@ CFG = {
         "rs_verlauf_tage": 30,
     },
 
+    # --- Technische Kennzahlen je Aktie (Etappe 2, Entscheidungen 4 und 5) ---
+    # Gerhard, 13.09.2026: alle 16 Kennzahlen der Gruppe A aus dem
+    # Recherche-Papier (Teil 4.1), NUR ANZEIGE, keine davon filtert, auch ADR
+    # nicht. Gerechnet in kennzahlen_technik.py, abgelegt je Aktie unter
+    # "technik" in rs_universum.json.
+    "technik": {
+        # Punkt 1: ADR nach Qullamaggie, mittlere Tagesspanne (Hoch durch
+        # Tief) ueber 20 Handelstage.
+        "adr_tage": 20,
+        # Punkt 9: Volatilitaet wie bei Finviz, dieselbe Rechnung ueber Woche
+        # und Monat. GEMESSEN 14.09.2026 an AAPL, NVDA, MSFT, IBM und AAOI:
+        # Finviz nimmt 5 und 21 Tage (mit 20 Tagen wich der Monat bei AAOI um
+        # 0,8 Punkte ab).
+        "volatilitaet_tage": [5, 21],
+        # Punkt 2: ATR nach Wilder.
+        "atr_tage": 14,
+        # Punkt 3: Up/Down Volume Ratio nach IBD.
+        "updown_tage": 50,
+        # Punkt 4: A/D nach Chaikin, dasselbe Fenster wie die fruehere
+        # Plus-Minus-Zaehlung (13 Wochen).
+        "ad_tage": 65,
+        # Punkte 5 und 12: Mansfield RS und Beta gegen diesen Index.
+        "vergleich_index": "SPY",
+        "mansfield_wochen": 52,
+        # Punkte 5 und 6: "steigend" heisst hoeher als vor so vielen Wochen;
+        # dieselbe Spanne misst die Steigung der 30-Wochen-Linie.
+        "vergleich_wochen": 4,
+        # Punkt 6: Weinstein-Stufe. Flach heisst, die Linie aendert sich in
+        # vier Wochen um hoechstens 0,5 Prozent; ob davor ein Anstieg (Stufe
+        # 3) oder ein Rueckgang (Stufe 1) lag, entscheidet das Quartal davor.
+        "weinstein_linie_wochen": 30,
+        "weinstein_flach_pct": 0.5,
+        "weinstein_vorlauf_wochen": 13,
+        # Punkt 7: Momentum Burst nach Stockbee und Episodic Pivot.
+        "burst_pct": 4.0,
+        "burst_mindestvolumen": 100_000,
+        "pivot_luecke_pct": 10.0,
+        # Volumenfaktor des Episodic Pivot: gegen den Schnitt so vieler Tage.
+        "volumen_schnitt_tage": 50,
+        # Punkt 8: Wertentwicklung wie bei Finviz. Zahlen sind Handelstage,
+        # "jahr" heisst gegen den letzten Schluss am oder vor demselben
+        # Kalendertag ein Jahr frueher. GEMESSEN 14.09.2026 an fuenf Aktien:
+        # So stimmen alle 25 Bezugskurse mit Finviz, mit 252 Handelstagen fuer
+        # das Jahr nur 20.
+        "wertentwicklung_tage": {"1w": 5, "1m": 21, "3m": 63, "6m": 126, "12m": "jahr"},
+        # Punkt 10: Abstand zu den einfachen Durchschnitten und zum Hoch und
+        # Tief dieses Fensters.
+        "sma_tage": [20, 50, 200],
+        "hoch_tief_tage": 50,
+        # Punkt 12: Beta ueber so viele Tagesrenditen.
+        "beta_tage": 252,
+        # Punkt 13: RSI nach Wilder.
+        "rsi_tage": [14, 2],
+        # Punkt 14: Durchschnittsvolumen und Dollarvolumen.
+        "volumen_tage": 63,
+        "dollarvolumen_kurz_tage": 20,
+        # Punkt 15: RS-Aenderung gegen den juengsten Verlaufseintrag, der so
+        # viele Kalendertage zurueckliegt (eine und vier Wochen).
+        "rs_aenderung_tage": {"1w": 5, "4w": 26},
+        # Punkt 16: Die ganze Historie kommt als Monatskerzen von Yahoo, alle
+        # so viele Tage fuer das ganze Universum; dazwischen wird das Hoch
+        # jede Nacht fortgeschrieben. GEMESSEN 14.09.2026 an 100 Aktien: Das
+        # hoechste Monatshoch ist bei allen 100 gleich dem hoechsten
+        # Tageshoch, der Abruf braucht 2,5 statt 8,9 Sekunden je Block.
+        "allzeithoch_abruf_tage": 7,
+        # Weicht der gespeicherte Schlusskurs der Vornacht um mehr als diesen
+        # Anteil von dem ab, den Yahoo heute fuer denselben Tag nennt, war es
+        # ein Split, und das gespeicherte Allzeithoch wird umgerechnet.
+        "allzeithoch_split_toleranz": 0.005,
+        # Unbereinigter Split (Befund 14.09.2026, sechs Kleinwerte an einem
+        # Tag): Springt der Schluss auf das Dreifache oder mehr (oder auf ein
+        # Drittel), waehrend das Dollarvolumen hoechstens fuenffach
+        # auseinanderliegt, hat die Kursquelle den Split noch nicht in die
+        # Historie eingerechnet. Die Kennzahlen dieses Tages sind dann nicht
+        # verfuegbar, statt falsch.
+        "split_verdacht_faktor": 3.0,
+        "split_verdacht_dollarvolumen": 5.0,
+        # Zuerst gilt Yahoos eigene Split-Meldung, wenn sie an einem der
+        # letzten so vielen Handelstage steht. GEMESSEN 14.09.2026: Yahoo
+        # fuehrte fuer alle sechs Titel mit unbereinigtem Sprung einen Split
+        # mit diesem Datum; die Dollarvolumen-Regel allein erkannte vier.
+        "split_ereignis_tage": 5,
+    },
+
     # --- Sektor-Rangliste der 36 Branchen-ETFs (R12 bis R17) -------------
     "sektor_rangliste": {
         # R13: Faber-Mittel ueber 1, 3, 6, 9 und 12 Monate (Handelstage).
@@ -944,6 +1028,17 @@ def pruefe_config():
     assert u["historie_tage"] >= max(CFG["lookback"]["rs_quartale"]), \
         "RS-Universum: die Historie muss das laengste RS-Quartal decken"
     assert u["mindestkurs"] > 0 and u["mindest_dollarvolumen"] > 0
+    t = CFG["technik"]
+    assert t["adr_tage"] >= 2 and len(t["volatilitaet_tage"]) == 2 and min(t["volatilitaet_tage"]) >= 2, \
+        "Technik: ADR und Volatilitaet ueber mindestens zwei Tage"
+    assert all(w == "jahr" or (isinstance(w, int) and w >= 1) for w in t["wertentwicklung_tage"].values()), \
+        "Technik: Wertentwicklung in Handelstagen oder 'jahr'"
+    assert len(t["rsi_tage"]) == 2 and min(t["rsi_tage"]) >= 2, "Technik: RSI ueber zwei Fenster mit je mindestens zwei Tagen"
+    assert t["weinstein_flach_pct"] >= 0 and t["vergleich_wochen"] >= 1 and t["weinstein_vorlauf_wochen"] >= 1
+    assert t["mansfield_wochen"] + t["vergleich_wochen"] <= 60,         "Technik: Mansfield RS samt Vergleich muss in die 14 Monate des Abrufs passen"
+    assert t["beta_tage"] < u["historie_tage"] + 30 and max(t["sma_tage"]) <= u["historie_tage"]
+    assert t["allzeithoch_abruf_tage"] >= 1 and 0 <= t["allzeithoch_split_toleranz"] < 0.1
+    assert t["split_verdacht_faktor"] > 1 and t["split_verdacht_dollarvolumen"] >= 1 and t["split_ereignis_tage"] >= 1
     s = CFG["scanner"]
     assert 0.0 <= s["toleranz"] < 0.5, "Scanner: Toleranz als Bruchteil zwischen 0 und 0,5"
     assert s["historie_tage"] >= 760, "Scanner: drei Jahre Handelstage brauchen mindestens 760 Tage"
