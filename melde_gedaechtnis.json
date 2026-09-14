@@ -16,7 +16,7 @@
     "KRT|Fallback: MA50-Pullback": "draussen",
     "LBRX|Fallback: MA50-Pullback": "draussen",
     "MRNA|Fallback: MA50-Pullback": "draussen",
-    "NESR|Fallback: MA50-Pullback": "drin",
+    "NESR|Fallback: MA50-Pullback": "draussen",
     "PARR|Fallback: MA50-Pullback": "draussen",
     "RVMD|Fallback: MA50-Pullback": "drin",
     "SMTC|Fallback: MA50-Pullback": "draussen",
@@ -169,7 +169,10 @@
     "CNC|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "HNGE|Cup & Handle (Wochenbasis)": "drin",
     "INSP|Fallback: 20-Tage-Hoch (Pivot)": "drin",
-    "GNK|Rectangle Top": "drin"
+    "GNK|Rectangle Top": "drin",
+    "TWLO|Rectangle Top": "drin",
+    "TSAT|EMA Crossback": "drin",
+    "GNK|EMA Crossback": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -257,7 +260,9 @@
     "INSP|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-14",
     "BEST|INSP|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-14",
     "GNK|Rectangle Top": "2026-09-14",
-    "BEST|GNK|Rectangle Top": "2026-09-14"
+    "BEST|GNK|Rectangle Top": "2026-09-14",
+    "GNK|EMA Crossback": "2026-09-14",
+    "BEST|GNK|EMA Crossback": "2026-09-14"
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-09-14"
