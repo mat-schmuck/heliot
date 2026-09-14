@@ -1,0 +1,206 @@
+name: Scanner-Daten bauen
+
+# DER SCANNER DER HELIOT-APP (Mathias, 14.09.2026): Dieser Ablauf baut jede
+# Nacht die Tabelle, aus der der Reiter "Scanner" liest (scanner_daten.py).
+# Er sendet nichts, setzt keine Alarme und schreibt keine Datei, die Waechter,
+# Scanner-Mappe oder Alarmbot lesen ("Baue noch keine Vernetzung zu unserem
+# Haupttool").
+#
+# WANN: nach jedem Lauf des Nachtscans. Der Nachtscan wird von cron-job.org
+# alle zehn Minuten angestossen und endet meist nach Sekunden; dieser Ablauf
+# endet dann ebenso schnell, weil scanner_noetig.py nur baut, wenn das
+# RS-Universum seit dem letzten Bau neu ist. Der Nachtscan selbst bleibt
+# unveraendert. Von Hand geht es ueber "Run workflow".
+#
+# WOHIN:
+#   scanner_tabelle.parquet und scanner_stand.json als Release-Anhang
+#     "scanner-daten" in DIESES Repo (Vorabversion, damit "latest" beim
+#     Fundament-Release bleibt, von dem ibd_ratings.py liest);
+#   scanner_stand.json zusaetzlich ins Repo, daran erkennt scanner_noetig.py
+#     den letzten Bau;
+#   scanner_analysten.parquet und das Kursarchiv der letzten drei Jahre als
+#     Release-Anhang "scanner-daten" im PRIVATEN Datenrepo heliot-daten
+#     (Secret DATEN_TOKEN, wie beim eingefrorenen Konsens). Fehlt das Token,
+#     wird trotzdem gebaut und veroeffentlicht, nur ohne diese zwei Dateien.
+
+on:
+  workflow_run:
+    workflows: ["Pattern-Scanner (Kaufpunkte)"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      erzwingen:
+        description: "Auch bauen, wenn die Tabelle schon mit dem neuesten RS-Universum rechnet (ja/nein)"
+        required: false
+        default: "nein"
+      grenze:
+        description: "Probelauf mit so vielen Aktien, leer heisst alle (ein Probelauf wird nicht veroeffentlicht)"
+        required: false
+        default: ""
+      analysten:
+        description: "Analystenwerte je Aktie"
+        type: choice
+        options:
+          - rotation
+          - alle
+          - aus
+        default: rotation
+
+# Eigene Gruppe: Der Bau darf den Nachtscan nie aufhalten. Ohne Abbrechen:
+# Ein zweiter Anstoss wartet, statt den laufenden zu zerschiessen.
+concurrency:
+  group: scanner-daten
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  bauen:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      # Immer der neueste Stand von main: Der Nachtscan legt sein
+      # RS-Universum erst am Ende seines Laufs ins Repo.
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      # Nur Standardbibliothek, deshalb vor setup-python und pip.
+      - name: Ist eine neue Scanner-Tabelle faellig?
+        id: pruefung
+        env:
+          ERZWINGEN: ${{ github.event.inputs.erzwingen }}
+        run: |
+          if [ "$ERZWINGEN" = "ja" ]; then
+            python3 scanner_noetig.py --erzwingen
+          else
+            python3 scanner_noetig.py
+          fi
+
+      - uses: actions/setup-python@v5
+        if: steps.pruefung.outputs.noetig == 'ja'
+        with:
+          python-version: "3.12"
+
+      # odfpy schreibt die OpenDocument-Tabelle des Selbsttests.
+      - name: Abhaengigkeiten
+        if: steps.pruefung.outputs.noetig == 'ja'
+        run: pip install requests pandas numpy scipy yfinance pyarrow openpyxl odfpy
+
+      - name: Selbsttests
+        if: steps.pruefung.outputs.noetig == 'ja'
+        run: |
+          python scanner_noetig.py --selbsttest
+          python scanner_daten.py --selbsttest
+          python scanner_ansicht.py --selbsttest
+
+      - name: Ist das Datenrepo-Token da?
+        id: token
+        if: steps.pruefung.outputs.noetig == 'ja'
+        env:
+          DATEN_TOKEN: ${{ secrets.DATEN_TOKEN }}
+        run: |
+          if [ -z "$DATEN_TOKEN" ]; then
+            echo "Secret DATEN_TOKEN fehlt; Analystenwerte und Kursarchiv werden nicht gesichert."
+            echo "da=nein" >> "$GITHUB_OUTPUT"
+          else
+            echo "da=ja" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Die Analystenwerte rotieren: je Nacht ein Siebtel des Markts. Ohne
+      # die Datei der Vornacht beginnt die Rotation von vorn.
+      - name: Analystenwerte der Vornacht holen
+        if: steps.pruefung.outputs.noetig == 'ja' && steps.token.outputs.da == 'ja'
+        env:
+          GH_TOKEN: ${{ secrets.DATEN_TOKEN }}
+        run: |
+          if gh release download scanner-daten --repo mat-schmuck/heliot-daten --pattern scanner_analysten.parquet --clobber; then
+            echo "Analystenwerte der Vornacht geholt."
+          else
+            echo "Noch keine Analystendatei im Datenrepo; die Rotation beginnt von vorn."
+          fi
+
+      - name: Scanner-Tabelle bauen
+        id: bau
+        if: steps.pruefung.outputs.noetig == 'ja'
+        env:
+          GRENZE: ${{ github.event.inputs.grenze }}
+          ANALYSTEN: ${{ github.event.inputs.analysten }}
+        run: |
+          case "${ANALYSTEN:-rotation}" in
+            rotation|alle|aus) ;;
+            *) echo "Unbekannte Analysten-Wahl: $ANALYSTEN"; exit 1 ;;
+          esac
+          if [ -n "$GRENZE" ]; then
+            case "$GRENZE" in
+              *[!0-9]*) echo "Die Grenze muss eine ganze Zahl sein: $GRENZE"; exit 1 ;;
+            esac
+            python scanner_daten.py --bauen --analysten "${ANALYSTEN:-rotation}" --grenze "$GRENZE"
+            echo "Probelauf mit $GRENZE Aktien: wird nicht veroeffentlicht."
+            echo "veroeffentlichen=nein" >> "$GITHUB_OUTPUT"
+          else
+            python scanner_daten.py --bauen --analysten "${ANALYSTEN:-rotation}"
+            echo "veroeffentlichen=ja" >> "$GITHUB_OUTPUT"
+          fi
+          ls -l scanner_tabelle.parquet scanner_analysten.parquet scanner_stand.json .cache/scanner/scanner_kurse_3j.parquet
+
+      - name: Tabelle als Release-Anhang veroeffentlichen
+        if: steps.bau.outputs.veroeffentlichen == 'ja'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! gh release view scanner-daten >/dev/null 2>&1; then
+            gh release create scanner-daten --prerelease --latest=false \
+              --title "Scanner-Daten" \
+              --notes "Nachttabelle fuer den Reiter Scanner der Heliot-App. Wird jede Nacht ersetzt."
+          fi
+          gh release upload scanner-daten scanner_tabelle.parquet scanner_stand.json --clobber
+
+      - name: Analystenwerte und Kursarchiv ins private Datenrepo
+        if: steps.bau.outputs.veroeffentlichen == 'ja' && steps.token.outputs.da == 'ja'
+        env:
+          GH_TOKEN: ${{ secrets.DATEN_TOKEN }}
+        run: |
+          if ! gh release view scanner-daten --repo mat-schmuck/heliot-daten >/dev/null 2>&1; then
+            gh release create scanner-daten --repo mat-schmuck/heliot-daten \
+              --title "Scanner-Daten" \
+              --notes "Analystenwerte je Aktie und Tageskurse der letzten drei Jahre fuer den Scanner. Wird jede Nacht ersetzt."
+          fi
+          gh release upload scanner-daten --repo mat-schmuck/heliot-daten \
+            scanner_analysten.parquet .cache/scanner/scanner_kurse_3j.parquet --clobber
+
+      # KONFLIKTFEST IN DREI ANLAEUFEN, dasselbe Muster wie in
+      # nachschlag_daten.yml. Erst nach dem Veroeffentlichen: Scheitert das,
+      # bleibt der alte Stand im Repo und der naechste Anstoss baut neu.
+      - name: Stand ins Repo legen
+        if: steps.bau.outputs.veroeffentlichen == 'ja'
+        run: |
+          git config user.name "pattern-scanner"
+          git config user.email "actions@users.noreply.github.com"
+          SICHERUNG=$(mktemp -d)
+          cp scanner_stand.json "$SICHERUNG/"
+          ERLEDIGT=nein
+          for versuch in 1 2 3; do
+            git fetch --quiet origin main
+            git reset --hard --quiet FETCH_HEAD
+            cp "$SICHERUNG/scanner_stand.json" scanner_stand.json
+            git add -- scanner_stand.json
+            if git diff --cached --quiet; then
+              echo "Keine Aenderung gegenueber dem Stand im Repo."
+              ERLEDIGT=ja
+              break
+            fi
+            git commit -q -m "Scanner-Daten: Stand der Nachttabelle"
+            if git push --quiet origin main; then
+              echo "Veroeffentlicht (Versuch $versuch)."
+              ERLEDIGT=ja
+              break
+            fi
+            echo "Jemand war schneller (Versuch $versuch von 3), noch einmal."
+          done
+          if [ "$ERLEDIGT" != "ja" ]; then
+            echo "Der Stand liess sich nach drei Anlaeufen nicht ins Repo legen; der naechste Anstoss baut neu."
+            exit 1
+          fi

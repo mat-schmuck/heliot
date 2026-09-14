@@ -138,10 +138,12 @@ def vorjahr(reihe, end):
 # Daten holen
 # ---------------------------------------------------------------------------
 
-def lade_kennzahlen(jahre, holen=None, cache=CACHE, leise=True):
+def lade_kennzahlen(jahre, holen=None, cache=CACHE, leise=True, auswahl=None):
     """Die Parquet-Dateien des juengsten Fundament-Releases, auf die
     gebrauchten Kennzahlen gefiltert. holen(name) -> bytes ersetzt den
-    Abruf (Selbsttest)."""
+    Abruf (Selbsttest). auswahl ersetzt die Kennzahlen der Ratings, etwa
+    fuer den Scanner (scanner_daten.py), der zusaetzlich Bruttogewinn,
+    Schulden, Bilanzsumme und ausstehende Aktien braucht."""
     import pandas as pd
     os.makedirs(cache, exist_ok=True)
     frames = []
@@ -173,7 +175,7 @@ def lade_kennzahlen(jahre, holen=None, cache=CACHE, leise=True):
             if not leise:
                 print(f"  {name}: unlesbar ({type(e).__name__})")
             continue
-        frames.append(df[df["kennzahl"].isin(KENNZAHLEN)])
+        frames.append(df[df["kennzahl"].isin(auswahl or KENNZAHLEN)])
     if not frames:
         return None
     alle = pd.concat(frames, ignore_index=True)
@@ -316,7 +318,22 @@ def bewerten_firma(reihen, quartale=None, heute=None):
     ums, ums_vermerk = umsatz_reihe(reihen)
     if ums_vermerk:
         vermerke.append(ums_vermerk)
-    ums = [(e[1], e[2]) for e in ums if e[1] >= grenze]
+    ums = [e for e in ums if e[1] >= grenze]
+    # Die Marge vergleicht Werte DESSELBEN Quartals, dort hebt sich die
+    # Laenge auf; sie rechnet deshalb mit den Zahlen, wie die SEC sie fuehrt.
+    ums_sec = [(e[1], e[2]) for e in ums]
+    # W7 gilt auch fuer den Umsatz (Befund 14.09.2026: BNED und RGP zeigten
+    # im Scanner ein anderes Umsatzwachstum als hier, weil ein 14-Wochen-
+    # Vorjahresquartal gegen ein 13-Wochen-Quartal stand).
+    ums_13 = []
+    ums_umgerechnet = False
+    for s, e, w, _qu, _tax in ums:
+        w2, um = auf_13_wochen(s, e, w) if CFGR.get("wochen_13_umrechnen", True) else (w, False)
+        ums_umgerechnet = ums_umgerechnet or um
+        ums_13.append((e, w2))
+    if ums_umgerechnet and not umgerechnet:
+        vermerke.append("14-Wochen-Quartal auf 13 Wochen umgerechnet (mal 13 durch 14)")
+    ums = ums_13
     sg = []
     for e, w in ums[-3:][::-1]:
         v = vorjahr(ums, e)
@@ -326,8 +343,8 @@ def bewerten_firma(reihen, quartale=None, heute=None):
     sales_roh = sum(sg) / len(sg) if sg else None
     ng = [(e[1], e[2]) for e in (reihen.get("nettogewinn") or {}).get("Q") or [] if e[1] >= grenze]
     marge = None
-    if ng and ums:
-        letzte_ums = dict(ums)
+    if ng and ums_sec:
+        letzte_ums = dict(ums_sec)
         e, w = ng[-1]
         if e in letzte_ums and letzte_ums[e] > 0:
             marge = w / letzte_ums[e]
@@ -627,6 +644,15 @@ def selbsttest() -> int:
       any(v.startswith("Immobilien") for v in r7["vermerke"]) and r7["umsatz_juengst"] > 500, r7["vermerke"])
     r5 = bewerten_firma(_reihen(df[df.cik == 5]), heute=heute)
     p("Antwort 8: IFRS-Firma laeuft mit und ist als ungeprueft gekennzeichnet", r5["ifrs"] and any("IFRS" in v for v in r5["vermerke"]))
+    # Firma 8: Umsatz gleich hoch je Woche, das juengste Quartal hat 14 Wochen.
+    # Ohne W7 saehe das nach 7,7 Prozent Wachstum aus, mit W7 sind es null.
+    zeilen8 = _quartale(8, "eps_verwaessert", [1.0] * 14) + _quartale(8, "umsatz", [91.0] * 13 + [98.0], lang_letztes=True)
+    zeilen8 += _quartale(8, "nettogewinn", [9.1] * 13 + [9.8], lang_letztes=True)
+    r8 = bewerten_firma(_reihen(pd.DataFrame(zeilen8)), heute=heute)
+    p("W7 auch beim Umsatz: 14-Wochen-Quartal mit gleichem Wochenumsatz ergibt null Wachstum, Vermerk, Marge aus den SEC-Zahlen",
+      r8["umsatz_juengst"] == 91.0 and abs(wachstum_pct(r8["umsatz_juengst"], r8["umsatz_vorjahr"])) < 0.05
+      and any("13 Wochen" in v for v in r8["vermerke"]) and abs(r8["marge"] - 0.1) < 1e-9,
+      {k: r8[k] for k in ("umsatz_juengst", "umsatz_vorjahr", "marge", "vermerke")})
 
     rs = {"listen": {"AAA": {"rs": 90, "ad_rang": 70, "abst_52w_hoch_pct": -2.0},
                      "BBB": {"rs": 20, "ad_rang": 30, "abst_52w_hoch_pct": -30.0}},

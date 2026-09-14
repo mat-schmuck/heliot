@@ -758,6 +758,86 @@ CFG = {
         # W7: 14-Wochen-Quartale auf 13 Wochen umrechnen, mit Kennzeichnung.
         "wochen_13_umrechnen": True,
     },
+
+    # --- Scanner der Heliot-App (Mathias, 14.09.2026) ------------------------
+    # Nachttabelle scanner_daten.py, Reiter "Scanner" der App. KEINE
+    # Vernetzung mit Waechter, Alarmen oder der Scanner-Mappe.
+    "scanner": {
+        # "Wuerde eine Toleranzabweichung von 5 % jedoch fuers erste
+        # akzeptieren" (Recherche 14.09.2026): Schwellen in Prozent oder als
+        # Verhaeltnis duerfen um diesen Bruchteil ihres Werts verfehlt werden,
+        # die Lage zu gleitenden Durchschnitten um diesen Bruchteil der ATR 14,
+        # Mindest- und Hoechstdauern um diesen Bruchteil, auf ganze Tage
+        # abgerundet. Zaehlregeln, Richtungen (steigt, faellt) und feste
+        # Formbedingungen (Kurs noch in der Box) bleiben streng.
+        "toleranz": 0.05,
+        "kurs_block": 100,           # Yahoo-Block, 100 wie im RS-Universum
+        "historie_tage": 800,        # drei Jahre Handelstage plus Rand
+        "archiv_tage": 1098,         # Kalendertage im Kursarchiv, drei Jahre
+        "mindest_abdeckung": 0.90,   # darunter heisst der Stand "unvollstaendig"
+        "termine_tage": 10,          # Kalendertage voraus im Nasdaq-Kalender
+        # Analysten und Quartalsueberraschungen je Aktie: ein Siebtel des
+        # Universums je Nacht (gemessen 0,37 s je Abruf, 200 Abrufe ohne
+        # Drosselung), dazu wer in den letzten Tagen berichtet hat.
+        "rotation_naechte": 7,
+        "nach_bericht_tage": 4,
+        "abruf_faeden": 4,
+        "abruf_fehlergrenze": 0.25,  # mehr Fehler: fuer diese Nacht aufhoeren
+        "abruf_mindestproben": 40,
+        # HANDELBARKEIT vor jedem Muster (Recherche 14.09.2026: O'Neil kauft
+        # ungern unter 15 Dollar, IBD will 20 bis 25 Millionen Dollar
+        # Tagesumsatz; Ausgangswerte etwas lockerer). Die App blendet nicht
+        # Handelbares in Teil 1 aus, abschaltbar.
+        "handelbar": {
+            "kurs_min": 10.0,
+            "dollarvolumen_min": 10e6,     # mittlerer Tagesumsatz 50 Tage in Dollar
+            "historie_min_tage": 252,
+        },
+        # LANGEWEILE-SPERRE der Darvas Box (Mathias: "wir brauchen irgendeinen
+        # Filter, der langweilige Charts aussortiert"). Darvas selbst nahm
+        # nur Aktien, deren Jahreshoch mindestens das Doppelte des Jahrestiefs
+        # betrug (1964). Dazu: die Aktie bewegt sich (mittlere Tagesspanne),
+        # die Box ist mehr als Rauschen (mindestens anderthalb Tagesspannen
+        # hoch) und keine tiefe Korrektur (hoechstens 25 Prozent).
+        "langeweile": {
+            "jahresspanne_min": 2.0,     # Jahreshoch durch Jahrestief
+            "adr_min_pct": 2.5,          # mittlere Tagesspanne der letzten 20 Tage
+            "box_adr_min": 1.5,          # Boxhoehe in Tagesspannen
+            "box_hoehe_max_pct": 25.0,   # Boxhoehe in Prozent der Oberkante
+        },
+        # RATING 0 bis 100 je Mustertreffer ("die genaue Gewichtung
+        # ueberlassen wir vorerst Dir"): Bausteine je 0 bis 1 ueber eine
+        # lineare Rampe vom Mindestwert zum Idealwert, gewichtet je Muster
+        # (Recherche 14.09.2026: Darvas, Bulkowski, O'Neil, Minervini,
+        # Kullamaegi). Fehlt ein Baustein, zaehlen die uebrigen. Ein Treffer
+        # nur mit Toleranz kostet Punkte. Ausgangswerte, zu kalibrieren.
+        "rating": {
+            "toleranz_abzug": 5,
+            "rampen": {
+                "rs": [70, 95], "hochnaehe": [25.0, 2.0], "vorlauf": [30.0, 100.0],
+                "jahresspanne": [1.5, 3.0], "adr": [2.5, 5.0], "adr_deckel": 12.0,
+                "liquiditaet": [5e6, 5e7], "austrocknen": [1.0, 0.6], "enge": [1.0, 0.5],
+                "nachfrage": [1.5, 2.5], "kaufpunkt_naehe": [5.0, 0.0], "cup_score": [80, 100],
+                "ma200_steigt": [21, 105], "box_ideal": [2.0, 8.0], "box_grenzen": [1.5, 12.0],
+            },
+            "gewichte": {
+                "darvas": {"jahresspanne": 15, "rs": 15, "nachfrage": 15, "box": 15, "hochnaehe": 10,
+                           "adr": 10, "austrocknen": 10, "enge": 5, "liquiditaet": 5},
+                "vcp": {"muster": 25, "austrocknen": 15, "rs": 15, "hochnaehe": 10, "vorlauf": 10,
+                        "enge": 10, "nachfrage": 10, "liquiditaet": 5},
+                "cup_handle": {"muster": 30, "rs": 15, "nachfrage": 15, "vorlauf": 10, "austrocknen": 10,
+                               "hochnaehe": 10, "liquiditaet": 5},
+                "rectangle": {"vorlauf": 15, "muster": 15, "rs": 15, "nachfrage": 15, "austrocknen": 10,
+                              "hochnaehe": 5, "liquiditaet": 5},
+                "htf": {"muster": 50, "austrocknen": 15, "nachfrage": 15, "liquiditaet": 10},
+                "htf_innen": {"muster": 50, "austrocknen": 15, "nachfrage": 15, "liquiditaet": 10},
+                "trend_template": {"rs": 25, "hochnaehe": 15, "vorlauf": 15, "ma200_steigt": 15, "adr": 10,
+                                   "liquiditaet": 10},
+                "standard": {"rs": 25, "hochnaehe": 15, "vorlauf": 15, "nachfrage": 15, "adr": 10,
+                             "liquiditaet": 10, "austrocknen": 10},
+            },
+        },
+    },
 }
 
 
@@ -864,6 +944,11 @@ def pruefe_config():
     assert u["historie_tage"] >= max(CFG["lookback"]["rs_quartale"]), \
         "RS-Universum: die Historie muss das laengste RS-Quartal decken"
     assert u["mindestkurs"] > 0 and u["mindest_dollarvolumen"] > 0
+    s = CFG["scanner"]
+    assert 0.0 <= s["toleranz"] < 0.5, "Scanner: Toleranz als Bruchteil zwischen 0 und 0,5"
+    assert s["historie_tage"] >= 760, "Scanner: drei Jahre Handelstage brauchen mindestens 760 Tage"
+    assert s["rotation_naechte"] >= 1 and s["abruf_faeden"] >= 1
+    assert 0.0 < s["mindest_abdeckung"] <= 1.0
     n = CFG["ibd_ratings"]["noten"]
     assert n["A"] > n["B"] > n["C"] > n["D"] > 0, "IBD-Noten: Grenzen muessen fallen (A ueber B ueber C ueber D)"
     assert CFG["gap_and_go"]["einstieg_grenze"] <= CFG["betrieb"]["nachlauf_grenze"], \

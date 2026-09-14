@@ -6,8 +6,8 @@ CHART-SCREENING-TOOL, Web-Oberflaeche
 Oben "Aktie nachschlagen": Kuerzel oder Name eingeben, dann alle unsere
 Zahlen als Text, alle Muster, die Kaufpunkte samt Chart und darunter der
 Aktienchart mit Tages-, Monats- oder Jahreskerzen. Darunter die
-Registerkarten Liste pruefen, Aktueller Scan, Wochenliste, Gastzugang und
-Regelwerk.
+Registerkarten Liste pruefen, Aktueller Scan, Scanner, Wochenliste,
+Gastzugang und Regelwerk.
 
 Lokal starten:
   pip install -r requirements.txt
@@ -39,6 +39,7 @@ import streamlit as st
 
 import nachschlagen
 import pattern_scanner as ps
+import scanner_ansicht as sa
 import zugang
 
 st.set_page_config(page_title="Chart-Screening-Tool", layout="wide")
@@ -592,15 +593,17 @@ st.markdown("---")
 # DIE EINZELABFRAGE IST ENTFALLEN (Mathias, 14.09.2026): Sie zeigte Muster,
 # Kaufpunkte und Chart einer Aktie mit einem geschaetzten RS. Muster,
 # Kaufpunkte und Chart stehen jetzt beim Nachschlagen oben, mit dem echten RS.
+# DER SCANNER (Mathias, 14.09.2026) steht allen offen, auch Gaesten: Er liest
+# nur und veraendert nichts.
 tab_upload = tab_gast = None
 if rolle == "gast":
-    tab_liste, tab_scan, tab_info = st.tabs(["Liste prüfen", "Aktueller Scan", "Regelwerk"])
+    tab_liste, tab_scan, tab_scanner, tab_info = st.tabs(["Liste prüfen", "Aktueller Scan", "Scanner", "Regelwerk"])
 elif rolle == "voll":
-    tab_liste, tab_scan, tab_upload, tab_gast, tab_info = st.tabs(
-        ["Liste prüfen", "Aktueller Scan", "Wochenliste", "Gastzugang", "Regelwerk"])
+    tab_liste, tab_scan, tab_scanner, tab_upload, tab_gast, tab_info = st.tabs(
+        ["Liste prüfen", "Aktueller Scan", "Scanner", "Wochenliste", "Gastzugang", "Regelwerk"])
 else:
-    tab_liste, tab_scan, tab_upload, tab_info = st.tabs(
-        ["Liste prüfen", "Aktueller Scan", "Wochenliste", "Regelwerk"])
+    tab_liste, tab_scan, tab_scanner, tab_upload, tab_info = st.tabs(
+        ["Liste prüfen", "Aktueller Scan", "Scanner", "Wochenliste", "Regelwerk"])
 
 
 def tt_text(wert) -> str:
@@ -853,6 +856,385 @@ with tab_scan:
             st.dataframe(df_scan, hide_index=True)
 
 
+# --- Scanner (Mathias, 14.09.2026) ------------------------------------------
+# "Wir bauen nun den scanner ein, erreichbar aus dem web-tool." Teil 1 schickt
+# eine Strategie oder ein Chart-Signal durch den ganzen US-Markt, Teil 2
+# filtert frei nach jedem Merkmal. Gerechnet wird nachts (scanner_daten.py,
+# Ablauf scanner_daten.yml). Die App liest die Tabelle aus dem Release
+# "scanner-daten" dieses Repos und die Analystenwerte aus dem privaten
+# Datenrepo; alles Weitere rechnet scanner_ansicht.py, das ohne Streamlit
+# pruefbar ist. Fuer Screenreader steht alles als Text: Kontrollfelder,
+# Eingabefelder mit ausgeschriebener Beschriftung, das Ergebnis als
+# nummerierte Liste mit Verweisen, keine Tabelle und kein Chart. Der Scanner
+# beeinflusst weder Waechter noch Alarme (Mathias: "Baue noch keine
+# Vernetzung zu unserem Haupttool").
+
+SCANNER_RELEASE = f"https://github.com/{REPO}/releases/download/scanner-daten/"
+DATEN_REPO = "mat-schmuck/heliot-daten"
+
+
+@st.cache_data(ttl=600, show_spinner=False)
+def _scanner_tabelle_holen():
+    """Die Nachttabelle aus dem Release. Fehlschlaege werfen und landen
+    deshalb nicht im Zwischenspeicher."""
+    import requests
+    r = requests.get(SCANNER_RELEASE + "scanner_tabelle.parquet", timeout=60)
+    if r.status_code != 200:
+        raise LookupError(f"GitHub antwortete mit Code {r.status_code}")
+    return pd.read_parquet(io.BytesIO(r.content))
+
+
+def lade_scanner_tabelle():
+    """(Tabelle oder None, Grund); ohne Release die Datei im Ordner."""
+    try:
+        return _scanner_tabelle_holen(), ""
+    except LookupError as e:
+        grund = str(e)
+    except Exception as e:  # noqa
+        grund = f"Netzwerkfehler {type(e).__name__}"
+    if os.path.exists("scanner_tabelle.parquet"):
+        try:
+            return pd.read_parquet("scanner_tabelle.parquet"), ""
+        except Exception:  # noqa
+            pass
+    return None, grund
+
+
+@st.cache_data(ttl=600, show_spinner=False)
+def lade_scanner_stand():
+    import requests
+    try:
+        r = requests.get(SCANNER_RELEASE + "scanner_stand.json", timeout=20)
+        if r.status_code == 200 and isinstance(r.json(), dict):
+            return r.json()
+    except Exception:  # noqa
+        pass
+    return nachschlagen.lade_datei("scanner_stand.json")
+
+
+@st.cache_data(ttl=600, show_spinner=False)
+def _scanner_analysten_holen():
+    """Die Analystenwerte liegen im PRIVATEN Datenrepo (wie der eingefrorene
+    Konsens, F17). Gelesen wird mit DATEN_LESE_TOKEN aus den Streamlit-
+    Secrets, einem Token nur zum Lesen dieses einen Repos; der Wert erscheint
+    in keiner Meldung. Fehlschlaege werfen und landen nicht im Speicher."""
+    import requests
+    token = (_secret("DATEN_LESE_TOKEN") or "").strip()
+    if not token:
+        raise LookupError("kein Lese-Token")
+    kopf = {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"}
+    r = requests.get(f"https://api.github.com/repos/{DATEN_REPO}/releases/tags/scanner-daten",
+                     headers=kopf, timeout=20)
+    if r.status_code != 200:
+        raise LookupError(f"GitHub antwortete mit Code {r.status_code}")
+    anhang = next((a for a in (r.json().get("assets") or []) if a.get("name") == "scanner_analysten.parquet"), None)
+    if not anhang:
+        raise LookupError("noch keine Analystendatei")
+    d = requests.get(anhang["url"], headers={**kopf, "Accept": "application/octet-stream"}, timeout=60)
+    if d.status_code != 200:
+        raise LookupError(f"GitHub antwortete mit Code {d.status_code}")
+    return pd.read_parquet(io.BytesIO(d.content))
+
+
+def lade_scanner_analysten():
+    try:
+        return _scanner_analysten_holen(), ""
+    except LookupError as e:
+        return None, str(e)
+    except Exception as e:  # noqa
+        return None, f"Netzwerkfehler {type(e).__name__}"
+
+
+def app_adresse() -> str:
+    """Die Adresse der App fuer die Verweise auf die vollstaendigen Daten. Auf
+    Streamlit Community Cloud laeuft die App in einem Rahmen unter /~/+/;
+    verwiesen wird auf die Adresse davor, die den Rahmen samt Anmeldung laedt."""
+    try:
+        u = str(st.context.url or "")
+    except Exception:  # noqa
+        u = ""
+    if "/~/+" in u:
+        u = u.split("/~/+")[0]
+    if not u.startswith("http"):
+        u = "https://heliot.streamlit.app"
+    return u.rstrip("/")
+
+
+def _sc_schluessel(feld: str, teil: str) -> str:
+    return f"sc_{feld}_{teil}"
+
+
+def _sc_sektor_schluessel(sektor: str) -> str:
+    return "sc_sektor_" + (re.sub(r"[^a-z0-9]+", "_", str(sektor).lower()).strip("_") or "ohne_angabe")
+
+
+def _sc_felder_leeren():
+    for feld in sa.FELDER:
+        st.session_state[_sc_schluessel(feld.schluessel, "an")] = False
+        st.session_state[_sc_schluessel(feld.schluessel, "min")] = ""
+        st.session_state[_sc_schluessel(feld.schluessel, "max")] = ""
+        if feld.wahl:
+            st.session_state[_sc_schluessel(feld.schluessel, "wahl")] = feld.wahl[0][0]
+        if feld.lage:
+            st.session_state[_sc_schluessel(feld.schluessel, "lage")] = "egal"
+    st.session_state["sc_rs_vorlaeufig"] = False
+
+
+def _sc_vorgaben_setzen(nur_grenzen: bool = False):
+    """Traegt die Merkmale der gewaehlten Strategie in Teil 2 ein. Beim Wechsel
+    der Strategie werden die Felder neu gesetzt; beim Wechsel der Toleranz nur
+    die Grenzen der Strategie."""
+    k = st.session_state.get("sc_strategie") or ""
+    vorgabe = sa.voreinstellung(k, st.session_state.get("sc_toleranz") == "toleranz")
+    if not nur_grenzen:
+        _sc_felder_leeren()
+        gruppen = {sa.FELD[s].gruppe for s in vorgabe}
+        for g, _name in sa.GRUPPEN:
+            st.session_state[f"sc_gruppe_{g}"] = g in gruppen
+        st.session_state["sc_sortierung"] = "rating" if sa.ist_muster(k) else "rs"
+    for schluessel, werte in vorgabe.items():
+        if not nur_grenzen:
+            st.session_state[_sc_schluessel(schluessel, "an")] = True
+        for teil in ("min", "max", "wahl", "lage"):
+            if teil in werte:
+                st.session_state[_sc_schluessel(schluessel, teil)] = werte[teil]
+
+
+def _sc_strategie_gewaehlt():
+    _sc_vorgaben_setzen()
+
+
+def _sc_toleranz_geaendert():
+    _sc_vorgaben_setzen(nur_grenzen=True)
+
+
+def _sc_sektoren_setzen(an: bool):
+    for s in st.session_state.get("sc_sektorliste") or []:
+        st.session_state[_sc_sektor_schluessel(s)] = an
+
+
+def _sc_alles_zuruecksetzen():
+    st.session_state["sc_strategie"] = ""
+    st.session_state["sc_toleranz"] = "streng"
+    st.session_state["sc_handelbar"] = True
+    st.session_state["sc_langweilig"] = True
+    _sc_felder_leeren()
+    for g, _name in sa.GRUPPEN:
+        st.session_state[f"sc_gruppe_{g}"] = False
+    st.session_state["sc_termine_an"] = False
+    for key, _text, _plus, _lage in sa.TERMIN_TEILE:
+        st.session_state[f"sc_termine_{key}"] = False
+    st.session_state["sc_termine_ohne_zeit"] = False
+    st.session_state["sc_termine_umfang"] = "markt"
+    _sc_sektoren_setzen(True)
+    st.session_state["sc_sortierung"] = "rs"
+
+
+def _sc_einstellung(sektoren) -> dict:
+    """Die Einstellungen aus den Bedienfeldern, fuer scanner_ansicht.auswerten."""
+    felder = {}
+    for f in sa.FELDER:
+        s = f.schluessel
+        felder[s] = {"an": bool(st.session_state.get(_sc_schluessel(s, "an"))),
+                     "min": st.session_state.get(_sc_schluessel(s, "min")) or "",
+                     "max": st.session_state.get(_sc_schluessel(s, "max")) or "",
+                     "wahl": st.session_state.get(_sc_schluessel(s, "wahl")),
+                     "lage": st.session_state.get(_sc_schluessel(s, "lage")) or "egal",
+                     "vorlaeufig": bool(st.session_state.get("sc_rs_vorlaeufig")) if s == "rs" else False}
+    termine = {"an": bool(st.session_state.get("sc_termine_an")),
+               "ohne_zeit": bool(st.session_state.get("sc_termine_ohne_zeit")),
+               "umfang": st.session_state.get("sc_termine_umfang") or "markt"}
+    for key, _text, _plus, _lage in sa.TERMIN_TEILE:
+        termine[key] = bool(st.session_state.get(f"sc_termine_{key}"))
+    return {"strategie": st.session_state.get("sc_strategie") or "",
+            "toleranz": st.session_state.get("sc_toleranz") == "toleranz",
+            "nur_handelbar": bool(st.session_state.get("sc_handelbar")),
+            "langweilig_raus": bool(st.session_state.get("sc_langweilig", True)),
+            "felder": felder, "termine": termine,
+            "sektoren": [s for s in sektoren if st.session_state.get(_sc_sektor_schluessel(s), True)],
+            "sortierung": st.session_state.get("sc_sortierung") or ""}
+
+
+@st.fragment
+def scanner_reiter():
+    """Der Reiter als Fragment: Ein Klick im Scanner rechnet nur den Scanner
+    neu, nicht die ganze Seite."""
+    st.markdown("#### So funktioniert der Scanner", anchors=False)
+    st.markdown(
+        "1. In Teil 1 eine Strategie oder ein Chart-Signal wählen. Der Scanner prüft sie für alle Stammaktien "
+        "des US-Markts und trägt in Teil 2 die Merkmale ein, die zur Strategie gehören.\n"
+        "2. In Teil 2 jedes Merkmal nach Wunsch anhaken, ändern oder dazunehmen. Angehakte Merkmale stehen im "
+        "Ergebnis, eine leere Grenze filtert nicht. Zahlen mit Beistrich, zum Beispiel 0,3; eine eingetippte Zahl "
+        "gilt nach der Eingabetaste oder sobald das Feld verlassen wird.\n"
+        "3. Das Ergebnis steht darunter als Liste, die besten Treffer zuerst. Ein Klick auf das Kürzel öffnet "
+        "die vollständigen Daten der Aktie in einem neuen Tab. Die Liste gibt es auch als Datei.")
+    tabelle, grund = lade_scanner_tabelle()
+    stand = lade_scanner_stand() or {}
+    if tabelle is None:
+        st.info("Die Scanner-Tabelle ist noch nicht da" + (f"; {grund}" if grund else "")
+                + ". Sie entsteht jede Nacht nach dem Nachtscan.")
+        return
+    analysten, _analysten_grund = lade_scanner_analysten()
+    analysten_da = analysten is not None
+    if analysten_da:
+        tabelle = tabelle.merge(analysten, on="ticker", how="left")
+    for satz in sa.stand_saetze(stand, analysten_da=analysten_da):
+        st.markdown(sa.md(satz))
+
+    sektoren = sa.sektoren_in(tabelle)
+    st.session_state["sc_sektorliste"] = sektoren
+    if not st.session_state.get("sc_bereit"):
+        _sc_alles_zuruecksetzen()
+        st.session_state["sc_anzahl"] = "50"
+        st.session_state["sc_format"] = "xlsx"
+        st.session_state["sc_bereit"] = True
+    for s in sektoren:
+        if _sc_sektor_schluessel(s) not in st.session_state:
+            st.session_state[_sc_sektor_schluessel(s)] = True
+    heute = sa.ny_jetzt().date()
+
+    # Teil 1
+    st.markdown("#### Teil 1: Strategie oder Chart-Signal", anchors=False)
+    ids = [k for k, _name in sa.AUSWAHL]
+    if st.session_state.get("sc_strategie") not in ids:
+        st.session_state["sc_strategie"] = ""
+    st.selectbox("Strategie oder Chart-Signal", ids, format_func=sa.AUSWAHL_NAMEN.get, key="sc_strategie",
+                 on_change=_sc_strategie_gewaehlt, placeholder="bitte wählen")
+    k = st.session_state.get("sc_strategie") or ""
+    st.markdown(sa.md(sa.strategie_text(k)))
+    if sa.ist_muster(k) and sa.treffer_satz(stand, k):
+        st.markdown(sa.md(sa.treffer_satz(stand, k)))
+    if sa.toleranz_moeglich(k):
+        if st.session_state.get("sc_toleranz") not in ("streng", "toleranz"):
+            st.session_state["sc_toleranz"] = "streng"
+        tol = sa.toleranz_prozent()
+        st.radio("Wie genau das Muster passen muss", ["streng", "toleranz"],
+                 format_func={"streng": "Streng: jede Regel des Musters erfüllt",
+                              "toleranz": f"Mit {tol} Prozent Toleranz: Schwellen dürfen um {tol} Prozent "
+                                          "verfehlt werden"}.get,
+                 key="sc_toleranz", on_change=_sc_toleranz_geaendert, persist_state="page")
+    st.checkbox(sa.handelbar_text(), key="sc_handelbar")
+    if k == "darvas":
+        st.checkbox(sa.langweile_text(), key="sc_langweilig", persist_state="page")
+    st.button("Alle Einstellungen zurücksetzen", key="sc_zuruecksetzen", on_click=_sc_alles_zuruecksetzen)
+
+    # Teil 2
+    st.markdown("#### Teil 2: Einstellungen", anchors=False)
+    st.caption("Jede Gruppe zeigt ihre Merkmale, sobald das Kontrollfeld unter ihrer Überschrift angehakt ist. "
+               "Angehakte Merkmale stehen im Ergebnis, eine leere Grenze filtert nicht. Angehakte Merkmale filtern "
+               "auch dann, wenn ihre Gruppe gerade nicht angezeigt wird.")
+    for g, gname in sa.GRUPPEN:
+        felder = [f for f in sa.FELDER if f.gruppe == g]
+        n_an = sum(1 for f in felder if st.session_state.get(_sc_schluessel(f.schluessel, "an")))
+        # Ein Kontrollfeld statt st.expander: Streamlit 1.63 schreibt vor die
+        # Beschriftung eines Ausklappers das Symbolwort keyboard_arrow_right, und
+        # ein Screenreader liest es vor (gemessen 14.09.2026). Alles Verborgene
+        # behaelt seinen Wert (persist_state), eine zugeklappte Gruppe filtert weiter.
+        st.markdown(f"##### {gname}", anchors=False)
+        if st.checkbox(f"Gruppe {gname} anzeigen" + (f", {n_an} angehakt" if n_an else ""), key=f"sc_gruppe_{g}"):
+            if g == "analysten" and not analysten_da:
+                st.caption("Die Analystendaten sind nicht geladen; diese Merkmale zeigen und filtern deshalb nichts.")
+            for f in felder:
+                if not st.checkbox(f.titel, key=_sc_schluessel(f.schluessel, "an"), persist_state="page"):
+                    continue
+                st.caption(f.erklaerung)
+                if f.wahl:
+                    werte = [w[0] for w in f.wahl]
+                    schluessel_wahl = _sc_schluessel(f.schluessel, "wahl")
+                    if st.session_state.get(schluessel_wahl) not in werte:
+                        st.session_state[schluessel_wahl] = werte[0]
+                    st.selectbox(f.wahl_titel, werte, format_func={w[0]: w[1] for w in f.wahl}.get,
+                                 key=schluessel_wahl, persist_state="page", placeholder="bitte wählen")
+                if f.art != "bereich":
+                    continue
+                if f.lage:
+                    st.selectbox(f"Lage des Kurses zur {f.titel.replace('Abstand zur ', '')}", [x[0] for x in sa.LAGE],
+                                 format_func=dict(sa.LAGE).get, key=_sc_schluessel(f.schluessel, "lage"),
+                                 persist_state="page", placeholder="bitte wählen")
+                fe = {"wahl": st.session_state.get(_sc_schluessel(f.schluessel, "wahl"))}
+                for teil in ("min", "max"):
+                    st.text_input(f.eingabe_titel(teil, fe), key=_sc_schluessel(f.schluessel, teil),
+                                  placeholder="leer heißt keine Grenze", persist_state="page")
+                if f.schluessel == "rs":
+                    st.checkbox("Junge Titel mit vorläufigem RS mitnehmen", key="sc_rs_vorlaeufig",
+                                persist_state="page")
+
+    st.markdown("##### Zahlentermine", anchors=False)
+    if st.checkbox("Nach Zahlenterminen filtern", key="sc_termine_an"):
+        st.caption(f"Heute ist in New York {sa.datum_lang(heute.isoformat())}; morgen heißt der nächste "
+                   f"Werktag, {sa.datum_lang(sa.naechster_handelstag(heute).isoformat())}.")
+        for key, text, _plus, _lage in sa.TERMIN_TEILE:
+            st.checkbox(f"Zahlen {text}", key=f"sc_termine_{key}", persist_state="page")
+        st.checkbox("Auch Termine während des Handels oder ohne bekannte Tageszeit",
+                    key="sc_termine_ohne_zeit", persist_state="page")
+        st.radio("Welche Aktien", [u[0] for u in sa.UMFANG], format_func=dict(sa.UMFANG).get,
+                 key="sc_termine_umfang", persist_state="page")
+
+    gewaehlt = sum(1 for s in sektoren if st.session_state.get(_sc_sektor_schluessel(s), True))
+    st.markdown("##### Sektoren", anchors=False)
+    if st.checkbox(f"Gruppe Sektoren anzeigen, {gewaehlt} von {len(sektoren)} angehakt", key="sc_gruppe_sektoren"):
+        st.button("Alle Sektoren anhaken", key="sc_sektoren_alle", on_click=_sc_sektoren_setzen, args=(True,))
+        st.button("Alle Sektoren abhaken", key="sc_sektoren_keine", on_click=_sc_sektoren_setzen, args=(False,))
+        for s in sektoren:
+            st.checkbox(sa.sektor_name(s), key=_sc_sektor_schluessel(s), persist_state="page")
+
+    # Ergebnis
+    e = _sc_einstellung(sektoren)
+    sortier = sa.sortier_wahl(e)
+    if st.session_state.get("sc_sortierung") not in [x for x, _t in sortier]:
+        st.session_state["sc_sortierung"] = sortier[0][0]
+    e["sortierung"] = st.session_state["sc_sortierung"]
+    ausw = sa.auswerten(tabelle, e, heute, analysten_da)
+    anzahl_treffer = len(ausw["df"])
+    st.markdown(f"#### Ergebnis: {nachschlagen.zahl(anzahl_treffer)} von {nachschlagen.zahl(ausw['gesamt'])} Aktien",
+                anchors=False)
+    teile = sa.einstellungs_teile(e, tabelle)
+    st.markdown(sa.md("Eingestellt: " + ("; ".join(teile) if teile else "nichts, die Liste zeigt den ganzen Markt") + "."))
+    for hinweis in ausw["hinweise"]:
+        st.warning(sa.md(hinweis))
+    for fehler in ausw["fehler"]:
+        st.error(sa.md(fehler))
+    st.selectbox("Sortieren nach", [x for x, _t in sortier], format_func=dict(sortier).get, key="sc_sortierung",
+                 placeholder="bitte wählen")
+    anzahlen = ["25", "50", "100", "250", "alle"]
+    if st.session_state.get("sc_anzahl") not in anzahlen:
+        st.session_state["sc_anzahl"] = "50"
+    anzahl = st.selectbox("Wie viele Aktien die Liste zeigt", anzahlen,
+                          format_func=lambda x: "alle" if x == "alle" else f"die ersten {x}", key="sc_anzahl",
+                          placeholder="bitte wählen")
+    basis = app_adresse()
+    if anzahl_treffer:
+        grenze = None if anzahl == "alle" else int(anzahl)
+        st.caption("Ein Klick auf das Kürzel öffnet die vollständigen Daten der Aktie in einem neuen Tab.")
+        st.markdown("\n".join(sa.zeilen(ausw, basis, anzahl=grenze)))
+        if grenze and anzahl_treffer > grenze:
+            st.caption(f"Die übrigen {nachschlagen.zahl(anzahl_treffer - grenze)} Aktien stehen in der Datei.")
+        formate = [x[0] for x in sa.FORMATE]
+        if st.session_state.get("sc_format") not in formate:
+            st.session_state["sc_format"] = "xlsx"
+        fmt = st.selectbox("Dateiformat", formate, format_func={x[0]: x[1] for x in sa.FORMATE}.get, key="sc_format",
+                           placeholder="bitte wählen", persist_state="page")
+        st.download_button("Ergebnis als Datei herunterladen",
+                           data=lambda: sa.datei(ausw, basis, fmt, stand, tabelle)[0],
+                           file_name=sa.dateiname(ausw, stand, fmt),
+                           mime=next(x[3] for x in sa.FORMATE if x[0] == fmt), on_click="ignore", key="sc_download")
+    else:
+        st.info("Keine Aktie erfüllt alle Einstellungen.")
+    st.markdown("##### Was der Scanner nicht kann", anchors=False)
+    for satz in sa.grenzen_saetze():
+        st.markdown(sa.md(satz))
+
+
+with tab_scanner:
+    # Streamlit schreibt unter ein Textfeld mit ungespeicherter Eingabe den
+    # englischen Hinweis "Press Enter to apply", und ein Screenreader liest ihn
+    # beim Weiterlesen vor (gemessen 14.09.2026). Im Scanner steht derselbe
+    # Hinweis deutsch in der Anleitung; ausgeblendet wird er nur im Scanner.
+    st.html("<style>.st-key-scanner_bereich [data-testid='InputInstructions'] {display: none;}</style>")
+    with st.container(key="scanner_bereich"):
+        scanner_reiter()
+
+
 # --- Regelwerk -------------------------------------------------------------
 with tab_info:
     st.markdown("""
@@ -895,6 +1277,25 @@ innerhalb der Wochenliste.
 dafür ist der Breakout-Wächter da.
 - **Kursdaten sind 15 Minuten zwischengespeichert**, um Abrufe zu sparen.
     """)
+    st.markdown("#### Der Scanner", anchors=False)
+    st.markdown(sa.md(
+        "Teil 1 prüft eine Strategie oder ein Chart-Signal für jede Stammaktie des US-Markts, Teil 2 filtert nach "
+        "Merkmalen. Gerechnet wird jede Nacht aus den Tageskerzen; der Scanner setzt keine Alarme."))
+    st.markdown(sa.md(
+        f"Treffer: Ein Muster muss streng erfüllt sein. Mit {sa.toleranz_prozent()} Prozent Toleranz dürfen "
+        "Schwellen in Prozent, Verhältnisse und Dauern um diesen Anteil verfehlt werden, die Lage zu gleitenden "
+        "Durchschnitten um diesen Anteil der mittleren Tagesschwankung. Ein Treffer nur mit Toleranz kostet "
+        f"{sa.SC['rating']['toleranz_abzug']} Punkte beim Rating."))
+    st.markdown(sa.md(
+        "Rating von 0 bis 100: relative Stärke, Nähe zum Hoch, Vorlauf, Jahresspanne, Tagesspanne, Liquidität, "
+        "Austrocknen des Volumens, Enge, Nachfrage und die Qualität des Musters, gewichtet je Muster. Das Rating "
+        "ordnet die Treffer, ein fehlendes Muster ersetzt es nie. Die drei stärksten und die zwei schwächsten "
+        "Bausteine stehen als Begründung dabei."))
+    st.markdown(sa.md(sa.handelbar_text() + "."))
+    st.markdown(sa.md(sa.langweile_text() + "."))
+    st.markdown("#### Grenzen des Scanners", anchors=False)
+    for satz in sa.grenzen_saetze():
+        st.markdown(sa.md(satz))
 
 
 # --- Ab hier nur mit vollem Zugang -----------------------------------------

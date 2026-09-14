@@ -29,3 +29,8 @@ __pycache__/
 venv/
 # PowerShell legt bei "> `$null" versehentlich eine Datei dieses Namens an
 $null
+
+# Scanner-Reiter (14.09.2026): Die Nachttabelle liegt als Release-Anhang, nicht im Repo.
+# Die Analystendatei gehoert ins PRIVATE Datenrepo heliot-daten und darf nie hierher.
+scanner_tabelle.parquet
+scanner_analysten.parquet

@@ -9,3 +9,6 @@ plotly>=5.18
 requests>=2.31
 openpyxl>=3.1
 yfinance>=0.2
+# Scanner-Reiter (14.09.2026): Tabelle als Parquet, Ergebnis auch als OpenDocument-Tabelle.
+pyarrow>=14
+odfpy>=1.4

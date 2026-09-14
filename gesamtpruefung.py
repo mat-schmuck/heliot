@@ -161,7 +161,9 @@ def block_b():
                     # Nachschlagen (Mathias, 13.09.2026)
                     "nachschlagen",
                     # Wochenputz und Anmeldung (Mathias, 13.09.2026)
-                    "wochenputz", "zugang"]
+                    "wochenputz", "zugang",
+                    # Scanner-Reiter (Mathias, 14.09.2026)
+                    "scanner_daten", "scanner_ansicht", "scanner_noetig"]
     for name in mit_schalter:
         r = subprocess.run([sys.executable, f"{name}.py", "--selbsttest"],
                            capture_output=True, text=True, cwd=WURZEL,
@@ -2248,6 +2250,50 @@ def block_h():
            "zugang.speicher_js(" in _app and "nachschlagen.chart_skript(" in _app
            and "function(" not in _app and "document.cookie" not in _app and "localStorage" not in _app)
 
+    # DER SCANNER (Mathias, 14.09.2026): ein Reiter fuer alle, auch fuer
+    # Gaeste, "in jeder Hinsicht und absolut mit Screenreader bedienbar",
+    # und "noch keine Vernetzung zu unserem Haupttool".
+    ok, zusatz = scanner_reiter_pruefen(WURZEL / "streamlit_app.py")
+    pruefe("H", "Scanner-Reiter fuer jede Rolle und vor der Anmeldeschranke", ok, zusatz)
+    ok, zusatz = scanner_bedienung_pruefen(WURZEL / "streamlit_app.py")
+    pruefe("H", "Scanner-Reiter: keine Ausklapper, Ueberschriften ohne Verweis, deutsche Platzhalter, "
+           "verborgene Felder behalten ihren Wert", ok, zusatz)
+    _scan_wf = (_wf / "scanner_daten.yml")
+    try:
+        _d = yaml.safe_load(_scan_wf.read_text(encoding="utf-8"))
+        _an = _d.get("on") or _d.get(True) or {}
+        _nach = ((_an.get("workflow_run") or {}).get("workflows") or [])
+        _scanner_name = (yaml.safe_load((_wf / "scanner.yml").read_text(encoding="utf-8")) or {}).get("name")
+        _gruppe = (_d.get("concurrency") or {}).get("group")
+        _text = _scan_wf.read_text(encoding="utf-8")
+        _oeffentlich = next((s.get("run") or "" for s in _d["jobs"]["bauen"]["steps"]
+                             if s.get("name") == "Tabelle als Release-Anhang veroeffentlichen"), "")
+        pruefe("H", "Scanner-Daten: startet nach dem Nachtscan, eigene Gruppe, von Hand anstossbar",
+               _scanner_name in _nach and "workflow_dispatch" in _an and _gruppe == "scanner-daten",
+               f"nach {_nach}, Gruppe {_gruppe}")
+        pruefe("H", "Scanner-Daten: sendet nichts, Analystenwerte nie im oeffentlichen Release",
+               "NTFY" not in _text and "ntfy" not in _text and bool(_oeffentlich)
+               and "scanner_analysten" not in _oeffentlich and "scanner_kurse" not in _oeffentlich)
+    except Exception as e:
+        pruefe("H", "Scanner-Daten: Ablauf lesbar", False, f"{type(e).__name__}: {e}")
+    _vernetzt = []
+    for _modul in ("scanner_daten.py", "scanner_ansicht.py", "scanner_noetig.py"):
+        _code = "\n".join(z for z in (WURZEL / _modul).read_text(encoding="utf-8").splitlines()
+                          if not z.lstrip().startswith("#"))
+        for _wort in ("NTFY_" + "TOPIC", "ntfy." + "sh", "requests." + "post(", "traderfox_" + "alarm",
+                      "breakout_" + "watcher", "melde_" + "gedaechtnis"):
+            if _wort in _code:
+                _vernetzt.append(f"{_modul}: {_wort}")
+    pruefe("H", "Scanner ohne Vernetzung zum Haupttool (kein Sendecode, keine Alarmdateien)",
+           not _vernetzt, ", ".join(_vernetzt))
+    _req = (WURZEL / "requirements.txt").read_text(encoding="utf-8-sig")
+    pruefe("H", "App-Abhaengigkeiten fuer den Scanner (Parquet, OpenDocument)",
+           "pyarrow" in _req and "odfpy" in _req)
+    _ign = (WURZEL / ".gitignore").read_text(encoding="utf-8")
+    pruefe("H", "Scanner-Tabellen nie im Repo, Analystenwerte nur mit Lese-Token aus dem privaten Datenrepo",
+           "scanner_analysten.parquet" in _ign and "scanner_tabelle.parquet" in _ign
+           and '_secret("DATEN_LESE_TOKEN")' in _app_code and "heliot-daten" in _app_code)
+
 
 def bildzeichen_im_quelltext(wurzel) -> list:
     """'datei:zeile U+XXXX' fuer jedes Bildzeichen in versionierten Quelltext-
@@ -2362,6 +2408,119 @@ def anmeldeschranke(pfad) -> tuple:
     if maengel:
         return False, "; ".join(maengel)
     return True, "Schranke vor der Wochenliste, Gastseite dahinter"
+
+
+def scanner_reiter_pruefen(pfad) -> tuple:
+    """Der Scanner steht allen offen, auch Gaesten (Mathias, 14.09.2026).
+    Geprueft wird am Quelltext, auf oberster Ebene:
+      * Jeder Zweig, der die Registerkarten baut (gast, voll, sonst), legt
+        tab_scanner an.
+      * "with tab_scanner:" steht vor der Schranke "if tab_upload is None:",
+        sonst endete der Lauf fuer Gaeste, bevor der Scanner gezeichnet ist.
+    Liefert (ok, Befund)."""
+    import ast as _ast
+    try:
+        baum = _ast.parse(open(pfad, encoding="utf-8").read())
+    except Exception as e:
+        return False, f"nicht lesbar: {type(e).__name__}: {e}"
+    maengel = []
+    zweige = 0
+    reiter = schranke = None
+    for i, knoten in enumerate(baum.body):
+        if isinstance(knoten, _ast.If) and _ast.unparse(knoten.test) in ("rolle == 'gast'", 'rolle == "gast"'):
+            teil = knoten
+            while teil is not None:
+                zweige += 1
+                namen = {n.id for s in teil.body for n in _ast.walk(s)
+                         if isinstance(n, _ast.Name) and isinstance(n.ctx, _ast.Store)}
+                if "tab_scanner" not in namen:
+                    maengel.append(f"der Zweig '{_ast.unparse(teil.test)}' baut keinen Scanner-Reiter"
+                                   if isinstance(teil, _ast.If) else "der letzte Zweig baut keinen Scanner-Reiter")
+                if isinstance(teil, _ast.If) and len(teil.orelse) == 1 and isinstance(teil.orelse[0], _ast.If):
+                    teil = teil.orelse[0]
+                elif isinstance(teil, _ast.If) and teil.orelse:
+                    teil = _ast.If(test=_ast.Constant(value=True), body=teil.orelse, orelse=[])
+                else:
+                    teil = None
+        if isinstance(knoten, _ast.If) and _ast.unparse(knoten.test) == "tab_upload is None" and schranke is None:
+            schranke = i
+        if isinstance(knoten, _ast.With) and _ast.unparse(knoten.items[0].context_expr) == "tab_scanner" and reiter is None:
+            reiter = i
+    if zweige < 3:
+        maengel.append(f"nur {zweige} Zweige mit Registerkarten gefunden")
+    if reiter is None:
+        maengel.append("kein 'with tab_scanner:' auf oberster Ebene")
+    if schranke is None:
+        maengel.append("keine Schranke 'if tab_upload is None:'")
+    if reiter is not None and schranke is not None and reiter > schranke:
+        maengel.append("der Scanner steht erst hinter der Anmeldeschranke")
+    if maengel:
+        return False, "; ".join(maengel)
+    return True, f"{zweige} Zweige mit Scanner-Reiter, Scanner vor der Schranke"
+
+
+def scanner_bedienung_pruefen(pfad) -> tuple:
+    """Screenreader-Befunde vom 14.09.2026 als Regel fuer die Funktion
+    scanner_reiter in streamlit_app.py:
+      * kein st.expander: Streamlit schreibt vor die Beschriftung das
+        Symbolwort keyboard_arrow_right, und ein Screenreader liest es vor;
+      * jede Ueberschrift aus st.markdown mit anchors=False, sonst haengt
+        Streamlit einen Verweis "Link to heading" an;
+      * jede Ausklappliste mit deutschem Platzhalter statt "Choose an option";
+      * jedes Bedienfeld, das nur unter einer Bedingung gezeichnet wird, mit
+        persist_state, sonst verliert es seinen Wert, sobald es verborgen ist,
+        und ein angehaktes Merkmal filtert still nicht mehr.
+    Liefert (ok, Befund)."""
+    import ast as _ast
+    try:
+        baum = _ast.parse(open(pfad, encoding="utf-8").read())
+    except Exception as e:
+        return False, f"nicht lesbar: {type(e).__name__}: {e}"
+    funktion = next((k for k in _ast.walk(baum) if isinstance(k, _ast.FunctionDef) and k.name == "scanner_reiter"), None)
+    if funktion is None:
+        return False, "Funktion scanner_reiter fehlt"
+    maengel = []
+    felder = ("checkbox", "text_input", "selectbox", "radio", "number_input", "multiselect", "toggle", "slider")
+
+    def st_aufruf(knoten):
+        f = knoten.func
+        return (f.attr if isinstance(f, _ast.Attribute) and isinstance(f.value, _ast.Name)
+                and f.value.id == "st" else None)
+
+    def schluessel(knoten, name):
+        return next((k.value for k in knoten.keywords if k.arg == name), None)
+
+    def besuchen(knoten, bedingt):
+        if isinstance(knoten, _ast.Call):
+            art = st_aufruf(knoten)
+            zeile = knoten.lineno
+            if art == "expander":
+                maengel.append(f"Zeile {zeile}: st.expander")
+            if art == "markdown" and knoten.args:
+                erster = knoten.args[0]
+                text = (erster.value if isinstance(erster, _ast.Constant) and isinstance(erster.value, str)
+                        else _ast.unparse(erster))
+                if text.lstrip("f\"'").startswith("#"):
+                    anker = schluessel(knoten, "anchors")
+                    if not (isinstance(anker, _ast.Constant) and anker.value is False):
+                        maengel.append(f"Zeile {zeile}: Ueberschrift ohne anchors=False")
+            if art == "selectbox" and schluessel(knoten, "placeholder") is None:
+                maengel.append(f"Zeile {zeile}: Ausklappliste ohne Platzhalter")
+            if art in felder and bedingt and schluessel(knoten, "persist_state") is None:
+                maengel.append(f"Zeile {zeile}: st.{art} unter einer Bedingung ohne persist_state")
+        if isinstance(knoten, _ast.If):
+            besuchen(knoten.test, bedingt)
+            for s in knoten.body + knoten.orelse:
+                besuchen(s, True)
+            return
+        for kind in _ast.iter_child_nodes(knoten):
+            besuchen(kind, bedingt)
+
+    for s in funktion.body:
+        besuchen(s, False)
+    if maengel:
+        return False, "; ".join(maengel[:8]) + (f" und {len(maengel) - 8} weitere" if len(maengel) > 8 else "")
+    return True, "geprueft an der Funktion scanner_reiter"
 
 
 def main() -> int:
