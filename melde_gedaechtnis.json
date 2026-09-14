@@ -269,7 +269,8 @@
     "UEBER|FROG|Fallback: MA50-R\u00fcckeroberung": "2026-09-14",
     "UEBER|ECO|Fallback: 52W-Hoch-Breakout": "2026-09-14",
     "UEBER|ECO|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-14",
-    "GEWINN|klimax_zeichen|ECO|1|5_kanaluebershooting": "2026-09-14"
+    "GEWINN|klimax_zeichen|ECO|1|5_kanaluebershooting": "2026-09-14",
+    "GEWINN|zonenwechsel|ECO|1|stark": "2026-09-14"
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-09-14"
