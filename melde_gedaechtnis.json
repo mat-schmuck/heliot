@@ -55,7 +55,7 @@
     "VIST|Fallback: MA50-Pullback": "draussen",
     "WK|Fallback: MA50-Pullback": "draussen",
     "ZIM|Fallback: MA50-Pullback": "draussen",
-    "ANRO|Fallback: MA50-Pullback": "draussen",
+    "ANRO|Fallback: MA50-Pullback": "drin",
     "AYA|Fallback: MA50-Pullback": "draussen",
     "BE|Fallback: MA50-Pullback": "draussen",
     "CGEM|Fallback: MA50-Pullback": "draussen",
@@ -156,7 +156,7 @@
     "NUTX|Fallback: 52W-Hoch-Breakout": "draussen",
     "CNC|Rectangle Top": "drin",
     "MPC|Fallback: 20-Tage-Hoch (Pivot)": "drin",
-    "FROG|Fallback: MA50-R\u00fcckeroberung": "drin",
+    "FROG|Fallback: MA50-R\u00fcckeroberung": "draussen",
     "CRWD|Darvas Box": "drin",
     "CRWD|Fallback: 52W-Hoch-Breakout": "drin",
     "RDVT|Cup & Handle (Wochenbasis)": "drin",
@@ -262,7 +262,8 @@
     "GNK|Rectangle Top": "2026-09-14",
     "BEST|GNK|Rectangle Top": "2026-09-14",
     "GNK|EMA Crossback": "2026-09-14",
-    "BEST|GNK|EMA Crossback": "2026-09-14"
+    "BEST|GNK|EMA Crossback": "2026-09-14",
+    "UEBER|FROG|Fallback: MA50-R\u00fcckeroberung": "2026-09-14"
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-09-14"
