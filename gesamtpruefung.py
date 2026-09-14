@@ -171,7 +171,9 @@ def block_b():
                     # Etappe 4, fundamentale Kennzahlen (Gerhard, 13.09.2026)
                     "kennzahlen_fundament",
                     # Etappe 5, Konsens (Gerhard, 13.09.2026)
-                    "kennzahlen_konsens"]
+                    "kennzahlen_konsens",
+                    # Etappe 7, Short-Daten (Gerhard, 13.09.2026)
+                    "kennzahlen_short"]
     for name in mit_schalter:
         r = subprocess.run([sys.executable, f"{name}.py", "--selbsttest"],
                            capture_output=True, text=True, cwd=WURZEL,
@@ -2364,6 +2366,19 @@ def block_h():
     else:
         pruefe("H", "Konsens in der Nachttabelle", True,
                "scanner_stand.json stammt noch vom Stand vor Etappe 5; der naechste Bau legt es an")
+    # ETAPPE 7 (Gerhard, 13.09.2026, Entscheidung 12): Short-Volumen laut FINRA
+    # mit der Mindestabdeckung des RS-Universums.
+    if "short_volumen" in _q_h:
+        _s_h = _q_h.get("short_volumen") or {}
+        pruefe("H", "Nachttabelle: FINRA-Tagesdateien aller 20 Handelstage verwendbar, juengste Datei ueber der "
+                    "Mindestabdeckung, Handelstag der Tabelle",
+               _s_h.get("status") == "ok" and _s_h.get("letzter_tag") == _sst_h.get("handelstag")
+               and (_s_h.get("abdeckung_letzter_tag") or 0) >= float(_s_h.get("mindest_abdeckung") or 1.0),
+               f"{_s_h.get('status')}, letzter Tag {_s_h.get('letzter_tag')} gegen Handelstag {_sst_h.get('handelstag')}, "
+               f"Abdeckung {_s_h.get('abdeckung_letzter_tag')}, fehlend {_s_h.get('fehlend')}")
+    else:
+        pruefe("H", "Short-Volumen in der Nachttabelle", True,
+               "scanner_stand.json stammt noch vom Stand vor Etappe 7; der naechste Bau legt es an")
 
     # positionen.json DARF fehlen, solange keine Position offen ist —
     # die Datei entsteht erst beim ersten Einstieg. Geprueft wird
@@ -2464,7 +2479,8 @@ def block_h():
     except Exception as e:
         pruefe("H", "Scanner-Daten: Ablauf lesbar", False, f"{type(e).__name__}: {e}")
     _vernetzt = []
-    for _modul in ("scanner_daten.py", "scanner_ansicht.py", "scanner_noetig.py", "kennzahlen_konsens.py"):
+    for _modul in ("scanner_daten.py", "scanner_ansicht.py", "scanner_noetig.py", "kennzahlen_konsens.py",
+                   "kennzahlen_short.py"):
         _code = "\n".join(z for z in (WURZEL / _modul).read_text(encoding="utf-8").splitlines()
                           if not z.lstrip().startswith("#"))
         for _wort in ("NTFY_" + "TOPIC", "ntfy." + "sh", "requests." + "post(", "traderfox_" + "alarm",

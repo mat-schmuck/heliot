@@ -955,6 +955,19 @@ CFG = {
         "rev_notbremse": 3,
     },
 
+    # --- Etappe 7, Short-Daten (Gerhard, 13.09.2026, Entscheidung 12) -------
+    # "FINRA-Tagesdatei Short-Volumen-Anteil [...]; dieselbe
+    # Mindestabdeckungs-Regel wie beim RS-Universum, lieber 'nicht verfuegbar'
+    # als halbe Daten." Die Mindestabdeckung selbst steht beim RS-Universum
+    # und gilt hier unveraendert. Rechnung in kennzahlen_short.py.
+    "short_daten": {
+        # Gleitender Anteil ueber so viele Handelstage (Papier 4.5, Punkt 1:
+        # "gleitend ueber 20 Tage").
+        "fenster_tage": 20,
+        # Hoechstdauer je Abruf einer Tagesdatei bei FINRA (rund 540 KB).
+        "abruf_zeitlimit_s": 60,
+    },
+
     # --- Scanner der Heliot-App (Mathias, 14.09.2026) ------------------------
     # Nachttabelle scanner_daten.py, Reiter "Scanner" der App. KEINE
     # Vernetzung mit Waechter, Alarmen oder der Scanner-Mappe.
@@ -1180,6 +1193,8 @@ def pruefe_config():
     assert _fenster and all(isinstance(n, int) and n >= 1 for n in _fenster) and _fenster == sorted(set(_fenster)), \
         "Konsens: Stufen-Fenster als ganze Tage, aufsteigend, ohne Doppel"
     assert kk["rev_abfragen_je_sekunde"] > 0 and kk["rev_warten_s"] >= 0 and kk["rev_notbremse"] >= 1
+    sd = CFG["short_daten"]
+    assert isinstance(sd["fenster_tage"], int) and sd["fenster_tage"] >= 1 and sd["abruf_zeitlimit_s"] > 0
     n = CFG["ibd_ratings"]["noten"]
     assert n["A"] > n["B"] > n["C"] > n["D"] > 0, "IBD-Noten: Grenzen muessen fallen (A ueber B ueber C ueber D)"
     assert CFG["gap_and_go"]["einstieg_grenze"] <= CFG["betrieb"]["nachlauf_grenze"], \

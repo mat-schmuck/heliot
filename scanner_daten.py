@@ -23,7 +23,9 @@ WAS DIESER LAUF BAUT
                            Forward-KGV und erwartetem Wachstum, der
                            EPS-Konsens des Nasdaq-Kalenders und fuer die
                            Wochenliste Revisionen und Einstufungen
-                           (kennzahlen_konsens.py). Sie gehen wie der
+                           (kennzahlen_konsens.py), seit Etappe 7 der
+                           Short-Volumen-Anteil laut FINRA
+                           (kennzahlen_short.py). Sie gehen wie der
                            eingefrorene Konsens (F17) in das PRIVATE
                            Datenrepo heliot-daten; die App liest sie nur mit
                            dem Lese-Token DATEN_LESE_TOKEN.
@@ -70,6 +72,11 @@ WOHER DIE WERTE KOMMEN (gemessen 14.09.2026)
               bei Yahoo fuer Revisionen und Einstufungen (gemessen am
               14.09.2026: fuenf Aktien in 3,8 Sekunden). Fehlt eine Quelle,
               bleiben die Werte der Vornacht mit ihrem Stand.
+  Short       (Etappe 7, Gerhards Entscheidung 12) die FINRA-Tagesdateien
+              "Consolidated NMS" der letzten 20 Handelstage, ohne Schluessel;
+              welche Tage Handelstage sind, sagt die Kurshistorie. Mit der
+              Mindestabdeckung des RS-Universums; fehlt etwas, heisst es "nicht
+              verfuegbar", Werte der Vornacht werden nicht weitergetragen.
 
 TOLERANZ (Mathias: "Findet das Muster nichts, kann diese Aktie nicht
 vorgeschlagen werden. Wuerde eine Toleranzabweichung von 5% jedoch fuers
@@ -103,7 +110,7 @@ Begruendung.
 
 Aufruf:
   python scanner_daten.py --bauen [--grenze N] [--analysten rotation|alle|aus]
-      [--konsens-ordner ORDNER] [--revisionen an|aus]
+      [--konsens-ordner ORDNER] [--revisionen an|aus] [--short an|aus]
   python scanner_daten.py --selbsttest
 """
 
@@ -124,6 +131,7 @@ import pandas as pd
 
 from config import CFG as ZENTRAL, mind_erreicht
 import kennzahlen_konsens as kk
+import kennzahlen_short as ks
 
 SC = ZENTRAL["scanner"]
 TABELLE = "scanner_tabelle.parquet"
@@ -1107,20 +1115,22 @@ UEBERRASCHUNG_FELDER = ("quartale_mit_schaetzung", "schaetzung_geschlagen", "let
                         "letzter_bericht", "ueberraschung_stand")
 # Alles, was nur ins private Datenrepo darf (F17 und die Linie der Analystenwerte).
 PRIVATE_FELDER = (ANALYSTEN_FELDER + UEBERRASCHUNG_FELDER + ("kursziel_abst_pct",) + kk.KONSENS_FELDER
-                  + kk.TERMIN_KONSENS_FELDER + kk.REVISION_FELDER)
+                  + kk.TERMIN_KONSENS_FELDER + kk.REVISION_FELDER + ks.SHORT_FELDER)
 
 
 def bauen(pfad_tabelle=TABELLE, pfad_stand=STAND, archiv=ARCHIV, grenze=None, analysten="rotation",
           heute=None, universum_liste=None, kurse_download=None, rs_daten=None, ratings=None, termine_listen=None,
           screener=None, kalender=None, je_aktie=None, kennzahlen=None, leise=False, pfad_analysten=ANALYSTEN,
-          konsens_pfade=None, revisionen="an"):
+          konsens_pfade=None, revisionen="an", short="an"):
     """Die ganze Nachttabelle. Alle Quellen lassen sich fuer den Selbsttest
     uebergeben; ohne Angabe wird geholt. Die Analystenwerte der Vornacht
     stehen in pfad_analysten (der Ablauf holt sie vorher aus dem privaten
     Datenrepo); fehlt die Datei, beginnt die Rotation von vorn.
     konsens_pfade: die Dateien der juengsten Einfrier-Laeufe, None heisst
     keine uebergeben (die Werte der Vornacht bleiben). revisionen: "an",
-    "aus" oder im Selbsttest ein Abruf holen(ticker) -> (trend, historie)."""
+    "aus" oder im Selbsttest ein Abruf holen(ticker) -> (trend, historie).
+    short: "an", "aus" oder im Selbsttest ein Abruf holen(tag) -> (Status,
+    Text) fuer die FINRA-Tagesdateien."""
     import rs_universum
     t0 = time.time()
     heute = heute or ny_heute()
@@ -1145,12 +1155,16 @@ def bauen(pfad_tabelle=TABELLE, pfad_stand=STAND, archiv=ARCHIV, grenze=None, an
 
     # --- Kurse, Kennzahlen und Muster je Block ------------------------------
     zeilen, archiv_teile, ohne_kurse = {}, [], 0
+    # Welche Tage Handelstage sind, zaehlt die Kurshistorie selbst (Etappe 7).
+    from collections import Counter
+    tage_zaehler = Counter()
     grenze_archiv = pd.Timestamp(heute - timedelta(days=int(SC["archiv_tage"])))
     for block in kurse_bloecke(symbole, download=kurse_download, leise=leise):
         for s, voll in block.items():
             if s in zeilen or voll is None or len(voll) == 0:
                 continue
             voll = voll.sort_values("datetime").reset_index(drop=True)
+            tage_zaehler.update(pd.to_datetime(voll["datetime"].tail(40)).dt.strftime("%Y-%m-%d"))
             ex = extrema(voll)
             d = voll.tail(int(SC["historie_tage"])).reset_index(drop=True)
             werte = kurs_werte(d, ex)
@@ -1343,6 +1357,27 @@ def bauen(pfad_tabelle=TABELLE, pfad_stand=STAND, archiv=ARCHIV, grenze=None, an
             info_r = {"status": f"fehler: {type(e).__name__}: {e}"[:200], "wochenliste": len(wl)}
     info_r["mit_stand"] = sum(1 for s in wl if zeilen[s].get("rev_stand"))
     stand["quellen"]["revisionen"] = info_r
+
+    # --- Short-Volumen aus der FINRA-Tagesdatei (Etappe 7) ------------------------------
+    # Ein Handelstag ist ein Tag, an dem mindestens ein Zehntel der Aktien einen
+    # Kurs hat; gezaehlt wird nur bis zum Handelstag der Tabelle.
+    schwelle_t = max(1.0, 0.1 * len(zeilen))
+    handelstage = sorted(t for t, n in tage_zaehler.items() if n >= schwelle_t and (not handelstag or t <= handelstag))
+    try:
+        if short == "aus":
+            werte_s, befund_s = {}, {"status": "aus"}
+        else:
+            werte_s, befund_s = ks.short_werte(symbole, handelstage, holen=short if callable(short) else None)
+    except Exception as e:  # noqa  die Short-Daten duerfen den Bau nie aufhalten
+        werte_s, befund_s = {}, {"status": f"fehler: {type(e).__name__}: {e}"[:200]}
+    leer_s = dict.fromkeys(ks.SHORT_FELDER)
+    if befund_s.get("status") != "ok" and befund_s.get("status") != "teilweise":
+        leer_s["short_hinweis"] = befund_s.get("hinweis") or ("abgeschaltet" if befund_s.get("status") == "aus"
+                                                              else "die Short-Daten liessen sich nicht rechnen")
+    for s, z in zeilen.items():
+        z.update(werte_s.get(s) or leer_s)
+    stand["quellen"]["short_volumen"] = {**{k: v for k, v in befund_s.items() if k != "fehlend"},
+                                         "fehlend": dict(list((befund_s.get("fehlend") or {}).items())[:5])}
 
     # --- Schreiben ---------------------------------------------------------------
     for z in zeilen.values():
@@ -1638,6 +1673,16 @@ def selbsttest() -> int:
                                     "eps_analysten": 5, "umsatz_avg": 100.0, "umsatz_vorjahr": 80.0,
                                     "umsatz_analysten": 4, "waehrung": wae, "naechster_termin": "2026-10-20"}) + "\n")
         abrufe_rev = []
+        # Etappe 7: FINRA-Tagesdateien der letzten 20 Handelstage der Kunstreihen
+        tage_k = [d.strftime("%Y-%m-%d") for d in pd.bdate_range("2023-06-01", periods=800)[-20:]]
+        abrufe_finra = []
+
+        def finra(tag):
+            abrufe_finra.append(tag)
+            zeilen_f = ["Date|Symbol|ShortVolume|ShortExemptVolume|TotalVolume|Market",
+                        f"{tag.replace('-', '')}|AAA|{40 if tag == tage_k[-1] else 60}|0|100|Q",
+                        f"{tag.replace('-', '')}|BBB|10|0|100|Q", f"{tag.replace('-', '')}|CCC|5|0|10|Q", "3"]
+            return 200, "\n".join(zeilen_f) + "\n"
 
         def rev(tk):
             abrufe_rev.append(tk)
@@ -1663,7 +1708,7 @@ def selbsttest() -> int:
                                                                     "termin_eps_vorjahr": -0.35,
                                                                     "termin_vorjahr_datum": "2025-09-04"})},
                    je_aktie=je, kennzahlen=pd.DataFrame(), leise=True,
-                   pfad_analysten=pfad_a, konsens_pfade=[pfad_k], revisionen=rev)
+                   pfad_analysten=pfad_a, konsens_pfade=[pfad_k], revisionen=rev, short=finra)
         t = pd.read_parquet(os.path.join(tmp, "t.parquet"))
         a = pd.read_parquet(pfad_a)
         p("Ganzer Lauf: drei Zeilen, Stand geschrieben", len(t) == 3 and st["zeilen"] == 3)
@@ -1707,7 +1752,7 @@ def selbsttest() -> int:
                     universum_liste=[{"symbol": s, "name": s, "boerse": "Nasdaq"} for s in kunst],
                     kurse_download=lambda teil: {s: kunst[s] for s in teil if s in kunst},
                     rs_daten={}, ratings={}, termine_listen={}, screener={}, kalender={}, kennzahlen=pd.DataFrame(),
-                    leise=True, pfad_analysten=pfad_a)
+                    leise=True, pfad_analysten=pfad_a, short=lambda tag: (404, ""))
         a2 = pd.read_parquet(pfad_a)
         p("Zweite Nacht ohne Abruf behaelt die Analysten der ersten",
           a2[a2["ticker"] == "AAA"].iloc[0]["analysten_anzahl"] == 4 and st2["quellen"]["analysten"]["status"] == "aus")
@@ -1715,6 +1760,16 @@ def selbsttest() -> int:
         p("Zweite Nacht ohne Einfrier-Lauf behaelt den Konsens samt Stand und rechnet das KGV neu",
           a2_aaa["konsens_stand"] == "2026-09-14T19:30:40Z" and a2_aaa["konsens_fwd_kgv"] == round(kurs_aaa / 2.5, 2)
           and str(st2["quellen"]["konsens"]["status"]).startswith("nicht verfuegbar"))
+        a_ccc = a[a["ticker"] == "CCC"].iloc[0]
+        p("Short-Volumen: die letzten 20 Handelstage laut Kurshistorie, Tag und 20 Tage, eigene Datei",
+          abrufe_finra == tage_k and a_aaa["short_anteil_pct"] == 40.0 and a_aaa["short_anteil_20t_pct"] == 59.0
+          and a_aaa["short_stand"] == tage_k[-1] and a_ccc["short_anteil_pct"] == 50.0
+          and st["quellen"]["short_volumen"]["status"] == "ok" and "short_anteil_pct" not in t.columns,
+          f"{abrufe_finra[:2]}, {a_aaa['short_anteil_pct']}, {a_aaa['short_anteil_20t_pct']}, {st['quellen']['short_volumen']}")
+        p("Short-Volumen: ohne Quelle nicht verfuegbar, keine Werte der Vornacht",
+          pd.isna(a2_aaa["short_anteil_pct"]) and isinstance(a2_aaa["short_hinweis"], str)
+          and "404" in a2_aaa["short_hinweis"]
+          and st2["quellen"]["short_volumen"]["status"] != "ok", str(a2_aaa["short_hinweis"]))
         p("Zweite Nacht: nicht mehr in der Wochenliste, keine Revisionen mehr",
           pd.isna(a2_aaa["rev_stand"]) and st2["quellen"]["revisionen"]["status"] == "aus")
 
@@ -1737,6 +1792,8 @@ def main():
                     help="Ordner mit den juengsten Einfrier-Laeufen (*.jsonl.gz); ohne ihn bleiben die Werte der Vornacht")
     ap.add_argument("--revisionen", choices=("an", "aus"), default="an",
                     help="Revisionen und Einstufungen fuer die Wochenliste bei Yahoo holen")
+    ap.add_argument("--short", choices=("an", "aus"), default="an",
+                    help="Short-Volumen-Anteil aus den FINRA-Tagesdateien rechnen")
     args = ap.parse_args()
     if args.selbsttest:
         return selbsttest()
@@ -1749,7 +1806,7 @@ def main():
             pfade = sorted(glob.glob(os.path.join(args.konsens_ordner, "*.jsonl.gz")),
                            key=os.path.basename)[-int(kk.KK["schnappschuesse"]):]
         stand = bauen(grenze=args.grenze or None, analysten=args.analysten, konsens_pfade=pfade,
-                      revisionen=args.revisionen)
+                      revisionen=args.revisionen, short=args.short)
         return 0 if stand.get("zeilen") else 1
     ap.print_help()
     return 0

@@ -1223,6 +1223,48 @@ def konsens_saetze(a, in_wochenliste=False, grund=None):
     return s
 
 
+def short_saetze(a, grund=None):
+    """Kapitel 'Leerverkäufe' (Etappe 7, Entscheidung 12): der Anteil der
+    Leerverkäufe am außerbörslich gemeldeten Umsatz laut FINRA-Tagesdatei.
+    a: die Zeile der Aktie aus scanner_analysten.parquet; grund wie bei
+    konsens_saetze."""
+    import kennzahlen_short as ks
+    fenster = int(ks.KS["fenster_tage"])
+    if a is None:
+        if grund is None:
+            return ["Die Short-Daten liegen im privaten Datenrepo; sie stehen nur in der App mit dem Lese-Token "
+                    "DATEN_LESE_TOKEN."]
+        if grund:
+            return [f"Short-Daten nicht geladen: {grund}."]
+        return ["Für diese Aktie stehen in der Nachttabelle des Scanners keine Short-Daten."]
+    if not a.get("short_stand"):
+        hinweis = a.get("short_hinweis") or "ohne Angabe"
+        return [f"Leerverkaufsvolumen laut FINRA nicht verfügbar: {hinweis}."]
+    s = []
+    if a.get("short_anteil_pct") is not None:
+        s.append(f"Leerverkäufe laut FINRA am {datum_text(a['short_stand'])}: {zahl(a['short_anteil_pct'], 1)} Prozent "
+                 f"der außerbörslich gemeldeten Umsätze, {zahl(a.get('short_volumen'))} von "
+                 f"{zahl(a.get('short_gesamtvolumen'))} Aktien.")
+    else:
+        s.append(f"Am {datum_text(a['short_stand'])} meldete FINRA für diese Aktie keine außerbörslichen Umsätze.")
+    if a.get("short_anteil_20t_pct") is not None:
+        tage = a.get("short_tage_20t")
+        s.append(f"Über die letzten {fenster} Handelstage {zahl(a['short_anteil_20t_pct'], 1)} Prozent, nach Volumen "
+                 f"gewichtet"
+                 + (f"; an {int(tage)} der {fenster} Tage außerbörslich gehandelt" if tage is not None else "") + ".")
+    elif a.get("short_hinweis"):
+        h = str(a["short_hinweis"])
+        s.append(h[:1].upper() + h[1:] + ".")
+    if a.get("short_median_pct") is not None:
+        s.append(f"Zum Vergleich der Median aller Aktien des Universums an diesem Tag: "
+                 f"{zahl(a['short_median_pct'], 1)} Prozent.")
+    s.append("Die FINRA-Tagesdatei erfasst nur außerbörslich gemeldete Umsätze während der regulären Handelszeit, "
+             "nicht die Börsen. Ein hoher Anteil ist üblich, weil Market Maker beim Handel leer verkaufen, und er ist "
+             "kein Short Interest, also kein Bestand offener Leerverkaufspositionen.")
+    s.append("Entscheidungshilfe, kein Filter.")
+    return s
+
+
 def sektor_saetze(sektor_name, sektoren, quelle=""):
     if not sektor_name:
         return ["Sektor unbekannt: die Aktie steht in keiner Wochenliste, und Yahoo nennt keinen Sektor."]
@@ -1298,6 +1340,7 @@ def bericht(ticker, rs, ratings, sektoren, live=None, kurve=None, kurve_quelle="
             ("Bilanz und Cashflow", bilanz_saetze(r)),
             ("Bewertung", bewertung_saetze(r, streubesitz_kurs)),
             ("Analysten und Konsens", konsens_saetze(analysten, in_wochenliste, analysten_grund)),
+            ("Leerverkäufe", short_saetze(analysten, analysten_grund)),
             ("Sektor", sektor_saetze(sektor_name, sektoren, sektor_quelle)),
             ("Stand", stand_saetze(rs, ratings, sektoren))]
 
@@ -1692,9 +1735,10 @@ def selbsttest() -> int:
 
     teile = bericht("AAOI", rs, ratings, sektoren, live=live_auf, kurve=kurve, kurve_quelle="Vorrat", sektor_name="Technology", sektor_quelle="Wochenliste")
     text = bericht_text(teile)
-    p("Bericht hat zehn Teile in fester Reihenfolge",
+    p("Bericht hat elf Teile in fester Reihenfolge",
       [u for u, _ in teile] == ["Aktie", "Unsere Ratings", "Volumen", "Technische Kennzahlen", "Umsatz und Gewinn",
-                                "Bilanz und Cashflow", "Bewertung", "Analysten und Konsens", "Sektor", "Stand"])
+                                "Bilanz und Cashflow", "Bewertung", "Analysten und Konsens", "Leerverkäufe", "Sektor",
+                                "Stand"])
     p("Kopf: Kuerzel, Name, Boerse, Kurs live, Abstand zum Hoch",
       "AAOI, Applied Optoelectronics, Inc., Nasdaq." in text and "Kurs 160,00 Dollar" in text and "Abstand zum 52-Wochen-Hoch minus 54,9 Prozent" in text)
     p("Ratings: RS mit Vorwoche, EPS, SMR, A/D, Composite je ein Satz",
@@ -1925,10 +1969,37 @@ def selbsttest() -> int:
       z_a == {"ticker": "AAOI", "konsens_fwd_kgv": 14.02, "konsens_stand": None, "rev_hoch_7t_0q": None}
       and isinstance(z_a["konsens_fwd_kgv"], float) and analysten_zeile(df_a, "ZZZ") is None
       and analysten_zeile(None, "AAOI") is None, str(z_a))
+    # Etappe 7: Leerverkaeufe laut FINRA
+    zeile_s = {"short_stand": "2026-09-14", "short_anteil_pct": 60.2, "short_volumen": 380591.1,
+               "short_gesamtvolumen": 631970.7, "short_anteil_20t_pct": 55.4, "short_tage_20t": 20,
+               "short_median_pct": 51.8, "short_hinweis": None}
+    st_text = "\n".join(short_saetze(zeile_s, ""))
+    p("Leerverkaeufe: Tag, 20 Tage, Median, Erklaerung",
+      "Leerverkäufe laut FINRA am 14.09.2026: 60,2 Prozent der außerbörslich gemeldeten Umsätze, 380.591 von 631.971 "
+      "Aktien." in st_text
+      and "Über die letzten 20 Handelstage 55,4 Prozent, nach Volumen gewichtet; an 20 der 20 Tage außerbörslich "
+          "gehandelt." in st_text
+      and "Zum Vergleich der Median aller Aktien des Universums an diesem Tag: 51,8 Prozent." in st_text
+      and "kein Short Interest" in st_text, st_text)
+    teil = short_saetze(dict(zeile_s, short_anteil_20t_pct=None, short_tage_20t=None,
+                             short_hinweis="der Wert über 20 Handelstage fehlt, die Tagesdatei vom 20.08.2026 ist nicht verwendbar"), "")
+    p("Leerverkaeufe: fehlender 20-Tage-Wert mit Grund, gross geschrieben",
+      "Der Wert über 20 Handelstage fehlt, die Tagesdatei vom 20.08.2026 ist nicht verwendbar." in teil, str(teil))
+    nv = short_saetze({"short_stand": None, "short_hinweis": "die FINRA-Tagesdatei vom 14.09.2026 fehlt oder ist "
+                                                            "unvollständig, FINRA antwortete mit 404"}, "")
+    p("Leerverkaeufe: nicht verfuegbar mit Grund", nv == ["Leerverkaufsvolumen laut FINRA nicht verfügbar: die "
+                                                         "FINRA-Tagesdatei vom 14.09.2026 fehlt oder ist unvollständig, "
+                                                         "FINRA antwortete mit 404."], str(nv))
+    ohne_h = short_saetze(dict(zeile_s, short_anteil_pct=None, short_volumen=0.0, short_gesamtvolumen=0.0), "")
+    p("Leerverkaeufe: kein ausserboerslicher Umsatz am Tag",
+      ohne_h[0] == "Am 14.09.2026 meldete FINRA für diese Aktie keine außerbörslichen Umsätze.", str(ohne_h))
+    p("Leerverkaeufe: ohne Daten wie beim Konsens", short_saetze(None, "kein Lese-Token")[0].startswith("Short-Daten nicht geladen")
+      and "DATEN_LESE_TOKEN" in short_saetze(None)[0])
     rs_w = dict(rs, listen={"AAOI": {}})
     teile_k = bericht("AAOI", rs_w, ratings, sektoren, live=live_auf, analysten=zeile_k, analysten_grund="")
     p("Bericht: Kapitel Analysten und Konsens nach der Bewertung, Wochenliste aus der Nachtdatei",
-      teile_k[7][0] == "Analysten und Konsens" and any("Needham" in x for x in teile_k[7][1]))
+      teile_k[7][0] == "Analysten und Konsens" and any("Needham" in x for x in teile_k[7][1])
+      and teile_k[8][0] == "Leerverkäufe")
 
     teile4 = bericht("XYZQ", {}, {}, {}, live=None)
     text4 = bericht_text(teile4)
