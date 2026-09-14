@@ -146,7 +146,9 @@
     "FRPT|Fallback: MA50-R\u00fcckeroberung": "drin",
     "MG|Rectangle Top": "drin",
     "DK|Cup & Handle (Wochenbasis)": "drin",
-    "DK|Fallback: 52W-Hoch-Breakout": "drin"
+    "DK|Fallback: 52W-Hoch-Breakout": "drin",
+    "APA|Cup & Handle (Wochenbasis)": "drin",
+    "APA|Fallback: 52W-Hoch-Breakout": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -213,7 +215,11 @@
     "DK|Cup & Handle (Wochenbasis)": "2026-09-14",
     "BEST|DK|Cup & Handle (Wochenbasis)": "2026-09-14",
     "DK|Fallback: 52W-Hoch-Breakout": "2026-09-14",
-    "BEST|DK|Fallback: 52W-Hoch-Breakout": "2026-09-14"
+    "BEST|DK|Fallback: 52W-Hoch-Breakout": "2026-09-14",
+    "APA|Cup & Handle (Wochenbasis)": "2026-09-14",
+    "BEST|APA|Cup & Handle (Wochenbasis)": "2026-09-14",
+    "APA|Fallback: 52W-Hoch-Breakout": "2026-09-14",
+    "BEST|APA|Fallback: 52W-Hoch-Breakout": "2026-09-14"
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-09-14"
