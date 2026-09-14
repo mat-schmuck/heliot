@@ -133,7 +133,12 @@
     "OII|Fallback: MA50-Pullback": "drin",
     "SCSC|Fallback: MA50-Pullback": "drin",
     "SEPN|Fallback: MA50-Pullback": "drin",
-    "SHIP|Fallback: MA50-Pullback": "draussen"
+    "SHIP|Fallback: MA50-Pullback": "draussen",
+    "BAND|EMA Crossback": "drin",
+    "BLTE|Fallback: MA50-Pullback": "draussen",
+    "LB|Cup & Handle (Wochenbasis)": "draussen",
+    "NVGS|Fallback: MA50-Pullback": "draussen",
+    "NBR|Fallback: MA50-Pullback": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -187,7 +192,10 @@
     "IBTA|Fallback: 52W-Hoch-Breakout": "2026-09-14",
     "BEST|IBTA|Fallback: 52W-Hoch-Breakout": "2026-09-14",
     "RAPP|Rectangle Top": "2026-09-14",
-    "BEST|RAPP|Rectangle Top": "2026-09-14"
+    "BEST|RAPP|Rectangle Top": "2026-09-14",
+    "BAND|EMA Crossback": "2026-09-14",
+    "BEST|BAND|EMA Crossback": "2026-09-14",
+    "R2GX|CXW|2026-09-14": "2026-09-14"
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-09-14"
