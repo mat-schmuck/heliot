@@ -55,10 +55,10 @@
     "VIST|Fallback: MA50-Pullback": "draussen",
     "WK|Fallback: MA50-Pullback": "draussen",
     "ZIM|Fallback: MA50-Pullback": "draussen",
-    "ANRO|Fallback: MA50-Pullback": "drin",
+    "ANRO|Fallback: MA50-Pullback": "draussen",
     "AYA|Fallback: MA50-Pullback": "draussen",
     "BE|Fallback: MA50-Pullback": "draussen",
-    "CGEM|Fallback: MA50-Pullback": "draussen",
+    "CGEM|Fallback: MA50-Pullback": "drin",
     "ECO|Fallback: MA50-Pullback": "draussen",
     "MPC|Fallback: MA50-Pullback": "draussen",
     "MTW|Fallback: MA50-Pullback": "draussen",
@@ -148,7 +148,12 @@
     "DK|Cup & Handle (Wochenbasis)": "drin",
     "DK|Fallback: 52W-Hoch-Breakout": "drin",
     "APA|Cup & Handle (Wochenbasis)": "drin",
-    "APA|Fallback: 52W-Hoch-Breakout": "drin"
+    "APA|Fallback: 52W-Hoch-Breakout": "drin",
+    "NUTX|Cup & Handle (Wochenbasis)": "drin",
+    "TPC|Fallback: MA50-Pullback": "drin",
+    "MRVL|Fallback: MA50-Pullback": "drin",
+    "SANM|Fallback: MA50-Pullback": "drin",
+    "NUTX|Fallback: 52W-Hoch-Breakout": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -219,7 +224,11 @@
     "APA|Cup & Handle (Wochenbasis)": "2026-09-14",
     "BEST|APA|Cup & Handle (Wochenbasis)": "2026-09-14",
     "APA|Fallback: 52W-Hoch-Breakout": "2026-09-14",
-    "BEST|APA|Fallback: 52W-Hoch-Breakout": "2026-09-14"
+    "BEST|APA|Fallback: 52W-Hoch-Breakout": "2026-09-14",
+    "NUTX|Cup & Handle (Wochenbasis)": "2026-09-14",
+    "BEST|NUTX|Cup & Handle (Wochenbasis)": "2026-09-14",
+    "NUTX|Fallback: 52W-Hoch-Breakout": "2026-09-14",
+    "BEST|NUTX|Fallback: 52W-Hoch-Breakout": "2026-09-14"
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-09-14"
