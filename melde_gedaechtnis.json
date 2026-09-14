@@ -58,7 +58,7 @@
     "ANRO|Fallback: MA50-Pullback": "drin",
     "AYA|Fallback: MA50-Pullback": "draussen",
     "BE|Fallback: MA50-Pullback": "draussen",
-    "CGEM|Fallback: MA50-Pullback": "drin",
+    "CGEM|Fallback: MA50-Pullback": "draussen",
     "ECO|Fallback: MA50-Pullback": "draussen",
     "MPC|Fallback: MA50-Pullback": "draussen",
     "MTW|Fallback: MA50-Pullback": "draussen",
@@ -143,7 +143,8 @@
     "RAPP|Fallback: MA50-R\u00fcckeroberung": "drin",
     "SLAB|Fallback: MA50-Pullback": "drin",
     "PNTG|Fallback: MA50-R\u00fcckeroberung": "drin",
-    "FRPT|Fallback: MA50-R\u00fcckeroberung": "drin"
+    "FRPT|Fallback: MA50-R\u00fcckeroberung": "drin",
+    "MG|Rectangle Top": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -204,7 +205,9 @@
     "SEKTORAUF|2026-09-14": "2026-09-14",
     "R2GX|CVI|2026-09-14": "2026-09-14",
     "FRPT|Fallback: MA50-R\u00fcckeroberung": "2026-09-14",
-    "BEST|FRPT|Fallback: MA50-R\u00fcckeroberung": "2026-09-14"
+    "BEST|FRPT|Fallback: MA50-R\u00fcckeroberung": "2026-09-14",
+    "MG|Rectangle Top": "2026-09-14",
+    "BEST|MG|Rectangle Top": "2026-09-14"
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-09-14"
