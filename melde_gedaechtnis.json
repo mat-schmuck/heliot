@@ -47,7 +47,7 @@
     "NMM|Fallback: MA50-Pullback": "draussen",
     "PAY|Rectangle Top": "drin",
     "PBT|Fallback: MA50-Pullback": "draussen",
-    "QNST|Fallback: MA50-Pullback": "drin",
+    "QNST|Fallback: MA50-Pullback": "draussen",
     "RGLD|Fallback: MA50-Pullback": "draussen",
     "STNG|Fallback: MA50-Pullback": "draussen",
     "TBBB|Fallback: MA50-Pullback": "draussen",
@@ -80,7 +80,7 @@
     "MEDP|Fallback: MA50-Pullback": "drin",
     "ODD|Fallback: MA50-Pullback": "draussen",
     "SBLK|Fallback: MA50-Pullback": "draussen",
-    "SEI|Fallback: MA50-Pullback": "drin",
+    "SEI|Fallback: MA50-Pullback": "draussen",
     "SNX|Fallback: MA50-Pullback": "drin",
     "SWKS|Fallback: MA50-Pullback": "draussen",
     "SWMR|Fallback: MA50-Pullback": "drin",
@@ -138,7 +138,12 @@
     "BLTE|Fallback: MA50-Pullback": "draussen",
     "LB|Cup & Handle (Wochenbasis)": "draussen",
     "NVGS|Fallback: MA50-Pullback": "draussen",
-    "NBR|Fallback: MA50-Pullback": "drin"
+    "NBR|Fallback: MA50-Pullback": "drin",
+    "NHC|Fallback: MA50-Pullback": "drin",
+    "RAPP|Fallback: MA50-R\u00fcckeroberung": "drin",
+    "SLAB|Fallback: MA50-Pullback": "drin",
+    "PNTG|Fallback: MA50-R\u00fcckeroberung": "drin",
+    "FRPT|Fallback: MA50-R\u00fcckeroberung": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -196,7 +201,10 @@
     "BAND|EMA Crossback": "2026-09-14",
     "BEST|BAND|EMA Crossback": "2026-09-14",
     "R2GX|CXW|2026-09-14": "2026-09-14",
-    "SEKTORAUF|2026-09-14": "2026-09-14"
+    "SEKTORAUF|2026-09-14": "2026-09-14",
+    "R2GX|CVI|2026-09-14": "2026-09-14",
+    "FRPT|Fallback: MA50-R\u00fcckeroberung": "2026-09-14",
+    "BEST|FRPT|Fallback: MA50-R\u00fcckeroberung": "2026-09-14"
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-09-14"
