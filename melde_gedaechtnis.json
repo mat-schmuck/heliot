@@ -174,7 +174,8 @@
     "TSAT|EMA Crossback": "drin",
     "GNK|EMA Crossback": "drin",
     "INTC|Fallback: MA50-Pullback": "drin",
-    "CNC|Fallback: 52W-Hoch-Breakout": "drin"
+    "CNC|Fallback: 52W-Hoch-Breakout": "drin",
+    "GKOS|Fallback: MA50-R\u00fcckeroberung": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -267,7 +268,8 @@
     "BEST|GNK|EMA Crossback": "2026-09-14",
     "UEBER|FROG|Fallback: MA50-R\u00fcckeroberung": "2026-09-14",
     "UEBER|ECO|Fallback: 52W-Hoch-Breakout": "2026-09-14",
-    "UEBER|ECO|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-14"
+    "UEBER|ECO|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-14",
+    "GEWINN|klimax_zeichen|ECO|1|5_kanaluebershooting": "2026-09-14"
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-09-14"
