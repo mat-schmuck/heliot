@@ -370,5 +370,16 @@
    "zeichen": null,
    "text": "INFORMATION: WTTR; EMA Crossback; Kurs 20.14 unter der 8-Tage-EMA 20.27; reiner Hinweis, kein Ausstiegssignal; Kurs 20,14, seit Trigger -3,9 % gleich -0,7 R"
   }
+ ],
+ "geprueft": "2026-09-14",
+ "zurueckgenommen": [
+  "LITE|1",
+  "LITE|3",
+  "MTRN|EMA Crossback",
+  "NGL|1",
+  "SMTC|1",
+  "SMTC|2",
+  "TWIN|EMA Crossback",
+  "TWIN|Rectangle Top"
  ]
 }

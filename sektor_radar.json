@@ -1,7 +1,29 @@
 {
- "gebaut_am": "2026-09-13T22:09:30",
- "handelstag": "2026-09-11",
+ "gebaut_am": "2026-09-14T22:18:06",
+ "handelstag": "2026-09-14",
  "geladen": 36,
  "unfertig": [],
- "treffer": []
+ "treffer": [
+  {
+   "etf": "HACK",
+   "name": "Cybersecurity",
+   "richtung": "hoch",
+   "volumen_pct": 277.6,
+   "kurs": 118.56
+  },
+  {
+   "etf": "SKYY",
+   "name": "Cloud",
+   "richtung": "hoch",
+   "volumen_pct": 103.7,
+   "kurs": 162.77
+  },
+  {
+   "etf": "XLE",
+   "name": "Energy",
+   "richtung": "runter",
+   "volumen_pct": 63.7,
+   "kurs": 64.53
+  }
+ ]
 }

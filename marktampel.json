@@ -1,27 +1,105 @@
 {
  "farbe": "gelb",
- "handelstag": "2026-09-11",
- "gebaut_am": "2026-09-14T00:09:31",
+ "handelstag": "2026-09-14",
+ "gebaut_am": "2026-09-14T22:01:12",
  "indizes": {
   "S&P 500": {
-   "schluss": 7656.98,
-   "ema21": 7665.65,
-   "sma50": 7607.34,
+   "schluss": 7619.98,
+   "ema21": 7661.5,
+   "sma50": 7610.07,
    "ueber_ema21": false,
    "ueber_sma50": true,
    "ema21_ueber_sma50": true,
    "sma50_steigt": true,
-   "handelstag": "2026-09-11"
+   "handelstag": "2026-09-14",
+   "distribution_days": [
+    {
+     "tag": "2026-08-17",
+     "pct": -0.52,
+     "art": "distribution"
+    },
+    {
+     "tag": "2026-08-18",
+     "pct": -0.69,
+     "art": "distribution"
+    },
+    {
+     "tag": "2026-08-31",
+     "pct": -0.33,
+     "art": "distribution"
+    },
+    {
+     "tag": "2026-09-08",
+     "pct": -0.58,
+     "art": "distribution"
+    }
+   ],
+   "dd_fenster": 25,
+   "volumen_letzter_tag": true,
+   "phase": {
+    "zustand": "erholungsversuch",
+    "korrektur_tag": "2026-09-10",
+    "tag1": "2026-09-11",
+    "versuch_tag": 2,
+    "ftd_tag": "2026-08-04",
+    "ftd_pct": 1.79,
+    "ftd_gescheitert": true,
+    "ftd_gescheitert_tag": "2026-09-01"
+   }
   },
   "Nasdaq": {
-   "schluss": 26333.04,
-   "ema21": 26272.56,
-   "sma50": 26046.83,
-   "ueber_ema21": true,
+   "schluss": 26186.41,
+   "ema21": 26264.73,
+   "sma50": 26053.91,
+   "ueber_ema21": false,
    "ueber_sma50": true,
    "ema21_ueber_sma50": true,
    "sma50_steigt": true,
-   "handelstag": "2026-09-11"
+   "handelstag": "2026-09-14",
+   "distribution_days": [
+    {
+     "tag": "2026-08-11",
+     "pct": -0.6,
+     "art": "distribution"
+    },
+    {
+     "tag": "2026-08-17",
+     "pct": -0.32,
+     "art": "distribution"
+    },
+    {
+     "tag": "2026-08-19",
+     "pct": 0.16,
+     "art": "stalling"
+    },
+    {
+     "tag": "2026-08-20",
+     "pct": -1.0,
+     "art": "distribution"
+    },
+    {
+     "tag": "2026-08-28",
+     "pct": -0.52,
+     "art": "distribution"
+    },
+    {
+     "tag": "2026-09-08",
+     "pct": -0.32,
+     "art": "distribution"
+    }
+   ],
+   "dd_fenster": 25,
+   "volumen_letzter_tag": true,
+   "phase": {
+    "zustand": "bestaetigt",
+    "korrektur_tag": "2026-07-29",
+    "tag1": null,
+    "versuch_tag": null,
+    "ftd_tag": "2026-08-27",
+    "ftd_pct": 1.57,
+    "ftd_gescheitert": true,
+    "ftd_gescheitert_tag": "2026-08-31"
+   }
   }
  }
 }
