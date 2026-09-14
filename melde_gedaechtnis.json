@@ -155,7 +155,9 @@
     "SANM|Fallback: MA50-Pullback": "drin",
     "NUTX|Fallback: 52W-Hoch-Breakout": "drin",
     "CNC|Rectangle Top": "drin",
-    "MPC|Fallback: 20-Tage-Hoch (Pivot)": "drin"
+    "MPC|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "FROG|Fallback: MA50-R\u00fcckeroberung": "drin",
+    "CRWD|Darvas Box": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -232,7 +234,9 @@
     "NUTX|Fallback: 52W-Hoch-Breakout": "2026-09-14",
     "BEST|NUTX|Fallback: 52W-Hoch-Breakout": "2026-09-14",
     "MPC|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-14",
-    "BEST|MPC|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-14"
+    "BEST|MPC|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-14",
+    "CRWD|Darvas Box": "2026-09-14",
+    "BEST|CRWD|Darvas Box": "2026-09-14"
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-09-14"
