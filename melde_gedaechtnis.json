@@ -16,7 +16,7 @@
     "KRT|Fallback: MA50-Pullback": "draussen",
     "LBRX|Fallback: MA50-Pullback": "draussen",
     "MRNA|Fallback: MA50-Pullback": "draussen",
-    "NESR|Fallback: MA50-Pullback": "draussen",
+    "NESR|Fallback: MA50-Pullback": "drin",
     "PARR|Fallback: MA50-Pullback": "draussen",
     "RVMD|Fallback: MA50-Pullback": "drin",
     "SMTC|Fallback: MA50-Pullback": "draussen",
@@ -58,7 +58,7 @@
     "ANRO|Fallback: MA50-Pullback": "draussen",
     "AYA|Fallback: MA50-Pullback": "draussen",
     "BE|Fallback: MA50-Pullback": "draussen",
-    "CGEM|Fallback: MA50-Pullback": "drin",
+    "CGEM|Fallback: MA50-Pullback": "draussen",
     "ECO|Fallback: MA50-Pullback": "draussen",
     "MPC|Fallback: MA50-Pullback": "draussen",
     "MTW|Fallback: MA50-Pullback": "draussen",
@@ -149,7 +149,7 @@
     "DK|Fallback: 52W-Hoch-Breakout": "drin",
     "APA|Cup & Handle (Wochenbasis)": "drin",
     "APA|Fallback: 52W-Hoch-Breakout": "drin",
-    "NUTX|Cup & Handle (Wochenbasis)": "drin",
+    "NUTX|Cup & Handle (Wochenbasis)": "draussen",
     "TPC|Fallback: MA50-Pullback": "drin",
     "MRVL|Fallback: MA50-Pullback": "drin",
     "SANM|Fallback: MA50-Pullback": "drin",
@@ -158,7 +158,13 @@
     "MPC|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "FROG|Fallback: MA50-R\u00fcckeroberung": "drin",
     "CRWD|Darvas Box": "drin",
-    "CRWD|Fallback: 52W-Hoch-Breakout": "drin"
+    "CRWD|Fallback: 52W-Hoch-Breakout": "drin",
+    "RDVT|Cup & Handle (Wochenbasis)": "drin",
+    "RDVT|Fallback: 52W-Hoch-Breakout": "drin",
+    "CGON|Fallback: MA50-R\u00fcckeroberung": "drin",
+    "HBM|Fallback: MA50-Pullback": "drin",
+    "MDB|Fallback: MA50-R\u00fcckeroberung": "drin",
+    "TEVA|Cup & Handle (Wochenbasis) + Darvas Box": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -240,7 +246,8 @@
     "BEST|CRWD|Darvas Box": "2026-09-14",
     "CRWD|Fallback: 52W-Hoch-Breakout": "2026-09-14",
     "BEST|CRWD|Fallback: 52W-Hoch-Breakout": "2026-09-14",
-    "UEBER|FTNT|Fallback: MA50-R\u00fcckeroberung": "2026-09-14"
+    "UEBER|FTNT|Fallback: MA50-R\u00fcckeroberung": "2026-09-14",
+    "UEBER|NUTX|Cup & Handle (Wochenbasis)": "2026-09-14"
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-09-14"
