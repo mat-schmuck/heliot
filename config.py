@@ -794,6 +794,61 @@ CFG = {
         "split_ereignis_tage": 5,
     },
 
+    # --- Marktbreite und Marktphase (Etappe 3, Entscheidung 6) -------------
+    # Gerhard, 13.09.2026: "JA BAUEN. Distribution Days, Follow-through Day,
+    # Steiger und Faller, McClellan, Anteil ueber SMA 50 und 200, neue Hochs
+    # und Tiefs, Stockbee-Zaehler. Die Ampel filtert weiterhin NICHTS."
+    # Rechnung in marktbreite.py; die Indexwerte legt marktampel.py ab, die
+    # Breite rs_universum.py unter "marktbreite". Alles nur Anzeige.
+    "marktbreite": {
+        # Distribution Day nach IBD (Papier 4.4 Punkt 6): Verlust ab so
+        # vielen Prozent bei hoeherem Volumen als am Vortag; zaehlt so viele
+        # Sitzungen, verfaellt frueher bei einem Tageshoch so viele Prozent
+        # ueber dem Schluss dieses Tages.
+        "dd_verlust_pct": 0.2,
+        "dd_fenster": 25,
+        "dd_verfall_pct": 5.0,
+        # Stalling Day (ebenda): Gewinn unter so vielen Prozent bei hoeherem
+        # Volumen als am Vortag; zaehlt wie ein Distribution Day.
+        "stalling_gewinn_pct": 0.2,
+        # Zaehlung nach IBD (ebenda): ab 4 unter Druck, ab 6 Korrektur.
+        "dd_druck_ab": 4,
+        "dd_korrektur_ab": 6,
+        # Follow-through Day (Papier 4.4 Punkt 7): ab dem vierten Tag des
+        # Erholungsversuchs ein Anstieg von mindestens 1,25 Prozent bei
+        # hoeherem Volumen. Ein Tief zaehlt (eigene Festlegung, IBD nennt
+        # keine Zahl) bei einem Schluss unter der 50-Tage-Linie, der der
+        # tiefste der letzten 25 Sitzungen ist.
+        "ftd_ab_tag": 4,
+        "ftd_gewinn_pct": 1.25,
+        "ftd_linie_tage": 50,
+        "ftd_tief_fenster": 25,
+        # McClellan-Oszillator ratio-adjusted (StockCharts ChartSchool).
+        "mcclellan_kurz": 19,
+        "mcclellan_lang": 39,
+        "mcclellan_alpha_kurz": 0.10,
+        "mcclellan_alpha_lang": 0.05,
+        # Richtung des Summation Index ueber so viele Tage.
+        "summation_trend_tage": 5,
+        # Fenster fuer A/D-Linie, Hochs-Tiefs-Schnitt und Stockbee-Verhaeltnis.
+        "mittel_tage": 10,
+        "sma_tage": [20, 50, 200],
+        # Neues 52-Wochen-Hoch: ueber dem hoechsten Hoch so vieler Sitzungen davor.
+        "hoch_tief_tage": 251,
+        # Stockbee Market Monitor, Formeln aus dem Beitrag vom August 2014.
+        "stockbee_tages_pct": 4.0,
+        "stockbee_min_volumen": 100_000,
+        "stockbee_verhaeltnis_tage": [5, 10],
+        "stockbee_quartal_tage": 65,
+        "stockbee_monat_tage": 20,
+        "stockbee_34_tage": 34,
+        "stockbee_min_dollarvolumen": 250_000,
+        "stockbee_min_kurs_monat": 5.0,
+        # Ein Tag mit weniger Aktien als dieser Anteil des ueblichen gilt als
+        # unvollstaendig und zaehlt nicht.
+        "min_anteil_tag": 0.5,
+    },
+
     # --- Sektor-Rangliste der 36 Branchen-ETFs (R12 bis R17) -------------
     "sektor_rangliste": {
         # R13: Faber-Mittel ueber 1, 3, 6, 9 und 12 Monate (Handelstage).
@@ -1039,6 +1094,17 @@ def pruefe_config():
     assert t["beta_tage"] < u["historie_tage"] + 30 and max(t["sma_tage"]) <= u["historie_tage"]
     assert t["allzeithoch_abruf_tage"] >= 1 and 0 <= t["allzeithoch_split_toleranz"] < 0.1
     assert t["split_verdacht_faktor"] > 1 and t["split_verdacht_dollarvolumen"] >= 1 and t["split_ereignis_tage"] >= 1
+    mb = CFG["marktbreite"]
+    assert mb["dd_verlust_pct"] > 0 and mb["dd_fenster"] >= 1 and mb["dd_verfall_pct"] > 0, \
+        "Marktbreite: Distribution Days brauchen Verlust, Fenster und Verfall"
+    assert 0 < mb["stalling_gewinn_pct"] and 1 <= mb["dd_druck_ab"] < mb["dd_korrektur_ab"]
+    assert mb["ftd_ab_tag"] >= 1 and mb["ftd_gewinn_pct"] > 0 and mb["ftd_linie_tage"] >= 2 and mb["ftd_tief_fenster"] >= 2
+    assert 1 <= mb["mcclellan_kurz"] < mb["mcclellan_lang"] and 0 < mb["mcclellan_alpha_lang"] < mb["mcclellan_alpha_kurz"] < 1
+    assert 1 <= mb["summation_trend_tage"] <= mb["mittel_tage"] and max(mb["stockbee_verhaeltnis_tage"]) <= mb["mittel_tage"], \
+        "Marktbreite: Summation-Richtung und Stockbee-Verhaeltnis muessen ins Zehn-Tage-Fenster passen"
+    assert max(mb["sma_tage"]) <= u["historie_tage"] and mb["hoch_tief_tage"] <= u["historie_tage"]
+    assert 0 < mb["min_anteil_tag"] < 1 and mb["stockbee_min_volumen"] >= 0 and mb["stockbee_min_dollarvolumen"] >= 0
+    assert min(mb["stockbee_quartal_tage"], mb["stockbee_monat_tage"], mb["stockbee_34_tage"]) >= 2 and mb["stockbee_min_kurs_monat"] >= 0
     s = CFG["scanner"]
     assert 0.0 <= s["toleranz"] < 0.5, "Scanner: Toleranz als Bruchteil zwischen 0 und 0,5"
     assert s["historie_tage"] >= 760, "Scanner: drei Jahre Handelstage brauchen mindestens 760 Tage"

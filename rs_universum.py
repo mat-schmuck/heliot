@@ -90,6 +90,7 @@ from datetime import date, datetime
 
 from config import CFG
 import kennzahlen_technik
+import marktbreite
 import red_to_green
 
 CFGU = CFG["rs_universum"]
@@ -646,6 +647,38 @@ def _verlauf_fortschreiben(alt_eintrag, tag, rs, hoechstens):
     return verlauf[-hoechstens:]
 
 
+def _marktbreite_rechnen(gruppen, kurse, leise=True):
+    """ETAPPE 3, ENTSCHEIDUNG 6 (Gerhard, 13.09.2026): die Marktbreite ueber
+    alle Stammaktien mit Kursen (dieselben Reihen, aus denen die technischen
+    Kennzahlen stammen). Titel mit Verdacht auf einen unbereinigten Split
+    zaehlen nicht mit: Ihr Sprung waere ein falscher Steiger oder Faller und
+    ein falsches Hoch oder Tief. Ein Fehler hier darf den Bau des RS nie
+    verhindern; dann steht nur der Fehler unter "marktbreite"."""
+    t0 = time.time()
+    try:
+        reihen, ohne = [], 0
+        for gruppe in gruppen:
+            for s, kz in gruppe.items():
+                if "technik" not in kz or not kurse.get(s):
+                    continue
+                if (kz.get("technik") or {}).get("split_verdacht") is not None:
+                    ohne += 1
+                    continue
+                reihen.append(kurse[s])
+        mb = marktbreite.breite(reihen)
+        if not mb:
+            return {"fehler": "keine Kursreihen"}
+        mb["ohne_split_verdacht"] = ohne
+        mb["dauer_s"] = round(time.time() - t0, 1)
+        if not leise:
+            print(f"  {marktbreite.breite_zeile(mb)}; {len(reihen)} Reihen, "
+                  f"{ohne} wegen Split-Verdacht nicht gezaehlt, {mb['dauer_s']} s")
+        return mb
+    except Exception as e:  # noqa
+        print(f"  Marktbreite: nicht berechenbar ({type(e).__name__}: {e})")
+        return {"fehler": f"{type(e).__name__}: {e}"}
+
+
 def bauen(loaded=None, pfad=DATEI, holen_liste=None, holen_kurse=None, leise=False, alt=None,
           liste_text=None, liste_text_andere=None, jetzt=None, listen_ticker=None, holen_allzeit=None):
     """Der naechtliche Lauf. loaded: {Ticker: (df, Firma)} des Nachtscans,
@@ -729,6 +762,8 @@ def bauen(loaded=None, pfad=DATEI, holen_liste=None, holen_kurse=None, leise=Fal
         for s, kz in gruppe.items():
             if "technik" in kz and kurse.get(s):
                 _allzeithoch_setzen(kz, kurse[s], ath_frisch.get(s), alt_je.get(s), ath_quellen)
+
+    breite = _marktbreite_rechnen((aktien, ausserhalb), kurse, leise)
 
     bezug = {s: kz for gruppe in (aktien, ausserhalb) for s, kz in gruppe.items() if kz.get("roh") is not None}
     rohwerte = [kz["roh"] for kz in bezug.values()]
@@ -852,6 +887,8 @@ def bauen(loaded=None, pfad=DATEI, holen_liste=None, holen_kurse=None, leise=Fal
         # Eintrag, woher der Wert kam (abruf, kette, fenster, fehlt).
         "allzeithoch": {**ath_stand, "quellen": ath_quellen,
                         "abruf_tage": int(CFG["technik"]["allzeithoch_abruf_tage"])},
+        # Etappe 3, Entscheidung 6: Marktbreite, reine Anzeige (marktbreite.py).
+        "marktbreite": breite,
         "aktien": aktien, "ausserhalb": ausserhalb, "listen": listen_ergebnis,
     }
     _schreiben(pfad, inhalt)
@@ -1172,6 +1209,19 @@ def selbsttest() -> int:
       and "technik" not in inhalt["ausserhalb"]["FEHLT"]
       and tk["adr20"] is not None and tk["beta"] is not None and tk["mrs"] is not None and tk["stufe"] is not None,
       tk)
+    mb = inhalt["marktbreite"]
+    p("Marktbreite (Etappe 3): ueber alle Titel mit Kursen am Handelstag des Universums; Steiger, Faller und "
+      "Unveraenderte ergeben die Titel des Tages",
+      mb.get("handelstag") == inhalt["handelstag"] and mb.get("reihen") == 302 and mb.get("aktien_heute", 0) > 0
+      and mb["steiger"] + mb["faller"] + mb["unveraendert"] == mb["aktien_heute"]
+      and mb.get("ohne_split_verdacht") == 0 and mb.get("mcclellan") is not None and "stockbee" in mb, mb)
+    k_a, k_b = reihen[nam("S", 1)], reihen[nam("S", 2)]
+    mb_split = _marktbreite_rechnen(({"A": {"technik": {"adr20": 1.0}}, "B": {"technik": {"split_verdacht": 30.0}},
+                                      "C": {"grund": "keine Kurse"}},), {"A": k_a, "B": k_b})
+    p("Marktbreite: ein Titel mit Split-Verdacht zaehlt nicht mit, ein Titel ohne Kennzahlen ebenso wenig",
+      mb_split.get("reihen") == 1 and mb_split.get("ohne_split_verdacht") == 1, mb_split)
+    p("Marktbreite: ein Fehler verhindert den Bau nicht, er steht nur unter marktbreite",
+      "fehler" in _marktbreite_rechnen(({"A": {"technik": {}}},), {"A": {"close": [1.0, 2.0]}}))
     p("Technik: ohne Abruf der ganzen Historie gibt es das Allzeithoch nur fuer junge Titel mit ganzer Historie",
       tk["ath"] is None and inhalt["ausserhalb"]["JUNG"]["technik"]["ath"] == round(max(reihen["JUNG"]["high"]), 2)
       and inhalt["allzeithoch"]["abruf_heute"] == "voll" and inhalt["allzeithoch"]["erhalten"] == 0

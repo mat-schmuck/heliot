@@ -3386,6 +3386,11 @@ def ampel_voranstellen(absaetze: list[str]) -> tuple:
     Anfang der ERSTEN Meldung des Tages". Die Zeile informiert nur; keine
     Meldung wird ihretwegen zurueckgehalten oder veraendert.
 
+    ETAPPE 3 (Gerhard, 13.09.2026, Entscheidung 6; Papier 4.4 Punkt 8): In
+    derselben Zeile folgen je Index die Distribution Days samt Stand des
+    Follow-through Day und dahinter die Marktbreite aus rs_universum.json,
+    mit derselben Pruefung auf den Schluss. Auch das filtert nichts.
+
     Rueckgabe: (Absaetze, Tag). Tag ist das ISO-Datum des New Yorker
     Handelstags, wenn die Zeile vorangestellt wurde, sonst None. Gemerkt
     wird der Tag erst, wenn die Meldung wirklich angenommen wurde (sende)."""
@@ -3394,7 +3399,8 @@ def ampel_voranstellen(absaetze: list[str]) -> tuple:
         return absaetze, None
     try:
         import marktampel
-        zeile = marktampel.zeile(marktampel.lese(), _AMPEL["vortag"])
+        rs = ((_zusatz_daten().get("rs") or (None, {}))[1]) or {}
+        zeile = marktampel.zeile(marktampel.lese(), _AMPEL["vortag"], rs.get("marktbreite") or {})
     except Exception as e:
         zeile = ("Marktampel nicht verfügbar; die Ablage ist nicht lesbar "
                  f"({type(e).__name__}).")

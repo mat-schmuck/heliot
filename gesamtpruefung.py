@@ -165,7 +165,9 @@ def block_b():
                     # Scanner-Reiter (Mathias, 14.09.2026)
                     "scanner_daten", "scanner_ansicht", "scanner_noetig",
                     # Etappe 2, technische Kennzahlen (Gerhard, 13.09.2026)
-                    "kennzahlen_technik"]
+                    "kennzahlen_technik",
+                    # Etappe 3, Marktbreite und Marktphase (Gerhard, 13.09.2026)
+                    "marktbreite"]
     for name in mit_schalter:
         r = subprocess.run([sys.executable, f"{name}.py", "--selbsttest"],
                            capture_output=True, text=True, cwd=WURZEL,
@@ -962,6 +964,17 @@ def block_e():
     _lage2 = _ma._index_lage(_fallend)
     pruefe("E", "Marktampel: fallende Reihe liegt unter der 50er-Linie",
            _lage2 is not None and not _lage2["ueber_sma50"])
+    # ETAPPE 3 (Gerhard, 13.09.2026, Entscheidung 6): je Index die
+    # Distribution Days aus demselben Kursrahmen, den die Ampel laedt.
+    import marktbreite as _mbm
+    _dd_df = _pdm.DataFrame({"Close": [100.0] * 79 + [99.0], "High": [101.0] * 80,
+                             "Low": [99.0] * 80, "Volume": [1000.0] * 79 + [2000.0]}, index=_idx)
+    _ph_e = _mbm.index_phase(_dd_df)
+    pruefe("E", "Marktampel: ein Distribution Day an einer Indexreihe erkannt (Etappe 3)",
+           _ph_e is not None and [x["tag"] for x in _ph_e["distribution_days"]] == [_idx[-1].strftime("%Y-%m-%d")]
+           and _ph_e["distribution_days"][0]["art"] == "distribution" and "phase" in _ph_e, _ph_e)
+    pruefe("E", "Marktampel laedt ein Jahr Indexkurse fuer Distribution Days und Follow-through Day",
+           'history(period="1y", auto_adjust=False)' in open("marktampel.py", encoding="utf-8").read())
     pruefe("E", "Logbuch haengt die Ampelfarbe an jede Zeile",
            "eintrag[\"ampel\"] = ampel" in
            open("trigger_logbuch.py", encoding="utf-8").read())
@@ -977,6 +990,22 @@ def block_e():
             "indizes": {"S&P 500": _lage_g,
                         "Nasdaq": {**_lage_g, "ueber_ema21": False}}}
     _z = _ma.zeile(_amp, "2026-09-11")
+    # ETAPPE 3: dahinter in derselben Zeile die Marktbreite
+    _mb_e = {"handelstag": "2026-09-11", "steiger": 2310, "faller": 1876, "mcclellan": 45.2,
+             "summation_trend": 12.0, "ueber_sma50_pct": 58.4, "ueber_sma200_pct": 61.2,
+             "neue_hochs": 85, "neue_tiefs": 40, "stockbee": {"plus4": 180, "minus4": 95, "verh5": 1.6}}
+    _z_mb = _ma.zeile(_amp, "2026-09-11", _mb_e)
+    pruefe("E", "Marktampel-Zeile samt Marktbreite in derselben Zeile (Etappe 3)",
+           _z_mb == (_z + "; Marktbreite 2.310 Steiger und 1.876 Faller; McClellan-Oszillator plus 45, "
+                     "Summation Index steigend; 58 Prozent über SMA 50, 61 Prozent über SMA 200; 85 neue "
+                     "52-Wochen-Hochs und 40 neue Tiefs; Stockbee 180 Aktien mit plus 4 Prozent und 95 mit "
+                     "minus 4 Prozent, Verhältnis über 5 Tage 1,60"), _z_mb)
+    _z_mb_alt = _ma.zeile(_amp, "2026-09-11", {**_mb_e, "handelstag": "2026-09-10"})
+    pruefe("E", "Marktampel-Zeile: eine Marktbreite vom falschen Schluss zeigt keine Zahl",
+           "Marktbreite nicht verfügbar, die letzte Berechnung gilt dem Schluss vom 10.09.2026" in _z_mb_alt
+           and "Steiger" not in _z_mb_alt, _z_mb_alt)
+    pruefe("E", "Marktampel-Zeile: ohne Marktbreite in der Nachtdatei ehrlich nicht verfuegbar",
+           _ma.zeile(_amp, "2026-09-11", {}).endswith("Marktbreite nicht verfügbar, es liegt keine Berechnung vor"))
     pruefe("E", "Marktampel-Zeile: Farbe, Schluss und beide Indizes",
            _z == ("Marktampel gelb, Schluss vom 11.09.2026; S&P 500 über "
                   "EMA 21 und SMA 50, SMA 50 steigt; Nasdaq unter EMA 21, "
@@ -990,7 +1019,7 @@ def block_e():
            _ma.zeile(None).startswith("Marktampel nicht verfügbar"))
     pruefe("E", "Marktampel-Zeile im Meldungsformat: kein Gedankenstrich, "
                 "kein senkrechter Strich",
-           not any(ch in s for s in (_z, _z_alt, _ma.zeile(None))
+           not any(ch in s for s in (_z, _z_alt, _ma.zeile(None), _z_mb, _z_mb_alt)
                    for ch in ("—", "–", "|")))
     # Die Handels-App (Repo heliot-daten, alarmeAusText) liest aeltere
     # Meldungen aus dem Text: Ein Absatz zaehlt dort nur als Alarm, wenn
@@ -1000,9 +1029,10 @@ def block_e():
     pruefe("E", "Marktampel-Zeile wird von der Handels-App nicht als Alarm "
                 "gelesen", not any(_re_amp.search(
                     r"(Kaufpunkt|Kurs|Stop|Ziel|Exit-Linie)\s+(\(Folgetag\)\s+)?\d", s)
-                    for s in (_z, _z_alt, _ma.zeile(None))))
+                    for s in (_z, _z_alt, _ma.zeile(None), _z_mb, _z_mb_alt)))
     _alt_eine, _alt_heute_a, _alt_lese = bw._sende_eine, bw.heute_ny, _ma.lese
     _alt_egal, _alt_amp = bw.HANDELSZEIT_EGAL, dict(bw._AMPEL)
+    _alt_zusatz = bw._zusatz_daten
     _bodies, _antwort = [], [True]
     try:
         from datetime import date as _dam
@@ -1011,6 +1041,7 @@ def block_e():
         bw.heute_ny = lambda: _dam(2026, 9, 14)
         bw.HANDELSZEIT_EGAL = True
         _ma.lese = lambda pfad=None: _amp
+        bw._zusatz_daten = lambda: {"rs": (None, {"marktbreite": _mb_e})}
         bw._AMPEL.update(tag=None, vortag=None)
         bw.kurs_vortag_merken({"A": {"prev_datum": _dam(2026, 9, 11)},
                                "B": {"prev_datum": _dam(2026, 9, 11)},
@@ -1028,9 +1059,9 @@ def block_e():
         bw.sende("probe", "Titel", ["1. AAA"], "high")
         bw.sende("probe", "Titel", ["1. BBB"], "high")
         pruefe("E", "Waechter: die erste Meldung des Tages traegt die Ampel "
-                    "als eigene Zeile vorn, die zweite nicht",
+                    "samt Marktbreite als eigene Zeile vorn, die zweite nicht",
                len(_bodies) == 2
-               and _bodies[0] == _z + "\n\n1. AAA" and _bodies[1] == "1. BBB"
+               and _bodies[0] == _z_mb + "\n\n1. AAA" and _bodies[1] == "1. BBB"
                and bw._AMPEL["tag"] == "2026-09-14", _bodies)
         _st_a = {"gemeldet": {}}
         _alt_file, _alt_repo_a = bw.STATE_FILE, bw.REPO_STATE
@@ -1056,6 +1087,7 @@ def block_e():
                f"{_gesichert.get('ampel_tag')} {_geladen.get('ampel_tag')}")
     finally:
         bw._sende_eine, bw.heute_ny, _ma.lese = _alt_eine, _alt_heute_a, _alt_lese
+        bw._zusatz_daten = _alt_zusatz
         bw.HANDELSZEIT_EGAL = _alt_egal
         bw._AMPEL.clear()
         bw._AMPEL.update(_alt_amp)
@@ -2247,6 +2279,34 @@ def block_h():
     else:
         pruefe("H", "Technische Kennzahlen in rs_universum.json", True,
                "die Datei stammt noch vom Stand vor Etappe 2; der naechste Nachtscan legt sie an")
+
+    # ETAPPE 3 (Gerhard, 13.09.2026, Entscheidung 6): die Marktbreite in der
+    # Nachtdatei, die Distribution Days je Index in der Marktampel.
+    if _rs and "marktbreite" in _rs:
+        _mb_h = _rs.get("marktbreite") or {}
+        _titel_h = sum(1 for g in ("aktien", "ausserhalb") for e in (_rs.get(g) or {}).values()
+                       if isinstance(e, dict) and e.get("technik"))
+        pruefe("H", "Marktbreite gerechnet, zum Handelstag der Nachtdatei und ueber mindestens 90 Prozent "
+                    "der Titel mit Kennzahlen",
+               not _mb_h.get("fehler") and _mb_h.get("handelstag") == _rs.get("handelstag")
+               and _titel_h > 0 and (_mb_h.get("aktien_heute") or 0) >= 0.9 * _titel_h,
+               f"{_mb_h.get('aktien_heute')} von {_titel_h} Titeln, Handelstag {_mb_h.get('handelstag')} gegen "
+               f"{_rs.get('handelstag')}" + (f", Fehler {_mb_h.get('fehler')}" if _mb_h.get("fehler") else ""))
+    else:
+        pruefe("H", "Marktbreite in rs_universum.json", True,
+               "die Datei stammt noch vom Stand vor Etappe 3; der naechste Nachtscan legt sie an")
+    try:
+        _amp_h = json.loads((WURZEL / "marktampel.json").read_text(encoding="utf-8"))
+    except Exception:
+        _amp_h = {}
+    _lagen_h = [l for l in ((_amp_h or {}).get("indizes") or {}).values() if isinstance(l, dict)]
+    if any("distribution_days" in l for l in _lagen_h):
+        pruefe("H", "Marktampel traegt je Index Distribution Days und Marktphase",
+               all("distribution_days" in l and isinstance(l.get("phase"), dict) for l in _lagen_h),
+               f"{len(_lagen_h)} Indizes")
+    else:
+        pruefe("H", "Distribution Days in marktampel.json", True,
+               "die Datei stammt noch vom Stand vor Etappe 3; der naechste Nachtscan legt sie an")
 
     # positionen.json DARF fehlen, solange keine Position offen ist —
     # die Datei entsteht erst beim ersten Einstieg. Geprueft wird

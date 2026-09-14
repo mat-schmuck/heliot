@@ -29,6 +29,10 @@ Gerhards Antworten vom 12.09.2026, R7 bis R11 und Teil 5, dazu M6.
        New York mit Handelskursen gerechnet) werden mit dem echten Schluss
        nachgeprueft; faellt die Bestaetigung, wird die RUECKNAHME gemeldet,
        optisch klar unterscheidbar (eigener Absatz, Wort RUECKNAHME).
+  Etappe 3  Gerhard, 13.09.2026, Entscheidung 6: Marktampel samt
+       Distribution Days und Follow-through Day je Index und die ganze
+       Marktbreite als eigener nummerierter Absatz (marktampel.bericht_absatz),
+       reine Anzeige, die Ampel filtert nichts.
 
 Der Bericht entsteht im Nachtscan nach dem Kapitel-12-Lauf, weil dort die
 Schlusskurse, das RS-Universum und die Sektor-Rangliste frisch sind. Er
@@ -311,8 +315,9 @@ def sektor_kurz(sek):
 # Bauen und senden
 # ---------------------------------------------------------------------------
 
-def bauen(rs, sek, gruen, gedaechtnis, schlussnah, befunde_nacht, heute, holen_allzeit=None, cfg=None):
-    """Rueckgabe (titel, absaetze, prioritaet, gedaechtnis_neu, zurueckgenommen)."""
+def bauen(rs, sek, gruen, gedaechtnis, schlussnah, befunde_nacht, heute, holen_allzeit=None, cfg=None, ampel=None):
+    """Rueckgabe (titel, absaetze, prioritaet, gedaechtnis_neu, zurueckgenommen).
+    ampel: der Inhalt von marktampel.json (Etappe 3), oder None."""
     cfg = cfg or CFGA
     handelstag = str(rs.get("handelstag") or heute.isoformat())
     titel = f"Abendbericht {_datum_de(handelstag)}, Bericht, kein Kaufsignal"
@@ -341,6 +346,11 @@ def bauen(rs, sek, gruen, gedaechtnis, schlussnah, befunde_nacht, heute, holen_a
     elif isinstance(schlussnah, dict) and str(schlussnah.get("handelstag") or "") == handelstag \
             and not schlussnah.get("geprueft") and (schlussnah.get("befunde") or []):
         absaetze.append(f"Alle {len(best)} schlussnahen Befunde von 15:45 mit dem Schluss bestaetigt")
+
+    # Etappe 3: Ampel, Distribution Days und Marktbreite ordnen den Tag ein.
+    if ampel is not None or rs.get("marktbreite") is not None:
+        import marktampel
+        absaetze.append(marktampel.bericht_absatz(ampel, rs.get("marktbreite"), handelstag))
 
     if rs.get("status") == "ok":
         gz, vermerk = gruen_bei_rot(rs, gruen, cfg)
@@ -460,8 +470,14 @@ def lauf(topic=None, senden_erlaubt=True, heute=None, leise=False, poster=None, 
         if not leise:
             print(f"Abendbericht fuer {handelstag} wurde schon gesendet.")
         return None
+    try:
+        import marktampel
+        ampel = marktampel.lese()
+    except Exception as e:  # noqa
+        print(f"Abendbericht: Marktampel nicht lesbar ({type(e).__name__}: {e})")
+        ampel = None
     titel, absaetze, prio, ged_neu, zurueck, best = bauen(rs, sek, gruen, ged, schlussnah, befunde, heute,
-                                                           holen_allzeit=holen_allzeit)
+                                                           holen_allzeit=holen_allzeit, ampel=ampel)
     if best and not (isinstance(schlussnah, dict) and schlussnah.get("geprueft")):
         try:
             n = klimax_merker_setzen(best)
@@ -574,6 +590,22 @@ def selbsttest() -> int:
     rs3 = dict(rs); rs3["status"] = "nicht verfuegbar"; rs3["grund"] = "Abdeckung 80 Prozent"
     _, abs4, _, _, _, _ = bauen(rs3, sek, gruen, {}, {}, [], heute)
     p("RS nicht verfuegbar: der Bericht sagt es und rechnet keine RS-Listen", "RS nicht verfuegbar: Abdeckung 80 Prozent" in abs4[0] and not any("RS ab" in a for a in abs4))
+    # Etappe 3: Ampel und Marktbreite als eigener Absatz nach dem Kopf
+    lage5 = {"ueber_ema21": True, "ueber_sma50": True, "ema21_ueber_sma50": True, "sma50_steigt": True,
+             "distribution_days": [], "dd_fenster": 25, "volumen_letzter_tag": True, "phase": {"zustand": "keine"}}
+    amp5 = {"farbe": "gruen", "handelstag": rs["handelstag"], "indizes": {"S&P 500": lage5, "Nasdaq": lage5}}
+    rs5 = dict(rs)
+    rs5["marktbreite"] = {"handelstag": rs["handelstag"], "steiger": 2310, "faller": 1876, "unveraendert": 12,
+                          "ad_netto_10t": 1234, "mcclellan": 45.2, "neue_hochs": 85, "neue_tiefs": 40,
+                          "stockbee": {"plus4": 180, "minus4": 95}}
+    _, abs5, _, _, _, _ = bauen(rs5, sek, gruen, {}, {}, [], heute, ampel=amp5)
+    p("Etappe 3: Marktampel und Marktbreite stehen als eigener nummerierter Absatz gleich nach dem Kopf",
+      abs5[1].startswith("Marktampel und Marktbreite, reine Anzeige, die Ampel filtert nichts:\n1. Marktampel grün\n"
+                         "2. S&P 500 über EMA 21 und SMA 50, SMA 50 steigt, kein Distribution Day in 25 Sitzungen")
+      and "Marktbreite: 2.310 Steiger, 1.876 Faller, 12 unverändert" in abs5[1], abs5[1][:300])
+    _, abs6, _, _, _, _ = bauen(rs, sek, gruen, {}, {}, [], heute)
+    p("Etappe 3: ohne Ampel und ohne Marktbreite kein solcher Absatz",
+      not any(a.startswith("Marktampel und Marktbreite") for a in abs6))
     # Portionen
     port = _portionen(["a" * 3000, "b" * 3000, "c" * 10])
     p("Portionierung trennt nur zwischen Absaetzen", len(port) == 2 and port[1] == ["b" * 3000, "c" * 10])

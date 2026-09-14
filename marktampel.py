@@ -21,6 +21,14 @@ je Index der Schluss gegen die 21-Tage-Exponentiallinie und die
   rot:   mindestens ein Index schliesst UNTER seiner 50-Tage-Linie.
   gelb:  alles dazwischen.
 
+ETAPPE 3 (Gerhard, 13.09.2026, Entscheidung 6: "JA BAUEN ... Die Ampel
+filtert weiterhin NICHTS"): Je Index kommen die Distribution Days samt
+Stalling Days und der Stand des Follow-through Day dazu (gerechnet in
+marktbreite.py, Papier 4.4 Punkte 6 und 7). Die Zeile der ersten
+Waechter-Meldung traegt dahinter die Marktbreite aus rs_universum.json
+(Papier 4.4 Punkt 8: "die Farbe samt Distribution-Day-Zaehlung und Breite
+als Zeile in der Morgenmeldung des Waechters und im Abendbericht").
+
 Aufruf:
   python marktampel.py            berechnen, drucken, marktampel.json schreiben
 """
@@ -28,6 +36,8 @@ Aufruf:
 import json
 import sys
 from datetime import datetime
+
+import marktbreite
 
 DATEI = "marktampel.json"
 INDIZES = {"^GSPC": "S&P 500", "^IXIC": "Nasdaq"}
@@ -56,12 +66,17 @@ def _index_lage(df):
 
 
 def berechnen():
-    """Beide Indizes laden und die Farbe bestimmen. None bei Datenmangel."""
+    """Beide Indizes laden und die Farbe bestimmen. None bei Datenmangel.
+
+    Ein Jahr Kurse (Etappe 3): Der Follow-through Day braucht die
+    50-Tage-Linie und ein Tief, das Monate zuruecklegen kann; die Farbe
+    selbst kommt mit 65 Schlusskursen aus. Scheitert die Rechnung der
+    Distribution Days, bleibt die Farbe trotzdem stehen."""
     import yfinance as yf
     lagen = {}
     for symbol, name in INDIZES.items():
         try:
-            df = yf.Ticker(symbol).history(period="6mo", auto_adjust=False)
+            df = yf.Ticker(symbol).history(period="1y", auto_adjust=False)
         except Exception as e:
             print(f"  Marktampel: {name} nicht ladbar ({type(e).__name__})")
             return None
@@ -69,6 +84,13 @@ def berechnen():
         if lage is None:
             print(f"  Marktampel: {name} mit zu wenig Historie")
             return None
+        try:
+            phase = marktbreite.index_phase(df)
+        except Exception as e:  # noqa
+            print(f"  Marktampel: Distribution Days fuer {name} nicht berechenbar ({type(e).__name__}: {e})")
+            phase = None
+        if phase:
+            lage.update(phase)
         lagen[name] = lage
 
     if any(not l["ueber_sma50"] for l in lagen.values()):
@@ -138,10 +160,13 @@ def _lage_text(lage):
         teile.append("EMA 21 unter SMA 50")
     teile.append("SMA 50 steigt" if lage.get("sma50_steigt")
                  else "SMA 50 steigt nicht")
+    phase = marktbreite.phase_text(lage)
+    if phase:
+        teile.append(phase)
     return ", ".join(teile)
 
 
-def zeile(daten, vortag=None):
+def zeile(daten, vortag=None, breite=None):
     """Die Ampel als EINE Zeile fuer die erste Meldung des Handelstags.
 
     ETAPPE 0 (Gerhard, 13.09.2026, "braucht gar keine Entscheidung von
@@ -158,20 +183,61 @@ def zeile(daten, vortag=None):
 
     Meldungsformat fuer Gerhard und Mathias: kein Gedankenstrich, kein
     senkrechter Strich, Strichpunkt zwischen den Angaben, Beistrich
-    innerhalb."""
+    innerhalb.
+
+    breite (Etappe 3): der Eintrag "marktbreite" aus rs_universum.json.
+    Ist er uebergeben (auch leer), steht die Breite in DERSELBEN Zeile
+    hinter der Ampel, mit derselben Pruefung auf den Schluss: Gilt sie einem
+    anderen Schluss, steht keine Zahl da. Ohne das Argument bleibt die
+    Zeile, wie sie in Etappe 0 war."""
     if not daten or daten.get("farbe") not in FARBWORT:
-        return "Marktampel nicht verfügbar; es liegt keine Berechnung vor."
+        text = "Marktampel nicht verfügbar; es liegt keine Berechnung vor"
+        if breite is None:
+            return text + "."
+        return "; ".join([text] + marktbreite.breite_teil(breite, vortag, mit_datum=True)) + "."
     tag = str(daten.get("handelstag") or "")[:10]
     if vortag and tag != str(vortag)[:10]:
-        return ("Marktampel nicht verfügbar; die letzte Berechnung gilt dem "
+        text = ("Marktampel nicht verfügbar; die letzte Berechnung gilt dem "
                 f"Schluss vom {_datum_de(tag)}, die heutigen Kurse folgen "
-                f"auf den {_datum_de(vortag)}.")
+                f"auf den {_datum_de(vortag)}")
+        if breite is None:
+            return text + "."
+        return "; ".join([text] + marktbreite.breite_teil(breite, vortag, mit_datum=True)) + "."
     teile = [f"Marktampel {FARBWORT[daten['farbe']]}, Schluss vom "
              f"{_datum_de(tag)}"]
     for name, lage in (daten.get("indizes") or {}).items():
         if isinstance(lage, dict):
             teile.append(f"{name} {_lage_text(lage)}")
+    if breite is not None:
+        teile += marktbreite.breite_teil(breite, tag)
     return "; ".join(teile)
+
+
+def bericht_absatz(daten, breite, handelstag):
+    """Ampel, Distribution Days und die ganze Breite als EIN nummerierter
+    Absatz fuer den Abendbericht (Etappe 3). handelstag: der Schluss, dem der
+    Bericht gilt; eine Ampel oder Breite von einem anderen Schluss steht nicht
+    mit Zahlen da."""
+    zeilen = []
+    tag_soll = str(handelstag or "")[:10]
+    if not daten or daten.get("farbe") not in FARBWORT:
+        zeilen.append("Marktampel nicht verfügbar, es liegt keine Berechnung vor")
+    else:
+        tag = str(daten.get("handelstag") or "")[:10]
+        if tag_soll and tag != tag_soll:
+            zeilen.append(f"Marktampel nicht verfügbar, die letzte Berechnung gilt dem Schluss vom {_datum_de(tag)}")
+        else:
+            zeilen.append(f"Marktampel {FARBWORT[daten['farbe']]}")
+            for name, lage in (daten.get("indizes") or {}).items():
+                if isinstance(lage, dict):
+                    zeilen.append(f"{name} {_lage_text(lage)}")
+    b_tag = str((breite or {}).get("handelstag") or "")[:10] if isinstance(breite, dict) else ""
+    if isinstance(breite, dict) and breite.get("steiger") is not None and tag_soll and b_tag != tag_soll:
+        zeilen.append(f"Marktbreite nicht verfügbar, die letzte Berechnung gilt dem Schluss vom {_datum_de(b_tag)}")
+    else:
+        zeilen += marktbreite.bericht_zeilen(breite)
+    return ("Marktampel und Marktbreite, reine Anzeige, die Ampel filtert nichts:\n"
+            + "\n".join(f"{i}. {z}" for i, z in enumerate(zeilen, 1)))
 
 
 def main():
