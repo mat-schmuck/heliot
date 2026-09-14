@@ -246,21 +246,21 @@ if __name__ == "__main__":
     # 1) Grundzuteilung
     a = st.aktualisiere({"NAH": 0.01, "MITTE": 0.03, "FERN": 0.09})
     assert a["stufe1"] == ["NAH"] and a["stufe2"] == ["MITTE"] and a["stufe3"] == ["FERN"]
-    print("✓ Grundzuteilung: 1 % → Stufe 1, 3 % → Vorraum, 9 % → langsam")
+    print("ok: Grundzuteilung: 1 % → Stufe 1, 3 % → Vorraum, 9 % → langsam")
 
     # 2) Hysterese: knapp über der Rein-Grenze bleibt drin
     a = st.aktualisiere({"NAH": 0.022, "MITTE": 0.03, "FERN": 0.09})
     assert st.stufe_von("NAH") == 1, "2,2 % muss in Stufe 1 BLEIBEN (Hysterese)"
     a = st.aktualisiere({"NAH": 0.026, "MITTE": 0.03, "FERN": 0.09})
     assert st.stufe_von("NAH") == 2, "erst über 2,5 % darf zurückgestuft werden"
-    print("✓ Hysterese: 2,2 % bleibt oben, erst 2,6 % stuft zurück — kein Flattern")
+    print("ok: Hysterese: 2,2 % bleibt oben, erst 2,6 % stuft zurück — kein Flattern")
 
     # 3) Wieder rein erst bei 2,0 %, nicht schon bei 2,4 %
     a = st.aktualisiere({"NAH": 0.024, "MITTE": 0.03, "FERN": 0.09})
     assert st.stufe_von("NAH") == 2, "2,4 % darf noch NICHT wieder aufsteigen"
     a = st.aktualisiere({"NAH": 0.019, "MITTE": 0.03, "FERN": 0.09})
     assert st.stufe_von("NAH") == 1
-    print("✓ Aufstieg erst wieder bei 2,0 %, nicht schon bei 2,4 %")
+    print("ok: Aufstieg erst wieder bei 2,0 %, nicht schon bei 2,4 %")
 
     # 4) Platzgrenze: die NÄCHSTEN gewinnen.
     # Bewusst 45 Aktien INNERHALB der 2 % — mehr, als Stufe 1 fasst. Der
@@ -276,24 +276,24 @@ if __name__ == "__main__":
     assert "T045" not in a["stufe1"], "die entferntesten müssen rausfallen"
     assert "T045" in a["stufe2"], "Überzählige rutschen in den Vorraum, nicht ins Nichts"
     assert len(a["websocket"]) <= st.max_ws
-    print(f"✓ Platzgrenze: {len(a['stufe1'])} von 45 Anwärtern in Stufe 1 "
+    print(f"ok: Platzgrenze: {len(a['stufe1'])} von 45 Anwärtern in Stufe 1 "
           f"(die nächsten gewinnen), Überzählige rutschen in den Vorraum")
 
     # 5) Oberer Vorraum füllt die freien WebSocket-Plätze
     frei = st.max_ws - len(a["stufe1"])
     assert len(a["websocket"]) == len(a["stufe1"]) + min(frei, len(a["stufe2"]))
-    print(f"✓ Oberer Vorraum belegt die {frei} freien Plätze — kein blinder "
+    print(f"ok: Oberer Vorraum belegt die {frei} freien Plätze — kein blinder "
           f"Fleck an der 2-%-Grenze")
 
     # 6) Eröffnung: Gedächtnis muss weg
     st.neu_aufbauen()
     assert st.stufe_von("T001") is None
-    print("✓ Bei Eröffnung wird die Zuteilung komplett neu aufgebaut")
+    print("ok: Bei Eröffnung wird die Zuteilung komplett neu aufgebaut")
 
     # 7) Abstandsrechnung
     assert abs(abstand_zum_kaufpunkt(98.0, 100.0) - 0.02) < 1e-9
     assert abstand_zum_kaufpunkt(105.0, 100.0) == 0.0
-    print("✓ Abstand: Kurs 98 zu Kaufpunkt 100 sind 2 %; schon darüber → 0 %")
+    print("ok: Abstand: Kurs 98 zu Kaufpunkt 100 sind 2 %; schon darüber → 0 %")
 
     # 8) Der Puffer muss echt sein: Mit 40 statt 50 Plätzen (Mathias,
     # 28.07.2026) darf die Liste die harte Grenze von 50 nie erreichen,
@@ -306,7 +306,7 @@ if __name__ == "__main__":
         "bei Andrang müssen alle verfügbaren Plätze belegt sein"
     assert len(a["websocket"]) <= 50 - 5, \
         "der Puffer zur harten Finnhub-Grenze muss erhalten bleiben"
-    print(f"✓ Puffer: {len(a['websocket'])} Plätze belegt, "
+    print(f"ok: Puffer: {len(a['websocket'])} Plätze belegt, "
           f"{50 - len(a['websocket'])} bleiben zur harten Grenze frei")
 
     print("\nAlle Staffelungs-Tests bestanden (ohne Netzwerk, ohne Börse).")

@@ -88,7 +88,7 @@ def main():
                 stufe_ok = False
                 break
             fehlend = vollstaendig - da
-            marke = "" if fehlend <= 2 else f"  ⚠ {fehlend} Aktien fehlen"
+            marke = "" if fehlend <= 2 else f"  Achtung: {fehlend} Aktien fehlen"
             print(f"  Abruf {i+1}: {dauer:5.1f} s, {da} Aktien, "
                   f"Takt {takt:.0f} s{marke}")
             if fehlend > 2:

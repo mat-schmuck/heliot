@@ -72,12 +72,12 @@ def main():
         # Schluessel koennte in der URL der Fehlermeldung stecken — deshalb
         # nur den Ausnahmetyp zeigen, nie den Text.
         sys.exit(f"Verbindung fehlgeschlagen ({type(e).__name__}).")
-    print("✓ Verbindung steht.")
+    print("ok: Verbindung steht.")
 
     for s in symbole:
         ws.send(json.dumps({"type": "subscribe", "symbol": s}))
         time.sleep(0.05)
-    print(f"✓ {len(symbole)} Abos verschickt.\n")
+    print(f"ok: {len(symbole)} Abos verschickt.\n")
 
     ticks = Counter()
     volumen = Counter()

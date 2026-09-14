@@ -51,6 +51,28 @@ denn eine neue Sitzung kostet nur ein Neuladen der Seite:
     hoechstens 2.880 Versuche am Tag, und die Chance, damit ein gueltiges
     Gastpasswort zu treffen, liegt unter einem Hunderttausendstel je Tag.
 
+ANGEMELDET BLEIBEN (Mathias, 14.09.2026: "Füge bei unserem Webtool unbedingt
+die Möglichkeit hinzu, angemeldet zu bleiben."). Streamlit merkt die
+Anmeldung nur je Browsersitzung; nach dem Neuladen oder in einem neuen Tab
+war sie weg. Wer beim Anmelden "Angemeldet bleiben" anhakt, bekommt deshalb
+ein Cookie im eigenen Browser:
+  * Inhalt "v1.<rolle>.<ende>.<zufall>.<pruefwert>": Rolle voll oder gast,
+    Ende als Unix-Zeit, zwoelf Zufallszeichen und ein HMAC-SHA256 darueber.
+    Das Passwort steht NICHT darin, und das Cookie laesst sich nicht
+    faelschen oder verlaengern, ohne beide Secrets zu kennen.
+  * Schluessel aus BEIDEN Secrets: Wer HELIOT_PASSWORT oder GAST_GEHEIMNIS
+    aendert, meldet damit auf allen Geraeten ab. Ohne GAST_GEHEIMNIS gibt es
+    kein Angemeldet-Bleiben; ein Pruefwert, der nur am festen Passwort
+    haengt, liesse ein schwaches Passwort offline erraten.
+  * Voller Zugang: 30 Tage ab dem letzten Oeffnen der App, jede neue
+    Sitzung stellt das Cookie neu aus. Gastzugang: nie laenger als das
+    Gastpasswort gilt.
+  * Safari auf dem iPhone loescht Cookies, die eine Seite selbst setzt,
+    nach sieben Tagen ohne Besuch. Wer die App mindestens einmal in der
+    Woche oeffnet, bleibt angemeldet; sonst wird einmal neu eingegeben.
+  * Ein ungueltiges oder abgelaufenes Cookie zaehlt nicht als Fehlversuch;
+    die App loescht es und zeigt das Anmeldefeld.
+
 Aufruf:
   python zugang.py --selbsttest
 """
@@ -58,6 +80,9 @@ Aufruf:
 import argparse
 import hashlib
 import hmac
+import json
+import re
+import secrets
 import string
 import sys
 import threading
@@ -79,6 +104,12 @@ SITZUNG_GRENZE = 5         # Fehlversuche hintereinander bis zur Pause
 SITZUNG_PAUSE_S = 60
 GESAMT_GRENZE = 20         # Fehlversuche aller Sitzungen im Zeitraum
 GESAMT_ZEITRAUM_S = 600
+
+BLEIBEN_COOKIE = "heliot_zugang"
+BLEIBEN_TAGE = 30          # voller Zugang: so lange ab dem letzten Oeffnen
+BLEIBEN_ROLLEN = ("voll", "gast")
+_BLEIBEN_FORM = re.compile(r"v1\.(voll|gast)\.(\d{10})\.([A-Za-z0-9_-]{12})\.([0-9a-f]{32})")
+_COOKIE_ZEICHEN = re.compile(r"[A-Za-z0-9._-]*")
 
 
 def gast_passwort(geheimnis: str, fenster: int) -> str:
@@ -183,6 +214,74 @@ def sitzung_nach_fehlversuch(zaehler: int, jetzt: float) -> tuple:
     if zaehler >= SITZUNG_GRENZE:
         return 0, jetzt + SITZUNG_PAUSE_S
     return zaehler, None
+
+
+def _bleiben_schluessel(passwort: str, geheimnis: str) -> bytes:
+    return hashlib.sha256(b"heliot-sitzung|" + (geheimnis or "").encode("utf-8")
+                          + b"|" + (passwort or "").strip().encode("utf-8")).digest()
+
+
+def _bleiben_pruefwert(rumpf: str, passwort: str, geheimnis: str) -> str:
+    return hmac.new(_bleiben_schluessel(passwort, geheimnis), rumpf.encode("ascii"),
+                    hashlib.sha256).hexdigest()[:32]
+
+
+def bleiben_moeglich(passwort: str, geheimnis: str) -> bool:
+    """Angemeldet bleiben geht nur mit beiden Secrets."""
+    return bool((passwort or "").strip()) and bool((geheimnis or "").strip())
+
+
+def bleiben_ende(rolle: str, gast_bis, jetzt: float) -> float:
+    """Bis wann das Cookie gilt: voller Zugang 30 Tage, Gast bis zum Ablauf."""
+    if rolle == "gast":
+        return float(gast_bis)
+    return float(jetzt + BLEIBEN_TAGE * 86400)
+
+
+def bleiben_ausstellen(rolle: str, ende: float, passwort: str, geheimnis: str,
+                       zufall: str = None) -> str:
+    """Der Cookie-Wert fuer eine Rolle bis zum Ende (Unix-Zeit)."""
+    if rolle not in BLEIBEN_ROLLEN:
+        raise ValueError("unbekannte Rolle")
+    if not bleiben_moeglich(passwort, geheimnis):
+        raise ValueError("ohne beide Secrets gibt es kein Angemeldet-Bleiben")
+    zufall = zufall or secrets.token_urlsafe(9)
+    if not re.fullmatch(r"[A-Za-z0-9_-]{12}", zufall):
+        raise ValueError("Zufallsteil hat nicht zwoelf erlaubte Zeichen")
+    rumpf = f"v1.{rolle}.{int(ende):010d}.{zufall}"
+    return rumpf + "." + _bleiben_pruefwert(rumpf, passwort, geheimnis)
+
+
+def bleiben_pruefen(wert, passwort: str, geheimnis: str, jetzt: float) -> tuple:
+    """(Rolle, Ende) fuer einen gueltigen, nicht abgelaufenen Cookie-Wert,
+    sonst (None, None). Wirft nie, auch nicht bei Unsinn."""
+    if not isinstance(wert, str) or not bleiben_moeglich(passwort, geheimnis):
+        return None, None
+    wert = wert.strip()
+    m = _BLEIBEN_FORM.fullmatch(wert)
+    if not m:
+        return None, None
+    rolle, ende = m.group(1), float(m.group(2))
+    rumpf = wert.rsplit(".", 1)[0]
+    if not hmac.compare_digest(m.group(4), _bleiben_pruefwert(rumpf, passwort, geheimnis)):
+        return None, None
+    if jetzt >= ende:
+        return None, None
+    if rolle == "voll" and ende > jetzt + BLEIBEN_TAGE * 86400 + 60:
+        return None, None
+    return rolle, ende
+
+
+def cookie_skript(name: str, wert: str, max_alter_s: int, sicher: bool) -> str:
+    """JavaScript, das das Cookie im Browser setzt (max_alter_s 0 loescht).
+    Name und Wert duerfen nur Buchstaben, Ziffern, Punkt, Unterstrich und
+    Bindestrich enthalten; alles andere wird abgewiesen, nichts escaped."""
+    if not name or not _COOKIE_ZEICHEN.fullmatch(name) or not _COOKIE_ZEICHEN.fullmatch(wert or ""):
+        raise ValueError("unerlaubtes Zeichen im Cookie")
+    teile = [f"{name}={wert or ''}", f"Max-Age={max(0, int(max_alter_s))}", "Path=/", "SameSite=Lax"]
+    if sicher:
+        teile.append("Secure")
+    return "document.cookie = " + json.dumps("; ".join(teile)) + ";"
 
 
 def uhrzeit_wien(zeitpunkt: float) -> str:
@@ -296,6 +395,55 @@ def selbsttest():
     p("Uhrzeit in Wiener Sommerzeit", uhrzeit_wien(sommer) == "21:30", uhrzeit_wien(sommer))
     p("Uhrzeit in Wiener Winterzeit", uhrzeit_wien(winter) == "20:30", uhrzeit_wien(winter))
     p("Buchstabiert", buchstabiert("kobe") == "k o b e")
+
+    # Angemeldet bleiben (14.09.2026)
+    pw_s, g_s = "Pruefwort-nur-fuer-den-Selbsttest", g
+    jetzt = 1789400000.0
+    p("Ohne eines der Secrets kein Angemeldet-Bleiben",
+      not bleiben_moeglich(pw_s, "") and not bleiben_moeglich("", g_s) and bleiben_moeglich(pw_s, g_s))
+    ende_v = bleiben_ende("voll", None, jetzt)
+    p("Voller Zugang gilt 30 Tage", ende_v - jetzt == 30 * 86400)
+    p("Gast gilt bis zum Ablauf des Gastpassworts", bleiben_ende("gast", jetzt + 3000, jetzt) == jetzt + 3000)
+    wert = bleiben_ausstellen("voll", ende_v, pw_s, g_s, zufall="abcDEF123_-x")
+    p("Cookie-Wert hat die Form v1.rolle.ende.zufall.pruefwert",
+      bool(_BLEIBEN_FORM.fullmatch(wert)), wert[:30])
+    p("Passwort und Geheimnis stehen nicht im Cookie", pw_s not in wert and g_s not in wert)
+    p("Gueltiges Cookie wird erkannt", bleiben_pruefen(wert, pw_s, g_s, jetzt + 5) == ("voll", ende_v))
+    p("Leerzeichen am Rand stoeren nicht", bleiben_pruefen(" " + wert + " ", pw_s, g_s, jetzt) == ("voll", ende_v))
+    p("Abgelaufenes Cookie wird abgewiesen", bleiben_pruefen(wert, pw_s, g_s, ende_v) == (None, None))
+    p("Anderes Passwort macht das Cookie ungueltig", bleiben_pruefen(wert, pw_s + "x", g_s, jetzt) == (None, None))
+    p("Anderes Geheimnis macht das Cookie ungueltig", bleiben_pruefen(wert, pw_s, g_s + "x", jetzt) == (None, None))
+    gefaelscht = wert.replace("v1.voll.", "v1.gast.")
+    p("Umgeschriebene Rolle wird abgewiesen", bleiben_pruefen(gefaelscht, pw_s, g_s, jetzt) == (None, None))
+    teile = wert.split(".")
+    verlaengert = ".".join([teile[0], teile[1], str(int(teile[2]) + 86400), teile[3], teile[4]])
+    p("Verlaengertes Ende wird abgewiesen", bleiben_pruefen(verlaengert, pw_s, g_s, jetzt) == (None, None))
+    p("Unsinn wirft nicht und wird abgewiesen",
+      all(bleiben_pruefen(x, pw_s, g_s, jetzt) == (None, None)
+          for x in (None, "", "v1", 42, "v1.voll.1.x.y", "ä" * 70, wert + ".zusatz")))
+    zu_lang = bleiben_ausstellen("voll", jetzt + 40 * 86400, pw_s, g_s, zufall="abcDEF123_-x")
+    p("Ein voller Zugang ueber 30 Tage hinaus wird abgewiesen",
+      bleiben_pruefen(zu_lang, pw_s, g_s, jetzt) == (None, None))
+    gast_wert = bleiben_ausstellen("gast", jetzt + 3000, pw_s, g_s)
+    p("Gast-Cookie gilt bis zum Ablauf und nicht laenger",
+      bleiben_pruefen(gast_wert, pw_s, g_s, jetzt + 2999) == ("gast", jetzt + 3000)
+      and bleiben_pruefen(gast_wert, pw_s, g_s, jetzt + 3000) == (None, None))
+    p("Jedes Ausstellen ergibt einen anderen Wert",
+      len({bleiben_ausstellen("voll", ende_v, pw_s, g_s) for _ in range(50)}) == 50)
+    js = cookie_skript(BLEIBEN_COOKIE, wert, 3600, True)
+    p("Cookie-Skript setzt Name, Wert, Dauer, Pfad, SameSite und Secure",
+      js.startswith('document.cookie = "heliot_zugang=v1.voll.') and "Max-Age=3600" in js
+      and "Path=/" in js and "SameSite=Lax" in js and "Secure" in js, js[:60])
+    # st.html reinigt mit DOMPurify; ein Skript mit Kleiner-Zeichen kam nicht an.
+    p("Cookie-Skript ohne Kleiner-Zeichen", "<" not in js and "<" not in cookie_skript(BLEIBEN_COOKIE, "", 0, True))
+    p("Loeschen setzt Max-Age=0 und leeren Wert",
+      cookie_skript(BLEIBEN_COOKIE, "", 0, False)
+      == 'document.cookie = "heliot_zugang=; Max-Age=0; Path=/; SameSite=Lax";')
+    try:
+        cookie_skript(BLEIBEN_COOKIE, 'x"; alert(1); "', 10, False)
+        p("Anfuehrungszeichen im Wert werden abgewiesen", False)
+    except ValueError:
+        p("Anfuehrungszeichen im Wert werden abgewiesen", True)
 
     print(f"\n{len(fehler)} Fehler." if fehler else "\nAlles bestanden.")
     return 1 if fehler else 0

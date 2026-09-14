@@ -1794,8 +1794,8 @@ def block_e():
         #      und gehoert geprueft.
         import re as _re
         bildzeichen = _re.compile(
-            "[🀀-🫿←-⇿⌀-➿"
-            "⤀-⥿⬀-⯿️]")
+            "[\U0001F000-\U0001FAFF\u2190-\u21FF\u2300-\u27BF"
+            "\u2900-\u297F\u2B00-\u2BFF\uFE0F]")
         alle_texte = list(formen.values()) + [
             bw.format_gapgo({"ticker": "AAA", "firma": "Alpha AG",
                              "bestaetigt": False, "frueh": True,
@@ -2213,6 +2213,65 @@ def block_h():
     # DIE WOCHENLISTE STEHT HINTER DER ANMELDUNG (Mathias, 13.09.2026).
     ok, zusatz = anmeldeschranke(WURZEL / "streamlit_app.py")
     pruefe("H", "Wochenliste und Gastpasswoerter nur mit vollem Zugang", ok, zusatz)
+
+    # KEINE BILDZEICHEN (Mathias, 14.09.2026: "Entferne konsequent alle
+    # Emojis des Webtools und lass sie entfernt bzw. achte darauf, dass sie
+    # nicht wieder erstellt werden, dies gilt für all unsere Tools").
+    # Geprueft wird jede versionierte Quelltext- und Textdatei. Wer ein
+    # fremdes Symbol erkennen muss, etwa den Schliessen-Knopf einer
+    # Webseite, schreibt es als Unicode-Escape, nicht als Zeichen.
+    _funde = bildzeichen_im_quelltext(WURZEL)
+    pruefe("H", "Keine Emojis oder Bildzeichen im Quelltext", not _funde,
+           "; ".join(_funde[:8]) + (f" und {len(_funde) - 8} weitere" if len(_funde) > 8 else ""))
+    _app = (WURZEL / "streamlit_app.py").read_text(encoding="utf-8")
+    # Das untere Eingabefeld mit dem geschaetzten RS ist entfallen; Muster
+    # und Kaufpunkte stehen beim Nachschlagen mit dem echten RS. Geprueft
+    # wird der Code, nicht die Kommentare, die davon erzaehlen.
+    pruefe("H", "Webtool ohne Seitensymbol, ohne Einzelabfrage und ohne RS-Schaetzung",
+           "page_icon=" not in _app and "tab_einzel" not in _app and "tanh(" not in _app
+           and '"RS (geschätzt)"' not in _app)
+    pruefe("H", "Webtool: Nachschlagen haengt an der Adresse (?aktie=)",
+           'key="aktie"' in _app and 'bind="query-params"' in _app)
+    pruefe("H", "Webtool: Angemeldet bleiben liest das Cookie, stellt es neu aus und loescht es beim Abmelden",
+           "zugang.bleiben_pruefen(" in _app and "zugang.bleiben_ausstellen(" in _app
+           and '_cookie_schreiben("", 0)' in _app and "on_click=_abmelden_knopf" in _app)
+    # Die Skripte fuer st.html baut die App nicht selbst, sondern ueber
+    # zugang.cookie_skript und nachschlagen.chart_skript; deren Selbsttests
+    # pruefen, dass kein Kleiner-Zeichen darin steht (DOMPurify).
+    pruefe("H", "Webtool: Skripte kommen aus den geprueften Bausteinen",
+           "zugang.cookie_skript(" in _app and "nachschlagen.chart_skript(" in _app
+           and "function(" not in _app)
+
+
+def bildzeichen_im_quelltext(wurzel) -> list:
+    """'datei:zeile U+XXXX' fuer jedes Bildzeichen in versionierten Quelltext-
+    und Textdateien. Die Bereiche stehen in nachschlagen.BILDZEICHEN_BEREICHE.
+    Datendateien wie rs_universum.json tragen fremde Firmennamen und bleiben
+    aussen vor. Ohne git (Pruefkopie) werden alle Dateien des Ordners gelesen."""
+    import nachschlagen
+    wurzel = pathlib.Path(wurzel)
+    endungen = {".py", ".yml", ".yaml", ".md", ".txt", ".toml", ".cfg", ".ini", ".html", ".js", ".css"}
+    try:
+        namen = subprocess.run(["git", "ls-files"], cwd=wurzel, capture_output=True, text=True,
+                               encoding="utf-8", errors="replace", timeout=60).stdout.split("\n")
+    except Exception:  # noqa
+        namen = []
+    if not any(namen):
+        namen = [p.relative_to(wurzel).as_posix() for p in wurzel.rglob("*")
+                 if p.is_file() and not ({".git", "__pycache__", ".cache"} & set(p.parts))]
+    funde = []
+    for name in namen:
+        p = wurzel / name
+        if not name or p.suffix.lower() not in endungen or not p.is_file():
+            continue
+        try:
+            text = p.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            continue
+        for nr, zeile in enumerate(text.split("\n"), 1):
+            for z in nachschlagen.bildzeichen_in(zeile):
+                funde.append(f"{name}:{nr} U+{ord(z):04X}")
+    return funde
 
 
 def config_ohne_leser(wurzel) -> list:

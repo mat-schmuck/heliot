@@ -62,7 +62,7 @@ def merke_antwort(antwort) -> str:
 def putz(topic: str) -> int:
     """Loescht alle gemerkten Nachrichten des Themas. Liefert die Anzahl."""
     if not topic:
-        print("⚠ Kein ntfy-Thema angegeben — nichts zu räumen.")
+        print("Achtung: Kein ntfy-Thema angegeben — nichts zu räumen.")
         return 0
     ids = _lies(VERLAUF_DATEI)
 
@@ -87,7 +87,7 @@ def putz(topic: str) -> int:
     try:
         VERLAUF_DATEI.write_text("[]")
     except Exception as e:
-        print(f"⚠ ntfy-Verlauf nicht leerbar: {e}")
+        print(f"Achtung: ntfy-Verlauf nicht leerbar: {e}")
 
     print(f"ntfy-Putz: {weg} von {len(ids)} Meldungen gelöscht"
           + (f", {fehler} Fehlschläge" if fehler else "")
@@ -136,7 +136,7 @@ def vereine(sicherung) -> int:
     try:
         VERLAUF_DATEI.write_text(json.dumps(zusammen, indent=2))
     except Exception as e:
-        print(f"⚠ ntfy-Verlauf nicht schreibbar: {e}")
+        print(f"Achtung: ntfy-Verlauf nicht schreibbar: {e}")
         return 0
     print(f"ntfy-Verlauf vereint: {len(im_repo)} im Repo, {len(meine)} aus "
           f"diesem Lauf, {neu} davon neu, jetzt {len(zusammen)} gesamt.")

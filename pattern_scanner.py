@@ -1416,7 +1416,7 @@ def write_excel(rows: list[dict], out_path: str):
                 round(r["rs"]) if r["rs"] is not None else "n/a",
                 # R4 (Gerhard, 12.09.2026): RS gegen das Nasdaq-Universum
                 row.get("rs_nasdaq", "n/a"),
-                f"✓ 8/8" if r["tt_pass"] else f"✗ {r['tt_count']}/8"]
+                "erfüllt, 8 von 8" if r["tt_pass"] else f"nicht erfüllt, {r['tt_count']} von 8"]
 
         # Fundamentaldaten laut Regelwerk. Fehlt der Wert, steht "n/a" —
         # das ist etwas anderes als "Wachstum zu gering" und darf nicht
@@ -1430,7 +1430,7 @@ def write_excel(rows: list[dict], out_path: str):
             else:
                 marke = ""
                 if grenze is not None:
-                    marke = "✓ " if wert >= grenze else "✗ "
+                    marke = "erfüllt " if wert >= grenze else "nicht erfüllt "
                 line.append(f"{marke}{wert * 100:+.0f}%")
         notes = []
         for i in range(3):
@@ -1540,7 +1540,7 @@ def main():
     # Yahoo antwortet — faellt Yahoo aus, fehlen dann allerdings die Daten.
     api_key = os.environ.get("TWELVE_DATA_API_KEY")
     if not api_key:
-        print("⚠ Kein TWELVE_DATA_API_KEY gesetzt — es gibt dann keine "
+        print("Achtung: Kein TWELVE_DATA_API_KEY gesetzt — es gibt dann keine "
               "Rückfallebene, falls Yahoo ausfällt.")
 
     # ZWEI LISTEN (Gerhard, 14.08.2026): Gescannt wird die VEREINIGUNG
@@ -1577,12 +1577,12 @@ def main():
     print(f"{len(tickers)} Ticker geladen. Bei {args.rate} Calls/min dauert das "
           f"~{dauer:.0f} Minuten (Cache-Treffer sind gratis).")
     if len(tickers) > 750:
-        print("⚠ ACHTUNG: Twelve-Data-Free-Tier erlaubt nur 800 API-Calls pro TAG. "
+        print("ACHTUNG: Twelve-Data-Free-Tier erlaubt nur 800 API-Calls pro TAG. "
               f"Bei {len(tickers)} Tickern wird das Limit gerissen — Aktien am Ende der "
               "Liste liefern dann Fehler. Optionen: Liste splitten und an 2 Tagen laufen "
               "lassen (Cache merkt sich Tag 1), oder Twelve-Data-Bezahlplan.")
     if dauer > 170:
-        print("⚠ Hinweis: Läuft das in GitHub Actions, muss timeout-minutes im Workflow "
+        print("Hinweis: Läuft das in GitHub Actions, muss timeout-minutes im Workflow "
               f"über {dauer:.0f} liegen (Maximum bei GitHub: 360).")
 
     limiter = RateLimiter(args.rate)
@@ -1609,7 +1609,7 @@ def main():
         if not lebt:
             ausgelassen.append({"ticker": ticker, "firma": company,
                                 "grund": grund})
-            print(f"  ⛔ {ticker}: keine lebendigen Kurse mehr — "
+            print(f"  Ausgelassen: {ticker}: keine lebendigen Kurse mehr — "
                   f"übersprungen ({grund})")
             continue
         loaded[ticker] = (df, company)
@@ -1641,7 +1641,7 @@ def main():
             res["zyklus"] = None
         rows.append({"ticker": ticker, "company": company, "res": res,
                      "fundamentals": fundamentals.get(ticker, {})})
-        tag = "🟢" if res["pattern_count"] else ("🟡" if res["tt_pass"] else "⚪")
+        tag = "Muster:" if res["pattern_count"] else ("Trend Template:" if res["tt_pass"] else "ohne:")
         pats = ", ".join(p["strategie"] for p in res["points"] if not p["strategie"].startswith("Fallback"))
         print(f"  {tag} {ticker}: {res['pattern_count']} Muster"
               + (f" ({pats})" if pats else ""))
@@ -1695,7 +1695,7 @@ def main():
         volumen.baue_kurven(sorted({t for t, _ in tickers}
                                    | set(sektor_radar.ETF_UNIVERSE)))
     except Exception as e:
-        print(f"  ⚠ Volumenkurven konnten nicht gebaut werden "
+        print(f"  Achtung: Volumenkurven konnten nicht gebaut werden "
               f"({type(e).__name__}: {e}) — die betroffenen Aktien gelten "
               f"morgen als NICHT VERIFIZIERBAR. Geschätzt wird nichts.")
 
@@ -1705,7 +1705,7 @@ def main():
     try:
         zahlen_termine.baue(sorted({t for t, _ in tickers}), leise=False)
     except Exception as e:
-        print(f"  ⚠ Zahlen-Termine konnten nicht geholt werden "
+        print(f"  Achtung: Zahlen-Termine konnten nicht geholt werden "
               f"({type(e).__name__}: {e}) — es wird nichts vermerkt. "
               f"Ein fehlender Vermerk ist KEIN Beweis, dass keine kommen.")
 

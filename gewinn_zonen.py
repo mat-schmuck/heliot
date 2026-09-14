@@ -339,7 +339,7 @@ if __name__ == "__main__":
     print(f"  Kauf 100, Stop 95, Kurs 120 -> Gewinn={pct*100:.0f}%  R={r:.1f}")
     assert abs(pct - 0.20) < 1e-9
     assert abs(r - 4.0) < 1e-9
-    print("  ✓ Grundformeln korrekt\n")
+    print("  ok: Grundformeln korrekt\n")
 
     print("=" * 72)
     print("TEST 2: Zonenklassifikation — alle drei Zonen")
@@ -368,13 +368,13 @@ if __name__ == "__main__":
     z = klassifiziere_zone(100, 95, 105, ist_klimax=True)
     print(f"  Kauf 100, Kurs 105, Klimax-Zeichen ausgelöst -> {z['zone']}")
     assert z["zone"] == "stark"
-    print("  ✓ Alle drei Zonen + beide Sonderfälle (Musterziel, Klimax-Flag) korrekt\n")
+    print("  ok: Alle drei Zonen + beide Sonderfälle (Musterziel, Klimax-Flag) korrekt\n")
 
     print("TEST 3: Darvas-Sonderfall — bewusst KEINE Zone")
     d = klassifiziere_zone_darvas(100, 108, 125)
     print(f"  {d}")
     assert d["zone"] is None
-    print("  ✓ Darvas liefert quellentreu keine Zonen-Kategorie\n")
+    print("  ok: Darvas liefert quellentreu keine Zonen-Kategorie\n")
 
     print("=" * 72)
     print("TEST 4: Klimax-Zeichen 1 — der Klimax-Lauf selbst")
@@ -385,7 +385,7 @@ if __name__ == "__main__":
     ok2, _ = klimax_zeichen_1_klimaxlauf(100, 135, tage_seit_start=10, wochen_vorlauf=3)
     print(f"  Gleicher Anstieg, aber nur 3 Wochen Vorlauf (<8) -> ausgelöst={ok2}")
     assert not ok2
-    print("  ✓ Vorlauf-Bedingung wird korrekt erzwungen\n")
+    print("  ok: Vorlauf-Bedingung wird korrekt erzwungen\n")
 
     print("TEST 5: Klimax-Zeichen 2 — größter Tagesgewinn, spät im Lauf")
     gewinne = [0.02, 0.01, -0.01, 0.03, 0.015, 0.05]  # letzter Tag = größter
@@ -396,7 +396,7 @@ if __name__ == "__main__":
     ok2, _ = klimax_zeichen_2_groesster_tagesgewinn(gewinne2)
     print(f"  Tagesgewinne {gewinne2} (größter liegt zurück) -> ausgelöst={ok2}")
     assert not ok2
-    print("  ✓ Erkennt korrekt, ob der AKTUELLE Tag der größte ist\n")
+    print("  ok: Erkennt korrekt, ob der AKTUELLE Tag der größte ist\n")
 
     print("TEST 6: Klimax-Zeichen 3 — Erschöpfungslücke")
     ok, wert = klimax_zeichen_3_erschoepfungsluecke(
@@ -407,7 +407,7 @@ if __name__ == "__main__":
         vortages_hoch=100, heutiges_tief=105, tage_seit_start=12, wochen_vorlauf=2)
     print(f"  Gleiche Lücke, aber erst 2 Wochen Vorlauf -> ausgelöst={ok2}")
     assert not ok2
-    print("  ✓ Auch hier greift die Vorlauf-Bedingung\n")
+    print("  ok: Auch hier greift die Vorlauf-Bedingung\n")
 
     print("TEST 7: Klimax-Zeichen 4 — Abstand zur 200-Tage-Linie")
     ok, wert = klimax_zeichen_4_ma200_abstand(kurs=185, ma200=100)
@@ -416,13 +416,13 @@ if __name__ == "__main__":
     ok2, wert2 = klimax_zeichen_4_ma200_abstand(kurs=130, ma200=100)
     print(f"  Kurs 130, MA200 100 (30% drüber, unter 70%-Schwelle) -> ausgelöst={ok2}  {wert2}%")
     assert not ok2
-    print("  ✓ Schwelle korrekt angewendet\n")
+    print("  ok: Schwelle korrekt angewendet\n")
 
     print("TEST 8: Klimax-Zeichen 5 — Kanal-Überschießen")
     ok, wert = klimax_zeichen_5_kanaluebershooting(kurs=112, obere_kanallinie=105)
     print(f"  Kurs 112, obere Kanallinie 105 (+6,7%) -> ausgelöst={ok}  {wert}%")
     assert ok
-    print("  ✓\n")
+    print("  ok\n")
 
     print("=" * 72)
     print("TEST 9: Kompletter Klimax-Katalog — alle fünf zusammen")
@@ -436,7 +436,7 @@ if __name__ == "__main__":
     print(f"  Ausgelöste Zeichen: {ergebnis['ausgeloeste_zeichen']}")
     assert ergebnis["ist_klimax"]
     assert len(ergebnis["ausgeloeste_zeichen"]) >= 3  # mehrere Zeichen sollten hier greifen
-    print("  ✓ Katalog kombiniert alle fünf Zeichen korrekt\n")
+    print("  ok: Katalog kombiniert alle fünf Zeichen korrekt\n")
 
     print("TEST 10: Ruhige Aktie OHNE Klimax — keine Fehlalarme")
     eingaben_ruhig = KlimaxEingaben(
@@ -446,7 +446,7 @@ if __name__ == "__main__":
     ergebnis_ruhig = pruefe_klimax_katalog(eingaben_ruhig)
     print(f"  Ist Klimax: {ergebnis_ruhig['ist_klimax']}  Zeichen: {ergebnis_ruhig['ausgeloeste_zeichen']}")
     assert not ergebnis_ruhig["ist_klimax"]
-    print("  ✓ Keine Fehlalarme bei normalem Kursverlauf\n")
+    print("  ok: Keine Fehlalarme bei normalem Kursverlauf\n")
 
     print("=" * 72)
     print("TEST 11: Weinstein Stufe-3-Erkennung")
@@ -459,7 +459,7 @@ if __name__ == "__main__":
     ok2, _ = pruefe_weinstein_stufe3(ma30w_weiter_steigend)
     print(f"  MA30W steigt gleichmäßig weiter: {ma30w_weiter_steigend} -> {ok2}")
     assert not ok2
-    print("  ✓ Erkennt das Abflachen, nicht den fortgesetzten Anstieg\n")
+    print("  ok: Erkennt das Abflachen, nicht den fortgesetzten Anstieg\n")
 
     print("=" * 72)
     print("TEST 12: Zeitdeckel je Klasse")
@@ -477,7 +477,7 @@ if __name__ == "__main__":
         assert False, "hätte ValueError werfen müssen"
     except ValueError:
         print(f"  tagesgeschaeft ohne ist_handelsschluss -> wirft ValueError, wie vorgesehen")
-    print("  ✓ Tagesgeschäft jetzt ehrlich an den Zeitpunkt gekoppelt, kein Blindwert mehr\n")
+    print("  ok: Tagesgeschäft jetzt ehrlich an den Zeitpunkt gekoppelt, kein Blindwert mehr\n")
 
     for klasse, tage, erwartet_erreicht in [
         ("zahlen_luecke", 59, False), ("zahlen_luecke", 60, True),
@@ -487,7 +487,7 @@ if __name__ == "__main__":
         erreicht, rest = pruefe_zeitdeckel(klasse, tage)
         print(f"  {klasse:15s} {tage:4d} Tage gehalten -> Deckel erreicht={erreicht}  Rest={rest}")
         assert erreicht == erwartet_erreicht
-    print("  ✓ Alle drei tageszählenden Klassen korrekt\n")
+    print("  ok: Alle drei tageszählenden Klassen korrekt\n")
 
     print("=" * 72)
     print("TEST 13: Meldepriorität passend zur Übergabe")
@@ -498,7 +498,7 @@ if __name__ == "__main__":
     assert meldepriorität("zonenwechsel")["buendeln"] is True
     assert meldepriorität("klimax_zeichen")["buendeln"] is False
     assert meldepriorität("ziel_erreicht")["prioritaet"] == "high"
-    print("  ✓ Zonenwechsel leise/gebündelt, Ziel+Klimax laut/einzeln — wie in der Übergabe beschrieben\n")
+    print("  ok: Zonenwechsel leise/gebündelt, Ziel+Klimax laut/einzeln — wie in der Übergabe beschrieben\n")
 
     print("=" * 72)
     print("TEST 14: Kanallinie selbst berechnen (für Klimax-Zeichen 5)")
@@ -513,18 +513,18 @@ if __name__ == "__main__":
     assert _linie is not None and _kurse[-1] < _linie
     _ok, _ = klimax_zeichen_5_kanaluebershooting(_kurse[-1], _linie)
     assert not _ok
-    print("  ✓ Normaler Trend löst keinen Fehlalarm aus")
+    print("  ok: Normaler Trend löst keinen Fehlalarm aus")
 
     _kurse_a = _kurse.copy(); _kurse_a[-1] = _linie * 1.12
     _linie2 = berechne_obere_kanallinie(_kurse_a)
     _ok2, _wert2 = klimax_zeichen_5_kanaluebershooting(_kurse_a[-1], _linie2)
     print(f"  Echter Ausbruch: Kurs={_kurse_a[-1]:.1f}, Linie={_linie2} -> ausgelöst={_ok2} ({_wert2}%)")
     assert _ok2
-    print("  ✓ Kanal-Überschießen wird erkannt")
+    print("  ok: Kanal-Überschießen wird erkannt")
 
     assert berechne_obere_kanallinie([100, 101, 102]) is None
     assert berechne_obere_kanallinie([100.0] * 50) is None
-    print("  ✓ Zu kurze und völlig flache Reihen liefern sauberes None\n")
+    print("  ok: Zu kurze und völlig flache Reihen liefern sauberes None\n")
 
     print("=" * 72)
     print("ALLE TESTS BESTANDEN")

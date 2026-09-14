@@ -300,15 +300,15 @@ if __name__ == "__main__":
     # beim naechsten Verbinden nachgeholt).
     assert ws.setze_symbole(["AAPL", "MSFT"]) == ["AAPL", "MSFT"]
     assert ws.aktive_symbole == ["AAPL", "MSFT"]
-    print("✓ Abos werden geführt, auch ohne Verbindung")
+    print("ok: Abos werden geführt, auch ohne Verbindung")
 
     ws.setze_symbole(["MSFT", "NVDA"])
     assert ws.aktive_symbole == ["MSFT", "NVDA"], "AAPL hätte abgemeldet werden müssen"
-    print("✓ Wechsel der schnellen Liste: alt abgemeldet, neu abonniert")
+    print("ok: Wechsel der schnellen Liste: alt abgemeldet, neu abonniert")
 
     gekappt = ws.setze_symbole(["A", "B", "C", "D", "E"])
     assert len(gekappt) == 3, "Grenze aus config.py muss strikt gelten"
-    print(f"✓ Kappung greift: 5 gewünscht, {len(gekappt)} abonniert")
+    print(f"ok: Kappung greift: 5 gewünscht, {len(gekappt)} abonniert")
 
     # Ein eingehender Tick muss im gemeinsamen Speicher landen — und zwar
     # als Preis, NICHT als Tagesvolumen.
@@ -318,11 +318,11 @@ if __name__ == "__main__":
     wert = cache._store.get("AAPL")
     assert wert is not None and wert.preis == 123.45 and wert.quelle == "finnhub_ws"
     assert wert.volumen == 0.0, "Tick-Stückzahl darf NICHT als Tagesvolumen gelten"
-    print("✓ Tick landet als Preis im gemeinsamen Speicher (ohne Volumen)")
+    print("ok: Tick landet als Preis im gemeinsamen Speicher (ohne Volumen)")
 
     ws._bei_nachricht(None, json.dumps({"type": "error", "msg": "Testfehler"}))
     assert ws.fehler and "Testfehler" in ws.fehler[-1]
-    print("✓ Serverfehler werden festgehalten")
+    print("ok: Serverfehler werden festgehalten")
 
     # Tickfreie Werte fürs Protokoll erkennen — der Fall Vodafone/Ovintiv
     # vom 28.07.2026. Ohne stehende Verbindung darf NIEMAND auffallen
@@ -337,11 +337,11 @@ if __name__ == "__main__":
         {"type": "trade", "data": [{"s": "LAUT", "p": 10.0, "v": 5}]}))
     assert ws2.ohne_tick(60) == ["STUMM"], \
         "ein einziger Tick belegt, dass der Strom die Aktie trägt"
-    print("✓ Tickfreie Werte erkannt: ein Tick genügt als Nachweis der Abdeckung")
+    print("ok: Tickfreie Werte erkannt: ein Tick genügt als Nachweis der Abdeckung")
 
     # Frisch abonniert heißt: noch keine Gelegenheit gehabt.
     ws2.setze_symbole(["LAUT", "STUMM", "NEU"])
     assert "NEU" not in ws2.ohne_tick(60), "frische Abos brauchen erst ihre Frist"
-    print("✓ Frisch abonnierte Werte werden nicht vorschnell gezählt")
+    print("ok: Frisch abonnierte Werte werden nicht vorschnell gezählt")
     print(f"\nStatistik: {ws.statistik()}")
     print("\nAlle WebSocket-Tests bestanden (ohne Netzwerk).")

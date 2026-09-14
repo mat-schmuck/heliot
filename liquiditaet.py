@@ -142,11 +142,11 @@ def main():
     k_summe = sum(z[0] for z in kontrolle)
     print(f"\nKontrollgruppe zusammen: {k_summe:.1f} Ticks/Min")
     if k_summe < 20:
-        print("  ⚠ ACHTUNG: Auch die Schwergewichte liefern kaum etwas. Dann "
+        print("  ACHTUNG: Auch die Schwergewichte liefern kaum etwas. Dann "
               "liegt es NICHT an euren Aktien, sondern an der Leitung oder am "
               "Tarif — das Ergebnis unten ist dann NICHT verwertbar.")
     else:
-        print("  ✓ Die Kontrolle sprudelt — die Leitung ist in Ordnung, das "
+        print("  ok: Die Kontrolle sprudelt — die Leitung ist in Ordnung, das "
               "Ergebnis unten misst echte Liquidität.")
 
     zeilen = eigene

@@ -1073,7 +1073,7 @@ def _deckel_nachziehen(items: list[dict]) -> list[dict]:
         if geaendert:
             korrigiert.append(it)
     if korrigiert:
-        print(f"  ⚠ {len(korrigiert)} Stop(s) aus der Mappe lagen weiter als "
+        print(f"  Achtung: {len(korrigiert)} Stop(s) aus der Mappe lagen weiter als "
               f"{CFG['exit']['stop_deckel_pct']*100:.0f} % unter dem Kaufpunkt "
               f"und wurden nachgezogen (die Mappe ist älter als der Scanner):")
         for it in sorted(korrigiert,
@@ -3332,7 +3332,7 @@ def _sende_eine(topic: str, titel: str, body: str, prio: str,
         # darf keinen Push ueber den Schlussgong schieben.
         offen, grund = markt_offen()
         if not offen:
-            print(f"⛔ NICHT gesendet — Börse geschlossen ({grund}), "
+            print(f"NICHT gesendet — Börse geschlossen ({grund}), "
                   f"nach dem Warten des Push-Sammlers.")
             return False
     kopf = {"Title": titel.encode("utf-8"), "Priority": prio}
@@ -3345,10 +3345,10 @@ def _sende_eine(topic: str, titel: str, body: str, prio: str,
         r = requests.post(f"https://ntfy.sh/{topic}", data=body.encode("utf-8"),
                           headers=kopf, timeout=20)
     except Exception as e:
-        print(f"⚠ Push fehlgeschlagen: {e}")
+        print(f"Achtung: Push fehlgeschlagen: {e}")
         return False
     if r.status_code >= 400:
-        print(f"⚠ Push abgelehnt: HTTP {r.status_code} — {r.text[:200]}")
+        print(f"Achtung: Push abgelehnt: HTTP {r.status_code} — {r.text[:200]}")
         return False
     ntfy_verlauf.merke_antwort(r)
     _LETZTER_PUSH = time.monotonic()
@@ -3424,7 +3424,7 @@ def sende(topic: str, titel: str, absaetze: list[str], prio: str,
     if not HANDELSZEIT_EGAL:
         offen, grund = markt_offen()
         if not offen:
-            print(f"⛔ NICHT gesendet — Börse geschlossen ({grund}). "
+            print(f"NICHT gesendet — Börse geschlossen ({grund}). "
                   f"Der Treffer bleibt offen und wird zum nächsten "
                   f"Handelsbeginn gemeldet.")
             return False
@@ -4018,13 +4018,13 @@ def testpush(topic: str) -> int:
         r = requests.post(f"https://ntfy.sh/{topic}", data=text.encode("utf-8"),
                           headers=kopf, timeout=20)
     except Exception as e:
-        print(f"⚠ Testnachricht fehlgeschlagen: {e}")
+        print(f"Achtung: Testnachricht fehlgeschlagen: {e}")
         return 1
     if r.status_code >= 400:
-        print(f"⚠ Testnachricht abgelehnt: HTTP {r.status_code} — {r.text[:200]}")
+        print(f"Achtung: Testnachricht abgelehnt: HTTP {r.status_code} — {r.text[:200]}")
         return 1
     ntfy_verlauf.merke_antwort(r)
-    print(f"✓ Testnachricht gesendet (HTTP {r.status_code}).")
+    print(f"ok: Testnachricht gesendet (HTTP {r.status_code}).")
     print("  Kommt sie am Handy an, ist die Push-Kette in Ordnung.")
     return 0
 
@@ -4068,7 +4068,7 @@ def main():
     # Nur noch fuer die Rueckfallebene noetig — Hauptquelle ist Yahoo.
     api_key = os.environ.get("TWELVE_DATA_API_KEY")
     if not api_key:
-        print("⚠ Kein TWELVE_DATA_API_KEY gesetzt — keine Rückfallebene, "
+        print("Achtung: Kein TWELVE_DATA_API_KEY gesetzt — keine Rückfallebene, "
               "falls Yahoo ausfällt.")
     if not topic and not args.dry_run:
         sys.exit("Bitte NTFY_TOPIC setzen (oder --dry-run benutzen).")
@@ -4340,7 +4340,7 @@ def main():
             quotes, veraltete_quotes = pruefe_handelstag(quotes)
             if veraltete_quotes and not quotes:
                 datum = next(iter(veraltete_quotes.values())).get("bar_datum")
-                print(f"⛔ Keine einzige Kurszeile von heute (jüngste ist vom "
+                print(f"FEHLER: Keine einzige Kurszeile von heute (jüngste ist vom "
                       f"{datum}) — es wird nichts geprüft und nichts gemeldet.")
                 # NICHT sofort aufgeben: Direkt nach der Eroeffnung kann Yahoo
                 # ein paar Minuten brauchen, bis die heutige Tageszeile steht.
@@ -4363,7 +4363,7 @@ def main():
                 continue
             if veraltete_quotes:
                 namen = sorted(veraltete_quotes)
-                print(f"⚠ {len(namen)} Aktien ohne heutige Kurszeile — "
+                print(f"Achtung: {len(namen)} Aktien ohne heutige Kurszeile — "
                       f"übersprungen (keine Meldung auf veralteten Daten): "
                       + ", ".join(namen[:15]) + (" …" if len(namen) > 15 else ""))
             # Diesen Stand als Grundlage merken. Die Kopie ist wichtig:
@@ -4396,7 +4396,7 @@ def main():
                           + (" …" if len(ohne) > 12 else ""))
             if st["verbindungen"] == 0:
                 # Das MUSS auffallen, auch zwischen den Abrufen.
-                print("  ⚠ Keine Verbindung zum Live-Strom — es zählen "
+                print("  Achtung: Keine Verbindung zum Live-Strom — es zählen "
                       "solange die Tagesdaten.")
 
         # Haengt eine Quelle? Der Speicher weiss, wann jeder Kurs zuletzt
@@ -4404,7 +4404,7 @@ def main():
         haengend = [t for t in KURSE.stale_liste() if t in gewuenscht]
         if haengend:
             if laut:
-                print(f"⚠ {len(haengend)} Kurse gelten als hängend und werden "
+                print(f"Achtung: {len(haengend)} Kurse gelten als hängend und werden "
                       f"NICHT für Auslöser verwendet: "
                       + ", ".join(sorted(haengend)[:15]))
             for t in haengend:
@@ -4420,14 +4420,14 @@ def main():
             if ende_dauerwache is None:
                 sys.exit("Keine Kursdaten erhalten — Abbruch.")
             if laut:
-                print(f"⚠ Keine Kursdaten — nächster Versuch in {TAKT} Sekunden.")
+                print(f"Achtung: Keine Kursdaten — nächster Versuch in {TAKT} Sekunden.")
         else:
             # Unvollstaendige Abfragen NICHT stillschweigend hinnehmen: Fuer die
             # fehlenden Aktien kann kein Breakout erkannt werden, und ohne
             # Hinweis sieht der Lauf trotzdem erfolgreich aus.
             fehlend = sorted(gewuenscht - set(quotes))
             if fehlend and laut:
-                print(f"\n⚠ ACHTUNG: {len(fehlend)} Aktien konnten NICHT geprüft werden:")
+                print(f"\nACHTUNG: {len(fehlend)} Aktien konnten NICHT geprüft werden:")
                 print("  " + ", ".join(fehlend))
                 print("  Für diese Werte wird kein Ausbruch erkannt.")
 
@@ -4534,14 +4534,14 @@ def main():
             # im Protokoll und die echten Ereignisse gingen darin unter.
             if laut or neu:
                 if neu and not laut:
-                    print(f"\n⚡ {datetime.now():%H:%M:%S} — {len(neu)} neue(r) "
+                    print(f"\n{datetime.now():%H:%M:%S} — {len(neu)} neue(r) "
                           f"Kaufpunkt(e) gerissen:")
                 else:
                     print(f"\n{len(treffer)} Kaufpunkte aktuell gerissen, "
                           f"davon {len(neu)} neu seit dem letzten Lauf.")
                 for t in (treffer if laut else neu):
-                    marker = ("🟢" if t["vol_ok"] is True
-                              else ("🟡" if t["vol_ok"] is False else "⚪"))
+                    marker = ("bestätigt:" if t["vol_ok"] is True
+                              else ("unbestätigt:" if t["vol_ok"] is False else "nicht verifizierbar:"))
                     neu_marker = " [NEU]" if t in neu else ""
                     print(f"  {marker} {format_treffer(t)}{neu_marker}\n")
 
@@ -4625,7 +4625,7 @@ def main():
                     beobachtungen_aus_breakouts(zu_melden)
                 else:
                     sperre_bis = jetzt_s + TAKT
-                    print(f"⚠ Zustand NICHT gespeichert — nächster Versuch "
+                    print(f"Achtung: Zustand NICHT gespeichert — nächster Versuch "
                           f"in {TAKT} Sekunden.")
             elif not zu_melden:
                 if laut:
@@ -4919,7 +4919,7 @@ def main():
                     else:
                         sperre_bis = jetzt_s + TAKT
             if gap_ein:
-                print(f"\n🟢 {GAP_NAME}: {len(gap_ein)} Einstieg(e) "
+                print(f"\n{GAP_NAME}: {len(gap_ein)} Einstieg(e) "
                       f"am Folgetag")
                 for g in gap_ein:
                     print("  " + format_gapgo_einstieg(g)
@@ -5003,7 +5003,7 @@ def main():
             if gap_geaendert:
                 save_state(state)
             if gap_neu:
-                print(f"\n🚀 Gap and Go: {len(gap_neu)} Meldung(en)")
+                print(f"\nGap and Go: {len(gap_neu)} Meldung(en)")
                 for g in gap_neu:
                     print("  " + format_gapgo(g).replace("\n", "\n  ") + "\n")
                 if args.dry_run:

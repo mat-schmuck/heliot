@@ -64,7 +64,7 @@ def main():
         sys.exit("In 30 Sekunden kam nichts an — ohne Datenfluss lässt sich "
                  "die Wiederverbindung nicht belegen. Bitte während oder "
                  "kurz nach der Handelszeit wiederholen.")
-    print(f"  ✓ Daten fliessen (Zaehler {vorher}).")
+    print(f"  ok: Daten fliessen (Zaehler {vorher}).")
 
     print("\n--- SCHRITT 2: Abriss erzwingen ---")
     neustarts_vorher = ws.statistik()["neustarts"]
@@ -93,7 +93,7 @@ def main():
             neu = warte_auf_daten(ws, 30, ab=stand)
             if neu > stand:
                 erfolg = True
-                print(f"  ✓ Nach {int(60 - (ende - time.time()))} Sekunden: "
+                print(f"  ok: Nach {int(60 - (ende - time.time()))} Sekunden: "
                       f"{st['verbindungen']} Verbindung(en) wieder offen, "
                       f"{st['neustarts'] - neustarts_vorher} Neuaufbau(ten), "
                       f"Zaehler von {stand} auf {neu} gestiegen.")

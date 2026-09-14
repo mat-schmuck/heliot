@@ -145,7 +145,7 @@ SELEKTOREN = {
     ],
     "dialog_schliessen": [
         ("css", "[class*='close' i]"),
-        ("text", r"^[✕✖×xX]$"),
+        ("text", r"^[\u2715\u2716×xX]$"),
     ],
     # Verwaltung bestehender Alarme. ACHTUNG: Diese beiden wirken auf die
     # echten Alarme des Nutzers. Nie blind den ersten Treffer anklicken —
@@ -525,7 +525,7 @@ def login(page, user: str, pw: str) -> bool:
     if not ist_eingeloggt(page):
         diagnose(page, "login_scheinbar_ok",
                  "Suchfeld da, aber Kopfzeile zeigt weiterhin 'Registrieren'")
-        print("✗ Login nicht wirksam — Kopfzeile zeigt weiterhin Anmeldung an.")
+        print("FEHLER: Login nicht wirksam — Kopfzeile zeigt weiterhin Anmeldung an.")
         return False
 
     print("Login OK.")
@@ -673,7 +673,7 @@ def aktie_suchen(page, ticker: str, langsam: bool, firma: str = "") -> bool:
     if firma and punkte < 10:
         diagnose(page, f"kein_passender_treffer_{ticker}",
                  f"Kein Treffer passt zu {firma!r}; bester war {text!r}")
-        print(f"    ✗ Kein Treffer passt zu '{firma}' — bester war '{text[:60]}'")
+        print(f"    FEHLER: Kein Treffer passt zu '{firma}' — bester war '{text[:60]}'")
         return False
 
     print(f"    → gewählt: {text[:70]}")
@@ -813,7 +813,7 @@ def alarm_dialog_oeffnen(page, ticker: str, firma: str) -> bool:
             if kern and kern not in titel_norm:
                 diagnose(page, f"falsche_aktie_{ticker}",
                          f"Dialog zeigt {titel!r}, erwartet wurde {erwartet!r}")
-                print(f"    ✗ Dialog zeigt {titel!r}, erwartet {erwartet!r} — abgebrochen")
+                print(f"    FEHLER: Dialog zeigt {titel!r}, erwartet {erwartet!r} — abgebrochen")
                 return False
             print(f"    Dialog bestätigt für: {titel[:60]!r}")
     except Exception as e:
@@ -1074,7 +1074,7 @@ def alarme_inventur(page, name: str = "bestand") -> list:
         return []
 
     if not eintraege:
-        print("    ⚠ Keine Alarme gelesen — Fenster vermutlich nicht geladen.")
+        print("    Achtung: Keine Alarme gelesen — Fenster vermutlich nicht geladen.")
 
     DEBUG_DIR.mkdir(exist_ok=True)
     stempel = datetime.now().strftime("%H%M%S")
@@ -1191,10 +1191,10 @@ def erkunde_loeschweg(page, preis: float) -> bool:
         page.wait_for_timeout(2500)
         jetzt = zaehle_preis(page, preis)
         if jetzt < vorher:
-            print(f"    ✓ [{bezeichnung}] HAT FUNKTIONIERT ({vorher} -> {jetzt})")
+            print(f"    ok: [{bezeichnung}] HAT FUNKTIONIERT ({vorher} -> {jetzt})")
             diagnose(page, "loeschweg_gefunden", f"'{bezeichnung}' loescht Alarme")
             return True
-        print(f"    ✗ [{bezeichnung}] wirkungslos (weiterhin {jetzt}x)")
+        print(f"    FEHLER: [{bezeichnung}] wirkungslos (weiterhin {jetzt}x)")
 
     diagnose(page, "loeschweg_unbekannt", f"Kein Weg gefunden, {preis} zu loeschen")
     print("    Kein Weg hat funktioniert.")
@@ -1246,7 +1246,7 @@ def alarm_loeschen(page, preis: float, maximal: int = 5) -> int:
                           if (lambda w: w is not None and abs(w - preis) < 0.005)(
                               preis_parsen(felder_neu.nth(i).input_value() or "")))
             if nachher >= vorher:
-                print(f"    ⚠ Löschen wirkungslos: {preis} ist immer noch "
+                print(f"    Achtung: Löschen wirkungslos: {preis} ist immer noch "
                       f"{nachher}x da (vorher {vorher}x) — abgebrochen")
                 break
             geloescht += 1
@@ -1309,7 +1309,7 @@ def aufraeum_lauf(page, user: str, pw: str, auftraege: list) -> int:
     print()
 
     if not login(page, user, pw):
-        print("✗ Login fehlgeschlagen.")
+        print("FEHLER: Login fehlgeschlagen.")
         return 1
 
     # BEWUSST KEINE Bestandsaufnahme vorweg.
@@ -1341,12 +1341,12 @@ def aufraeum_lauf(page, user: str, pw: str, auftraege: list) -> int:
     print(f"  Aufträge:  {len(auftraege)}")
     print(f"  Entfernt:  {entfernt}")
     if probleme:
-        print(f"\n⚠ {len(probleme)} Problem(e): {', '.join(probleme)}")
+        print(f"\nAchtung: {len(probleme)} Problem(e): {', '.join(probleme)}")
         return 1
     if entfernt == 0:
-        print("\n⚠ Nichts entfernt — standen die Alarme überhaupt noch?")
+        print("\nAchtung: Nichts entfernt — standen die Alarme überhaupt noch?")
         return 1
-    print("\n✓ Aufräumen abgeschlossen.")
+    print("\nok: Aufräumen abgeschlossen.")
     return 0
 
 
@@ -1397,7 +1397,7 @@ def inventur_lauf(page, user: str, pw: str) -> int:
     erneut feuern."""
     print("\n=== INVENTUR: nur lesen, es wird nichts verändert ===\n")
     if not login(page, user, pw):
-        print("✗ Login fehlgeschlagen.")
+        print("FEHLER: Login fehlgeschlagen.")
         return 1
 
     eintraege = alarme_inventur(page, "messung")
@@ -1457,14 +1457,14 @@ def loesche_alle_lauf(page, user: str, pw: str) -> int:
     Runden ohne Wirkung = Abbruch mit Diagnose statt Endlosklickerei."""
     print("\n=== ALLES LÖSCHEN: sämtliche Alarme entfernen ===\n")
     if not login(page, user, pw):
-        print("✗ Login fehlgeschlagen.")
+        print("FEHLER: Login fehlgeschlagen.")
         return 1
 
     print("[1/3] Alerts manager öffnen und zählen")
     oeffner = finde(page, "nutzer_alarme_oeffnen")
     if oeffner is None:
         diagnose(page, "loeschen_kein_manager", "Öffner für Nutzer-Alarme fehlt")
-        print("✗ Alarm-Übersicht nicht auffindbar.")
+        print("FEHLER: Alarm-Übersicht nicht auffindbar.")
         return 1
     klick(oeffner, "Nutzer-Alarme")
     # Warten, bis wirklich Inhalt geladen ist — ein halb leeres Fenster
@@ -1479,7 +1479,7 @@ def loesche_alle_lauf(page, user: str, pw: str) -> int:
     vorher = page.evaluate(JS_MANAGER_ALARMZAHL)
     if vorher < 0:
         diagnose(page, "loeschen_manager_leer", "Alerts manager nicht gefunden")
-        print("✗ Alarm-Fenster nicht lesbar — nichts gelöscht.")
+        print("FEHLER: Alarm-Fenster nicht lesbar — nichts gelöscht.")
         return 1
     if vorher == 0:
         print("    Konto ist bereits leer — nichts zu tun.")
@@ -1492,7 +1492,7 @@ def loesche_alle_lauf(page, user: str, pw: str) -> int:
         try:
             geklickt = page.evaluate(JS_MANAGER_ALLE_LOESCHEN)
         except Exception as e:
-            print(f"    ✗ Klickrunde fehlgeschlagen: {str(e)[:60]}")
+            print(f"    FEHLER: Klickrunde fehlgeschlagen: {str(e)[:60]}")
             break
         # TraderFox die Serverseite abarbeiten lassen — je mehr Klicks,
         # desto laenger (Erfahrungswert aus Lauf #29: einzelne Loeschungen
@@ -1537,11 +1537,11 @@ def loesche_alle_lauf(page, user: str, pw: str) -> int:
                 print("  Fortschrittsgedächtnis geleert — der nächste Lauf "
                       "setzt alles frisch.")
         except Exception as e:
-            print(f"  ⚠ Fortschrittsdatei nicht löschbar: {e} — beim "
+            print(f"  Achtung: Fortschrittsdatei nicht löschbar: {e} — beim "
                   "nächsten Eintragen 'neu=true' verwenden!")
-        print("\n✓ Konto ist leer — alle Alarme entfernt und nachgezählt.")
+        print("\nok: Konto ist leer — alle Alarme entfernt und nachgezählt.")
         return 0
-    print("\n⚠ Es sind noch Alarme übrig — Diagnose siehe debug/.")
+    print("\nAchtung: Es sind noch Alarme übrig — Diagnose siehe debug/.")
     return 1
 
 
@@ -1557,7 +1557,7 @@ def testalarm_lauf(page, user: str, pw: str, ticker: str = "AAPL",
     print("    Der Alarm wird am Ende wieder geloescht.\n")
 
     if not login(page, user, pw):
-        print("✗ Login fehlgeschlagen.")
+        print("FEHLER: Login fehlgeschlagen.")
         return 1
 
     print("\n[1/6] Bestandsaufnahme vorher")
@@ -1568,14 +1568,14 @@ def testalarm_lauf(page, user: str, pw: str, ticker: str = "AAPL",
 
     print(f"\n[2/6] {ticker} suchen")
     if not aktie_suchen(page, ticker, langsam=True, firma=firma):
-        print("✗ Suche fehlgeschlagen.")
+        print("FEHLER: Suche fehlgeschlagen.")
         return 1
 
     print("\n[3/6] Alarm-Dialog oeffnen")
     # Firmenname ist wichtig: In der Kursliste steht 'Apple Inc.', das
     # Kuerzel AAPL kommt dort gar nicht vor.
     if not alarm_dialog_oeffnen(page, ticker, firma):
-        print("✗ Alarm-Dialog ging nicht auf.")
+        print("FEHLER: Alarm-Dialog ging nicht auf.")
         return 1
 
     # Reste aus frueheren Testlaeufen zuerst wegraeumen. 99999 stammt aus dem
@@ -1599,15 +1599,15 @@ def testalarm_lauf(page, user: str, pw: str, ticker: str = "AAPL",
     gesetzt = alarm_setzen(page, ticker, TESTPREIS, "Testalarm", langsam=True)
     diagnose(page, "testalarm_nach_setzen", f"Nach dem Setzen von {TESTPREIS}")
     if not gesetzt:
-        print("✗ Alarm konnte nicht gesetzt werden.")
+        print("FEHLER: Alarm konnte nicht gesetzt werden.")
         return 1
-    print("    ✓ Alarm gesetzt und verifiziert")
+    print("    ok: Alarm gesetzt und verifiziert")
 
     print(f"\n[5/6] Testalarm zu {TESTPREIS} wieder loeschen")
     geloescht = alarm_loeschen(page, TESTPREIS) > 0
     diagnose(page, "testalarm_nach_loeschen", f"Nach dem Loeschen von {TESTPREIS}")
     if not geloescht:
-        print(f"⚠ ACHTUNG: Der Testalarm zu {TESTPREIS} $ auf {ticker} konnte")
+        print(f"ACHTUNG: Der Testalarm zu {TESTPREIS} $ auf {ticker} konnte")
         print("  nicht geloescht werden und steht noch im Konto!")
         print("  Bitte von Hand entfernen (App oder Alerts manager).")
 
@@ -1627,10 +1627,10 @@ def testalarm_lauf(page, user: str, pw: str, ticker: str = "AAPL",
     erwartet = anzahl_vorher - aufgeraeumt
     abweichung = anzahl_nachher - erwartet
     if gesetzt and geloescht and abweichung == 0:
-        print("\n✓ Anlegen und Loeschen funktionieren. Bestand wie erwartet.")
+        print("\nok: Anlegen und Loeschen funktionieren. Bestand wie erwartet.")
         return 0
     if abweichung != 0:
-        print(f"\n⚠ Erwartet waren {erwartet} Alarme, gezaehlt {anzahl_nachher} "
+        print(f"\nAchtung: Erwartet waren {erwartet} Alarme, gezaehlt {anzahl_nachher} "
               f"(Abweichung {abweichung:+d}).")
         print("  Achtung: Ausgeloeste Alarme entfernt TraderFox von selbst —")
         print("  eine Abweichung nach unten kann auch daher kommen.")
@@ -1710,9 +1710,9 @@ def alarm_setzen(page, ticker: str, preis: float, strategie: str, langsam: bool)
 
     ok = mit_retry(versuch, versuche=3, pause=1.5, name=f"Alarm {ticker} {preis_str}")
     if ok:
-        print(f"    ✓ {ticker}: {preis_str} $ ({strategie}) — verifiziert")
+        print(f"    ok: {ticker}: {preis_str} $ ({strategie}) — verifiziert")
         return True
-    print(f"    ✗ {ticker}: {preis_str} $ ({strategie}) — nicht bestätigt")
+    print(f"    FEHLER: {ticker}: {preis_str} $ ({strategie}) — nicht bestätigt")
     diagnose(page, f"alarm_unbestaetigt_{ticker}_{preis_str.replace('.', '_')}",
              f"Alarm {preis_str} nach 3 Versuchen nicht in der Liste")
     return False
@@ -1768,7 +1768,7 @@ def dialog_schliessen(page) -> bool:
     except Exception:
         pass
     if alarmdialog_offen(page):
-        print("    ⚠ Alarm-Dialog liess sich nicht schliessen")
+        print("    Achtung: Alarm-Dialog liess sich nicht schliessen")
         return False
     return True
 
@@ -1972,7 +1972,7 @@ def selbsttest(page, user: str, pw: str) -> int:
     ok_login = login(page, user, pw)
     ergebnis["Login"] = ok_login
     if not ok_login:
-        print("\n✗ Login fehlgeschlagen — weitere Prüfungen nicht möglich.")
+        print("\nFEHLER: Login fehlgeschlagen — weitere Prüfungen nicht möglich.")
         return 1
 
     ergebnis["Suchfeld"] = finde(page, "suchfeld") is not None
@@ -2049,14 +2049,14 @@ def selbsttest(page, user: str, pw: str) -> int:
 
     print("\n--- Ergebnis ---")
     for k, v in ergebnis.items():
-        print(f"  {'✓' if v else '✗'} {k}")
+        print(f"  {'ok' if v else 'FEHLER'} {k}")
     fehler = [k for k, v in ergebnis.items() if not v]
     if fehler:
-        print(f"\n✗ {len(fehler)} Prüfpunkt(e) fehlgeschlagen: {', '.join(fehler)}")
+        print(f"\nFEHLER: {len(fehler)} Prüfpunkt(e) fehlgeschlagen: {', '.join(fehler)}")
         print("  → Die Dateien in ./debug/ an Claude schicken, dann wird die "
               "SELEKTOREN-Karte oben im Script angepasst.")
         return 1
-    print("\n✓ Alles gefunden — der Bot ist einsatzbereit.")
+    print("\nok: Alles gefunden — der Bot ist einsatzbereit.")
     return 0
 
 
@@ -2136,7 +2136,7 @@ def main():
                 for _, zeile in d.iterrows():
                     firmen[str(zeile["Ticker"]).strip()] = str(zeile.get("Firma", "")).strip()
             except Exception as e:
-                print(f"⚠ Firmennamen nicht lesbar ({e}) — suche nur nach Kürzel.")
+                print(f"Achtung: Firmennamen nicht lesbar ({e}) — suche nur nach Kürzel.")
         for teil in args.loesche.split(","):
             teil = teil.strip()
             if not teil:
@@ -2269,7 +2269,7 @@ def main():
                     abgleich_probleme.append(t)
             print(f"\n=== Abgleich fertig: {weg} überholte Alarme entfernt ===")
             if abgleich_probleme:
-                print(f"⚠ nicht erreichbar: {', '.join(abgleich_probleme[:20])}")
+                print(f"Achtung: nicht erreichbar: {', '.join(abgleich_probleme[:20])}")
             dialog_schliessen(page)
 
         gesamt = sum(len(j["points"]) for j in jobs)
@@ -2278,7 +2278,7 @@ def main():
         print(f"\n{len(jobs)} Aktien, {gesamt} Alarme gesamt, davon {len(offen)} offen "
               f"({gesamt - len(offen)} bereits erledigt).")
         if gesamt > 100:
-            print("⚠ Über 100 Alarme — prüf, ob dein TraderFox-Abo so viele zulässt.")
+            print("Achtung: Über 100 Alarme — prüf, ob dein TraderFox-Abo so viele zulässt.")
 
         gesetzt, probleme = 0, []
         for i, job in enumerate(jobs, 1):

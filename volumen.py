@@ -351,7 +351,7 @@ def lade_kurven(pfad=KURVEN_DATEI, leise=False):
     except Exception as e:
         _kurven = {}
         if not leise:
-            print(f"  ⚠ Keine Volumenkurven ({type(e).__name__}) — jede Aktie "
+            print(f"  Achtung: Keine Volumenkurven ({type(e).__name__}) — jede Aktie "
                   f"gilt als nicht verifizierbar, bis der Nachtlauf sie baut.")
     return _kurven
 
@@ -534,7 +534,7 @@ if __name__ == "__main__":
     print("=" * 66)
     assert abs(volume_pct_change(1_100_000, 700_000) - 57.14) < 0.01
     assert abs(volume_pct_change(700_000, 700_000) - 0.0) < 1e-9
-    print("  1,1 Mio gegen Ø50 700.000 → +57 %; genau am Schnitt → 0 %  ✓")
+    print("  1,1 Mio gegen Ø50 700.000 → +57 %; genau am Schnitt → 0 %  ok")
     print("  (ohne Uhrzeit braucht die Formel KEINE Kurve — Gerhards EOD-Fall)")
 
     print("\n" + "=" * 66)
@@ -568,23 +568,23 @@ if __name__ == "__main__":
         ist = entscheide_kurven_quelle(tage, schwelle)
         print(f"  {was}: {tage} Tage → {ist}")
         assert ist == erwartet, f"erwartet {erwartet}, war {ist}"
-    print("  ✓ Nur zwei Ausgänge, kein Rückgriff auf eine fremde Kurve")
+    print("  ok: Nur zwei Ausgänge, kein Rückgriff auf eine fremde Kurve")
 
     print("\n" + "=" * 66)
     print("TEST 5: Ohne eigene Kurve — NICHT VERIFIZIERBAR, kein Absturz")
     print("=" * 66)
     # EOD ohne Kurve: geht, weil F(t)=1 keine Kurve braucht
     assert volume_pct_change(150_000, 100_000, None, None) is not None
-    print("  EOD ohne Kurve: rechnet normal weiter  ✓")
+    print("  EOD ohne Kurve: rechnet normal weiter  ok")
     # Intraday ohne Kurve: None, KEINE Ersatzrechnung
     assert volume_pct_change(70_000, 100_000, None, 30) is None
     assert tagesanteil(30, None) is None
     assert verhaeltnis(70_000, 100_000, 30, None) is None
-    print("  Intraday ohne Kurve: None  ✓")
+    print("  Intraday ohne Kurve: None  ok")
     assert "NICHT VERIFIZIERBAR" in text(70_000, 100_000, 30, None)
     print(f"  Text dazu: „{text(70_000, 100_000, 30, None)}"
-          f"“  ✓")
-    print("  ✓ Das ist NICHT dasselbe wie 'nicht bestätigt' — dort wurde")
+          f"“  ok")
+    print("  ok: Das ist NICHT dasselbe wie 'nicht bestätigt' — dort wurde")
     print("    geprüft und für zu schwach befunden, hier gar nicht geprüft.")
 
     print("\n" + "=" * 66)
@@ -592,7 +592,7 @@ if __name__ == "__main__":
     print("=" * 66)
     assert volume_pct_change(500_000, 0) is None
     assert volume_pct_change(500_000, None) is None
-    print("  Ohne Ø50 keine Zahl  ✓")
+    print("  Ohne Ø50 keine Zahl  ok")
 
     print("\n" + "=" * 66)
     print("TEST 7: Der Vorrat kennt eine Aktie nicht")
@@ -600,7 +600,7 @@ if __name__ == "__main__":
     assert kurve_fuer("GIBTSNICHT") is None
     assert kurve_fuer(None) is None
     assert volume_pct_change(1_000, 500, kurve_fuer("GIBTSNICHT"), 30) is None
-    print("  Unbekannte Aktie → keine Kurve → nicht verifizierbar  ✓")
+    print("  Unbekannte Aktie → keine Kurve → nicht verifizierbar  ok")
 
     print("\n" + "=" * 66)
     print("TEST 8: Eine Kurve aus echten Kerzen bauen (ohne Netz)")
@@ -619,12 +619,12 @@ if __name__ == "__main__":
     assert n == 2, f"zwei Handelstage erwartet, {n} gezählt"
     assert kurve[0] == 0.0 and kurve[390] == 1.0
     assert all(kurve[a] <= kurve[b] for a, b in zip(sorted(kurve), sorted(kurve)[1:]))
-    print(f"  {n} Tage, {len(kurve)} Stützstellen, monoton, 0 bis 1  ✓")
+    print(f"  {n} Tage, {len(kurve)} Stützstellen, monoton, 0 bis 1  ok")
     # Halber Handelstag muss ausgeschieden werden
     halb = df[df.index.time < __import__("datetime").time(13, 0)]
     _, n_halb = _kurve_aus_kerzen(halb)
     assert n_halb == 0, f"halbe Tage müssen rausfallen, {n_halb} blieben"
-    print("  Halbe Handelstage (Feiertagsschluss 13:00) fliegen raus  ✓")
+    print("  Halbe Handelstage (Feiertagsschluss 13:00) fliegen raus  ok")
 
     print("\n" + "=" * 66)
     print("TEST 9: Der LAUFENDE Tag darf nie in die Kurve")
@@ -662,7 +662,7 @@ if __name__ == "__main__":
     _, n_fertig = _kurve_aus_kerzen(df_heute, jetzt=danach)
     print(f"  Derselbe Tag, geprüft um 16:30: {n_fertig} Tage verwendet")
     assert n_fertig == 1, "nach dem Schluss gehört der Tag hinein"
-    print("  ✓ Ein Nachzügler mitten im Handel verbiegt die Kurve nicht —")
+    print("  ok: Ein Nachzügler mitten im Handel verbiegt die Kurve nicht —")
     print("    nach dem Schlussgong zählt derselbe Tag dagegen mit")
 
     print("\nAlle Volumen-Tests bestanden (ohne Netzwerk).")

@@ -262,16 +262,16 @@ if __name__ == "__main__":
     assert watcher["gemeldet"] == {}, "alter Wächterzustand muss geleert werden"
     assert isinstance(watcher["gemeldet"], dict), \
         "Verzeichnis darf nicht zur Liste werden"
-    print("  ✓ Nur ÄLTER als der Freitags-Putz wird geleert")
-    print("  ✓ Gesetzte Alarme dieser Woche bleiben stehen (Doppelsignal-Fehler behoben)")
-    print("  ✓ Feldname 'erledigt' und Bauart Verzeichnis bleiben erhalten")
+    print("  ok: Nur ÄLTER als der Freitags-Putz wird geleert")
+    print("  ok: Gesetzte Alarme dieser Woche bleiben stehen (Doppelsignal-Fehler behoben)")
+    print("  ok: Feldname 'erledigt' und Bauart Verzeichnis bleiben erhalten")
 
     # Unlesbare Datei darf NICHT vernichtet werden
     (Path(tmp) / "radar_state.json").write_text("{kaputt")
     raeume_zustaende(basis=tmp)
     assert (Path(tmp) / "radar_state.json").read_text() == "{kaputt", \
         "unlesbare Datei muss unangetastet bleiben"
-    print("  ✓ Unlesbare Datei bleibt unangetastet, statt überschrieben zu werden")
+    print("  ok: Unlesbare Datei bleibt unangetastet, statt überschrieben zu werden")
 
     # Gesundheits-Check testen — Normalfall
     checks = baue_standard_checks(
@@ -299,7 +299,7 @@ if __name__ == "__main__":
     for z in koerper2.splitlines():
         print("  " + z)
     assert ok2 is False
-    print("\n  ✓ Problemfall korrekt als FEHLER erkannt (Versorgung <95%, stale, Minuten-Limit)")
+    print("\n  ok: Problemfall korrekt als FEHLER erkannt (Versorgung <95%, stale, Minuten-Limit)")
 
     shutil.rmtree(tmp)
     print("\nAlle Wartungs-Tests bestanden.")

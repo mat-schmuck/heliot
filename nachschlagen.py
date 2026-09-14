@@ -515,6 +515,257 @@ def bericht_text(teile):
 
 
 # ---------------------------------------------------------------------------
+# Chartmuster, Kaufpunkte und Kerzen (Mathias, 14.09.2026)
+# ---------------------------------------------------------------------------
+# "Wenn man ins obere Feld eine Aktie reinschreibt, will ich, dass sie oben
+# gleichzeitig durch die Muster gejagt wird, dass ganz unten die Kaufpunkte
+# angezeigt werden, dass der Chart dort auch noch einmal vorhanden ist.
+# Darunter gibt es den Aktienchart, wo man zwischen täglich, monatlich, Jahr
+# umschalten kann." Die Saetze stehen hier, damit sie ohne Netz pruefbar
+# sind; die App zeichnet nur die Charts.
+#
+# KEINE BILDZEICHEN (Mathias, 14.09.2026: "Entferne konsequent alle Emojis
+# ... dies gilt für all unsere Tools"). Screenreader lesen jedes Symbol als
+# Wort vor. Fremde Texte, etwa Status und Notizen der Detektoren oder eine
+# aeltere Mappe, gehen deshalb vor der Anzeige durch lesbar().
+
+BILDZEICHEN_BEREICHE = ((0x1F000, 0x1FAFF), (0x2600, 0x27BF), (0x2B00, 0x2BFF), (0x25A0, 0x25FF),
+                        (0x2300, 0x23FF), (0xFE0E, 0xFE0F), (0x200D, 0x200D), (0x20E3, 0x20E3),
+                        (0x2139, 0x2139), (0x3030, 0x3030), (0x303D, 0x303D), (0x3297, 0x3297),
+                        (0x3299, 0x3299))
+MONATE = ("Jänner", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September",
+          "Oktober", "November", "Dezember")
+WOCHENTAGE = ("Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag")
+
+
+def ist_bildzeichen(zeichen):
+    o = ord(zeichen)
+    return any(a <= o <= b for a, b in BILDZEICHEN_BEREICHE)
+
+
+def bildzeichen_in(text):
+    """Die Bildzeichen eines Textes, in der Reihenfolge ihres Vorkommens."""
+    return [z for z in str(text or "") if ist_bildzeichen(z)]
+
+
+def lesbar(text):
+    """Fremder Text fuer die Anzeige: ohne Bildzeichen, Gedankenstriche als
+    Strichpunkt, Zahlenbereiche mit 'bis', Vergleichszeichen in Worten."""
+    s = "".join(" " if ist_bildzeichen(z) else z for z in str(text or ""))
+    s = re.sub(r"(\d)\s*[–—]\s*(\d)", r"\1 bis \2", s)
+    s = re.sub(r"\s*[–—]\s*", "; ", s)
+    s = re.sub(r"\s*·\s*", "; ", s)
+    s = s.replace("≥", "mindestens ").replace("≤", "höchstens ").replace(">=", "mindestens ").replace("<=", "höchstens ")
+    s = re.sub(r"\s+", " ", s).strip()
+    s = re.sub(r"^[;,]\s*|\s*[;,]$", "", s)
+    return s.replace(" ;", ";").replace(" ,", ",")
+
+
+def chart_skript(key, text):
+    """JavaScript, das den Chart-Behaelter mit dem Streamlit-Schluessel key zu
+    EINEM Bild mit Beschreibung macht (role img, aria-label) und seinen Inhalt
+    vor dem Screenreader verbirgt. Ein Chart ist sonst eine Folge aus
+    Achsenzahlen, Monatsnamen und Legenden; was er zeigt, steht als Text
+    daneben. Wartet mit einem MutationObserver hoechstens 30 Sekunden, bis
+    der Chart im Browser steht.
+
+    KEIN KLEINER-ZEICHEN (gemessen 14.09.2026): st.html reinigt das HTML mit
+    DOMPurify, und ein Skript mit "i<c.children" kam nicht an; die Charts
+    blieben unbeschriftet. Das Skript kommt deshalb ohne Vergleich mit
+    Kleiner-Zeichen aus, und aus dem Text werden spitze Klammern entfernt."""
+    if not re.fullmatch(r"[A-Za-z0-9_-]+", str(key or "")):
+        raise ValueError("unerlaubter Schluessel")
+    sauber = str(text or "").replace("<", " ").replace(">", " ")
+    skript = ("(function(){var k=" + json.dumps(key) + ",t=" + json.dumps(sauber) + ";"
+              "function f(){var c=document.querySelector('.st-key-'+k+' [data-testid=stPlotlyChart]');"
+              "if(!c)return false;c.setAttribute('role','img');c.setAttribute('aria-label',t);"
+              "Array.prototype.forEach.call(c.children,function(x){x.setAttribute('aria-hidden','true')});"
+              "return true}"
+              "if(!f()){var o=new MutationObserver(function(){if(f())o.disconnect()});"
+              "o.observe(document.body,{childList:true,subtree:true});"
+              "setTimeout(function(){o.disconnect()},30000)}})();")
+    assert "<" not in skript
+    return skript
+
+
+def tt_kriterium_text(name, cfg=None):
+    """Die Bedingungen des Trend Templates als deutscher Satzteil; die
+    Schwellen kommen aus den Regelwerk-Werten des Scanners (pattern_scanner.CFG),
+    nicht aus dem Namen der Bedingung."""
+    if cfg is None:
+        import pattern_scanner
+        cfg = pattern_scanner.CFG
+    tief = zahl(cfg["tt_min_above_low"] * 100)
+    hoch = zahl(cfg["tt_max_below_high"] * 100)
+    texte = {"Kurs > MA150 & MA200": "Kurs über dem 150- und dem 200-Tage-Durchschnitt",
+             "MA150 > MA200": "150-Tage-Durchschnitt über dem 200-Tage-Durchschnitt",
+             "MA200 steigt (≥1 Monat)": "200-Tage-Durchschnitt steigt seit mindestens einem Monat",
+             "MA50 > MA150 & MA200": "50-Tage-Durchschnitt über dem 150- und dem 200-Tage-Durchschnitt",
+             "Kurs > MA50": "Kurs über dem 50-Tage-Durchschnitt",
+             "≥25 % über 52W-Tief": f"mindestens {tief} Prozent über dem 52-Wochen-Tief",
+             "≤25 % unter 52W-Hoch": f"höchstens {hoch} Prozent unter dem 52-Wochen-Hoch",
+             "RS-Rank ≥ 70": f"RS mindestens {zahl(cfg['tt_rs_min'])}",
+             "Zu wenig Historie für MA200": "zu wenig Kurshistorie für den 200-Tage-Durchschnitt"}
+    return texte.get(name, lesbar(name))
+
+
+def rs_fuer_muster(e):
+    """(RS-Wert, Satz) fuer die RS-Bedingung des Trend Templates im
+    Nachschlagen: das marktweite RS, sonst das vorlaeufige, sonst keines."""
+    e = e or {}
+    if e.get("rs") is not None:
+        return float(e["rs"]), f"Die RS-Bedingung ist mit RS {int(e['rs'])} gegen den ganzen US-Markt geprüft."
+    if e.get("rs_vorlaeufig") is not None:
+        return (float(e["rs_vorlaeufig"]),
+                f"Die RS-Bedingung ist mit dem vorläufigen RS {int(e['rs_vorlaeufig'])} geprüft, "
+                "gerechnet aus den vorhandenen Quartalen.")
+    return None, "Ohne RS-Wert gilt die RS-Bedingung als nicht erfüllt."
+
+
+def muster_saetze(res, rs_satz=None, cfg=None):
+    """Chartmuster und Trend Template als Saetze."""
+    if not res:
+        return ["Keine Kursdaten für die Musterprüfung bekommen."]
+    s = []
+    echte = [p for p in res.get("points") or [] if not str(p.get("strategie", "")).startswith("Fallback")]
+    anzahl = int(res.get("pattern_count") or len(echte))
+    if echte:
+        namen = ", ".join(anzeige_text(p["strategie"]) for p in echte)
+        if anzahl == 1:
+            s.append(f"Ein aktives Chartmuster: {namen}.")
+        elif anzahl > len(echte):
+            s.append(f"{anzahl} aktive Chartmuster; die {len(echte)} wichtigsten mit Kaufpunkt: {namen}.")
+        else:
+            s.append(f"{anzahl} aktive Chartmuster: {namen}.")
+    else:
+        s.append("Kein aktives Chartmuster. Die Kaufpunkte weiter unten sind allgemeine Orientierungsmarken, "
+                 "keine Signale des Regelwerks.")
+    n = int(res.get("tt_count") or 0)
+    if res.get("tt_pass"):
+        s.append("Trend Template nach Minervini erfüllt, 8 von 8 Bedingungen.")
+    else:
+        s.append(f"Trend Template nach Minervini nicht erfüllt, {n} von 8 Bedingungen.")
+        fehlt = [tt_kriterium_text(f, cfg) for f in res.get("tt_failed") or []]
+        if fehlt:
+            s.append("Es fehlt: " + "; ".join(fehlt) + ".")
+    if rs_satz:
+        s.append(rs_satz)
+    return s
+
+
+# Kuerzel der Detektoren in Worten, damit ein Screenreader nicht "52 W" oder
+# "M A 50" vorliest. Nur fuer die Anzeige; die Mappe behaelt ihre Namen.
+_ANZEIGE_WOERTER = (("Fallback: ", "allgemeine Marke, "), ("52W-Hoch", "52-Wochen-Hoch"),
+                    ("52W-Tief", "52-Wochen-Tief"), ("MA200", "200-Tage-Durchschnitt"),
+                    ("MA150", "150-Tage-Durchschnitt"), ("MA50", "50-Tage-Durchschnitt"),
+                    ("SMA21", "21-Tage-Durchschnitt"), ("SMA 21", "21-Tage-Durchschnitt"))
+
+
+def anzeige_text(text):
+    """lesbar() und dazu die Kuerzel der Detektoren in Worten und englische
+    Dezimalpunkte als Beistrich (ein Datum wie 11.09.2026 bleibt)."""
+    t = lesbar(text)
+    for alt_wort, neues_wort in _ANZEIGE_WOERTER:
+        t = t.replace(alt_wort, neues_wort)
+    t = t.replace(" > ", " über ").replace(" < ", " unter ")
+    return re.sub(r"(?<![\d.])(\d+)\.(\d{1,2})(?![\d.])", r"\1,\2", t)
+
+
+def _satz(text):
+    t = anzeige_text(text)
+    return t[:-1] if t.endswith(".") else t
+
+
+def kaufpunkt_saetze(res):
+    """Je Kaufpunkt ein Satz: Preis, Abstand zum Kurs, Stop samt Risiko,
+    Ziel samt Chance, Status und Notiz."""
+    import exit_regeln
+    if not res or not res.get("points"):
+        return ["Keine Kaufpunkte berechnet."]
+    kurs = res.get("close")
+    s = []
+    for i, p in enumerate(res["points"], 1):
+        kp = p.get("kaufpunkt")
+        teile = [f"Kaufpunkt {i}, {_satz(p.get('strategie'))}: {zahl(kp, 2)} Dollar"]
+        if kp and kurs:
+            abst = (float(kp) / float(kurs) - 1) * 100
+            teile[0] += (f", {zahl(abst, 1)} Prozent über dem Kurs" if abst >= 0
+                         else f", der Kurs liegt {zahl(-abst, 1)} Prozent darüber")
+        risiko = None
+        if p.get("stop") is not None:
+            risiko = exit_regeln.risiko_pct(kp, p["stop"])
+            teile.append(f"Stop {zahl(p['stop'], 2)} Dollar"
+                         + (f", Risiko {zahl(abs(risiko), 1)} Prozent" if risiko is not None else ""))
+        if p.get("ziel"):
+            chance = (float(p["ziel"]) / float(kp) - 1) * 100
+            ziel = f"Ziel {zahl(p['ziel'], 2)} Dollar, Chance {zahl(chance, 1)} Prozent"
+            if risiko:
+                ziel += f", Chance zu Risiko {zahl(chance / abs(risiko), 1)} zu 1"
+            teile.append(ziel)
+        for feld in ("status", "notiz"):
+            if p.get(feld) and _satz(p[feld]):
+                teile.append(_satz(p[feld]))
+        s.append("; ".join(teile) + ".")
+    s.append("Kaufpunkt heißt nicht Kaufsignal: Jeder Ausbruch braucht laut Regelwerk zusätzlich die "
+             "Volumenbestätigung am Ausbruchstag.")
+    return s
+
+
+KERZEN_ARTEN = ("tag", "monat", "jahr")
+
+
+def kerzen(df, art):
+    """Kerzen fuer den Aktienchart. df hat die Spalten datetime, open, high,
+    low, close, volume: Tageskerzen fuer art 'tag', Monatskerzen fuer
+    'monat' und 'jahr' (Jahre werden aus den Monaten gebildet). Liefert
+    einen DataFrame in derselben Form, aufsteigend nach Datum."""
+    import pandas as pd
+    if art not in KERZEN_ARTEN:
+        raise ValueError("unbekannte Kerzenart")
+    if df is None or len(df) == 0:
+        return None
+    d = df[["datetime", "open", "high", "low", "close", "volume"]].dropna(subset=["open", "high", "low", "close"])
+    d = d.sort_values("datetime").reset_index(drop=True)
+    if art != "jahr":
+        return d
+    jahre = d.groupby(pd.to_datetime(d["datetime"]).dt.year)
+    j = pd.DataFrame({"open": jahre["open"].first(), "high": jahre["high"].max(), "low": jahre["low"].min(),
+                      "close": jahre["close"].last(), "volume": jahre["volume"].sum()})
+    j["datetime"] = pd.to_datetime([f"{y}-01-01" for y in j.index])
+    return j.reset_index(drop=True)[["datetime", "open", "high", "low", "close", "volume"]]
+
+
+def _kerzen_name(ts, art, heute=None):
+    heute = heute or datetime.now().date()
+    tag = ts.date() if hasattr(ts, "date") else ts
+    if art == "tag":
+        return f"{WOCHENTAGE[tag.weekday()]}, {tag:%d.%m.%Y}"
+    if art == "monat":
+        laufend = (tag.year, tag.month) == (heute.year, heute.month)
+        return f"{MONATE[tag.month - 1]} {tag.year}" + (", bisher" if laufend else "")
+    return f"Jahr {tag.year}" + (", bisher" if tag.year == heute.year else "")
+
+
+def kerzen_saetze(k, art, anzahl=12, heute=None):
+    """Die juengsten Kerzen als Saetze, die neueste zuerst."""
+    if k is None or len(k) == 0:
+        return ["Keine Kurse für diese Darstellung bekommen."]
+    bezug = {"tag": "Vortag", "monat": "Vormonat", "jahr": "Vorjahr"}[art]
+    s = []
+    n = len(k)
+    for i in range(n - 1, max(-1, n - 1 - anzahl), -1):
+        z = k.iloc[i]
+        satz = (f"{_kerzen_name(z['datetime'], art, heute)}: Eröffnung {zahl(z['open'], 2)}, Hoch {zahl(z['high'], 2)}, "
+                f"Tief {zahl(z['low'], 2)}, Schluss {zahl(z['close'], 2)} Dollar")
+        if i > 0 and k.iloc[i - 1]["close"]:
+            satz += f"; {prozent((z['close'] / k.iloc[i - 1]['close'] - 1) * 100, 1)} gegenüber dem {bezug}"
+        if z.get("volume") is not None and z["volume"] == z["volume"]:
+            satz += f"; {zahl(z['volume'])} Stück"
+        s.append(satz + ".")
+    return s
+
+
+# ---------------------------------------------------------------------------
 # Selbsttest (ohne Netz)
 # ---------------------------------------------------------------------------
 
@@ -642,6 +893,92 @@ def selbsttest() -> int:
     p("Kurve ohne Vorrat und ohne Bauen: keine", kurve_fuer("ZZZZ", {}, bauen=False) == (None, "keine"))
     p("Datei laden: Repo-Abruf ersetzt, sonst leer", lade_datei("gibt_es_nicht.json", holen=lambda n: {}) == {}
       and lade_datei("x.json", holen=lambda n: {"a": 1}) == {"a": 1})
+
+    # Chartmuster, Kaufpunkte, Kerzen (14.09.2026)
+    haken = chr(0x2713) + " 8/8"
+    p("Bildzeichen werden gefunden, gewoehnliche Zeichen nicht",
+      bildzeichen_in("Rakete " + chr(0x1F680) + " und " + haken) == [chr(0x1F680), chr(0x2713)]
+      and bildzeichen_in("Ä ö ß € 12,5 % → ≥ & | ;") == [], bildzeichen_in("Ä ö ß € → ≥"))
+    p("lesbar: Bildzeichen weg, Gedankenstrich zu Strichpunkt, Bereich mit bis, Vergleich in Worten",
+      lesbar(haken) == "8/8" and lesbar("Kein Muster — generischer Level") == "Kein Muster; generischer Level"
+      and lesbar("Tiefe 12–50 %") == "Tiefe 12 bis 50 %" and lesbar("≥25 % über") == "mindestens 25 % über"
+      and lesbar("Darvas Box · VCP") == "Darvas Box; VCP" and lesbar(chr(0x26A0) + chr(0xFE0F) + " Achtung") == "Achtung",
+      [lesbar(haken), lesbar("Kein Muster — generischer Level"), lesbar(chr(0x26A0) + chr(0xFE0F) + " Achtung")])
+    tt_cfg = {"tt_min_above_low": 0.25, "tt_max_below_high": 0.3, "tt_rs_min": 70}
+    p("Trend-Template-Bedingungen deutsch, Schwellen aus den Regelwerk-Werten statt aus dem Namen",
+      tt_kriterium_text("≥25 % über 52W-Tief", tt_cfg) == "mindestens 25 Prozent über dem 52-Wochen-Tief"
+      and tt_kriterium_text("≤25 % unter 52W-Hoch", tt_cfg) == "höchstens 30 Prozent unter dem 52-Wochen-Hoch"
+      and tt_kriterium_text("RS-Rank ≥ 70", tt_cfg) == "RS mindestens 70"
+      and tt_kriterium_text("Kurs > MA50", tt_cfg) == "Kurs über dem 50-Tage-Durchschnitt"
+      and tt_kriterium_text("Unbekannt ≥ 3", tt_cfg) == "Unbekannt mindestens 3")
+    p("RS fuer das Trend Template: marktweit, vorlaeufig, keines",
+      rs_fuer_muster({"rs": 91})[0] == 91.0 and "RS 91 gegen den ganzen US-Markt" in rs_fuer_muster({"rs": 91})[1]
+      and rs_fuer_muster({"rs_vorlaeufig": 80})[0] == 80.0 and "vorläufigen RS 80" in rs_fuer_muster({"rs_vorlaeufig": 80})[1]
+      and rs_fuer_muster({}) == (None, "Ohne RS-Wert gilt die RS-Bedingung als nicht erfüllt."))
+    res = {"close": 100.0, "pattern_count": 1, "tt_pass": False, "tt_count": 6,
+           "tt_failed": ["Kurs > MA50", "RS-Rank ≥ 70"],
+           "points": [{"strategie": "VCP", "kaufpunkt": 105.0, "stop": 96.6, "ziel": 126.0,
+                       "status": "Pivot noch nicht überschritten — beobachten", "notiz": "3 Kontraktionen."},
+                      {"strategie": "Fallback: 20-Tage-Hoch (Pivot)", "kaufpunkt": 98.0, "stop": 90.0, "ziel": None,
+                       "status": "Kein Muster — Konsolidierungs-Pivot", "notiz": ""}]}
+    ms = muster_saetze(res, "Die RS-Bedingung ist mit RS 58 gegen den ganzen US-Markt geprüft.", tt_cfg)
+    p("Muster: aktives Muster, Trend Template mit fehlenden Bedingungen, RS-Satz",
+      ms[0] == "Ein aktives Chartmuster: VCP." and ms[1] == "Trend Template nach Minervini nicht erfüllt, 6 von 8 Bedingungen."
+      and ms[2] == "Es fehlt: Kurs über dem 50-Tage-Durchschnitt; RS mindestens 70." and ms[3].startswith("Die RS-Bedingung"), ms)
+    ohne = muster_saetze({"points": [res["points"][1]], "pattern_count": 0, "tt_pass": True, "tt_count": 8, "tt_failed": []})
+    p("Muster: ohne echtes Muster ehrlicher Hinweis; Trend Template erfuellt",
+      ohne[0].startswith("Kein aktives Chartmuster.") and ohne[1] == "Trend Template nach Minervini erfüllt, 8 von 8 Bedingungen.", ohne)
+    ks = kaufpunkt_saetze(res)
+    p("Kaufpunkte: Preis, Abstand, Stop, Risiko, Ziel, Chance zu Risiko, Status ohne Gedankenstrich",
+      ks[0] == ("Kaufpunkt 1, VCP: 105,00 Dollar, 5,0 Prozent über dem Kurs; Stop 96,60 Dollar, Risiko 8,0 Prozent; "
+                "Ziel 126,00 Dollar, Chance 20,0 Prozent, Chance zu Risiko 2,5 zu 1; Pivot noch nicht überschritten; "
+                "beobachten; 3 Kontraktionen.")
+      and ks[1].startswith("Kaufpunkt 2, allgemeine Marke, 20-Tage-Hoch (Pivot): 98,00 Dollar, der Kurs liegt 2,0 Prozent darüber")
+      and ks[-1].startswith("Kaufpunkt heißt nicht Kaufsignal"), ks)
+    p("Kaufpunkte ohne Ergebnis: ehrlicher Satz", kaufpunkt_saetze(None) == ["Keine Kaufpunkte berechnet."])
+    p("Anzeige: Kuerzel in Worten, Dezimalpunkt als Beistrich, Datum bleibt",
+      anzeige_text("Fallback: 52W-Hoch-Breakout; MA50 aktuell 114.74; am 11.09.2026; 3.5 Prozent")
+      == "allgemeine Marke, 52-Wochen-Hoch-Breakout; 50-Tage-Durchschnitt aktuell 114,74; am 11.09.2026; 3,5 Prozent",
+      anzeige_text("Fallback: 52W-Hoch-Breakout; MA50 aktuell 114.74; am 11.09.2026; 3.5 Prozent"))
+    p("Anzeige: Vergleichszeichen zwischen Woertern in Worten",
+      anzeige_text("Setup komplett (Kurs > SMA21)") == "Setup komplett (Kurs über 21-Tage-Durchschnitt)"
+      and anzeige_text("Tief < Vortag") == "Tief unter Vortag", anzeige_text("Setup komplett (Kurs > SMA21)"))
+    cs = chart_skript("aktienchart_tag", "Chart AAOI: Kurs < 50 und > 40, Jänner")
+    p("Chart-Skript: ohne Kleiner-Zeichen, Schluessel-Klasse, Bild mit Beschreibung, Inhalt verborgen",
+      "<" not in cs and ".st-key-'+k+' [data-testid=stPlotlyChart]" in cs and '"aktienchart_tag"' in cs
+      and "setAttribute('role','img')" in cs and "aria-label" in cs and "aria-hidden" in cs, cs[:80])
+    try:
+        chart_skript("x'); alert(1); ('", "t")
+        p("Chart-Skript weist fremde Zeichen im Schluessel ab", False)
+    except ValueError:
+        p("Chart-Skript weist fremde Zeichen im Schluessel ab", True)
+    import pandas as pd
+    tage_k = pd.DataFrame({"datetime": pd.to_datetime(["2026-09-10", "2026-09-11"]), "open": [10.0, 11.0],
+                           "high": [12.0, 12.5], "low": [9.5, 10.5], "close": [11.0, 12.1], "volume": [1000.0, 2500.0]})
+    kt = kerzen_saetze(kerzen(tage_k, "tag"), "tag")
+    p("Tageskerzen: neueste zuerst, Wochentag, Werte, Veraenderung zum Vortag, Stueck",
+      kt == ["Freitag, 11.09.2026: Eröffnung 11,00, Hoch 12,50, Tief 10,50, Schluss 12,10 Dollar; plus 10,0 Prozent "
+             "gegenüber dem Vortag; 2.500 Stück.",
+             "Donnerstag, 10.09.2026: Eröffnung 10,00, Hoch 12,00, Tief 9,50, Schluss 11,00 Dollar; 1.000 Stück."], kt)
+    monate_k = pd.DataFrame({"datetime": pd.to_datetime(["2025-11-01", "2025-12-01", "2026-01-01", "2026-02-01"]),
+                             "open": [10.0, 11.0, 12.0, 13.0], "high": [11.5, 12.5, 14.0, 13.5],
+                             "low": [9.0, 10.0, 11.5, 12.0], "close": [11.0, 12.0, 13.0, 12.5],
+                             "volume": [100.0, 200.0, 300.0, 400.0]})
+    km = kerzen_saetze(kerzen(monate_k, "monat"), "monat", anzahl=2, heute=datetime(2026, 2, 20).date())
+    p("Monatskerzen: Jaenner, laufender Monat mit bisher, nur die verlangte Anzahl",
+      len(km) == 2 and km[0].startswith("Februar 2026, bisher: Eröffnung 13,00") and "minus 3,8 Prozent gegenüber dem Vormonat" in km[0]
+      and km[1].startswith("Jänner 2026: Eröffnung 12,00"), km)
+    kj = kerzen(monate_k, "jahr")
+    p("Jahreskerzen aus Monaten: erste Eroeffnung, hoechstes Hoch, tiefstes Tief, letzter Schluss, Volumen summiert",
+      len(kj) == 2 and kj.iloc[0]["open"] == 10.0 and kj.iloc[0]["high"] == 12.5 and kj.iloc[0]["low"] == 9.0
+      and kj.iloc[0]["close"] == 12.0 and kj.iloc[0]["volume"] == 300.0 and kj.iloc[1]["high"] == 14.0
+      and kj.iloc[1]["volume"] == 700.0, kj.to_dict("records"))
+    kjs = kerzen_saetze(kj, "jahr", heute=datetime(2026, 2, 20).date())
+    p("Jahreskerzen als Saetze: laufendes Jahr mit bisher",
+      kjs[0].startswith("Jahr 2026, bisher:") and "plus 4,2 Prozent gegenüber dem Vorjahr" in kjs[0], kjs)
+    alle_saetze = ms + ohne + ks + kt + km + kjs
+    p("Keine Bildzeichen und keine Gedankenstriche in den neuen Saetzen",
+      not any(bildzeichen_in(x) or "—" in x or "–" in x for x in alle_saetze))
     print(f"\n{len(fehler)} Fehler." if fehler else "\nAlles bestanden.")
     return 1 if fehler else 0
 

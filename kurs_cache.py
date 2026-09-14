@@ -157,18 +157,18 @@ if __name__ == "__main__":
     a = cache.hole("AAPL", fake_abruf)
     b = cache.hole("AAPL", fake_abruf)
     assert a.preis == b.preis and aufrufe["n"] == 1
-    print(f"✓ Cache spart Abruf: AAPL 2× angefragt, nur {aufrufe['n']}× echt geholt")
+    print(f"ok: Cache spart Abruf: AAPL 2× angefragt, nur {aufrufe['n']}× echt geholt")
 
     # 2) Nach TTL wird neu geholt
     time.sleep(2.1)
     cache.hole("AAPL", fake_abruf)
     assert aufrufe["n"] == 2
-    print("✓ Nach Ablauf der TTL wird frisch geholt")
+    print("ok: Nach Ablauf der TTL wird frisch geholt")
 
     # 3) Stale-Erkennung
     time.sleep(3.1)
     assert cache.ist_stale("AAPL"), "Kurs müsste jetzt stale sein"
-    print("✓ Stale-Erkennung greift: alter Kurs wird als 'hängend' erkannt")
+    print("ok: Stale-Erkennung greift: alter Kurs wird als 'hängend' erkannt")
 
     # 4) Batch
     def fake_batch(tickers):
@@ -176,7 +176,7 @@ if __name__ == "__main__":
     res = cache.hole_batch(["MSFT", "NVDA", "AMD"], fake_batch)
     assert len(res) == 3
     res2 = cache.hole_batch(["MSFT", "NVDA", "AMD"], fake_batch)  # jetzt aus Cache
-    print(f"✓ Batch-Abruf: 3 geholt, beim 2. Mal aus Cache. Statistik: {cache.statistik()}")
+    print(f"ok: Batch-Abruf: 3 geholt, beim 2. Mal aus Cache. Statistik: {cache.statistik()}")
 
     # 5) Schwelle PRO QUELLE (Gerhard, 28.07.2026)
     c2 = KursCache(ttl_sekunden=1, stale_max_sekunden=120,
@@ -190,7 +190,7 @@ if __name__ == "__main__":
     assert not c2.ist_stale("LANGSAM"), "yfinance: 30 s dürfen NICHT stale sein"
     assert not c2.ist_stale("UNBEKANNT"), "unbekannte Quelle nutzt den Rückfallwert"
     assert c2.stale_liste() == ["TICK"]
-    print("✓ Schwelle je Quelle: derselbe 30 s alte Kurs ist beim WebSocket "
+    print("ok: Schwelle je Quelle: derselbe 30 s alte Kurs ist beim WebSocket "
           "stale, bei yfinance frisch")
 
     print("\nAlle Cache-Tests bestanden.")

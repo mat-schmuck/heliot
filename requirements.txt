@@ -1,5 +1,7 @@
 ﻿# Für das Streamlit-Webtool (Streamlit Community Cloud liest diese Datei automatisch)
-streamlit>=1.32
+# Streamlit fest auf 1.63.0 (14.09.2026): Das Nachschlagen-Feld haengt an der Adresse (bind),
+# Cookie und Chart-Beschriftung laufen als Skript in st.html, der Aktienchart ist ein Fragment.
+streamlit==1.63.0
 pandas>=2.0
 numpy>=1.24
 scipy>=1.10
