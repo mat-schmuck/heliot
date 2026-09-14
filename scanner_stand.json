@@ -1,0 +1,127 @@
+{
+ "gebaut_am": "2026-09-14T02:48:46+00:00",
+ "handelstag": "2026-09-11",
+ "status": "ok",
+ "toleranz": 0.05,
+ "quellen": {
+  "rs": {
+   "stand": "2026-09-13T22:06:41",
+   "status": "ok"
+  },
+  "kurse": {
+   "status": "ok",
+   "mit_kursen": 5663,
+   "ohne_kurse": 2,
+   "aktuell": 5657,
+   "abdeckung": 0.9986,
+   "archiv_zeilen": 3927464
+  },
+  "screener": {
+   "status": "ok",
+   "anzahl": 7163
+  },
+  "kalender": {
+   "status": "ok",
+   "tage": 8,
+   "eintraege": 99
+  },
+  "fundament": {
+   "status": "ok",
+   "firmen": 4930,
+   "zuordnung": 5317
+  },
+  "analysten": {
+   "status": "ok",
+   "abgerufen": 827,
+   "fehler": 0,
+   "abgebrochen": false,
+   "hinweis": "5663 Aktien noch nie abgefragt; volle Abdeckung nach 7 Naechten",
+   "mit_analysten": 521,
+   "mit_stand": 827
+  }
+ },
+ "hinweise": [],
+ "universum": 5665,
+ "strategien": {
+  "darvas": {
+   "name": "Darvas Box",
+   "toleranz_moeglich": true,
+   "streng": 228,
+   "nur_toleranz": 5,
+   "handelbar": 111,
+   "handelbar_langweilig": 68
+  },
+  "trend_template": {
+   "name": "Minervini Trend Template",
+   "toleranz_moeglich": true,
+   "streng": 699,
+   "nur_toleranz": 61,
+   "handelbar": 410
+  },
+  "vcp": {
+   "name": "VCP",
+   "toleranz_moeglich": true,
+   "streng": 26,
+   "nur_toleranz": 3,
+   "handelbar": 12
+  },
+  "cup_handle": {
+   "name": "Cup & Handle",
+   "toleranz_moeglich": true,
+   "streng": 783,
+   "nur_toleranz": 184,
+   "handelbar": 564
+  },
+  "rectangle": {
+   "name": "Rectangle Top",
+   "toleranz_moeglich": true,
+   "streng": 2379,
+   "nur_toleranz": 66,
+   "handelbar": 1169
+  },
+  "htf": {
+   "name": "High & Tight Flag",
+   "toleranz_moeglich": true,
+   "streng": 15,
+   "nur_toleranz": 8,
+   "handelbar": 9
+  },
+  "htf_innen": {
+   "name": "HTF Innen-Einstieg",
+   "toleranz_moeglich": true,
+   "streng": 13,
+   "nur_toleranz": 4,
+   "handelbar": 5
+  },
+  "ema_crossback": {
+   "name": "EMA Crossback",
+   "toleranz_moeglich": false,
+   "streng": 132,
+   "nur_toleranz": 0,
+   "handelbar": 44
+  },
+  "power_gap": {
+   "name": "Power-Gap (Lücken-Bestätigungstag)",
+   "toleranz_moeglich": false,
+   "streng": 2,
+   "nur_toleranz": 0,
+   "handelbar": 2
+  },
+  "hoch_52w": {
+   "name": "Neues 52-Wochen-Hoch",
+   "toleranz_moeglich": false,
+   "streng": 76,
+   "nur_toleranz": 0,
+   "handelbar": 38
+  },
+  "hoch_allzeit": {
+   "name": "Neues Allzeithoch",
+   "toleranz_moeglich": false,
+   "streng": 26,
+   "nur_toleranz": 0,
+   "handelbar": 16
+  }
+ },
+ "zeilen": 5663,
+ "dauer_s": 1229.8
+}
