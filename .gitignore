@@ -34,3 +34,5 @@ $null
 # Die Analystendatei gehoert ins PRIVATE Datenrepo heliot-daten und darf nie hierher.
 scanner_tabelle.parquet
 scanner_analysten.parquet
+# Die Rangliste der Industry Group RS (Etappe 6) stammt aus dem EODHD-Abzug, ebenfalls nur privat.
+scanner_gruppen.json

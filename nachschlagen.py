@@ -1265,6 +1265,48 @@ def short_saetze(a, grund=None):
     return s
 
 
+def gruppe_saetze(a, grund=None):
+    """Kapitel 'Branchengruppe' (Etappe 6, Entscheidung 11): Gruppe und Rang
+    der Industry Group RS. a: die Zeile der Aktie aus
+    scanner_analysten.parquet; grund wie bei konsens_saetze."""
+    import kennzahlen_gruppen as kg
+    if a is None:
+        if grund is None:
+            return ["Die Branchengruppe liegt im privaten Datenrepo; sie steht nur in der App mit dem Lese-Token "
+                    "DATEN_LESE_TOKEN."]
+        if grund:
+            return [f"Branchengruppe nicht geladen: {grund}."]
+        return ["Für diese Aktie steht in der Nachttabelle des Scanners keine Branchengruppe."]
+    g = a.get("gruppe")
+    hinweis = a.get("gruppe_hinweis")
+    if not g:
+        return [f"Branchengruppe nicht verfügbar: {hinweis or 'ohne Angabe'}."]
+    if g == kg.UNBEKANNT:
+        return [f"Branche unbekannt: {hinweis or 'ohne Angabe'}.",
+                "Titel ohne Branche stehen in der Gruppen-Rangliste als eigene Zeile ohne Rang; das betrifft vor allem "
+                "Listungen nach dem Stichtag der Zuordnungsliste."]
+    ebene = a.get("gruppe_ebene") or "GICS-Unterbranche"
+    kopf = f"Branchengruppe laut {ebene}: {g}"
+    if a.get("gruppe_rang") is not None:
+        kopf += (f"; Rang {int(a['gruppe_rang'])}"
+                 + (f" von {int(a['gruppen_zahl'])} Gruppen" if a.get("gruppen_zahl") is not None else "")
+                 + f" am {datum_text(a.get('gruppe_stand'))}"
+                 + (f", vor drei Wochen Rang {int(a['gruppe_rang_3w'])}" if a.get("gruppe_rang_3w") is not None else "")
+                 + (f", vor sechs Wochen Rang {int(a['gruppe_rang_6w'])}" if a.get("gruppe_rang_6w") is not None else ""))
+    s = [kopf + "."]
+    titel = a.get("gruppe_titel")
+    if titel is not None:
+        s.append(f"In die Rechnung gehen {int(titel)} {'Aktie' if int(titel) == 1 else 'Aktien'} der Gruppe mit vollem "
+                 f"RS-Rohwert; Rang 1 hat die Gruppe mit dem höchsten Median der RS-Rohwerte.")
+    if hinweis:
+        h = str(hinweis)
+        s.append(h[:1].upper() + h[1:] + ".")
+    if a.get("gruppe_zuordnung_stand"):
+        s.append(f"Die Gruppe stammt aus der eigenen Zuordnungsliste vom {datum_text(a['gruppe_zuordnung_stand'])}.")
+    s.append("Entscheidungshilfe, kein Filter.")
+    return s
+
+
 def sektor_saetze(sektor_name, sektoren, quelle=""):
     if not sektor_name:
         return ["Sektor unbekannt: die Aktie steht in keiner Wochenliste, und Yahoo nennt keinen Sektor."]
@@ -1341,6 +1383,7 @@ def bericht(ticker, rs, ratings, sektoren, live=None, kurve=None, kurve_quelle="
             ("Bewertung", bewertung_saetze(r, streubesitz_kurs)),
             ("Analysten und Konsens", konsens_saetze(analysten, in_wochenliste, analysten_grund)),
             ("Leerverkäufe", short_saetze(analysten, analysten_grund)),
+            ("Branchengruppe", gruppe_saetze(analysten, analysten_grund)),
             ("Sektor", sektor_saetze(sektor_name, sektoren, sektor_quelle)),
             ("Stand", stand_saetze(rs, ratings, sektoren))]
 
@@ -1735,10 +1778,10 @@ def selbsttest() -> int:
 
     teile = bericht("AAOI", rs, ratings, sektoren, live=live_auf, kurve=kurve, kurve_quelle="Vorrat", sektor_name="Technology", sektor_quelle="Wochenliste")
     text = bericht_text(teile)
-    p("Bericht hat elf Teile in fester Reihenfolge",
+    p("Bericht hat zwoelf Teile in fester Reihenfolge",
       [u for u, _ in teile] == ["Aktie", "Unsere Ratings", "Volumen", "Technische Kennzahlen", "Umsatz und Gewinn",
-                                "Bilanz und Cashflow", "Bewertung", "Analysten und Konsens", "Leerverkäufe", "Sektor",
-                                "Stand"])
+                                "Bilanz und Cashflow", "Bewertung", "Analysten und Konsens", "Leerverkäufe",
+                                "Branchengruppe", "Sektor", "Stand"])
     p("Kopf: Kuerzel, Name, Boerse, Kurs live, Abstand zum Hoch",
       "AAOI, Applied Optoelectronics, Inc., Nasdaq." in text and "Kurs 160,00 Dollar" in text and "Abstand zum 52-Wochen-Hoch minus 54,9 Prozent" in text)
     p("Ratings: RS mit Vorwoche, EPS, SMR, A/D, Composite je ein Satz",
@@ -1995,11 +2038,37 @@ def selbsttest() -> int:
       ohne_h[0] == "Am 14.09.2026 meldete FINRA für diese Aktie keine außerbörslichen Umsätze.", str(ohne_h))
     p("Leerverkaeufe: ohne Daten wie beim Konsens", short_saetze(None, "kein Lese-Token")[0].startswith("Short-Daten nicht geladen")
       and "DATEN_LESE_TOKEN" in short_saetze(None)[0])
+    # Etappe 6: Branchengruppe
+    zeile_g = {"gruppe": "Semiconductors", "gruppe_ebene": "GICS-Unterbranche", "gruppe_rang": 12.0,
+               "gruppe_rang_3w": 20.0, "gruppe_rang_6w": None, "gruppen_zahl": 158.0, "gruppe_titel": 42.0,
+               "gruppe_stand": "2026-09-14", "gruppe_zuordnung_stand": "2026-09-16",
+               "gruppe_hinweis": "der Rang vor sechs Wochen fehlt, die Kurshistorie kennt erst 20 Handelstage"}
+    gt = gruppe_saetze(zeile_g, "")
+    p("Branchengruppe: Rang von N am Tag, vor drei Wochen, fehlender Rang mit Grund, Liste, kein Filter",
+      gt == ["Branchengruppe laut GICS-Unterbranche: Semiconductors; Rang 12 von 158 Gruppen am 14.09.2026, vor drei "
+             "Wochen Rang 20.",
+             "In die Rechnung gehen 42 Aktien der Gruppe mit vollem RS-Rohwert; Rang 1 hat die Gruppe mit dem höchsten "
+             "Median der RS-Rohwerte.",
+             "Der Rang vor sechs Wochen fehlt, die Kurshistorie kennt erst 20 Handelstage.",
+             "Die Gruppe stammt aus der eigenen Zuordnungsliste vom 16.09.2026.",
+             "Entscheidungshilfe, kein Filter."], str(gt))
+    gu = gruppe_saetze({"gruppe": "Branche unbekannt", "gruppe_hinweis": "die Aktie steht nicht in der "
+                                                                        "Zuordnungsliste vom 16.09.2026"}, "")
+    p("Branchengruppe: unbekannt mit Grund und ohne Rang", gu[0] == "Branche unbekannt: die Aktie steht nicht in der "
+                                                              "Zuordnungsliste vom 16.09.2026." and "ohne Rang" in gu[1],
+      str(gu))
+    gn = gruppe_saetze({"gruppe": None, "gruppe_hinweis": "die eigene Zuordnungsliste der Branchen liegt noch nicht vor"},
+                       "")
+    p("Branchengruppe: ohne Zuordnungsliste nicht verfuegbar", gn == ["Branchengruppe nicht verfügbar: die eigene "
+                                                                    "Zuordnungsliste der Branchen liegt noch nicht vor."],
+      str(gn))
+    p("Branchengruppe: ohne Daten wie beim Konsens", gruppe_saetze(None, "kein Lese-Token")[0].startswith(
+        "Branchengruppe nicht geladen") and "DATEN_LESE_TOKEN" in gruppe_saetze(None)[0])
     rs_w = dict(rs, listen={"AAOI": {}})
     teile_k = bericht("AAOI", rs_w, ratings, sektoren, live=live_auf, analysten=zeile_k, analysten_grund="")
     p("Bericht: Kapitel Analysten und Konsens nach der Bewertung, Wochenliste aus der Nachtdatei",
       teile_k[7][0] == "Analysten und Konsens" and any("Needham" in x for x in teile_k[7][1])
-      and teile_k[8][0] == "Leerverkäufe")
+      and teile_k[8][0] == "Leerverkäufe" and teile_k[9][0] == "Branchengruppe")
 
     teile4 = bericht("XYZQ", {}, {}, {}, live=None)
     text4 = bericht_text(teile4)

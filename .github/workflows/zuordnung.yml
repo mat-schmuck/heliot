@@ -1,0 +1,115 @@
+name: Branchen-Zuordnung bauen
+
+# ETAPPE 6 (Gerhard, 13.09.2026, Entscheidung 10): "EIN EINMALIGER ABZUG von
+# Branche (GICS) und TYP je Symbol, solange das Abo laeuft. [...] Danach haben
+# wir eine eigene Zuordnungsliste und sind von EODHD unabhaengig."
+#
+# Dieser Ablauf baut die Liste aus dem, was der EODHD-Vollabzug schon im
+# privaten Datenrepo abgelegt hat (Register, Symbolliste, Release-Archive).
+# Er fragt EODHD NICHT an und braucht keinen EODHD-Schluessel. Nur von Hand,
+# erst wenn der Vollabzug die Stammaktien der Hauptboersen erledigt hat; sonst
+# bricht zuordnung_bauen.py mit Grund ab. Die Liste geht nach
+# zuordnung/branchen_JJJJ-MM-TT.json im privaten Datenrepo; die Nachttabelle
+# (scanner_daten.yml) holt die juengste. Das Log nennt nur Zahlen, nie Werte:
+# Die Liste ist lizenziert, dieses Repo oeffentlich.
+
+on:
+  workflow_dispatch:
+    inputs:
+      auch_unvollstaendig:
+        description: "Auch bauen, wenn der Vollabzug noch nicht alle Stammaktien erledigt hat (ja/nein)"
+        required: false
+        default: "nein"
+
+concurrency:
+  group: branchen-zuordnung
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  zuordnung:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Ist das Datenrepo-Token da?
+        id: token
+        env:
+          DATEN_TOKEN: ${{ secrets.DATEN_TOKEN }}
+        run: |
+          if [ -z "$DATEN_TOKEN" ]; then
+            echo "Secret DATEN_TOKEN fehlt; ohne Zugang zum privaten Datenrepo wird nichts gebaut."
+            echo "da=nein" >> "$GITHUB_OUTPUT"
+          else
+            echo "da=ja" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.token.outputs.da == 'ja'
+        with:
+          ref: main
+
+      - uses: actions/checkout@v4
+        if: steps.token.outputs.da == 'ja'
+        with:
+          repository: mat-schmuck/heliot-daten
+          token: ${{ secrets.DATEN_TOKEN }}
+          path: daten
+
+      # Nur Standardbibliothek, keine Abhaengigkeiten.
+      - uses: actions/setup-python@v5
+        if: steps.token.outputs.da == 'ja'
+        with:
+          python-version: "3.12"
+
+      - name: Selbsttest
+        if: steps.token.outputs.da == 'ja'
+        run: python zuordnung_bauen.py --selbsttest
+
+      # Nur die Archive, in denen Titel der Hauptboersen liegen; welche das
+      # sind, sagt das Register des Vollabzugs.
+      - name: Archive des Vollabzugs holen
+        if: steps.token.outputs.da == 'ja'
+        env:
+          GH_TOKEN: ${{ secrets.DATEN_TOKEN }}
+        run: |
+          mkdir -p .cache/eodhd
+          python zuordnung_bauen.py --archive-liste --daten daten > .cache/archive.txt
+          echo "Benoetigte Archive: $(wc -l < .cache/archive.txt)"
+          while IFS='|' read -r RELEASE ARCHIV; do
+            if [ -z "$ARCHIV" ]; then
+              continue
+            fi
+            gh release download "$RELEASE" --repo mat-schmuck/heliot-daten --pattern "$ARCHIV" --dir .cache/eodhd --clobber
+          done < .cache/archive.txt
+          ls -l .cache/eodhd
+
+      - name: Liste bauen und ins Datenrepo legen
+        if: steps.token.outputs.da == 'ja'
+        env:
+          UNVOLLSTAENDIG: ${{ github.event.inputs.auch_unvollstaendig }}
+        run: |
+          if [ "$UNVOLLSTAENDIG" = "ja" ]; then
+            python zuordnung_bauen.py --bauen --daten daten --archive .cache/eodhd --auch-unvollstaendig
+          else
+            python zuordnung_bauen.py --bauen --daten daten --archive .cache/eodhd
+          fi
+          cd daten
+          git config user.name "pattern-scanner"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A -- zuordnung
+          if git diff --cached --quiet; then
+            echo "Keine neue Zuordnungsliste."
+            exit 0
+          fi
+          git commit -q -m "Branchen-Zuordnung: eigene Liste aus dem einmaligen Abzug (Entscheidung 10)"
+          for versuch in 1 2 3; do
+            if git push -q; then
+              echo "Abgelegt (Versuch $versuch)."
+              exit 0
+            fi
+            git pull -q --rebase
+          done
+          echo "Die Liste liess sich nach drei Anlaeufen nicht ablegen."
+          exit 1

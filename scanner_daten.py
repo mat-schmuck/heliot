@@ -25,10 +25,15 @@ WAS DIESER LAUF BAUT
                            Wochenliste Revisionen und Einstufungen
                            (kennzahlen_konsens.py), seit Etappe 7 der
                            Short-Volumen-Anteil laut FINRA
-                           (kennzahlen_short.py). Sie gehen wie der
+                           (kennzahlen_short.py), seit Etappe 6 Gruppe und
+                           Rang der Industry Group RS
+                           (kennzahlen_gruppen.py). Sie gehen wie der
                            eingefrorene Konsens (F17) in das PRIVATE
                            Datenrepo heliot-daten; die App liest sie nur mit
                            dem Lese-Token DATEN_LESE_TOKEN.
+  scanner_gruppen.json     die Rangliste der Industry Group RS (Etappe 6),
+                           ebenfalls nur im PRIVATEN Datenrepo, weil die
+                           Gruppen aus dem EODHD-Abzug stammen.
   scanner_stand.json       wann gebaut, Stand der Kurse und jeder Quelle,
                            Zahl der Treffer je Strategie. Liegt im Repo; an
                            ihm erkennt scanner_noetig.py, ob gebaut werden muss.
@@ -77,6 +82,12 @@ WOHER DIE WERTE KOMMEN (gemessen 14.09.2026)
               welche Tage Handelstage sind, sagt die Kurshistorie. Mit der
               Mindestabdeckung des RS-Universums; fehlt etwas, heisst es "nicht
               verfuegbar", Werte der Vornacht werden nicht weitergetragen.
+  Gruppen     (Etappe 6, Gerhards Entscheidung 11) Median der RS-Rohwerte je
+              GICS-Unterbranche aus der eigenen Zuordnungsliste (Entscheidung
+              10, einmaliger EODHD-Abzug; der Ablauf legt sie vorher ab,
+              --zuordnung), Rang heute und vor drei und sechs Wochen, gerechnet
+              aus der Kurshistorie dieses Laufs. Ohne Zuordnungsliste "nicht
+              verfuegbar"; Aktien ohne Eintrag heissen "Branche unbekannt".
 
 TOLERANZ (Mathias: "Findet das Muster nichts, kann diese Aktie nicht
 vorgeschlagen werden. Wuerde eine Toleranzabweichung von 5% jedoch fuers
@@ -111,6 +122,7 @@ Begruendung.
 Aufruf:
   python scanner_daten.py --bauen [--grenze N] [--analysten rotation|alle|aus]
       [--konsens-ordner ORDNER] [--revisionen an|aus] [--short an|aus]
+      [--zuordnung DATEI]
   python scanner_daten.py --selbsttest
 """
 
@@ -130,12 +142,14 @@ import numpy as np
 import pandas as pd
 
 from config import CFG as ZENTRAL, mind_erreicht
+import kennzahlen_gruppen as kg
 import kennzahlen_konsens as kk
 import kennzahlen_short as ks
 
 SC = ZENTRAL["scanner"]
 TABELLE = "scanner_tabelle.parquet"
 ANALYSTEN = "scanner_analysten.parquet"
+GRUPPEN = "scanner_gruppen.json"
 STAND = "scanner_stand.json"
 ARCHIV = os.path.join(".cache", "scanner", "scanner_kurse_3j.parquet")
 NASDAQ_KOPF = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)", "Accept": "application/json"}
@@ -1115,13 +1129,13 @@ UEBERRASCHUNG_FELDER = ("quartale_mit_schaetzung", "schaetzung_geschlagen", "let
                         "letzter_bericht", "ueberraschung_stand")
 # Alles, was nur ins private Datenrepo darf (F17 und die Linie der Analystenwerte).
 PRIVATE_FELDER = (ANALYSTEN_FELDER + UEBERRASCHUNG_FELDER + ("kursziel_abst_pct",) + kk.KONSENS_FELDER
-                  + kk.TERMIN_KONSENS_FELDER + kk.REVISION_FELDER + ks.SHORT_FELDER)
+                  + kk.TERMIN_KONSENS_FELDER + kk.REVISION_FELDER + ks.SHORT_FELDER + kg.GRUPPEN_FELDER)
 
 
 def bauen(pfad_tabelle=TABELLE, pfad_stand=STAND, archiv=ARCHIV, grenze=None, analysten="rotation",
           heute=None, universum_liste=None, kurse_download=None, rs_daten=None, ratings=None, termine_listen=None,
           screener=None, kalender=None, je_aktie=None, kennzahlen=None, leise=False, pfad_analysten=ANALYSTEN,
-          konsens_pfade=None, revisionen="an", short="an"):
+          konsens_pfade=None, revisionen="an", short="an", zuordnung_pfad=None, pfad_gruppen=GRUPPEN):
     """Die ganze Nachttabelle. Alle Quellen lassen sich fuer den Selbsttest
     uebergeben; ohne Angabe wird geholt. Die Analystenwerte der Vornacht
     stehen in pfad_analysten (der Ablauf holt sie vorher aus dem privaten
@@ -1130,7 +1144,9 @@ def bauen(pfad_tabelle=TABELLE, pfad_stand=STAND, archiv=ARCHIV, grenze=None, an
     keine uebergeben (die Werte der Vornacht bleiben). revisionen: "an",
     "aus" oder im Selbsttest ein Abruf holen(ticker) -> (trend, historie).
     short: "an", "aus" oder im Selbsttest ein Abruf holen(tag) -> (Status,
-    Text) fuer die FINRA-Tagesdateien."""
+    Text) fuer die FINRA-Tagesdateien. zuordnung_pfad: die eigene
+    Zuordnungsliste der Branchen (Etappe 6), None heisst keine; pfad_gruppen:
+    wohin die Rangliste der Gruppen geht, None heisst nirgends."""
     import rs_universum
     t0 = time.time()
     heute = heute or ny_heute()
@@ -1155,6 +1171,8 @@ def bauen(pfad_tabelle=TABELLE, pfad_stand=STAND, archiv=ARCHIV, grenze=None, an
 
     # --- Kurse, Kennzahlen und Muster je Block ------------------------------
     zeilen, archiv_teile, ohne_kurse = {}, [], 0
+    # Etappe 6: je Aktie die juengsten Schlusskurse fuer die Gruppen-RS.
+    auszuege = {}
     # Welche Tage Handelstage sind, zaehlt die Kurshistorie selbst (Etappe 7).
     from collections import Counter
     tage_zaehler = Counter()
@@ -1165,6 +1183,7 @@ def bauen(pfad_tabelle=TABELLE, pfad_stand=STAND, archiv=ARCHIV, grenze=None, an
                 continue
             voll = voll.sort_values("datetime").reset_index(drop=True)
             tage_zaehler.update(pd.to_datetime(voll["datetime"].tail(40)).dt.strftime("%Y-%m-%d"))
+            auszuege[s] = kg.kurs_auszug(voll)
             ex = extrema(voll)
             d = voll.tail(int(SC["historie_tage"])).reset_index(drop=True)
             werte = kurs_werte(d, ex)
@@ -1378,6 +1397,26 @@ def bauen(pfad_tabelle=TABELLE, pfad_stand=STAND, archiv=ARCHIV, grenze=None, an
         z.update(werte_s.get(s) or leer_s)
     stand["quellen"]["short_volumen"] = {**{k: v for k, v in befund_s.items() if k != "fehlend"},
                                          "fehlend": dict(list((befund_s.get("fehlend") or {}).items())[:5])}
+
+    # --- Industry Group RS (Etappe 6) ------------------------------------------------
+    # Median der RS-Rohwerte je Gruppe, Rang heute und vor drei und sechs Wochen,
+    # aus den Kursen dieses Laufs; ohne Zuordnungsliste nicht verfuegbar.
+    try:
+        zuordnung_g, zb_g = kg.zuordnung_lesen(zuordnung_pfad)
+        werte_g, liste_g, befund_g = kg.gruppen_werte({s: auszuege[s] for s in zeilen if s in auszuege}, zuordnung_g,
+                                                      handelstag=handelstag, zuordnung_befund=zb_g)
+    except Exception as e:  # noqa  die Gruppen duerfen den Bau nie aufhalten
+        werte_g, liste_g, befund_g = {}, None, {"status": f"fehler: {type(e).__name__}: {e}"[:200]}
+    leer_g = dict(dict.fromkeys(kg.GRUPPEN_FELDER),
+                  gruppe_hinweis=befund_g.get("grund") or "die Gruppen liessen sich nicht rechnen")
+    for s, z in zeilen.items():
+        z.update(werte_g.get(s) or leer_g)
+    stand["quellen"]["gruppen_rs"] = befund_g
+    if pfad_gruppen:
+        # Immer neu schreiben, auch ohne Werte: nie eine Rangliste der Vornacht.
+        with open(pfad_gruppen, "w", encoding="utf-8") as f:
+            json.dump({"gebaut_am": stand["gebaut_am"], "status": befund_g.get("status"),
+                       "grund": befund_g.get("grund"), **(liste_g or {"gruppen": []})}, f, ensure_ascii=False, indent=1)
 
     # --- Schreiben ---------------------------------------------------------------
     for z in zeilen.values():
@@ -1673,6 +1712,13 @@ def selbsttest() -> int:
                                     "eps_analysten": 5, "umsatz_avg": 100.0, "umsatz_vorjahr": 80.0,
                                     "umsatz_analysten": 4, "waehrung": wae, "naechster_termin": "2026-10-20"}) + "\n")
         abrufe_rev = []
+        # Etappe 6: eine Zuordnungsliste fuer AAA und BBB, CCC fehlt darin
+        pfad_z = os.path.join(tmp, "branchen.json")
+        with open(pfad_z, "w", encoding="utf-8") as f:
+            json.dump({"stand": "2026-09-16", "quelle": "Selbsttest",
+                       "titel": {"AAA": {"typ": "Common Stock", "gics_unterbranche": "Application Software"},
+                                 "BBB": {"typ": "Common Stock", "gics_unterbranche": "Regional Banks"}}}, f)
+        pfad_g = os.path.join(tmp, "g.json")
         # Etappe 7: FINRA-Tagesdateien der letzten 20 Handelstage der Kunstreihen
         tage_k = [d.strftime("%Y-%m-%d") for d in pd.bdate_range("2023-06-01", periods=800)[-20:]]
         abrufe_finra = []
@@ -1708,7 +1754,8 @@ def selbsttest() -> int:
                                                                     "termin_eps_vorjahr": -0.35,
                                                                     "termin_vorjahr_datum": "2025-09-04"})},
                    je_aktie=je, kennzahlen=pd.DataFrame(), leise=True,
-                   pfad_analysten=pfad_a, konsens_pfade=[pfad_k], revisionen=rev, short=finra)
+                   pfad_analysten=pfad_a, konsens_pfade=[pfad_k], revisionen=rev, short=finra,
+                   zuordnung_pfad=pfad_z, pfad_gruppen=pfad_g)
         t = pd.read_parquet(os.path.join(tmp, "t.parquet"))
         a = pd.read_parquet(pfad_a)
         p("Ganzer Lauf: drei Zeilen, Stand geschrieben", len(t) == 3 and st["zeilen"] == 3)
@@ -1752,7 +1799,7 @@ def selbsttest() -> int:
                     universum_liste=[{"symbol": s, "name": s, "boerse": "Nasdaq"} for s in kunst],
                     kurse_download=lambda teil: {s: kunst[s] for s in teil if s in kunst},
                     rs_daten={}, ratings={}, termine_listen={}, screener={}, kalender={}, kennzahlen=pd.DataFrame(),
-                    leise=True, pfad_analysten=pfad_a, short=lambda tag: (404, ""))
+                    leise=True, pfad_analysten=pfad_a, short=lambda tag: (404, ""), pfad_gruppen=pfad_g)
         a2 = pd.read_parquet(pfad_a)
         p("Zweite Nacht ohne Abruf behaelt die Analysten der ersten",
           a2[a2["ticker"] == "AAA"].iloc[0]["analysten_anzahl"] == 4 and st2["quellen"]["analysten"]["status"] == "aus")
@@ -1772,6 +1819,21 @@ def selbsttest() -> int:
           and st2["quellen"]["short_volumen"]["status"] != "ok", str(a2_aaa["short_hinweis"]))
         p("Zweite Nacht: nicht mehr in der Wochenliste, keine Revisionen mehr",
           pd.isna(a2_aaa["rev_stand"]) and st2["quellen"]["revisionen"]["status"] == "aus")
+        # Etappe 6: Industry Group RS
+        p("Gruppen-RS: steigende Aktie Rang 1, fallende Rang 2, Rang vor drei und sechs Wochen, eigene Datei",
+          a_aaa["gruppe"] == "Application Software" and a_aaa["gruppe_rang"] == 1 and a_aaa["gruppe_rang_3w"] == 1
+          and a_aaa["gruppe_rang_6w"] == 1 and a_bbb["gruppe_rang"] == 2 and a_aaa["gruppen_zahl"] == 2
+          and "gruppe" not in t.columns and st["quellen"]["gruppen_rs"]["status"] == "ok",
+          f"{a_aaa['gruppe']} {a_aaa['gruppe_rang']}, {a_bbb['gruppe']} {a_bbb['gruppe_rang']}, {st['quellen']['gruppen_rs']}")
+        p("Gruppen-RS: Aktie ohne Eintrag heisst Branche unbekannt und nennt die Liste",
+          a_ccc["gruppe"] == kg.UNBEKANNT and pd.isna(a_ccc["gruppe_rang"])
+          and a_ccc["gruppe_hinweis"] == "die Aktie steht nicht in der Zuordnungsliste vom 16.09.2026", str(a_ccc["gruppe_hinweis"]))
+        g2 = json.load(open(pfad_g, encoding="utf-8"))
+        p("Gruppen-RS: zweite Nacht ohne Zuordnungsliste nicht verfuegbar, Rangliste leer statt der Vornacht",
+          pd.isna(a2_aaa["gruppe_rang"]) and a2_aaa["gruppe_hinweis"] == "die eigene Zuordnungsliste der Branchen liegt "
+                                                                        "noch nicht vor"
+          and st2["quellen"]["gruppen_rs"]["status"] == "nicht verfuegbar" and g2["gruppen"] == []
+          and g2["status"] == "nicht verfuegbar", f"{a2_aaa['gruppe_hinweis']}, {g2}")
 
     quelle = open(__file__, encoding="utf-8").read()
     p("Keine Vernetzung: kein Sendecode, keine Alarmdateien",
@@ -1794,6 +1856,8 @@ def main():
                     help="Revisionen und Einstufungen fuer die Wochenliste bei Yahoo holen")
     ap.add_argument("--short", choices=("an", "aus"), default="an",
                     help="Short-Volumen-Anteil aus den FINRA-Tagesdateien rechnen")
+    ap.add_argument("--zuordnung", default=None,
+                    help="die eigene Zuordnungsliste der Branchen (Etappe 6); ohne sie keine Gruppen-RS")
     args = ap.parse_args()
     if args.selbsttest:
         return selbsttest()
@@ -1806,7 +1870,7 @@ def main():
             pfade = sorted(glob.glob(os.path.join(args.konsens_ordner, "*.jsonl.gz")),
                            key=os.path.basename)[-int(kk.KK["schnappschuesse"]):]
         stand = bauen(grenze=args.grenze or None, analysten=args.analysten, konsens_pfade=pfade,
-                      revisionen=args.revisionen, short=args.short)
+                      revisionen=args.revisionen, short=args.short, zuordnung_pfad=args.zuordnung)
         return 0 if stand.get("zeilen") else 1
     ap.print_help()
     return 0

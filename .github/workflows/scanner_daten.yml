@@ -18,8 +18,9 @@ name: Scanner-Daten bauen
 #     Fundament-Release bleibt, von dem ibd_ratings.py liest);
 #   scanner_stand.json zusaetzlich ins Repo, daran erkennt scanner_noetig.py
 #     den letzten Bau;
-#   scanner_analysten.parquet und das Kursarchiv der letzten drei Jahre als
-#     Release-Anhang "scanner-daten" im PRIVATEN Datenrepo heliot-daten
+#   scanner_analysten.parquet, die Rangliste der Industry Group RS
+#     (scanner_gruppen.json, Etappe 6) und das Kursarchiv der letzten drei
+#     Jahre als Release-Anhang "scanner-daten" im PRIVATEN Datenrepo heliot-daten
 #     (Secret DATEN_TOKEN, wie beim eingefrorenen Konsens). Fehlt das Token,
 #     wird trotzdem gebaut und veroeffentlicht, nur ohne diese zwei Dateien.
 #     Auch dort eine Vorabversion: Ohne die Kennzeichnung wurde das Release
@@ -161,6 +162,30 @@ jobs:
           echo "Einfrier-Laeufe geholt: $GEHOLT von $ANZAHL"
           ls -l .cache/konsens
 
+      # ETAPPE 6 (Gerhard, 13.09.2026, Entscheidungen 10 und 11): die eigene
+      # Zuordnungsliste der Branchen aus dem privaten Datenrepo, die juengste
+      # Datei im Ordner zuordnung. Gibt es noch keine, rechnet der Bau keine
+      # Gruppen-RS und sagt es ("nicht verfuegbar"). Die Liste stammt aus dem
+      # EODHD-Abzug: Das Log nennt nur den Dateinamen, nie ihren Inhalt.
+      - name: Branchen-Zuordnung holen
+        if: steps.pruefung.outputs.noetig == 'ja' && steps.token.outputs.da == 'ja'
+        env:
+          GH_TOKEN: ${{ secrets.DATEN_TOKEN }}
+        run: |
+          mkdir -p .cache/zuordnung
+          NAME=$(gh api repos/mat-schmuck/heliot-daten/contents/zuordnung --jq '[.[] | select(.type == "file") | .name | select(test("^branchen_[0-9]{4}-[0-9]{2}-[0-9]{2}[.]json$"))] | sort | reverse | .[0] // empty' 2>/dev/null || true)
+          if [ -z "$NAME" ]; then
+            echo "Noch keine Zuordnungsliste im Datenrepo; die Gruppen-RS bleibt nicht verfuegbar."
+            exit 0
+          fi
+          if gh api -H "Accept: application/vnd.github.raw" "repos/mat-schmuck/heliot-daten/contents/zuordnung/$NAME" > .cache/zuordnung/branchen.json; then
+            echo "Zuordnungsliste geholt: $NAME"
+            ls -l .cache/zuordnung
+          else
+            rm -f .cache/zuordnung/branchen.json
+            echo "Die Zuordnungsliste $NAME liess sich nicht holen; die Gruppen-RS bleibt nicht verfuegbar."
+          fi
+
       - name: Scanner-Tabelle bauen
         id: bau
         if: steps.pruefung.outputs.noetig == 'ja'
@@ -174,19 +199,21 @@ jobs:
           esac
           # Ohne geholten Konsens (kein Token) bleibt der Ordner leer; der Bau
           # behaelt dann die Werte der Vornacht.
-          mkdir -p .cache/konsens
+          mkdir -p .cache/konsens .cache/zuordnung
+          # Ohne geholte Zuordnungsliste zeigt der Pfad ins Leere; der Bau sagt
+          # dann, dass die Gruppen-RS nicht verfuegbar ist.
           if [ -n "$GRENZE" ]; then
             case "$GRENZE" in
               *[!0-9]*) echo "Die Grenze muss eine ganze Zahl sein: $GRENZE"; exit 1 ;;
             esac
-            python scanner_daten.py --bauen --analysten "${ANALYSTEN:-rotation}" --grenze "$GRENZE" --konsens-ordner .cache/konsens
+            python scanner_daten.py --bauen --analysten "${ANALYSTEN:-rotation}" --grenze "$GRENZE" --konsens-ordner .cache/konsens --zuordnung .cache/zuordnung/branchen.json
             echo "Probelauf mit $GRENZE Aktien: wird nicht veroeffentlicht."
             echo "veroeffentlichen=nein" >> "$GITHUB_OUTPUT"
           else
-            python scanner_daten.py --bauen --analysten "${ANALYSTEN:-rotation}" --konsens-ordner .cache/konsens
+            python scanner_daten.py --bauen --analysten "${ANALYSTEN:-rotation}" --konsens-ordner .cache/konsens --zuordnung .cache/zuordnung/branchen.json
             echo "veroeffentlichen=ja" >> "$GITHUB_OUTPUT"
           fi
-          ls -l scanner_tabelle.parquet scanner_analysten.parquet scanner_stand.json .cache/scanner/scanner_kurse_3j.parquet
+          ls -l scanner_tabelle.parquet scanner_analysten.parquet scanner_gruppen.json scanner_stand.json .cache/scanner/scanner_kurse_3j.parquet
 
       - name: Tabelle als Release-Anhang veroeffentlichen
         if: steps.bau.outputs.veroeffentlichen == 'ja'
@@ -211,7 +238,7 @@ jobs:
               --notes "Analystenwerte je Aktie und Tageskurse der letzten drei Jahre fuer den Scanner. Wird jede Nacht ersetzt."
           fi
           gh release upload scanner-daten --repo mat-schmuck/heliot-daten \
-            scanner_analysten.parquet .cache/scanner/scanner_kurse_3j.parquet --clobber
+            scanner_analysten.parquet scanner_gruppen.json .cache/scanner/scanner_kurse_3j.parquet --clobber
 
       # KONFLIKTFEST IN DREI ANLAEUFEN, dasselbe Muster wie in
       # nachschlag_daten.yml. Erst nach dem Veroeffentlichen: Scheitert das,

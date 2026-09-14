@@ -968,6 +968,21 @@ CFG = {
         "abruf_zeitlimit_s": 60,
     },
 
+    # --- Industry Group RS (Etappe 6, Gerhard, 13.09.2026) -------------------
+    # Entscheidung 11: "Median der RS-Rohwerte je Gruppe, Rang heute und vor 3
+    # und 6 Wochen." Gruppen aus der eigenen Zuordnungsliste (Entscheidung 10,
+    # einmaliger EODHD-Abzug). Rechnung in kennzahlen_gruppen.py; die
+    # Mindestabdeckung ist die des RS-Universums.
+    "gruppen_rs": {
+        # Ebene der Gruppen: gics_sektor, gics_gruppe, gics_branche oder
+        # gics_unterbranche. Die Recherche vom 13.09.2026 (Gruppe E, Punkt 6)
+        # hat Gerhard die Unterbranche vorgelegt, rund 160 Gruppen.
+        "ebene": "gics_unterbranche",
+        # Rang vor 3 und vor 6 Wochen in Handelstagen, wie bei der
+        # Sektor-Rangliste und bei IBD.
+        "rang_zurueck_tage": [15, 30],
+    },
+
     # --- Scanner der Heliot-App (Mathias, 14.09.2026) ------------------------
     # Nachttabelle scanner_daten.py, Reiter "Scanner" der App. KEINE
     # Vernetzung mit Waechter, Alarmen oder der Scanner-Mappe.
@@ -1195,6 +1210,12 @@ def pruefe_config():
     assert kk["rev_abfragen_je_sekunde"] > 0 and kk["rev_warten_s"] >= 0 and kk["rev_notbremse"] >= 1
     sd = CFG["short_daten"]
     assert isinstance(sd["fenster_tage"], int) and sd["fenster_tage"] >= 1 and sd["abruf_zeitlimit_s"] > 0
+    gr = CFG["gruppen_rs"]
+    assert gr["ebene"] in ("gics_sektor", "gics_gruppe", "gics_branche", "gics_unterbranche"), \
+        "Gruppen-RS: unbekannte GICS-Ebene"
+    assert (len(gr["rang_zurueck_tage"]) == 2 and all(isinstance(k, int) and k > 0 for k in gr["rang_zurueck_tage"])
+            and gr["rang_zurueck_tage"][0] < gr["rang_zurueck_tage"][1]), \
+        "Gruppen-RS: genau zwei Rueckblicke in Handelstagen, aufsteigend (drei und sechs Wochen)"
     n = CFG["ibd_ratings"]["noten"]
     assert n["A"] > n["B"] > n["C"] > n["D"] > 0, "IBD-Noten: Grenzen muessen fallen (A ueber B ueber C ueber D)"
     assert CFG["gap_and_go"]["einstieg_grenze"] <= CFG["betrieb"]["nachlauf_grenze"], \

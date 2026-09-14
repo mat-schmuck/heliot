@@ -173,7 +173,9 @@ def block_b():
                     # Etappe 5, Konsens (Gerhard, 13.09.2026)
                     "kennzahlen_konsens",
                     # Etappe 7, Short-Daten (Gerhard, 13.09.2026)
-                    "kennzahlen_short"]
+                    "kennzahlen_short",
+                    # Etappe 6, Industry Group RS und Zuordnungsliste (Gerhard, 13.09.2026)
+                    "kennzahlen_gruppen", "zuordnung_bauen"]
     for name in mit_schalter:
         r = subprocess.run([sys.executable, f"{name}.py", "--selbsttest"],
                            capture_output=True, text=True, cwd=WURZEL,
@@ -2379,6 +2381,28 @@ def block_h():
     else:
         pruefe("H", "Short-Volumen in der Nachttabelle", True,
                "scanner_stand.json stammt noch vom Stand vor Etappe 7; der naechste Bau legt es an")
+    # ETAPPE 6 (Gerhard, 13.09.2026, Entscheidungen 10 und 11): Industry Group
+    # RS. Ohne Zuordnungsliste ist "nicht verfuegbar" der richtige Zustand; mit
+    # ihr muessen alle drei Raenge da sein und die meisten Aktien eine Gruppe
+    # tragen.
+    if "gruppen_rs" in _q_h:
+        _g_h = _q_h.get("gruppen_rs") or {}
+        if _g_h.get("zuordnung_stand"):
+            _anteil_g = (_g_h.get("mit_gruppe") or 0) / max(1, _g_h.get("aktien") or 0)
+            pruefe("H", "Nachttabelle: Industry Group RS mit Rang heute und vor drei und sechs Wochen, Stichtag gleich "
+                        "Handelstag, mindestens drei Viertel der Aktien mit Gruppe",
+                   _g_h.get("status") == "ok" and (_g_h.get("stichtage") or {}).get("heute") == _sst_h.get("handelstag")
+                   and _anteil_g >= 0.75,
+                   f"{_g_h.get('status')}, Stichtage {_g_h.get('stichtage')}, Handelstag {_sst_h.get('handelstag')}, "
+                   f"{_g_h.get('mit_gruppe')} von {_g_h.get('aktien')} mit Gruppe, {_g_h.get('gruppen_heute')} Gruppen, "
+                   f"Liste vom {_g_h.get('zuordnung_stand')}")
+        else:
+            pruefe("H", "Nachttabelle: ohne Zuordnungsliste ist die Industry Group RS ehrlich nicht verfuegbar",
+                   str(_g_h.get("status") or "").startswith("nicht verfuegbar") and bool(_g_h.get("grund")),
+                   f"{_g_h.get('status')}, {_g_h.get('grund')}")
+    else:
+        pruefe("H", "Industry Group RS in der Nachttabelle", True,
+               "scanner_stand.json stammt noch vom Stand vor Etappe 6; der naechste Bau legt es an")
 
     # positionen.json DARF fehlen, solange keine Position offen ist —
     # die Datei entsteht erst beim ersten Einstieg. Geprueft wird
@@ -2468,6 +2492,20 @@ def block_h():
                and "DATEN_TOKEN" in str((_konsens_schritt.get("env") or {}).get("GH_TOKEN"))
                and "steps.token.outputs.da == 'ja'" in str(_konsens_schritt.get("if"))
                and "--konsens-ordner" in (_bau_schritt.get("run") or "") and "konsens" not in _oeffentlich)
+        # ETAPPE 6: Die Zuordnungsliste kommt nur aus dem privaten Datenrepo, die
+        # Rangliste der Gruppen geht nur dorthin.
+        _zuordnung_schritt = next((s for s in _d["jobs"]["bauen"]["steps"]
+                                   if s.get("name") == "Branchen-Zuordnung holen"), {})
+        _privat_schritt = next((s.get("run") or "" for s in _d["jobs"]["bauen"]["steps"]
+                                if s.get("name") == "Analystenwerte und Kursarchiv ins private Datenrepo"), "")
+        pruefe("H", "Scanner-Daten: Zuordnungsliste nur aus dem privaten Datenrepo, Gruppen-Rangliste nie im "
+                    "oeffentlichen Release",
+               "heliot-daten/contents/zuordnung" in (_zuordnung_schritt.get("run") or "")
+               and "DATEN_TOKEN" in str((_zuordnung_schritt.get("env") or {}).get("GH_TOKEN"))
+               and "steps.token.outputs.da == 'ja'" in str(_zuordnung_schritt.get("if"))
+               and "--zuordnung" in (_bau_schritt.get("run") or "")
+               and "scanner_gruppen" not in _oeffentlich and "zuordnung" not in _oeffentlich
+               and "scanner_gruppen.json" in _privat_schritt)
         # Beide Releases sind Vorabversionen und nie "latest": ibd_ratings.py
         # liest vom latest-Release des oeffentlichen Repos, und im Datenrepo
         # verdraengte das Scanner-Release beim ersten Bau am 14.09.2026 den
@@ -2478,9 +2516,24 @@ def block_h():
                f"{len(_anlegen)} Anlage-Zeilen")
     except Exception as e:
         pruefe("H", "Scanner-Daten: Ablauf lesbar", False, f"{type(e).__name__}: {e}")
+    # ETAPPE 6 (Gerhard, 13.09.2026, Entscheidung 10): Die Zuordnungsliste
+    # entsteht nur von Hand aus dem schon abgelegten Vollabzug, ohne
+    # EODHD-Schluessel und ohne Abruf, und nur im privaten Datenrepo.
+    try:
+        _zw_text = (_wf / "zuordnung.yml").read_text(encoding="utf-8")
+        _zw = yaml.safe_load(_zw_text)
+        _zw_an = _zw.get("on") or _zw.get(True) or {}
+        pruefe("H", "Branchen-Zuordnung: nur von Hand, nur mit dem Datenrepo-Token, ohne EODHD-Schluessel, Ablage im "
+                    "privaten Datenrepo",
+               list(_zw_an.keys()) == ["workflow_dispatch"] and "EODHD_API_KEY" not in _zw_text
+               and "secrets.DATEN_TOKEN" in _zw_text and "repository: mat-schmuck/heliot-daten" in _zw_text
+               and "git add -A -- zuordnung" in _zw_text and "gh release upload" not in _zw_text,
+               f"Ausloeser {list(_zw_an.keys())}")
+    except Exception as e:
+        pruefe("H", "Branchen-Zuordnung: Ablauf lesbar", False, f"{type(e).__name__}: {e}")
     _vernetzt = []
     for _modul in ("scanner_daten.py", "scanner_ansicht.py", "scanner_noetig.py", "kennzahlen_konsens.py",
-                   "kennzahlen_short.py"):
+                   "kennzahlen_short.py", "kennzahlen_gruppen.py", "zuordnung_bauen.py"):
         _code = "\n".join(z for z in (WURZEL / _modul).read_text(encoding="utf-8").splitlines()
                           if not z.lstrip().startswith("#"))
         for _wort in ("NTFY_" + "TOPIC", "ntfy." + "sh", "requests." + "post(", "traderfox_" + "alarm",
@@ -2494,7 +2547,7 @@ def block_h():
            "pyarrow" in _req and "odfpy" in _req)
     _ign = (WURZEL / ".gitignore").read_text(encoding="utf-8")
     pruefe("H", "Scanner-Tabellen nie im Repo, Analystenwerte nur mit Lese-Token aus dem privaten Datenrepo",
-           "scanner_analysten.parquet" in _ign and "scanner_tabelle.parquet" in _ign
+           "scanner_analysten.parquet" in _ign and "scanner_tabelle.parquet" in _ign and "scanner_gruppen.json" in _ign
            and '_secret("DATEN_LESE_TOKEN")' in _app_code and "heliot-daten" in _app_code)
 
 
