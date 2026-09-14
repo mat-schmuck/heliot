@@ -914,6 +914,315 @@ def kurs_am(ticker, stichtag, holen=None):
     return werte[-1] if werte else None
 
 
+# ---------------------------------------------------------------------------
+# Etappe 5: Analysten und Konsens (Entscheidung 9)
+# ---------------------------------------------------------------------------
+# Gerhard, 13.09.2026: Forward-KGV und erwartetes Wachstum aus dem
+# eingefrorenen Yahoo-Konsens, EPS-Konsens aus dem Nasdaq-Kalender,
+# Revisionen und Einstufungen nur fuer die Wochenliste; reine Anzeige.
+# Gerechnet in kennzahlen_konsens.py; die Werte liegen im privaten Datenrepo
+# (scanner_analysten.parquet) und kommen nur ueber die App mit dem Lese-Token.
+
+AKTION_TEXT = {"up": "hochgestuft", "down": "herabgestuft", "init": "Erstbewertung", "main": "Einstufung bestätigt",
+               "reit": "Einstufung bekräftigt"}
+MONATE_EN = {"jan": 1, "feb": 2, "mar": 3, "apr": 4, "may": 5, "jun": 6, "jul": 7, "aug": 8, "sep": 9, "oct": 10,
+             "nov": 11, "dec": 12}
+PERIODE_BEZUG = {"0q": "dem Vorjahresquartal", "1q": "dem Vorjahresquartal", "0y": "dem Vorjahr",
+                 "1y": "dem Geschäftsjahr davor"}
+
+
+def _fehlt(x):
+    """None, NaN, NA und leere Texte gelten als nicht vorhanden."""
+    if x is None:
+        return True
+    if type(x).__name__ in ("NAType", "NaTType"):
+        return True
+    if isinstance(x, float) and x != x:
+        return True
+    return isinstance(x, str) and not x.strip()
+
+
+def analysten_zeile(tabelle, ticker):
+    """Die Zeile einer Aktie aus scanner_analysten.parquet als dict mit None
+    statt NaN; None, wenn die Tabelle fehlt oder die Aktie nicht darin steht."""
+    if tabelle is None:
+        return None
+    try:
+        treffer = tabelle[tabelle["ticker"].astype(str).str.upper() == str(ticker or "").strip().upper()]
+    except Exception:  # noqa
+        return None
+    if len(treffer) == 0:
+        return None
+    raus = {}
+    for k, v in treffer.iloc[0].to_dict().items():
+        if _fehlt(v):
+            raus[k] = None
+        else:
+            raus[k] = v.item() if hasattr(v, "item") and not isinstance(v, str) else v
+    return raus
+
+
+def _wien_zeit(iso):
+    """'2026-09-14T19:30:40Z' wird '14.09.2026 um 21:30 Uhr Wiener Zeit'."""
+    try:
+        from datetime import timezone
+        from zoneinfo import ZoneInfo
+        zeit = datetime.fromisoformat(str(iso).replace("Z", "+00:00"))
+        if zeit.tzinfo is None:
+            zeit = zeit.replace(tzinfo=timezone.utc)
+        w = zeit.astimezone(ZoneInfo("Europe/Vienna"))
+        return f"{w:%d.%m.%Y} um {w:%H:%M} Uhr Wiener Zeit"
+    except Exception:  # noqa
+        return datum_text(iso)
+
+
+def quartal_text(q):
+    """Nasdaqs 'Jun/2026' wird 'Juni 2026'."""
+    m = re.fullmatch(r"([A-Za-z]{3})/(\d{4})", str(q or "").strip())
+    if m and m.group(1).lower() in MONATE_EN:
+        return f"{MONATE[MONATE_EN[m.group(1).lower()] - 1]} {m.group(2)}"
+    return str(q) if q else "unbekannt"
+
+
+def _geld(x, waehrung=None, stellen=2):
+    if x is None:
+        return "unbekannt"
+    return f"{zahl(x, stellen)} {'Dollar' if waehrung in (None, 'USD') else waehrung}"
+
+
+def _stueck(n, einzahl, mehrzahl):
+    return f"1 {einzahl}" if int(n) == 1 else f"{int(n)} {mehrzahl}"
+
+
+def _n_analysten(n):
+    return "Zahl der Analysten unbekannt" if n is None else _stueck(n, "Analyst", "Analysten")
+
+
+def _n_schaetzungen(n):
+    if n is None:
+        return "einer unbekannten Zahl von Schätzungen"
+    return "einer Schätzung" if int(n) == 1 else f"{int(n)} Schätzungen"
+
+
+def _periode_kopf(a, k):
+    """Die Periode nach ihrem Ende: 'Quartal bis 31.08.2026'. Yahoos 'Current
+    Qtr.' ist das Quartal der naechsten Meldung und kann schon vorbei sein
+    (AutoZone am 14.09.2026: Quartal bis 31.08.2026, Meldung am 22.09.2026);
+    'laufendes Quartal' waere dann falsch. Ohne Ende gilt Yahoos Name."""
+    import kennzahlen_konsens as kk
+    ende = a.get(f"konsens_ende_{k}")
+    if ende:
+        return f"{'Quartal' if k.endswith('q') else 'Geschäftsjahr'} bis {datum_text(ende)}"
+    return kk.PERIODE_NAME[k] + " laut Yahoo"
+
+
+def _konsens_perioden_saetze(a):
+    import kennzahlen_konsens as kk
+    wae = a.get("konsens_waehrung")
+    s = []
+    for _y, k in kk.PERIODEN:
+        eps, ums = a.get(f"konsens_eps_{k}"), a.get(f"konsens_umsatz_{k}")
+        if eps is None and ums is None:
+            continue
+        kopf = _periode_kopf(a, k)
+        bezug = PERIODE_BEZUG[k]
+        if eps is not None:
+            satz = (f"{kopf}: Gewinn je Aktie erwartet {_geld(eps, wae)}")
+            if a.get(f"konsens_eps_tief_{k}") is not None and a.get(f"konsens_eps_hoch_{k}") is not None:
+                satz += f", Spanne {zahl(a[f'konsens_eps_tief_{k}'], 2)} bis {_geld(a[f'konsens_eps_hoch_{k}'], wae)}"
+            satz += f", {_n_analysten(a.get(f'konsens_eps_analysten_{k}'))}"
+            vj, pct = a.get(f"konsens_eps_vj_{k}"), a.get(f"konsens_eps_wachstum_{k}_pct")
+            if vj is None:
+                satz += "; der Vergleichswert fehlt im Einfrier-Lauf"
+            elif pct is None:
+                satz += f"; gegenüber {bezug} {_geld(vj, wae)} kein Prozentwert, der Vergleichswert ist null oder negativ"
+            else:
+                satz += f"; gegenüber {bezug} {_geld(vj, wae)} {prozent(pct, 1)}"
+            s.append(satz + ".")
+        if ums is not None:
+            satz = f"{kopf}: Umsatz erwartet {_betrag(ums, 'Dollar' if wae in (None, 'USD') else wae)}"
+            satz += f", {_n_analysten(a.get(f'konsens_umsatz_analysten_{k}'))}"
+            vj, pct = a.get(f"konsens_umsatz_vj_{k}"), a.get(f"konsens_umsatz_wachstum_{k}_pct")
+            if vj is None:
+                satz += "; der Vergleichswert fehlt im Einfrier-Lauf"
+            elif pct is None:
+                satz += f"; gegenüber {bezug} kein Prozentwert, der Vergleichswert ist null"
+            else:
+                satz += (f"; gegenüber {bezug} {_betrag(vj, 'Dollar' if wae in (None, 'USD') else wae)} "
+                         f"{prozent(pct, 1)}")
+            s.append(satz + ".")
+    return s
+
+
+def _kgv_satz(a):
+    wae = a.get("konsens_waehrung")
+    if a.get("konsens_fwd_kgv") is not None:
+        satz = (f"Forward-KGV {zahl(a['konsens_fwd_kgv'], 1)} mit dem Schlusskurs der Nacht und dem erwarteten Gewinn "
+                f"je Aktie des nächsten Geschäftsjahres"
+                + (f" bis {datum_text(a['konsens_ende_1y'])}" if a.get("konsens_ende_1y") else ""))
+        if a.get("konsens_kgv_0y") is not None:
+            satz += (f"; KGV {zahl(a['konsens_kgv_0y'], 1)} auf das Geschäftsjahr davor"
+                     + (f" bis {datum_text(a['konsens_ende_0y'])}" if a.get("konsens_ende_0y") else ""))
+        return satz + "."
+    eps = a.get("konsens_eps_1y")
+    if wae is None:
+        return "Kein Forward-KGV: Yahoo nennt keine Währung des Konsens."
+    if wae != "USD":
+        return f"Kein Forward-KGV: Der Konsens steht in {wae}, der Kurs in Dollar."
+    if eps is None:
+        return "Kein Forward-KGV: Für das nächste Geschäftsjahr gibt es keinen Gewinnkonsens."
+    if eps <= 0:
+        return "Kein Forward-KGV: Der erwartete Gewinn je Aktie des nächsten Geschäftsjahres ist null oder negativ."
+    return "Kein Forward-KGV: In der Nachttabelle fehlt der Schlusskurs."
+
+
+def _stufe_satz(e):
+    a = str(e.get("aktion") or "").lower()
+    von, zu = e.get("von"), e.get("zu")
+    if a in ("up", "down") and von and zu:
+        text = f"{AKTION_TEXT[a]} von {von} auf {zu}"
+    elif a == "init":
+        text = f"Erstbewertung mit {zu}" if zu else "Erstbewertung"
+    else:
+        text = AKTION_TEXT.get(a, "Einstufung") + (f", {zu}" if zu else "")
+    ziel, vorher = e.get("ziel"), e.get("ziel_vorher")
+    za = str(e.get("ziel_aktion") or "").lower()
+    if ziel:
+        if za == "raises" and vorher:
+            text += f"; Kursziel angehoben von {zahl(vorher, 2)} auf {zahl(ziel, 2)} Dollar"
+        elif za == "lowers" and vorher:
+            text += f"; Kursziel gesenkt von {zahl(vorher, 2)} auf {zahl(ziel, 2)} Dollar"
+        elif za == "maintains":
+            text += f"; Kursziel unverändert bei {zahl(ziel, 2)} Dollar"
+        else:
+            text += f"; Kursziel {zahl(ziel, 2)} Dollar"
+    return f"{datum_text(e.get('datum'))}, {e.get('firma') or 'ohne Namen'}: {text}."
+
+
+def _revisionen_saetze(a):
+    import kennzahlen_konsens as kk
+    wae = a.get("konsens_waehrung")
+    s = [f"Revisionen und Einstufungen laut Yahoo, abgefragt am {datum_text(a.get('rev_stand'))}."]
+    for _y, k in kk.PERIODEN:
+        zaehler = [a.get(f"rev_{x}_{k}") for x in ("hoch_7t", "runter_7t", "hoch_30t", "runter_30t")]
+        jetzt = a.get(f"rev_eps_jetzt_{k}")
+        if all(x is None for x in zaehler) and jetzt is None:
+            continue
+        teile = []
+        if any(x is not None for x in zaehler):
+            h7, r7, h30, r30 = (0 if x is None else int(x) for x in zaehler)
+            teile.append(f"in 7 Tagen {_stueck(h7, 'Anhebung', 'Anhebungen')} und "
+                         f"{_stueck(r7, 'Senkung', 'Senkungen')} einzelner Schätzungen, in 30 Tagen "
+                         f"{_stueck(h30, 'Anhebung', 'Anhebungen')} und {_stueck(r30, 'Senkung', 'Senkungen')}")
+        if jetzt is not None:
+            satz = f"Konsens heute {_geld(jetzt, wae)}"
+            for tage in ("30", "90"):
+                vor = a.get(f"rev_eps_{tage}t_{k}")
+                if vor is not None:
+                    pct = (jetzt / vor - 1.0) * 100.0 if vor > 0 else None
+                    satz += f", vor {tage} Tagen {_geld(vor, wae)}" + (f", {prozent(pct, 1)} seither" if pct is not None else "")
+            teile.append(satz)
+        s.append(f"{_periode_kopf(a, k)}: " + "; ".join(teile) + ".")
+    for n in kk.STUFEN_FENSTER:
+        werte = [a.get(f"stufen_{x}_{n}t") for x in ("hoch", "runter", "neu", "ziel_rauf", "ziel_runter")]
+        if any(w is None for w in werte):
+            continue
+        hoch, runter, neu, rauf, runter_z = (int(w) for w in werte)
+        s.append(f"In {n} Tagen {_stueck(hoch, 'Heraufstufung', 'Heraufstufungen')}, "
+                 f"{_stueck(runter, 'Herabstufung', 'Herabstufungen')} und "
+                 f"{_stueck(neu, 'Erstbewertung', 'Erstbewertungen')}; "
+                 f"Kursziel {rauf} mal angehoben und {runter_z} mal gesenkt.")
+    try:
+        liste = json.loads(a.get("stufen_liste") or "[]")
+    except ValueError:
+        liste = []
+    if liste:
+        s.append(f"Jüngste Einstufungen der letzten {max(kk.STUFEN_FENSTER)} Tage:")
+        s.extend(_stufe_satz(e) for e in liste)
+    elif a.get("stufen_liste") is not None:
+        s.append(f"Keine Einstufungen in den letzten {max(kk.STUFEN_FENSTER)} Tagen.")
+    return s
+
+
+def konsens_saetze(a, in_wochenliste=False, grund=None):
+    """Kapitel 'Analysten und Konsens'. a: die Zeile der Aktie aus
+    scanner_analysten.parquet (analysten_zeile); grund: warum die
+    Analystendaten fehlen, None heisst nicht uebergeben."""
+    if a is None:
+        if grund is None:
+            return ["Analysten und Konsens liegen im privaten Datenrepo; sie stehen nur in der App mit dem "
+                    "Lese-Token DATEN_LESE_TOKEN."]
+        if grund:
+            return [f"Analystendaten nicht geladen: {grund}. Sie liegen im privaten Datenrepo; die App braucht dafür "
+                    "den Lese-Token DATEN_LESE_TOKEN in den Streamlit-Secrets."]
+        return ["Für diese Aktie stehen in der Nachttabelle des Scanners keine Analystendaten."]
+    s = []
+    # Eingefrorener Yahoo-Konsens
+    if a.get("konsens_stand"):
+        wae = a.get("konsens_waehrung")
+        s.append(f"Eingefrorener Konsens von Yahoo, Stand {_wien_zeit(a['konsens_stand'])}"
+                 + (f", Beträge in {wae}" if wae and wae != "USD" else "") + ".")
+        s.append(_kgv_satz(a))
+        s.extend(_konsens_perioden_saetze(a))
+        if a.get("konsens_termin"):
+            s.append(f"Nächster Termin laut Yahoo {datum_text(a['konsens_termin'])}.")
+    else:
+        s.append("Kein eingefrorener Analystenkonsens von Yahoo für diese Aktie.")
+    # Nasdaq-Kalender
+    if a.get("termin_konsens_datum"):
+        satz = (f"Laut Nasdaq-Kalender meldet die Firma am {datum_text(a['termin_konsens_datum'])}"
+                + (f" das Quartal bis {quartal_text(a['termin_quartal'])}" if a.get("termin_quartal") else ""))
+        if a.get("termin_eps_konsens") is not None:
+            satz += (f"; erwartet {_geld(a['termin_eps_konsens'])} je Aktie aus "
+                     f"{_n_schaetzungen(a.get('termin_eps_schaetzungen'))}")
+        else:
+            satz += "; ohne EPS-Konsens"
+        if a.get("termin_eps_vorjahr") is not None:
+            satz += f"; im Vorjahresquartal {_geld(a['termin_eps_vorjahr'])}"
+            if a.get("termin_vorjahr_datum"):
+                satz += f", gemeldet am {datum_text(a['termin_vorjahr_datum'])}"
+        s.append(satz + ".")
+    else:
+        s.append("Im Nasdaq-Kalender der kommenden Tage steht kein Termin für diese Aktie.")
+    # Empfehlungen, Kursziel und Ueberraschungen von Nasdaq
+    if a.get("analysten_stand"):
+        if a.get("analysten_anzahl"):
+            s.append(f"Empfehlungen laut Nasdaq, abgefragt am {datum_text(a['analysten_stand'])}: "
+                     f"{int(a.get('analysten_kaufen') or 0)} Kaufen, {int(a.get('analysten_halten') or 0)} Halten, "
+                     f"{int(a.get('analysten_verkaufen') or 0)} Verkaufen"
+                     + (f"; Konsens {a['konsens']}" if a.get("konsens") else "") + ".")
+        else:
+            s.append(f"Nasdaq nennt für diese Aktie keine Empfehlungen, abgefragt am {datum_text(a['analysten_stand'])}.")
+        if a.get("kursziel") is not None:
+            satz = f"Kursziel im Mittel {zahl(a['kursziel'], 2)} Dollar"
+            if a.get("kursziel_tief") is not None and a.get("kursziel_hoch") is not None:
+                satz += f", Spanne {zahl(a['kursziel_tief'], 2)} bis {zahl(a['kursziel_hoch'], 2)} Dollar"
+            if a.get("kursziel_abst_pct") is not None:
+                satz += f"; {prozent(a['kursziel_abst_pct'], 1)} gegenüber dem Schlusskurs der Nacht"
+            s.append(satz + ".")
+    else:
+        s.append("Empfehlungen und Kursziel von Nasdaq für diese Aktie noch nicht abgefragt; jede Nacht kommt ein "
+                 "Siebtel des Markts dran.")
+    if a.get("quartale_mit_schaetzung"):
+        satz = (f"Gewinnüberraschungen laut Nasdaq: in {int(a['quartale_mit_schaetzung'])} Quartalen mit Schätzung "
+                f"{int(a.get('schaetzung_geschlagen') or 0)} mal geschlagen")
+        if a.get("letzte_ueberraschung_pct") is not None:
+            satz += f"; zuletzt {prozent(a['letzte_ueberraschung_pct'], 1)}"
+            if a.get("letzter_bericht"):
+                satz += f" bei der Meldung vom {datum_text(a['letzter_bericht'])}"
+        s.append(satz + ".")
+    # Revisionen und Einstufungen, nur Wochenliste
+    if not in_wochenliste:
+        s.append("Revisionen und Einstufungen gibt es nur für Aktien der Wochenliste.")
+    elif not a.get("rev_stand"):
+        s.append("Revisionen und Einstufungen für diese Aktie der Wochenliste sind noch nicht abgefragt; der nächste "
+                 "Bau der Nachttabelle holt sie.")
+    else:
+        s.extend(_revisionen_saetze(a))
+    s.append("Entscheidungshilfen, keine Filter.")
+    return s
+
+
 def sektor_saetze(sektor_name, sektoren, quelle=""):
     if not sektor_name:
         return ["Sektor unbekannt: die Aktie steht in keiner Wochenliste, und Yahoo nennt keinen Sektor."]
@@ -971,12 +1280,16 @@ def stand_saetze(rs, ratings, sektoren):
 
 
 def bericht(ticker, rs, ratings, sektoren, live=None, kurve=None, kurve_quelle="", sektor_name=None, sektor_quelle="",
-            streubesitz_kurs=None):
+            streubesitz_kurs=None, analysten=None, analysten_grund=None):
     """Liste von (Ueberschrift, [Saetze]) fuer die Anzeige. streubesitz_kurs:
-    der Schlusskurs am Stichtag des Streubesitzes (kurs_am), sonst None."""
+    der Schlusskurs am Stichtag des Streubesitzes (kurs_am), sonst None.
+    analysten: die Zeile der Aktie aus scanner_analysten.parquet
+    (analysten_zeile); analysten_grund: warum sie fehlt, None heisst nicht
+    uebergeben."""
     t = str(ticker or "").upper()
     e = eintraege(rs).get(t, {})
     r = ((ratings or {}).get("aktien") or {}).get(t, {})
+    in_wochenliste = t in ((rs or {}).get("listen") or {})
     return [("Aktie", kopf_saetze(t, e, live)),
             ("Unsere Ratings", ratings_saetze(e, r, ratings)),
             ("Volumen", volumen_saetze(live, kurve, kurve_quelle)),
@@ -984,6 +1297,7 @@ def bericht(ticker, rs, ratings, sektoren, live=None, kurve=None, kurve_quelle="
             ("Umsatz und Gewinn", wachstum_saetze(r)),
             ("Bilanz und Cashflow", bilanz_saetze(r)),
             ("Bewertung", bewertung_saetze(r, streubesitz_kurs)),
+            ("Analysten und Konsens", konsens_saetze(analysten, in_wochenliste, analysten_grund)),
             ("Sektor", sektor_saetze(sektor_name, sektoren, sektor_quelle)),
             ("Stand", stand_saetze(rs, ratings, sektoren))]
 
@@ -1378,9 +1692,9 @@ def selbsttest() -> int:
 
     teile = bericht("AAOI", rs, ratings, sektoren, live=live_auf, kurve=kurve, kurve_quelle="Vorrat", sektor_name="Technology", sektor_quelle="Wochenliste")
     text = bericht_text(teile)
-    p("Bericht hat neun Teile in fester Reihenfolge",
+    p("Bericht hat zehn Teile in fester Reihenfolge",
       [u for u, _ in teile] == ["Aktie", "Unsere Ratings", "Volumen", "Technische Kennzahlen", "Umsatz und Gewinn",
-                                "Bilanz und Cashflow", "Bewertung", "Sektor", "Stand"])
+                                "Bilanz und Cashflow", "Bewertung", "Analysten und Konsens", "Sektor", "Stand"])
     p("Kopf: Kuerzel, Name, Boerse, Kurs live, Abstand zum Hoch",
       "AAOI, Applied Optoelectronics, Inc., Nasdaq." in text and "Kurs 160,00 Dollar" in text and "Abstand zum 52-Wochen-Hoch minus 54,9 Prozent" in text)
     p("Ratings: RS mit Vorwoche, EPS, SMR, A/D, Composite je ein Satz",
@@ -1529,6 +1843,93 @@ def selbsttest() -> int:
     p("Junge Aktie (Etappe 1): vorlaeufiges RS mit Kennzeichnung, Quartalen und Zahl der Schlusskurse",
       "RS 91 vorläufig, zwei Quartale, sehr gut; gerechnet aus den vorhandenen Quartalen gegen den ganzen Bezug, "
       "die Aktie hat erst 150 Schlusskurse." in text5, text5)
+    # Etappe 5: Analysten und Konsens
+    import json as _json
+    zeile_k = {"ticker": "AAOI", "konsens_stand": "2026-09-14T19:30:40Z", "konsens_waehrung": "USD",
+               "konsens_termin": "2026-11-05", "konsens_fwd_kgv": 14.02, "konsens_kgv_0y": 23.46,
+               "konsens_ende_0q": "2026-10-31", "konsens_eps_0q": 2.47269, "konsens_eps_tief_0q": 2.34,
+               "konsens_eps_hoch_0q": 2.7, "konsens_eps_analysten_0q": 42, "konsens_eps_vj_0q": 1.3,
+               "konsens_eps_wachstum_0q_pct": 90.2, "konsens_umsatz_0q": 108988683310.0,
+               "konsens_umsatz_analysten_0q": 42, "konsens_umsatz_vj_0q": 57006000000.0,
+               "konsens_umsatz_wachstum_0q_pct": 91.2,
+               "konsens_ende_0y": "2027-01-31", "konsens_eps_0y": 9.3, "konsens_eps_analysten_0y": 49,
+               "konsens_eps_vj_0y": None, "konsens_eps_wachstum_0y_pct": None,
+               "konsens_eps_1y": 15.57, "konsens_eps_vj_1y": -0.5, "konsens_eps_wachstum_1y_pct": None,
+               "termin_konsens_datum": "2026-09-15", "termin_quartal": "Jun/2026", "termin_eps_konsens": -0.26,
+               "termin_eps_schaetzungen": 1, "termin_eps_vorjahr": 0.9, "termin_vorjahr_datum": "2025-08-27",
+               "analysten_stand": "2026-09-12", "analysten_anzahl": 30, "analysten_kaufen": 16, "analysten_halten": 10,
+               "analysten_verkaufen": 4, "konsens": "Kaufen", "kursziel": 335.87, "kursziel_tief": 245.0,
+               "kursziel_hoch": 400.0, "kursziel_abst_pct": 12.5, "quartale_mit_schaetzung": 4,
+               "schaetzung_geschlagen": 3, "letzte_ueberraschung_pct": 1.6, "letzter_bericht": "2026-07-30",
+               "rev_stand": "2026-09-14", "rev_hoch_7t_0q": 34, "rev_runter_7t_0q": 3, "rev_hoch_30t_0q": 35,
+               "rev_runter_30t_0q": 1, "rev_eps_jetzt_0q": 2.47, "rev_eps_30t_0q": 2.35, "rev_eps_90t_0q": 2.0,
+               "stufen_hoch_30t": 1, "stufen_runter_30t": 0, "stufen_neu_30t": 2, "stufen_ziel_rauf_30t": 5,
+               "stufen_ziel_runter_30t": 0, "stufen_hoch_90t": 3, "stufen_runter_90t": 1, "stufen_neu_90t": 2,
+               "stufen_ziel_rauf_90t": 9, "stufen_ziel_runter_90t": 1,
+               "stufen_liste": _json.dumps([{"datum": "2026-09-10", "firma": "Needham", "von": "Hold", "zu": "Buy",
+                                             "aktion": "up", "ziel_aktion": "Raises", "ziel": 300.0, "ziel_vorher": 250.0},
+                                            {"datum": "2026-09-04", "firma": "Rosenblatt", "von": "Buy", "zu": "Buy",
+                                             "aktion": "main", "ziel_aktion": "Maintains", "ziel": 390.0,
+                                             "ziel_vorher": 390.0}])}
+    kt = konsens_saetze(zeile_k, in_wochenliste=True, grund="")
+    ktext = "\n".join(kt)
+    p("Konsens: Stand in Wiener Zeit, Forward-KGV, Geschaeftsjahr davor mit seinem Ende",
+      "Eingefrorener Konsens von Yahoo, Stand 14.09.2026 um 21:30 Uhr Wiener Zeit." in ktext
+      and "Forward-KGV 14,0 mit dem Schlusskurs der Nacht und dem erwarteten Gewinn je Aktie des nächsten "
+          "Geschäftsjahres; KGV 23,5 auf das Geschäftsjahr davor bis 31.01.2027." in ktext, ktext)
+    p("Konsens: Quartal mit Spanne, Analysten und Wachstum; Umsatz in Milliarden",
+      "Quartal bis 31.10.2026: Gewinn je Aktie erwartet 2,47 Dollar, Spanne 2,34 bis 2,70 Dollar, "
+      "42 Analysten; gegenüber dem Vorjahresquartal 1,30 Dollar plus 90,2 Prozent." in ktext
+      and "Quartal bis 31.10.2026: Umsatz erwartet 109,0 Milliarden Dollar, 42 Analysten; gegenüber dem "
+          "Vorjahresquartal 57,0 Milliarden Dollar plus 91,2 Prozent." in ktext, ktext)
+    p("Konsens: fehlender und negativer Vergleichswert ehrlich benannt",
+      "Geschäftsjahr bis 31.01.2027: Gewinn je Aktie erwartet 9,30 Dollar, 49 Analysten; der "
+      "Vergleichswert fehlt im Einfrier-Lauf." in ktext
+      and "Nächstes Geschäftsjahr laut Yahoo: Gewinn je Aktie erwartet 15,57 Dollar, Zahl der Analysten unbekannt; "
+          "gegenüber dem Geschäftsjahr davor minus 0,50 Dollar kein Prozentwert" in ktext, ktext)
+    p("Konsens: Nasdaq-Kalender mit Quartal, negativem Konsens, einer Schaetzung und Vorjahr",
+      "Laut Nasdaq-Kalender meldet die Firma am 15.09.2026 das Quartal bis Juni 2026; erwartet minus 0,26 Dollar je "
+      "Aktie aus einer Schätzung; im Vorjahresquartal 0,90 Dollar, gemeldet am 27.08.2025." in ktext, ktext)
+    p("Konsens: Empfehlungen, Kursziel und Ueberraschungen von Nasdaq",
+      "Empfehlungen laut Nasdaq, abgefragt am 12.09.2026: 16 Kaufen, 10 Halten, 4 Verkaufen; Konsens Kaufen." in ktext
+      and "Kursziel im Mittel 335,87 Dollar, Spanne 245,00 bis 400,00 Dollar; plus 12,5 Prozent gegenüber" in ktext
+      and "in 4 Quartalen mit Schätzung 3 mal geschlagen; zuletzt plus 1,6 Prozent bei der Meldung vom 30.07.2026." in ktext,
+      ktext)
+    p("Konsens: Revisionen mit Veraenderung seit 30 und 90 Tagen",
+      "Quartal bis 31.10.2026: in 7 Tagen 34 Anhebungen und 3 Senkungen einzelner Schätzungen, in 30 Tagen 35 "
+      "Anhebungen und 1 Senkung; Konsens heute 2,47 Dollar, vor 30 Tagen 2,35 Dollar, plus 5,1 Prozent seither, vor "
+      "90 Tagen 2,00 Dollar, plus 23,5 Prozent seither." in ktext, ktext)
+    p("Konsens: Einstufungen je Fenster und die juengsten mit Kursziel",
+      "In 30 Tagen 1 Heraufstufung, 0 Herabstufungen und 2 Erstbewertungen; Kursziel 5 mal angehoben und 0 mal "
+      "gesenkt." in ktext
+      and "10.09.2026, Needham: hochgestuft von Hold auf Buy; Kursziel angehoben von 250,00 auf 300,00 Dollar." in ktext
+      and "04.09.2026, Rosenblatt: Einstufung bestätigt, Buy; Kursziel unverändert bei 390,00 Dollar." in ktext
+      and kt[-1] == "Entscheidungshilfen, keine Filter.", ktext)
+    eur_k = dict(zeile_k, konsens_waehrung="EUR", konsens_fwd_kgv=None)
+    p("Konsens in Euro: Betraege in EUR, kein Forward-KGV mit Grund",
+      "Beträge in EUR" in "\n".join(konsens_saetze(eur_k, True, ""))
+      and "Kein Forward-KGV: Der Konsens steht in EUR, der Kurs in Dollar." in konsens_saetze(eur_k, True, ""))
+    p("Nicht in der Wochenliste: keine Revisionen, ehrlich gesagt",
+      "Revisionen und Einstufungen gibt es nur für Aktien der Wochenliste." in konsens_saetze(zeile_k, False, "")
+      and not any("Needham" in x for x in konsens_saetze(zeile_k, False, "")))
+    p("Ohne Analystendaten: Grund, fehlende Zeile, nicht uebergeben",
+      konsens_saetze(None, True, "kein Lese-Token")[0].startswith("Analystendaten nicht geladen: kein Lese-Token.")
+      and konsens_saetze(None, True, "") == ["Für diese Aktie stehen in der Nachttabelle des Scanners keine Analystendaten."]
+      and "DATEN_LESE_TOKEN" in konsens_saetze(None)[0])
+    p("Quartal von Nasdaq in Worten", quartal_text("Jun/2026") == "Juni 2026" and quartal_text("Jan/2027") == "Jänner 2027"
+      and quartal_text(None) == "unbekannt")
+    df_a = pd.DataFrame([{"ticker": "AAOI", "konsens_fwd_kgv": 14.02, "konsens_stand": None, "rev_hoch_7t_0q": float("nan")},
+                         {"ticker": "BBB", "konsens_fwd_kgv": float("nan"), "konsens_stand": "x", "rev_hoch_7t_0q": 2.0}])
+    z_a = analysten_zeile(df_a, "aaoi")
+    p("Analystenzeile: NaN wird None, Zahlen bleiben, fehlende Aktie None",
+      z_a == {"ticker": "AAOI", "konsens_fwd_kgv": 14.02, "konsens_stand": None, "rev_hoch_7t_0q": None}
+      and isinstance(z_a["konsens_fwd_kgv"], float) and analysten_zeile(df_a, "ZZZ") is None
+      and analysten_zeile(None, "AAOI") is None, str(z_a))
+    rs_w = dict(rs, listen={"AAOI": {}})
+    teile_k = bericht("AAOI", rs_w, ratings, sektoren, live=live_auf, analysten=zeile_k, analysten_grund="")
+    p("Bericht: Kapitel Analysten und Konsens nach der Bewertung, Wochenliste aus der Nachtdatei",
+      teile_k[7][0] == "Analysten und Konsens" and any("Needham" in x for x in teile_k[7][1]))
+
     teile4 = bericht("XYZQ", {}, {}, {}, live=None)
     text4 = bericht_text(teile4)
     p("Ganz ohne Dateien: ehrliche Saetze statt Fehler", "RS nicht verfügbar" in text4 and "Ratings-Datei fehlt" in text4

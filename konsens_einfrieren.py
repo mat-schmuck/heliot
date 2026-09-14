@@ -15,7 +15,11 @@ Ergebnis-8-K bei der SEC).
 
 WAS GESPEICHERT WIRD: je Firma und Periode (0q laufendes Quartal, +1q
 naechstes, 0y laufendes Jahr, +1y naechstes) der Durchschnitt, das Tief,
-das Hoch und die Analystenzahl fuer Umsatz und Ergebnis je Aktie, das
+das Hoch und die Analystenzahl fuer Umsatz und Ergebnis je Aktie, seit
+15.09.2026 auch der VORJAHRESWERT, gegen den Yahoo sein Wachstum rechnet
+(yearAgoEps und yearAgoRevenue aus derselben Antwort, keine zusaetzliche
+Anfrage; fuer +1y ist er das Mittel des laufenden Jahres; Gerhards
+Entscheidung 9 vom 13.09.2026, erwartetes Wachstum), das
 PERIODENENDE laut Anbieter (die Grundlage fuer die Zuordnung zum
 richtigen Quartal, Gerhards Punkt 3), der naechste Meldetermin, die
 Waehrung, die Quelle und der Zeitstempel in UTC. Ablage als gepackte
@@ -69,7 +73,8 @@ REFERENZ = ["AAPL", "MSFT", "JPM", "ANF", "KRYS"]
 PERIODEN = ("0q", "+1q", "0y", "+1y")
 FELDER = ["zeit_utc", "ticker", "periode", "periodenende", "umsatz_avg", "umsatz_low",
           "umsatz_high", "umsatz_analysten", "eps_avg", "eps_low", "eps_high",
-          "eps_analysten", "waehrung", "naechster_termin", "quelle"]
+          "eps_analysten", "waehrung", "naechster_termin", "quelle",
+          "eps_vorjahr", "umsatz_vorjahr"]
 NEU_PRUEFEN_NACH_TAGEN = 90     # Firmen ohne Konsens spaeter noch einmal ansehen
 ABFRAGEN_JE_SEKUNDE = 4.0       # Bremse ueber alle Faeden (jede Firma kostet zwei Anfragen); 0 = keine
 NOTBREMSE_DROSSEL = 12          # so viele Drossel-Fehler in Folge beenden den Lauf
@@ -216,12 +221,14 @@ def hole_trend(ticker, fetcher=None):
                     eintrag["revenueEstimate"] = {"avg": z.get("avg"), "low": z.get("low"),
                                                   "high": z.get("high"),
                                                   "numberOfAnalysts": z.get("numberOfAnalysts"),
+                                                  "yearAgoRevenue": z.get("yearAgoRevenue"),
                                                   "revenueCurrency": z.get("currency")}
                 if ee is not None and per in ee.index:
                     z = ee.loc[per]
                     eintrag["earningsEstimate"] = {"avg": z.get("avg"), "low": z.get("low"),
                                                    "high": z.get("high"),
                                                    "numberOfAnalysts": z.get("numberOfAnalysts"),
+                                                   "yearAgoEps": z.get("yearAgoEps"),
                                                    "earningsCurrency": z.get("currency")}
                 trend.append(eintrag)
         except Exception as e:  # noqa
@@ -255,6 +262,7 @@ def zeilen_aus_trend(ticker, trend, zeit, termin, quelle="yahoo"):
             "eps_high": _raw(ee, "high"), "eps_analysten": _raw(ee, "numberOfAnalysts"),
             "waehrung": ee.get("earningsCurrency") or re_.get("revenueCurrency"),
             "naechster_termin": termin, "quelle": quelle,
+            "eps_vorjahr": _raw(ee, "yearAgoEps"), "umsatz_vorjahr": _raw(re_, "yearAgoRevenue"),
         })
     return out
 
@@ -511,9 +519,11 @@ def _fake_trend(ticker, analysten=12, ende="2026-09-30"):
     def per(p, e):
         return {"period": p, "endDate": e,
                 "revenueEstimate": {"avg": {"raw": 1000.0}, "low": {"raw": 900.0}, "high": {"raw": 1100.0},
-                                    "numberOfAnalysts": {"raw": analysten}, "revenueCurrency": "USD"},
+                                    "numberOfAnalysts": {"raw": analysten}, "yearAgoRevenue": {"raw": 800.0},
+                                    "revenueCurrency": "USD"},
                 "earningsEstimate": {"avg": {"raw": 1.5}, "low": {"raw": 1.2}, "high": {"raw": 1.8},
-                                     "numberOfAnalysts": {"raw": analysten}, "earningsCurrency": "USD"}}
+                                     "numberOfAnalysts": {"raw": analysten}, "yearAgoEps": {"raw": 1.2},
+                                     "earningsCurrency": "USD"}}
     return {"trend": [per("0q", ende), per("+1q", "2026-12-31"), per("0y", "2026-12-31"),
                       per("+1y", "2027-12-31")], "termin": "2026-10-29"}
 
@@ -534,6 +544,11 @@ def selbsttest() -> int:
       len(z) == 4 and all(set(FELDER) == set(x.keys()) for x in z))
     p("Periodenende und Termin werden mitgefuehrt (Punkt 3 und 4)",
       z[0]["periodenende"] == "2026-09-30" and z[0]["naechster_termin"] == "2026-10-29")
+    p("Vorjahreswerte fuer das erwartete Wachstum (Entscheidung 9)",
+      z[0]["eps_vorjahr"] == 1.2 and z[0]["umsatz_vorjahr"] == 800.0)
+    ohne_vj = zeilen_aus_trend("Q", [{"period": "0q", "endDate": "2026-09-30", "revenueEstimate": {},
+                                      "earningsEstimate": {"avg": {"raw": 1.0}, "yearAgoEps": {}}}], "", None)
+    p("Fehlender Vorjahreswert bleibt leer", ohne_vj[0]["eps_vorjahr"] is None and ohne_vj[0]["umsatz_vorjahr"] is None)
     p("Konsens erkannt, wenn Analysten da sind", hat_konsens(z))
     p("Kein Konsens ohne Analysten",
       not hat_konsens(zeilen_aus_trend("X", _fake_trend("X", analysten=0)["trend"], "", None)))

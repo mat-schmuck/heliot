@@ -18,8 +18,13 @@ WAS DIESER LAUF BAUT
                            wuerden das Repo in einem Jahr um ueber einen
                            Gigabyte wachsen lassen); die App liest sie dort.
   scanner_analysten.parquet  Empfehlungen, Kursziele und Quartals-
-                           ueberraschungen von Nasdaq je Aktie. Sie gehen wie
-                           der eingefrorene Konsens (F17) in das PRIVATE
+                           ueberraschungen von Nasdaq je Aktie, seit Etappe 5
+                           dazu der eingefrorene Yahoo-Konsens mit
+                           Forward-KGV und erwartetem Wachstum, der
+                           EPS-Konsens des Nasdaq-Kalenders und fuer die
+                           Wochenliste Revisionen und Einstufungen
+                           (kennzahlen_konsens.py). Sie gehen wie der
+                           eingefrorene Konsens (F17) in das PRIVATE
                            Datenrepo heliot-daten; die App liest sie nur mit
                            dem Lese-Token DATEN_LESE_TOKEN.
   scanner_stand.json       wann gebaut, Stand der Kurse und jeder Quelle,
@@ -57,6 +62,14 @@ WOHER DIE WERTE KOMMEN (gemessen 14.09.2026)
               Kursziel und die letzten vier Quartalsueberraschungen. Ein
               Siebtel des Universums je Nacht plus alle, die gerade berichtet
               haben (0,37 Sekunden je Abruf, 200 Abrufe ohne Drosselung).
+  Konsens     (Etappe 5, Gerhards Entscheidung 9) die juengsten Laeufe des
+              eingefrorenen Yahoo-Konsens aus dem privaten Datenrepo (der
+              Ablauf legt sie vorher in einen Ordner, --konsens-ordner), der
+              EPS-Konsens aus der Antwort des Nasdaq-Kalenders, die ohnehin
+              geholt wird, und nur fuer die Wochenliste je Aktie ein Abruf
+              bei Yahoo fuer Revisionen und Einstufungen (gemessen am
+              14.09.2026: fuenf Aktien in 3,8 Sekunden). Fehlt eine Quelle,
+              bleiben die Werte der Vornacht mit ihrem Stand.
 
 TOLERANZ (Mathias: "Findet das Muster nichts, kann diese Aktie nicht
 vorgeschlagen werden. Wuerde eine Toleranzabweichung von 5% jedoch fuers
@@ -90,6 +103,7 @@ Begruendung.
 
 Aufruf:
   python scanner_daten.py --bauen [--grenze N] [--analysten rotation|alle|aus]
+      [--konsens-ordner ORDNER] [--revisionen an|aus]
   python scanner_daten.py --selbsttest
 """
 
@@ -109,6 +123,7 @@ import numpy as np
 import pandas as pd
 
 from config import CFG as ZENTRAL, mind_erreicht
+import kennzahlen_konsens as kk
 
 SC = ZENTRAL["scanner"]
 TABELLE = "scanner_tabelle.parquet"
@@ -881,14 +896,18 @@ def screener_aus(antwort):
 
 
 def kalender_aus(antworten):
-    """{Ticker: (Datum, Lage)} aus {Datum: Kalender-Antwort}; der frueheste Termin gewinnt."""
+    """{Ticker: (Datum, Lage, Konsens)} aus {Datum: Kalender-Antwort}; der
+    frueheste Termin gewinnt. Konsens sind epsForecast, noOfEsts,
+    lastYearEPS, lastYearRptDt und fiscalQuarterEnding derselben Zeile
+    (Etappe 5, kennzahlen_konsens.kalender_konsens); bis dahin warf der Bau
+    sie weg."""
     raus = {}
     for tag in sorted(antworten):
         d = antworten[tag] or {}
         for z in ((d.get("data") or {}).get("rows") or []):
             t = str(z.get("symbol") or "").strip().upper()
             if t and t not in raus:
-                raus[t] = (tag, LAGE_NASDAQ.get(z.get("time"), "unbekannt"))
+                raus[t] = (tag, LAGE_NASDAQ.get(z.get("time"), "unbekannt"), kk.kalender_konsens(z))
     return raus
 
 
@@ -1067,20 +1086,41 @@ def _alte_tabelle(pfad):
         return {}
 
 
+def _sauber(w):
+    """Ein Wert aus der Parquet-Datei der Vornacht: NaN und NA werden None."""
+    if w is None:
+        return None
+    if isinstance(w, float) and not math.isfinite(w):
+        return None
+    try:
+        if pd.isna(w) is True:
+            return None
+    except (TypeError, ValueError):
+        pass
+    return w
+
+
 ANALYSTEN_FELDER = ("analysten_kaufen", "analysten_halten", "analysten_verkaufen", "analysten_anzahl",
                     "analysten_kauf_anteil_pct", "konsens", "konsens_wert", "kursziel", "kursziel_tief",
                     "kursziel_hoch", "analysten_stand")
 UEBERRASCHUNG_FELDER = ("quartale_mit_schaetzung", "schaetzung_geschlagen", "letzte_ueberraschung_pct",
                         "letzter_bericht", "ueberraschung_stand")
+# Alles, was nur ins private Datenrepo darf (F17 und die Linie der Analystenwerte).
+PRIVATE_FELDER = (ANALYSTEN_FELDER + UEBERRASCHUNG_FELDER + ("kursziel_abst_pct",) + kk.KONSENS_FELDER
+                  + kk.TERMIN_KONSENS_FELDER + kk.REVISION_FELDER)
 
 
 def bauen(pfad_tabelle=TABELLE, pfad_stand=STAND, archiv=ARCHIV, grenze=None, analysten="rotation",
           heute=None, universum_liste=None, kurse_download=None, rs_daten=None, ratings=None, termine_listen=None,
-          screener=None, kalender=None, je_aktie=None, kennzahlen=None, leise=False, pfad_analysten=ANALYSTEN):
+          screener=None, kalender=None, je_aktie=None, kennzahlen=None, leise=False, pfad_analysten=ANALYSTEN,
+          konsens_pfade=None, revisionen="an"):
     """Die ganze Nachttabelle. Alle Quellen lassen sich fuer den Selbsttest
     uebergeben; ohne Angabe wird geholt. Die Analystenwerte der Vornacht
     stehen in pfad_analysten (der Ablauf holt sie vorher aus dem privaten
-    Datenrepo); fehlt die Datei, beginnt die Rotation von vorn."""
+    Datenrepo); fehlt die Datei, beginnt die Rotation von vorn.
+    konsens_pfade: die Dateien der juengsten Einfrier-Laeufe, None heisst
+    keine uebergeben (die Werte der Vornacht bleiben). revisionen: "an",
+    "aus" oder im Selbsttest ein Abruf holen(ticker) -> (trend, historie)."""
     import rs_universum
     t0 = time.time()
     heute = heute or ny_heute()
@@ -1179,6 +1219,7 @@ def bauen(pfad_tabelle=TABELLE, pfad_stand=STAND, archiv=ARCHIV, grenze=None, an
         stand["quellen"]["kalender"] = {"status": "ok"}
     stand["quellen"]["kalender"]["eintraege"] = len(kalender)
     listen_termine = (termine_listen or {}).get("aktien") or {}
+    mit_termin_konsens = 0
     for s, z in zeilen.items():
         lt = listen_termine.get(s)
         if lt and lt.get("datum"):
@@ -1187,6 +1228,18 @@ def bauen(pfad_tabelle=TABELLE, pfad_stand=STAND, archiv=ARCHIV, grenze=None, an
             z["termin_datum"], z["termin_lage"], z["termin_quelle"] = kalender[s][0], kalender[s][1], "Nasdaq"
         else:
             z["termin_datum"] = z["termin_lage"] = z["termin_quelle"] = None
+        # Etappe 5: der EPS-Konsens der anstehenden Meldung laut Nasdaq-Kalender,
+        # mit dem Datum des Kalenders (es kann vom Termin der Wochenliste abweichen).
+        for feld in kk.TERMIN_KONSENS_FELDER:
+            z[feld] = None
+        k = kalender.get(s)
+        if k and len(k) > 2 and isinstance(k[2], dict):
+            z["termin_konsens_datum"] = k[0]
+            for feld in kk.TERMIN_KONSENS_FELDER[1:]:
+                z[feld] = k[2].get(feld)
+            if z["termin_eps_konsens"] is not None:
+                mit_termin_konsens += 1
+    stand["quellen"]["kalender"]["mit_eps_konsens"] = mit_termin_konsens
 
     # --- Fundament ------------------------------------------------------------------
     ciks = {}
@@ -1201,8 +1254,34 @@ def bauen(pfad_tabelle=TABELLE, pfad_stand=STAND, archiv=ARCHIV, grenze=None, an
     for s, z in zeilen.items():
         z.update(werte_f.get(ciks.get(s), leer_f) if ciks.get(s) else leer_f)
 
-    # --- Analysten und Ueberraschungen: Rotation ------------------------------------
+    # --- Eingefrorener Yahoo-Konsens (Etappe 5) ----------------------------------------
     alt = _alte_tabelle(pfad_analysten)
+    try:
+        if konsens_pfade is None:
+            je_k, befund_k = {}, {"status": "nicht verfuegbar: kein Einfrier-Lauf uebergeben"}
+        else:
+            je_k, befund_k = kk.schnappschuesse_lesen(konsens_pfade)
+            befund_k["status"] = "ok" if je_k else "nicht verfuegbar: " + ("; ".join(befund_k.get("unlesbar") or [])
+                                                                          or "keine Datei")
+    except Exception as e:  # noqa  der Konsens darf den Bau nie aufhalten
+        je_k, befund_k = {}, {"status": f"fehler: {type(e).__name__}: {e}"[:200]}
+    mit_k = 0
+    for s, z in zeilen.items():
+        if je_k:
+            z.update(kk.konsens_werte(je_k.get(kk.schluessel(s)), z.get("kurs")))
+        else:
+            # Ohne Einfrier-Lauf bleiben die Werte der Vornacht mit ihrem Stand;
+            # die KGV rechnen mit dem Kurs dieser Nacht.
+            a = alt.get(s) or {}
+            z.update({feld: _sauber(a.get(feld)) for feld in kk.KONSENS_FELDER})
+            kk.kgv_setzen(z, z.get("kurs"))
+        if z.get("konsens_stand"):
+            mit_k += 1
+    stand["quellen"]["konsens"] = {**{k: v for k, v in befund_k.items()
+                                      if k in ("status", "dateien", "unlesbar", "firmen", "neuester", "aeltester")},
+                                   "mit_konsens": mit_k}
+
+    # --- Analysten und Ueberraschungen: Rotation ------------------------------------
     for s, z in zeilen.items():
         a = alt.get(s) or {}
         for feld in ANALYSTEN_FELDER + UEBERRASCHUNG_FELDER:
@@ -1242,6 +1321,29 @@ def bauen(pfad_tabelle=TABELLE, pfad_stand=STAND, archiv=ARCHIV, grenze=None, an
     info["mit_stand"] = sum(1 for z in zeilen.values() if z.get("analysten_stand"))
     stand["quellen"]["analysten"] = info
 
+    # --- Revisionen und Einstufungen, nur Wochenliste (Etappe 5) ------------------------
+    wl = sorted(s for s, z in zeilen.items() if z.get("in_wochenliste"))
+    wl_menge = set(wl)
+    for s, z in zeilen.items():
+        a = (alt.get(s) or {}) if s in wl_menge else {}
+        for feld in kk.REVISION_FELDER:
+            z[feld] = _sauber(a.get(feld))
+    info_r = {"status": "aus", "wochenliste": len(wl), "abgerufen": 0, "fehler": 0, "abgebrochen": False}
+    if revisionen != "aus" and wl:
+        try:
+            erg_r, fehler_r, abgebrochen_r = kk.revisionen_viele(
+                wl, heute, holen=revisionen if callable(revisionen) else None, leise=leise)
+            for s, felder in erg_r.items():
+                zeilen[s].update(felder)
+            info_r = {"status": "abgebrochen" if abgebrochen_r else "ok", "wochenliste": len(wl),
+                      "abgerufen": len(erg_r), "fehler": len(fehler_r), "abgebrochen": abgebrochen_r}
+            if fehler_r:
+                info_r["beispiele"] = dict(list(fehler_r.items())[:5])
+        except Exception as e:  # noqa  die Revisionen duerfen den Bau nie aufhalten
+            info_r = {"status": f"fehler: {type(e).__name__}: {e}"[:200], "wochenliste": len(wl)}
+    info_r["mit_stand"] = sum(1 for s in wl if zeilen[s].get("rev_stand"))
+    stand["quellen"]["revisionen"] = info_r
+
     # --- Schreiben ---------------------------------------------------------------
     for z in zeilen.values():
         if z.get("kursziel") and z.get("kurs"):
@@ -1257,8 +1359,7 @@ def bauen(pfad_tabelle=TABELLE, pfad_stand=STAND, archiv=ARCHIV, grenze=None, an
                     tabelle[spalte] = tabelle[spalte].astype("boolean")
     # Die Nasdaq-Werte je Aktie in eine eigene Datei (privates Datenrepo),
     # die Tabelle behaelt alles andere.
-    privat = [s for s in ("ticker",) + ANALYSTEN_FELDER + UEBERRASCHUNG_FELDER + ("kursziel_abst_pct",)
-              if s in tabelle.columns]
+    privat = [s for s in ("ticker",) + PRIVATE_FELDER if s in tabelle.columns]
     tabelle[privat].to_parquet(pfad_analysten, compression="zstd", index=False)
     tabelle = tabelle.drop(columns=[s for s in privat if s != "ticker"])
     tabelle.to_parquet(pfad_tabelle, compression="zstd", index=False)
@@ -1473,10 +1574,17 @@ def selbsttest() -> int:
     p("Screener: Schraegstrich wird Punkt, null ist unbekannt", "BRK.B" in sc and sc["BRK.B"]["marktkap"] is None
       and sc["BRK.B"]["sektor"] is None)
     kal = kalender_aus({"2026-09-15": {"data": {"rows": [{"symbol": "ORCL", "time": "time-after-hours"}]}},
-                        "2026-09-14": {"data": {"rows": [{"symbol": "ORCL", "time": "time-pre-market"},
+                        "2026-09-14": {"data": {"rows": [{"symbol": "ORCL", "time": "time-pre-market",
+                                                          "epsForecast": "$1.48", "noOfEsts": "12",
+                                                          "lastYearEPS": "$1.47", "lastYearRptDt": "9/09/2025",
+                                                          "fiscalQuarterEnding": "Aug/2026"},
                                                          {"symbol": "X", "time": "time-not-supplied"}]}}})
     p("Kalender: der frueheste Termin gewinnt, Tageszeit uebersetzt",
-      kal["ORCL"] == ("2026-09-14", "vorboerslich") and kal["X"][1] == "unbekannt")
+      kal["ORCL"][:2] == ("2026-09-14", "vorboerslich") and kal["X"][1] == "unbekannt")
+    p("Kalender: der EPS-Konsens derselben Zeile bleibt erhalten (Etappe 5)",
+      kal["ORCL"][2]["termin_eps_konsens"] == 1.48 and kal["ORCL"][2]["termin_eps_schaetzungen"] == 12
+      and kal["ORCL"][2]["termin_vorjahr_datum"] == "2025-09-09" and kal["X"][2]["termin_eps_konsens"] is None,
+      str(kal["ORCL"][2]))
     an = analysten_aus({"data": {"consensusOverview": {"lowPriceTarget": 245.0, "highPriceTarget": 400.0,
                                                        "priceTarget": 335.87, "buy": 16, "sell": 4, "hold": 10},
                                  "historicalConsensus": [{"z": {"consensus": "Buy"}}]}})
@@ -1519,6 +1627,26 @@ def selbsttest() -> int:
                                                                        "priceTarget": 30.0}}}), None
 
         pfad_a = os.path.join(tmp, "a.parquet")
+        # Etappe 5: ein Einfrier-Lauf fuer AAA (Dollar) und BBB (Euro)
+        import gzip as _gz
+        pfad_k = os.path.join(tmp, "2026-09-14_1930Z.jsonl.gz")
+        with _gz.open(pfad_k, "wt", encoding="utf-8") as f:
+            for tk, per, eps, vj, wae in (("AAA", "0q", 0.5, 0.4, "USD"), ("AAA", "0y", 2.0, 1.6, "USD"),
+                                          ("AAA", "+1y", 2.5, 2.0, "USD"), ("BBB", "+1y", 1.0, 0.8, "EUR")):
+                f.write(json.dumps({"zeit_utc": "2026-09-14T19:30:40Z", "ticker": tk, "periode": per,
+                                    "periodenende": "2027-12-31", "eps_avg": eps, "eps_vorjahr": vj,
+                                    "eps_analysten": 5, "umsatz_avg": 100.0, "umsatz_vorjahr": 80.0,
+                                    "umsatz_analysten": 4, "waehrung": wae, "naechster_termin": "2026-10-20"}) + "\n")
+        abrufe_rev = []
+
+        def rev(tk):
+            abrufe_rev.append(tk)
+            return ([{"period": "0q", "epsRevisions": {"upLast7days": {"raw": 2}, "downLast30days": {"raw": 1}},
+                      "epsTrend": {"current": {"raw": 0.5}, "30daysAgo": {"raw": 0.45}}}],
+                    [{"epochGradeDate": int(datetime(2026, 9, 10, 15, tzinfo=timezone.utc).timestamp()),
+                      "firm": "Musterbank", "toGrade": "Buy", "fromGrade": "Hold", "action": "up",
+                      "priceTargetAction": "Raises", "currentPriceTarget": 40.0, "priorPriceTarget": 30.0}])
+
         st = bauen(pfad_tabelle=os.path.join(tmp, "t.parquet"), pfad_stand=os.path.join(tmp, "s.json"),
                    archiv=os.path.join(tmp, "k.parquet"), analysten="alle", heute=date(2026, 9, 14),
                    universum_liste=[{"symbol": s, "name": s + " Inc", "boerse": "Nasdaq"} for s in kunst],
@@ -1529,8 +1657,13 @@ def selbsttest() -> int:
                                                 "linie_qqq_abst_pct": -1.5}}},
                    ratings={"aktien": {}}, termine_listen={"aktien": {"AAA": {"datum": "2026-09-15", "lage": "nachboerslich"}}},
                    screener={"AAA": {"sektor": "Technology", "branche": "Software", "land": "United States", "marktkap": 3e8}},
-                   kalender={"BBB": ("2026-09-14", "vorboerslich")}, je_aktie=je, kennzahlen=pd.DataFrame(), leise=True,
-                   pfad_analysten=pfad_a)
+                   kalender={"BBB": ("2026-09-14", "vorboerslich", {"termin_quartal": "Jun/2026",
+                                                                    "termin_eps_konsens": -0.26,
+                                                                    "termin_eps_schaetzungen": 1,
+                                                                    "termin_eps_vorjahr": -0.35,
+                                                                    "termin_vorjahr_datum": "2025-09-04"})},
+                   je_aktie=je, kennzahlen=pd.DataFrame(), leise=True,
+                   pfad_analysten=pfad_a, konsens_pfade=[pfad_k], revisionen=rev)
         t = pd.read_parquet(os.path.join(tmp, "t.parquet"))
         a = pd.read_parquet(pfad_a)
         p("Ganzer Lauf: drei Zeilen, Stand geschrieben", len(t) == 3 and st["zeilen"] == 3)
@@ -1547,6 +1680,23 @@ def selbsttest() -> int:
           and a_aaa["kursziel_abst_pct"] is not None and len(a) == 3)
         p("Ganzer Lauf: die oeffentliche Tabelle traegt keine Nasdaq-Werte je Aktie",
           not any(s in t.columns for s in ANALYSTEN_FELDER + UEBERRASCHUNG_FELDER + ("kursziel_abst_pct",)))
+        p("Ganzer Lauf: die oeffentliche Tabelle traegt weder Konsens noch Revisionen (Etappe 5)",
+          not any(s in t.columns for s in PRIVATE_FELDER) and all(s in a.columns for s in kk.KONSENS_FELDER
+                                                                  + kk.TERMIN_KONSENS_FELDER + kk.REVISION_FELDER))
+        kurs_aaa = float(aaa["kurs"])
+        p("Ganzer Lauf: Forward-KGV mit dem Schlusskurs, Wachstum und Stand aus dem Einfrier-Lauf",
+          a_aaa["konsens_fwd_kgv"] == round(kurs_aaa / 2.5, 2) and a_aaa["konsens_eps_wachstum_0q_pct"] == 25.0
+          and a_aaa["konsens_stand"] == "2026-09-14T19:30:40Z" and st["quellen"]["konsens"]["mit_konsens"] == 2,
+          f"{a_aaa['konsens_fwd_kgv']} bei Kurs {kurs_aaa}")
+        a_bbb = a[a["ticker"] == "BBB"].iloc[0]
+        p("Ganzer Lauf: Konsens in Euro ohne Forward-KGV; Kalender-Konsens mit Datum",
+          a_bbb["konsens_waehrung"] == "EUR" and pd.isna(a_bbb["konsens_fwd_kgv"])
+          and a_bbb["termin_eps_konsens"] == -0.26 and a_bbb["termin_konsens_datum"] == "2026-09-14"
+          and st["quellen"]["kalender"]["mit_eps_konsens"] == 1)
+        p("Ganzer Lauf: Revisionen nur fuer die Wochenliste",
+          abrufe_rev == ["AAA"] and a_aaa["rev_hoch_7t_0q"] == 2 and a_aaa["stufen_hoch_30t"] == 1
+          and pd.isna(a_bbb["rev_stand"]) and st["quellen"]["revisionen"]["abgerufen"] == 1
+          and json.loads(a_aaa["stufen_liste"])[0]["firma"] == "Musterbank", str(st["quellen"]["revisionen"]))
         p("Ganzer Lauf: Bauzeit mit Zeitzone", str(st["gebaut_am"]).endswith("+00:00"), str(st["gebaut_am"]))
         p("Ganzer Lauf: Kursarchiv mit Eroeffnung geschrieben",
           os.path.exists(os.path.join(tmp, "k.parquet"))
@@ -1561,6 +1711,12 @@ def selbsttest() -> int:
         a2 = pd.read_parquet(pfad_a)
         p("Zweite Nacht ohne Abruf behaelt die Analysten der ersten",
           a2[a2["ticker"] == "AAA"].iloc[0]["analysten_anzahl"] == 4 and st2["quellen"]["analysten"]["status"] == "aus")
+        a2_aaa = a2[a2["ticker"] == "AAA"].iloc[0]
+        p("Zweite Nacht ohne Einfrier-Lauf behaelt den Konsens samt Stand und rechnet das KGV neu",
+          a2_aaa["konsens_stand"] == "2026-09-14T19:30:40Z" and a2_aaa["konsens_fwd_kgv"] == round(kurs_aaa / 2.5, 2)
+          and str(st2["quellen"]["konsens"]["status"]).startswith("nicht verfuegbar"))
+        p("Zweite Nacht: nicht mehr in der Wochenliste, keine Revisionen mehr",
+          pd.isna(a2_aaa["rev_stand"]) and st2["quellen"]["revisionen"]["status"] == "aus")
 
     quelle = open(__file__, encoding="utf-8").read()
     p("Keine Vernetzung: kein Sendecode, keine Alarmdateien",
@@ -1577,11 +1733,23 @@ def main():
     ap.add_argument("--selbsttest", action="store_true")
     ap.add_argument("--grenze", type=int, default=0, help="nur die ersten N Aktien (Probelauf)")
     ap.add_argument("--analysten", choices=("rotation", "alle", "aus"), default="rotation")
+    ap.add_argument("--konsens-ordner", default=None,
+                    help="Ordner mit den juengsten Einfrier-Laeufen (*.jsonl.gz); ohne ihn bleiben die Werte der Vornacht")
+    ap.add_argument("--revisionen", choices=("an", "aus"), default="an",
+                    help="Revisionen und Einstufungen fuer die Wochenliste bei Yahoo holen")
     args = ap.parse_args()
     if args.selbsttest:
         return selbsttest()
     if args.bauen:
-        stand = bauen(grenze=args.grenze or None, analysten=args.analysten)
+        pfade = None
+        if args.konsens_ordner:
+            import glob
+            # Die Dateien heissen nach ihrer Kennung; hoechstens die juengsten, so
+            # viele wie config.py sagt, auch wenn der Ordner mehr enthaelt.
+            pfade = sorted(glob.glob(os.path.join(args.konsens_ordner, "*.jsonl.gz")),
+                           key=os.path.basename)[-int(kk.KK["schnappschuesse"]):]
+        stand = bauen(grenze=args.grenze or None, analysten=args.analysten, konsens_pfade=pfade,
+                      revisionen=args.revisionen)
         return 0 if stand.get("zeilen") else 1
     ap.print_help()
     return 0

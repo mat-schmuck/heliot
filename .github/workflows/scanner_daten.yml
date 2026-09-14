@@ -128,6 +128,39 @@ jobs:
             echo "Noch keine Analystendatei im Datenrepo; die Rotation beginnt von vorn."
           fi
 
+      # ETAPPE 5 (Gerhard, 13.09.2026, Entscheidung 9): die juengsten Laeufe
+      # des eingefrorenen Yahoo-Konsens aus dem privaten Datenrepo, nur diese
+      # Dateien, nicht das ganze Repo. Je Firma gilt der juengste Lauf, der sie
+      # fuehrt; die Zahl steht in config.py. Klappt der Abruf nicht, baut der
+      # Lauf trotzdem und behaelt den Konsens der Vornacht mit seinem Stand.
+      - name: Eingefrorenen Konsens holen
+        if: steps.pruefung.outputs.noetig == 'ja' && steps.token.outputs.da == 'ja'
+        env:
+          GH_TOKEN: ${{ secrets.DATEN_TOKEN }}
+        run: |
+          ANZAHL=$(python -c "from config import CFG; print(CFG['konsens_kennzahlen']['schnappschuesse'])")
+          mkdir -p .cache/konsens
+          GEHOLT=0
+          JAHRE=$(gh api repos/mat-schmuck/heliot-daten/contents/konsens --jq '[.[] | select(.type == "dir") | .name] | sort | reverse | .[]' || true)
+          for JAHR in $JAHRE; do
+            NAMEN=$(gh api "repos/mat-schmuck/heliot-daten/contents/konsens/$JAHR" --jq '[.[] | select(.type == "file") | .name | select(test("^[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{4}Z[.]jsonl[.]gz$"))] | sort | reverse | .[]' || true)
+            for NAME in $NAMEN; do
+              if [ "$GEHOLT" -ge "$ANZAHL" ]; then
+                break
+              fi
+              if gh api -H "Accept: application/vnd.github.raw" "repos/mat-schmuck/heliot-daten/contents/konsens/$JAHR/$NAME" > ".cache/konsens/$NAME"; then
+                GEHOLT=$((GEHOLT + 1))
+              else
+                rm -f ".cache/konsens/$NAME"
+              fi
+            done
+            if [ "$GEHOLT" -ge "$ANZAHL" ]; then
+              break
+            fi
+          done
+          echo "Einfrier-Laeufe geholt: $GEHOLT von $ANZAHL"
+          ls -l .cache/konsens
+
       - name: Scanner-Tabelle bauen
         id: bau
         if: steps.pruefung.outputs.noetig == 'ja'
@@ -139,15 +172,18 @@ jobs:
             rotation|alle|aus) ;;
             *) echo "Unbekannte Analysten-Wahl: $ANALYSTEN"; exit 1 ;;
           esac
+          # Ohne geholten Konsens (kein Token) bleibt der Ordner leer; der Bau
+          # behaelt dann die Werte der Vornacht.
+          mkdir -p .cache/konsens
           if [ -n "$GRENZE" ]; then
             case "$GRENZE" in
               *[!0-9]*) echo "Die Grenze muss eine ganze Zahl sein: $GRENZE"; exit 1 ;;
             esac
-            python scanner_daten.py --bauen --analysten "${ANALYSTEN:-rotation}" --grenze "$GRENZE"
+            python scanner_daten.py --bauen --analysten "${ANALYSTEN:-rotation}" --grenze "$GRENZE" --konsens-ordner .cache/konsens
             echo "Probelauf mit $GRENZE Aktien: wird nicht veroeffentlicht."
             echo "veroeffentlichen=nein" >> "$GITHUB_OUTPUT"
           else
-            python scanner_daten.py --bauen --analysten "${ANALYSTEN:-rotation}"
+            python scanner_daten.py --bauen --analysten "${ANALYSTEN:-rotation}" --konsens-ordner .cache/konsens
             echo "veroeffentlichen=ja" >> "$GITHUB_OUTPUT"
           fi
           ls -l scanner_tabelle.parquet scanner_analysten.parquet scanner_stand.json .cache/scanner/scanner_kurse_3j.parquet

@@ -169,7 +169,9 @@ def block_b():
                     # Etappe 3, Marktbreite und Marktphase (Gerhard, 13.09.2026)
                     "marktbreite",
                     # Etappe 4, fundamentale Kennzahlen (Gerhard, 13.09.2026)
-                    "kennzahlen_fundament"]
+                    "kennzahlen_fundament",
+                    # Etappe 5, Konsens (Gerhard, 13.09.2026)
+                    "kennzahlen_konsens"]
     for name in mit_schalter:
         r = subprocess.run([sys.executable, f"{name}.py", "--selbsttest"],
                            capture_output=True, text=True, cwd=WURZEL,
@@ -2336,6 +2338,33 @@ def block_h():
         pruefe("H", "Fundamentale Kennzahlen in ibd_ratings.json", True,
                "die Datei stammt noch vom Stand vor Etappe 4; der naechste Nachtscan legt sie an")
 
+    # ETAPPE 5 (Gerhard, 13.09.2026, Entscheidung 9): Der Bau der Nachttabelle
+    # vermerkt je Quelle, ob Konsens und Revisionen da sind. Die Werte selbst
+    # liegen im privaten Datenrepo und werden hier nicht gelesen.
+    try:
+        _sst_h = json.loads((WURZEL / "scanner_stand.json").read_text(encoding="utf-8"))
+    except Exception:
+        _sst_h = {}
+    _q_h = (_sst_h or {}).get("quellen") or {}
+    if "konsens" in _q_h:
+        _k_h, _r_h = _q_h.get("konsens") or {}, _q_h.get("revisionen") or {}
+        pruefe("H", "Nachttabelle: Einfrier-Laeufe gelesen, Konsens fuer mindestens die Haelfte der Aktien, "
+                    "juengster Lauf hoechstens vier Tage alt",
+               _k_h.get("status") == "ok" and (_k_h.get("mit_konsens") or 0) >= 0.5 * (_sst_h.get("zeilen") or 1)
+               and bool(_k_h.get("neuester"))
+               and (datetime.now(timezone.utc) - datetime.fromisoformat(str(_k_h["neuester"]).replace("Z", "+00:00"))).days <= 4,
+               f"{_k_h.get('status')}, {_k_h.get('mit_konsens')} von {_sst_h.get('zeilen')} Aktien, juengster Lauf "
+               f"{_k_h.get('neuester')}, Dateien {len(_k_h.get('dateien') or [])}")
+        pruefe("H", "Nachttabelle: Revisionen fuer die Wochenliste abgerufen, hoechstens ein Zehntel Fehler",
+               _r_h.get("status") == "ok" and (_r_h.get("fehler") or 0) <= 0.1 * max(1, _r_h.get("wochenliste") or 0)
+               and (_r_h.get("mit_stand") or 0) >= 0.9 * (_r_h.get("wochenliste") or 0),
+               f"{_r_h}")
+        pruefe("H", "Nachttabelle: EPS-Konsens aus dem Nasdaq-Kalender vermerkt",
+               "mit_eps_konsens" in (_q_h.get("kalender") or {}), f"{_q_h.get('kalender')}")
+    else:
+        pruefe("H", "Konsens in der Nachttabelle", True,
+               "scanner_stand.json stammt noch vom Stand vor Etappe 5; der naechste Bau legt es an")
+
     # positionen.json DARF fehlen, solange keine Position offen ist —
     # die Datei entsteht erst beim ersten Einstieg. Geprueft wird
     # deshalb, ob das Laden sauber durchlaeuft, nicht ob die Datei da ist.
@@ -2411,6 +2440,19 @@ def block_h():
         pruefe("H", "Scanner-Daten: sendet nichts, Analystenwerte nie im oeffentlichen Release",
                "NTFY" not in _text and "ntfy" not in _text and bool(_oeffentlich)
                and "scanner_analysten" not in _oeffentlich and "scanner_kurse" not in _oeffentlich)
+        # ETAPPE 5 (Gerhard, 13.09.2026, Entscheidung 9): Der Bau holt die
+        # juengsten Einfrier-Laeufe aus dem privaten Datenrepo, mit dem
+        # Datenrepo-Token und nur in einen Arbeitsordner; der Konsens landet nie
+        # im oeffentlichen Release.
+        _konsens_schritt = next((s for s in _d["jobs"]["bauen"]["steps"]
+                                 if s.get("name") == "Eingefrorenen Konsens holen"), {})
+        _bau_schritt = next((s for s in _d["jobs"]["bauen"]["steps"] if s.get("name") == "Scanner-Tabelle bauen"), {})
+        pruefe("H", "Scanner-Daten: Einfrier-Laeufe nur aus dem privaten Datenrepo, mit dessen Token, "
+                    "nie im oeffentlichen Release",
+               "heliot-daten/contents/konsens" in (_konsens_schritt.get("run") or "")
+               and "DATEN_TOKEN" in str((_konsens_schritt.get("env") or {}).get("GH_TOKEN"))
+               and "steps.token.outputs.da == 'ja'" in str(_konsens_schritt.get("if"))
+               and "--konsens-ordner" in (_bau_schritt.get("run") or "") and "konsens" not in _oeffentlich)
         # Beide Releases sind Vorabversionen und nie "latest": ibd_ratings.py
         # liest vom latest-Release des oeffentlichen Repos, und im Datenrepo
         # verdraengte das Scanner-Release beim ersten Bau am 14.09.2026 den
@@ -2422,7 +2464,7 @@ def block_h():
     except Exception as e:
         pruefe("H", "Scanner-Daten: Ablauf lesbar", False, f"{type(e).__name__}: {e}")
     _vernetzt = []
-    for _modul in ("scanner_daten.py", "scanner_ansicht.py", "scanner_noetig.py"):
+    for _modul in ("scanner_daten.py", "scanner_ansicht.py", "scanner_noetig.py", "kennzahlen_konsens.py"):
         _code = "\n".join(z for z in (WURZEL / _modul).read_text(encoding="utf-8").splitlines()
                           if not z.lstrip().startswith("#"))
         for _wort in ("NTFY_" + "TOPIC", "ntfy." + "sh", "requests." + "post(", "traderfox_" + "alarm",

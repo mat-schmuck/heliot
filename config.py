@@ -929,6 +929,32 @@ CFG = {
         "jahre": 7,
     },
 
+    # --- Etappe 5, Konsens (Gerhard, 13.09.2026, Entscheidung 9) -------------
+    # "BEIDES. Forward-KGV und erwartetes Wachstum aus dem eingefrorenen
+    # Yahoo-Konsens, EPS-Konsens aus dem Nasdaq-Kalender [...], Revisionen und
+    # Herauf-Herabstufungen nur fuer die Wochenliste." Reine Anzeige, nichts
+    # filtert. Gerechnet in kennzahlen_konsens.py, abgelegt wie die
+    # Analystenwerte im privaten Datenrepo (scanner_analysten.parquet).
+    "konsens_kennzahlen": {
+        # So viele juengste Einfrier-Laeufe liest der Scanner-Bau; je Firma
+        # gilt der juengste, der sie fuehrt. Ein abgebrochener Lauf
+        # hinterlaesst nur einen Teil der Firmen. Zwei Laeufe je Handelstag,
+        # sechs Laeufe sind drei Handelstage.
+        "schnappschuesse": 6,
+        # Herauf- und Herabstufungen werden in diesen Fenstern gezaehlt
+        # (Kalendertage, aufsteigend); das laengste begrenzt auch die Liste
+        # der juengsten Einstufungen.
+        "stufen_fenster_tage": (30, 90),
+        "stufen_liste_anzahl": 10,
+        # Yahoo-Abrufe fuer die Wochenliste: hoechstens so viele je Sekunde
+        # (die Einfrier-Laeufe schaffen vier ohne Drossel), Wartezeit je
+        # Versuch bei Drossel (mal Versuchsnummer: 30, 60, 90 Sekunden) und
+        # Schluss fuer die Nacht nach so vielen gedrosselten Aktien in Folge.
+        "rev_abfragen_je_sekunde": 2.0,
+        "rev_warten_s": 30,
+        "rev_notbremse": 3,
+    },
+
     # --- Scanner der Heliot-App (Mathias, 14.09.2026) ------------------------
     # Nachttabelle scanner_daten.py, Reiter "Scanner" der App. KEINE
     # Vernetzung mit Waechter, Alarmen oder der Scanner-Mappe.
@@ -1148,6 +1174,12 @@ def pruefe_config():
     assert 91 < fk["quartal_lang_tage"] < 100 and 0 <= fk["stichtag_toleranz_tage"] <= 45
     assert fk["aktien_hoechstalter_tage"] >= 100 and fk["jahre"] >= 6, \
         "Fundament: die Umsatz-CAGR ueber fuenf Jahre braucht mindestens sechs Kalenderjahre"
+    kk = CFG["konsens_kennzahlen"]
+    assert kk["schnappschuesse"] >= 1 and kk["stufen_liste_anzahl"] >= 1
+    _fenster = list(kk["stufen_fenster_tage"])
+    assert _fenster and all(isinstance(n, int) and n >= 1 for n in _fenster) and _fenster == sorted(set(_fenster)), \
+        "Konsens: Stufen-Fenster als ganze Tage, aufsteigend, ohne Doppel"
+    assert kk["rev_abfragen_je_sekunde"] > 0 and kk["rev_warten_s"] >= 0 and kk["rev_notbremse"] >= 1
     n = CFG["ibd_ratings"]["noten"]
     assert n["A"] > n["B"] > n["C"] > n["D"] > 0, "IBD-Noten: Grenzen muessen fallen (A ueber B ueber C ueber D)"
     assert CFG["gap_and_go"]["einstieg_grenze"] <= CFG["betrieb"]["nachlauf_grenze"], \

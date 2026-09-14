@@ -497,6 +497,44 @@ if not api_key and rolle != "gast":
 # ohne Netz pruefbar ist.
 
 
+# DIE ANALYSTENWERTE DES SCANNERS (Mathias, 14.09.2026) liest seit Etappe 5
+# auch das Nachschlagen (Gerhard, 13.09.2026, Entscheidung 9: Konsens,
+# Forward-KGV, erwartetes Wachstum, Revisionen der Wochenliste); deshalb
+# stehen die Lesefunktionen hier vor dem Suchfeld und nicht beim Scanner.
+DATEN_REPO = "mat-schmuck/heliot-daten"
+@st.cache_data(ttl=600, show_spinner=False)
+def _scanner_analysten_holen():
+    """Die Analystenwerte liegen im PRIVATEN Datenrepo (wie der eingefrorene
+    Konsens, F17). Gelesen wird mit DATEN_LESE_TOKEN aus den Streamlit-
+    Secrets, einem Token nur zum Lesen dieses einen Repos; der Wert erscheint
+    in keiner Meldung. Fehlschlaege werfen und landen nicht im Speicher."""
+    import requests
+    token = (_secret("DATEN_LESE_TOKEN") or "").strip()
+    if not token:
+        raise LookupError("kein Lese-Token")
+    kopf = {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"}
+    r = requests.get(f"https://api.github.com/repos/{DATEN_REPO}/releases/tags/scanner-daten",
+                     headers=kopf, timeout=20)
+    if r.status_code != 200:
+        raise LookupError(f"GitHub antwortete mit Code {r.status_code}")
+    anhang = next((a for a in (r.json().get("assets") or []) if a.get("name") == "scanner_analysten.parquet"), None)
+    if not anhang:
+        raise LookupError("noch keine Analystendatei")
+    d = requests.get(anhang["url"], headers={**kopf, "Accept": "application/octet-stream"}, timeout=60)
+    if d.status_code != 200:
+        raise LookupError(f"GitHub antwortete mit Code {d.status_code}")
+    return pd.read_parquet(io.BytesIO(d.content))
+
+
+def lade_scanner_analysten():
+    try:
+        return _scanner_analysten_holen(), ""
+    except LookupError as e:
+        return None, str(e)
+    except Exception as e:  # noqa
+        return None, f"Netzwerkfehler {type(e).__name__}"
+
+
 @st.cache_data(ttl=600, show_spinner=False)
 def nachschlag_dateien():
     return {n: nachschlagen.lade_datei(n) for n in nachschlagen.DATEIEN}
@@ -564,6 +602,11 @@ if nachschlag_eingabe:
                                       if nachschlag_stichtag else None)
             except Exception:
                 nachschlag_sb_kurs = None
+            # ETAPPE 5 (Gerhard, 13.09.2026, Entscheidung 9): Analysten und
+            # Konsens aus dem privaten Datenrepo, nur mit dem Lese-Token; ohne
+            # ihn nennt das Kapitel den Grund.
+            nachschlag_an_tab, nachschlag_an_grund = lade_scanner_analysten()
+            nachschlag_an = nachschlagen.analysten_zeile(nachschlag_an_tab, nachschlag_ticker)
             # Die Muster laufen mit dem echten RS aus der Nachtdatei, nicht mit
             # einer Schaetzung (siehe analysiere).
             nachschlag_e = nachschlagen.eintraege(nachschlag_daten.get("rs_universum.json")).get(nachschlag_ticker, {})
@@ -576,7 +619,7 @@ if nachschlag_eingabe:
                 nachschlag_ticker, nachschlag_daten.get("rs_universum.json"), nachschlag_daten.get("ibd_ratings.json"),
                 nachschlag_daten.get("sektor_rangliste.json"), live=nachschlag_live_werte, kurve=nachschlag_k,
                 kurve_quelle=nachschlag_kq, sektor_name=nachschlag_s, sektor_quelle=nachschlag_sq,
-                streubesitz_kurs=nachschlag_sb_kurs):
+                streubesitz_kurs=nachschlag_sb_kurs, analysten=nachschlag_an, analysten_grund=nachschlag_an_grund):
             st.markdown(f"#### {ueberschrift}")
             for satz in saetze:
                 st.markdown(satz)
@@ -885,7 +928,6 @@ with tab_scan:
 # Vernetzung zu unserem Haupttool").
 
 SCANNER_RELEASE = f"https://github.com/{REPO}/releases/download/scanner-daten/"
-DATEN_REPO = "mat-schmuck/heliot-daten"
 
 
 @st.cache_data(ttl=600, show_spinner=False)
@@ -926,38 +968,6 @@ def lade_scanner_stand():
         pass
     return nachschlagen.lade_datei("scanner_stand.json")
 
-
-@st.cache_data(ttl=600, show_spinner=False)
-def _scanner_analysten_holen():
-    """Die Analystenwerte liegen im PRIVATEN Datenrepo (wie der eingefrorene
-    Konsens, F17). Gelesen wird mit DATEN_LESE_TOKEN aus den Streamlit-
-    Secrets, einem Token nur zum Lesen dieses einen Repos; der Wert erscheint
-    in keiner Meldung. Fehlschlaege werfen und landen nicht im Speicher."""
-    import requests
-    token = (_secret("DATEN_LESE_TOKEN") or "").strip()
-    if not token:
-        raise LookupError("kein Lese-Token")
-    kopf = {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"}
-    r = requests.get(f"https://api.github.com/repos/{DATEN_REPO}/releases/tags/scanner-daten",
-                     headers=kopf, timeout=20)
-    if r.status_code != 200:
-        raise LookupError(f"GitHub antwortete mit Code {r.status_code}")
-    anhang = next((a for a in (r.json().get("assets") or []) if a.get("name") == "scanner_analysten.parquet"), None)
-    if not anhang:
-        raise LookupError("noch keine Analystendatei")
-    d = requests.get(anhang["url"], headers={**kopf, "Accept": "application/octet-stream"}, timeout=60)
-    if d.status_code != 200:
-        raise LookupError(f"GitHub antwortete mit Code {d.status_code}")
-    return pd.read_parquet(io.BytesIO(d.content))
-
-
-def lade_scanner_analysten():
-    try:
-        return _scanner_analysten_holen(), ""
-    except LookupError as e:
-        return None, str(e)
-    except Exception as e:  # noqa
-        return None, f"Netzwerkfehler {type(e).__name__}"
 
 
 def app_adresse() -> str:
