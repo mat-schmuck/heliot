@@ -679,7 +679,7 @@ def _qreihe(reihe):
     """[(ende, wert)] chronologisch, 14-Wochen-Quartale auf 13 Wochen (W7)."""
     import ibd_ratings as ibd
     raus = []
-    for s, e, w, _qu, _tax in reihe:
+    for s, e, w, _qu, _tax, *_ in reihe:
         if ZENTRAL["ibd_ratings"].get("wochen_13_umrechnen", True):
             w, _um = ibd.auf_13_wochen(s, e, w)
         raus.append((e, w))
@@ -836,9 +836,9 @@ def fundament_tabelle(ciks, heute, kennzahlen=None, leise=True):
     gesucht = {int(c) for c in ciks if c is not None}
     teil = kennzahlen[kennzahlen["cik"].isin(gesucht)]
     werte = {}
-    for cik, df_f in teil.groupby("cik"):
+    for cik, reihen_f in ibd._reihen_je_firma(teil).items():
         try:
-            werte[int(cik)] = fundament_werte(ibd._reihen(df_f), heute)
+            werte[cik] = fundament_werte(reihen_f, heute)
         except Exception:  # noqa
             continue
     return werte, "ok"

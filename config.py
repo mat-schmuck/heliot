@@ -898,6 +898,37 @@ CFG = {
         "wochen_13_umrechnen": True,
     },
 
+    # --- Fundamentale Kennzahlen aus dem SEC-Fundament (Etappe 4) -----------
+    # Gerhard, 13.09.2026, Entscheidung 7: alle 13 Punkte aus Gruppe B;
+    # Entscheidung 8: CAN-SLIM-Haekchen, kein Filter. Rechnung in
+    # kennzahlen_fundament.py, abgelegt je Aktie in ibd_ratings.json.
+    "fundament_kennzahlen": {
+        # Entscheidung 8, woertlich: Quartals-EPS ab 25 Prozent, Dreijahres-CAGR
+        # ab 25 Prozent, ROE ab 17 Prozent.
+        "canslim_eps_quartal_pct": 25.0,
+        "canslim_eps_cagr3_pct": 25.0,
+        "canslim_roe_pct": 17.0,
+        # Wachstum gegen das Vorjahresquartal fuer so viele Quartale (Papier 4.2
+        # Punkt 5: "ueber acht Quartale").
+        "wachstum_quartale": 8,
+        # EPS-Stabilitaet (Papier: "ueber 12 bis 20 Quartale").
+        "stabilitaet_min_quartale": 12,
+        "stabilitaet_max_quartale": 20,
+        # Ab so vielen Tagen gilt ein Quartal als 14-Wochen-Quartal (W7, wie
+        # QUARTAL_LANG_TAGE in ibd_ratings.py).
+        "quartal_lang_tage": 95,
+        # Bilanzwerte gelten als vom selben Stichtag, wenn sie hoechstens so
+        # viele Tage auseinanderliegen.
+        "stichtag_toleranz_tage": 10,
+        # Die Aktienzahl vom Deckblatt taugt fuer die Marktkapitalisierung,
+        # solange sie hoechstens so alt ist (ein Quartal, die Einreichungsfrist
+        # des Jahresberichts und Spielraum).
+        "aktien_hoechstalter_tage": 200,
+        # So viele Kalenderjahre des Fundaments braucht die Rechnung: fuenf
+        # Jahre Umsatz-CAGR und zwanzig Quartale fuer die Stabilitaet.
+        "jahre": 7,
+    },
+
     # --- Scanner der Heliot-App (Mathias, 14.09.2026) ------------------------
     # Nachttabelle scanner_daten.py, Reiter "Scanner" der App. KEINE
     # Vernetzung mit Waechter, Alarmen oder der Scanner-Mappe.
@@ -1110,6 +1141,13 @@ def pruefe_config():
     assert s["historie_tage"] >= 760, "Scanner: drei Jahre Handelstage brauchen mindestens 760 Tage"
     assert s["rotation_naechte"] >= 1 and s["abruf_faeden"] >= 1
     assert 0.0 < s["mindest_abdeckung"] <= 1.0
+    fk = CFG["fundament_kennzahlen"]
+    assert fk["canslim_eps_quartal_pct"] > 0 and fk["canslim_eps_cagr3_pct"] > 0 and fk["canslim_roe_pct"] > 0
+    assert fk["wachstum_quartale"] >= 3 and 3 <= fk["stabilitaet_min_quartale"] <= fk["stabilitaet_max_quartale"] <= 24, \
+        "Fundament: Beschleunigung braucht drei Quartale, die Stabilitaet hoechstens sechs Jahre"
+    assert 91 < fk["quartal_lang_tage"] < 100 and 0 <= fk["stichtag_toleranz_tage"] <= 45
+    assert fk["aktien_hoechstalter_tage"] >= 100 and fk["jahre"] >= 6, \
+        "Fundament: die Umsatz-CAGR ueber fuenf Jahre braucht mindestens sechs Kalenderjahre"
     n = CFG["ibd_ratings"]["noten"]
     assert n["A"] > n["B"] > n["C"] > n["D"] > 0, "IBD-Noten: Grenzen muessen fallen (A ueber B ueber C ueber D)"
     assert CFG["gap_and_go"]["einstieg_grenze"] <= CFG["betrieb"]["nachlauf_grenze"], \

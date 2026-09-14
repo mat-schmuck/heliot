@@ -517,6 +517,13 @@ def nachschlag_sektor(ticker: str):
     return nachschlagen.sektor_name_fuer(ticker)
 
 
+@st.cache_data(ttl=24 * 3600, show_spinner=False)
+def nachschlag_stichtagkurs(ticker: str, stichtag: str):
+    # Etappe 4, Punkt 11: der Schlusskurs am Stichtag des Streubesitzes, fuer
+    # die Zahl der Aktien im Streubesitz
+    return nachschlagen.kurs_am(ticker, stichtag)
+
+
 st.markdown("### Aktie nachschlagen")
 # DAS FELD STEHT IN DER ADRESSE (Mathias, 14.09.2026): bind="query-params"
 # schreibt die Eingabe als ?aktie=... in die Adresse der Seite und liest sie
@@ -550,6 +557,13 @@ if nachschlag_eingabe:
                 nachschlag_s, nachschlag_sq = nachschlag_sektor(nachschlag_ticker)
             except Exception:
                 nachschlag_s, nachschlag_sq = None, "keine"
+            try:
+                nachschlag_stichtag = nachschlagen.streubesitz_stichtag(nachschlag_daten.get("ibd_ratings.json"),
+                                                                       nachschlag_ticker)
+                nachschlag_sb_kurs = (nachschlag_stichtagkurs(nachschlag_ticker, nachschlag_stichtag)
+                                      if nachschlag_stichtag else None)
+            except Exception:
+                nachschlag_sb_kurs = None
             # Die Muster laufen mit dem echten RS aus der Nachtdatei, nicht mit
             # einer Schaetzung (siehe analysiere).
             nachschlag_e = nachschlagen.eintraege(nachschlag_daten.get("rs_universum.json")).get(nachschlag_ticker, {})
@@ -561,7 +575,8 @@ if nachschlag_eingabe:
         for ueberschrift, saetze in nachschlagen.bericht(
                 nachschlag_ticker, nachschlag_daten.get("rs_universum.json"), nachschlag_daten.get("ibd_ratings.json"),
                 nachschlag_daten.get("sektor_rangliste.json"), live=nachschlag_live_werte, kurve=nachschlag_k,
-                kurve_quelle=nachschlag_kq, sektor_name=nachschlag_s, sektor_quelle=nachschlag_sq):
+                kurve_quelle=nachschlag_kq, sektor_name=nachschlag_s, sektor_quelle=nachschlag_sq,
+                streubesitz_kurs=nachschlag_sb_kurs):
             st.markdown(f"#### {ueberschrift}")
             for satz in saetze:
                 st.markdown(satz)

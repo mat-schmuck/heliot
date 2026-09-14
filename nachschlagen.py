@@ -19,12 +19,17 @@ WOHER DIE ZAHLEN KOMMEN
     ibd_ratings.json       EPS, SMR, A/D und Composite als Naeherung aus dem
                            SEC-Fundament (amtlich), dazu Umsatz und Gewinn je
                            Aktie des juengsten Quartals, des Vorquartals und
-                           des Vorjahresquartals
+                           des Vorjahresquartals; seit Etappe 4 die
+                           SMR-Bausteine, die fundamentalen Kennzahlen
+                           (fundament: Margen, Wachstum, Bilanz, Cashflow,
+                           F-Score, Altman Z, Bewertung, Streubesitz) und die
+                           CAN-SLIM-Haekchen
     sektor_rangliste.json  Rang des Sektor-ETFs (36 ETFs, Faber-Mittel)
     volumenkurven.json     die eigene Volumenkurve je Listenaktie
   Live von Yahoo, ohne Schluessel: Kurs, das bisher gehandelte Volumen des
   Tages, fuer Aktien ohne Vorratskurve die Fuenf-Minuten-Historie fuer die
-  Kurve, und der Sektor, wenn die Aktie in keiner Wochenliste steht.
+  Kurve, der Sektor, wenn die Aktie in keiner Wochenliste steht, und der
+  Schlusskurs am Stichtag des Streubesitzes (daraus die Zahl der Aktien).
 
 DIE VOLUMENFORMEL ist die von volumen.py (Gerhard, 28.07.2026): waehrend
 des Handels hochgerechnet auf den Tag nach der eigenen Kurve der Aktie,
@@ -346,6 +351,19 @@ def ratings_saetze(e, r, ratings):
         return s
     s.append(f"EPS-Rating {int(r['eps'])}." if r.get("eps") is not None else "EPS-Rating nicht verfügbar.")
     s.append(f"SMR-Note {r['smr']}, Rang {int(r['smr_rang'])}." if r.get("smr") else "SMR-Note nicht verfügbar.")
+    # Etappe 4, Punkt 13 (Gerhard, 13.09.2026): die Bausteine des SMR mit Rohwert und Rang
+    bs = r.get("smr_bausteine") or {}
+    teile = []
+    for k, name in (("umsatz", "Umsatzwachstum der drei jüngsten Quartale gegen das Vorjahr"),
+                    ("marge", "Nettomarge des jüngsten Quartals"), ("vorsteuer", "Vorsteuermarge des Geschäftsjahres"),
+                    ("roe", "Eigenkapitalrendite")):
+        roh, rang = (bs.get(k) or [None, None])[:2]
+        if roh is None:
+            continue
+        wert = prozent(roh * 100.0, 1) if k == "umsatz" else _pz(roh)
+        teile.append(f"{name} {wert}" + (f", Rang {int(rang)}" if rang is not None else ""))
+    if teile:
+        s.append("SMR-Bausteine: " + "; ".join(teile) + ".")
     s.append(f"A/D-Note {r['ad']}, Rang {int(r['ad_rang'])}, Näherung aus der Schlusslage in der Tagesspanne und dem Volumen."
              if r.get("ad")
              else "A/D-Note nicht verfügbar.")
@@ -555,7 +573,7 @@ def wachstum_saetze(r):
         for v in (r or {}).get("vermerke") or []:
             if "SEC" in v or "Release" in v:
                 s.append(v + ".")
-        return s
+        return s + fundament_wachstum_saetze(r)
     s = []
     if r.get("umsatz_juengst") is not None:
         was = _begriff(r)
@@ -582,7 +600,318 @@ def wachstum_saetze(r):
         s.append("Gewinn je Aktie: kein Quartalswert im Fundament.")
     s.append(f"Quelle SEC-Fundament, Basis {r.get('basis', 'amtlich')}, {int(r.get('quartale') or 0)} Quartale"
              + (", IFRS-Zahlen ungeprüft" if r.get("ifrs") else "") + ".")
-    return [x for x in s if x]
+    return [x for x in s if x] + fundament_wachstum_saetze(r)
+
+
+# ---------------------------------------------------------------------------
+# Etappe 4: fundamentale Kennzahlen aus dem SEC-Fundament (Entscheidungen 7 und 8)
+# ---------------------------------------------------------------------------
+# Gerhard, 13.09.2026: alle 13 Punkte aus Gruppe B und die CAN-SLIM-Haekchen,
+# reine Anzeige. Gerechnet wird in kennzahlen_fundament.py, abgelegt je Aktie
+# in ibd_ratings.json unter "fundament" und "canslim".
+
+def _pz(anteil, stellen=1):
+    """Ein Anteil (0,123) als '12,3 Prozent', negativ mit 'minus'."""
+    return "nicht berechenbar" if anteil is None else f"{zahl(float(anteil) * 100.0, stellen)} Prozent"
+
+
+def _q(x, stellen=2):
+    return "nicht berechenbar" if x is None else zahl(x, stellen)
+
+
+def _betrag(x, wort="Dollar"):
+    """Grosse Betraege in Worten mit Vorzeichen: 'minus 1,2 Milliarden Dollar'."""
+    if x is None:
+        return "unbekannt"
+    v = float(x)
+    vz = "minus " if v < 0 else ""
+    a = abs(v)
+    if a >= 1e9:
+        return f"{vz}{zahl(a / 1e9, 1)} Milliarden {wort}"
+    if a >= 1e6:
+        return f"{vz}{zahl(a / 1e6, 1)} Millionen {wort}"
+    return f"{vz}{zahl(a)} {wort}"
+
+
+def _geldwort(f):
+    w = (f or {}).get("waehrung")
+    return "Dollar" if w in (None, "USD") else str(w)
+
+
+def split_text(faktor):
+    """1,5 wird 'Split 3 zu 2', 0,1 wird 'Reverse-Split 1 zu 10'."""
+    import kennzahlen_fundament as kf
+    f = float(faktor)
+    g = f if f >= 1 else 1.0 / f
+    nett = min(kf.SPLIT_FAKTOREN, key=lambda s: abs(s / g - 1.0))
+    z, n = (3, 2) if nett == 1.5 else (int(nett), 1)
+    return f"Split {z} zu {n}" if f >= 1 else f"Reverse-Split {n} zu {z}"
+
+
+def _perioden(n):
+    return "1 Periode" if n == 1 else f"{n} Perioden"
+
+
+def fundament_wachstum_saetze(r):
+    """Etappe 4, Punkte 1, 5 und 6 samt Entscheidung 8: Margen, acht Quartale
+    Wachstum, Beschleunigung, CAGR, EPS-Stabilitaet, Verwaesserung und die
+    CAN-SLIM-Haekchen; dazu, was an den Rohzahlen berichtigt wurde."""
+    f = (r or {}).get("fundament")
+    s = []
+    if not f:
+        return s
+    if f.get("fehler"):
+        return [f"Erweiterte Kennzahlen aus dem SEC-Fundament nicht berechnet: {f['fehler']}."]
+    for art, wort in (("q", "im Quartal"), ("fy", "im Geschäftsjahr")):
+        teile = [f"{name} {_pz(f.get(f'marge_{k}_{art}'))}" for k, name in (
+            ("brutto", "brutto"), ("operativ", "operativ"), ("vorsteuer", "vor Steuern"), ("netto", "netto"))
+                 if f.get(f"marge_{k}_{art}") is not None]
+        if teile:
+            s.append(f"Margen {wort} bis {datum_text(f.get(f'marge_ende_{art}'))}: " + "; ".join(teile) + ".")
+    begriff = _begriff(r).rstrip(",")
+    for feld, was in (("umsatz_vj", begriff), ("eps_vj", "Gewinn je Aktie")):
+        liste = f.get(feld) or []
+        if liste:
+            teile = [f"bis {datum_text(e)} {prozent(p, 1)}" for e, p in liste]
+            s.append(f"{was} gegenüber dem Vorjahresquartal, jüngstes zuerst: " + "; ".join(teile) + ".")
+    for feld, was in (("umsatz_trend", begriff), ("eps_trend", "Gewinn je Aktie")):
+        if f.get(feld):
+            s.append(f"{was}, Wachstum über die drei jüngsten Quartale: {f[feld]}.")
+    teile = []
+    if f.get("umsatz_cagr3") is not None:
+        teile.append(f"{begriff} über drei Jahre {prozent(f['umsatz_cagr3'], 1)}")
+    if f.get("umsatz_cagr5") is not None:
+        teile.append(f"über fünf Jahre {prozent(f['umsatz_cagr5'], 1)}")
+    if f.get("eps_cagr3") is not None:
+        teile.append(f"Gewinn je Aktie über drei Jahre {prozent(f['eps_cagr3'], 1)}")
+    if teile:
+        s.append("Jährliches Wachstum im Schnitt: " + "; ".join(teile) + ".")
+    if f.get("eps_stabilitaet") is not None:
+        s.append(f"EPS-Stabilität {int(f['eps_stabilitaet'])} über {int(f.get('stabilitaet_quartale') or 0)} Quartale, "
+                 "Näherung nach IBD-Art: 1 heißt gleichmäßig, 99 sprunghaft.")
+    teile = []
+    if f.get("aktien_1j_pct") is not None:
+        teile.append(f"gegenüber einem Jahr zuvor {prozent(f['aktien_1j_pct'], 1)}")
+    if f.get("aktien_3j_pct") is not None:
+        teile.append(f"gegenüber drei Jahren zuvor {prozent(f['aktien_3j_pct'], 1)}")
+    if teile:
+        s.append("Verwässerte Aktienzahl " + ", ".join(teile)
+                 + (f", Stand {datum_text(f['aktien_ende'])}" if f.get("aktien_ende") else "") + ".")
+    if f.get("sbc_umsatz") is not None:
+        s.append(f"Aktienbasierte Vergütung {_pz(f['sbc_umsatz'])} des Umsatzes.")
+    cs = (r or {}).get("canslim")
+    if cs:
+        try:
+            from config import CFG
+            g = CFG["fundament_kennzahlen"]
+            grenzen = {"eps_q": g["canslim_eps_quartal_pct"], "eps_cagr3": g["canslim_eps_cagr3_pct"], "roe": g["canslim_roe_pct"]}
+        except Exception:  # noqa
+            grenzen = {"eps_q": 25, "eps_cagr3": 25, "roe": 17}
+        teile = []
+        for k, name in (("eps_q", "Quartals-EPS gegenüber dem Vorjahr"), ("eps_cagr3", "Dreijahres-CAGR des Gewinns je Aktie"),
+                        ("roe", "Eigenkapitalrendite")):
+            erfuellt, wert = (cs.get(k) or [None, None])[:2]
+            grenze = f"ab {zahl(grenzen[k])} Prozent"
+            if erfuellt is None:
+                teile.append(f"{name} {grenze} offen, nicht berechenbar")
+            else:
+                w = prozent(wert, 1) if k != "roe" else f"{zahl(wert, 1)} Prozent"
+                teile.append(f"{name} {grenze} {'erfüllt' if erfuellt else 'nicht erfüllt'} mit {w}")
+        s.append("CAN-SLIM-Häkchen, kein Filter: " + "; ".join(teile) + ".")
+    if f.get("splits"):
+        s.append("Eingerechnet: " + "; ".join(f"{split_text(fk)}, Umrechnung ab {datum_text(tag)}" for fk, tag in f["splits"]) + ".")
+    if f.get("einheiten"):
+        zaehler = {}
+        for kz, _typ, _ende, _fk in f["einheiten"]:
+            zaehler[kz] = zaehler.get(kz, 0) + 1
+        namen = {"aktien_verwaessert": "Aktienzahl", "eps_verwaessert": "Gewinn je Aktie", "nettogewinn": "Nettogewinn"}
+        s.append("Einheitenfehler in den SEC-Meldungen berichtigt, etwa Aktien in Tausend statt Stück: "
+                 + "; ".join(f"{namen.get(k, k)} in {_perioden(n)}" for k, n in zaehler.items()) + ".")
+    if f.get("unstimmig"):
+        s.append(f"Unstimmig: Bei {_perioden(int(f['unstimmig']))} passen Gewinn je Aktie, Aktienzahl und Nettogewinn "
+                 f"nicht zusammen, zuletzt bis {datum_text(f.get('unstimmig_ende'))}; Kennzahlen daraus mit Vorsicht lesen.")
+    return s
+
+
+def bilanz_saetze(r):
+    """Etappe 4, Punkte 2, 3, 4, 7, 8, 9 und 12: Renditen, Verschuldung,
+    Cashflow, F-Score, Altman Z, Rule of 40, Banken und Immobilien."""
+    f = (r or {}).get("fundament")
+    if not f:
+        return ["Keine erweiterten Kennzahlen aus dem SEC-Fundament für diese Aktie."]
+    if f.get("fehler"):
+        return [f"Erweiterte Kennzahlen aus dem SEC-Fundament nicht berechnet: {f['fehler']}."]
+    wort = _geldwort(f)
+    s = []
+    teile = []
+    if f.get("roe") is not None:
+        teile.append(f"Eigenkapitalrendite {_pz(f['roe'])}")
+    if f.get("roa") is not None:
+        teile.append(f"Rendite auf das Vermögen {_pz(f['roa'])}")
+    if f.get("roic") is not None:
+        teile.append(f"Rendite auf das eingesetzte Kapital {_pz(f['roic'])}"
+                     + (f" bei einem Steuersatz von {_pz(f['steuersatz'])}" if f.get("steuersatz") is not None else ""))
+    if teile:
+        s.append("Renditen mit dem Gewinn des Geschäftsjahres: " + "; ".join(teile) + ".")
+    teile = []
+    if f.get("lt_schulden_ek") is not None:
+        teile.append(f"langfristige Schulden zum Eigenkapital {_q(f['lt_schulden_ek'])}")
+    if f.get("schulden_ek") is not None:
+        teile.append(f"alle Schulden zum Eigenkapital {_q(f['schulden_ek'])}")
+    if f.get("nettoschulden") is not None:
+        teile.append(f"Nettoschulden {_betrag(f['nettoschulden'], wort)}" if f["nettoschulden"] >= 0
+                     else f"Nettokasse {_betrag(-f['nettoschulden'], wort)}")
+    if f.get("current_ratio") is not None:
+        teile.append(f"Current Ratio {_q(f['current_ratio'])}")
+    if f.get("quick_ratio") is not None:
+        teile.append(f"Quick Ratio {_q(f['quick_ratio'])}")
+    if f.get("zinsdeckung") is not None:
+        teile.append(f"Zinsdeckung {_q(f['zinsdeckung'], 1)} mal")
+    if teile:
+        s.append((f"Bilanz zum {datum_text(f['bilanz_ende'])}: " if f.get("bilanz_ende") else "Bilanz: ")
+                 + "; ".join(teile) + ".")
+    if f.get("umsatz_12m") is not None:
+        s.append(f"{_begriff(r).rstrip(',')} der letzten zwölf Monate {_betrag(f['umsatz_12m'], wort)}"
+                 + (", aus dem Geschäftsjahr, weil ein Quartal fehlt" if f.get("umsatz_12m_art") == "fy" else "") + ".")
+    teile = []
+    if f.get("fcf") is not None:
+        teile.append(f"Free Cashflow {_betrag(f['fcf'], wort)}")
+    if f.get("fcf_marge") is not None:
+        teile.append(f"FCF-Marge {_pz(f['fcf_marge'])}")
+    if f.get("cash_conversion") is not None:
+        teile.append(f"Cash Conversion {_q(f['cash_conversion'])}, also operativer Cashflow durch Nettogewinn")
+    if f.get("ausschuettung") is not None:
+        teile.append(f"Ausschüttungsquote {_pz(f['ausschuettung'])}")
+    if teile:
+        zeit = (f"im Geschäftsjahr bis {datum_text(f.get('cashflow_ende'))}" if f.get("cashflow_art") == "fy"
+                else f"über die vier Quartale bis {datum_text(f.get('cashflow_ende'))}")
+        s.append(f"Cashflow {zeit}: " + "; ".join(teile) + ".")
+    if f.get("finanz_grund"):
+        s.append(f"{f['finanz_grund']}.")
+    if f.get("fscore") is not None:
+        try:
+            import kennzahlen_fundament as kf
+            texte = [kf.F_SIGNALE.get(c, c) for c in f.get("fscore_erfuellt") or []]
+        except Exception:  # noqa
+            texte = list(f.get("fscore_erfuellt") or [])
+        s.append(f"Piotroski F-Score {int(f['fscore'])} von {int(f.get('fscore_bewertbar') or 0)} bewertbaren Signalen"
+                 + ("; erfüllt: " + ", ".join(texte) if texte else "") + ".")
+    elif f.get("fscore_grund"):
+        s.append(f"Piotroski F-Score {f['fscore_grund']}.")
+    if f.get("altman_z") is not None:
+        z = float(f["altman_z"])
+        zone = "sichere Zone über 2,99" if z > 2.99 else ("Grauzone von 1,81 bis 2,99" if z >= 1.81 else "Gefahrenzone unter 1,81")
+        s.append(f"Altman Z {zahl(z, 2)}, {zone}.")
+    elif f.get("altman_grund"):
+        s.append(f"Altman Z {f['altman_grund']}.")
+    if f.get("rule40") is not None:
+        s.append(f"Rule of 40, gedacht für Software: Umsatzwachstum der vier Quartale {prozent(f.get('umsatz_12m_vj_pct'), 1)} "
+                 f"plus FCF-Marge {_pz(f.get('fcf_marge'))} ergibt {zahl(f['rule40'], 1)}; ab 40 erfüllt.")
+    teile = []
+    if f.get("kernkapitalquote") is not None:
+        teile.append(f"Kernkapitalquote {_pz(f['kernkapitalquote'])}")
+    if f.get("risikovorsorge_kredite") is not None:
+        teile.append(f"Risikovorsorge {_pz(f['risikovorsorge_kredite'], 2)} der Kredite")
+    if f.get("einlagen_vj_pct") is not None:
+        teile.append(f"Einlagen gegenüber dem Vorjahr {prozent(f['einlagen_vj_pct'], 1)}")
+    if teile:
+        s.append("Bank: " + "; ".join(teile) + ".")
+    if f.get("ffo") is not None:
+        s.append(f"FFO nach NAREIT über zwölf Monate {_betrag(f['ffo'], wort)}"
+                 + (f"; je Aktie {zahl(f['ffo_je_aktie'], 2)} {wort}" if f.get("ffo_je_aktie") is not None else "")
+                 + (f"; Kurs zu FFO {_q(f['p_ffo'], 1)}" if f.get("p_ffo") is not None else "") + ".")
+    return s or ["Aus dem SEC-Fundament lassen sich für diese Aktie keine Bilanz- und Cashflow-Kennzahlen rechnen."]
+
+
+def bewertung_saetze(r, streubesitz_kurs=None):
+    """Etappe 4, Punkte 10 und 11: Bewertung mit dem Schlusskurs der Nacht
+    und der Aktienzahl vom Deckblatt, dazu der Streubesitz. Mit dem Kurs am
+    Stichtag des Streubesitzes (live von Yahoo) auch die Zahl der Aktien."""
+    f = (r or {}).get("fundament")
+    if not f:
+        return ["Keine Bewertung: Für diese Aktie gibt es keine erweiterten Kennzahlen aus dem SEC-Fundament."]
+    if f.get("fehler"):
+        return [f"Keine Bewertung: {f['fehler']}."]
+    s = []
+    if f.get("bewertung_grund"):
+        s.append(f"Bewertung mit dem Kurs nicht gerechnet: {f['bewertung_grund']}.")
+    elif f.get("mk") is not None:
+        s.append(f"Marktkapitalisierung {_betrag(f['mk'])} aus {zahl(f.get('aktien_ausstehend'))} Aktien vom Deckblatt, "
+                 f"Stand {datum_text(f.get('aktien_stand'))}, mal dem Schlusskurs der Nacht.")
+        teile = []
+        teile.append(f"KGV {_q(f['kgv'], 1)}" if f.get("kgv") is not None
+                     else "KGV nicht sinnvoll, der Nettogewinn der letzten zwölf Monate ist null oder negativ")
+        if f.get("kuv") is not None:
+            teile.append(f"KUV {_q(f['kuv'])}")
+        if f.get("kbv") is not None:
+            teile.append(f"KBV {_q(f['kbv'])}")
+        s.append("; ".join(teile) + ".")
+        teile = []
+        if f.get("ev") is not None:
+            teile.append(f"Enterprise Value {_betrag(f['ev'])}")
+        if f.get("ev_ebitda") is not None:
+            teile.append(f"EV zu EBITDA {_q(f['ev_ebitda'], 1)}")
+        if f.get("ev_umsatz") is not None:
+            teile.append(f"EV zu Umsatz {_q(f['ev_umsatz'])}")
+        if teile:
+            s.append("; ".join(teile) + ".")
+        if f.get("peg") is not None:
+            s.append(f"PEG {_q(f['peg'])} mit einem Wachstum des Gewinns je Aktie im letzten Geschäftsjahr von "
+                     f"{prozent(f.get('peg_wachstum'), 1)}.")
+        teile = [f"{name} {zahl(f[k], 2)} Dollar" for k, name in (
+            ("cash_je_aktie", "Cash"), ("nettokasse_je_aktie", "Nettokasse"), ("buchwert_je_aktie", "Buchwert"),
+            ("fcf_je_aktie", "Free Cashflow")) if f.get(k) is not None]
+        if teile:
+            s.append("Je Aktie: " + "; ".join(teile) + ".")
+        teile = [f"{name} {_pz(f[k])}" for k, name in (
+            ("div_rendite", "Dividendenrendite"), ("fcf_rendite", "FCF-Rendite"),
+            ("rueckkauf_mk", "Aktienrückkäufe in Prozent der Marktkapitalisierung")) if f.get(k) is not None]
+        if teile:
+            s.append("; ".join(teile) + ".")
+    if f.get("streubesitz_wert") is not None:
+        wort = "Dollar" if f.get("streubesitz_waehrung") in (None, "USD") else str(f["streubesitz_waehrung"])
+        satz = f"Streubesitz laut Deckblatt zum {datum_text(f.get('streubesitz_stichtag'))}: {_betrag(f['streubesitz_wert'], wort)}"
+        if streubesitz_kurs and wort == "Dollar":
+            satz += (f"; beim Schlusskurs von {zahl(streubesitz_kurs, 2)} Dollar an jenem Tag rund "
+                     f"{zahl(f['streubesitz_wert'] / streubesitz_kurs)} Aktien in heutiger Stückelung")
+        s.append(satz + ".")
+    return s or ["Aus dem SEC-Fundament lässt sich für diese Aktie keine Bewertung rechnen."]
+
+
+def streubesitz_stichtag(ratings, ticker):
+    """Der Stichtag des Streubesitzes einer Aktie, wenn er in Dollar steht; sonst None."""
+    f = (((ratings or {}).get("aktien") or {}).get(str(ticker or "").upper()) or {}).get("fundament") or {}
+    if f.get("streubesitz_wert") is None or f.get("streubesitz_waehrung") not in (None, "USD"):
+        return None
+    return f.get("streubesitz_stichtag")
+
+
+def kurs_am(ticker, stichtag, holen=None):
+    """Der Schlusskurs am Stichtag oder am letzten Handelstag davor
+    (hoechstens sieben Tage zurueck), von Yahoo. holen(ticker, datum)
+    liefert im Selbsttest einen DataFrame mit Close und Datumsindex. Yahoo
+    rechnet spaetere Splits in die Kurse ein; die Aktienzahl daraus steht
+    deshalb in heutiger Stueckelung. None ohne Kurs."""
+    from datetime import date, timedelta
+    try:
+        d = date.fromisoformat(str(stichtag)[:10])
+    except ValueError:
+        return None
+    try:
+        if holen is not None:
+            df = holen(ticker, d)
+        else:
+            import yfinance as yf
+            df = yf.Ticker(ticker).history(start=(d - timedelta(days=7)).isoformat(),
+                                           end=(d + timedelta(days=1)).isoformat(), interval="1d", auto_adjust=False)
+    except Exception:  # noqa
+        return None
+    if df is None or len(df) == 0:
+        return None
+    df = df.dropna(subset=["Close"])
+    tage = [(x.date() if hasattr(x, "date") else x) for x in df.index]
+    werte = [float(c) for t, c in zip(tage, df["Close"]) if t <= d]
+    return werte[-1] if werte else None
 
 
 def sektor_saetze(sektor_name, sektoren, quelle=""):
@@ -641,8 +970,10 @@ def stand_saetze(rs, ratings, sektoren):
     return s
 
 
-def bericht(ticker, rs, ratings, sektoren, live=None, kurve=None, kurve_quelle="", sektor_name=None, sektor_quelle=""):
-    """Liste von (Ueberschrift, [Saetze]) fuer die Anzeige."""
+def bericht(ticker, rs, ratings, sektoren, live=None, kurve=None, kurve_quelle="", sektor_name=None, sektor_quelle="",
+            streubesitz_kurs=None):
+    """Liste von (Ueberschrift, [Saetze]) fuer die Anzeige. streubesitz_kurs:
+    der Schlusskurs am Stichtag des Streubesitzes (kurs_am), sonst None."""
     t = str(ticker or "").upper()
     e = eintraege(rs).get(t, {})
     r = ((ratings or {}).get("aktien") or {}).get(t, {})
@@ -651,6 +982,8 @@ def bericht(ticker, rs, ratings, sektoren, live=None, kurve=None, kurve_quelle="
             ("Volumen", volumen_saetze(live, kurve, kurve_quelle)),
             ("Technische Kennzahlen", technik_saetze(e)),
             ("Umsatz und Gewinn", wachstum_saetze(r)),
+            ("Bilanz und Cashflow", bilanz_saetze(r)),
+            ("Bewertung", bewertung_saetze(r, streubesitz_kurs)),
             ("Sektor", sektor_saetze(sektor_name, sektoren, sektor_quelle)),
             ("Stand", stand_saetze(rs, ratings, sektoren))]
 
@@ -978,7 +1311,39 @@ def selbsttest() -> int:
                                    "umsatz_juengst": 1234567890.0, "umsatz_vorquartal": 1190000000.0, "umsatz_vorjahr": 987654321.0,
                                    "umsatz_ende": "2026-06-30", "umsatz_wachstum_vj_pct": 25.0, "umsatz_wachstum_vq_pct": 3.7,
                                    "eps_juengst": 1.23, "eps_vorquartal": 1.15, "eps_vorjahr": -0.2, "eps_ende": "2026-06-30",
-                                   "eps_wachstum_vj_pct": None, "eps_wachstum_vq_pct": 7.0},
+                                   "eps_wachstum_vj_pct": None, "eps_wachstum_vq_pct": 7.0,
+                                   "smr_bausteine": {"umsatz": [0.2136, 81], "marge": [0.085, 60], "vorsteuer": [-0.012, 22],
+                                                     "roe": [0.18, 66]},
+                                   "canslim": {"eps_q": [None, None], "eps_cagr3": [True, 31.5], "roe": [True, 18.0]},
+                                   "fundament": {
+                                       "waehrung": "USD", "marge_brutto_q": 0.305, "marge_operativ_q": 0.061,
+                                       "marge_vorsteuer_q": 0.058, "marge_netto_q": -0.021, "marge_ende_q": "2026-06-30",
+                                       "marge_brutto_fy": 0.29, "marge_ende_fy": "2025-12-31",
+                                       "umsatz_vj": [["2026-06-30", 25.0], ["2026-03-31", None]],
+                                       "eps_vj": [["2026-06-30", None]], "umsatz_trend": "beschleunigt",
+                                       "umsatz_cagr3": 18.2, "umsatz_cagr5": 9.0, "eps_cagr3": 31.5,
+                                       "eps_stabilitaet": 42, "stabilitaet_quartale": 15,
+                                       "aktien_1j_pct": 12.5, "aktien_3j_pct": 40.1, "aktien_ende": "2026-06-30",
+                                       "sbc_umsatz": 0.034,
+                                       "roe": 0.18, "roa": 0.071, "roic": 0.093, "steuersatz": 0.21, "bilanz_ende": "2026-06-30",
+                                       "lt_schulden_ek": 0.45, "schulden_ek": 0.6, "nettoschulden": -120000000,
+                                       "current_ratio": 1.8, "quick_ratio": 1.2, "zinsdeckung": 12.34,
+                                       "umsatz_12m": 4567000000, "umsatz_12m_art": "4q",
+                                       "fcf": 150000000, "fcf_marge": 0.0328, "cash_conversion": 1.42, "ausschuettung": 0.0,
+                                       "cashflow_ende": "2026-06-30", "cashflow_art": "4q",
+                                       "fscore": 6, "fscore_bewertbar": 8, "fscore_erfuellt": ["roa", "cfo", "cfo_ng"],
+                                       "altman_z": 2.5, "rule40": 28.3, "umsatz_12m_vj_pct": 25.0,
+                                       "aktien_ausstehend": 62000000, "aktien_stand": "2026-08-01", "mk": 6532320000,
+                                       "kgv": 88.4, "kuv": 1.43, "kbv": 5.2, "ev": 6412320000, "ev_ebitda": 30.12,
+                                       "ev_umsatz": 1.4, "cash_je_aktie": 3.1, "nettokasse_je_aktie": 1.94,
+                                       "buchwert_je_aktie": 20.26, "fcf_je_aktie": 2.42, "fcf_rendite": 0.023,
+                                       "streubesitz_wert": 3100000000, "streubesitz_stichtag": "2025-06-30",
+                                       "streubesitz_waehrung": "USD",
+                                       "splits": [[4, "2026-08-27"], [0.1, "2021-05-10"]],
+                                       "einheiten": [["aktien_verwaessert", "FY", "2021-12-31", 1000.0],
+                                                     ["aktien_verwaessert", "FY", "2022-12-31", 1000.0],
+                                                     ["eps_verwaessert", "Q", "2022-07-30", 0.01]],
+                                       "unstimmig": 1, "unstimmig_ende": "2023-06-30"}},
                           "AAPL": {"eps": 60, "smr": None, "smr_rang": None, "ad": None, "ad_rang": None, "composite": None,
                                    "composite_fehlt": ["SMR", "A/D"], "basis": "amtlich", "quartale": 8, "ifrs": True,
                                    "vermerke": ["IFRS-Zahlen, ungeprueft (Antwort 8)", "Bank: Nettoertraege (Zinsueberschuss plus Provisionsertrag) statt Umsatz"],
@@ -1013,9 +1378,9 @@ def selbsttest() -> int:
 
     teile = bericht("AAOI", rs, ratings, sektoren, live=live_auf, kurve=kurve, kurve_quelle="Vorrat", sektor_name="Technology", sektor_quelle="Wochenliste")
     text = bericht_text(teile)
-    p("Bericht hat sieben Teile in fester Reihenfolge",
-      [u for u, _ in teile] == ["Aktie", "Unsere Ratings", "Volumen", "Technische Kennzahlen", "Umsatz und Gewinn", "Sektor",
-                                "Stand"])
+    p("Bericht hat neun Teile in fester Reihenfolge",
+      [u for u, _ in teile] == ["Aktie", "Unsere Ratings", "Volumen", "Technische Kennzahlen", "Umsatz und Gewinn",
+                                "Bilanz und Cashflow", "Bewertung", "Sektor", "Stand"])
     p("Kopf: Kuerzel, Name, Boerse, Kurs live, Abstand zum Hoch",
       "AAOI, Applied Optoelectronics, Inc., Nasdaq." in text and "Kurs 160,00 Dollar" in text and "Abstand zum 52-Wochen-Hoch minus 54,9 Prozent" in text)
     p("Ratings: RS mit Vorwoche, EPS, SMR, A/D, Composite je ein Satz",
@@ -1080,6 +1445,75 @@ def selbsttest() -> int:
       and weinstein_satz({"stufe": 3, "linie_abst": 1.0, "linie_steig": 0.2}).startswith("Weinstein-Stufe 3: 30-Wochen-Linie flach nach einem Anstieg")
       and weinstein_satz({"stufe": None, "linie_abst": None, "linie_steig": None}).startswith("Weinstein-Stufe nicht berechenbar"))
     p("Kein Gedankenstrich, kein senkrechter Strich, keine Tabelle", "–" not in text and "|" not in text and "—" not in text)
+    p("Etappe 4: SMR-Bausteine mit Rohwert und Rang, Wachstum mit Vorzeichen, Margen ohne",
+      "SMR-Bausteine: Umsatzwachstum der drei jüngsten Quartale gegen das Vorjahr plus 21,4 Prozent, Rang 81; "
+      "Nettomarge des jüngsten Quartals 8,5 Prozent, Rang 60; Vorsteuermarge des Geschäftsjahres minus 1,2 Prozent, Rang 22; "
+      "Eigenkapitalrendite 18,0 Prozent, Rang 66." in text, text)
+    ug = dict(teile)["Umsatz und Gewinn"]
+    erwartet_ug = [
+        "Margen im Quartal bis 30.06.2026: brutto 30,5 Prozent; operativ 6,1 Prozent; vor Steuern 5,8 Prozent; netto minus 2,1 Prozent.",
+        "Margen im Geschäftsjahr bis 31.12.2025: brutto 29,0 Prozent.",
+        "Umsatz gegenüber dem Vorjahresquartal, jüngstes zuerst: bis 30.06.2026 plus 25,0 Prozent; bis 31.03.2026 nicht berechenbar.",
+        "Gewinn je Aktie gegenüber dem Vorjahresquartal, jüngstes zuerst: bis 30.06.2026 nicht berechenbar.",
+        "Umsatz, Wachstum über die drei jüngsten Quartale: beschleunigt.",
+        "Jährliches Wachstum im Schnitt: Umsatz über drei Jahre plus 18,2 Prozent; über fünf Jahre plus 9,0 Prozent; "
+        "Gewinn je Aktie über drei Jahre plus 31,5 Prozent.",
+        "EPS-Stabilität 42 über 15 Quartale, Näherung nach IBD-Art: 1 heißt gleichmäßig, 99 sprunghaft.",
+        "Verwässerte Aktienzahl gegenüber einem Jahr zuvor plus 12,5 Prozent, gegenüber drei Jahren zuvor plus 40,1 Prozent, "
+        "Stand 30.06.2026.",
+        "Aktienbasierte Vergütung 3,4 Prozent des Umsatzes.",
+        "CAN-SLIM-Häkchen, kein Filter: Quartals-EPS gegenüber dem Vorjahr ab 25 Prozent offen, nicht berechenbar; "
+        "Dreijahres-CAGR des Gewinns je Aktie ab 25 Prozent erfüllt mit plus 31,5 Prozent; "
+        "Eigenkapitalrendite ab 17 Prozent erfüllt mit 18,0 Prozent.",
+        "Eingerechnet: Split 4 zu 1, Umrechnung ab 27.08.2026; Reverse-Split 1 zu 10, Umrechnung ab 10.05.2021.",
+        "Einheitenfehler in den SEC-Meldungen berichtigt, etwa Aktien in Tausend statt Stück: Aktienzahl in 2 Perioden; "
+        "Gewinn je Aktie in 1 Periode.",
+        "Unstimmig: Bei 1 Periode passen Gewinn je Aktie, Aktienzahl und Nettogewinn nicht zusammen, zuletzt bis 30.06.2023; "
+        "Kennzahlen daraus mit Vorsicht lesen."]
+    p("Etappe 4: Umsatz und Gewinn um Margen, acht Quartale, Trend, CAGR, Stabilitaet, Verwaesserung, CAN-SLIM, Splits und "
+      "Einheiten erweitert",
+      ug[-len(erwartet_ug):] == erwartet_ug, [x for x in ug if x not in erwartet_ug][-15:] or ug)
+    bz = dict(teile)["Bilanz und Cashflow"]
+    erwartet_bz = [
+        "Renditen mit dem Gewinn des Geschäftsjahres: Eigenkapitalrendite 18,0 Prozent; Rendite auf das Vermögen 7,1 Prozent; "
+        "Rendite auf das eingesetzte Kapital 9,3 Prozent bei einem Steuersatz von 21,0 Prozent.",
+        "Bilanz zum 30.06.2026: langfristige Schulden zum Eigenkapital 0,45; alle Schulden zum Eigenkapital 0,60; "
+        "Nettokasse 120,0 Millionen Dollar; Current Ratio 1,80; Quick Ratio 1,20; Zinsdeckung 12,3 mal.",
+        "Umsatz der letzten zwölf Monate 4,6 Milliarden Dollar.",
+        "Cashflow über die vier Quartale bis 30.06.2026: Free Cashflow 150,0 Millionen Dollar; FCF-Marge 3,3 Prozent; "
+        "Cash Conversion 1,42, also operativer Cashflow durch Nettogewinn; Ausschüttungsquote 0,0 Prozent.",
+        "Piotroski F-Score 6 von 8 bewertbaren Signalen; erfüllt: Rendite auf das Vermoegen positiv, operativer Cashflow positiv, "
+        "operativer Cashflow ueber dem Nettogewinn.",
+        "Altman Z 2,50, Grauzone von 1,81 bis 2,99.",
+        "Rule of 40, gedacht für Software: Umsatzwachstum der vier Quartale plus 25,0 Prozent plus FCF-Marge 3,3 Prozent "
+        "ergibt 28,3; ab 40 erfüllt."]
+    p("Etappe 4: Bilanz und Cashflow, je Punkt ein Satz", bz == erwartet_bz, [x for x in bz if x not in erwartet_bz] or bz)
+    bw = bewertung_saetze(ratings["aktien"]["AAOI"], streubesitz_kurs=50.0)
+    erwartet_bw = [
+        "Marktkapitalisierung 6,5 Milliarden Dollar aus 62.000.000 Aktien vom Deckblatt, Stand 01.08.2026, mal dem Schlusskurs der Nacht.",
+        "KGV 88,4; KUV 1,43; KBV 5,20.",
+        "Enterprise Value 6,4 Milliarden Dollar; EV zu EBITDA 30,1; EV zu Umsatz 1,40.",
+        "Je Aktie: Cash 3,10 Dollar; Nettokasse 1,94 Dollar; Buchwert 20,26 Dollar; Free Cashflow 2,42 Dollar.",
+        "FCF-Rendite 2,3 Prozent.",
+        "Streubesitz laut Deckblatt zum 30.06.2025: 3,1 Milliarden Dollar; beim Schlusskurs von 50,00 Dollar an jenem Tag rund "
+        "62.000.000 Aktien in heutiger Stückelung."]
+    p("Etappe 4: Bewertung mit Kurs, Werten je Aktie, Renditen und Streubesitz samt Aktienzahl zum Kurs am Stichtag",
+      bw == erwartet_bw and dict(teile)["Bewertung"][-1].startswith("Streubesitz laut Deckblatt zum 30.06.2025: 3,1 Milliarden Dollar.")
+      and streubesitz_stichtag(ratings, "aaoi") == "2025-06-30" and streubesitz_stichtag(ratings, "AAPL") is None,
+      [x for x in bw if x not in erwartet_bw] or bw)
+    p("Etappe 4: ohne Kurs oder im Ausland ein ehrlicher Grund; ohne Fundament ein Satz; Splittexte",
+      bewertung_saetze({"fundament": {"bewertung_grund": "kein Kurs"}}) == ["Bewertung mit dem Kurs nicht gerechnet: kein Kurs."]
+      and bilanz_saetze({}) == ["Keine erweiterten Kennzahlen aus dem SEC-Fundament für diese Aktie."]
+      and bewertung_saetze({"fundament": {"fehler": "KeyError: x"}}) == ["Keine Bewertung: KeyError: x."]
+      and split_text(1.5) == "Split 3 zu 2" and split_text(0.6667) == "Reverse-Split 2 zu 3" and split_text(0.0286) == "Reverse-Split 1 zu 35"
+      and split_text(10) == "Split 10 zu 1")
+    import pandas as pd_k
+    df_k = pd_k.DataFrame({"Close": [48.0, 49.0, 50.0, 51.0]},
+                          index=pd_k.to_datetime(["2025-06-26", "2025-06-27", "2025-06-30", "2025-07-01"]))
+    p("Kurs am Stichtag: der Schluss am Tag selbst, sonst am letzten Handelstag davor; ohne Daten None",
+      kurs_am("AAOI", "2025-06-30", holen=lambda t, d: df_k) == 50.0
+      and kurs_am("AAOI", "2025-06-29", holen=lambda t, d: df_k) == 49.0
+      and kurs_am("AAOI", "unbekannt", holen=lambda t, d: df_k) is None and kurs_am("AAOI", "2025-06-30", holen=lambda t, d: None) is None)
 
     teile2 = bericht("AAPL", rs, ratings, sektoren, live=None, kurve=None, sektor_name="Financial", sektor_quelle="Yahoo")
     text2 = bericht_text(teile2)
@@ -1204,8 +1638,11 @@ def zeige(ticker):
     live = live_daten(t)
     kurve, kq = kurve_fuer(t, daten["volumenkurven.json"])
     sektor, sq = sektor_name_fuer(t)
+    stichtag = streubesitz_stichtag(daten["ibd_ratings.json"], t)
+    sb_kurs = kurs_am(t, stichtag) if stichtag else None
     print(bericht_text(bericht(t, daten["rs_universum.json"], daten["ibd_ratings.json"], daten["sektor_rangliste.json"],
-                               live=live, kurve=kurve, kurve_quelle=kq, sektor_name=sektor, sektor_quelle=sq)))
+                               live=live, kurve=kurve, kurve_quelle=kq, sektor_name=sektor, sektor_quelle=sq,
+                               streubesitz_kurs=sb_kurs)))
     return 0
 
 

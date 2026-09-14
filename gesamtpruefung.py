@@ -167,7 +167,9 @@ def block_b():
                     # Etappe 2, technische Kennzahlen (Gerhard, 13.09.2026)
                     "kennzahlen_technik",
                     # Etappe 3, Marktbreite und Marktphase (Gerhard, 13.09.2026)
-                    "marktbreite"]
+                    "marktbreite",
+                    # Etappe 4, fundamentale Kennzahlen (Gerhard, 13.09.2026)
+                    "kennzahlen_fundament"]
     for name in mit_schalter:
         r = subprocess.run([sys.executable, f"{name}.py", "--selbsttest"],
                            capture_output=True, text=True, cwd=WURZEL,
@@ -2307,6 +2309,32 @@ def block_h():
     else:
         pruefe("H", "Distribution Days in marktampel.json", True,
                "die Datei stammt noch vom Stand vor Etappe 3; der naechste Nachtscan legt sie an")
+
+    # ETAPPE 4 (Gerhard, 13.09.2026, Entscheidungen 7 und 8): je Aktie mit
+    # SEC-Zuordnung die fundamentalen Kennzahlen, die SMR-Bausteine und die
+    # drei CAN-SLIM-Haekchen.
+    try:
+        _ibd_h = json.loads((WURZEL / "ibd_ratings.json").read_text(encoding="utf-8"))
+    except Exception:
+        _ibd_h = {}
+    _akt_h = [(t, e) for t, e in ((_ibd_h or {}).get("aktien") or {}).items() if isinstance(e, dict) and e.get("cik")]
+    if any("fundament" in e for _t, e in _akt_h):
+        _mit_f = [t for t, e in _akt_h if isinstance(e.get("fundament"), dict) and "fehler" not in e["fundament"]]
+        _fehl_f = [t for t, e in _akt_h if isinstance(e.get("fundament"), dict) and "fehler" in e["fundament"]]
+        pruefe("H", "Fundamentale Kennzahlen fuer mindestens 80 Prozent der Aktien mit SEC-Zuordnung, Rechenfehler "
+                    "bei hoechstens einem Prozent",
+               _akt_h and len(_mit_f) >= 0.8 * len(_akt_h) and len(_fehl_f) <= 0.01 * len(_akt_h),
+               f"{len(_mit_f)} von {len(_akt_h)}, Fehler {len(_fehl_f)}" + (": " + nennen(_fehl_f) if _fehl_f else ""))
+        _ohne_cs = [t for t, e in _akt_h if e.get("smr") and not (e.get("smr_bausteine") and e.get("canslim"))]
+        pruefe("H", "SMR-Bausteine und CAN-SLIM-Haekchen bei jeder Aktie mit SMR-Note", not _ohne_cs,
+               nennen(_ohne_cs) if _ohne_cs else f"{sum(1 for _t, e in _akt_h if e.get('smr'))} Aktien mit SMR-Note")
+        _stand_h = (_ibd_h or {}).get("fundament_stand") or {}
+        pruefe("H", "Fundament-Stand vermerkt (Firmen, Filer-Typen, Jahre)",
+               (_stand_h.get("firmen") or 0) > 0 and (_stand_h.get("filer_typen") or 0) > 0,
+               f"{_stand_h}")
+    else:
+        pruefe("H", "Fundamentale Kennzahlen in ibd_ratings.json", True,
+               "die Datei stammt noch vom Stand vor Etappe 4; der naechste Nachtscan legt sie an")
 
     # positionen.json DARF fehlen, solange keine Position offen ist —
     # die Datei entsteht erst beim ersten Einstieg. Geprueft wird
