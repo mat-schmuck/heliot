@@ -168,7 +168,8 @@
     "AXSM|Fallback: MA50-R\u00fcckeroberung": "drin",
     "CNC|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "HNGE|Cup & Handle (Wochenbasis)": "drin",
-    "INSP|Fallback: 20-Tage-Hoch (Pivot)": "drin"
+    "INSP|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "GNK|Rectangle Top": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -254,7 +255,9 @@
     "UEBER|NUTX|Cup & Handle (Wochenbasis)": "2026-09-14",
     "UEBER|NUTX|Fallback: 52W-Hoch-Breakout": "2026-09-14",
     "INSP|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-14",
-    "BEST|INSP|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-14"
+    "BEST|INSP|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-14",
+    "GNK|Rectangle Top": "2026-09-14",
+    "BEST|GNK|Rectangle Top": "2026-09-14"
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-09-14"
