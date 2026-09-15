@@ -1,5 +1,5 @@
 {
-  "fenster_tag": "2026-09-14",
+  "fenster_tag": "2026-09-15",
   "fenster": {
     "OMER|Fallback: MA50-Pullback": "draussen",
     "CBLL|Fallback: MA50-Pullback": "draussen",
@@ -80,7 +80,7 @@
     "MEDP|Fallback: MA50-Pullback": "drin",
     "ODD|Fallback: MA50-Pullback": "draussen",
     "SBLK|Fallback: MA50-Pullback": "draussen",
-    "SEI|Fallback: MA50-Pullback": "drin",
+    "SEI|Fallback: MA50-Pullback": "draussen",
     "SNX|Fallback: MA50-Pullback": "drin",
     "SWKS|Fallback: MA50-Pullback": "draussen",
     "SWMR|Fallback: MA50-Pullback": "drin",
@@ -176,7 +176,14 @@
     "INTC|Fallback: MA50-Pullback": "drin",
     "CNC|Fallback: 52W-Hoch-Breakout": "drin",
     "GKOS|Fallback: MA50-R\u00fcckeroberung": "drin",
-    "NVGS|Cup & Handle (Wochenbasis)": "drin"
+    "NVGS|Cup & Handle (Wochenbasis)": "drin",
+    "RNG|Fallback: MA50-Pullback": "draussen",
+    "AMD|EMA Crossback": "drin",
+    "FTNT|Fallback: MA50-Pullback": "draussen",
+    "CNC|Fallback: MA50-Pullback": "drin",
+    "FROG|Fallback: MA50-Pullback": "drin",
+    "GOLD|Fallback: MA50-Pullback": "draussen",
+    "SNX|Rectangle Top": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -272,8 +279,16 @@
     "UEBER|ECO|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-14",
     "GEWINN|klimax_zeichen|ECO|1|5_kanaluebershooting": "2026-09-14",
     "GEWINN|zonenwechsel|ECO|1|stark": "2026-09-14",
-    "SCHLUSSNAH|2026-09-14": "2026-09-14"
+    "SCHLUSSNAH|2026-09-14": "2026-09-14",
+    "AMD|EMA Crossback": "2026-09-15",
+    "BEST|AMD|EMA Crossback": "2026-09-15",
+    "HNGE|Cup & Handle (Wochenbasis)": "2026-09-15",
+    "BEST|HNGE|Cup & Handle (Wochenbasis)": "2026-09-15",
+    "CNC|Rectangle Top": "2026-09-15",
+    "BEST|CNC|Rectangle Top": "2026-09-15",
+    "SNX|Rectangle Top": "2026-09-15",
+    "BEST|SNX|Rectangle Top": "2026-09-15"
   },
   "gapgo_warten": {},
-  "ampel_tag": "2026-09-14"
+  "ampel_tag": "2026-09-15"
 }
