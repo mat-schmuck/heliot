@@ -14,7 +14,7 @@
     "FET|Fallback: MA50-Pullback": "draussen",
     "KRT|Cup & Handle (Wochenbasis)": "draussen",
     "KRT|Fallback: MA50-Pullback": "draussen",
-    "LBRX|Fallback: MA50-Pullback": "draussen",
+    "LBRX|Fallback: MA50-Pullback": "drin",
     "MRNA|Fallback: MA50-Pullback": "draussen",
     "NESR|Fallback: MA50-Pullback": "draussen",
     "PARR|Fallback: MA50-Pullback": "draussen",
@@ -100,7 +100,7 @@
     "MLAB|Fallback: MA50-Pullback": "draussen",
     "NTRA|Fallback: MA50-Pullback": "draussen",
     "TEVA|Fallback: MA50-Pullback": "draussen",
-    "TWIN|Fallback: MA50-Pullback": "drin",
+    "TWIN|Fallback: MA50-Pullback": "draussen",
     "CDNA|Fallback: MA50-Pullback": "draussen",
     "ETON|Cup & Handle (Wochenbasis)": "draussen",
     "ETON|Fallback: MA50-Pullback": "draussen",
@@ -204,7 +204,8 @@
     "PBT|Cup & Handle (Wochenbasis)": "drin",
     "PBT|Fallback: 52W-Hoch-Breakout": "drin",
     "SMTC|Rectangle Top": "drin",
-    "TNK|Cup & Handle (Wochenbasis)": "drin"
+    "TNK|Cup & Handle (Wochenbasis)": "drin",
+    "GH|Fallback: 20-Tage-Hoch (Pivot)": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -335,7 +336,9 @@
     "PBT|Fallback: 52W-Hoch-Breakout": "2026-09-15",
     "BEST|PBT|Fallback: 52W-Hoch-Breakout": "2026-09-15",
     "TNK|Cup & Handle (Wochenbasis)": "2026-09-15",
-    "BEST|TNK|Cup & Handle (Wochenbasis)": "2026-09-15"
+    "BEST|TNK|Cup & Handle (Wochenbasis)": "2026-09-15",
+    "GH|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-15",
+    "BEST|GH|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-15"
   },
   "gapgo_warten": {
     "KGS": {
