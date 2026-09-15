@@ -100,7 +100,7 @@
     "MLAB|Fallback: MA50-Pullback": "draussen",
     "NTRA|Fallback: MA50-Pullback": "draussen",
     "TEVA|Fallback: MA50-Pullback": "draussen",
-    "TWIN|Fallback: MA50-Pullback": "draussen",
+    "TWIN|Fallback: MA50-Pullback": "drin",
     "CDNA|Fallback: MA50-Pullback": "draussen",
     "ETON|Cup & Handle (Wochenbasis)": "draussen",
     "ETON|Fallback: MA50-Pullback": "draussen",
@@ -210,7 +210,10 @@
     "CDNA|Fallback: 52W-Hoch-Breakout": "drin",
     "NMM|Cup & Handle (Wochenbasis)": "drin",
     "HOPE|Rectangle Top": "drin",
-    "MGRT|Fallback: MA50-Pullback": "draussen"
+    "MGRT|Fallback: MA50-Pullback": "draussen",
+    "EC|Darvas Box": "drin",
+    "EC|Fallback: 52W-Hoch-Breakout": "drin",
+    "CXW|Fallback: 52W-Hoch-Breakout": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -348,7 +351,9 @@
     "NTRA|Darvas Box": "2026-09-15",
     "BEST|NTRA|Cup & Handle (Wochenbasis)": "2026-09-15",
     "BEST|NTRA|Darvas Box": "2026-09-15",
-    "TEIL|ECO|1": "2026-09-15"
+    "TEIL|ECO|1": "2026-09-15",
+    "CXW|Fallback: 52W-Hoch-Breakout": "2026-09-15",
+    "BEST|CXW|Fallback: 52W-Hoch-Breakout": "2026-09-15"
   },
   "gapgo_warten": {
     "KGS": {
