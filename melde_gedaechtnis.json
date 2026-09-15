@@ -123,7 +123,7 @@
     "FTH|Fallback: MA50-Pullback": "draussen",
     "NVCT|Fallback: MA50-Pullback": "draussen",
     "PSNL|Fallback: MA50-Pullback": "draussen",
-    "TVTX|Fallback: MA50-Pullback": "draussen",
+    "TVTX|Fallback: MA50-Pullback": "drin",
     "TWST|Fallback: MA50-Pullback": "draussen",
     "ARGX|Fallback: MA50-Pullback": "draussen",
     "ASO|Fallback: MA50-Pullback": "draussen",
@@ -202,7 +202,9 @@
     "FLYW|Fallback: MA50-Pullback": "drin",
     "UMAC|Fallback: MA50-R\u00fcckeroberung": "drin",
     "PBT|Cup & Handle (Wochenbasis)": "drin",
-    "PBT|Fallback: 52W-Hoch-Breakout": "drin"
+    "PBT|Fallback: 52W-Hoch-Breakout": "drin",
+    "SMTC|Rectangle Top": "drin",
+    "TNK|Cup & Handle (Wochenbasis)": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -331,7 +333,9 @@
     "PBT|Cup & Handle (Wochenbasis)": "2026-09-15",
     "BEST|PBT|Cup & Handle (Wochenbasis)": "2026-09-15",
     "PBT|Fallback: 52W-Hoch-Breakout": "2026-09-15",
-    "BEST|PBT|Fallback: 52W-Hoch-Breakout": "2026-09-15"
+    "BEST|PBT|Fallback: 52W-Hoch-Breakout": "2026-09-15",
+    "TNK|Cup & Handle (Wochenbasis)": "2026-09-15",
+    "BEST|TNK|Cup & Handle (Wochenbasis)": "2026-09-15"
   },
   "gapgo_warten": {
     "KGS": {
