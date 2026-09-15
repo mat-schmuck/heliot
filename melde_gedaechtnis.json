@@ -58,7 +58,7 @@
     "ANRO|Fallback: MA50-Pullback": "drin",
     "AYA|Fallback: MA50-Pullback": "draussen",
     "BE|Fallback: MA50-Pullback": "draussen",
-    "CGEM|Fallback: MA50-Pullback": "drin",
+    "CGEM|Fallback: MA50-Pullback": "draussen",
     "ECO|Fallback: MA50-Pullback": "draussen",
     "MPC|Fallback: MA50-Pullback": "draussen",
     "MTW|Fallback: MA50-Pullback": "draussen",
@@ -221,7 +221,8 @@
     "TEVA|Cup & Handle (Wochenbasis) + EMA Crossback": "drin",
     "PBF|Rectangle Top": "drin",
     "NMM|Fallback: 52W-Hoch-Breakout": "drin",
-    "NVGS|Fallback: 52W-Hoch-Breakout": "drin"
+    "NVGS|Fallback: 52W-Hoch-Breakout": "drin",
+    "TWLO|Fallback: 20-Tage-Hoch (Pivot)": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -375,7 +376,9 @@
     "TEIL|SWKS|1": "2026-09-15",
     "NVGS|Fallback: 52W-Hoch-Breakout": "2026-09-15",
     "BEST|NVGS|Fallback: 52W-Hoch-Breakout": "2026-09-15",
-    "UEBER|TWLO|Rectangle Top": "2026-09-15"
+    "UEBER|TWLO|Rectangle Top": "2026-09-15",
+    "MPC|Fallback: 52W-Hoch-Breakout": "2026-09-15",
+    "BEST|MPC|Fallback: 52W-Hoch-Breakout": "2026-09-15"
   },
   "gapgo_warten": {
     "KGS": {
