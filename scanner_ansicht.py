@@ -1287,9 +1287,13 @@ def auswerten(tabelle, e, heute=None, analysten_da=True):
         m, f = feld.maske(df, fe)
         fehler += f
         if m is not None:
-            # Eine Grenze auf eine Kennzahl ohne jeden Wert laesst keine Aktie
-            # uebrig; das soll nicht wie ein leerer Markt aussehen.
-            if feld.art == "bereich" and not feld.werte(basis, fe).notna().any():
+            # Eine Grenze oder Bedingung auf eine Kennzahl ohne jeden Wert laesst
+            # keine Aktie uebrig; das soll nicht wie ein leerer Markt aussehen.
+            if feld.art == "bereich":
+                leer = not feld.werte(basis, fe).notna().any()
+            else:
+                leer = not _sp(basis, feld.spalte).notna().any()
+            if leer:
                 ohne_werte.append(feld.titel)
             df = df[m.reindex(df.index).fillna(False).astype(bool)]
     if ohne_analysten:
@@ -1297,7 +1301,7 @@ def auswerten(tabelle, e, heute=None, analysten_da=True):
                         + " filtern deshalb nicht.")
     if ohne_werte:
         hinweise.append("Für " + ", ".join(ohne_werte) + " stehen in der Tabelle noch keine Werte; mit einer Grenze "
-                        "bleibt deshalb keine Aktie übrig.")
+                        "oder Bedingung bleibt deshalb keine Aktie übrig.")
     te = e.get("termine") or {}
     termine = te if te.get("an") else None
     if termine:
@@ -1847,6 +1851,10 @@ def selbsttest() -> int:
     p("Betrag in Millionen Dollar, negative Grenze", list(a["df"]["ticker"]) == ["BBB"])
     a = auswerten(tab, felder(burst={"an": True}), heute)
     p("Bedingung ohne Zahl: Momentum Burst muss erfuellt sein", list(a["df"]["ticker"]) == ["BBB"])
+    a = auswerten(tab, felder(pivot={"an": True}), heute)
+    p("Bedingung auf eine Kennzahl ohne jeden Wert: keine Aktie und ein Hinweis",
+      a["df"].empty and any("Episodic Pivot stehen in der Tabelle noch keine Werte" in h for h in a["hinweise"]),
+      "; ".join(a["hinweise"]))
     p("Einstellungstext: von bis, nach oben offen, nach unten offen, angezeigt",
       FELD["marktkap"].einstellung_text({"min": "0,3", "max": "2"}) == "Marktkapitalisierung von 0,3 bis 2 Milliarden Dollar"
       and FELD["marktkap"].einstellung_text({"min": "0,3"}) == "Marktkapitalisierung ab 0,3 Milliarden Dollar, nach oben offen"
