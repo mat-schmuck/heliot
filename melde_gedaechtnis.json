@@ -93,7 +93,7 @@
     "FIVE|Rectangle Top": "drin",
     "ECO|Fallback: 52W-Hoch-Breakout": "drin",
     "ECO|Fallback: 20-Tage-Hoch (Pivot)": "drin",
-    "NGL|Fallback: MA50-Pullback": "drin",
+    "NGL|Fallback: MA50-Pullback": "draussen",
     "CXW|Cup & Handle (Wochenbasis)": "draussen",
     "CXW|Rectangle Top": "drin",
     "MG|Fallback: MA50-Pullback": "draussen",
@@ -197,7 +197,12 @@
     "MDB|Fallback: MA50-Pullback": "drin",
     "NTRA|Cup & Handle (Wochenbasis) + Darvas Box": "drin",
     "BLLN|Fallback: 20-Tage-Hoch (Pivot)": "drin",
-    "GH|Rectangle Top": "drin"
+    "GH|Rectangle Top": "drin",
+    "GKOS|Fallback: MA50-Pullback": "drin",
+    "FLYW|Fallback: MA50-Pullback": "drin",
+    "UMAC|Fallback: MA50-R\u00fcckeroberung": "drin",
+    "PBT|Cup & Handle (Wochenbasis)": "drin",
+    "PBT|Fallback: 52W-Hoch-Breakout": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -320,7 +325,13 @@
     "SEKTORAUF|2026-09-15": "2026-09-15",
     "TWIN|Rectangle Top": "2026-09-15",
     "BEST|TWIN|Rectangle Top": "2026-09-15",
-    "TEIL|FSLY|SPRING-2026-09-04": "2026-09-15"
+    "TEIL|FSLY|SPRING-2026-09-04": "2026-09-15",
+    "GH|Rectangle Top": "2026-09-15",
+    "BEST|GH|Rectangle Top": "2026-09-15",
+    "PBT|Cup & Handle (Wochenbasis)": "2026-09-15",
+    "BEST|PBT|Cup & Handle (Wochenbasis)": "2026-09-15",
+    "PBT|Fallback: 52W-Hoch-Breakout": "2026-09-15",
+    "BEST|PBT|Fallback: 52W-Hoch-Breakout": "2026-09-15"
   },
   "gapgo_warten": {
     "KGS": {
