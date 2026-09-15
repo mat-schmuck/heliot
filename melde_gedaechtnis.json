@@ -216,7 +216,9 @@
     "CXW|Fallback: 52W-Hoch-Breakout": "drin",
     "CRWD|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "MPC|Fallback: 52W-Hoch-Breakout": "drin",
-    "GH|Fallback: 52W-Hoch-Breakout": "drin"
+    "GH|Fallback: 52W-Hoch-Breakout": "drin",
+    "FTI|Fallback: MA50-R\u00fcckeroberung": "drin",
+    "TEVA|Cup & Handle (Wochenbasis) + EMA Crossback": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -360,7 +362,11 @@
     "CRWD|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-15",
     "BEST|CRWD|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-15",
     "GH|Fallback: 52W-Hoch-Breakout": "2026-09-15",
-    "BEST|GH|Fallback: 52W-Hoch-Breakout": "2026-09-15"
+    "BEST|GH|Fallback: 52W-Hoch-Breakout": "2026-09-15",
+    "TEVA|Cup & Handle (Wochenbasis)": "2026-09-15",
+    "TEVA|EMA Crossback": "2026-09-15",
+    "BEST|TEVA|Cup & Handle (Wochenbasis)": "2026-09-15",
+    "BEST|TEVA|EMA Crossback": "2026-09-15"
   },
   "gapgo_warten": {
     "KGS": {
