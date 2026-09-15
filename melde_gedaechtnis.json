@@ -218,7 +218,8 @@
     "MPC|Fallback: 52W-Hoch-Breakout": "drin",
     "GH|Fallback: 52W-Hoch-Breakout": "drin",
     "FTI|Fallback: MA50-R\u00fcckeroberung": "drin",
-    "TEVA|Cup & Handle (Wochenbasis) + EMA Crossback": "drin"
+    "TEVA|Cup & Handle (Wochenbasis) + EMA Crossback": "drin",
+    "PBF|Rectangle Top": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -366,7 +367,9 @@
     "TEVA|Cup & Handle (Wochenbasis)": "2026-09-15",
     "TEVA|EMA Crossback": "2026-09-15",
     "BEST|TEVA|Cup & Handle (Wochenbasis)": "2026-09-15",
-    "BEST|TEVA|EMA Crossback": "2026-09-15"
+    "BEST|TEVA|EMA Crossback": "2026-09-15",
+    "PBF|Rectangle Top": "2026-09-15",
+    "BEST|PBF|Rectangle Top": "2026-09-15"
   },
   "gapgo_warten": {
     "KGS": {
