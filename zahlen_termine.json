@@ -1,12 +1,14 @@
 {
- "gebaut_am": "2026-09-15 00:17 Wien",
+ "gebaut_am": "2026-09-16 00:11 Wien",
  "ohne_termin": [
   "ASND",
   "MGRT",
   "SUNB"
  ],
  "nur_nasdaq": [],
- "uneinig": [],
+ "uneinig": [
+  "AIR"
+ ],
  "aktien": {
   "AAMI": {
    "datum": "2026-10-29",
@@ -41,13 +43,14 @@
    ]
   },
   "AIR": {
-   "datum": "2026-09-22",
+   "datum": "2026-09-29",
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
     "yahoo",
     "nasdaq"
-   ]
+   ],
+   "uneinig": "Quellen uneinig: 2026-09-29 (Yahoo, hier bevorzugt) gegen 2026-09-22 (Nasdaq)"
   },
   "ALNT": {
    "datum": "2026-11-04",
@@ -1347,7 +1350,7 @@
    ]
   },
   "PENG": {
-   "datum": "2026-10-13",
+   "datum": "2026-10-06",
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
@@ -1685,8 +1688,8 @@
   },
   "TEVA": {
    "datum": "2026-11-04",
-   "uhrzeit": "07:00",
-   "lage": "vorboerslich",
+   "uhrzeit": "15:00",
+   "lage": "im_handel",
    "quellen": [
     "yahoo"
    ]

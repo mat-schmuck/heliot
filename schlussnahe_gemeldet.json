@@ -234,5 +234,12 @@
    "zeichen": null,
    "text": "INFORMATION: SCCO; Rectangle Top; Kurs 189.28 unter der 8-Tage-EMA 196.25; reiner Hinweis, kein Ausstiegssignal; Kurs 189,28, seit Trigger -6,2 % gleich -0,6 R"
   }
+ ],
+ "geprueft": "2026-09-15",
+ "zurueckgenommen": [
+  "MLYS|1",
+  "MNPR|Fallback: MA50-Rückeroberung",
+  "PBF|1",
+  "PBF|2"
  ]
 }
