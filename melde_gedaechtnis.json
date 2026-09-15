@@ -213,7 +213,8 @@
     "MGRT|Fallback: MA50-Pullback": "draussen",
     "EC|Darvas Box": "drin",
     "EC|Fallback: 52W-Hoch-Breakout": "drin",
-    "CXW|Fallback: 52W-Hoch-Breakout": "drin"
+    "CXW|Fallback: 52W-Hoch-Breakout": "drin",
+    "CRWD|Fallback: 20-Tage-Hoch (Pivot)": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -353,7 +354,9 @@
     "BEST|NTRA|Darvas Box": "2026-09-15",
     "TEIL|ECO|1": "2026-09-15",
     "CXW|Fallback: 52W-Hoch-Breakout": "2026-09-15",
-    "BEST|CXW|Fallback: 52W-Hoch-Breakout": "2026-09-15"
+    "BEST|CXW|Fallback: 52W-Hoch-Breakout": "2026-09-15",
+    "CRWD|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-15",
+    "BEST|CRWD|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-15"
   },
   "gapgo_warten": {
     "KGS": {
