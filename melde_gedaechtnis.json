@@ -170,7 +170,7 @@
     "HNGE|Cup & Handle (Wochenbasis)": "drin",
     "INSP|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "GNK|Rectangle Top": "drin",
-    "TWLO|Rectangle Top": "drin",
+    "TWLO|Rectangle Top": "draussen",
     "TSAT|EMA Crossback": "drin",
     "GNK|EMA Crossback": "drin",
     "INTC|Fallback: MA50-Pullback": "drin",
@@ -374,7 +374,8 @@
     "BEST|PBF|Rectangle Top": "2026-09-15",
     "TEIL|SWKS|1": "2026-09-15",
     "NVGS|Fallback: 52W-Hoch-Breakout": "2026-09-15",
-    "BEST|NVGS|Fallback: 52W-Hoch-Breakout": "2026-09-15"
+    "BEST|NVGS|Fallback: 52W-Hoch-Breakout": "2026-09-15",
+    "UEBER|TWLO|Rectangle Top": "2026-09-15"
   },
   "gapgo_warten": {
     "KGS": {
