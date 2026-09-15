@@ -917,7 +917,8 @@ with tab_scan:
 # --- Scanner (Mathias, 14.09.2026) ------------------------------------------
 # "Wir bauen nun den scanner ein, erreichbar aus dem web-tool." Teil 1 schickt
 # eine Strategie oder ein Chart-Signal durch den ganzen US-Markt, Teil 2
-# filtert frei nach jedem Merkmal. Gerechnet wird nachts (scanner_daten.py,
+# filtert frei nach jedem Merkmal, jede Kennzahl als Spanne mit Von und Bis
+# (Gerhard, 15.09.2026, Auftrag 1). Gerechnet wird nachts (scanner_daten.py,
 # Ablauf scanner_daten.yml). Die App liest die Tabelle aus dem Release
 # "scanner-daten" dieses Repos und die Analystenwerte aus dem privaten
 # Datenrepo; alles Weitere rechnet scanner_ansicht.py, das ohne Streamlit
@@ -926,6 +927,17 @@ with tab_scan:
 # nummerierte Liste mit Verweisen, keine Tabelle und kein Chart. Der Scanner
 # beeinflusst weder Waechter noch Alarme (Mathias: "Baue noch keine
 # Vernetzung zu unserem Haupttool").
+#
+# GESCANNT WIRD NUR MIT DEM KNOPF (Gerhard, 15.09.2026, Auftrag 2): "Den
+# Erklaertext zum Scanner bitte entfernen, den brauche ich nicht. Unten einen
+# Knopf einbauen, mit dem ich den Scan starte. Wichtig ist mir, dass ich
+# merke, dass etwas passiert: Der Knopf soll waehrend des Laufs anzeigen, dass
+# gescannt wird, und danach, wie viele Treffer es gab. Kein stilles Nachladen
+# im Hintergrund." Die Einstellungen aendern das Ergebnis deshalb nicht mehr;
+# erst der Knopf holt die Tabelle und rechnet. Der Knopf behaelt dabei seinen
+# Schluessel, nur die Beschriftung wechselt: So bleibt der Fokus eines
+# Screenreaders auf ihm (Streamlit leitet die Kennung eines Knopfs mit
+# Schluessel allein aus dem Schluessel ab, nachgelesen in 1.63).
 
 SCANNER_RELEASE = f"https://github.com/{REPO}/releases/download/scanner-daten/"
 
@@ -969,6 +981,18 @@ def lade_scanner_stand():
     return nachschlagen.lade_datei("scanner_stand.json")
 
 
+@st.cache_data(ttl=600, show_spinner=False)
+def _scanner_kennzahlen_nachtragen(handelstag):
+    """Die Kennzahlen aus Nachtscan und Fundament fuer eine Nachttabelle, der sie
+    fehlen (gebaut vor dem 15.09.2026): aus denselben Nachtdateien, die das
+    Nachschlagen liest. Rueckgabe (Tabelle oder None, Hinweis)."""
+    tabelle, _grund = lade_scanner_tabelle()
+    if tabelle is None:
+        return None, ""
+    dateien = nachschlag_dateien()
+    return sa.sd.kennzahlen_ergaenzen(tabelle, dateien.get("rs_universum.json") or {},
+                                      dateien.get("ibd_ratings.json") or {}, handelstag=handelstag)
+
 
 def app_adresse() -> str:
     """Die Adresse der App fuer die Verweise auf die vollstaendigen Daten. Auf
@@ -998,10 +1022,6 @@ def _sc_felder_leeren():
         st.session_state[_sc_schluessel(feld.schluessel, "an")] = False
         st.session_state[_sc_schluessel(feld.schluessel, "min")] = ""
         st.session_state[_sc_schluessel(feld.schluessel, "max")] = ""
-        if feld.wahl:
-            st.session_state[_sc_schluessel(feld.schluessel, "wahl")] = feld.wahl[0][0]
-        if feld.lage:
-            st.session_state[_sc_schluessel(feld.schluessel, "lage")] = "egal"
     st.session_state["sc_rs_vorlaeufig"] = False
 
 
@@ -1020,7 +1040,7 @@ def _sc_vorgaben_setzen(nur_grenzen: bool = False):
     for schluessel, werte in vorgabe.items():
         if not nur_grenzen:
             st.session_state[_sc_schluessel(schluessel, "an")] = True
-        for teil in ("min", "max", "wahl", "lage"):
+        for teil in ("min", "max"):
             if teil in werte:
                 st.session_state[_sc_schluessel(schluessel, teil)] = werte[teil]
 
@@ -1063,8 +1083,6 @@ def _sc_einstellung(sektoren) -> dict:
         felder[s] = {"an": bool(st.session_state.get(_sc_schluessel(s, "an"))),
                      "min": st.session_state.get(_sc_schluessel(s, "min")) or "",
                      "max": st.session_state.get(_sc_schluessel(s, "max")) or "",
-                     "wahl": st.session_state.get(_sc_schluessel(s, "wahl")),
-                     "lage": st.session_state.get(_sc_schluessel(s, "lage")) or "egal",
                      "vorlaeufig": bool(st.session_state.get("sc_rs_vorlaeufig")) if s == "rs" else False}
     termine = {"an": bool(st.session_state.get("sc_termine_an")),
                "ohne_zeit": bool(st.session_state.get("sc_termine_ohne_zeit")),
@@ -1080,33 +1098,149 @@ def _sc_einstellung(sektoren) -> dict:
             "sortierung": st.session_state.get("sc_sortierung") or ""}
 
 
-@st.fragment
-def scanner_reiter():
-    """Der Reiter als Fragment: Ein Klick im Scanner rechnet nur den Scanner
-    neu, nicht die ganze Seite."""
-    st.markdown("#### So funktioniert der Scanner", anchors=False)
-    st.markdown(
-        "1. In Teil 1 eine Strategie oder ein Chart-Signal wählen. Der Scanner prüft sie für alle Stammaktien "
-        "des US-Markts und trägt in Teil 2 die Merkmale ein, die zur Strategie gehören.\n"
-        "2. In Teil 2 jedes Merkmal nach Wunsch anhaken, ändern oder dazunehmen. Angehakte Merkmale stehen im "
-        "Ergebnis, eine leere Grenze filtert nicht. Zahlen mit Beistrich, zum Beispiel 0,3; eine eingetippte Zahl "
-        "gilt nach der Eingabetaste oder sobald das Feld verlassen wird.\n"
-        "3. Das Ergebnis steht darunter als Liste, die besten Treffer zuerst. Ein Klick auf das Kürzel öffnet "
-        "die vollständigen Daten der Aktie in einem neuen Tab. Die Liste gibt es auch als Datei.")
+def _sc_scan_anfordern():
+    st.session_state["sc_scan_auftrag"] = True
+
+
+# Dieselbe Angabe wie auf dem Knopf als Statusmeldung fuer Screenreader, die den
+# Wechsel der Beschriftung am fokussierten Knopf nicht von selbst vorlesen. Die
+# Meldung braucht einen Knoten, der bleibt: st.html ersetzt seinen Inhalt bei
+# jeder Aenderung samt Knoten (gemessen 15.09.2026 im Browser), und ein neu
+# eingesetzter Knoten wird oft nicht angesagt. Die Komponente legt den Knoten
+# deshalb einmal unsichtbar an und aendert danach nur seinen Text, und nur,
+# wenn er sich aendert.
+_SC_STATUS_JS = """export default function (component) {
+  const text = String((component.data || {}).text || "");
+  let el = document.getElementById("heliot_scan_status");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "heliot_scan_status";
+    el.setAttribute("role", "status");
+    el.setAttribute("aria-live", "polite");
+    el.style.cssText = "position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;"
+      + "clip:rect(0 0 0 0);white-space:nowrap;border:0;";
+    document.body.appendChild(el);
+  }
+  if (el.textContent !== text) {
+    el.textContent = text;
+  }
+}
+"""
+_sc_status = st.components.v2.component("heliot_scan_status", js=_SC_STATUS_JS)
+
+
+def _sc_wien_uhrzeit() -> str:
+    from zoneinfo import ZoneInfo
+    return datetime.now(ZoneInfo("Europe/Vienna")).strftime("%H:%M")
+
+
+def _sc_scannen(vergleich: dict) -> dict:
+    """Ein Scan: Tabelle, Kennzahlen und Analystenwerte holen, auswerten. Das
+    Ergebnis bleibt bis zum naechsten Scan stehen."""
+    erg = {"vergleich": vergleich, "uhrzeit": _sc_wien_uhrzeit(), "hinweise": []}
     tabelle, grund = lade_scanner_tabelle()
     stand = lade_scanner_stand() or {}
+    erg["stand"] = stand
     if tabelle is None:
-        st.info("Die Scanner-Tabelle ist noch nicht da" + (f"; {grund}" if grund else "")
-                + ". Sie entsteht jede Nacht nach dem Nachtscan.")
-        return
-    analysten, _analysten_grund = lade_scanner_analysten()
+        erg["fehlt"] = ("Die Scanner-Tabelle ist noch nicht da" + (f"; {grund}" if grund else "")
+                        + ". Sie entsteht jede Nacht nach dem Nachtscan.")
+        erg["treffer"] = 0
+        return erg
+    if any(s not in tabelle.columns for s in sa.sd.KENNZAHL_SPALTEN):
+        ergaenzt, hinweis = _scanner_kennzahlen_nachtragen(stand.get("handelstag"))
+        if ergaenzt is not None and len(ergaenzt) == len(tabelle):
+            tabelle = ergaenzt
+        if hinweis:
+            erg["hinweise"].append(hinweis)
+    analysten, analysten_grund = lade_scanner_analysten()
     analysten_da = analysten is not None
     if analysten_da:
         tabelle = tabelle.merge(analysten, on="ticker", how="left")
-    for satz in sa.stand_saetze(stand, analysten_da=analysten_da):
+    elif (_secret("DATEN_LESE_TOKEN") or "").strip():
+        erg["hinweise"].append(f"Die Analystendaten ließen sich nicht laden: {analysten_grund}.")
+    sektoren = sa.sektoren_in(tabelle)
+    heute = sa.ny_jetzt().date()
+    ausw = sa.auswerten(tabelle, _sc_einstellung(sektoren), heute, analysten_da)
+    erg.update({"ausw": ausw, "treffer": len(ausw["df"]), "sektor_tabelle": tabelle[["sektor"]].copy()
+                if "sektor" in tabelle.columns else None})
+    return erg
+
+
+def _sc_neu_zeichnen():
+    """Nach dem Scan nur den Scanner neu zeichnen; laeuft der Scanner gerade als
+    Teil der ganzen Seite, die ganze Seite."""
+    from streamlit.errors import StreamlitAPIException
+    try:
+        st.rerun(scope="fragment")
+    except StreamlitAPIException:
+        st.rerun()
+
+
+def _sc_ergebnis_zeigen(erg: dict, geaendert: bool):
+    """Das Ergebnis des letzten Scans; die Einstellungen darueber aendern es nicht."""
+    if erg.get("fehlt"):
+        st.info(erg["fehlt"])
+        return
+    ausw = erg["ausw"]
+    stand = erg.get("stand") or {}
+    if geaendert:
+        st.warning("Die Einstellungen wurden seit dem letzten Scan geändert. Die Liste zeigt noch das Ergebnis des "
+                   "letzten Scans; mit dem Knopf Scan starten gilt die neue Einstellung.")
+    st.markdown(f"#### Ergebnis: {nachschlagen.zahl(erg['treffer'])} von {nachschlagen.zahl(ausw['gesamt'])} Aktien",
+                anchors=False)
+    satz = f"Scan von {erg['uhrzeit']} Uhr Wiener Zeit"
+    if stand.get("handelstag"):
+        satz += f", Schlusskurse vom {sa.datum_lang(stand['handelstag'])}"
+    st.markdown(sa.md(satz + "."))
+    teile = sa.einstellungs_teile(ausw["einstellung"], erg.get("sektor_tabelle"))
+    st.markdown(sa.md("Eingestellt: " + ("; ".join(teile) if teile else "nichts, die Liste zeigt den ganzen Markt") + "."))
+    for hinweis in list(erg.get("hinweise") or []) + list(ausw["hinweise"]):
+        st.warning(sa.md(hinweis))
+    for fehler in ausw["fehler"]:
+        st.error(sa.md(fehler))
+    sortier = sa.sortier_wahl(ausw["einstellung"])
+    if st.session_state.get("sc_sortierung") not in [x for x, _t in sortier]:
+        st.session_state["sc_sortierung"] = sortier[0][0]
+    st.selectbox("Sortieren nach", [x for x, _t in sortier], format_func=dict(sortier).get, key="sc_sortierung",
+                 placeholder="bitte wählen")
+    # Umsortieren braucht keinen neuen Scan: dieselben Treffer in anderer Reihenfolge.
+    ausw = {**ausw, "df": sa.sortieren(ausw, st.session_state["sc_sortierung"])}
+    anzahlen = ["25", "50", "100", "250", "alle"]
+    if st.session_state.get("sc_anzahl") not in anzahlen:
+        st.session_state["sc_anzahl"] = "50"
+    anzahl = st.selectbox("Wie viele Aktien die Liste zeigt", anzahlen,
+                          format_func=lambda x: "alle" if x == "alle" else f"die ersten {x}", key="sc_anzahl",
+                          placeholder="bitte wählen")
+    basis = app_adresse()
+    anzahl_treffer = erg["treffer"]
+    if not anzahl_treffer:
+        st.info("Keine Aktie erfüllt alle Einstellungen.")
+        return
+    grenze = None if anzahl == "alle" else int(anzahl)
+    st.markdown("\n".join(sa.zeilen(ausw, basis, anzahl=grenze)))
+    if grenze and anzahl_treffer > grenze:
+        st.caption(f"Die übrigen {nachschlagen.zahl(anzahl_treffer - grenze)} Aktien stehen in der Datei.")
+    formate = [x[0] for x in sa.FORMATE]
+    if st.session_state.get("sc_format") not in formate:
+        st.session_state["sc_format"] = "xlsx"
+    fmt = st.selectbox("Dateiformat", formate, format_func={x[0]: x[1] for x in sa.FORMATE}.get, key="sc_format",
+                       placeholder="bitte wählen", persist_state="page")
+    st.download_button("Ergebnis als Datei herunterladen",
+                       data=lambda: sa.datei(ausw, basis, fmt, stand, erg.get("sektor_tabelle"))[0],
+                       file_name=sa.dateiname(ausw, stand, fmt),
+                       mime=next(x[3] for x in sa.FORMATE if x[0] == fmt), on_click="ignore", key="sc_download")
+
+
+@st.fragment
+def scanner_reiter():
+    """Der Reiter als Fragment: Ein Klick im Scanner rechnet nur den Scanner
+    neu, nicht die ganze Seite. Die Tabelle holt erst der Knopf Scan starten."""
+    stand = lade_scanner_stand() or {}
+    lese_token = bool((_secret("DATEN_LESE_TOKEN") or "").strip())
+    for satz in sa.stand_saetze(stand, analysten_da=lese_token):
         st.markdown(sa.md(satz))
 
-    sektoren = sa.sektoren_in(tabelle)
+    sektoren = sa.sektoren_in(None)
     st.session_state["sc_sektorliste"] = sektoren
     if not st.session_state.get("sc_bereit"):
         _sc_alles_zuruecksetzen()
@@ -1126,7 +1260,8 @@ def scanner_reiter():
     st.selectbox("Strategie oder Chart-Signal", ids, format_func=sa.AUSWAHL_NAMEN.get, key="sc_strategie",
                  on_change=_sc_strategie_gewaehlt, placeholder="bitte wählen")
     k = st.session_state.get("sc_strategie") or ""
-    st.markdown(sa.md(sa.strategie_text(k)))
+    if sa.strategie_text(k):
+        st.markdown(sa.md(sa.strategie_text(k)))
     if sa.ist_muster(k) and sa.treffer_satz(stand, k):
         st.markdown(sa.md(sa.treffer_satz(stand, k)))
     if sa.toleranz_moeglich(k):
@@ -1145,9 +1280,6 @@ def scanner_reiter():
 
     # Teil 2
     st.markdown("#### Teil 2: Einstellungen", anchors=False)
-    st.caption("Jede Gruppe zeigt ihre Merkmale, sobald das Kontrollfeld unter ihrer Überschrift angehakt ist. "
-               "Angehakte Merkmale stehen im Ergebnis, eine leere Grenze filtert nicht. Angehakte Merkmale filtern "
-               "auch dann, wenn ihre Gruppe gerade nicht angezeigt wird.")
     for g, gname in sa.GRUPPEN:
         felder = [f for f in sa.FELDER if f.gruppe == g]
         n_an = sum(1 for f in felder if st.session_state.get(_sc_schluessel(f.schluessel, "an")))
@@ -1157,29 +1289,17 @@ def scanner_reiter():
         # behaelt seinen Wert (persist_state), eine zugeklappte Gruppe filtert weiter.
         st.markdown(f"##### {gname}", anchors=False)
         if st.checkbox(f"Gruppe {gname} anzeigen" + (f", {n_an} angehakt" if n_an else ""), key=f"sc_gruppe_{g}"):
-            if g == "analysten" and not analysten_da:
+            if any(f.analysten for f in felder) and not lese_token:
                 st.caption("Die Analystendaten sind nicht geladen; diese Merkmale zeigen und filtern deshalb nichts.")
             for f in felder:
                 if not st.checkbox(f.titel, key=_sc_schluessel(f.schluessel, "an"), persist_state="page"):
                     continue
                 st.caption(f.erklaerung)
-                if f.wahl:
-                    werte = [w[0] for w in f.wahl]
-                    schluessel_wahl = _sc_schluessel(f.schluessel, "wahl")
-                    if st.session_state.get(schluessel_wahl) not in werte:
-                        st.session_state[schluessel_wahl] = werte[0]
-                    st.selectbox(f.wahl_titel, werte, format_func={w[0]: w[1] for w in f.wahl}.get,
-                                 key=schluessel_wahl, persist_state="page", placeholder="bitte wählen")
                 if f.art != "bereich":
                     continue
-                if f.lage:
-                    st.selectbox(f"Lage des Kurses zur {f.titel.replace('Abstand zur ', '')}", [x[0] for x in sa.LAGE],
-                                 format_func=dict(sa.LAGE).get, key=_sc_schluessel(f.schluessel, "lage"),
-                                 persist_state="page", placeholder="bitte wählen")
-                fe = {"wahl": st.session_state.get(_sc_schluessel(f.schluessel, "wahl"))}
                 for teil in ("min", "max"):
-                    st.text_input(f.eingabe_titel(teil, fe), key=_sc_schluessel(f.schluessel, teil),
-                                  placeholder="leer heißt keine Grenze", persist_state="page")
+                    st.text_input(f.eingabe_titel(teil), key=_sc_schluessel(f.schluessel, teil),
+                                  placeholder=f.eingabe_hinweis(teil), persist_state="page")
                 if f.schluessel == "rs":
                     st.checkbox("Junge Titel mit vorläufigem RS mitnehmen", key="sc_rs_vorlaeufig",
                                 persist_state="page")
@@ -1203,58 +1323,46 @@ def scanner_reiter():
         for s in sektoren:
             st.checkbox(sa.sektor_name(s), key=_sc_sektor_schluessel(s), persist_state="page")
 
-    # Ergebnis
-    e = _sc_einstellung(sektoren)
-    sortier = sa.sortier_wahl(e)
-    if st.session_state.get("sc_sortierung") not in [x for x, _t in sortier]:
-        st.session_state["sc_sortierung"] = sortier[0][0]
-    e["sortierung"] = st.session_state["sc_sortierung"]
-    ausw = sa.auswerten(tabelle, e, heute, analysten_da)
-    anzahl_treffer = len(ausw["df"])
-    st.markdown(f"#### Ergebnis: {nachschlagen.zahl(anzahl_treffer)} von {nachschlagen.zahl(ausw['gesamt'])} Aktien",
-                anchors=False)
-    teile = sa.einstellungs_teile(e, tabelle)
-    st.markdown(sa.md("Eingestellt: " + ("; ".join(teile) if teile else "nichts, die Liste zeigt den ganzen Markt") + "."))
-    for hinweis in ausw["hinweise"]:
-        st.warning(sa.md(hinweis))
-    for fehler in ausw["fehler"]:
-        st.error(sa.md(fehler))
-    st.selectbox("Sortieren nach", [x for x, _t in sortier], format_func=dict(sortier).get, key="sc_sortierung",
-                 placeholder="bitte wählen")
-    anzahlen = ["25", "50", "100", "250", "alle"]
-    if st.session_state.get("sc_anzahl") not in anzahlen:
-        st.session_state["sc_anzahl"] = "50"
-    anzahl = st.selectbox("Wie viele Aktien die Liste zeigt", anzahlen,
-                          format_func=lambda x: "alle" if x == "alle" else f"die ersten {x}", key="sc_anzahl",
-                          placeholder="bitte wählen")
-    basis = app_adresse()
-    if anzahl_treffer:
-        grenze = None if anzahl == "alle" else int(anzahl)
-        st.caption("Ein Klick auf das Kürzel öffnet die vollständigen Daten der Aktie in einem neuen Tab.")
-        st.markdown("\n".join(sa.zeilen(ausw, basis, anzahl=grenze)))
-        if grenze and anzahl_treffer > grenze:
-            st.caption(f"Die übrigen {nachschlagen.zahl(anzahl_treffer - grenze)} Aktien stehen in der Datei.")
-        formate = [x[0] for x in sa.FORMATE]
-        if st.session_state.get("sc_format") not in formate:
-            st.session_state["sc_format"] = "xlsx"
-        fmt = st.selectbox("Dateiformat", formate, format_func={x[0]: x[1] for x in sa.FORMATE}.get, key="sc_format",
-                           placeholder="bitte wählen", persist_state="page")
-        st.download_button("Ergebnis als Datei herunterladen",
-                           data=lambda: sa.datei(ausw, basis, fmt, stand, tabelle)[0],
-                           file_name=sa.dateiname(ausw, stand, fmt),
-                           mime=next(x[3] for x in sa.FORMATE if x[0] == fmt), on_click="ignore", key="sc_download")
+    # Scan: nur mit dem Knopf (Auftrag 2)
+    vergleich = sa.wirksame_einstellung(_sc_einstellung(sektoren))
+    ergebnis = st.session_state.get("sc_ergebnis")
+    laeuft = bool(st.session_state.get("sc_scan_auftrag"))
+    geaendert = bool(ergebnis) and ergebnis.get("vergleich") != vergleich
+    if laeuft:
+        beschriftung = "Scan läuft, bitte warten"
+    elif ergebnis and not ergebnis.get("fehlt") and not geaendert:
+        beschriftung = f"{nachschlagen.zahl(ergebnis['treffer'])} Treffer; Scan neu starten"
     else:
-        st.info("Keine Aktie erfüllt alle Einstellungen.")
-    st.markdown("##### Was der Scanner nicht kann", anchors=False)
-    for satz in sa.grenzen_saetze():
-        st.markdown(sa.md(satz))
+        beschriftung = "Scan starten"
+    # Die Statusmeldung wechselt nur mit dem Scan selbst, nie mit den
+    # Einstellungen; sonst meldete ein Screenreader "Scan fertig", sobald eine
+    # Einstellung wieder auf dem Stand des letzten Scans steht.
+    if laeuft:
+        status = "Scan läuft."
+    elif ergebnis:
+        status = ("Scan fertig: keine Tabelle." if ergebnis.get("fehlt")
+                  else f"Scan fertig: {nachschlagen.zahl(ergebnis['treffer'])} Treffer.")
+    else:
+        status = ""
+    st.markdown("#### Scan", anchors=False)
+    st.button(beschriftung, key="sc_scan", type="primary", on_click=_sc_scan_anfordern)
+    _sc_status(key="sc_scan_status", data={"text": status})
+    if laeuft:
+        try:
+            st.session_state["sc_ergebnis"] = _sc_scannen(vergleich)
+        finally:
+            st.session_state["sc_scan_auftrag"] = False
+        _sc_neu_zeichnen()
+    if ergebnis:
+        _sc_ergebnis_zeigen(ergebnis, geaendert)
 
 
 with tab_scanner:
     # Streamlit schreibt unter ein Textfeld mit ungespeicherter Eingabe den
     # englischen Hinweis "Press Enter to apply", und ein Screenreader liest ihn
-    # beim Weiterlesen vor (gemessen 14.09.2026). Im Scanner steht derselbe
-    # Hinweis deutsch in der Anleitung; ausgeblendet wird er nur im Scanner.
+    # beim Weiterlesen vor (gemessen 14.09.2026). Ausgeblendet wird er nur im
+    # Scanner; eine Eingabe gilt dort spaetestens beim Druck auf Scan starten,
+    # weil das Feld dabei verlassen wird.
     st.html("<style>.st-key-scanner_bereich [data-testid='InputInstructions'] {display: none;}</style>")
     with st.container(key="scanner_bereich"):
         scanner_reiter()

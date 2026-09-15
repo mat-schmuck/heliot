@@ -57,6 +57,12 @@ WOHER DIE WERTE KOMMEN (gemessen 14.09.2026)
               ema_crossback, einmal streng und einmal mit Toleranz (alle
               zusammen 15 Millisekunden je Aktie).
   RS          rs_universum.json des Nachtscans: RS 1 bis 99, RS-Linie.
+  Kennzahlen  (Gerhard, 15.09.2026, Auftrag 1: jede gebaute Kennzahl als
+              Spanne im Scanner) die technischen Kennzahlen der Etappe 2 aus
+              rs_universum.json (Spalten tk_, die Woche der RS-Linie rl_),
+              EPS-Rating, SMR, A/D und Composite (ib_) und die fundamentalen
+              Kennzahlen der Etappe 4 (fu_) aus ibd_ratings.json; die Technik
+              nur, wenn der Nachtscan zum Handelstag der Tabelle gehoert.
   Fundament   SEC-Zahlen aus dem Fundament-Release (Umsatz, Gewinn je Aktie,
               Bruttogewinn, Schulden, Eigenkapital, Bilanzsumme, ausstehende
               Aktien); die Zuordnung Ticker zu CIK kommt aus ibd_ratings.json
@@ -1131,6 +1137,121 @@ UEBERRASCHUNG_FELDER = ("quartale_mit_schaetzung", "schaetzung_geschlagen", "let
 PRIVATE_FELDER = (ANALYSTEN_FELDER + UEBERRASCHUNG_FELDER + ("kursziel_abst_pct",) + kk.KONSENS_FELDER
                   + kk.TERMIN_KONSENS_FELDER + kk.REVISION_FELDER + ks.SHORT_FELDER + kg.GRUPPEN_FELDER)
 
+# --- Kennzahlen aus Nachtscan und Fundament (Gerhard, 15.09.2026, Auftrag 1) ----
+# "Das soll fuer alle Kennzahlen gelten, die wir bauen, nicht nur fuer einzelne."
+# Die technischen Kennzahlen der Etappe 2 stehen in rs_universum.json unter
+# technik, die fundamentalen der Etappe 4 samt Ratings in ibd_ratings.json. Der
+# Bau legt sie mit Vorsilbe in die Nachttabelle (tk_ Technik, rl_ Woche der
+# RS-Linie, ib_ Ratings, fu_ Fundament), damit der Scanner jede als Spanne
+# filtern kann. Was die Tabelle schon selbst rechnet, kommt nicht doppelt
+# (gemessen 15.09.2026 an der Nacht zum 14.09.2026, gleich bis auf die
+# Rundung): adr20 und vola5 sind volatilitaet_20_pct und volatilitaet_5_pct,
+# seit_eroeffnung, tief52_abst und ath_abst sind seit_eroeffnung_pct,
+# abst_tief_1j_pct und abst_hoch_allzeit_pct; marge_brutto_q, schulden_ek und
+# aktien_ausstehend sind bruttomarge_pct, schulden_zu_ek und aktien_ausstehend.
+TECHNIK_SPALTEN = ("vola21", "atr14", "ud50", "mrs", "mrs_vorher", "stufe", "linie_abst", "linie_steig", "burst",
+                   "schlusslage", "vortag_pct", "vortag_spanne", "luecke", "vol_faktor", "pivot", "perf_1w", "perf_1m",
+                   "perf_3m", "perf_6m", "perf_12m", "perf_ytd", "sma20_abst", "sma50_abst", "sma200_abst",
+                   "hoch50_abst", "tief50_abst", "beta", "rsi14", "rsi2", "vol63", "dv20", "rs_1w", "rs_4w")
+LINIE_SPALTEN = ("linie_spy_1w", "linie_qqq_1w")
+RATING_SPALTEN = ("eps", "smr_rang", "ad_rang", "composite")
+FUNDAMENT_SPALTEN = ("marge_operativ_q", "marge_vorsteuer_q", "marge_netto_q", "marge_brutto_fy", "marge_operativ_fy",
+                     "marge_vorsteuer_fy", "marge_netto_fy", "roe", "roa", "roic", "steuersatz", "schulden",
+                     "lt_schulden_ek", "nettoschulden", "current_ratio", "quick_ratio", "zinsdeckung", "umsatz_12m", "fcf",
+                     "fcf_marge", "cash_conversion", "ausschuettung", "sbc_umsatz", "umsatz_cagr3", "umsatz_cagr5",
+                     "eps_cagr3", "eps_stabilitaet", "aktien_1j_pct", "aktien_3j_pct", "fscore", "rule40", "kgv", "kuv",
+                     "kbv", "ev", "ev_ebitda", "ev_umsatz", "peg", "cash_je_aktie", "nettokasse_je_aktie",
+                     "buchwert_je_aktie", "fcf_je_aktie", "fcf_rendite", "div_rendite", "rueckkauf_mk", "altman_z",
+                     "streubesitz_wert", "ffo", "ffo_je_aktie", "p_ffo", "einlagen_vj_pct", "risikovorsorge_kredite",
+                     "kernkapitalquote")
+# Betraege stehen in der Waehrung der Firma und sind nur in Dollar mit dem
+# Scanner vergleichbar; die Bewertung rechnet kennzahlen_fundament ohnehin nur
+# fuer Dollarzahlen (Eigenheit 3), die Verhaeltnisse gelten fuer alle.
+FUNDAMENT_WAEHRUNG = ("schulden", "nettoschulden", "umsatz_12m", "fcf", "ffo", "ffo_je_aktie")
+TECHNIK_KENNZAHLEN = tuple(f"tk_{k}" for k in TECHNIK_SPALTEN) + tuple(f"rl_{k}" for k in LINIE_SPALTEN)
+KENNZAHL_SPALTEN = (TECHNIK_KENNZAHLEN + tuple(f"ib_{k}" for k in RATING_SPALTEN)
+                    + tuple(f"fu_{k}" for k in FUNDAMENT_SPALTEN))
+
+
+def _kennzahl(w):
+    """Ein Wert aus den Nachtdateien: Wahrheitswerte bleiben, Zahlen werden
+    Gleitkommazahlen, alles andere und NaN wird None."""
+    if isinstance(w, (bool, np.bool_)):
+        return bool(w)
+    try:
+        v = float(w)
+    except (TypeError, ValueError):
+        return None
+    return v if math.isfinite(v) else None
+
+
+def kennzahlen_werte(symbol, rs_daten, ratings, technik_gilt=True):
+    """{Spalte: Wert} der Kennzahlen einer Aktie aus Nachtscan (rs_universum.json)
+    und Fundament (ibd_ratings.json); fehlt etwas, steht None da. Gesucht wird
+    in den Listen, im Universum und ausserhalb, auch ohne RS (anders als
+    rs_universum.eintrag, das nur Eintraege mit RS nennt). technik_gilt=False
+    heisst: Der Nachtscan gehoert zu einem anderen Handelstag, seine
+    Kennzahlen bleiben leer."""
+    t = str(symbol or "").upper()
+    d = rs_daten or {}
+    e = (d.get("listen") or {}).get(t) or (d.get("aktien") or {}).get(t) or (d.get("ausserhalb") or {}).get(t) or {}
+    tk = (e.get("technik") or {}) if technik_gilt else {}
+    r = ((ratings or {}).get("aktien") or {}).get(t) or {}
+    f = r.get("fundament") or {}
+    raus = {f"tk_{k}": _kennzahl(tk.get(k)) for k in TECHNIK_SPALTEN}
+    raus.update({f"rl_{k}": _kennzahl(e.get(k)) if technik_gilt else None for k in LINIE_SPALTEN})
+    raus.update({f"ib_{k}": _kennzahl(r.get(k)) for k in RATING_SPALTEN})
+    dollar = f.get("waehrung") == "USD"
+    for k in FUNDAMENT_SPALTEN:
+        w = _kennzahl(f.get(k))
+        if (k in FUNDAMENT_WAEHRUNG and not dollar) or (k == "streubesitz_wert" and f.get("streubesitz_waehrung") != "USD"):
+            w = None
+        raus[f"fu_{k}"] = w
+    return raus
+
+
+def _tag_text(iso):
+    """'2026-09-11' wird '11.09.2026'."""
+    try:
+        return date.fromisoformat(str(iso)[:10]).strftime("%d.%m.%Y")
+    except ValueError:
+        return str(iso)
+
+
+def technik_gilt(rs_daten, handelstag):
+    """Gehoert der Nachtscan zum Handelstag der Tabelle? Ohne Angabe auf einer
+    Seite gilt er (Selbsttest, alte Dateien)."""
+    tag = (rs_daten or {}).get("handelstag")
+    return not (tag and handelstag and str(tag)[:10] != str(handelstag)[:10])
+
+
+def _wahrheitsspalten(tabelle):
+    """Objektspalten, die nur Wahrheitswerte tragen, werden 'boolean'."""
+    for spalte in tabelle.columns:
+        if tabelle[spalte].dtype == object:
+            werte_sp = tabelle[spalte].dropna()
+            if len(werte_sp) and all(isinstance(w, bool) for w in werte_sp):
+                tabelle[spalte] = tabelle[spalte].astype("boolean")
+    return tabelle
+
+
+def kennzahlen_ergaenzen(tabelle, rs_daten, ratings, handelstag=None):
+    """Die Kennzahl-Spalten fuer eine Tabelle, der sie fehlen (gebaut vor dem
+    15.09.2026). Vorhandene Spalten bleiben unberuehrt. Rueckgabe (Tabelle,
+    Hinweis oder "")."""
+    if tabelle is None or "ticker" not in tabelle.columns:
+        return tabelle, ""
+    fehlen = [s for s in KENNZAHL_SPALTEN if s not in tabelle.columns]
+    if not fehlen:
+        return tabelle, ""
+    gilt = technik_gilt(rs_daten, handelstag)
+    werte = pd.DataFrame([kennzahlen_werte(s, rs_daten, ratings, gilt) for s in tabelle["ticker"]],
+                         index=tabelle.index, columns=list(KENNZAHL_SPALTEN))
+    raus = _wahrheitsspalten(pd.concat([tabelle, werte[fehlen]], axis=1))
+    hinweis = "" if gilt else (f"Die technischen Kennzahlen fehlen: Der Nachtscan gehört zum "
+                               f"{_tag_text(rs_daten.get('handelstag'))}, die Tabelle zum {_tag_text(handelstag)}.")
+    return raus, hinweis
+
 
 def bauen(pfad_tabelle=TABELLE, pfad_stand=STAND, archiv=ARCHIV, grenze=None, analysten="rotation",
           heute=None, universum_liste=None, kurse_download=None, rs_daten=None, ratings=None, termine_listen=None,
@@ -1418,6 +1539,20 @@ def bauen(pfad_tabelle=TABELLE, pfad_stand=STAND, archiv=ARCHIV, grenze=None, an
             json.dump({"gebaut_am": stand["gebaut_am"], "status": befund_g.get("status"),
                        "grund": befund_g.get("grund"), **(liste_g or {"gruppen": []})}, f, ensure_ascii=False, indent=1)
 
+    # --- Kennzahlen aus Nachtscan und Fundament (Auftrag 1, 15.09.2026) -----------------
+    # Die Technik gilt nur, wenn der Nachtscan zum Handelstag dieser Tabelle gehoert;
+    # sonst bleibt sie leer, statt Werte eines anderen Tages zu mischen.
+    gilt_t = technik_gilt(rs_daten, handelstag)
+    for s, z in zeilen.items():
+        z.update(kennzahlen_werte(s, rs_daten, ratings, gilt_t))
+    stand["quellen"]["kennzahlen"] = {
+        "status": "ok" if gilt_t else "technik nicht verfuegbar: Nachtscan von einem anderen Handelstag",
+        "technik_handelstag": rs_daten.get("handelstag"), "fundament_stand": ratings.get("gebaut_am"),
+        "mit_technik": sum(1 for z in zeilen.values() if z.get("tk_perf_1w") is not None),
+        "mit_fundament": sum(1 for z in zeilen.values() if any(z.get(f"fu_{k}") is not None for k in FUNDAMENT_SPALTEN))}
+    if not gilt_t:
+        stand["hinweise"].append(f"Technische Kennzahlen fehlen, der Nachtscan gehoert zum {rs_daten.get('handelstag')}")
+
     # --- Schreiben ---------------------------------------------------------------
     for z in zeilen.values():
         if z.get("kursziel") and z.get("kurs"):
@@ -1426,11 +1561,7 @@ def bauen(pfad_tabelle=TABELLE, pfad_stand=STAND, archiv=ARCHIV, grenze=None, an
             z["kursziel_abst_pct"] = None
     tabelle = pd.DataFrame(sorted(zeilen.values(), key=lambda z: z["ticker"]))
     if len(tabelle):
-        for spalte in tabelle.columns:
-            if tabelle[spalte].dtype == object:
-                werte_sp = tabelle[spalte].dropna()
-                if len(werte_sp) and all(isinstance(w, bool) for w in werte_sp):
-                    tabelle[spalte] = tabelle[spalte].astype("boolean")
+        tabelle = _wahrheitsspalten(tabelle)
     # Die Nasdaq-Werte je Aktie in eine eigene Datei (privates Datenrepo),
     # die Tabelle behaelt alles andere.
     privat = [s for s in ("ticker",) + PRIVATE_FELDER if s in tabelle.columns]
@@ -1745,8 +1876,15 @@ def selbsttest() -> int:
                    rs_daten={"status": "ok", "aktien": {"AAA": {"rs": 90, "linie_spy_hoch": True,
                                                                "linie_qqq_hoch": False, "linie_qqq_abst_pct": -1.5}},
                              "listen": {"AAA": {"rs": 90, "linie_spy_hoch": True, "linie_qqq_hoch": False,
-                                                "linie_qqq_abst_pct": -1.5}}},
-                   ratings={"aktien": {}}, termine_listen={"aktien": {"AAA": {"datum": "2026-09-15", "lage": "nachboerslich"}}},
+                                                "linie_qqq_abst_pct": -1.5, "linie_spy_1w": 1.25,
+                                                "technik": {"perf_1w": 2.5, "burst": True, "stufe": 2, "adr20": 9.9,
+                                                            "rs_4w": 7}}},
+                             "ausserhalb": {"CCC": {"rs": None, "technik": {"perf_1w": -1.0, "burst": False}}}},
+                   ratings={"aktien": {"AAA": {"eps": 88, "fundament": {"waehrung": "USD", "roe": 0.25, "fcf": 1e8,
+                                                                        "streubesitz_wert": 5e8,
+                                                                        "streubesitz_waehrung": "USD"}},
+                                       "BBB": {"fundament": {"waehrung": "EUR", "fcf": 2e8, "roe": 0.1}}}},
+                   termine_listen={"aktien": {"AAA": {"datum": "2026-09-15", "lage": "nachboerslich"}}},
                    screener={"AAA": {"sektor": "Technology", "branche": "Software", "land": "United States", "marktkap": 3e8}},
                    kalender={"BBB": ("2026-09-14", "vorboerslich", {"termin_quartal": "Jun/2026",
                                                                     "termin_eps_konsens": -0.26,
@@ -1794,6 +1932,36 @@ def selbsttest() -> int:
           os.path.exists(os.path.join(tmp, "k.parquet"))
           and "open" in pd.read_parquet(os.path.join(tmp, "k.parquet")).columns)
         p("Ganzer Lauf: kurze Historie ohne Muster", int(t[t["ticker"] == "CCC"].iloc[0]["m_darvas"]) == 0)
+        # Auftrag 1 (Gerhard, 15.09.2026): jede gebaute Kennzahl in der Tabelle
+        bbb, ccc = t[t["ticker"] == "BBB"].iloc[0], t[t["ticker"] == "CCC"].iloc[0]
+        p("Kennzahlen: Technik, Woche der RS-Linie, Rating und Fundament mit Vorsilbe in der Tabelle",
+          aaa["tk_perf_1w"] == 2.5 and aaa["tk_stufe"] == 2.0 and aaa["tk_rs_4w"] == 7.0 and aaa["rl_linie_spy_1w"] == 1.25
+          and aaa["ib_eps"] == 88.0 and aaa["fu_roe"] == 0.25 and aaa["fu_fcf"] == 1e8 and aaa["fu_streubesitz_wert"] == 5e8
+          and all(s in t.columns for s in KENNZAHL_SPALTEN), str({k: aaa.get(k) for k in ("tk_perf_1w", "ib_eps", "fu_roe")}))
+        p("Kennzahlen: Wahrheitswerte bleiben Wahrheitswerte, Doppeltes kommt nicht",
+          str(t["tk_burst"].dtype) == "boolean" and bool(aaa["tk_burst"]) and not bool(ccc["tk_burst"])
+          and "tk_adr20" not in t.columns, str(t["tk_burst"].dtype))
+        p("Kennzahlen: auch ausserhalb des Universums ohne RS, Betraege nur in Dollar, Verhaeltnisse fuer alle",
+          ccc["tk_perf_1w"] == -1.0 and pd.isna(bbb["fu_fcf"]) and bbb["fu_roe"] == 0.1 and pd.isna(bbb["tk_perf_1w"])
+          and st["quellen"]["kennzahlen"]["status"] == "ok" and st["quellen"]["kennzahlen"]["mit_technik"] == 2,
+          str(st["quellen"]["kennzahlen"]))
+        p("Kennzahlen: Nachtscan eines anderen Handelstags laesst die Technik leer, das Fundament bleibt",
+          not technik_gilt({"handelstag": "2026-09-11"}, "2026-09-14") and technik_gilt({}, "2026-09-14")
+          and technik_gilt({"handelstag": "2026-09-14"}, "2026-09-14")
+          and kennzahlen_werte("AAA", {"listen": {"AAA": {"technik": {"perf_1w": 1.0}, "linie_spy_1w": 2.0}}},
+                               {"aktien": {"AAA": {"eps": 50}}}, technik_gilt=False)["tk_perf_1w"] is None
+          and kennzahlen_werte("AAA", {"listen": {"AAA": {"linie_spy_1w": 2.0}}}, {"aktien": {"AAA": {"eps": 50}}},
+                               technik_gilt=False)["ib_eps"] == 50.0)
+        alt_t = t.drop(columns=[s for s in KENNZAHL_SPALTEN if s in t.columns])
+        erg_t, hinweis_t = kennzahlen_ergaenzen(alt_t, {"handelstag": "2026-09-11", "listen": {"AAA": {"technik": {"perf_1w": 3.0}}}},
+                                                {"aktien": {"AAA": {"eps": 70}}}, handelstag="2026-09-14")
+        erg_t2, hinweis_t2 = kennzahlen_ergaenzen(alt_t, {"listen": {"AAA": {"technik": {"perf_1w": 3.0}}}},
+                                                  {"aktien": {"AAA": {"eps": 70}}})
+        p("Kennzahlen nachtraeglich: fehlende Spalten ergaenzt, vorhandene bleiben, anderer Tag benannt",
+          all(s in erg_t.columns for s in KENNZAHL_SPALTEN) and pd.isna(erg_t.loc[erg_t["ticker"] == "AAA", "tk_perf_1w"].iloc[0])
+          and erg_t.loc[erg_t["ticker"] == "AAA", "ib_eps"].iloc[0] == 70.0 and "11.09.2026" in hinweis_t and "14.09.2026" in hinweis_t
+          and erg_t2.loc[erg_t2["ticker"] == "AAA", "tk_perf_1w"].iloc[0] == 3.0 and hinweis_t2 == ""
+          and kennzahlen_ergaenzen(t, {}, {})[0] is t, hinweis_t)
         st2 = bauen(pfad_tabelle=os.path.join(tmp, "t.parquet"), pfad_stand=os.path.join(tmp, "s.json"),
                     archiv=None, analysten="aus", heute=date(2026, 9, 15),
                     universum_liste=[{"symbol": s, "name": s, "boerse": "Nasdaq"} for s in kunst],

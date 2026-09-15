@@ -27,6 +27,11 @@ den Scanner nicht angehakt wurden, sollen beim Ergebnis auch nicht
 aufscheinen"). Ein angehaktes Feld ohne Grenzen filtert nicht, es zeigt nur
 seinen Wert.
 
+JEDE KENNZAHL ALS SPANNE (Gerhard, 15.09.2026): Von und Bis, ein leeres Ende
+heisst offen. Das gilt fuer jede gebaute Kennzahl, auch fuer die technischen
+und fundamentalen aus Nachtscan und Fundament, die scanner_daten.py mit
+Vorsilbe in die Nachttabelle legt (tk_, rl_, ib_, fu_).
+
 DIE VORGABEN EINER STRATEGIE FILTERN NIE STRENGER ALS IHR MUSTER. Eingetragen
 werden die Schwellen des Detektors, bei Toleranz um die Toleranz gelockert;
 alles andere bleibt ohne Grenze und zeigt nur den Wert. So faellt durch die
@@ -251,8 +256,10 @@ def strategie_text(kennung):
     import pattern_scanner as ps
     c = ps.CFG
     p = lambda x: zahl_eingabe(x * 100)  # noqa: E731
+    # Ohne Strategie steht kein Text da (Gerhard, 15.09.2026: "Den Erklaertext
+    # zum Scanner bitte entfernen, den brauche ich nicht").
     texte = {
-        "": "Ohne Strategie filtern nur die Einstellungen darunter; angehakte Merkmale stehen im Ergebnis.",
+        "": "",
         "darvas": (f"Darvas Box: ein neues 52-Wochen-Hoch, danach eine Box aus mindestens {c['darvas_box_days']} "
                    f"plus {c['darvas_box_days']} Tagen; Kauf über der Oberkante, Stop unter der Unterkante. "
                    f"Gemeldet werden nur Boxen, deren Hoch höchstens {ZENTRAL['darvas']['frische_max_tage']} "
@@ -317,60 +324,81 @@ def treffer_satz(stand, kennung):
 # ---------------------------------------------------------------------------
 # Teil 2: die Felder
 # ---------------------------------------------------------------------------
+# JEDE KENNZAHL ALS SPANNE (Gerhard, 15.09.2026, Auftrag 1): "Wenn ich keine
+# fertige Strategie auswaehle, will ich jede Kennzahl selbst einstellen
+# koennen, und zwar als Spanne mit Von und Bis ... Das obere Ende muss also
+# leer bleiben duerfen und bedeutet dann nach oben offen. Dasselbe gilt fuer
+# das untere Ende. Das soll fuer alle Kennzahlen gelten, die wir bauen." Jede
+# Kennzahl ist deshalb ein eigenes Feld mit Von und Bis. Auch die Zeitraeume
+# von Hoch, Tief, Volatilitaet und Wertentwicklung stehen je fuer sich, damit
+# sich etwa der Abstand zum Jahreshoch und zum Allzeithoch zugleich eingrenzen
+# laesst. Die frueheren Stufenwahlen (Konsens, geschlagene Schaetzungen,
+# groesstes Volumen) sind Spannen auf ihre Zahl; die Lagewahl bei den
+# Durchschnitten ist eine Spanne ab oder bis null. Nur Bedingungen ohne Zahl
+# (Red to Green, neues Hoch, RS-Linie auf dem Hoch, Momentum Burst, Episodic
+# Pivot) bleiben Kontrollfelder, die erfuellt sein muessen. Der Selbsttest
+# prueft, dass jede Kennzahl der Nachttabelle (scanner_daten.KENNZAHL_SPALTEN)
+# ein Feld hat.
 
-GRUPPEN = (("wachstum", "Wachstum und Bruttomarge"),
-           ("groesse", "Kurs, Größe und Volumen"),
+GRUPPEN = (("wachstum", "Wachstum von Umsatz und Gewinn"),
+           ("margen", "Margen, Renditen und Cashflow"),
+           ("groesse", "Kurs, Größe und Aktienzahl"),
+           ("volumen", "Volumen"),
            ("tag", "Letzter Handelstag"),
-           ("ema", "Exponentielle gleitende Durchschnitte"),
+           ("volatilitaet", "Volatilität und Schwankung"),
+           ("durchschnitte", "Gleitende Durchschnitte und Trend"),
            ("hochtief", "Abstand von Hoch und Tief"),
+           ("entwicklung", "Wertentwicklung und Momentum"),
            ("rs", "Relative Stärke"),
-           ("bilanz", "Bilanz"),
-           ("analysten", "Analysten und Quartalszahlen"))
+           ("ratings", "Ratings"),
+           ("bilanz", "Bilanz und Sicherheit"),
+           ("bewertung", "Bewertung"),
+           ("analysten", "Analysten und Konsens"),
+           ("revisionen", "Revisionen und Einstufungen"),
+           ("short", "Leerverkäufe"),
+           ("gruppe", "Branchengruppe"))
 
-HOCH_TIEF = (("1t", "Tag, der letzte Handelstag", "Tageshoch", "Tagestief"),
-             ("1w", "Woche, die letzten 5 Handelstage", "Wochenhoch", "Wochentief"),
-             ("1m", "Monat, die letzten 21 Handelstage", "Monatshoch", "Monatstief"),
-             ("3m", "Quartal, die letzten 63 Handelstage", "Quartalshoch", "Quartalstief"),
-             ("6m", "Halbjahr, die letzten 126 Handelstage", "Halbjahreshoch", "Halbjahrestief"),
-             ("1j", "Jahr, 52 Wochen", "Jahreshoch", "Jahrestief"),
-             ("3j", "Drei Jahre", "Dreijahreshoch", "Dreijahrestief"),
-             ("allzeit", "Allzeit, die ganze Kurshistorie", "Allzeithoch", "Allzeittief"))
+HOCH_TIEF = (("1t", "den letzten Handelstag", "Tageshoch", "Tagestief"),
+             ("1w", "die letzten 5 Handelstage", "Wochenhoch", "Wochentief"),
+             ("1m", "die letzten 21 Handelstage", "Monatshoch", "Monatstief"),
+             ("3m", "die letzten 63 Handelstage", "Quartalshoch", "Quartalstief"),
+             ("6m", "die letzten 126 Handelstage", "Halbjahreshoch", "Halbjahrestief"),
+             ("1j", "52 Wochen", "Jahreshoch", "Jahrestief"),
+             ("3j", "drei Jahre", "Dreijahreshoch", "Dreijahrestief"),
+             ("allzeit", "die ganze Kurshistorie", "Allzeithoch", "Allzeittief"))
 
-VOLA = (("20", "Durchschnitt der letzten 20 Handelstage", "volatilitaet_20_pct",
-         "mittlere Tagesspanne der letzten 20 Handelstage"),
-        ("5", "Durchschnitt der letzten 5 Handelstage", "volatilitaet_5_pct",
-         "mittlere Tagesspanne der letzten 5 Handelstage"),
-        ("1", "nur der letzte Handelstag", "tagesspanne_pct", "Tagesspanne des letzten Handelstags"))
-
-NUR_ANZEIGEN = ("anzeigen", "nur anzeigen, nicht filtern")
-KONSENS = (NUR_ANZEIGEN, ("5", "starker Kauf"), ("4", "mindestens Kaufen"), ("3", "mindestens Halten"),
-           ("2", "mindestens Verkaufen"))
-BEAT = (NUR_ANZEIGEN, ("4", "in allen vier der letzten vier Quartale"),
-        ("3", "in mindestens drei der letzten vier Quartale"), ("2", "in mindestens zwei der letzten vier Quartale"),
-        ("1", "in mindestens einem der letzten vier Quartale"))
+# Yahoos Namen der Perioden; das laufende Quartal ist das Quartal der naechsten
+# Meldung und kann schon vorbei sein (siehe nachschlagen._periode_kopf).
+PERIODEN_REV = (("0q", "laufendes Quartal"), ("1q", "nächstes Quartal"), ("0y", "laufendes Geschäftsjahr"),
+                ("1y", "nächstes Geschäftsjahr"))
+_FEHLT = object()
 
 
-def _volmax_wahl():
-    raus = [NUR_ANZEIGEN, ("0", "heute, am letzten Handelstag"), ("1", "heute oder vor einem Handelstag")]
-    raus += [(str(n), f"heute bis vor {n} Handelstagen") for n in range(2, 11)]
-    return tuple(raus)
-
-
-VOLMAX = _volmax_wahl()
-LAGE = (("egal", "Lage egal"), ("darueber", "Kurs darüber"), ("darunter", "Kurs darunter"))
+def _anteil(zaehler, nenner, basis_positiv=True):
+    """Rechnung fuer Felder: zaehler geteilt durch nenner, minus 1, mal 100;
+    bei basis_positiv nur mit positivem Nenner."""
+    def rechnung(df):
+        z, n = _zahlen(df, zaehler), _zahlen(df, nenner)
+        if basis_positiv:
+            n = n.where(n > 0)
+        return (z / n - 1.0) * 100.0
+    return rechnung
 
 
 class Feld:
     """Ein Merkmal aus Teil 2.
 
-    art "bereich": Grenzen mindestens und hoechstens (leer heisst keine),
-        wahl bestimmt bei Hoch, Tief und Tagesvolatilitaet die Spalte;
-    art "ja": angehakt heisst, die Bedingung muss erfuellt sein;
-    art "stufe": eine Auswahl, deren erste Zeile nur anzeigt."""
+    art "bereich": Von und Bis, leer heisst offen; angehakt ohne Grenze zeigt
+        das Feld nur seinen Wert;
+    art "ja": angehakt heisst, die Bedingung muss erfuellt sein.
+    rechnung: statt einer Spalte eine Rechnung aus der Tabelle (df -> Series),
+        quellen nennt die Spalten, aus denen sie rechnet;
+    bezug: bei Hoch und Tief der Name des Hochs oder Tiefs;
+    linie: bei Abstaenden zu einem Durchschnitt dessen Name."""
 
     def __init__(self, schluessel, gruppe, titel, art="bereich", spalte=None, einheit="Prozent", erklaerung="",
-                 stellen=1, faktor=1.0, vorzeichen=False, signed=False, wahl=(), wahl_titel="",
-                 analysten=False, lage=False):
+                 stellen=1, faktor=1.0, vorzeichen=False, signed=False, analysten=False, rechnung=None, quellen=(),
+                 bezug="", linie=""):
         self.schluessel = schluessel
         self.gruppe = gruppe
         self.titel = titel
@@ -382,97 +410,80 @@ class Feld:
         self.faktor = faktor
         self.vorzeichen = vorzeichen
         self.signed = signed
-        self.wahl = tuple(wahl)
-        self.wahl_titel = wahl_titel
         self.analysten = analysten
-        self.lage = lage
+        self.rechnung = rechnung
+        self.quellen = tuple(quellen)
+        self.bezug = bezug
+        self.linie = linie
 
     # --- Werte ---------------------------------------------------------------
-    def wahl_eintrag(self, fe):
-        if not self.wahl:
-            return None
-        w = (fe or {}).get("wahl")
-        return next((x for x in self.wahl if x[0] == w), self.wahl[0])
-
-    def spalte_fuer(self, fe):
-        e = self.wahl_eintrag(fe)
-        if self.art == "bereich" and e is not None and len(e) > 2:
-            return e[2]
-        return self.spalte
-
     def werte(self, df, fe=None):
         """Die Werte in der Einheit der Eingabe, als Gleitkommazahlen."""
-        name = self.spalte_fuer(fe)
-        v = _zahlen(df, name) * self.faktor if name else pd.Series(np.nan, index=df.index, dtype="float64")
+        if self.rechnung is not None:
+            v = pd.to_numeric(self.rechnung(df), errors="coerce").astype("float64") * self.faktor
+        elif self.spalte:
+            v = _zahlen(df, self.spalte) * self.faktor
+        else:
+            v = pd.Series(np.nan, index=df.index, dtype="float64")
         if self.schluessel == "rs" and (fe or {}).get("vorlaeufig"):
             v = v.fillna(_zahlen(df, "rs_vorlaeufig"))
+        v = v.where(np.isfinite(v))
         return -v if self.vorzeichen else v
 
     def wert(self, r, fe=None):
         """Der Wert einer Zeile (dict) in der Einheit der Eingabe, oder None."""
-        name = self.spalte_fuer(fe)
-        v = _num(r.get(name)) if name else None
-        if v is None and self.schluessel == "rs" and (fe or {}).get("vorlaeufig"):
-            v = _num(r.get("rs_vorlaeufig"))
-        if v is None:
-            return None
-        v *= self.faktor
-        return -v if self.vorzeichen else v
+        return _num(self.werte(pd.DataFrame([r]), fe).iloc[0])
 
     # --- Filter --------------------------------------------------------------
+    def grenzen(self, fe):
+        """(Von, Bis, [Fehler]) aus der Einstellung. Leer heisst offen; eine
+        unlesbare Grenze wirkt nicht, ebenso eine Spanne mit Von ueber Bis."""
+        fe = fe or {}
+        fehler = []
+        von, f1 = zahl_lesen(fe.get("min"))
+        bis, f2 = zahl_lesen(fe.get("max"))
+        if f1:
+            fehler.append(f"{self.titel}, von: {f1}; diese Grenze wirkt deshalb nicht.")
+        if f2:
+            fehler.append(f"{self.titel}, bis: {f2}; diese Grenze wirkt deshalb nicht.")
+        if von is not None and bis is not None and von > bis + EPS:
+            fehler.append(f"{self.titel}: Von {zahl_eingabe(von)} liegt über Bis {zahl_eingabe(bis)}; "
+                          "diese Spanne wirkt deshalb nicht.")
+            von = bis = None
+        return von, bis, fehler
+
     def maske(self, df, fe):
         """(Maske oder None, [Fehler]); None heisst: dieses Feld filtert nicht."""
         fe = fe or {}
-        fehler = []
         if self.art == "ja":
-            return _wahr(_sp(df, self.spalte)), fehler
-        if self.art == "stufe":
-            w = fe.get("wahl") or NUR_ANZEIGEN[0]
-            if w == NUR_ANZEIGEN[0]:
-                return None, fehler
-            n = int(w)
-            if self.schluessel == "konsens":
-                return _zahlen(df, "konsens_wert") >= n, fehler
-            if self.schluessel == "beat":
-                return _zahlen(df, "schaetzung_geschlagen") >= n, fehler
-            if self.schluessel == "volmax":
-                return _zahlen(df, "volumen_max_tage_her") <= n, fehler
+            return _wahr(_sp(df, self.spalte)), []
+        von, bis, fehler = self.grenzen(fe)
+        if von is None and bis is None:
             return None, fehler
         v = self.werte(df, fe)
         m = pd.Series(True, index=df.index)
-        gesetzt = False
-        lage = fe.get("lage") or "egal"
-        if self.lage and lage in ("darueber", "darunter"):
-            m &= (v > 0) if lage == "darueber" else (v < 0)
-            gesetzt = True
-        for teil, wort in (("min", "mindestens"), ("max", "höchstens")):
-            x, f = zahl_lesen(fe.get(teil))
-            if f:
-                fehler.append(f"{self.titel}, {wort}: {f}; diese Grenze wirkt deshalb nicht.")
-            elif x is not None:
-                m &= (v >= x - EPS) if teil == "min" else (v <= x + EPS)
-                gesetzt = True
-        return (m.fillna(False) if gesetzt else None), fehler
+        if von is not None:
+            m &= v >= von - EPS
+        if bis is not None:
+            m &= v <= bis + EPS
+        return m.fillna(False).astype(bool), fehler
+
+    def filtert(self, fe):
+        """Traegt die Einstellung eine wirksame Grenze oder ist es eine Bedingung?"""
+        if self.art == "ja":
+            return True
+        von, bis, _f = self.grenzen(fe)
+        return von is not None or bis is not None
 
     # --- Texte ---------------------------------------------------------------
     def eingabe_titel(self, teil, fe=None):
-        """Beschriftung eines Grenzfelds; bei Hoch und Tief mit dem gewaehlten Zeitraum."""
-        wort = "mindestens" if teil == "min" else "höchstens"
-        if self.schluessel in ("hoch", "tief"):
-            e = self.wahl_eintrag(fe)
-            name = e[3] if self.schluessel == "hoch" else e[4]
-            return f"Abstand zum {name} {wort}, in Prozent {'darunter' if self.schluessel == 'hoch' else 'darüber'}"
-        if self.schluessel == "vola":
-            return f"Tagesvolatilität {wort}, in Prozent"
-        einheit = self.einheit_fuer(fe)
-        return f"{self.titel} {wort}" + (f", in {einheit}" if einheit else "")
+        """Beschriftung eines Grenzfelds: Von oder Bis, mit der Einheit."""
+        wort = "von" if teil == "min" else "bis"
+        return f"{self.titel} {wort}" + (f", in {self.einheit}" if self.einheit else "")
 
-    def einheit_fuer(self, fe):
-        if self.schluessel == "hoch":
-            return "Prozent unter dem Hoch"
-        if self.schluessel == "tief":
-            return "Prozent über dem Tief"
-        return self.einheit
+    def eingabe_hinweis(self, teil):
+        """Platzhalter eines leeren Grenzfelds."""
+        return "leer heißt nach unten offen" if teil == "min" else "leer heißt nach oben offen"
 
     def _wert_text(self, v):
         if v is None:
@@ -480,8 +491,9 @@ class Feld:
         text = mit_vorzeichen(v, self.stellen) if self.signed else zahl(v, self.stellen)
         return text + (f" {self.einheit}" if self.einheit else "")
 
-    def satz(self, r, fe=None, analysten_da=True):
-        """Das Merkmal einer Aktie (Zeile als dict) als Satzteil fuer die Liste."""
+    def satz(self, r, fe=None, analysten_da=True, v=_FEHLT):
+        """Das Merkmal einer Aktie (Zeile als dict) als Satzteil fuer die Liste;
+        v ist der schon gerechnete Wert, sonst wird er aus der Zeile gerechnet."""
         fe = fe or {}
         if self.analysten and not analysten_da:
             return f"{self.titel}: Analystendaten nicht geladen"
@@ -520,32 +532,30 @@ class Feld:
             n = int(tage)
             wann = "heute" if n == 0 else ("vor einem Handelstag" if n == 1 else f"vor {n} Handelstagen")
             return f"größtes Volumen jemals {wann}, {menge} Stück am {am}"
-        v = self.wert(r, fe)
-        if s in ("hoch", "tief"):
-            e = self.wahl_eintrag(fe)
-            name = e[3] if s == "hoch" else e[4]
+        if v is _FEHLT:
+            v = self.wert(r, fe)
+        else:
+            v = _num(v)
+        if self.bezug:
             if v is None:
-                return f"Abstand zum {name} unbekannt"
-            return f"{zahl(v, 1)} Prozent {'unter dem' if s == 'hoch' else 'über dem'} {name}"
-        if s == "vola":
-            e = self.wahl_eintrag(fe)
-            return f"{e[3]} {zahl(v, 2)} Prozent" if v is not None else f"{e[3]} unbekannt"
-        if self.lage:
-            linie = self.titel.replace("Abstand zur ", "")
+                return f"Abstand zum {self.bezug} unbekannt"
+            return f"{zahl(v, 1)} Prozent {'unter dem' if self.vorzeichen else 'über dem'} {self.bezug}"
+        if self.linie:
             if v is None:
-                return f"{linie} unbekannt"
+                return f"{self.linie} unbekannt"
             if round(v, 2) == 0:
-                return f"Kurs auf der {linie}"
-            return f"Kurs {zahl(abs(v), 2)} Prozent {'über' if v > 0 else 'unter'} der {linie}"
+                return f"Kurs auf der {self.linie}"
+            return f"Kurs {zahl(abs(v), 2)} Prozent {'über' if v > 0 else 'unter'} der {self.linie}"
         if s == "rs":
             if v is not None:
                 vorl = _num(r.get("rs")) is None
                 return f"RS {int(round(v))}" + (" vorläufig" if vorl else "")
             vl = _num(r.get("rs_vorlaeufig"))
             return f"kein RS, vorläufiges RS {int(round(vl))}" if vl is not None else "RS unbekannt"
-        if s == "rs_linie_abst":
-            return (f"RS-Linie gegen SPY {zahl(v, 1)} Prozent unter dem 52-Wochen-Hoch" if v is not None
-                    else "Abstand der RS-Linie gegen SPY unbekannt")
+        for kennung, gegen in (("rs_linie_abst", "SPY"), ("rs_linie_qqq_abst", "QQQ")):
+            if s == kennung:
+                return (f"RS-Linie gegen {gegen} {zahl(v, 1)} Prozent unter dem 52-Wochen-Hoch" if v is not None
+                        else f"Abstand der RS-Linie gegen {gegen} unbekannt")
         if s == "kursziel":
             ziel = _num(r.get("kursziel"))
             if v is None or ziel is None:
@@ -558,27 +568,17 @@ class Feld:
         fe = fe or {}
         if self.art == "ja":
             return self.titel
-        if self.art == "stufe":
-            e = self.wahl_eintrag(fe)
-            if e[0] == NUR_ANZEIGEN[0]:
-                return f"{self.titel} angezeigt"
-            return f"{self.titel} {e[1]}"
-        teile = []
-        titel = self.titel
-        if self.schluessel in ("hoch", "tief", "vola"):
-            e = self.wahl_eintrag(fe)
-            titel = (f"Abstand zum {e[3]}" if self.schluessel == "hoch" else
-                     f"Abstand zum {e[4]}" if self.schluessel == "tief" else f"Tagesvolatilität, {e[1]}")
-        if self.lage and (fe.get("lage") or "egal") != "egal":
-            teile.append("Kurs darüber" if fe.get("lage") == "darueber" else "Kurs darunter")
-        einheit = self.einheit_fuer(fe)
-        for teil, wort in (("min", "mindestens"), ("max", "höchstens")):
-            x, f = zahl_lesen(fe.get(teil))
-            if x is not None and not f:
-                teile.append(f"{wort} {zahl_eingabe(x)}" + (f" {einheit}" if einheit else ""))
-        if self.schluessel == "rs" and fe.get("vorlaeufig"):
-            teile.append("mit vorläufigem RS")
-        return titel + (" " + ", ".join(teile) if teile else " angezeigt")
+        von, bis, _f = self.grenzen(fe)
+        einheit = f" {self.einheit}" if self.einheit else ""
+        if von is not None and bis is not None:
+            teil = f"von {zahl_eingabe(von)} bis {zahl_eingabe(bis)}{einheit}"
+        elif von is not None:
+            teil = f"ab {zahl_eingabe(von)}{einheit}, nach oben offen"
+        elif bis is not None:
+            teil = f"bis {zahl_eingabe(bis)}{einheit}, nach unten offen"
+        else:
+            teil = "angezeigt"
+        return f"{self.titel} {teil}" + (", mit vorläufigem RS" if self.schluessel == "rs" and fe.get("vorlaeufig") else "")
 
     def datei_spalten(self, df, fe=None, analysten_da=True):
         """[(Spaltenkopf, Werte)] fuer die Dateien."""
@@ -594,8 +594,9 @@ class Feld:
                 raus.append(("RS-Linie gegen QQQ, Prozent unter dem 52-Wochen-Hoch", -_zahlen(df, "rs_linie_qqq_abst_pct")))
             return raus
         if s == "konsens":
-            return [("Analystenkonsens", _sp(df, "konsens")), ("Kaufempfehlungen", _zahlen(df, "analysten_kaufen")),
-                    ("Halten", _zahlen(df, "analysten_halten")), ("Verkaufsempfehlungen", _zahlen(df, "analysten_verkaufen"))]
+            return [("Analystenkonsens", _sp(df, "konsens")), ("Analystenkonsens als Zahl", _zahlen(df, "konsens_wert")),
+                    ("Kaufempfehlungen", _zahlen(df, "analysten_kaufen")), ("Halten", _zahlen(df, "analysten_halten")),
+                    ("Verkaufsempfehlungen", _zahlen(df, "analysten_verkaufen"))]
         if s == "beat":
             return [("Quartale über der Schätzung", _zahlen(df, "schaetzung_geschlagen")),
                     ("Quartale mit Schätzung", _zahlen(df, "quartale_mit_schaetzung"))]
@@ -604,12 +605,8 @@ class Feld:
                     ("Größtes Volumen jemals, Datum", _sp(df, "volumen_max_datum")),
                     ("Größtes Volumen jemals, vor Handelstagen", _zahlen(df, "volumen_max_tage_her"))]
         werte = self.werte(df, fe).round(self.stellen)
-        if s in ("hoch", "tief"):
-            e = self.wahl_eintrag(fe)
-            return [(f"Prozent {'unter dem' if s == 'hoch' else 'über dem'} {e[3] if s == 'hoch' else e[4]}", werte)]
-        if s == "vola":
-            e = self.wahl_eintrag(fe)
-            return [(f"Tagesvolatilität in Prozent, {e[1]}", werte)]
+        if self.bezug:
+            return [(f"Prozent {'unter dem' if self.vorzeichen else 'über dem'} {self.bezug}", werte)]
         if s == "rs":
             raus = [("RS", werte)]
             if fe.get("vorlaeufig"):
@@ -624,8 +621,12 @@ class Feld:
 
 def _felder():
     F = Feld
-    return (
-        # Wachstum und Bruttomarge, aus den SEC-Zahlen
+    tech = ZENTRAL["technik"]
+    fenster_short = int(sd.ks.KS["fenster_tage"])
+    nur_dollar = " Nur für Firmen, die in Dollar berichten."
+    nur_inland = " Nur für inländische Firmen mit Dollarzahlen."
+    felder = [
+        # Wachstum von Umsatz und Gewinn
         F("umsatz_q", "wachstum", "Umsatzwachstum q/q", spalte="umsatz_q_vj_pct", signed=True,
           erklaerung="Jüngstes Quartal gegen dasselbe Quartal des Vorjahres, aus den SEC-Zahlen."),
         F("umsatz_j", "wachstum", "Umsatzwachstum y/y", spalte="umsatz_ttm_pct", signed=True,
@@ -639,30 +640,116 @@ def _felder():
           erklaerung="Gewinn je Aktie der letzten vier Quartale gegen die vier Quartale ein Jahr davor."),
         F("eps_s", "wachstum", "EPS-Wachstum sequenziell", spalte="eps_seq_pct", signed=True,
           erklaerung="Gewinn je Aktie des jüngsten Quartals gegen das Quartal davor."),
-        F("marge", "wachstum", "Bruttomarge", spalte="bruttomarge_pct", stellen=1,
+        F("umsatz_cagr3", "wachstum", "Umsatzwachstum pro Jahr über drei Jahre", spalte="fu_umsatz_cagr3", signed=True,
+          erklaerung="Durchschnittliches jährliches Wachstum des Umsatzes über die letzten drei Geschäftsjahre, "
+                     "CAGR, aus dem SEC-Fundament."),
+        F("umsatz_cagr5", "wachstum", "Umsatzwachstum pro Jahr über fünf Jahre", spalte="fu_umsatz_cagr5", signed=True,
+          erklaerung="Durchschnittliches jährliches Wachstum des Umsatzes über die letzten fünf Geschäftsjahre, CAGR."),
+        F("eps_cagr3", "wachstum", "EPS-Wachstum pro Jahr über drei Jahre", spalte="fu_eps_cagr3", signed=True,
+          erklaerung="Durchschnittliches jährliches Wachstum des verwässerten Gewinns je Aktie über die letzten drei "
+                     "Geschäftsjahre, CAGR."),
+        F("eps_stabilitaet", "wachstum", "EPS-Stabilität", spalte="fu_eps_stabilitaet", einheit="", stellen=0,
+          erklaerung="Wie gleichmäßig der Gewinn je Aktie über die Quartale verläuft, Näherung nach IBD-Art: 1 heißt "
+                     "gleichmäßig, 99 sprunghaft."),
+        F("rule40", "wachstum", "Rule of 40", spalte="fu_rule40", einheit="", signed=True,
+          erklaerung="Umsatzwachstum der letzten vier Quartale in Prozent plus FCF-Marge in Prozent; ab 40 erfüllt, "
+                     "gedacht für Software."),
+        # Margen, Renditen und Cashflow
+        F("marge", "margen", "Bruttomarge", spalte="bruttomarge_pct",
           erklaerung="Bruttogewinn in Prozent des Umsatzes im jüngsten Quartal. Banken, Versicherer und "
                      "Immobilienfirmen weisen keine aus."),
-        F("marge_q", "wachstum", "Bruttomarge q/q", spalte="bruttomarge_q_vj_pp", einheit="Prozentpunkte", signed=True,
+        F("marge_q", "margen", "Bruttomarge q/q", spalte="bruttomarge_q_vj_pp", einheit="Prozentpunkte", signed=True,
           erklaerung="Veränderung der Bruttomarge des jüngsten Quartals gegen das Vorjahresquartal."),
-        F("marge_j", "wachstum", "Bruttomarge y/y", spalte="bruttomarge_ttm_pp", einheit="Prozentpunkte", signed=True,
+        F("marge_j", "margen", "Bruttomarge y/y", spalte="bruttomarge_ttm_pp", einheit="Prozentpunkte", signed=True,
           erklaerung="Bruttomarge der letzten vier Quartale gegen die der vier Quartale ein Jahr davor."),
-        F("marge_s", "wachstum", "Bruttomarge sequenziell", spalte="bruttomarge_seq_pp", einheit="Prozentpunkte",
+        F("marge_s", "margen", "Bruttomarge sequenziell", spalte="bruttomarge_seq_pp", einheit="Prozentpunkte",
           signed=True, erklaerung="Bruttomarge des jüngsten Quartals gegen die des Quartals davor."),
-        # Kurs, Groesse und Volumen
+        F("marge_op_q", "margen", "Operative Marge im Quartal", spalte="fu_marge_operativ_q", faktor=100.0, signed=True,
+          erklaerung="Operatives Ergebnis in Prozent des Umsatzes im jüngsten Quartal."),
+        F("marge_vst_q", "margen", "Vorsteuermarge im Quartal", spalte="fu_marge_vorsteuer_q", faktor=100.0, signed=True,
+          erklaerung="Ergebnis vor Steuern in Prozent des Umsatzes im jüngsten Quartal."),
+        F("marge_netto_q", "margen", "Nettomarge im Quartal", spalte="fu_marge_netto_q", faktor=100.0, signed=True,
+          erklaerung="Nettogewinn in Prozent des Umsatzes im jüngsten Quartal."),
+        F("marge_brutto_fy", "margen", "Bruttomarge im Geschäftsjahr", spalte="fu_marge_brutto_fy", faktor=100.0,
+          signed=True, erklaerung="Bruttogewinn in Prozent des Umsatzes im jüngsten Geschäftsjahr."),
+        F("marge_op_fy", "margen", "Operative Marge im Geschäftsjahr", spalte="fu_marge_operativ_fy", faktor=100.0,
+          signed=True, erklaerung="Operatives Ergebnis in Prozent des Umsatzes im jüngsten Geschäftsjahr."),
+        F("marge_vst_fy", "margen", "Vorsteuermarge im Geschäftsjahr", spalte="fu_marge_vorsteuer_fy", faktor=100.0,
+          signed=True, erklaerung="Ergebnis vor Steuern in Prozent des Umsatzes im jüngsten Geschäftsjahr."),
+        F("marge_netto_fy", "margen", "Nettomarge im Geschäftsjahr", spalte="fu_marge_netto_fy", faktor=100.0,
+          signed=True, erklaerung="Nettogewinn in Prozent des Umsatzes im jüngsten Geschäftsjahr."),
+        F("roe", "margen", "Eigenkapitalrendite, ROE", spalte="fu_roe", faktor=100.0, signed=True,
+          erklaerung="Nettogewinn des Geschäftsjahres in Prozent des Eigenkapitals, wie im SMR-Rating."),
+        F("roa", "margen", "Rendite auf das Vermögen, ROA", spalte="fu_roa", faktor=100.0, signed=True,
+          erklaerung="Nettogewinn des Geschäftsjahres in Prozent der Bilanzsumme."),
+        F("roic", "margen", "Rendite auf das eingesetzte Kapital, ROIC", spalte="fu_roic", faktor=100.0, signed=True,
+          erklaerung="Operatives Ergebnis des Geschäftsjahres nach Steuern in Prozent des eingesetzten Kapitals, "
+                     "mit dem Steuersatz des Jahres."),
+        F("steuersatz", "margen", "Steuersatz", spalte="fu_steuersatz", faktor=100.0,
+          erklaerung="Steuern in Prozent des Ergebnisses vor Steuern im Geschäftsjahr; bei Verlust null."),
+        F("umsatz_12m", "margen", "Umsatz der letzten zwölf Monate", spalte="fu_umsatz_12m", einheit="Millionen Dollar",
+          faktor=1e-6, erklaerung="Umsatz der letzten vier Quartale, sonst des jüngsten Geschäftsjahres." + nur_dollar),
+        F("fcf", "margen", "Free Cashflow", spalte="fu_fcf", einheit="Millionen Dollar", faktor=1e-6, signed=True,
+          erklaerung="Free Cashflow über die letzten vier Quartale, sonst im jüngsten Geschäftsjahr." + nur_dollar),
+        F("fcf_marge", "margen", "FCF-Marge", spalte="fu_fcf_marge", faktor=100.0, signed=True,
+          erklaerung="Free Cashflow in Prozent des Umsatzes."),
+        F("cash_conversion", "margen", "Cash Conversion", spalte="fu_cash_conversion", einheit="", stellen=2,
+          signed=True, erklaerung="Operativer Cashflow geteilt durch den Nettogewinn; 1 heißt, der Gewinn kommt "
+                                  "vollständig als Geld herein."),
+        F("ausschuettung", "margen", "Ausschüttungsquote", spalte="fu_ausschuettung", faktor=100.0,
+          erklaerung="Gezahlte Dividenden in Prozent des Nettogewinns."),
+        F("sbc", "margen", "Aktienbasierte Vergütung", spalte="fu_sbc_umsatz", faktor=100.0, stellen=2,
+          erklaerung="Aktienbasierte Vergütung in Prozent des Umsatzes."),
+        F("ffo", "margen", "FFO nach NAREIT", spalte="fu_ffo", einheit="Millionen Dollar", faktor=1e-6, signed=True,
+          erklaerung="Funds from Operations über zwölf Monate, die Gewinnkennzahl der Immobilienfirmen." + nur_dollar),
+        F("ffo_je_aktie", "margen", "FFO je Aktie", spalte="fu_ffo_je_aktie", einheit="Dollar", stellen=2, signed=True,
+          erklaerung="FFO nach NAREIT je Aktie." + nur_dollar),
+        # Kurs, Groesse und Aktienzahl
         F("kurs", "groesse", "Kurs", spalte="kurs", einheit="Dollar", stellen=2,
           erklaerung="Schlusskurs des letzten Handelstags."),
         F("marktkap", "groesse", "Marktkapitalisierung", spalte="marktkap_mrd", einheit="Milliarden Dollar", stellen=2,
           erklaerung="In Milliarden Dollar: 0,3 heißt 300 Millionen, 1000 heißt eine Billion. Quelle Nasdaq."),
-        F("volumen", "groesse", "Durchschnittliches Tagesvolumen, 50 Tage", spalte="volumen_50", einheit="Stück",
-          stellen=0, erklaerung="Gehandelte Aktien je Tag im Schnitt der letzten 50 Handelstage."),
-        F("umsatz_dollar", "groesse", "Durchschnittlicher Tagesumsatz, 50 Tage", spalte="dollarvolumen_50",
-          einheit="Millionen Dollar", faktor=1e-6, stellen=1,
-          erklaerung="Kurs mal Volumen im Schnitt der letzten 50 Handelstage."),
         F("aktien", "groesse", "Ausstehende Aktien", spalte="aktien_ausstehend", einheit="Millionen Stück",
           faktor=1e-6, stellen=1, erklaerung="Zahl der ausstehenden Aktien aus dem jüngsten SEC-Bericht."),
-        F("volmax", "groesse", "Größtes Volumen der ganzen Kurshistorie", art="stufe", wahl=VOLMAX,
-          wahl_titel="Größtes Volumen jemals gehandelt",
-          erklaerung="Der Tag mit dem höchsten Volumen seit Beginn der Kurshistorie bei Yahoo."),
+        F("aktien_1j", "groesse", "Veränderung der Aktienzahl über ein Jahr", spalte="fu_aktien_1j_pct", signed=True,
+          erklaerung="Verwässerte Aktienzahl gegenüber einem Jahr zuvor; ein Plus heißt Verwässerung, ein Minus "
+                     "Rückkäufe."),
+        F("aktien_3j", "groesse", "Veränderung der Aktienzahl über drei Jahre", spalte="fu_aktien_3j_pct", signed=True,
+          erklaerung="Verwässerte Aktienzahl gegenüber drei Jahren zuvor."),
+        F("streubesitz", "groesse", "Streubesitz", spalte="fu_streubesitz_wert", einheit="Millionen Dollar",
+          faktor=1e-6, erklaerung="Marktwert der Aktien im Streubesitz laut Deckblatt des Jahresberichts, zum "
+                                  "Stichtag dort; nur Angaben in Dollar."),
+        F("historie", "groesse", "Kurshistorie", spalte="historie_gesamt_tage", einheit="Handelstage", stellen=0,
+          erklaerung="Wie viele Handelstage mit Kursen die Aktie hat; frische Börsengänge haben wenige. 252 "
+                     "Handelstage sind rund ein Jahr."),
+        # Volumen
+        F("volumen", "volumen", "Durchschnittliches Tagesvolumen, 50 Tage", spalte="volumen_50", einheit="Stück",
+          stellen=0, erklaerung="Gehandelte Aktien je Tag im Schnitt der letzten 50 Handelstage."),
+        F("umsatz_dollar", "volumen", "Durchschnittlicher Tagesumsatz, 50 Tage", spalte="dollarvolumen_50",
+          einheit="Millionen Dollar", faktor=1e-6, stellen=1,
+          erklaerung="Kurs mal Volumen im Schnitt der letzten 50 Handelstage."),
+        F("tag_volumen", "volumen", "Volumen am letzten Handelstag", spalte="volumen", einheit="Stück", stellen=0,
+          erklaerung="Gehandelte Aktien am letzten Handelstag."),
+        F("vol_faktor", "volumen", "Volumenfaktor zum 50-Tage-Schnitt", spalte="tk_vol_faktor", einheit="", stellen=2,
+          erklaerung=f"Volumen des letzten Handelstags geteilt durch den Schnitt der {tech['volumen_schnitt_tage']} "
+                     "Handelstage davor; 2 heißt doppelt so hoch."),
+        F("vol63", "volumen", "Durchschnittsvolumen über drei Monate", spalte="tk_vol63", einheit="Stück", stellen=0,
+          erklaerung="Gehandelte Aktien je Tag im Schnitt der letzten 63 Handelstage."),
+        F("dv20", "volumen", "Dollarvolumen über 20 Tage", spalte="tk_dv20", einheit="Millionen Dollar", faktor=1e-6,
+          erklaerung="Kurs mal Volumen im Schnitt der letzten 20 Handelstage."),
+        F("vdu", "volumen", "Austrocknen des Volumens", spalte="vdu", einheit="", stellen=2,
+          erklaerung="Volumen der letzten 10 Handelstage im Schnitt geteilt durch den Schnitt der 50 Handelstage "
+                     "davor; unter 1 trocknet das Volumen aus."),
+        F("vol_spitze", "volumen", "Volumenspitze der letzten 10 Tage", spalte="vol_spitze_10", einheit="", stellen=2,
+          erklaerung="Das größte Tagesvolumen der letzten 10 Handelstage geteilt durch den Schnitt der 50 "
+                     "Handelstage davor."),
+        F("ud50", "volumen", "Up/Down-Volumen über 50 Tage", spalte="tk_ud50", einheit="", stellen=2,
+          erklaerung=f"Volumen der Plus-Tage der letzten {tech['updown_tage']} Handelstage geteilt durch das Volumen "
+                     "der Minus-Tage, nach IBD; über 1 überwiegt das Volumen an Plus-Tagen."),
+        F("volmax", "volumen", "Größtes Volumen jemals, vor so vielen Handelstagen", spalte="volumen_max_tage_her",
+          einheit="Handelstage", stellen=0,
+          erklaerung="Wie viele Handelstage der Tag mit dem höchsten Volumen der ganzen Kurshistorie zurückliegt; 0 "
+                     "heißt am letzten Handelstag. Liegt der Tag mehr als drei Jahre zurück, gibt es keinen Wert."),
         # Letzter Handelstag
         F("veraenderung", "tag", "Veränderung zum Vortag", spalte="veraenderung_pct", signed=True, stellen=2,
           erklaerung="Schlusskurs des letzten Handelstags gegen den Schlusskurs davor."),
@@ -672,68 +759,331 @@ def _felder():
                      "während des Handels steht hier noch der Vortag."),
         F("rtg", "tag", "Red to Green", art="ja", spalte="red_to_green",
           erklaerung="Am letzten Handelstag unter dem Vortagesschluss eröffnet und darüber geschlossen."),
-        F("vola", "tag", "Tagesvolatilität", wahl=VOLA, wahl_titel="Zeitraum der Tagesvolatilität", stellen=2,
-          erklaerung="Spanne zwischen Tageshoch und Tagestief in Prozent des Tagestiefs."),
-        # Exponentielle Durchschnitte
-        F("ema21", "ema", "Abstand zur EMA 21", spalte="abst_ema21_pct", signed=True, stellen=2, lage=True,
-          erklaerung="Schlusskurs gegen den exponentiellen Durchschnitt der letzten 21 Tage; negativ heißt darunter."),
-        F("ema50", "ema", "Abstand zur EMA 50", spalte="abst_ema50_pct", signed=True, stellen=2, lage=True,
-          erklaerung="Schlusskurs gegen den exponentiellen Durchschnitt der letzten 50 Tage; negativ heißt darunter."),
-        F("ema200", "ema", "Abstand zur EMA 200", spalte="abst_ema200_pct", signed=True, stellen=2, lage=True,
-          erklaerung="Schlusskurs gegen den exponentiellen Durchschnitt der letzten 200 Tage; negativ heißt darunter."),
-        # Abstand von Hoch und Tief
-        F("hoch", "hochtief", "Abstand vom Hoch", vorzeichen=True, stellen=1, wahl_titel="Zeitraum des Hochs",
-          wahl=tuple((h, text, f"abst_hoch_{h}_pct", hoch, tief) for h, text, hoch, tief in HOCH_TIEF),
-          erklaerung="Wie weit der Schlusskurs unter dem Hoch des gewählten Zeitraums liegt; 0 heißt am Hoch."),
-        F("tief", "hochtief", "Abstand vom Tief", stellen=1, wahl_titel="Zeitraum des Tiefs",
-          wahl=tuple((h, text, f"abst_tief_{h}_pct", hoch, tief) for h, text, hoch, tief in HOCH_TIEF),
-          erklaerung="Wie weit der Schlusskurs über dem Tief des gewählten Zeitraums liegt."),
+        F("spanne", "tag", "Tagesspanne", spalte="tagesspanne_pct", stellen=2,
+          erklaerung="Spanne zwischen Tageshoch und Tagestief des letzten Handelstags in Prozent des Tagestiefs."),
+        F("luecke", "tag", "Eröffnungslücke", spalte="tk_luecke", signed=True,
+          erklaerung="Eröffnungskurs des letzten Handelstags gegen den Schlusskurs davor."),
+        F("pivot", "tag", "Episodic Pivot", art="ja", spalte="tk_pivot",
+          erklaerung=f"Eröffnungslücke von {zahl_eingabe(tech['pivot_luecke_pct'])} Prozent oder mehr am letzten "
+                     "Handelstag."),
+        F("burst", "tag", "Momentum Burst nach Stockbee", art="ja", spalte="tk_burst",
+          erklaerung=f"Schluss mindestens {zahl_eingabe(tech['burst_pct'])} Prozent über dem Vortag, bei höherem "
+                     f"Volumen als am Vortag und mindestens {nachschlagen.zahl(tech['burst_mindestvolumen'])} Stück."),
+        F("schlusslage", "tag", "Schlusslage in der Tagesspanne", spalte="tk_schlusslage", stellen=0,
+          erklaerung="Wo der Schlusskurs in der Tagesspanne liegt: 0 heißt am Tagestief, 100 am Tageshoch."),
+        F("vortag", "tag", "Veränderung am Vortag", spalte="tk_vortag_pct", signed=True,
+          erklaerung="Schlusskurs des vorletzten Handelstags gegen den Schlusskurs davor."),
+        F("vortag_spanne", "tag", "Tagesspanne am Vortag", spalte="tk_vortag_spanne",
+          erklaerung="Hoch geteilt durch Tief des vorletzten Handelstags, minus 1, in Prozent."),
+        # Volatilitaet und Schwankung
+        F("adr", "volatilitaet", "ADR nach Qullamaggie, 20 Tage", spalte="volatilitaet_20_pct", stellen=2,
+          erklaerung="Mittlere Tagesspanne der letzten 20 Handelstage: je Tag Hoch geteilt durch Tief, davon das "
+                     "Mittel, minus 1, in Prozent."),
+        F("vola5", "volatilitaet", "Volatilität Woche wie bei Finviz, 5 Tage", spalte="volatilitaet_5_pct", stellen=2,
+          erklaerung="Dieselbe Rechnung wie die ADR über die letzten 5 Handelstage."),
+        F("vola21", "volatilitaet", "Volatilität Monat wie bei Finviz, 21 Tage", spalte="tk_vola21", stellen=2,
+          erklaerung="Dieselbe Rechnung wie die ADR über die letzten 21 Handelstage."),
+        F("atr", "volatilitaet", "ATR 14 in Dollar", spalte="tk_atr14", einheit="Dollar", stellen=2,
+          erklaerung="Mittlere wahre Tagesspanne über 14 Tage nach Wilder, in Dollar."),
+        F("atr_pct", "volatilitaet", "ATR 14 in Prozent des Kurses", stellen=2, quellen=("tk_atr14", "kurs"),
+          rechnung=lambda df: _zahlen(df, "tk_atr14") / _zahlen(df, "kurs").where(_zahlen(df, "kurs") > 0) * 100.0,
+          erklaerung="Die ATR 14 geteilt durch den Schlusskurs."),
+        F("atr_verh", "volatilitaet", "ATR der letzten 5 Tage zur ATR der letzten 50", spalte="atr_verhaeltnis",
+          einheit="", stellen=2,
+          erklaerung="Mittlere wahre Tagesspanne der letzten 5 Handelstage geteilt durch die der letzten 50; unter 1 "
+                     "wird die Aktie ruhiger."),
+        F("beta", "volatilitaet", "Beta gegen SPY", spalte="tk_beta", einheit="", stellen=2, signed=True,
+          erklaerung="Schwankung gegenüber dem S&P-500-ETF SPY über 252 Tagesrenditen; 1 heißt so beweglich wie der "
+                     "Markt."),
+        F("jahresspanne", "volatilitaet", "Jahresspanne", spalte="jahresspanne", einheit="", stellen=2,
+          erklaerung="Jahreshoch geteilt durch das Jahrestief der letzten 252 Handelstage; 2 heißt, das Hoch liegt "
+                     "doppelt so hoch wie das Tief."),
+        # Gleitende Durchschnitte und Trend
+        F("ema21", "durchschnitte", "Abstand zur EMA 21", spalte="abst_ema21_pct", signed=True, stellen=2,
+          linie="EMA 21", erklaerung="Schlusskurs gegen den exponentiellen Durchschnitt der letzten 21 Tage; "
+                                    "negativ heißt darunter; von 0 an liegt der Kurs darüber."),
+        F("ema50", "durchschnitte", "Abstand zur EMA 50", spalte="abst_ema50_pct", signed=True, stellen=2,
+          linie="EMA 50", erklaerung="Schlusskurs gegen den exponentiellen Durchschnitt der letzten 50 Tage; "
+                                    "negativ heißt darunter; von 0 an liegt der Kurs darüber."),
+        F("ema200", "durchschnitte", "Abstand zur EMA 200", spalte="abst_ema200_pct", signed=True, stellen=2,
+          linie="EMA 200", erklaerung="Schlusskurs gegen den exponentiellen Durchschnitt der letzten 200 Tage; "
+                                     "negativ heißt darunter; von 0 an liegt der Kurs darüber."),
+        F("sma20", "durchschnitte", "Abstand zur SMA 20", spalte="tk_sma20_abst", signed=True, linie="SMA 20",
+          erklaerung="Schlusskurs gegen den einfachen Durchschnitt der letzten 20 Tage; negativ heißt darunter; von 0 an liegt der Kurs darüber."),
+        F("sma50", "durchschnitte", "Abstand zur SMA 50", spalte="tk_sma50_abst", signed=True, linie="SMA 50",
+          erklaerung="Schlusskurs gegen den einfachen Durchschnitt der letzten 50 Tage; negativ heißt darunter; von 0 an liegt der Kurs darüber."),
+        F("sma200", "durchschnitte", "Abstand zur SMA 200", spalte="tk_sma200_abst", signed=True, linie="SMA 200",
+          erklaerung="Schlusskurs gegen den einfachen Durchschnitt der letzten 200 Tage; negativ heißt darunter; von 0 an liegt der Kurs darüber."),
+        F("ma200_steigt", "durchschnitte", "Anstieg der SMA 200 in Folge", spalte="ma200_steigt_tage",
+          einheit="Handelstage", stellen=0,
+          erklaerung="Wie viele Handelstage in Folge der einfache 200-Tage-Durchschnitt zuletzt gestiegen ist; 0 "
+                     "heißt, er ist am letzten Handelstag nicht gestiegen."),
+        F("weinstein", "durchschnitte", "Weinstein-Stufe", spalte="tk_stufe", einheit="", stellen=0,
+          erklaerung="Stufe nach Stan Weinstein aus der 30-Wochen-Linie und dem Mansfield RS: 1 Boden, 2 "
+                     "Aufwärtstrend, 3 Top, 4 Abwärtstrend; 0 heißt nicht eindeutig."),
+        F("linie30", "durchschnitte", "Abstand zur 30-Wochen-Linie", spalte="tk_linie_abst", signed=True,
+          linie="30-Wochen-Linie",
+          erklaerung="Schlusskurs gegen den Durchschnitt der letzten 30 Wochen; negativ heißt darunter; von 0 an liegt der Kurs darüber."),
+        F("linie30_steig", "durchschnitte", "Veränderung der 30-Wochen-Linie in vier Wochen", spalte="tk_linie_steig",
+          signed=True, stellen=2,
+          erklaerung="Wie stark die 30-Wochen-Linie in den letzten vier Wochen gestiegen oder gefallen ist."),
+    ]
+    # Abstand von Hoch und Tief, je Zeitraum ein Feld
+    for h, zeitraum, hoch, _tief in HOCH_TIEF:
+        felder.append(F(f"hoch_{h}", "hochtief", f"Abstand zum {hoch}", spalte=f"abst_hoch_{h}_pct", vorzeichen=True,
+                        einheit="Prozent unter dem Hoch", bezug=hoch,
+                        erklaerung=f"Wie weit der Schlusskurs unter dem {hoch} liegt, dem höchsten Kurs über "
+                                   f"{zeitraum}; 0 heißt am Hoch."))
+    felder.append(F("hoch50", "hochtief", "Abstand zum 50-Tage-Hoch", spalte="tk_hoch50_abst", vorzeichen=True,
+                    einheit="Prozent unter dem Hoch", bezug="50-Tage-Hoch",
+                    erklaerung="Wie weit der Schlusskurs unter dem Hoch der letzten 50 Handelstage liegt."))
+    for h, zeitraum, _hoch, tief in HOCH_TIEF:
+        felder.append(F(f"tief_{h}", "hochtief", f"Abstand zum {tief}", spalte=f"abst_tief_{h}_pct",
+                        einheit="Prozent über dem Tief", bezug=tief,
+                        erklaerung=f"Wie weit der Schlusskurs über dem {tief} liegt, dem tiefsten Kurs über "
+                                   f"{zeitraum}."))
+    felder += [
+        F("tief50", "hochtief", "Abstand zum 50-Tage-Tief", spalte="tk_tief50_abst", einheit="Prozent über dem Tief",
+          bezug="50-Tage-Tief", erklaerung="Wie weit der Schlusskurs über dem Tief der letzten 50 Handelstage liegt."),
         F("neu_52w", "hochtief", "Neues 52-Wochen-Hoch", art="ja", spalte="hoch_52w",
           erklaerung="Das Tageshoch des letzten Handelstags liegt über allen Hochs der 52 Wochen davor."),
         F("neu_ath", "hochtief", "Neues Allzeithoch", art="ja", spalte="hoch_allzeit",
           erklaerung="Am letzten Handelstag wurde das Hoch der ganzen Kurshistorie erreicht."),
+        # Wertentwicklung und Momentum
+        F("perf_1w", "entwicklung", "Wertentwicklung eine Woche", spalte="tk_perf_1w", signed=True,
+          erklaerung="Schlusskurs gegen den Schluss vor 5 Handelstagen, wie bei Finviz."),
+        F("perf_1m", "entwicklung", "Wertentwicklung ein Monat", spalte="tk_perf_1m", signed=True,
+          erklaerung="Schlusskurs gegen den Schluss vor 21 Handelstagen, wie bei Finviz."),
+        F("perf_3m", "entwicklung", "Wertentwicklung drei Monate", spalte="tk_perf_3m", signed=True,
+          erklaerung="Schlusskurs gegen den Schluss vor 63 Handelstagen, wie bei Finviz."),
+        F("perf_6m", "entwicklung", "Wertentwicklung sechs Monate", spalte="tk_perf_6m", signed=True,
+          erklaerung="Schlusskurs gegen den Schluss vor 126 Handelstagen, wie bei Finviz."),
+        F("perf_12m", "entwicklung", "Wertentwicklung zwölf Monate", spalte="tk_perf_12m", signed=True,
+          erklaerung="Schlusskurs gegen den letzten Schluss am oder vor demselben Kalendertag ein Jahr früher, wie bei "
+                     "Finviz."),
+        F("perf_ytd", "entwicklung", "Wertentwicklung seit Jahresbeginn", spalte="tk_perf_ytd", signed=True,
+          erklaerung="Schlusskurs gegen den letzten Schluss des Vorjahres."),
+        F("rsi14", "entwicklung", "RSI 14", spalte="tk_rsi14", einheit="",
+          erklaerung="Relative Strength Index über 14 Tage nach Wilder, von 0 bis 100; über 70 gilt als überkauft, "
+                     "unter 30 als überverkauft."),
+        F("rsi2", "entwicklung", "RSI 2", spalte="tk_rsi2", einheit="",
+          erklaerung="Relative Strength Index über 2 Tage nach Wilder, von 0 bis 100; zeigt kurze Übertreibungen."),
         # Relative Staerke
         F("rs", "rs", "RS gegen den ganzen US-Markt", spalte="rs", einheit="", stellen=0,
           erklaerung="Relative Stärke von 1 bis 99 gegen alle Stammaktien des US-Markts; 90 heißt stärker als "
                      "90 Prozent. Junge Titel haben nur ein vorläufiges RS."),
+        F("rs_1w", "rs", "RS-Veränderung über eine Woche", spalte="tk_rs_1w", einheit="Punkte", stellen=0, signed=True,
+          erklaerung="RS heute minus RS vor einer Woche."),
+        F("rs_4w", "rs", "RS-Veränderung über vier Wochen", spalte="tk_rs_4w", einheit="Punkte", stellen=0, signed=True,
+          erklaerung="RS heute minus RS vor vier Wochen."),
+        F("mrs", "rs", "Mansfield RS gegen SPY", spalte="tk_mrs", einheit="", signed=True,
+          erklaerung="Relation von Kurs zu SPY, geteilt durch ihren 52-Wochen-Schnitt, minus 1, mal 100, nach "
+                     "Weinstein; über null ist die Aktie stärker als der Markt."),
+        F("mrs_vorher", "rs", "Mansfield RS vor vier Wochen", spalte="tk_mrs_vorher", einheit="", signed=True,
+          erklaerung="Derselbe Wert vier Wochen früher; ist er kleiner als heute, steigt der Mansfield RS."),
         F("rs_linie", "rs", "RS-Linie gegen SPY auf 52-Wochen-Hoch", art="ja", spalte="rs_linie_hoch",
           erklaerung="Kurs geteilt durch den S&P-500-ETF SPY steht auf einem 52-Wochen-Hoch."),
         F("rs_linie_qqq", "rs", "RS-Linie gegen QQQ auf 52-Wochen-Hoch", art="ja", spalte="rs_linie_qqq_hoch",
           erklaerung="Kurs geteilt durch den Nasdaq-100-ETF QQQ steht auf einem 52-Wochen-Hoch."),
         F("rs_linie_abst", "rs", "Abstand der RS-Linie gegen SPY vom 52-Wochen-Hoch", spalte="rs_linie_abst_pct",
-          vorzeichen=True, einheit="Prozent unter dem Hoch", stellen=1,
+          vorzeichen=True, einheit="Prozent unter dem Hoch",
           erklaerung="Wie weit die RS-Linie gegen SPY unter ihrem 52-Wochen-Hoch steht; 0 heißt auf dem Hoch."),
-        # Bilanz
+        F("rs_linie_qqq_abst", "rs", "Abstand der RS-Linie gegen QQQ vom 52-Wochen-Hoch", spalte="rs_linie_qqq_abst_pct",
+          vorzeichen=True, einheit="Prozent unter dem Hoch",
+          erklaerung="Wie weit die RS-Linie gegen QQQ unter ihrem 52-Wochen-Hoch steht; 0 heißt auf dem Hoch."),
+        F("rs_linie_1w", "rs", "Veränderung der RS-Linie gegen SPY in einer Woche", spalte="rl_linie_spy_1w",
+          signed=True, stellen=2,
+          erklaerung="Wie stark die RS-Linie gegen SPY in den letzten 5 Handelstagen gestiegen oder gefallen ist."),
+        F("rs_linie_qqq_1w", "rs", "Veränderung der RS-Linie gegen QQQ in einer Woche", spalte="rl_linie_qqq_1w",
+          signed=True, stellen=2,
+          erklaerung="Wie stark die RS-Linie gegen QQQ in den letzten 5 Handelstagen gestiegen oder gefallen ist."),
+        # Ratings
+        F("eps_rating", "ratings", "EPS-Rating", spalte="ib_eps", einheit="", stellen=0,
+          erklaerung="Rating des Gewinnwachstums von 1 bis 99 nach IBD-Art aus den amtlichen SEC-Zahlen; 99 ist das "
+                     "beste."),
+        F("smr", "ratings", "SMR-Rang", spalte="ib_smr_rang", einheit="", stellen=0,
+          erklaerung="Rang aus Umsatzwachstum, Nettomarge, Vorsteuermarge und Eigenkapitalrendite von 1 bis 99; Note A "
+                     "ab 80, B ab 60, C ab 40, D ab 20, darunter E."),
+        F("ad", "ratings", "A/D-Rang", spalte="ib_ad_rang", einheit="", stellen=0,
+          erklaerung="Rang von 1 bis 99 für Kauf- und Verkaufsdruck, Näherung aus der Schlusslage in der Tagesspanne "
+                     f"und dem Volumen der letzten {tech['ad_tage']} Handelstage; Note A ab 80."),
+        F("composite", "ratings", "Composite Rating", spalte="ib_composite", einheit="", stellen=0,
+          erklaerung="Gesamtrang von 1 bis 99 aus EPS-Rating und RS doppelt gewichtet, dazu SMR, A/D und der Nähe "
+                     "zum 52-Wochen-Hoch."),
+        F("tt_count", "ratings", "Bedingungen des Trend Templates", spalte="tt_count", einheit="von 8", stellen=0,
+          erklaerung="Wie viele der acht Bedingungen des Minervini Trend Templates erfüllt sind."),
+        # Bilanz und Sicherheit
         F("schulden_ek", "bilanz", "Schulden zu Eigenkapital, Debt to Equity", spalte="schulden_zu_ek", einheit="",
           stellen=2, erklaerung="Kurz- und langfristige Finanzschulden geteilt durch das Eigenkapital; 0,5 heißt halb "
                                 "so viele Schulden wie Eigenkapital. Aus der jüngsten SEC-Bilanz."),
+        F("lt_schulden_ek", "bilanz", "Langfristige Schulden zu Eigenkapital", spalte="fu_lt_schulden_ek", einheit="",
+          stellen=2, erklaerung="Langfristige Finanzschulden geteilt durch das Eigenkapital."),
         F("schulden_vermoegen", "bilanz", "Verschuldung im Verhältnis zum Vermögen", spalte="schulden_zu_vermoegen_pct",
           erklaerung="Finanzschulden in Prozent der Bilanzsumme."),
         F("ek_quote", "bilanz", "Eigenkapitalquote", spalte="ek_quote_pct",
           erklaerung="Eigenkapital in Prozent der Bilanzsumme."),
         F("fk_quote", "bilanz", "Fremdkapitalquote", spalte="fk_quote_pct",
           erklaerung="Alle Verbindlichkeiten in Prozent der Bilanzsumme."),
-        # Analysten und Quartalszahlen
-        F("konsens", "analysten", "Analystenkonsens", art="stufe", wahl=KONSENS, wahl_titel="Analystenkonsens",
-          analysten=True,
-          erklaerung="Die jüngste Empfehlung der Analysten laut Nasdaq, samt der Zahl der Kauf-, Halten- und "
-                     "Verkaufsempfehlungen."),
+        F("current_ratio", "bilanz", "Current Ratio", spalte="fu_current_ratio", einheit="", stellen=2,
+          erklaerung="Umlaufvermögen geteilt durch kurzfristige Verbindlichkeiten; über 1 decken die kurzfristigen "
+                     "Mittel die kurzfristigen Schulden."),
+        F("quick_ratio", "bilanz", "Quick Ratio", spalte="fu_quick_ratio", einheit="", stellen=2,
+          erklaerung="Wie die Current Ratio, aber ohne Vorräte."),
+        F("zinsdeckung", "bilanz", "Zinsdeckung", spalte="fu_zinsdeckung", einheit="", signed=True,
+          erklaerung="Operatives Ergebnis der letzten vier Quartale geteilt durch die Zinsaufwendungen; 5 heißt, "
+                     "die Zinsen sind fünfmal verdient."),
+        F("schulden", "bilanz", "Finanzschulden", spalte="fu_schulden", einheit="Millionen Dollar", faktor=1e-6,
+          erklaerung="Kurz- und langfristige Finanzschulden laut jüngster Bilanz." + nur_dollar),
+        F("nettoschulden", "bilanz", "Nettoschulden", spalte="fu_nettoschulden", einheit="Millionen Dollar",
+          faktor=1e-6, signed=True,
+          erklaerung="Finanzschulden minus Kasse und kurzfristige Anlagen; negativ heißt Nettokasse." + nur_dollar),
+        F("fscore", "bilanz", "Piotroski F-Score", spalte="fu_fscore", einheit="", stellen=0,
+          erklaerung="Wie viele der neun Signale nach Piotroski erfüllt sind, aus Jahreswerten; nicht für Banken und "
+                     "Versicherer."),
+        F("altman_z", "bilanz", "Altman Z", spalte="fu_altman_z", einheit="", stellen=2, signed=True,
+          erklaerung="Insolvenzmaß nach Altman für Industriefirmen: über 2,99 sichere Zone, 1,81 bis 2,99 Grauzone, "
+                     "darunter Gefahrenzone." + nur_inland),
+        F("kernkapital", "bilanz", "Kernkapitalquote", spalte="fu_kernkapitalquote", faktor=100.0, stellen=2,
+          erklaerung="Nur Banken: Kernkapital in Prozent der risikogewichteten Aktiva."),
+        F("risikovorsorge", "bilanz", "Risikovorsorge zu Krediten", spalte="fu_risikovorsorge_kredite", faktor=100.0,
+          stellen=2, signed=True, erklaerung="Nur Banken: Risikovorsorge in Prozent der Kredite."),
+        F("einlagen", "bilanz", "Einlagen gegenüber dem Vorjahr", spalte="fu_einlagen_vj_pct", signed=True,
+          erklaerung="Nur Banken: Kundeneinlagen gegenüber dem Vorjahr."),
+        # Bewertung
+        F("kgv", "bewertung", "KGV", spalte="fu_kgv", einheit="",
+          erklaerung="Marktkapitalisierung geteilt durch den Nettogewinn der letzten vier Quartale; nur bei Gewinn."
+                     + nur_inland),
+        F("kuv", "bewertung", "KUV", spalte="fu_kuv", einheit="", stellen=2,
+          erklaerung="Marktkapitalisierung geteilt durch den Umsatz der letzten zwölf Monate." + nur_inland),
+        F("kbv", "bewertung", "KBV", spalte="fu_kbv", einheit="", stellen=2,
+          erklaerung="Marktkapitalisierung geteilt durch das Eigenkapital; nur bei positivem Eigenkapital." + nur_inland),
+        F("ev", "bewertung", "Enterprise Value", spalte="fu_ev", einheit="Millionen Dollar", faktor=1e-6,
+          erklaerung="Marktkapitalisierung plus Finanzschulden minus Kasse." + nur_inland),
+        F("ev_ebitda", "bewertung", "EV zu EBITDA", spalte="fu_ev_ebitda", einheit="",
+          erklaerung="Enterprise Value geteilt durch operatives Ergebnis plus Abschreibungen der letzten zwölf Monate."
+                     + nur_inland),
+        F("ev_umsatz", "bewertung", "EV zu Umsatz", spalte="fu_ev_umsatz", einheit="", stellen=2,
+          erklaerung="Enterprise Value geteilt durch den Umsatz der letzten zwölf Monate." + nur_inland),
+        F("peg", "bewertung", "PEG", spalte="fu_peg", einheit="", stellen=2,
+          erklaerung="KGV geteilt durch das Wachstum des Gewinns je Aktie im letzten Geschäftsjahr in Prozent; nur "
+                     "bei Gewinn und Wachstum." + nur_inland),
+        F("p_ffo", "bewertung", "Kurs zu FFO", spalte="fu_p_ffo", einheit="",
+          erklaerung="Nur Immobilienfirmen: Kurs geteilt durch FFO je Aktie."),
+        F("fcf_rendite", "bewertung", "FCF-Rendite", spalte="fu_fcf_rendite", faktor=100.0, stellen=2, signed=True,
+          erklaerung="Free Cashflow in Prozent der Marktkapitalisierung." + nur_inland),
+        F("div_rendite", "bewertung", "Dividendenrendite", spalte="fu_div_rendite", faktor=100.0, stellen=2,
+          erklaerung="Gezahlte Dividenden in Prozent der Marktkapitalisierung." + nur_inland),
+        F("rueckkauf", "bewertung", "Aktienrückkäufe", spalte="fu_rueckkauf_mk", faktor=100.0, stellen=2,
+          erklaerung="Aktienrückkäufe in Prozent der Marktkapitalisierung." + nur_inland),
+        F("cash_je_aktie", "bewertung", "Cash je Aktie", spalte="fu_cash_je_aktie", einheit="Dollar", stellen=2,
+          erklaerung="Kasse und kurzfristige Anlagen je Aktie." + nur_inland),
+        F("nettokasse_je_aktie", "bewertung", "Nettokasse je Aktie", spalte="fu_nettokasse_je_aktie", einheit="Dollar",
+          stellen=2, signed=True,
+          erklaerung="Kasse und kurzfristige Anlagen minus Finanzschulden, je Aktie; negativ heißt Nettoschulden."
+                     + nur_inland),
+        F("buchwert_je_aktie", "bewertung", "Buchwert je Aktie", spalte="fu_buchwert_je_aktie", einheit="Dollar",
+          stellen=2, signed=True, erklaerung="Eigenkapital je Aktie." + nur_inland),
+        F("fcf_je_aktie", "bewertung", "Free Cashflow je Aktie", spalte="fu_fcf_je_aktie", einheit="Dollar", stellen=2,
+          signed=True, erklaerung="Free Cashflow der letzten vier Quartale je Aktie." + nur_inland),
+        # Analysten und Konsens
+        F("konsens", "analysten", "Analystenkonsens", spalte="konsens_wert", einheit="", stellen=0, analysten=True,
+          erklaerung="Die jüngste Empfehlung der Analysten laut Nasdaq als Zahl: 5 starker Kauf, 4 Kaufen, 3 Halten, "
+                     "2 Verkaufen, 1 starker Verkauf."),
+        F("analysten_anzahl", "analysten", "Zahl der Analysten", spalte="analysten_anzahl", einheit="", stellen=0,
+          analysten=True, erklaerung="Wie viele Analysten laut Nasdaq eine Empfehlung abgeben."),
         F("kaufanteil", "analysten", "Anteil der Kaufempfehlungen", spalte="analysten_kauf_anteil_pct", analysten=True,
           erklaerung="Kaufempfehlungen in Prozent aller Empfehlungen."),
         F("kursziel", "analysten", "Kursziel über dem Kurs", spalte="kursziel_abst_pct", signed=True, analysten=True,
           erklaerung="Mittleres Kursziel der Analysten gegen den Schlusskurs; negativ heißt, das Ziel liegt darunter."),
-        F("beat", "analysten", "Schätzungen geschlagen", art="stufe", wahl=BEAT,
-          wahl_titel="Wie oft der Gewinn je Aktie über der Schätzung lag", analysten=True,
-          erklaerung="Wie oft der gemeldete Gewinn je Aktie in den letzten vier Quartalen über der Schätzung der "
-                     "Analysten lag, laut Nasdaq."),
+        F("kursziel_tief", "analysten", "Niedrigstes Kursziel über dem Kurs", signed=True, analysten=True,
+          rechnung=_anteil("kursziel_tief", "kurs"), quellen=("kursziel_tief", "kurs"),
+          erklaerung="Das niedrigste Kursziel der Analysten gegen den Schlusskurs; negativ heißt, das Ziel liegt "
+                     "darunter."),
+        F("kursziel_hoch", "analysten", "Höchstes Kursziel über dem Kurs", signed=True, analysten=True,
+          rechnung=_anteil("kursziel_hoch", "kurs"), quellen=("kursziel_hoch", "kurs"),
+          erklaerung="Das höchste Kursziel der Analysten gegen den Schlusskurs."),
+        F("fwd_kgv", "analysten", "Forward-KGV", spalte="konsens_fwd_kgv", einheit="", analysten=True,
+          erklaerung="Schlusskurs geteilt durch den erwarteten Gewinn je Aktie des nächsten Geschäftsjahres laut "
+                     "eingefrorenem Yahoo-Konsens."),
+        F("kgv_0y", "analysten", "KGV auf das laufende Geschäftsjahr laut Konsens", spalte="konsens_kgv_0y", einheit="",
+          analysten=True, erklaerung="Schlusskurs geteilt durch den erwarteten Gewinn je Aktie des laufenden "
+                                     "Geschäftsjahres laut eingefrorenem Yahoo-Konsens."),
+        F("eps_erwartet", "analysten", "Erwartetes EPS-Wachstum im nächsten Geschäftsjahr",
+          spalte="konsens_eps_wachstum_1y_pct", signed=True, analysten=True,
+          erklaerung="Erwarteter Gewinn je Aktie des nächsten Geschäftsjahres gegen das Geschäftsjahr davor, laut "
+                     "eingefrorenem Yahoo-Konsens."),
+        F("umsatz_erwartet", "analysten", "Erwartetes Umsatzwachstum im nächsten Geschäftsjahr",
+          spalte="konsens_umsatz_wachstum_1y_pct", signed=True, analysten=True,
+          erklaerung="Erwarteter Umsatz des nächsten Geschäftsjahres gegen das Geschäftsjahr davor, laut eingefrorenem "
+                     "Yahoo-Konsens."),
+        F("beat", "analysten", "Quartale mit übertroffener Gewinnschätzung", spalte="schaetzung_geschlagen", einheit="",
+          stellen=0, analysten=True,
+          erklaerung="In wie vielen der letzten vier Quartale mit Schätzung der gemeldete Gewinn je Aktie über der "
+                     "Schätzung der Analysten lag, laut Nasdaq; 4 heißt jedes Mal."),
         F("ueberraschung", "analysten", "Letzte Gewinnüberraschung", spalte="letzte_ueberraschung_pct", signed=True,
           analysten=True,
           erklaerung="Abweichung des zuletzt gemeldeten Gewinns je Aktie von der Schätzung der Analysten."),
-    )
+    ]
+    # Revisionen und Einstufungen, nur fuer die Aktien der Wochenliste
+    for k, name in PERIODEN_REV:
+        for richtung, wort in (("hoch", "Anhebungen"), ("runter", "Senkungen")):
+            for tage in (7, 30):
+                felder.append(F(f"rev_{richtung}_{tage}t_{k}", "revisionen",
+                                f"{wort} der Gewinnschätzung in {tage} Tagen, {name}",
+                                spalte=f"rev_{richtung}_{tage}t_{k}", einheit="", stellen=0, analysten=True,
+                                erklaerung=f"Wie viele Analysten ihre Schätzung des Gewinns je Aktie für das {name} "
+                                           f"laut Yahoo in den letzten {tage} Tagen "
+                                           f"{'angehoben' if richtung == 'hoch' else 'gesenkt'} haben; nur für die "
+                                           "Aktien der Wochenliste."))
+        for tage in (30, 90):
+            felder.append(F(f"rev_aend_{tage}t_{k}", "revisionen",
+                            f"Veränderung des Gewinnkonsens in {tage} Tagen, {name}", signed=True, analysten=True,
+                            rechnung=_anteil(f"rev_eps_jetzt_{k}", f"rev_eps_{tage}t_{k}"),
+                            quellen=(f"rev_eps_jetzt_{k}", f"rev_eps_{tage}t_{k}"),
+                            erklaerung=f"Erwarteter Gewinn je Aktie für das {name} heute gegen den Wert vor {tage} "
+                                       "Tagen, laut Yahoo; nur bei positivem Vergleichswert und nur für die Aktien "
+                                       "der Wochenliste."))
+    for tage in sd.kk.STUFEN_FENSTER:
+        for art, titel, verb in (("hoch", "Heraufstufungen", "heraufgestuft haben"),
+                                 ("runter", "Herabstufungen", "herabgestuft haben"),
+                                 ("neu", "Erstbewertungen", "erstmals bewertet haben"),
+                                 ("ziel_rauf", "Angehobene Kursziele", "ihr Kursziel angehoben haben"),
+                                 ("ziel_runter", "Gesenkte Kursziele", "ihr Kursziel gesenkt haben")):
+            felder.append(F(f"stufen_{art}_{tage}t", "revisionen", f"{titel} in {tage} Tagen",
+                            spalte=f"stufen_{art}_{tage}t", einheit="", stellen=0, analysten=True,
+                            erklaerung=f"Wie viele Analysten die Aktie laut Yahoo in den letzten {tage} Tagen {verb}; "
+                                       "nur für die Aktien der Wochenliste."))
+    felder += [
+        # Leerverkaeufe
+        F("short_anteil", "short", "Leerverkaufsanteil am letzten Handelstag", spalte="short_anteil_pct",
+          analysten=True,
+          erklaerung="Anteil der Leerverkäufe an den außerbörslich gemeldeten Umsätzen laut FINRA-Tagesdatei; kein "
+                     "Short Interest, also kein Bestand offener Leerverkaufspositionen."),
+        F("short_anteil_fenster", "short", f"Leerverkaufsanteil über {fenster_short} Handelstage",
+          spalte="short_anteil_20t_pct", analysten=True,
+          erklaerung=f"Derselbe Anteil über die letzten {fenster_short} Handelstage, nach Volumen gewichtet."),
+        F("short_tage", "short", "Handelstage mit außerbörslichem Umsatz", spalte="short_tage_20t",
+          einheit="Handelstage", stellen=0, analysten=True,
+          erklaerung=f"An wie vielen der letzten {fenster_short} Handelstage FINRA außerbörsliche Umsätze gemeldet hat."),
+        # Branchengruppe
+        F("gruppe_rang", "gruppe", "Rang der Branchengruppe", spalte="gruppe_rang", einheit="", stellen=0,
+          analysten=True,
+          erklaerung="Rang der Branchengruppe nach dem Median der RS-Rohwerte ihrer Aktien; Rang 1 ist die stärkste "
+                     "Gruppe."),
+        F("gruppe_rang_3w", "gruppe", "Rang der Branchengruppe vor drei Wochen", spalte="gruppe_rang_3w", einheit="",
+          stellen=0, analysten=True, erklaerung="Derselbe Rang drei Wochen früher."),
+        F("gruppe_rang_6w", "gruppe", "Rang der Branchengruppe vor sechs Wochen", spalte="gruppe_rang_6w", einheit="",
+          stellen=0, analysten=True, erklaerung="Derselbe Rang sechs Wochen früher."),
+        F("gruppe_titel", "gruppe", "Aktien der Branchengruppe in der Rechnung", spalte="gruppe_titel", einheit="",
+          stellen=0, analysten=True,
+          erklaerung="Wie viele Aktien der Gruppe mit vollem RS-Rohwert in den Rang eingehen."),
+    ]
+    return tuple(felder)
 
 
 FELDER = _felder()
 FELD = {f.schluessel: f for f in FELDER}
+
 
 # ---------------------------------------------------------------------------
 # Zahlentermine und Sektoren
@@ -761,9 +1111,12 @@ def sektor_name(kennung):
 
 
 def sektoren_in(tabelle):
-    """Die Sektoren der Tabelle, deutsch sortiert; "" steht fuer ohne Angabe."""
+    """Die Sektoren der Tabelle, deutsch sortiert; "" steht fuer ohne Angabe.
+    Ohne Tabelle die bekannten Sektoren samt ohne Angabe."""
     vorhanden = set(SEKTOREN)
-    if tabelle is not None and "sektor" in tabelle.columns:
+    if tabelle is None:
+        vorhanden.add("")
+    elif "sektor" in tabelle.columns:
         vorhanden |= {str(s) for s in tabelle["sektor"].dropna().unique() if str(s).strip()}
         if tabelle["sektor"].isna().any() or (tabelle["sektor"].astype(str).str.strip() == "").any():
             vorhanden.add("")
@@ -811,26 +1164,26 @@ def voreinstellung(kennung, toleranz=False):
 
     if kennung in ("trend_template", "vcp"):
         an("rs", min=zahl_eingabe(ps.CFG["tt_rs_min"] * (1.0 - t)))
-        an("tief", wahl="1j", min=zahl_eingabe(ps.CFG["tt_min_above_low"] * 100.0 * (1.0 - t)))
-        an("hoch", wahl="1j", max=zahl_eingabe(ps.CFG["tt_max_below_high"] * 100.0 * (1.0 + t)))
+        an("tief_1j", min=zahl_eingabe(ps.CFG["tt_min_above_low"] * 100.0 * (1.0 - t)))
+        an("hoch_1j", max=zahl_eingabe(ps.CFG["tt_max_below_high"] * 100.0 * (1.0 + t)))
         an("ema50")
         an("ema200")
     elif kennung == "darvas":
         an("rs")
-        an("hoch", wahl="1j")
-        an("vola", wahl="20")
+        an("hoch_1j")
+        an("adr")
     elif kennung == "cup_handle":
         an("rs")
-        an("hoch", wahl="1j")
+        an("hoch_1j")
         an("volumen")
     elif kennung == "rectangle":
         an("rs")
-        an("hoch", wahl="3m")
+        an("hoch_3m")
         an("ema21")
     elif kennung in ("htf", "htf_innen"):
         an("rs")
-        an("tief", wahl="3m")
-        an("hoch", wahl="1m")
+        an("tief_3m")
+        an("hoch_1m")
     elif kennung == "ema_crossback":
         an("rs")
         an("ema21")
@@ -841,11 +1194,11 @@ def voreinstellung(kennung, toleranz=False):
         an("umsatz_dollar")
     elif kennung == "hoch_52w":
         an("rs")
-        an("hoch", wahl="1j")
-        an("tief", wahl="1j")
+        an("hoch_1j")
+        an("tief_1j")
     elif kennung == "hoch_allzeit":
         an("rs")
-        an("hoch", wahl="allzeit")
+        an("hoch_allzeit")
     elif kennung == "rs_linie":
         an("rs")
         an("rs_linie")
@@ -859,6 +1212,32 @@ def voreinstellung(kennung, toleranz=False):
 def standard_einstellung():
     return {"strategie": "", "toleranz": False, "nur_handelbar": True, "langweilig_raus": True, "felder": {},
             "termine": {"an": False, "umfang": "markt"}, "sektoren": None, "sortierung": ""}
+
+
+def wirksame_einstellung(e):
+    """Nur was das Ergebnis eines Scans bestimmt, zum Vergleich zweier
+    Einstellungen: angehakte Felder samt Grenzen, Termine nur wenn an, keine
+    Sortierung. Die App merkt so, dass sich seit dem letzten Scan etwas
+    geaendert hat, ohne selbst neu zu rechnen (Gerhard, 15.09.2026: kein
+    stilles Nachladen)."""
+    e = {**standard_einstellung(), **(e or {})}
+    k = e.get("strategie") or ""
+    felder = {}
+    for feld, fe in aktive_felder(e):
+        if feld.art == "ja":
+            felder[feld.schluessel] = True
+        else:
+            felder[feld.schluessel] = (str(fe.get("min") or "").strip(), str(fe.get("max") or "").strip(),
+                                       bool(fe.get("vorlaeufig")) and feld.schluessel == "rs")
+    te = e.get("termine") or {}
+    termine = None
+    if te.get("an"):
+        termine = (tuple(bool(te.get(key)) for key, _t, _p, _l in TERMIN_TEILE), bool(te.get("ohne_zeit")),
+                   te.get("umfang") or "markt")
+    return {"strategie": k, "toleranz": bool(e.get("toleranz")) and toleranz_moeglich(k),
+            "nur_handelbar": bool(e.get("nur_handelbar")),
+            "langweilig_raus": bool(e.get("langweilig_raus")) and k == "darvas", "felder": felder,
+            "termine": termine, "sektoren": None if e.get("sektoren") is None else sorted(e.get("sektoren"))}
 
 
 # ---------------------------------------------------------------------------
@@ -898,8 +1277,9 @@ def auswerten(tabelle, e, heute=None, analysten_da=True):
         df = df[_wahr(df["red_to_green"])] if "red_to_green" in df.columns else df.iloc[0:0]
     if e.get("nur_handelbar") and "handelbar" in df.columns:
         df = df[_wahr(df["handelbar"])]
+    basis = df
     felder = aktive_felder(e)
-    ohne_analysten = []
+    ohne_analysten, ohne_werte = [], []
     for feld, fe in felder:
         if feld.analysten and not analysten_da:
             ohne_analysten.append(feld.titel)
@@ -907,10 +1287,17 @@ def auswerten(tabelle, e, heute=None, analysten_da=True):
         m, f = feld.maske(df, fe)
         fehler += f
         if m is not None:
+            # Eine Grenze auf eine Kennzahl ohne jeden Wert laesst keine Aktie
+            # uebrig; das soll nicht wie ein leerer Markt aussehen.
+            if feld.art == "bereich" and not feld.werte(basis, fe).notna().any():
+                ohne_werte.append(feld.titel)
             df = df[m.reindex(df.index).fillna(False).astype(bool)]
     if ohne_analysten:
         hinweise.append("Die Analystendaten sind nicht geladen; " + ", ".join(ohne_analysten)
                         + " filtern deshalb nicht.")
+    if ohne_werte:
+        hinweise.append("Für " + ", ".join(ohne_werte) + " stehen in der Tabelle noch keine Werte; mit einer Grenze "
+                        "bleibt deshalb keine Aktie übrig.")
     te = e.get("termine") or {}
     termine = te if te.get("an") else None
     if termine:
@@ -1046,10 +1433,12 @@ def termin_teil(r):
     return f"Zahlen am {datum_lang(d)}, {lage}" + (f", laut {quelle}" if isinstance(quelle, str) and quelle else "")
 
 
-def satz_teile(ausw, r):
+def satz_teile(ausw, r, werte=None):
+    """Die Satzteile einer Zeile; werte: {Feldschluessel: schon gerechneter Wert}."""
     teile = strategie_teile(ausw, r)
+    werte = werte or {}
     for feld, fe in ausw.get("felder") or []:
-        teile.append(feld.satz(r, fe, ausw.get("analysten_da", True)))
+        teile.append(feld.satz(r, fe, ausw.get("analysten_da", True), werte.get(feld.schluessel, _FEHLT)))
     if ausw.get("termine"):
         teile.append(termin_teil(r))
     if ausw.get("sektor_aktiv"):
@@ -1064,11 +1453,14 @@ def zeilen(ausw, basis_url, anzahl=None, markdown=True):
     df = ausw["df"]
     if anzahl:
         df = df.head(int(anzahl))
+    # Die Werte der Felder einmal fuer alle Zeilen, nicht je Zeile neu.
+    vorab = {feld.schluessel: feld.werte(df, fe).to_numpy() for feld, fe in ausw.get("felder") or []
+             if feld.art == "bereich"}
     raus = []
     for i, r in enumerate(df.to_dict("records"), 1):
         t = str(r.get("ticker") or "")
         url = adresse(basis_url, t)
-        teile = satz_teile(ausw, r)
+        teile = satz_teile(ausw, r, {k: w[i - 1] for k, w in vorab.items()})
         if markdown:
             kopf = f"[{md(t)}]({url}), {md(_firma(r.get('name')))}"
             text = "; ".join(md(x) for x in teile)
@@ -1289,6 +1681,10 @@ def stand_saetze(stand, jetzt=None, analysten_da=True):
     fund = q.get("fundament") or {}
     if fund and str(fund.get("status", "")).startswith("nicht"):
         s.append("Fundamentzahlen fehlen in dieser Tabelle: " + str(fund.get("status")) + ".")
+    kz = q.get("kennzahlen") or {}
+    if kz and kz.get("status") != "ok":
+        s.append(f"Die technischen Kennzahlen fehlen in dieser Tabelle: Der Nachtscan gehört zum "
+                 f"{datum_lang(kz.get('technik_handelstag'))}.")
     an = q.get("analysten") or {}
     if not analysten_da:
         s.append("Analystendaten sind nicht geladen: Sie liegen im privaten Datenrepo, und in den Streamlit-Secrets "
@@ -1342,7 +1738,8 @@ def _probe_tabelle():
          "darvas_langweilig_gruende": None, "m_trend_template": 2, "rating_trend_template": 70, "tt_count": 8,
          "schulden_zu_ek": 0.4, "konsens": "Kaufen", "konsens_wert": 4, "analysten_kaufen": 10,
          "analysten_halten": 2, "analysten_verkaufen": 0, "schaetzung_geschlagen": 4, "quartale_mit_schaetzung": 4,
-         "kursziel": 140.0, "kursziel_abst_pct": 16.67},
+         "kursziel": 140.0, "kursziel_abst_pct": 16.67, "kursziel_tief": 90.0, "abst_hoch_allzeit_pct": -12.0,
+         "tk_atr14": 6.0, "tk_burst": False, "tk_sma50_abst": -0.001, "fu_fcf": 2.5e8, "tk_perf_1w": 4.25},
         {"ticker": "BBB", "name": "Beta_Corp *Test*", "kurse_aktuell": True, "handelbar": True,
          "in_wochenliste": False, "kurs": 15.0, "marktkap_mrd": 1200.0, "volumen_50": 100000.0,
          "dollarvolumen_50": 1.5e6, "umsatz_q_vj_pct": None, "abst_ema21_pct": -4.0, "abst_ema50_pct": -1.0,
@@ -1351,7 +1748,8 @@ def _probe_tabelle():
          "volumen_max_tage_her": 30, "sektor": None, "termin_datum": "2026-09-15", "termin_lage": "vorboerslich",
          "termin_quelle": "Nasdaq", "m_darvas": 1, "rating_darvas": 40, "darvas_langweilig": True,
          "darvas_langweilig_gruende": "mittlere Tagesspanne unter 2,5 Prozent", "m_trend_template": 1,
-         "konsens": "Halten", "konsens_wert": 3, "schaetzung_geschlagen": 2, "quartale_mit_schaetzung": 4},
+         "konsens": "Halten", "konsens_wert": 3, "schaetzung_geschlagen": 2, "quartale_mit_schaetzung": 4,
+         "abst_hoch_allzeit_pct": -2.0, "tk_atr14": 0.3, "tk_burst": True, "tk_sma50_abst": 5.5, "fu_fcf": -1.2e7},
         {"ticker": "CCC", "name": "Gamma", "kurse_aktuell": True, "handelbar": False, "in_wochenliste": True,
          "kurs": 8.0, "marktkap_mrd": 0.05, "abst_hoch_1j_pct": -50.0, "rs": 30, "m_darvas": 0,
          "m_trend_template": 0, "sektor": "Finance", "termin_datum": "2026-09-14", "termin_lage": "unbekannt",
@@ -1430,17 +1828,45 @@ def selbsttest() -> int:
     a = auswerten(tab, felder(umsatz_dollar={"an": True, "min": "10"}), heute)
     p("Tagesumsatz in Millionen Dollar", list(a["df"]["ticker"]) == ["AAA"])
 
+    # Spannen mit Von und Bis (Gerhard, 15.09.2026, Auftrag 1)
+    a = auswerten(tab, felder(marktkap={"an": True, "min": "0,1", "max": "1000"}), heute)
+    p("Spanne von 0,1 bis 1000 Milliarden, beide Grenzen", list(a["df"]["ticker"]) == ["AAA"])
+    a = auswerten(tab, felder(kurs={"an": True, "max": "15"}), heute)
+    p("Nach unten offen: bis 15 Dollar, die Grenze eingeschlossen", set(a["df"]["ticker"]) == {"BBB", "CCC"})
+    a = auswerten(tab, felder(umsatz_q={"an": True, "min": "5", "max": "100"}), heute)
+    p("Umsatzwachstum von 5 bis 100 Prozent", list(a["df"]["ticker"]) == ["AAA"])
+    a = auswerten(tab, felder(kurs={"an": True, "min": "100", "max": "10"}), heute)
+    p("Von ueber Bis wirkt nicht und wird gemeldet",
+      len(a["df"]) == 3 and any("liegt über Bis" in f for f in a["fehler"]), "; ".join(a["fehler"]))
+    a = auswerten(tab, felder(perf_1m={"an": True, "min": "1"}), heute)
+    p("Grenze auf eine Kennzahl ohne jeden Wert: keine Aktie und ein Hinweis",
+      a["df"].empty and any("noch keine Werte" in h for h in a["hinweise"]), "; ".join(a["hinweise"]))
+    a = auswerten(tab, felder(atr_pct={"an": True, "min": "4"}), heute)
+    p("Gerechnete Kennzahl: ATR in Prozent des Kurses", list(a["df"]["ticker"]) == ["AAA"])
+    a = auswerten(tab, felder(fcf={"an": True, "min": "minus 20", "max": "0"}), heute)
+    p("Betrag in Millionen Dollar, negative Grenze", list(a["df"]["ticker"]) == ["BBB"])
+    a = auswerten(tab, felder(burst={"an": True}), heute)
+    p("Bedingung ohne Zahl: Momentum Burst muss erfuellt sein", list(a["df"]["ticker"]) == ["BBB"])
+    p("Einstellungstext: von bis, nach oben offen, nach unten offen, angezeigt",
+      FELD["marktkap"].einstellung_text({"min": "0,3", "max": "2"}) == "Marktkapitalisierung von 0,3 bis 2 Milliarden Dollar"
+      and FELD["marktkap"].einstellung_text({"min": "0,3"}) == "Marktkapitalisierung ab 0,3 Milliarden Dollar, nach oben offen"
+      and FELD["umsatz_q"].einstellung_text({"max": "100"}) == "Umsatzwachstum q/q bis 100 Prozent, nach unten offen"
+      and FELD["rs"].einstellung_text({}) == "RS gegen den ganzen US-Markt angezeigt",
+      FELD["marktkap"].einstellung_text({"min": "0,3", "max": "2"}))
+
     # Hoch, Tief, EMA, RS
-    a = auswerten(tab, felder(hoch={"an": True, "wahl": "1j", "max": "25"}), heute)
-    p("Hoechstens 25 Prozent unter dem Jahreshoch", list(a["df"]["ticker"]) == ["AAA"])
-    a = auswerten(tab, felder(hoch={"an": True, "wahl": "3m", "max": "2"}), heute)
-    p("Zeitraum waehlt die Spalte: Quartalshoch", list(a["df"]["ticker"]) == ["AAA"])
-    a = auswerten(tab, felder(tief={"an": True, "wahl": "1j", "min": "25"}), heute)
-    p("Mindestens 25 Prozent ueber dem Jahrestief", list(a["df"]["ticker"]) == ["AAA"])
-    a = auswerten(tab, felder(ema21={"an": True, "lage": "darunter"}), heute)
-    p("EMA 21: Kurs darunter", list(a["df"]["ticker"]) == ["BBB"])
-    a = auswerten(tab, felder(ema50={"an": True, "lage": "darueber", "min": "5"}), heute)
-    p("EMA 50: darueber und mindestens 5 Prozent", list(a["df"]["ticker"]) == ["AAA"])
+    a = auswerten(tab, felder(hoch_1j={"an": True, "max": "25"}), heute)
+    p("Bis 25 Prozent unter dem Jahreshoch", list(a["df"]["ticker"]) == ["AAA"])
+    a = auswerten(tab, felder(hoch_3m={"an": True, "max": "2"}), heute)
+    p("Jeder Zeitraum ein eigenes Feld: Quartalshoch", list(a["df"]["ticker"]) == ["AAA"])
+    a = auswerten(tab, felder(hoch_1j={"an": True, "max": "30"}, hoch_allzeit={"an": True, "max": "5"}), heute)
+    p("Jahreshoch und Allzeithoch zugleich eingegrenzt", list(a["df"]["ticker"]) == ["BBB"])
+    a = auswerten(tab, felder(tief_1j={"an": True, "min": "25"}), heute)
+    p("Ab 25 Prozent ueber dem Jahrestief", list(a["df"]["ticker"]) == ["AAA"])
+    a = auswerten(tab, felder(ema21={"an": True, "max": "0"}), heute)
+    p("EMA 21: bis 0 heisst Kurs darunter", list(a["df"]["ticker"]) == ["BBB"])
+    a = auswerten(tab, felder(ema50={"an": True, "min": "5"}), heute)
+    p("EMA 50: ab 5 Prozent darueber", list(a["df"]["ticker"]) == ["AAA"])
     a = auswerten(tab, felder(rs={"an": True, "min": "70"}), heute)
     p("RS ab 70 ohne vorlaeufiges RS", list(a["df"]["ticker"]) == ["AAA"])
     a = auswerten(tab, felder(rs={"an": True, "min": "70", "vorlaeufig": True}), heute)
@@ -1448,18 +1874,20 @@ def selbsttest() -> int:
     a = auswerten(tab, felder(neu_52w={"an": True}), heute)
     p("Ja-Feld ohne Spalte laesst nichts durch", a["df"].empty)
 
-    # Stufen und Analysten
-    a = auswerten(tab, felder(konsens={"an": True, "wahl": "4"}), heute)
-    p("Konsens mindestens Kaufen", list(a["df"]["ticker"]) == ["AAA"])
-    a = auswerten(tab, felder(konsens={"an": True, "wahl": "3"}), heute)
-    p("Konsens mindestens Halten", set(a["df"]["ticker"]) == {"AAA", "BBB"})
-    a = auswerten(tab, felder(konsens={"an": True, "wahl": "anzeigen"}), heute)
-    p("Stufe nur anzeigen filtert nicht", len(a["df"]) == 3)
-    a = auswerten(tab, felder(beat={"an": True, "wahl": "3"}), heute)
-    p("Schaetzung in mindestens drei von vier Quartalen geschlagen", list(a["df"]["ticker"]) == ["AAA"])
-    a = auswerten(tab, felder(volmax={"an": True, "wahl": "2"}), heute)
-    p("Groesstes Volumen jemals heute bis vor zwei Handelstagen", list(a["df"]["ticker"]) == ["AAA"])
-    a = auswerten(tab, felder(konsens={"an": True, "wahl": "5"}), heute, analysten_da=False)
+    # Fruehere Stufen als Spannen, Analysten
+    a = auswerten(tab, felder(konsens={"an": True, "min": "4", "max": "5"}), heute)
+    p("Konsens von 4 bis 5, Kaufen oder starker Kauf", list(a["df"]["ticker"]) == ["AAA"])
+    a = auswerten(tab, felder(konsens={"an": True, "min": "3"}), heute)
+    p("Konsens ab 3, mindestens Halten", set(a["df"]["ticker"]) == {"AAA", "BBB"})
+    a = auswerten(tab, felder(konsens={"an": True}), heute)
+    p("Konsens ohne Grenze filtert nicht", len(a["df"]) == 3)
+    a = auswerten(tab, felder(beat={"an": True, "min": "3"}), heute)
+    p("Schaetzung in 3 bis 4 von vier Quartalen geschlagen", list(a["df"]["ticker"]) == ["AAA"])
+    a = auswerten(tab, felder(volmax={"an": True, "max": "2"}), heute)
+    p("Groesstes Volumen jemals vor bis zu zwei Handelstagen", list(a["df"]["ticker"]) == ["AAA"])
+    a = auswerten(tab, felder(kursziel_tief={"an": True, "max": "-20"}), heute)
+    p("Gerechnete Analystenkennzahl: niedrigstes Kursziel 25 Prozent unter dem Kurs", list(a["df"]["ticker"]) == ["AAA"])
+    a = auswerten(tab, felder(konsens={"an": True, "min": "5"}), heute, analysten_da=False)
     p("Ohne Analystendaten filtert das Feld nicht und sagt es",
       len(a["df"]) == 3 and any("Analystendaten" in h for h in a["hinweise"]))
 
@@ -1498,13 +1926,20 @@ def selbsttest() -> int:
     import pattern_scanner as ps
     v = voreinstellung("trend_template")
     p("Trend Template traegt die Schwellen des Detektors ein",
-      v["rs"]["min"] == zahl_eingabe(ps.CFG["tt_rs_min"]) and v["tief"]["min"] == zahl_eingabe(ps.CFG["tt_min_above_low"] * 100)
-      and v["hoch"]["max"] == zahl_eingabe(ps.CFG["tt_max_below_high"] * 100) and v["hoch"]["wahl"] == "1j"
-      and v["ema50"] == {"an": True})
+      v["rs"]["min"] == zahl_eingabe(ps.CFG["tt_rs_min"]) and v["tief_1j"]["min"] == zahl_eingabe(ps.CFG["tt_min_above_low"] * 100)
+      and v["hoch_1j"]["max"] == zahl_eingabe(ps.CFG["tt_max_below_high"] * 100) and v["ema50"] == {"an": True})
     vt = voreinstellung("trend_template", toleranz=True)
-    p("Mit Toleranz gelockert", vt["rs"]["min"] == "66,5" and vt["tief"]["min"] == "23,75" and vt["hoch"]["max"] == "26,25",
-      str(vt))
+    p("Mit Toleranz gelockert", vt["rs"]["min"] == "66,5" and vt["tief_1j"]["min"] == "23,75"
+      and vt["hoch_1j"]["max"] == "26,25", str(vt))
     p("Power-Gap ohne Toleranzstufe bleibt ohne Lockerung", voreinstellung("power_gap", True) == voreinstellung("power_gap"))
+    w1 = wirksame_einstellung({"felder": {"kurs": {"an": True, "min": "10"}, "rs": {"an": False, "min": "80"}},
+                               "sortierung": "rs", "termine": {"an": False, "heute_vor": True}})
+    w2 = wirksame_einstellung({"felder": {"kurs": {"an": True, "min": " 10 "}, "rs": {"an": False, "min": "90"}},
+                               "sortierung": "kurs:auf", "termine": {"an": False}})
+    w3 = wirksame_einstellung({"felder": {"kurs": {"an": True, "min": "11"}}})
+    p("Vergleich der Einstellungen: Sortierung, abgehakte Felder und abgeschaltete Termine zaehlen nicht, Grenzen schon",
+      w1 == w2 and w1 != w3 and wirksame_einstellung({"felder": {"kurs": {"an": True}}}) != wirksame_einstellung({})
+      and wirksame_einstellung({"strategie": "power_gap", "toleranz": True}) == wirksame_einstellung({"strategie": "power_gap"}))
     treu_streng = treu_locker = geprueft_s = geprueft_l = 0
     for seed in range(80):
         roh = sd._kunstreihe(seed=seed, schritt=0.0005 * (seed % 6), streuung=0.008 + 0.002 * (seed % 3))
@@ -1526,12 +1961,14 @@ def selbsttest() -> int:
       geprueft_s >= 5 and treu_streng == geprueft_s, f"{treu_streng} von {geprueft_s}")
     p("Vorgabe mit Toleranz filtert keinen gelockerten Treffer weg",
       geprueft_l >= geprueft_s and treu_locker == geprueft_l, f"{treu_locker} von {geprueft_l}")
-    p("Jede Strategie der Auswahl hat einen Text und eine Vorgabe ohne unbekannte Felder",
-      all(strategie_text(k) and all(s in FELD for s in voreinstellung(k)) for k, _n in AUSWAHL))
+    p("Jede Strategie der Auswahl hat einen Text und eine Vorgabe ohne unbekannte Felder; ohne Strategie kein Text",
+      all(strategie_text(k) and all(s in FELD for s in voreinstellung(k)) for k, _n in AUSWAHL if k)
+      and strategie_text("") == "")
 
     # Ergebnisliste: nur Angehaktes, Verweise, Satzform
     e = {"strategie": "darvas", "nur_handelbar": False, "langweilig_raus": False,
-         "felder": {"rs": {"an": True}, "hoch": {"an": True, "wahl": "1j"}, "marktkap": {"an": True}},
+         "felder": {"rs": {"an": True}, "hoch_1j": {"an": True}, "marktkap": {"an": True}, "ema21": {"an": True},
+                    "fcf": {"an": True}, "sma50": {"an": True}},
          "termine": {"an": True}}
     a = auswerten(tab, e, heute)
     z = zeilen(a, "https://heliot.streamlit.app", markdown=True)
@@ -1539,7 +1976,16 @@ def selbsttest() -> int:
       z and z[0].startswith("1. [AAA](https://heliot.streamlit.app/?aktie=AAA), Alpha Inc.;"), z[0] if z else "")
     p("Liste: angehakte Merkmale stehen drin, andere nicht",
       "RS 95" in z[0] and "3,0 Prozent unter dem Jahreshoch" in z[0] and "Marktkapitalisierung 0,30 Milliarden Dollar" in z[0]
-      and "Umsatzwachstum" not in z[0] and "EMA" not in z[0] and "Zahlen am Montag, 14.09.2026, nachbörslich" in z[0], z[0])
+      and "Umsatzwachstum" not in z[0] and "EMA 50" not in z[0] and "Zahlen am Montag, 14.09.2026, nachbörslich" in z[0], z[0])
+    p("Liste: Abstand zur Linie, Betrag in Millionen mit Vorzeichen, Kurs auf der Linie",
+      "Kurs 2,00 Prozent über der EMA 21" in z[0] and "Free Cashflow plus 250,0 Millionen Dollar" in z[0]
+      and "Kurs auf der SMA 50" in z[0], z[0])
+    z2 = zeilen(auswerten(tab, {"nur_handelbar": False, "felder": {"fcf": {"an": True}, "sma50": {"an": True},
+                                                                     "perf_1w": {"an": True}}}, heute), "https://x")
+    p("Liste: negativer Betrag, Kurs ueber der Linie, fehlender Wert heisst nicht berechenbar",
+      "Free Cashflow minus 12,0 Millionen Dollar" in z2[1] and "Kurs 5,50 Prozent über der SMA 50" in z2[1]
+      and "Wertentwicklung eine Woche nicht berechenbar" in z2[1] and "Wertentwicklung eine Woche plus 4,2 Prozent" in z2[0]
+      and "SMA 50 unbekannt" in z2[2], " | ".join(z2))
     p("Liste: Strategie mit Rating, Begruendung, Kaufpunkt, Stop und Status ohne Formel-Dollar",
       "Darvas Box streng erfüllt" in z[0] and "Rating 82 von 100, stark: relative Stärke, Nachfrage, schwach: Enge" in z[0]
       and "Kaufpunkt 121,50 Dollar" in z[0] and "Stop 110,00 Dollar" in z[0] and "\\$110" in z[0], z[0])
@@ -1564,6 +2010,7 @@ def selbsttest() -> int:
     p("Datei: nur angehakte Spalten, Verweis und Stand",
       "RS" in tabelle_e.columns and "Prozent unter dem Jahreshoch" in tabelle_e.columns
       and "Marktkapitalisierung in Milliarden Dollar" in tabelle_e.columns and "Umsatzwachstum q/q in Prozent" not in tabelle_e.columns
+      and "Free Cashflow in Millionen Dollar" in tabelle_e.columns and "Abstand zur EMA 21 in Prozent" in tabelle_e.columns
       and tabelle_e.loc[0, "Vollständige Daten"] == "https://heliot.streamlit.app/?aktie=AAA"
       and tabelle_e.loc[0, "Schlusskurse vom"] == "11.09.2026", list(tabelle_e.columns))
     inhalte = {}
@@ -1611,22 +2058,31 @@ def selbsttest() -> int:
       not any("nach dem Nachtscan" in x for x in s3) and any("DATEN_LESE_TOKEN" in x for x in s3), " | ".join(s3))
 
     # Texte: kein langer Strich, keine Bildzeichen
-    texte = [f.titel for f in FELDER] + [f.erklaerung for f in FELDER] + [f.wahl_titel for f in FELDER]
-    texte += [w[1] for f in FELDER for w in f.wahl] + [strategie_text(k) for k, _n in AUSWAHL]
+    texte = [f.titel for f in FELDER] + [f.erklaerung for f in FELDER] + [f.einheit for f in FELDER]
+    texte += [f.eingabe_titel(teil) for f in FELDER for teil in ("min", "max")] + [strategie_text(k) for k, _n in AUSWAHL]
     texte += [n for _k, n in AUSWAHL] + grenzen_saetze() + [handelbar_text(), langweile_text()]
     texte += [t for _k, t, _p, _l in TERMIN_TEILE] + list(LAGE_TEXT.values()) + [x[1] for x in FORMATE]
-    texte += [x[1] for x in LAGE] + [x[1] for x in UMFANG] + list(SEKTOREN.values()) + [g for _k, g in GRUPPEN]
+    texte += [x[1] for x in UMFANG] + list(SEKTOREN.values()) + [g for _k, g in GRUPPEN]
+    texte += [FELDER[0].eingabe_hinweis("min"), FELDER[0].eingabe_hinweis("max")]
     lang = [t for t in texte if chr(0x2013) in t or chr(0x2014) in t]
     p("Kein langer Strich in Beschriftungen und Erklaerungen", not lang, "; ".join(lang[:3]))
     bild = [t for t in texte if nachschlagen.bildzeichen_in(t)]
     p("Keine Bildzeichen in Beschriftungen und Erklaerungen", not bild, "; ".join(bild[:3]))
-    p("Beschriftung der Grenzfelder nennt Zeitraum und Einheit",
-      FELD["hoch"].eingabe_titel("max", {"wahl": "1j"}) == "Abstand zum Jahreshoch höchstens, in Prozent darunter"
-      and FELD["tief"].eingabe_titel("min", {"wahl": "3m"}) == "Abstand zum Quartalstief mindestens, in Prozent darüber"
-      and FELD["marktkap"].eingabe_titel("min") == "Marktkapitalisierung mindestens, in Milliarden Dollar"
-      and FELD["rs"].eingabe_titel("min") == "RS gegen den ganzen US-Markt mindestens")
-    p("Jedes Feld hat Titel, Gruppe und Erklaerung",
-      all(f.titel and f.erklaerung and f.gruppe in dict(GRUPPEN) for f in FELDER) and len(FELD) == len(FELDER))
+    p("Beschriftung der Grenzfelder: von und bis mit der Einheit, Platzhalter nennen das offene Ende",
+      FELD["hoch_1j"].eingabe_titel("max") == "Abstand zum Jahreshoch bis, in Prozent unter dem Hoch"
+      and FELD["tief_3m"].eingabe_titel("min") == "Abstand zum Quartalstief von, in Prozent über dem Tief"
+      and FELD["marktkap"].eingabe_titel("min") == "Marktkapitalisierung von, in Milliarden Dollar"
+      and FELD["rs"].eingabe_titel("min") == "RS gegen den ganzen US-Markt von"
+      and FELD["kurs"].eingabe_hinweis("min") == "leer heißt nach unten offen"
+      and FELD["kurs"].eingabe_hinweis("max") == "leer heißt nach oben offen")
+    p("Jedes Feld hat Titel, Gruppe und Erklaerung; Schluessel und Titel sind eindeutig; jede Gruppe hat Felder",
+      all(f.titel and f.erklaerung and f.gruppe in dict(GRUPPEN) for f in FELDER) and len(FELD) == len(FELDER)
+      and len({f.titel for f in FELDER}) == len(FELDER) and all(any(f.gruppe == g for f in FELDER) for g, _n in GRUPPEN))
+    genutzt = {f.spalte for f in FELDER if f.spalte} | {q for f in FELDER for q in f.quellen}
+    fehlend = [s for s in sd.KENNZAHL_SPALTEN if s not in genutzt]
+    p("Jede Kennzahl der Nachttabelle aus Nachtscan und Fundament hat ein Feld", not fehlend, ", ".join(fehlend))
+    p("Nur noch Spannen und Bedingungen, keine Stufen- oder Lagewahl mehr",
+      all(f.art in ("bereich", "ja") for f in FELDER) and not any(hasattr(f, "wahl") for f in FELDER))
 
     print(f"\n{len(fehler)} Fehler." if fehler else "\nAlles bestanden.")
     return 1 if fehler else 0
