@@ -92,7 +92,7 @@
     "NRIX|Fallback: MA50-Pullback": "drin",
     "FIVE|Rectangle Top": "drin",
     "ECO|Fallback: 52W-Hoch-Breakout": "drin",
-    "ECO|Fallback: 20-Tage-Hoch (Pivot)": "draussen",
+    "ECO|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "NGL|Fallback: MA50-Pullback": "drin",
     "CXW|Cup & Handle (Wochenbasis)": "draussen",
     "CXW|Rectangle Top": "drin",
@@ -388,8 +388,7 @@
     "NMM|Cup & Handle (Wochenbasis)": "2026-09-15",
     "BEST|NMM|Cup & Handle (Wochenbasis)": "2026-09-15",
     "NMM|Fallback: 52W-Hoch-Breakout": "2026-09-15",
-    "BEST|NMM|Fallback: 52W-Hoch-Breakout": "2026-09-15",
-    "UEBER|ECO|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-14"
+    "BEST|NMM|Fallback: 52W-Hoch-Breakout": "2026-09-15"
   },
   "gapgo_warten": {
     "KGS": {
