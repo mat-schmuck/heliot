@@ -240,22 +240,26 @@ def mansfield(daten, closes, v_daten, v_closes, wochen, zurueck):
     return bei(len(ws)), bei(len(ws) - zurueck)
 
 
-def weinstein(daten, closes, mrs, mrs_vorher, linie, zurueck, flach_pct, vorlauf):
+def weinstein(daten, closes, linie, zurueck, flach_pct, vorlauf):
     """Punkt 6: die Stufe nach Weinstein, nach festen Regeln. Rueckgabe
     {"stufe", "linie_abst", "linie_steig"}:
       linie_steig  Veraenderung der 30-Wochen-Linie ueber zurueck Wochen in
                    Prozent; steigend ueber plus flach_pct, fallend unter minus
                    flach_pct, dazwischen flach.
       Stufe 2      Linie steigend, die letzten zwei Wochenschluesse ueber
-                   der Linie ihrer Woche, Mansfield RS ueber null und hoeher
-                   als vor zurueck Wochen.
-      Stufe 4      spiegelbildlich: Linie fallend, zwei Schluesse darunter,
-                   Mansfield RS unter null und tiefer als vor zurueck Wochen.
+                   der Linie ihrer Woche.
+      Stufe 4      spiegelbildlich: Linie fallend, zwei Schluesse darunter.
       Stufe 3      Linie flach, davor (vorlauf Wochen) gestiegen.
       Stufe 1      Linie flach, davor gefallen.
       0            keine eindeutige Stufe: Die Linie steigt oder faellt, aber
-                   Kurs oder Mansfield RS bestaetigen es nicht, oder die Linie
-                   war auch davor flach.
+                   der Kurs bestaetigt es nicht, oder die Linie war auch davor
+                   flach.
+    Gerhard, 15.09.2026, Nachfrage N3: "Stufe 2 und Stufe 4 nur noch aus
+    30-Wochen-Linie und Kurs." Bis dahin verlangten beide zusaetzlich eine
+    Mansfield RS ueber beziehungsweise unter null, steigend beziehungsweise
+    fallend; am Schluss vom 14.09.2026 war damit mehr als die Haelfte der
+    Aktien ohne eindeutige Stufe. Die Mansfield RS steht als eigene Zahl
+    daneben.
     Ohne 30 plus zurueck Wochen gibt es keine Stufe (None)."""
     ws = [x[2] for x in wochenschluesse(daten, closes)]
     n = len(ws)
@@ -270,13 +274,10 @@ def weinstein(daten, closes, mrs, mrs_vorher, linie, zurueck, flach_pct, vorlauf
         return leer
     steig = (jetzt / vorher - 1.0) * 100.0
     abst = (ws[-1] / jetzt - 1.0) * 100.0
-    bestaetigt = mrs is not None and mrs_vorher is not None
     if steig > flach_pct:
-        ueber = ws[-1] > jetzt and ws[-2] > vorwoche
-        stufe = 2 if (ueber and bestaetigt and mrs > 0 and mrs > mrs_vorher) else 0
+        stufe = 2 if (ws[-1] > jetzt and ws[-2] > vorwoche) else 0
     elif steig < -flach_pct:
-        unter = ws[-1] < jetzt and ws[-2] < vorwoche
-        stufe = 4 if (unter and bestaetigt and mrs < 0 and mrs < mrs_vorher) else 0
+        stufe = 4 if (ws[-1] < jetzt and ws[-2] < vorwoche) else 0
     else:
         frueher = sma(n - zurueck - vorlauf)
         if frueher is None or frueher <= 0:
@@ -627,7 +628,7 @@ def technik(k, vergleich=None, cfg=None):
             "ud50": updown(c, v, int(cfg["updown_tage"]))}
     mrs, mrs_vorher = mansfield(d, c, vd, vc, int(cfg["mansfield_wochen"]), int(cfg["vergleich_wochen"]))
     raus["mrs"], raus["mrs_vorher"] = mrs, mrs_vorher
-    raus.update(weinstein(d, c, mrs, mrs_vorher, int(cfg["weinstein_linie_wochen"]),
+    raus.update(weinstein(d, c, int(cfg["weinstein_linie_wochen"]),
                           int(cfg["vergleich_wochen"]), float(cfg["weinstein_flach_pct"]),
                           int(cfg["weinstein_vorlauf_wochen"])))
     raus.update(momentum_burst(c, h, lo, v, float(cfg["burst_pct"]), float(cfg["burst_mindestvolumen"])))
@@ -720,23 +721,34 @@ def selbsttest() -> int:
     p("Mansfield: ohne Index oder mit zu kurzer Reihe nichts",
       mansfield(tage, steigend, [], [], 52, 4) == (None, None)
       and mansfield(tage[:200], steigend[:200], tage, index, 52, 4)[0] is None)
-    w2 = weinstein(tage, steigend, m_jetzt, m_vorher, 30, 4, 0.5, 13)
-    p("Weinstein: stetiger Anstieg mit steigender Mansfield RS ist Stufe 2", w2["stufe"] == 2, w2)
+    w2 = weinstein(tage, steigend, 30, 4, 0.5, 13)
+    p("Weinstein: stetiger Anstieg, Kurs zwei Wochen ueber der steigenden Linie, ist Stufe 2", w2["stufe"] == 2, w2)
     fallend = [200.0 * math.exp(-0.001 * i - 0.000005 * i * i) for i in range(300)]
     mf, mfv = mansfield(tage, fallend, tage, index, 52, 4)
-    w4 = weinstein(tage, fallend, mf, mfv, 30, 4, 0.5, 13)
-    p("Weinstein: stetiger Rueckgang mit fallender Mansfield RS ist Stufe 4", w4["stufe"] == 4, w4)
-    p("Weinstein: steigende Linie ohne bestaetigende Mansfield RS ist keine eindeutige Stufe",
-      weinstein(tage, steigend, -1.0, 0.0, 30, 4, 0.5, 13)["stufe"] == 0)
+    w4 = weinstein(tage, fallend, 30, 4, 0.5, 13)
+    p("Weinstein: stetiger Rueckgang, Kurs zwei Wochen unter der fallenden Linie, ist Stufe 4", w4["stufe"] == 4, w4)
+    # N3 vom 15.09.2026: Die Mansfield RS entscheidet nicht mehr mit. Dieselbe
+    # steigende Reihe gegen einen noch schneller steigenden Index hat eine
+    # fallende Mansfield RS unter null und bleibt trotzdem Stufe 2.
+    index_schneller = [100.0 * math.exp(0.003 * i + 0.00001 * i * i) for i in range(300)]
+    mrs_neg, mrs_neg_v = mansfield(tage, steigend, tage, index_schneller, 52, 4)
+    p("Weinstein: Stufe 2 auch bei Mansfield RS unter null und fallend, seit Nachfrage N3",
+      mrs_neg is not None and mrs_neg < 0 and mrs_neg_v is not None and mrs_neg < mrs_neg_v
+      and weinstein(tage, steigend, 30, 4, 0.5, 13)["stufe"] == 2, f"{mrs_neg} {mrs_neg_v}")
+    knick = list(steigend)
+    knick[-5:] = [steigend[-6] * 0.7] * 5
+    wk = weinstein(tage, knick, 30, 4, 0.5, 13)
+    p("Weinstein: steigende Linie, der letzte Wochenschluss faellt unter die Linie, ist keine eindeutige Stufe",
+      wk["stufe"] == 0 and wk["linie_steig"] > 0.5 and wk["linie_abst"] < 0, wk)
     oben = [50.0 * 1.004 ** i for i in range(150)] + [50.0 * 1.004 ** 149] * 150
-    w3 = weinstein(tage, oben, 0.0, 0.0, 30, 4, 0.5, 13)
+    w3 = weinstein(tage, oben, 30, 4, 0.5, 13)
     p("Weinstein: flache Linie nach einem Anstieg ist Stufe 3", w3["stufe"] == 3, w3)
     unten = [200.0 * 0.996 ** i for i in range(150)] + [200.0 * 0.996 ** 149] * 150
-    w1 = weinstein(tage, unten, 0.0, 0.0, 30, 4, 0.5, 13)
+    w1 = weinstein(tage, unten, 30, 4, 0.5, 13)
     p("Weinstein: flache Linie nach einem Rueckgang ist Stufe 1", w1["stufe"] == 1, w1)
     p("Weinstein: ganz flach ohne Vorlauf ist keine eindeutige Stufe, zu kurz gar keine",
-      weinstein(tage, [100.0] * 300, 0.0, 0.0, 30, 4, 0.5, 13)["stufe"] == 0
-      and weinstein(tage[:100], [100.0] * 100, 0.0, 0.0, 30, 4, 0.5, 13)["stufe"] is None)
+      weinstein(tage, [100.0] * 300, 30, 4, 0.5, 13)["stufe"] == 0
+      and weinstein(tage[:100], [100.0] * 100, 30, 4, 0.5, 13)["stufe"] is None)
     # 7: Momentum Burst und Episodic Pivot
     mb = momentum_burst([100.0, 99.0, 104.0], [101.0, 100.0, 104.5], [99.0, 98.0, 99.0],
                         [150000.0, 120000.0, 300000.0], 4.0, 100000)

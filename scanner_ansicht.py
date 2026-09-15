@@ -158,6 +158,16 @@ def _ja(x):
     return x is True or (isinstance(x, np.bool_) and bool(x))
 
 
+# Gerhard, 15.09.2026, Nachfrage N8: "Die ANZAHL DER AKTIEN muss neben dem
+# Rang stehen, fest in der Anzeige, nicht als Beigabe." Zu jedem Rangfeld die
+# Spalte mit der Zahl der Aktien, aus denen dieser Rang gerechnet ist.
+RANG_TITEL = {"gruppe_rang": "gruppe_titel", "gruppe_rang_3w": "gruppe_titel_3w", "gruppe_rang_6w": "gruppe_titel_6w"}
+
+
+def _aktien(n):
+    return f"{int(n)} {'Aktie' if int(n) == 1 else 'Aktien'}"
+
+
 def _sp(df, name):
     """Eine Spalte; fehlt sie, eine Spalte aus None in derselben Laenge."""
     if name in df.columns:
@@ -532,6 +542,16 @@ class Feld:
             n = int(tage)
             wann = "heute" if n == 0 else ("vor einem Handelstag" if n == 1 else f"vor {n} Handelstagen")
             return f"größtes Volumen jemals {wann}, {menge} Stück am {am}"
+        if s in RANG_TITEL:
+            # Nachfragen N8 und N9: der Rang nie ohne die Zahl seiner Aktien;
+            # der Gruppenname steht dabei, auch Branche unbekannt.
+            g = r.get("gruppe") if isinstance(r.get("gruppe"), str) and r.get("gruppe") else None
+            rang, anzahl = _num(r.get(self.spalte)), _num(r.get(RANG_TITEL[s]))
+            if rang is None:
+                return f"{self.titel} unbekannt" + (f", {g}" if g else "")
+            von = _num(r.get("gruppen_zahl")) if s == "gruppe_rang" else None
+            return (f"{self.titel} {int(rang)}" + (f" von {int(von)}" if von else "") + (f", {g}" if g else "")
+                    + (f", aus {_aktien(anzahl)} gerechnet" if anzahl is not None else ""))
         if v is _FEHLT:
             v = self.wert(r, fe)
         else:
@@ -605,6 +625,9 @@ class Feld:
                     ("Größtes Volumen jemals, Datum", _sp(df, "volumen_max_datum")),
                     ("Größtes Volumen jemals, vor Handelstagen", _zahlen(df, "volumen_max_tage_her"))]
         werte = self.werte(df, fe).round(self.stellen)
+        if s in RANG_TITEL:
+            return [(self.titel, werte), ("Branchengruppe", _sp(df, "gruppe")),
+                    (f"Aktien zum {self.titel}", _zahlen(df, RANG_TITEL[s]))]
         if self.bezug:
             return [(f"Prozent {'unter dem' if self.vorzeichen else 'über dem'} {self.bezug}", werte)]
         if s == "rs":
@@ -792,9 +815,11 @@ def _felder():
           einheit="", stellen=2,
           erklaerung="Mittlere wahre Tagesspanne der letzten 5 Handelstage geteilt durch die der letzten 50; unter 1 "
                      "wird die Aktie ruhiger."),
-        F("beta", "volatilitaet", "Beta gegen SPY", spalte="tk_beta", einheit="", stellen=2, signed=True,
-          erklaerung="Schwankung gegenüber dem S&P-500-ETF SPY über 252 Tagesrenditen; 1 heißt so beweglich wie der "
-                     "Markt."),
+        F("beta", "volatilitaet", f"Beta gegen SPY über {int(tech['beta_tage'])} Handelstage", spalte="tk_beta",
+          einheit="", stellen=2, signed=True,
+          erklaerung=f"Schwankung gegenüber dem S&P-500-ETF SPY über die Tagesrenditen der letzten "
+                     f"{int(tech['beta_tage'])} Handelstage; 1 heißt so beweglich wie der Markt. Finviz rechnet "
+                     f"sein Beta über 60 Monate, die Zahlen weichen deshalb voneinander ab."),
         F("jahresspanne", "volatilitaet", "Jahresspanne", spalte="jahresspanne", einheit="", stellen=2,
           erklaerung="Jahreshoch geteilt durch das Jahrestief der letzten 252 Handelstage; 2 heißt, das Hoch liegt "
                      "doppelt so hoch wie das Tief."),
@@ -819,8 +844,10 @@ def _felder():
           erklaerung="Wie viele Handelstage in Folge der einfache 200-Tage-Durchschnitt zuletzt gestiegen ist; 0 "
                      "heißt, er ist am letzten Handelstag nicht gestiegen."),
         F("weinstein", "durchschnitte", "Weinstein-Stufe", spalte="tk_stufe", einheit="", stellen=0,
-          erklaerung="Stufe nach Stan Weinstein aus der 30-Wochen-Linie und dem Mansfield RS: 1 Boden, 2 "
-                     "Aufwärtstrend, 3 Top, 4 Abwärtstrend; 0 heißt nicht eindeutig."),
+          erklaerung="Stufe nach Stan Weinstein aus der 30-Wochen-Linie und dem Kurs: 1 Boden, 2 Aufwärtstrend, "
+                     "die Linie steigt und die letzten zwei Wochenschlüsse liegen darüber, 3 Top, 4 Abwärtstrend, "
+                     "spiegelbildlich; 0 heißt nicht eindeutig. Der Mansfield RS entscheidet nicht mit, er steht "
+                     "als eigenes Feld daneben."),
         F("linie30", "durchschnitte", "Abstand zur 30-Wochen-Linie", spalte="tk_linie_abst", signed=True,
           linie="30-Wochen-Linie",
           erklaerung="Schlusskurs gegen den Durchschnitt der letzten 30 Wochen; negativ heißt darunter; von 0 an liegt der Kurs darüber."),
@@ -1069,11 +1096,13 @@ def _felder():
         F("gruppe_rang", "gruppe", "Rang der Branchengruppe", spalte="gruppe_rang", einheit="", stellen=0,
           analysten=True,
           erklaerung="Rang der Branchengruppe nach dem Median der RS-Rohwerte ihrer Aktien; Rang 1 ist die stärkste "
-                     "Gruppe."),
+                     "Gruppe. Jede Gruppe bekommt einen Rang, auch eine mit einer einzigen Aktie und die Sammelgruppe "
+                     "Branche unbekannt; neben dem Rang stehen immer die Gruppe und die Zahl der Aktien, aus denen er "
+                     "gerechnet ist."),
         F("gruppe_rang_3w", "gruppe", "Rang der Branchengruppe vor drei Wochen", spalte="gruppe_rang_3w", einheit="",
-          stellen=0, analysten=True, erklaerung="Derselbe Rang drei Wochen früher."),
+          stellen=0, analysten=True, erklaerung="Derselbe Rang drei Wochen früher, mit der Zahl der Aktien von damals."),
         F("gruppe_rang_6w", "gruppe", "Rang der Branchengruppe vor sechs Wochen", spalte="gruppe_rang_6w", einheit="",
-          stellen=0, analysten=True, erklaerung="Derselbe Rang sechs Wochen früher."),
+          stellen=0, analysten=True, erklaerung="Derselbe Rang sechs Wochen früher, mit der Zahl der Aktien von damals."),
         F("gruppe_titel", "gruppe", "Aktien der Branchengruppe in der Rechnung", spalte="gruppe_titel", einheit="",
           stellen=0, analysten=True,
           erklaerung="Wie viele Aktien der Gruppe mit vollem RS-Rohwert in den Rang eingehen."),
@@ -2086,6 +2115,26 @@ def selbsttest() -> int:
     p("Jedes Feld hat Titel, Gruppe und Erklaerung; Schluessel und Titel sind eindeutig; jede Gruppe hat Felder",
       all(f.titel and f.erklaerung and f.gruppe in dict(GRUPPEN) for f in FELDER) and len(FELD) == len(FELDER)
       and len({f.titel for f in FELDER}) == len(FELDER) and all(any(f.gruppe == g for f in FELDER) for g, _n in GRUPPEN))
+    zr = {"gruppe": "Gold", "gruppe_rang": 3.0, "gruppen_zahl": 165.0, "gruppe_titel": 1.0, "gruppe_rang_3w": 150.0,
+          "gruppe_titel_3w": 1.0, "gruppe_rang_6w": None, "gruppe_titel_6w": 0.0}
+    zu = {"gruppe": "Branche unbekannt", "gruppe_rang": 40.0, "gruppen_zahl": 165.0, "gruppe_titel": 212.0}
+    p("Rang der Branchengruppe: immer mit Gruppe und Zahl der Aktien, auch Branche unbekannt (Nachfragen N8 und N9)",
+      FELD["gruppe_rang"].satz(zr) == "Rang der Branchengruppe 3 von 165, Gold, aus 1 Aktie gerechnet"
+      and FELD["gruppe_rang_3w"].satz(zr) == "Rang der Branchengruppe vor drei Wochen 150, Gold, aus 1 Aktie gerechnet"
+      and FELD["gruppe_rang_6w"].satz(zr) == "Rang der Branchengruppe vor sechs Wochen unbekannt, Gold"
+      and FELD["gruppe_rang"].satz(zu) == "Rang der Branchengruppe 40 von 165, Branche unbekannt, aus 212 Aktien gerechnet",
+      " | ".join([FELD["gruppe_rang"].satz(zr), FELD["gruppe_rang_3w"].satz(zr), FELD["gruppe_rang_6w"].satz(zr),
+                  FELD["gruppe_rang"].satz(zu)]))
+    sp_r = FELD["gruppe_rang_3w"].datei_spalten(pd.DataFrame([zr, zu]))
+    p("Rang der Branchengruppe in den Dateien: Rang, Gruppe und Zahl der Aktien nebeneinander",
+      [k for k, _w in sp_r] == ["Rang der Branchengruppe vor drei Wochen", "Branchengruppe",
+                                "Aktien zum Rang der Branchengruppe vor drei Wochen"]
+      and list(sp_r[1][1]) == ["Gold", "Branche unbekannt"] and sp_r[2][1].iloc[0] == 1.0 and pd.isna(sp_r[2][1].iloc[1]),
+      str([(k, list(w)) for k, w in sp_r]))
+    p("Beta nennt im Titel die Handelstage, ueber die es gerechnet ist (Nachfrage N4)",
+      FELD["beta"].titel == f"Beta gegen SPY über {int(ZENTRAL['technik']['beta_tage'])} Handelstage"
+      and FELD["beta"].satz({"tk_beta": 1.35}) == f"Beta gegen SPY über {int(ZENTRAL['technik']['beta_tage'])} Handelstage plus 1,35",
+      FELD["beta"].satz({"tk_beta": 1.35}))
     genutzt = {f.spalte for f in FELDER if f.spalte} | {q for f in FELDER for q in f.quellen}
     fehlend = [s for s in sd.KENNZAHL_SPALTEN if s not in genutzt]
     p("Jede Kennzahl der Nachttabelle aus Nachtscan und Fundament hat ein Feld", not fehlend, ", ".join(fehlend))

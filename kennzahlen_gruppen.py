@@ -36,14 +36,22 @@ WAS GERECHNET WIRD
   Median        je Gruppe ueber die Rohwerte ihrer Aktien am Stichtag.
   Rang          1 fuer den hoechsten Median, fortlaufend ueber alle Gruppen
                 mit mindestens einer Aktie am Stichtag; gleiche Mediane
-                ordnet der Gruppenname.
+                ordnet der Gruppenname. KEINE UNTERGRENZE: Gerhard,
+                15.09.2026, Nachfrage N8, "Auch Gruppen mit einer oder zwei
+                Aktien bekommen einen Rang", mit der Bedingung "Die ANZAHL
+                DER AKTIEN muss neben dem Rang stehen, fest in der Anzeige,
+                nicht als Beigabe". Deshalb traegt jede Aktie zu jedem Rang
+                die Zahl der Aktien, aus denen er gerechnet ist
+                (gruppe_titel, gruppe_titel_3w, gruppe_titel_6w), und jede
+                Anzeige nennt sie beim Rang.
   Branche unbekannt  Aktien ohne Eintrag oder ohne Gruppe in der
-                Zuordnungsliste. Sie stehen als eigene Zeile in der
-                Rangliste, mit Zahl der Aktien und Median, aber OHNE Rang:
-                Eine Sammelgruppe ist keine Branche, und ein eigener Rang
-                verschoebe die Raenge der echten Gruppen (eigene
-                Festlegung, im Bericht benannt). Die Aktie selbst traegt
-                die Gruppe "Branche unbekannt" samt Grund.
+                Zuordnungsliste, zusammengefasst unter diesem Namen. Die
+                Gruppe bekommt einen Rang wie jede andere: Gerhard,
+                15.09.2026, Nachfrage N9, "NEIN, Branche unbekannt soll auch
+                einen Rang bekommen. Konsequent zu N8. ... Der Name ist die
+                Kennzeichnung." Bis dahin stand sie ohne Rang am Ende der
+                Rangliste. Die Aktie selbst traegt die Gruppe "Branche
+                unbekannt" samt Grund.
 
 MINDESTABDECKUNG wie beim RS-Universum: Zaehlt eine Aktie an einem Stichtag
 zur Basis (volle Historie bis dahin), fehlt ihr aber der Kurs genau an
@@ -77,7 +85,8 @@ EBENE_NAME = {"gics_sektor": "GICS-Sektor", "gics_gruppe": "GICS-Branchengruppe"
               "gics_unterbranche": "GICS-Unterbranche"}
 LEER = {"", "NA", "N/A", "NONE", "NULL", "-"}
 GRUPPEN_FELDER = ("gruppe", "gruppe_ebene", "gruppe_rang", "gruppe_rang_3w", "gruppe_rang_6w", "gruppen_zahl",
-                  "gruppe_titel", "gruppe_stand", "gruppe_zuordnung_stand", "gruppe_hinweis")
+                  "gruppe_titel", "gruppe_titel_3w", "gruppe_titel_6w", "gruppe_stand", "gruppe_zuordnung_stand",
+                  "gruppe_hinweis")
 
 
 def mindest_abdeckung():
@@ -265,8 +274,10 @@ def gruppen_werte(auszuege, zuordnung, handelstag=None, zuordnung_befund=None, a
             hinweise[k] = (f"der Rang {wort} fehlt, am {_datum_text(tag)} tragen nur {_prozent(a)} Prozent der Aktien "
                            f"einen Rohwert, verlangt sind {mindest * 100:.0f}")
             continue
-        echte = sorted((g for g in mediane[k] if g != UNBEKANNT), key=lambda g: (-mediane[k][g], g))
-        raenge[k] = {g: i + 1 for i, g in enumerate(echte)}
+        # Nachfragen N8 und N9: jede Gruppe mit mindestens einer Aktie, auch
+        # Branche unbekannt, ohne Untergrenze.
+        alle = sorted(mediane[k], key=lambda g: (-mediane[k][g], g))
+        raenge[k] = {g: i + 1 for i, g in enumerate(alle)}
 
     k3, k6 = zurueck[0], zurueck[-1]
     je_aktie = {}
@@ -275,19 +286,19 @@ def gruppen_werte(auszuege, zuordnung, handelstag=None, zuordnung_befund=None, a
         z = dict(leer)
         z.update({"gruppe": g, "gruppe_ebene": EBENE_NAME.get(ebene, ebene), "gruppe_stand": tage.get(0),
                   "gruppe_zuordnung_stand": zu_stand, "gruppen_zahl": len(raenge[0]) or None,
-                  "gruppe_titel": len(werte_k[0].get(g, [])),
+                  "gruppe_titel": len(werte_k[0].get(g, [])), "gruppe_titel_3w": len(werte_k[k3].get(g, [])),
+                  "gruppe_titel_6w": len(werte_k[k6].get(g, [])),
                   "gruppe_rang": raenge[0].get(g), "gruppe_rang_3w": raenge[k3].get(g), "gruppe_rang_6w": raenge[k6].get(g)})
         teile = []
         if g == UNBEKANNT:
             teile.append(grund_unbekannt[t])
-        else:
-            for k in (0, k3, k6):
-                if k in hinweise:
-                    teile.append(hinweise[k])
-                elif not raenge[k].get(g):
-                    wort = "heute" if k == 0 else _wochen_text(k)
-                    teile.append(f"der Rang {wort} fehlt, am {_datum_text(tage[k])} trug keine Aktie der Gruppe "
-                                 f"einen Rohwert")
+        for k in (0, k3, k6):
+            if k in hinweise:
+                teile.append(hinweise[k])
+            elif not raenge[k].get(g):
+                wort = "heute" if k == 0 else _wochen_text(k)
+                teile.append(f"der Rang {wort} fehlt, am {_datum_text(tage[k])} trug keine Aktie der Gruppe "
+                             f"einen Rohwert")
         z["gruppe_hinweis"] = "; ".join(teile) or None
         je_aktie[t] = z
 
@@ -298,7 +309,7 @@ def gruppen_werte(auszuege, zuordnung, handelstag=None, zuordnung_befund=None, a
                        "titel_3w": len(werte_k[k3].get(g, [])), "titel_6w": len(werte_k[k6].get(g, [])),
                        "median_roh": _rund(mediane[0].get(g)), "median_roh_3w": _rund(mediane[k3].get(g)),
                        "median_roh_6w": _rund(mediane[k6].get(g))})
-    zeilen.sort(key=lambda z: (z["gruppe"] == UNBEKANNT, z["rang"] is None, z["rang"] or 0, z["gruppe"]))
+    zeilen.sort(key=lambda z: (z["rang"] is None, z["rang"] or 0, z["gruppe"]))
     liste = {"stand": tage.get(0), "zuordnung_stand": zu_stand, "ebene": ebene,
              "stichtage": {"heute": tage.get(0), "vor_3_wochen": tage.get(k3), "vor_6_wochen": tage.get(k6)},
              "abdeckung": {str(k): v for k, v in abdeckung.items()}, "gruppen": zeilen}
@@ -387,27 +398,40 @@ def selbsttest() -> int:
         zuordnung[schluessel(t)] = {"typ": "Common Stock", "gics_unterbranche": g if g else "NA"}
     je, liste, bf = gruppen_werte(auszuege, zuordnung, handelstag=tage[-1],
                                   zuordnung_befund={"status": "ok", "stand": "2026-09-16", "eintraege": len(zuordnung)})
-    p("Rangliste: staerkste Gruppe Rang 1, Reihenfolge nach Median",
-      [z["gruppe"] for z in liste["gruppen"]][:3] == ["Semiconductors", "Application Software", "Regional Banks"]
-      and liste["gruppen"][0]["rang"] == 1 and liste["gruppen"][2]["rang"] == 3, str([(z["gruppe"], z["rang"]) for z in liste["gruppen"]]))
+    median_je = {z["gruppe"]: z["median_roh"] for z in liste["gruppen"]}
+    soll = sorted(median_je, key=lambda g: (-median_je[g], g))
+    p("Rangliste: staerkste Gruppe Rang 1, Reihenfolge nach Median, Branche unbekannt mitten darin",
+      [z["gruppe"] for z in liste["gruppen"]] == soll and [z["rang"] for z in liste["gruppen"]] == [1, 2, 3, 4]
+      and soll.index("Semiconductors") < soll.index("Application Software") < soll.index("Regional Banks"),
+      str([(z["gruppe"], z["rang"], z["median_roh"]) for z in liste["gruppen"]]))
     unb = [z for z in liste["gruppen"] if z["gruppe"] == UNBEKANNT]
-    p("Branche unbekannt: eigene Zeile am Ende, ohne Rang, mit Zahl der Aktien",
-      len(unb) == 1 and unb[0]["rang"] is None and unb[0]["titel"] == 2 and liste["gruppen"][-1]["gruppe"] == UNBEKANNT)
-    p("Aktie: Gruppe, Rang heute und vor drei und sechs Wochen, Zahl der Gruppen und Aktien",
-      je["STARK2"]["gruppe"] == "Semiconductors" and je["STARK2"]["gruppe_rang"] == 1 and je["STARK2"]["gruppe_rang_3w"] == 1
-      and je["STARK2"]["gruppe_rang_6w"] == 1 and je["STARK2"]["gruppen_zahl"] == 3 and je["STARK2"]["gruppe_titel"] == 3
+    p("Branche unbekannt: Rang wie jede Gruppe, mit Zahl der Aktien (Nachfrage N9)",
+      len(unb) == 1 and unb[0]["rang"] == soll.index(UNBEKANNT) + 1 and unb[0]["titel"] == 2
+      and je["OHNE"]["gruppe_rang"] == unb[0]["rang"] and je["NEU.A"]["gruppe_titel"] == 2, str(unb))
+    p("Aktie: Gruppe, Rang heute und vor drei und sechs Wochen, Zahl der Gruppen und zu jedem Rang die Aktien",
+      je["STARK2"]["gruppe"] == "Semiconductors" and je["STARK2"]["gruppe_rang"] == soll.index("Semiconductors") + 1
+      and je["STARK2"]["gruppe_rang_3w"] is not None and je["STARK2"]["gruppe_rang_6w"] is not None
+      and je["STARK2"]["gruppen_zahl"] == 4 and je["STARK2"]["gruppe_titel"] == 3
+      and je["STARK2"]["gruppe_titel_3w"] == 3 and je["STARK2"]["gruppe_titel_6w"] == 3
       and je["STARK2"]["gruppe_hinweis"] is None and je["STARK2"]["gruppe_zuordnung_stand"] == "2026-09-16", str(je["STARK2"]))
+    ein = {"EINZEL": ("Gold", 0.004), "PAAR1": ("Silber", 0.001), "PAAR2": ("Silber", 0.0012)}
+    ausz_e = {tk: _reihe(tage, 20.0, s) for tk, (g, s) in ein.items()}
+    je_e, liste_e, _be = gruppen_werte(ausz_e, {tk: {"gics_unterbranche": g} for tk, (g, s) in ein.items()},
+                                       zuordnung_befund={"stand": "2026-09-16"})
+    p("Keine Untergrenze: eine Gruppe mit einer einzigen Aktie bekommt einen Rang und traegt die Zahl 1 (Nachfrage N8)",
+      je_e["EINZEL"]["gruppe_rang"] == 1 and je_e["EINZEL"]["gruppe_titel"] == 1 and je_e["PAAR1"]["gruppe_rang"] == 2
+      and je_e["PAAR1"]["gruppe_titel"] == 2 and [z["titel"] for z in liste_e["gruppen"]] == [1, 2], str(je_e["EINZEL"]))
     p("Median ist der mittlere Rohwert der Gruppe",
       abs(liste["gruppen"][0]["median_roh"] - round(statistics.median(
           [red_to_green.rs_rohwert(auszuege[t][1]) for t in ("STARK1", "STARK2", "STARK3")]), 6)) < 1e-9)
     p("Ohne Gruppe in der Liste: Grund nennt die Liste",
-      je["OHNE"]["gruppe"] == UNBEKANNT and je["OHNE"]["gruppe_rang"] is None
+      je["OHNE"]["gruppe"] == UNBEKANNT and je["OHNE"]["gruppe_rang"] is not None
       and je["OHNE"]["gruppe_hinweis"] == "die Zuordnungsliste vom 16.09.2026 nennt für die Aktie keine Branche", str(je["OHNE"]))
     p("Ohne Eintrag: Klassenaktie mit Punkt, Grund nennt den Stand der Liste",
       je["NEU.A"]["gruppe"] == UNBEKANNT
       and je["NEU.A"]["gruppe_hinweis"] == "die Aktie steht nicht in der Zuordnungsliste vom 16.09.2026", str(je["NEU.A"]))
-    p("Befund: Status ok, Zahl mit Gruppe und unbekannt", bf["status"] == "ok" and bf["mit_gruppe"] == 7
-      and bf["unbekannt"] == 2 and bf["gruppen_heute"] == 3, str(bf))
+    p("Befund: Status ok, Zahl mit Gruppe und unbekannt, Branche unbekannt unter den Gruppen",
+      bf["status"] == "ok" and bf["mit_gruppe"] == 7 and bf["unbekannt"] == 2 and bf["gruppen_heute"] == 4, str(bf))
 
     # Rang vor sechs Wochen anders als heute: Gruppe B holt auf
     auf = {"A1": ("Gruppe A", 0.002), "B1": ("Gruppe B", 0.0)}
@@ -445,7 +469,7 @@ def selbsttest() -> int:
     je4, liste4, _b4 = gruppen_werte(auszuege, zuordnung, zuordnung_befund={"stand": "2026-09-16"},
                                      ausschluss={"STARK1", "STARK3"})
     p("Ausschluss: die Gruppe zaehlt nur noch die uebrigen Aktien", je4["STARK2"]["gruppe_titel"] == 1
-      and liste4["gruppen"][0]["titel"] == 1)
+      and [z["titel"] for z in liste4["gruppen"] if z["gruppe"] == "Semiconductors"] == [1])
 
     # Ohne Zuordnungsliste: alles nicht verfuegbar mit Grund
     z0, b0 = zuordnung_lesen(None)

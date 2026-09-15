@@ -512,7 +512,7 @@ def technik_saetze(e):
     s.append(("Am letzten Handelstag: " + "; ".join(teile) + ".") if teile else "Eröffnungslücke nicht bekannt.")
     if tk.get("pivot"):
         s.append("Episodic Pivot: Die Eröffnungslücke liegt bei 10 Prozent oder mehr.")
-    s.append(f"Beta gegen SPY über 252 Tage: {zahl(tk['beta'], 2)}." if tk.get("beta") is not None
+    s.append(f"Beta gegen SPY über 252 Handelstage: {zahl(tk['beta'], 2)}." if tk.get("beta") is not None
              else "Beta nicht berechenbar, dafür braucht es 252 Tagesrenditen gemeinsam mit dem Index.")
     teile = [f"RSI {n} bei {zahl(tk[name], 1)}" for n, name in ((14, "rsi14"), (2, "rsi2")) if tk.get(name) is not None]
     s.append(("; ".join(teile) + ".") if teile else "RSI nicht berechenbar.")
@@ -535,10 +535,12 @@ def weinstein_satz(tk):
     linie = (f"die Linie steigt in vier Wochen um {zahl(abs(steig), 1)} Prozent" if steig > 0
              else f"die Linie fällt in vier Wochen um {zahl(abs(steig), 1)} Prozent" if steig < 0
              else "die Linie ist in vier Wochen unverändert")
+    # Gerhard, 15.09.2026, Nachfrage N3: Stufe 2 und 4 nur noch aus der
+    # 30-Wochen-Linie und dem Kurs; die Mansfield RS steht im Satz davor.
     if stufe == 2:
-        return f"Weinstein-Stufe 2: {lage}, {linie}, Mansfield RS über null und steigend."
+        return f"Weinstein-Stufe 2: {lage}, {linie}, die letzten zwei Wochenschlüsse liegen über der Linie."
     if stufe == 4:
-        return f"Weinstein-Stufe 4: {lage}, {linie}, Mansfield RS unter null und fallend."
+        return f"Weinstein-Stufe 4: {lage}, {linie}, die letzten zwei Wochenschlüsse liegen unter der Linie."
     if stufe == 3:
         return f"Weinstein-Stufe 3: 30-Wochen-Linie flach nach einem Anstieg; {lage}."
     if stufe == 1:
@@ -1281,24 +1283,34 @@ def gruppe_saetze(a, grund=None):
     hinweis = a.get("gruppe_hinweis")
     if not g:
         return [f"Branchengruppe nicht verfügbar: {hinweis or 'ohne Angabe'}."]
-    if g == kg.UNBEKANNT:
-        return [f"Branche unbekannt: {hinweis or 'ohne Angabe'}.",
-                "Titel ohne Branche stehen in der Gruppen-Rangliste als eigene Zeile ohne Rang; das betrifft vor allem "
-                "Listungen nach dem Stichtag der Zuordnungsliste."]
-    ebene = a.get("gruppe_ebene") or "GICS-Unterbranche"
-    kopf = f"Branchengruppe laut {ebene}: {g}"
-    if a.get("gruppe_rang") is not None:
-        kopf += (f"; Rang {int(a['gruppe_rang'])}"
-                 + (f" von {int(a['gruppen_zahl'])} Gruppen" if a.get("gruppen_zahl") is not None else "")
-                 + f" am {datum_text(a.get('gruppe_stand'))}"
-                 + (f", vor drei Wochen Rang {int(a['gruppe_rang_3w'])}" if a.get("gruppe_rang_3w") is not None else "")
-                 + (f", vor sechs Wochen Rang {int(a['gruppe_rang_6w'])}" if a.get("gruppe_rang_6w") is not None else ""))
-    s = [kopf + "."]
-    titel = a.get("gruppe_titel")
-    if titel is not None:
-        s.append(f"In die Rechnung gehen {int(titel)} {'Aktie' if int(titel) == 1 else 'Aktien'} der Gruppe mit vollem "
-                 f"RS-Rohwert; Rang 1 hat die Gruppe mit dem höchsten Median der RS-Rohwerte.")
-    if hinweis:
+
+    def da(x):
+        return x is not None and x == x
+
+    # Gerhard, 15.09.2026, Nachfragen N8 und N9: jede Gruppe hat einen Rang,
+    # auch eine mit einer einzigen Aktie und Branche unbekannt, und bei jedem
+    # Rang steht fest, aus wie vielen Aktien er gerechnet ist.
+    unbekannt = g == kg.UNBEKANNT
+    s = [f"Branche unbekannt: {hinweis or 'ohne Angabe'}."] if unbekannt else []
+    teile = [("Sammelgruppe Branche unbekannt, darin die Titel ohne Branche, vor allem Listungen nach dem Stichtag "
+              "der Zuordnungsliste") if unbekannt else f"Branchengruppe laut {a.get('gruppe_ebene') or 'GICS-Unterbranche'}: {g}"]
+    for spalte, spalte_n, wann in (("gruppe_rang", "gruppe_titel", ""), ("gruppe_rang_3w", "gruppe_titel_3w", "vor drei Wochen "),
+                                   ("gruppe_rang_6w", "gruppe_titel_6w", "vor sechs Wochen ")):
+        if not da(a.get(spalte)):
+            continue
+        teil = f"{wann}Rang {int(a[spalte])}"
+        if not wann:
+            teil += ((f" von {int(a['gruppen_zahl'])} Gruppen" if da(a.get("gruppen_zahl")) else "")
+                     + f" am {datum_text(a.get('gruppe_stand'))}")
+        if da(a.get(spalte_n)):
+            n = int(a[spalte_n])
+            teil += f", aus {n} {'Aktie' if n == 1 else 'Aktien'} gerechnet"
+        teile.append(teil)
+    s.append("; ".join(teile) + ".")
+    s.append("Gerechnet wird mit den Aktien der Gruppe, die einen vollen RS-Rohwert haben; Rang 1 hat die Gruppe mit "
+             "dem höchsten Median der RS-Rohwerte. Jede Gruppe bekommt einen Rang, auch eine mit einer einzigen Aktie; "
+             "deshalb steht bei jedem Rang, aus wie vielen Aktien er gerechnet ist.")
+    if hinweis and not unbekannt:
         h = str(hinweis)
         s.append(h[:1].upper() + h[1:] + ".")
     if a.get("gruppe_zuordnung_stand"):
@@ -1813,13 +1825,13 @@ def selbsttest() -> int:
         "Up/Down-Volumen über 50 Tage: 1,34; über 1 überwiegt das Volumen an Plus-Tagen.",
         "Mansfield RS gegen SPY: plus 12,3, vor vier Wochen plus 8,1, also steigend.",
         "Weinstein-Stufe 2: Kurs 5,2 Prozent über der 30-Wochen-Linie, die Linie steigt in vier Wochen um 2,1 Prozent, "
-        "Mansfield RS über null und steigend.",
+        "die letzten zwei Wochenschlüsse liegen über der Linie.",
         "Momentum Burst nach Stockbee am letzten Handelstag: plus 5,2 Prozent bei höherem Volumen als am Vortag; "
         "Schluss bei 85 Prozent der Tagesspanne; Vortag minus 0,8 Prozent bei 2,1 Prozent Spanne.",
         "Am letzten Handelstag: Eröffnungslücke plus 11,0 Prozent; seit Eröffnung minus 0,5 Prozent; "
         "Volumen 4,2 mal so hoch wie der 50-Tage-Schnitt.",
         "Episodic Pivot: Die Eröffnungslücke liegt bei 10 Prozent oder mehr.",
-        "Beta gegen SPY über 252 Tage: 1,35.",
+        "Beta gegen SPY über 252 Handelstage: 1,35.",
         "RSI 14 bei 62,5; RSI 2 bei 91,0.",
         "Durchschnittsvolumen über drei Monate 1.234.567 Stück je Tag; Dollarvolumen über 20 Tage 45,6 Millionen Dollar je Tag.",
         "Reine Anzeige: Keine dieser Kennzahlen filtert."]
@@ -2041,22 +2053,31 @@ def selbsttest() -> int:
     # Etappe 6: Branchengruppe
     zeile_g = {"gruppe": "Semiconductors", "gruppe_ebene": "GICS-Unterbranche", "gruppe_rang": 12.0,
                "gruppe_rang_3w": 20.0, "gruppe_rang_6w": None, "gruppen_zahl": 158.0, "gruppe_titel": 42.0,
+               "gruppe_titel_3w": 41.0, "gruppe_titel_6w": None,
                "gruppe_stand": "2026-09-14", "gruppe_zuordnung_stand": "2026-09-16",
                "gruppe_hinweis": "der Rang vor sechs Wochen fehlt, die Kurshistorie kennt erst 20 Handelstage"}
     gt = gruppe_saetze(zeile_g, "")
-    p("Branchengruppe: Rang von N am Tag, vor drei Wochen, fehlender Rang mit Grund, Liste, kein Filter",
-      gt == ["Branchengruppe laut GICS-Unterbranche: Semiconductors; Rang 12 von 158 Gruppen am 14.09.2026, vor drei "
-             "Wochen Rang 20.",
-             "In die Rechnung gehen 42 Aktien der Gruppe mit vollem RS-Rohwert; Rang 1 hat die Gruppe mit dem höchsten "
-             "Median der RS-Rohwerte.",
+    p("Branchengruppe: Rang von N am Tag, vor drei Wochen, je mit Zahl der Aktien, fehlender Rang mit Grund, Liste, "
+      "kein Filter",
+      gt == ["Branchengruppe laut GICS-Unterbranche: Semiconductors; Rang 12 von 158 Gruppen am 14.09.2026, aus 42 "
+             "Aktien gerechnet; vor drei Wochen Rang 20, aus 41 Aktien gerechnet.",
+             "Gerechnet wird mit den Aktien der Gruppe, die einen vollen RS-Rohwert haben; Rang 1 hat die Gruppe mit "
+             "dem höchsten Median der RS-Rohwerte. Jede Gruppe bekommt einen Rang, auch eine mit einer einzigen Aktie; "
+             "deshalb steht bei jedem Rang, aus wie vielen Aktien er gerechnet ist.",
              "Der Rang vor sechs Wochen fehlt, die Kurshistorie kennt erst 20 Handelstage.",
              "Die Gruppe stammt aus der eigenen Zuordnungsliste vom 16.09.2026.",
              "Entscheidungshilfe, kein Filter."], str(gt))
-    gu = gruppe_saetze({"gruppe": "Branche unbekannt", "gruppe_hinweis": "die Aktie steht nicht in der "
-                                                                        "Zuordnungsliste vom 16.09.2026"}, "")
-    p("Branchengruppe: unbekannt mit Grund und ohne Rang", gu[0] == "Branche unbekannt: die Aktie steht nicht in der "
-                                                              "Zuordnungsliste vom 16.09.2026." and "ohne Rang" in gu[1],
-      str(gu))
+    gu = gruppe_saetze({"gruppe": "Branche unbekannt", "gruppe_rang": 150.0, "gruppen_zahl": 165.0, "gruppe_titel": 212.0,
+                        "gruppe_rang_3w": float("nan"), "gruppe_titel_3w": float("nan"), "gruppe_stand": "2026-09-14",
+                        "gruppe_hinweis": "die Aktie steht nicht in der Zuordnungsliste vom 16.09.2026"}, "")
+    p("Branchengruppe: unbekannt mit Grund und mit Rang samt Zahl der Aktien (Nachfrage N9)",
+      gu[0] == "Branche unbekannt: die Aktie steht nicht in der Zuordnungsliste vom 16.09.2026."
+      and gu[1] == ("Sammelgruppe Branche unbekannt, darin die Titel ohne Branche, vor allem Listungen nach dem Stichtag "
+                    "der Zuordnungsliste; Rang 150 von 165 Gruppen am 14.09.2026, aus 212 Aktien gerechnet.")
+      and gu[-1] == "Entscheidungshilfe, kein Filter." and not any("ohne Rang" in x for x in gu), str(gu))
+    g1 = gruppe_saetze({"gruppe": "Gold", "gruppe_rang": 3.0, "gruppe_titel": 1.0, "gruppe_stand": "2026-09-14"}, "")
+    p("Branchengruppe: eine Gruppe mit einer einzigen Aktie hat einen Rang und sagt es (Nachfrage N8)",
+      g1[0] == "Branchengruppe laut GICS-Unterbranche: Gold; Rang 3 am 14.09.2026, aus 1 Aktie gerechnet.", str(g1))
     gn = gruppe_saetze({"gruppe": None, "gruppe_hinweis": "die eigene Zuordnungsliste der Branchen liegt noch nicht vor"},
                        "")
     p("Branchengruppe: ohne Zuordnungsliste nicht verfuegbar", gn == ["Branchengruppe nicht verfügbar: die eigene "

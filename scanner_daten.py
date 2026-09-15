@@ -1993,9 +1993,12 @@ def selbsttest() -> int:
           and a_aaa["gruppe_rang_6w"] == 1 and a_bbb["gruppe_rang"] == 2 and a_aaa["gruppen_zahl"] == 2
           and "gruppe" not in t.columns and st["quellen"]["gruppen_rs"]["status"] == "ok",
           f"{a_aaa['gruppe']} {a_aaa['gruppe_rang']}, {a_bbb['gruppe']} {a_bbb['gruppe_rang']}, {st['quellen']['gruppen_rs']}")
-        p("Gruppen-RS: Aktie ohne Eintrag heisst Branche unbekannt und nennt die Liste",
-          a_ccc["gruppe"] == kg.UNBEKANNT and pd.isna(a_ccc["gruppe_rang"])
-          and a_ccc["gruppe_hinweis"] == "die Aktie steht nicht in der Zuordnungsliste vom 16.09.2026", str(a_ccc["gruppe_hinweis"]))
+        p("Gruppen-RS: Aktie ohne Eintrag heisst Branche unbekannt, nennt die Liste und, weil ihre 40 Tage keinen "
+          "Rohwert tragen, warum auch die Sammelgruppe heute keinen Rang hat (Nachfrage N9)",
+          a_ccc["gruppe"] == kg.UNBEKANNT and pd.isna(a_ccc["gruppe_rang"]) and a_aaa["gruppen_zahl"] == 2
+          and str(a_ccc["gruppe_hinweis"]).startswith("die Aktie steht nicht in der Zuordnungsliste vom 16.09.2026; "
+                                                     "der Rang heute fehlt, am ")
+          and "trug keine Aktie der Gruppe einen Rohwert" in str(a_ccc["gruppe_hinweis"]), str(a_ccc["gruppe_hinweis"]))
         g2 = json.load(open(pfad_g, encoding="utf-8"))
         p("Gruppen-RS: zweite Nacht ohne Zuordnungsliste nicht verfuegbar, Rangliste leer statt der Vornacht",
           pd.isna(a2_aaa["gruppe_rang"]) and a2_aaa["gruppe_hinweis"] == "die eigene Zuordnungsliste der Branchen liegt "

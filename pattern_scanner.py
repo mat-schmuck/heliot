@@ -1380,12 +1380,13 @@ def _logbuch_zusatz(ticker) -> dict:
 # Kennzahlen aus rs_universum.json in eigenen Spalten VOR "Notizen", NUR
 # ANZEIGE. Jeder Leser der Mappe greift ueber den Spaltennamen zu; die leere
 # Vorlage des Wochenputzes (kaufpunkte_leer.xlsx) traegt dieselben Spalten,
-# das prueft die Gesamtpruefung.
+# das prueft die Gesamtpruefung. "Beta 252T": Gerhard, 15.09.2026, Nachfrage N4, die
+# Zahl nennt die 252 Handelstage, ueber die sie gerechnet ist (Finviz: 60 Monate).
 TECHNIK_KOEPFE = ["ADR 20 %", "Volatilität Woche %", "Volatilität Monat %", "ATR 14 %", "Up/Down-Vol. 50", "Mansfield RS", "Weinstein-Stufe",
                   "Momentum Burst", "Lücke %", "Episodic Pivot", "Perf. 1W %", "Perf. 1M %", "Perf. 3M %",
                   "Perf. 6M %", "Perf. 12M %", "Perf. lfd. Jahr %", "Abst. SMA20 %", "Abst. SMA50 %",
                   "Abst. SMA200 %", "Abst. 50T-Hoch %", "Abst. 50T-Tief %", "Abst. 52W-Tief %", "Allzeithoch",
-                  "Abst. Allzeithoch %", "Beta", "RSI 14", "RSI 2", "Vol. 3M", "Dollarvol. 20T", "RS Änd. 1W",
+                  "Abst. Allzeithoch %", "Beta 252T", "RSI 14", "RSI 2", "Vol. 3M", "Dollarvol. 20T", "RS Änd. 1W",
                   "RS Änd. 4W"]
 MAPPEN_KOEPFE = (["Ticker", "Firma", "Kurs", "52W-Hoch", "52W-Tief", "Abst. 52W-Hoch",
                   "RS-Rank", "RS Nasdaq", "Trend Template", "Umsatzwachstum", "Gewinnwachstum",
@@ -1517,7 +1518,8 @@ def write_excel(rows: list[dict], out_path: str):
                           "(Regelwerk). RS-Rank = Perzentil innerhalb der gescannten Liste."])
     lg.append(["Kennzahlen", "Spalten von ADR 20 bis RS Änd. 4W: technische Kennzahlen aus den Tageskursen, "
                "Entscheidungshilfen, reine Anzeige, keine davon filtert (Gerhard, 13.09.2026). Prozentwerte in "
-               "Prozentpunkten; Allzeithoch aus der ganzen Kurshistorie; Weinstein-Stufe nach festen Regeln"])
+               "Prozentpunkten; Allzeithoch aus der ganzen Kurshistorie; Weinstein-Stufe nach festen Regeln "
+               "aus 30-Wochen-Linie und Kurs; Beta 252T gegen SPY über 252 Handelstage"])
     lg["A1"].fill = HEAD; lg["B1"].fill = HEAD
     lg["A1"].font = Font(bold=True, color="FFFFFF"); lg["B1"].font = Font(bold=True, color="FFFFFF")
     lg["A2"].fill = GREEN; lg["A3"].fill = YELLOW; lg["A4"].fill = GREY

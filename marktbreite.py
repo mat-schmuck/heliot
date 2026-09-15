@@ -25,9 +25,11 @@ AUS DEN INDIZES (je S&P 500 und Nasdaq, Yahoo mit Volumen)
   Distribution Day (Papier 4.4 Punkt 6, IBD): Schluss mindestens 0,2 Prozent
       unter dem Vortag bei hoeherem Volumen als am Vortag.
   Stalling Day (ebenda): hoeheres Volumen als am Vortag und ein Gewinn unter
-      0,2 Prozent; ein Tag ohne Veraenderung zaehlt mit. Ein Verlust zwischen
-      0 und 0,2 Prozent bei hoeherem Volumen ist nach dem Wortlaut weder das
-      eine noch das andere und wird nicht gezaehlt.
+      0,2 Prozent; ein Tag ohne Veraenderung zaehlt mit. Ebenso ein Verlust
+      unter 0,2 Prozent bei hoeherem Volumen: Gerhard, 15.09.2026, Nachfrage
+      N5, "JA, ein kleiner Verlust bei hoeherem Volumen zaehlt als Stalling
+      Day"; er ist schwaecher als ein kleiner Gewinn bei hoeherem Volumen, der
+      schon zaehlt. Bis dahin zaehlte er nirgends.
   Beide zaehlen 25 Sitzungen lang, heute eingeschlossen, und verfallen
       frueher, sobald der Index danach 5 Prozent ueber dem Schluss dieses
       Tages handelt (Tageshoch). Die Zaehlung nennt beide zusammen; ab 4 heisst
@@ -39,10 +41,18 @@ AUS DEN INDIZES (je S&P 500 und Nasdaq, Yahoo mit Volumen)
       beginnt die Zaehlung neu; ein tieferer Schluss allein beendet den
       Versuch nicht. Der Follow-through Day ist ungueltig, sobald der Index
       sein Tagestief unterschreitet.
-      WANN EIN TIEF ZAEHLT, nennt IBD nicht in Zahlen. Eigene Festlegung: ein
-      Schluss unter der 50-Tage-Linie, der zugleich der tiefste Schluss der
-      letzten 25 Sitzungen ist. Die 50-Tage-Linie ist dieselbe wie in der
-      Marktampel.
+      WANN EIN TIEF ZAEHLT, nennt IBD nicht in Zahlen. Gerhard, 15.09.2026,
+      Nachfrage N6, "JA, so gilt es": ein Schluss unter der 50-Tage-Linie,
+      der zugleich der tiefste Schluss der letzten 25 Sitzungen ist. Die
+      50-Tage-Linie ist dieselbe wie in der Marktampel.
+      NACH EINEM GESCHEITERTEN FOLLOW-THROUGH DAY: Gerhard, 15.09.2026,
+      Nachfrage N7, "JA, nach einem gescheiterten Follow-through Day zaehlt
+      schon vor einem neuen Tief ein neuer Erholungsversuch." Der Tag, an dem
+      der Index das Tagestief des Follow-through Day unterschreitet, tritt an
+      die Stelle des Tiefs: Mit dem ersten hoeheren Schluss danach beginnt
+      der neue Erholungsversuch (Tag 1), und wieder beginnt die Zaehlung neu,
+      sobald der Index das Tagestief dieses Tages unterschreitet. Bis dahin
+      kam ein neuer Erholungsversuch erst nach einem neuen Tief.
 
 AUS DEM UNIVERSUM (die Stammaktien des RS-Bezugs; Titel mit unbereinigtem
 Split zaehlen nicht mit)
@@ -121,7 +131,9 @@ def distribution_days(daten, highs, closes, volumes, fenster=None, verlust_pct=N
         pct = round((c / c1 - 1.0) * 100.0, 6)
         if pct <= -verlust_pct:
             art = "distribution"
-        elif 0.0 <= pct < stall_pct:
+        elif pct < stall_pct:
+            # Gewinn unter stall_pct oder, seit Nachfrage N5, Verlust unter
+            # verlust_pct; beides bei hoeherem Volumen.
             art = "stalling"
         else:
             continue
@@ -150,7 +162,12 @@ def follow_through(daten, lows, closes, volumes, linie=None, tief_fenster=None, 
       zustand       "bestaetigt" (Follow-through Day nach dem letzten Tief),
                     "erholungsversuch", "korrektur" (Tief ohne
                     Erholungsversuch) oder "keine" (kein Tief in der Reihe)
-      korrektur_tag Tag des letzten Tiefs
+      korrektur_tag Tag des letzten Tiefs; nach einem gescheiterten
+                    Follow-through Day der Tag, an dem er scheiterte, oder ein
+                    spaeterer Tag mit tieferem Tagestief
+      versuch_grund "tief" (der Zyklus beginnt mit einem Tief) oder
+                    "ftd_gescheitert" (er beginnt mit dem Scheitern des
+                    Follow-through Day, Nachfrage N7); None ohne Zyklus
       tag1          Tag 1 des laufenden Erholungsversuchs; versuch_tag dessen
                     Zaehler heute
       ftd_tag, ftd_pct, ftd_gescheitert, ftd_gescheitert_tag  der juengste
@@ -160,27 +177,36 @@ def follow_through(daten, lows, closes, volumes, linie=None, tief_fenster=None, 
     ab_tag = int(ab_tag or CFGB["ftd_ab_tag"])
     gewinn_pct = float(CFGB["ftd_gewinn_pct"] if gewinn_pct is None else gewinn_pct)
     n = len(closes)
-    raus = {"zustand": "keine", "korrektur_tag": None, "tag1": None, "versuch_tag": None,
+    raus = {"zustand": "keine", "korrektur_tag": None, "versuch_grund": None, "tag1": None, "versuch_tag": None,
             "ftd_tag": None, "ftd_pct": None, "ftd_gescheitert": None, "ftd_gescheitert_tag": None}
     if n < linie + 1 or any(not _ok(x) for x in closes) or any(not _ok(x) for x in lows):
         return raus
     sma = _sma_reihe(closes, linie)
     korr = None        # (Index, Tagestief) des Tiefs
+    grund = None       # "tief" oder "ftd_gescheitert"
     tag1 = None
     zyklus_ftd = None  # Follow-through Day seit diesem Tief
     ftd = None         # (Index, Tagestief, Prozent) des juengsten
     gescheitert = None
     for t in range(max(linie, tief_fenster), n):
-        if ftd is not None and gescheitert is None and t > ftd[0] and lows[t] < ftd[1]:
-            gescheitert = t
         c = closes[t]
         neues_tief = sma[t] is not None and c < sma[t] and c <= min(closes[t - tief_fenster + 1:t + 1])
+        if ftd is not None and gescheitert is None and t > ftd[0] and lows[t] < ftd[1]:
+            gescheitert = t
+            if zyklus_ftd is not None:
+                # Nachfrage N7: Scheitert der Follow-through Day des
+                # laufenden Zyklus, beginnt von diesem Tag an ein neuer.
+                korr, tag1, zyklus_ftd = (t, lows[t]), None, None
+                grund = "tief" if neues_tief else "ftd_gescheitert"
+                continue
         if korr is None or zyklus_ftd is not None:
             if neues_tief:
-                korr, tag1, zyklus_ftd = (t, lows[t]), None, None
+                korr, tag1, zyklus_ftd, grund = (t, lows[t]), None, None, "tief"
             continue
         if lows[t] < korr[1]:
             korr, tag1 = (t, lows[t]), None
+            if neues_tief:
+                grund = "tief"
             continue
         if tag1 is None:
             if c > closes[t - 1]:
@@ -194,6 +220,7 @@ def follow_through(daten, lows, closes, volumes, linie=None, tief_fenster=None, 
                 gescheitert = None
     if korr is not None:
         raus["korrektur_tag"] = str(daten[korr[0]])[:10]
+        raus["versuch_grund"] = grund
         if zyklus_ftd is not None:
             raus["zustand"] = "bestaetigt"
         elif tag1 is not None:
@@ -465,6 +492,18 @@ def phase_text(info):
                          f"{_datum_de(ph.get('ftd_gescheitert_tag'))}")
         else:
             teile.append(f"Follow-through Day am {_datum_de(ph['ftd_tag'])} mit {_vz(ph.get('ftd_pct'), 2)} Prozent")
+    elif z in ("erholungsversuch", "korrektur") and ph.get("versuch_grund") == "ftd_gescheitert" and ph.get("ftd_tag"):
+        # Nachfrage N7: der neue Zyklus beginnt mit dem Scheitern.
+        s = (f"Follow-through Day vom {_datum_de(ph['ftd_tag'])} gescheitert am "
+             f"{_datum_de(ph.get('ftd_gescheitert_tag'))}")
+        spaeter = ph.get("korrektur_tag") and ph.get("korrektur_tag") != ph.get("ftd_gescheitert_tag")
+        if z == "erholungsversuch":
+            s += (f", neuer Erholungsversuch am Tag {int(ph.get('versuch_tag') or 0)} seit dem Tagestief vom "
+                  f"{_datum_de(ph.get('korrektur_tag'))}")
+        else:
+            s += (f", tieferes Tagestief am {_datum_de(ph['korrektur_tag'])}" if spaeter else "")
+            s += ", noch kein neuer Erholungsversuch"
+        teile.append(s)
     elif z == "erholungsversuch":
         teile.append(f"Erholungsversuch am Tag {int(ph.get('versuch_tag') or 0)} seit dem Tief vom "
                      f"{_datum_de(ph.get('korrektur_tag'))}")
@@ -594,19 +633,21 @@ def selbsttest() -> int:
     c[10], v[10] = 99.7, 1200.0          # minus 0,3 Prozent, mehr Volumen: Distribution Day
     c[12], v[12] = 99.5, 900.0           # weniger Volumen: nichts
     c[18], v[18] = 100.1, 1100.0         # plus 0,1 Prozent, mehr Volumen: Stalling Day
-    c[20], v[20] = 99.85, 1300.0         # minus 0,15 Prozent: weder noch
+    c[20], v[20] = 99.85, 1300.0         # minus 0,15 Prozent, mehr Volumen: seit Nachfrage N5 Stalling Day
     c[25], v[25] = 99.0, 1500.0          # Distribution Day
     dd = distribution_days(t30, h, c, v, fenster=25, verlust_pct=0.2, verfall_pct=5.0, stall_pct=0.2)
     p("Distribution Days ab minus 0,2 Prozent und Stalling Days unter plus 0,2 Prozent, beide bei hoeherem "
-      "Volumen, nur in 25 Sitzungen; minus 0,15 Prozent zaehlt nirgends",
-      dd == [(t30[10], -0.3, "distribution"), (t30[18], 0.1, "stalling"), (t30[25], -1.0, "distribution")], dd)
+      "Volumen, nur in 25 Sitzungen; minus 0,15 Prozent ist seit Nachfrage N5 ein Stalling Day",
+      dd == [(t30[10], -0.3, "distribution"), (t30[18], 0.1, "stalling"), (t30[20], -0.15, "stalling"),
+             (t30[25], -1.0, "distribution")], dd)
     h2 = list(h)
     h2[15] = 99.7 * 1.051
     p("Distribution Days: verfallen, sobald ein Tageshoch danach 5 Prozent ueber dem Schluss liegt",
-      [x[0] for x in distribution_days(t30, h2, c, v, 25, 0.2, 5.0, 0.2)] == [t30[18], t30[25]])
+      [x[0] for x in distribution_days(t30, h2, c, v, 25, 0.2, 5.0, 0.2)] == [t30[18], t30[20], t30[25]])
     p("Distribution Days: aelter als das Fenster zaehlt nicht",
-      [x[0] for x in distribution_days(t30, h, c, v, 12, 0.2, 5.0, 0.2)] == [t30[18], t30[25]]
-      and [x[0] for x in distribution_days(t30, h, c, v, 11, 0.2, 5.0, 0.2)] == [t30[25]])
+      [x[0] for x in distribution_days(t30, h, c, v, 12, 0.2, 5.0, 0.2)] == [t30[18], t30[20], t30[25]]
+      and [x[0] for x in distribution_days(t30, h, c, v, 11, 0.2, 5.0, 0.2)] == [t30[20], t30[25]]
+      and [x[0] for x in distribution_days(t30, h, c, v, 9, 0.2, 5.0, 0.2)] == [t30[25]])
     # Follow-through Day
     n = 120
     tage = _handelstage(n)
@@ -640,6 +681,28 @@ def selbsttest() -> int:
     ph3 = follow_through(tage, lows_bruch, closes, vols, 50, 25, 4, 1.25)
     p("Follow-through Day: gescheitert, sobald der Index das Tagestief des Tages unterschreitet",
       ph3["ftd_gescheitert"] is True and ph3["ftd_gescheitert_tag"] == tage[ftd_i + 3], ph3)
+    p("Follow-through Day gescheitert: ohne neues Tief beginnt mit dem naechsten hoeheren Schluss ein neuer "
+      "Erholungsversuch (Nachfrage N7)",
+      ph3["zustand"] == "erholungsversuch" and ph3["versuch_grund"] == "ftd_gescheitert"
+      and ph3["korrektur_tag"] == tage[ftd_i + 3] and ph3["tag1"] == tage[ftd_i + 4]
+      and ph3["versuch_tag"] == n - (ftd_i + 4), ph3)
+    closes_neu = list(closes)
+    for i in range(ftd_i + 8, n):
+        closes_neu[i] = closes[i] * 1.016
+    vols_neu = list(vols)
+    vols_neu[ftd_i + 8] = 1600.0
+    ph3b = follow_through(tage, lows_bruch, closes_neu, vols_neu, 50, 25, 4, 1.25)
+    p("Follow-through Day gescheitert: im neuen Erholungsversuch zaehlt ab Tag 4 ein neuer Follow-through Day",
+      ph3b["zustand"] == "bestaetigt" and ph3b["ftd_tag"] == tage[ftd_i + 8] and ph3b["ftd_gescheitert"] is False
+      and ph3b["versuch_grund"] == "ftd_gescheitert", ph3b)
+    lows_zweimal = list(lows_bruch)
+    lows_zweimal[ftd_i + 6] = lows_bruch[ftd_i + 3] * 0.99
+    ph3c = follow_through(tage[:ftd_i + 7], lows_zweimal[:ftd_i + 7], closes[:ftd_i + 7], vols[:ftd_i + 7],
+                          50, 25, 4, 1.25)
+    p("Follow-through Day gescheitert: unterschreitet der Index danach das Tagestief des Scheiterns, beginnt die "
+      "Zaehlung neu",
+      ph3c["zustand"] == "korrektur" and ph3c["korrektur_tag"] == tage[ftd_i + 6]
+      and ph3c["versuch_grund"] == "ftd_gescheitert", ph3c)
     closes_frueh = list(closes)
     closes_frueh[tief + 3] = closes[tief + 2] * 1.02
     vols_frueh = [1000.0] * n
@@ -747,6 +810,17 @@ def selbsttest() -> int:
     p("Phase: keiner, fehlendes Volumen, Tief ohne Erholungsversuch",
       pt3 == "kein Distribution Day in 25 Sitzungen, Volumen des letzten Tages fehlt, Tief vom 08.09.2026, "
              "noch kein Erholungsversuch", pt3)
+    gesch = {"ftd_tag": "2026-08-27", "ftd_pct": 1.4, "ftd_gescheitert": True, "ftd_gescheitert_tag": "2026-08-31",
+             "versuch_grund": "ftd_gescheitert"}
+    pt4 = phase_text({"distribution_days": [], "dd_fenster": 25,
+                      "phase": dict(gesch, zustand="erholungsversuch", versuch_tag=5, korrektur_tag="2026-08-31")})
+    pt5 = phase_text({"distribution_days": [], "dd_fenster": 25,
+                      "phase": dict(gesch, zustand="korrektur", korrektur_tag="2026-09-03")})
+    p("Phase: neuer Erholungsversuch nach gescheitertem Follow-through Day, und noch keiner (Nachfrage N7)",
+      pt4 == "kein Distribution Day in 25 Sitzungen, Follow-through Day vom 27.08.2026 gescheitert am 31.08.2026, "
+             "neuer Erholungsversuch am Tag 5 seit dem Tagestief vom 31.08.2026"
+      and pt5 == "kein Distribution Day in 25 Sitzungen, Follow-through Day vom 27.08.2026 gescheitert am 31.08.2026, "
+                 "tieferes Tagestief am 03.09.2026, noch kein neuer Erholungsversuch", f"{pt4} / {pt5}")
     bz = bericht_zeilen({**b, "hochs_tiefs_mittel": 12.5})
     p("Bericht: Breite je Zeile, Stockbee ganz",
       bz[0].startswith("Marktbreite: 7 Steiger, 3 Faller, 0 unverändert; A/D-Linie über 10 Tage plus")

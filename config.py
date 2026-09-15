@@ -809,16 +809,18 @@ CFG = {
         "dd_fenster": 25,
         "dd_verfall_pct": 5.0,
         # Stalling Day (ebenda): Gewinn unter so vielen Prozent bei hoeherem
-        # Volumen als am Vortag; zaehlt wie ein Distribution Day.
+        # Volumen als am Vortag, seit Gerhards Nachfrage N5 vom 15.09.2026
+        # auch ein kleinerer Verlust als dd_verlust_pct; zaehlt wie ein
+        # Distribution Day.
         "stalling_gewinn_pct": 0.2,
         # Zaehlung nach IBD (ebenda): ab 4 unter Druck, ab 6 Korrektur.
         "dd_druck_ab": 4,
         "dd_korrektur_ab": 6,
         # Follow-through Day (Papier 4.4 Punkt 7): ab dem vierten Tag des
         # Erholungsversuchs ein Anstieg von mindestens 1,25 Prozent bei
-        # hoeherem Volumen. Ein Tief zaehlt (eigene Festlegung, IBD nennt
-        # keine Zahl) bei einem Schluss unter der 50-Tage-Linie, der der
-        # tiefste der letzten 25 Sitzungen ist.
+        # hoeherem Volumen. Ein Tief zaehlt (Gerhard, 15.09.2026, Nachfrage
+        # N6; IBD nennt keine Zahl) bei einem Schluss unter der
+        # 50-Tage-Linie, der der tiefste der letzten 25 Sitzungen ist.
         "ftd_ab_tag": 4,
         "ftd_gewinn_pct": 1.25,
         "ftd_linie_tage": 50,
