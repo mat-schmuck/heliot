@@ -25,12 +25,13 @@ on:
   workflow_dispatch:
     inputs:
       modus:
-        description: "inventur (zaehlen, Listen und Kalender holen, Groessen messen), voll (Fundamentals je Symbol in Vorrangfolge) oder trends (Konsens aller aktiven Aktien, 1 Call je 100 Symbole)"
+        description: "inventur (zaehlen, Listen und Kalender holen, Groessen messen), voll (Fundamentals je Symbol in Vorrangfolge), trends (Konsens aller aktiven Aktien, laut Konto 1 Call je Symbol) oder tarif (je Endpunkt der Doku eine kleine Probe samt Kosten laut Konto)"
         type: choice
         options:
           - inventur
           - voll
           - trends
+          - tarif
         default: voll
       stufen:
         description: "voll: Stufen mit Beistrich (delisted_stock,stock_boerse,stock_otc,etf,fund,sonstige,delisted_rest,index,makro); leer = alle in Vorrangfolge"

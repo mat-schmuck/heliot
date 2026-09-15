@@ -39,6 +39,7 @@ fuer die Bilanz):
   python eodhd_voll.py --daten daten --modus inventur
   python eodhd_voll.py --daten daten --modus voll [--stufen a,b] [--hoechstens N]
                        [--zeitgrenze-min 300]
+  python eodhd_voll.py --daten daten --modus tarif    (je Endpunkt eine kleine Probe)
   python eodhd_voll.py --selbsttest
 """
 import argparse
@@ -73,18 +74,29 @@ TYP_STAMM = {"common stock"}
 TYP_ETF = {"etf"}
 TYP_FONDS = {"fund", "mutual fund"}
 
-# Reihenfolge = Vorrang. Gerhard: zuerst die delisteten Firmen.
+# Reihenfolge = Vorrang. Gerhard (12.09.2026): zuerst die delisteten Firmen.
+# Gerhard (15.09.2026, "Zieh alles ab"): Vorrang erstens alles zu delisteten
+# Firmen, weil das spaeter nie wieder zu bekommen ist, zweitens die
+# historischen Konsensdaten, drittens Branche und Typ. Deshalb steht der
+# delistete Rest seither direkt hinter den Boersenaktien und vor dem
+# Freiverkehr; darin kommen die Wertpapiere von Firmen (Vorzugsaktien,
+# Einheiten, Optionsscheine, Anleihen) vor den delisteten ETFs und Fonds
+# (DELISTED_REST_VORRANG). Die Konsens-Historie steckt in den Fundamentals
+# der Aktien (Earnings::History und Earnings::Trend) und im Ergebniskalender.
 STUFEN = [
     ("delisted_stock", "delistete Aktien (Common Stock)"),
     ("stock_boerse", "aktive Aktien an NYSE, Nasdaq, NYSE Arca, NYSE American, Cboe"),
+    ("delisted_rest", "delistete Vorzugsaktien, Einheiten, Optionsscheine, Anleihen, ETFs und Fonds"),
     ("stock_otc", "aktive Aktien im Freiverkehr (OTC, Pink Sheets und andere)"),
+    ("sonstige", "aktive Vorzugsaktien, Optionsscheine, Einheiten, Rechte, Anleihen"),
     ("etf", "aktive ETFs"),
     ("fund", "aktive Fonds"),
-    ("sonstige", "aktive Vorzugsaktien, Optionsscheine, Einheiten, Rechte, Anleihen"),
-    ("delisted_rest", "delistete ETFs, Fonds, Vorzugsaktien und Uebriges"),
     ("index", "Indizes mit Komponenten und Mitgliedschaftsgeschichte"),
     ("makro", "Makro-Indikatoren je Land"),
 ]
+# Innerhalb des delisteten Rests: kleinere Zahl zuerst; unbekannte Typen
+# zaehlen wie Wertpapiere von Firmen.
+DELISTED_REST_VORRANG = {"etf": 1, "fund": 2, "mutual fund": 2}
 STUFEN_NAMEN = [s for s, _ in STUFEN]
 
 MAKRO_LAENDER = ["USA", "CAN", "GBR", "DEU", "FRA", "ITA", "ESP", "NLD", "CHE", "AUT", "SWE", "DNK",
@@ -313,6 +325,7 @@ def einordnen(aktiv, delisted):
         stufen["delisted_stock" if _typ(e) in TYP_STAMM else "delisted_rest"].append(eintrag)
     for s in stufen:
         stufen[s].sort(key=lambda x: x["Code"].upper())
+    stufen["delisted_rest"].sort(key=lambda x: DELISTED_REST_VORRANG.get(_typ(x), 0))
     return stufen
 
 
@@ -867,6 +880,193 @@ def lauf_trends(daten, token, fetcher=None, warte=time.sleep, log=print, je_anfr
 
 
 # ---------------------------------------------------------------------------
+# Tarif-Probe: was gibt der Zugang wirklich her?
+# ---------------------------------------------------------------------------
+
+# Felder des Kontos, die ausgegeben werden duerfen. Nie name, email,
+# paymentMethod oder inviteToken: die Logs des Repos heliot sind oeffentlich.
+KONTO_FELDER_TARIF = KONTO_FELDER + ("subscriptionMode", "availableDataFeeds")
+
+
+def konto_tarif(token, fetcher=None, warte=time.sleep):
+    """Tarif samt freigeschalteter Datenfeeds (Endpunkt internal-user, laut
+    Doku 0 Calls). Marketplace nur mit Grenze und Namen der Abos."""
+    status, d, _, _ = abruf_json("internal-user", token, fetcher=fetcher, warte=warte)
+    if status != 200 or not isinstance(d, dict):
+        # Aeltere Schreibweise desselben Endpunkts, mit der der Vollabzug arbeitet.
+        status, d, _, _ = abruf_json("user", token, fetcher=fetcher, warte=warte)
+    if status != 200 or not isinstance(d, dict):
+        return status, {}
+    aus = {k: d.get(k) for k in KONTO_FELDER_TARIF if k in d}
+    mp = d.get("availableMarketplaceDataFeeds")
+    if isinstance(mp, dict):
+        aus["marketplace"] = {"dailyRateLimit": mp.get("dailyRateLimit"), "subscriptions": mp.get("subscriptions")}
+    return status, aus
+
+
+def tarif_proben(heute):
+    """Je Endpunkt der Doku (llms-full.txt, gelesen 15.09.2026) eine kleine
+    Anfrage: (Name, Pfad, Parameter, erwartete Calls laut Doku). Die Zeitraeume
+    sind klein gehalten; eine gescheiterte Anfrage kostet laut Doku nichts."""
+    t = heute
+    gestern = (t - dt.timedelta(days=1)).isoformat()
+    vor_woche = (t - dt.timedelta(days=7)).isoformat()
+    tag_eins = dt.datetime(t.year, t.month, 1, 14, tzinfo=dt.timezone.utc)
+    von_unix, bis_unix = int(tag_eins.timestamp()), int((tag_eins + dt.timedelta(hours=6)).timestamp())
+    return [
+        ("eod", "eod/AAPL.US", {"from": vor_woche, "to": gestern}, 1),
+        ("eod_delistet", "eod/ATVI.US", {"from": "2023-01-02", "to": "2023-01-06"}, 1),
+        ("div", "div/AAPL.US", {"from": "2025-01-01"}, 1),
+        ("splits", "splits/AAPL.US", {"from": "2020-01-01"}, 1),
+        ("intraday", "intraday/AAPL.US", {"interval": "1h", "from": von_unix, "to": bis_unix}, 5),
+        ("real_time", "real-time/AAPL.US", {}, 1),
+        ("us_quote_delayed", "us-quote-delayed", {"s": "AAPL.US"}, 1),
+        ("technical", "technical/AAPL.US", {"function": "sma", "period": 50, "from": vor_woche, "to": gestern}, 5),
+        ("screener", "screener", {"limit": 1}, 5),
+        ("historical_market_cap", "historical-market-cap/AAPL.US", {"from": "2026-01-01"}, 10),
+        ("bulk_eod_splits", "eod-bulk-last-day/US", {"type": "splits"}, 100),
+        ("bulk_fundamentals", "bulk-fundamentals/NASDAQ", {"symbols": "AAPL.US"}, 101),
+        ("fundamentals_ausland", "fundamentals/BMW.XETRA", {"filter": "General"}, 10),
+        ("fundamentals_logo", "fundamentals/AAPL.US", {"filter": "General::LogoURL"}, 10),
+        ("news", "news", {"s": "AAPL.US", "limit": 1}, 10),
+        ("sentiments", "sentiments", {"s": "AAPL.US", "from": vor_woche, "to": gestern}, 10),
+        ("news_word_weights", "news-word-weights",
+         {"s": "AAPL.US", "filter[date_from]": vor_woche, "filter[date_to]": gestern, "page[limit]": 5}, 10),
+        ("earnings_2016", "calendar/earnings", {"from": "2016-01-01", "to": "2016-12-31"}, 1),
+        ("earnings_1985_1995", "calendar/earnings", {"from": "1985-01-01", "to": "1995-12-31"}, 1),
+        ("ipos_2015", "calendar/ipos", {"from": "2015-01-01", "to": "2015-12-31"}, 1),
+        ("ipos_2026", "calendar/ipos", {"from": "2026-01-01", "to": t.isoformat()}, 1),
+        ("splits_kalender_2000", "calendar/splits", {"from": "2000-01-01", "to": "2000-12-31"}, 1),
+        ("splits_kalender_2025", "calendar/splits", {"from": "2025-01-01", "to": "2025-12-31"}, 1),
+        ("dividenden_tag", "calendar/dividends", {"filter[date_eq]": "2026-09-01", "page[limit]": 1000}, 1),
+        ("dividenden_tag_2005", "calendar/dividends", {"filter[date_eq]": "2005-03-01", "page[limit]": 1000}, 1),
+        ("dividenden_symbol", "calendar/dividends", {"filter[symbol]": "AAPL.US", "page[limit]": 1000}, 1),
+        ("trends_ein_symbol", "calendar/trends", {"symbols": "AAPL.US"}, 1),
+        ("insider_symbol", "insider-transactions", {"code": "AAPL.US", "limit": 5}, 10),
+        ("insider_tag", "insider-transactions", {"from": "2026-09-01", "to": "2026-09-01", "limit": 1000}, 10),
+        ("insider_2004", "insider-transactions", {"from": "2004-03-01", "to": "2004-03-01", "limit": 1000}, 10),
+        ("events_monat", "economic-events", {"from": "2025-01-01", "to": "2025-01-31", "limit": 1000}, 1),
+        ("events_monat_seite2", "economic-events", {"from": "2025-01-01", "to": "2025-01-31", "limit": 1000, "offset": 1000}, 1),
+        ("events_2019", "economic-events", {"from": "2019-01-01", "to": "2019-01-31", "limit": 1000}, 1),
+        ("makro_usa", "macro-indicator/USA", {"indicator": "gdp_growth_annual"}, 1),
+        ("makro_afg", "macro-indicator/AFG", {"indicator": "gdp_current_usd"}, 1),
+        ("makro_interest_rate", "macro-indicator/USA", {"indicator": "interest_rate"}, 1),
+        ("makro_ohne_indikator", "macro-indicator/DEU", {}, 1),
+        ("id_mapping", "id-mapping", {"filter[ex]": "US", "page[limit]": 1000}, 1),
+        ("exchange_details", "exchange-details/US", {}, 1),
+        ("symbolwechsel", "symbol-change-history", {"from": "2025-01-01", "to": "2025-12-31"}, 1),
+        ("search", "search/Apple", {"limit": 1}, 1),
+        ("boersen", "exchanges-list", {}, 1),
+        ("liste_lse", "exchange-symbol-list/LSE", {}, 1),
+        ("liste_lse_delistet", "exchange-symbol-list/LSE", {"delisted": 1}, 1),
+        ("ust_bill", "ust/bill-rates", {"filter[year]": 2025}, 1),
+        ("ust_yield", "ust/yield-rates", {"filter[year]": 2025}, 1),
+        ("ust_long_term", "ust/long-term-rates", {"filter[year]": 2025}, 1),
+        ("ust_real_yield", "ust/real-yield-rates", {"filter[year]": 2025}, 1),
+        ("ust_bill_1990", "ust/bill-rates", {"filter[year]": 1990}, 1),
+        ("cboe_indizes", "cboe/indices", {}, 1),
+        ("logo_marketplace", "logo/AAPL.US", {}, 10),
+        ("optionen_marketplace", "mp/unicornbay/options/underlying-symbols", {}, 10),
+        ("indizes_marketplace", "mp/unicornbay/spglobal/list", {}, 10),
+    ]
+
+
+def _anzahl_zeilen(d):
+    """Grobe Zeilenzahl einer Antwort fuer den Bericht."""
+    if isinstance(d, list):
+        return len(d)
+    if isinstance(d, dict):
+        for k in ("earnings", "ipos", "splits", "data", "items"):
+            if isinstance(d.get(k), list):
+                return len(d[k])
+        return len(d)
+    return None
+
+
+def lauf_tarif(daten, token, fetcher=None, warte=time.sleep, log=print, heute=None, proben=None):
+    """Fragt je Endpunkt der Doku eine kleine Anfrage und liest den Zaehler des
+    Kontos davor und danach (internal-user kostet laut Doku 0 Calls). So steht
+    fest, was der Tarif hergibt und was jede Anfrage wirklich kostet. Legt die
+    Antworten gepackt unter proben/tarif_<tag>/ ab und schreibt tarif_<tag>.json
+    samt Bericht. Ein 401 (Schluessel) oder 402 (Tagesgrenze) bricht ab, ein 403
+    ist ein Befund."""
+    heute = heute or _utc_jetzt().date()
+    tag = heute.isoformat()
+    wurzel = os.path.join(daten, ORDNER)
+    bilanz = {"zeit": _utc_jetzt().isoformat(), "modus": "tarif", "proben": {}, "calls_laut_konto": 0, "abbruch": None}
+    status, tarif = konto_tarif(token, fetcher, warte)
+    bilanz["konto_status"], bilanz["tarif"] = status, tarif
+    if status == 401:
+        raise EodhdGesperrt("Schluessel ungueltig (HTTP 401 am Konto-Endpunkt)")
+    log("Konto: " + json.dumps(tarif, ensure_ascii=False))
+
+    def zaehler():
+        st, k = konto_tarif(token, fetcher, warte)
+        try:
+            return int(k.get("apiRequests")) if st == 200 and str(k.get("apiRequestsDate") or "")[:10] == _utc_jetzt().date().isoformat() else None
+        except (TypeError, ValueError):
+            return None
+
+    for name, pfad, params, erwartet in (proben if proben is not None else tarif_proben(heute)):
+        vorher = zaehler()
+        eintrag = {"pfad": pfad, "parameter": {k: v for k, v in params.items()}, "calls_laut_doku": erwartet}
+        try:
+            st, text, kopf = abruf(pfad, token, params, fetcher, warte)
+        except EodhdGesperrt as e:
+            m = re.search(r"HTTP (\d{3})", str(e))
+            st, text, kopf = (int(m.group(1)) if m else 403), str(e)[:200], {}
+            if st in (401, 402):
+                eintrag.update({"status": st, "fehler": str(e)[:160]})
+                bilanz["proben"][name] = eintrag
+                bilanz["abbruch"] = f"HTTP {st} bei {name}"
+                break
+        nachher = zaehler()
+        kosten = (nachher - vorher) if (vorher is not None and nachher is not None) else None
+        eintrag.update({"status": st, "bytes": len(text or ""), "calls_laut_konto": kosten})
+        if kosten:
+            bilanz["calls_laut_konto"] += kosten
+        if st == 200 and text:
+            try:
+                d = json.loads(text)
+            except ValueError:
+                d = None
+                eintrag["zeilen"], eintrag["kein_json"] = None, True
+            if d is not None:
+                eintrag["zeilen"] = _anzahl_zeilen(d)
+                eintrag["bytes_gz"] = _gz_text(os.path.join(wurzel, "proben", f"tarif_{tag}", f"{name}.json.gz"), text)
+        elif text:
+            eintrag["fehler"] = str(text)[:160]
+        bilanz["proben"][name] = eintrag
+        log(f"  {name}: HTTP {st}, {eintrag['bytes']} Bytes, Zeilen {eintrag.get('zeilen')}, Calls laut Konto {kosten}, laut Doku {erwartet}")
+        warte(ABSTAND_S)
+    _json_schreiben(os.path.join(wurzel, f"tarif_{tag}.json"), bilanz)
+    bericht = tarif_bericht(bilanz)
+    with io.open(os.path.join(wurzel, f"tarif_{tag}.md"), "w", encoding="utf-8") as f:
+        f.write(bericht)
+    with io.open(os.path.join(wurzel, "laeufe.jsonl"), "a", encoding="utf-8") as f:
+        f.write(json.dumps({k: bilanz[k] for k in ("zeit", "modus", "calls_laut_konto", "abbruch")}, ensure_ascii=False) + "\n")
+    log(bericht)
+    return bilanz
+
+
+def tarif_bericht(b):
+    feeds = (b.get("tarif") or {}).get("availableDataFeeds")
+    z = ["EODHD-Tarif-Probe vom " + str(b.get("zeit", ""))[:16].replace("T", " ") + " UTC",
+         "Freigeschaltete Datenfeeds laut Konto: " + (", ".join(feeds) if isinstance(feeds, list) else str(feeds)),
+         "Marketplace: " + json.dumps((b.get("tarif") or {}).get("marketplace"), ensure_ascii=False),
+         f"Calls der Probe laut Konto: {b.get('calls_laut_konto')}" + (f"; Abbruch: {b['abbruch']}" if b.get("abbruch") else "")]
+    geht = [n for n, p in b.get("proben", {}).items() if p.get("status") == 200]
+    geht_nicht = [f"{n} {p.get('status')}" for n, p in b.get("proben", {}).items() if p.get("status") != 200]
+    z.append("Mit Antwort 200: " + ", ".join(geht))
+    z.append("Ohne Antwort 200: " + ", ".join(geht_nicht))
+    for n, p in b.get("proben", {}).items():
+        z.append(f"{n}: HTTP {p.get('status')}; Bytes {p.get('bytes')}; gepackt {p.get('bytes_gz')}; Zeilen {p.get('zeilen')}; "
+                 f"Calls laut Konto {p.get('calls_laut_konto')}, laut Doku {p.get('calls_laut_doku')}"
+                 + (f"; Fehler {p.get('fehler')}" if p.get("fehler") else ""))
+    return "\n".join(z) + "\n"
+
+
+# ---------------------------------------------------------------------------
 # Selbsttest (ohne Netz)
 # ---------------------------------------------------------------------------
 
@@ -1041,6 +1241,67 @@ def selbsttest() -> int:
         bericht = inventur_bericht(inv)
         p("Bericht ohne Gedankenstrich und ohne senkrechten Strich", "–" not in bericht and "|" not in bericht)
 
+    # Vorrang nach Gerhard (15.09.2026): delisteter Rest direkt hinter den Boersenaktien,
+    # darin die Wertpapiere von Firmen vor ETFs und Fonds.
+    p("Vorrang: delisteter Rest steht hinter den Boersenaktien und vor dem Freiverkehr",
+      STUFEN_NAMEN[:4] == ["delisted_stock", "stock_boerse", "delisted_rest", "stock_otc"], STUFEN_NAMEN)
+    rest = einordnen([], [{"Code": "AAA", "Type": "FUND"}, {"Code": "BBB", "Type": "ETF"}, {"Code": "CCC", "Type": "Preferred Stock"},
+                          {"Code": "DDD", "Type": "Mutual Fund"}, {"Code": "EEE", "Type": "Warrant"}, {"Code": "FFF", "Type": None}])
+    p("Delisteter Rest: Firmenpapiere, dann ETFs, dann Fonds, je nach Code",
+      [e["Code"] for e in rest["delisted_rest"]] == ["CCC", "EEE", "FFF", "BBB", "AAA", "DDD"],
+      [e["Code"] for e in rest["delisted_rest"]])
+
+    with tempfile.TemporaryDirectory() as tmp:
+        zaehlstand = {"n": 100}
+        abgerufen = []
+
+        def fetcher_tarif(kennung):
+            heute_gmt = _utc_jetzt().date().isoformat()
+            if kennung.startswith("internal-user?"):
+                return 404, "Not found", {}
+            if kennung.startswith("user?"):
+                return 200, json.dumps({"name": "geheim", "email": "geheim@example.org", "paymentMethod": "Stripe",
+                                        "subscriptionType": "monthly", "dailyRateLimit": 100000, "apiRequests": zaehlstand["n"],
+                                        "apiRequestsDate": heute_gmt, "availableDataFeeds": ["Fundamental Data", "Calendar Data"],
+                                        "availableMarketplaceDataFeeds": {"dailyRateLimit": 100000, "requestsSpent": 3,
+                                                                          "subscriptions": []}}), {}
+            abgerufen.append(kennung)
+            if kennung.startswith("eod/"):
+                return 403, "Forbidden", {}
+            if kennung.startswith("calendar/earnings"):
+                zaehlstand["n"] += 1
+                return 200, json.dumps({"type": "Earnings", "earnings": [{"code": "A.US"}, {"code": "B.US"}]}), {}
+            if kennung.startswith("logo/"):
+                zaehlstand["n"] += 10
+                return 200, "\x89PNG kein json", {}
+            if kennung.startswith("news"):
+                return 402, "limit", {}
+            return 200, "[]", {}
+
+        proben = [("eod", "eod/AAPL.US", {"from": "2026-09-01"}, 1), ("earnings", "calendar/earnings", {"from": "2016-01-01"}, 1),
+                  ("logo", "logo/AAPL.US", {}, 10), ("news", "news", {"s": "AAPL.US"}, 10), ("danach", "search/Apple", {}, 1)]
+        protokoll = []
+        bt = lauf_tarif(tmp, "x", fetcher=fetcher_tarif, warte=lambda s: None, log=protokoll.append,
+                        heute=dt.date(2026, 9, 15), proben=proben)
+        p("Tarif-Probe: Rueckfall auf user, Feeds ohne Name und E-Mail",
+          bt["tarif"].get("availableDataFeeds") == ["Fundamental Data", "Calendar Data"] and "name" not in bt["tarif"]
+          and "email" not in bt["tarif"] and "paymentMethod" not in bt["tarif"]
+          and not any("geheim" in str(z) for z in protokoll), bt["tarif"])
+        p("Tarif-Probe: 403 ist ein Befund, Kosten aus dem Kontozaehler, kein JSON wird nicht abgelegt",
+          bt["proben"]["eod"]["status"] == 403 and bt["proben"]["earnings"]["calls_laut_konto"] == 1
+          and bt["proben"]["earnings"]["zeilen"] == 2 and bt["proben"]["logo"]["calls_laut_konto"] == 10
+          and bt["proben"]["logo"].get("kein_json") is True
+          and os.path.exists(os.path.join(tmp, ORDNER, "proben", "tarif_2026-09-15", "earnings.json.gz"))
+          and not os.path.exists(os.path.join(tmp, ORDNER, "proben", "tarif_2026-09-15", "logo.json.gz")), bt["proben"])
+        p("Tarif-Probe: 402 bricht ab, danach wird nichts mehr gefragt, Bericht und Datei stehen",
+          bt["abbruch"] == "HTTP 402 bei news" and "danach" not in bt["proben"] and not any(k.startswith("search/") for k in abgerufen)
+          and os.path.exists(os.path.join(tmp, ORDNER, "tarif_2026-09-15.md"))
+          and bt["calls_laut_konto"] == 11, (bt["abbruch"], bt["calls_laut_konto"]))
+        bericht = tarif_bericht(bt)
+        p("Tarif-Bericht ohne Gedankenstrich und ohne senkrechten Strich", "–" not in bericht and "|" not in bericht)
+        p("Tarif-Proben: jeder Endpunkt der Doku einmal, Namen eindeutig",
+          len({n for n, _, _, _ in tarif_proben(dt.date(2026, 9, 15))}) == len(tarif_proben(dt.date(2026, 9, 15))) >= 50)
+
     print("\n" + ("Alles bestanden." if fehler == 0 else f"{fehler} Fehler."))
     return fehler
 
@@ -1048,7 +1309,7 @@ def selbsttest() -> int:
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--daten", default="")
-    ap.add_argument("--modus", default="inventur", choices=["inventur", "voll", "trends"])
+    ap.add_argument("--modus", default="inventur", choices=["inventur", "voll", "trends", "tarif"])
     ap.add_argument("--stufen", default="", help="voll: Stufen mit Beistrich, leer = alle in Vorrangfolge")
     ap.add_argument("--hoechstens", type=int, default=0)
     ap.add_argument("--zeitgrenze-min", type=int, default=300)
@@ -1071,6 +1332,11 @@ def main():
             sys.exit(0)
         if a.modus == "trends":
             lauf_trends(a.daten, token, hoechstens=a.hoechstens)
+            sys.exit(0)
+        if a.modus == "tarif":
+            b = lauf_tarif(a.daten, token)
+            push("EODHD-Tarif-Probe fertig", f"Calls laut Konto {b['calls_laut_konto']}"
+                 + (f"; Abbruch: {b['abbruch']}" if b["abbruch"] else ""))
             sys.exit(0)
         stufen = [s.strip() for s in a.stufen.split(",") if s.strip()] or None
         b, text = lauf_voll(a.daten, token, stufen=stufen, hoechstens=a.hoechstens,
