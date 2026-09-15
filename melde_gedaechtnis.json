@@ -183,7 +183,10 @@
     "CNC|Fallback: MA50-Pullback": "drin",
     "FROG|Fallback: MA50-Pullback": "drin",
     "GOLD|Fallback: MA50-Pullback": "draussen",
-    "SNX|Rectangle Top": "drin"
+    "SNX|Rectangle Top": "drin",
+    "BE|EMA Crossback": "drin",
+    "INTC|EMA Crossback": "drin",
+    "AVT|Rectangle Top": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -287,8 +290,33 @@
     "CNC|Rectangle Top": "2026-09-15",
     "BEST|CNC|Rectangle Top": "2026-09-15",
     "SNX|Rectangle Top": "2026-09-15",
-    "BEST|SNX|Rectangle Top": "2026-09-15"
+    "BEST|SNX|Rectangle Top": "2026-09-15",
+    "GAPGO|KGS|2026-09-15": "2026-09-15",
+    "GAPGO|OII|2026-09-15": "2026-09-15",
+    "BE|EMA Crossback": "2026-09-15",
+    "BEST|BE|EMA Crossback": "2026-09-15",
+    "INTC|EMA Crossback": "2026-09-15",
+    "BEST|INTC|EMA Crossback": "2026-09-15",
+    "AVT|Rectangle Top": "2026-09-15",
+    "BEST|AVT|Rectangle Top": "2026-09-15",
+    "GEWINN|zonenwechsel|CRWD|2|stark": "2026-09-15",
+    "GEWINN|zonenwechsel|FSLY|SPRING-2026-09-04|stark": "2026-09-15"
   },
-  "gapgo_warten": {},
+  "gapgo_warten": {
+    "KGS": {
+      "signal": "2026-09-15",
+      "kp": 57.36,
+      "stop": 56.61,
+      "firma": "Kodiak Gas Services Inc",
+      "bestaetigt": false
+    },
+    "OII": {
+      "signal": "2026-09-15",
+      "kp": 47.03,
+      "stop": 47.01,
+      "firma": "Oceaneering International Inc",
+      "bestaetigt": false
+    }
+  },
   "ampel_tag": "2026-09-15"
 }
