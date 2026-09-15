@@ -91,8 +91,8 @@
     "STNG|Cup & Handle (Wochenbasis)": "drin",
     "NRIX|Fallback: MA50-Pullback": "drin",
     "FIVE|Rectangle Top": "drin",
-    "ECO|Fallback: 52W-Hoch-Breakout": "draussen",
-    "ECO|Fallback: 20-Tage-Hoch (Pivot)": "draussen",
+    "ECO|Fallback: 52W-Hoch-Breakout": "drin",
+    "ECO|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "NGL|Fallback: MA50-Pullback": "drin",
     "CXW|Cup & Handle (Wochenbasis)": "draussen",
     "CXW|Rectangle Top": "drin",
@@ -132,7 +132,7 @@
     "ILMN|Fallback: MA50-Pullback": "drin",
     "OII|Fallback: MA50-Pullback": "drin",
     "SCSC|Fallback: MA50-Pullback": "draussen",
-    "SEPN|Fallback: MA50-Pullback": "draussen",
+    "SEPN|Fallback: MA50-Pullback": "drin",
     "SHIP|Fallback: MA50-Pullback": "draussen",
     "BAND|EMA Crossback": "drin",
     "BLTE|Fallback: MA50-Pullback": "draussen",
@@ -186,7 +186,12 @@
     "SNX|Rectangle Top": "drin",
     "BE|EMA Crossback": "drin",
     "INTC|EMA Crossback": "drin",
-    "AVT|Rectangle Top": "drin"
+    "AVT|Rectangle Top": "drin",
+    "INSW|Cup & Handle (Wochenbasis)": "drin",
+    "INSW|Fallback: 52W-Hoch-Breakout": "drin",
+    "PNTG|Fallback: MA50-Pullback": "drin",
+    "PVLA|Fallback: MA50-Pullback": "drin",
+    "FTK|Fallback: MA50-R\u00fcckeroberung": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -278,8 +283,6 @@
     "GNK|EMA Crossback": "2026-09-14",
     "BEST|GNK|EMA Crossback": "2026-09-14",
     "UEBER|FROG|Fallback: MA50-R\u00fcckeroberung": "2026-09-14",
-    "UEBER|ECO|Fallback: 52W-Hoch-Breakout": "2026-09-14",
-    "UEBER|ECO|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-14",
     "GEWINN|klimax_zeichen|ECO|1|5_kanaluebershooting": "2026-09-14",
     "GEWINN|zonenwechsel|ECO|1|stark": "2026-09-14",
     "SCHLUSSNAH|2026-09-14": "2026-09-14",
@@ -300,7 +303,15 @@
     "AVT|Rectangle Top": "2026-09-15",
     "BEST|AVT|Rectangle Top": "2026-09-15",
     "GEWINN|zonenwechsel|CRWD|2|stark": "2026-09-15",
-    "GEWINN|zonenwechsel|FSLY|SPRING-2026-09-04|stark": "2026-09-15"
+    "GEWINN|zonenwechsel|FSLY|SPRING-2026-09-04|stark": "2026-09-15",
+    "INSW|Cup & Handle (Wochenbasis)": "2026-09-15",
+    "BEST|INSW|Cup & Handle (Wochenbasis)": "2026-09-15",
+    "INSW|Fallback: 52W-Hoch-Breakout": "2026-09-15",
+    "BEST|INSW|Fallback: 52W-Hoch-Breakout": "2026-09-15",
+    "NVGS|Cup & Handle (Wochenbasis)": "2026-09-15",
+    "BEST|NVGS|Cup & Handle (Wochenbasis)": "2026-09-15",
+    "R2GX|INSW|2026-09-15": "2026-09-15",
+    "SEKTORAUF|2026-09-15": "2026-09-15"
   },
   "gapgo_warten": {
     "KGS": {
