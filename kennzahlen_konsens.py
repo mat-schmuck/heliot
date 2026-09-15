@@ -212,6 +212,16 @@ def schnappschuesse_lesen(pfade):
                 "neuester": max(staende) if staende else None, "aeltester": min(staende) if staende else None}
 
 
+def _mittel(zeile, art):
+    """Konsens-Mittel einer Periode. Ohne Schaetzung liefert Yahoo beim
+    Umsatz 0 bei 0 Analysten statt nichts (Einfrier-Lauf vom 15.09.2026:
+    1.130 Zeilen); das ist kein erwarteter Umsatz von 0 Dollar und wird None."""
+    mittel = _zahl((zeile or {}).get(f"{art}_avg"))
+    if mittel == 0 and not _ganz((zeile or {}).get(f"{art}_analysten")):
+        return None
+    return mittel
+
+
 def konsens_werte(eintrag, kurs=None):
     """Die Felder KONSENS_FELDER einer Firma aus ihrem Eintrag in
     schnappschuesse_lesen und dem Schlusskurs der Nacht."""
@@ -229,15 +239,15 @@ def konsens_werte(eintrag, kurs=None):
     for y, k in PERIODEN:
         z = zeilen.get(y) or {}
         raus[f"konsens_ende_{k}"] = (str(z["periodenende"])[:10] if z.get("periodenende") else None)
-        for art, avg, vj_feld in (("eps", "eps_avg", "eps_vorjahr"), ("umsatz", "umsatz_avg", "umsatz_vorjahr")):
-            mittel = _zahl(z.get(avg))
+        for art, vj_feld in (("eps", "eps_vorjahr"), ("umsatz", "umsatz_vorjahr")):
+            mittel = _mittel(z, art)
             vj = _zahl(z.get(vj_feld))
             if vj is None and k == "1y":
                 # Yahoo rechnet +1y gegen das Mittel des laufenden Jahres.
-                vj = _zahl((zeilen.get("0y") or {}).get(avg))
+                vj = _mittel(zeilen.get("0y") or {}, art)
             raus[f"konsens_{art}_{k}"] = mittel
-            raus[f"konsens_{art}_tief_{k}"] = _zahl(z.get(f"{art}_low"))
-            raus[f"konsens_{art}_hoch_{k}"] = _zahl(z.get(f"{art}_high"))
+            raus[f"konsens_{art}_tief_{k}"] = None if mittel is None else _zahl(z.get(f"{art}_low"))
+            raus[f"konsens_{art}_hoch_{k}"] = None if mittel is None else _zahl(z.get(f"{art}_high"))
             raus[f"konsens_{art}_vj_{k}"] = vj
             raus[f"konsens_{art}_wachstum_{k}_pct"] = wachstum_pct(mittel, vj)
             raus[f"konsens_{art}_analysten_{k}"] = _ganz(z.get(f"{art}_analysten"))
@@ -672,6 +682,18 @@ def selbsttest() -> int:
     ohne = {"stand": t, "zeilen": {"+1y": _zeile("O", "+1y", t, 3.0, waehrung=None)}}
     p("Konsens ohne Waehrungsangabe: kein Forward-KGV", konsens_werte(ohne, kurs=30.0)["konsens_fwd_kgv"] is None)
     p("Ohne Kurs: kein KGV", konsens_werte(nvda, kurs=None)["konsens_fwd_kgv"] is None)
+    # Yahoo ohne Umsatzschaetzung: 0 bei 0 Analysten, auch als Basis fuer +1y
+    platz = {"stand": t, "zeilen": {"0q": _zeile("P", "0q", t, -0.4, vj=-0.5, umsatz=0, uvj=0, analysten=0),
+                                    "0y": _zeile("P", "0y", t, -1.5, umsatz=0, analysten=0),
+                                    "+1y": _zeile("P", "+1y", t, -1.2, umsatz=2000000, analysten=2)}}
+    w = konsens_werte(platz, kurs=5.0)
+    p("Umsatz 0 bei 0 Analysten ist keine Schaetzung: kein Umsatz, keine Spanne, kein Vergleich daraus",
+      w["konsens_umsatz_0q"] is None and w["konsens_umsatz_tief_0q"] is None and w["konsens_umsatz_0y"] is None
+      and w["konsens_umsatz_1y"] == 2000000.0 and w["konsens_umsatz_vj_1y"] is None
+      and w["konsens_umsatz_wachstum_1y_pct"] is None, str({x: w[x] for x in w if x.startswith("konsens_umsatz")}))
+    null_mit = {"stand": t, "zeilen": {"0q": _zeile("B", "0q", t, -0.3, umsatz=0, uvj=0, analysten=3)}}
+    p("Umsatz 0 mit Analysten bleibt eine Schaetzung von 0",
+      konsens_werte(null_mit, kurs=5.0)["konsens_umsatz_0q"] == 0.0)
     p("Ohne Eintrag: alle Felder leer", all(v is None for v in konsens_werte(None, 10.0).values())
       and set(konsens_werte(None).keys()) == set(KONSENS_FELDER))
 
