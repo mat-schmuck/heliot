@@ -55,7 +55,7 @@
     "VIST|Fallback: MA50-Pullback": "draussen",
     "WK|Fallback: MA50-Pullback": "draussen",
     "ZIM|Fallback: MA50-Pullback": "draussen",
-    "ANRO|Fallback: MA50-Pullback": "draussen",
+    "ANRO|Fallback: MA50-Pullback": "drin",
     "AYA|Fallback: MA50-Pullback": "draussen",
     "BE|Fallback: MA50-Pullback": "draussen",
     "CGEM|Fallback: MA50-Pullback": "draussen",
@@ -191,7 +191,9 @@
     "INSW|Fallback: 52W-Hoch-Breakout": "drin",
     "PNTG|Fallback: MA50-Pullback": "drin",
     "PVLA|Fallback: MA50-Pullback": "drin",
-    "FTK|Fallback: MA50-R\u00fcckeroberung": "drin"
+    "FTK|Fallback: MA50-R\u00fcckeroberung": "drin",
+    "TWIN|Rectangle Top": "drin",
+    "NBR|Rectangle Top": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -311,7 +313,9 @@
     "NVGS|Cup & Handle (Wochenbasis)": "2026-09-15",
     "BEST|NVGS|Cup & Handle (Wochenbasis)": "2026-09-15",
     "R2GX|INSW|2026-09-15": "2026-09-15",
-    "SEKTORAUF|2026-09-15": "2026-09-15"
+    "SEKTORAUF|2026-09-15": "2026-09-15",
+    "TWIN|Rectangle Top": "2026-09-15",
+    "BEST|TWIN|Rectangle Top": "2026-09-15"
   },
   "gapgo_warten": {
     "KGS": {
