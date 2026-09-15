@@ -205,7 +205,9 @@
     "PBT|Fallback: 52W-Hoch-Breakout": "drin",
     "SMTC|Rectangle Top": "drin",
     "TNK|Cup & Handle (Wochenbasis)": "drin",
-    "GH|Fallback: 20-Tage-Hoch (Pivot)": "drin"
+    "GH|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "CDNA|Darvas Box": "drin",
+    "CDNA|Fallback: 52W-Hoch-Breakout": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -338,7 +340,11 @@
     "TNK|Cup & Handle (Wochenbasis)": "2026-09-15",
     "BEST|TNK|Cup & Handle (Wochenbasis)": "2026-09-15",
     "GH|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-15",
-    "BEST|GH|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-15"
+    "BEST|GH|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-15",
+    "NTRA|Cup & Handle (Wochenbasis)": "2026-09-15",
+    "NTRA|Darvas Box": "2026-09-15",
+    "BEST|NTRA|Cup & Handle (Wochenbasis)": "2026-09-15",
+    "BEST|NTRA|Darvas Box": "2026-09-15"
   },
   "gapgo_warten": {
     "KGS": {
