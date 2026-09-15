@@ -55,7 +55,7 @@
     "VIST|Fallback: MA50-Pullback": "draussen",
     "WK|Fallback: MA50-Pullback": "draussen",
     "ZIM|Fallback: MA50-Pullback": "draussen",
-    "ANRO|Fallback: MA50-Pullback": "drin",
+    "ANRO|Fallback: MA50-Pullback": "draussen",
     "AYA|Fallback: MA50-Pullback": "draussen",
     "BE|Fallback: MA50-Pullback": "draussen",
     "CGEM|Fallback: MA50-Pullback": "draussen",
@@ -92,8 +92,8 @@
     "NRIX|Fallback: MA50-Pullback": "drin",
     "FIVE|Rectangle Top": "drin",
     "ECO|Fallback: 52W-Hoch-Breakout": "drin",
-    "ECO|Fallback: 20-Tage-Hoch (Pivot)": "drin",
-    "NGL|Fallback: MA50-Pullback": "draussen",
+    "ECO|Fallback: 20-Tage-Hoch (Pivot)": "draussen",
+    "NGL|Fallback: MA50-Pullback": "drin",
     "CXW|Cup & Handle (Wochenbasis)": "draussen",
     "CXW|Rectangle Top": "drin",
     "MG|Fallback: MA50-Pullback": "draussen",
@@ -169,8 +169,8 @@
     "CNC|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "HNGE|Cup & Handle (Wochenbasis)": "drin",
     "INSP|Fallback: 20-Tage-Hoch (Pivot)": "drin",
-    "GNK|Rectangle Top": "drin",
-    "TWLO|Rectangle Top": "draussen",
+    "GNK|Rectangle Top": "draussen",
+    "TWLO|Rectangle Top": "drin",
     "TSAT|EMA Crossback": "drin",
     "GNK|EMA Crossback": "drin",
     "INTC|Fallback: MA50-Pullback": "drin",
@@ -224,7 +224,9 @@
     "NVGS|Fallback: 52W-Hoch-Breakout": "drin",
     "TWLO|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "GNK|Fallback: 52W-Hoch-Breakout": "drin",
-    "JBHT|EMA Crossback": "drin"
+    "JBHT|EMA Crossback": "drin",
+    "CVI|Cup & Handle (Wochenbasis)": "drin",
+    "CVI|Fallback: 52W-Hoch-Breakout": "drin"
   },
   "gemeldet": {
     "INSIDER|RSG|pfad_a|0": "2026-08-17",
@@ -386,7 +388,8 @@
     "NMM|Cup & Handle (Wochenbasis)": "2026-09-15",
     "BEST|NMM|Cup & Handle (Wochenbasis)": "2026-09-15",
     "NMM|Fallback: 52W-Hoch-Breakout": "2026-09-15",
-    "BEST|NMM|Fallback: 52W-Hoch-Breakout": "2026-09-15"
+    "BEST|NMM|Fallback: 52W-Hoch-Breakout": "2026-09-15",
+    "UEBER|ECO|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-14"
   },
   "gapgo_warten": {
     "KGS": {
