@@ -227,7 +227,7 @@
     "JBHT|EMA Crossback": "drin",
     "CVI|Cup & Handle (Wochenbasis)": "drin",
     "CVI|Fallback: 52W-Hoch-Breakout": "drin",
-    "SMTC|EMA Crossback": "drin",
+    "SMTC|EMA Crossback": "draussen",
     "GH|Fallback: MA50-Pullback": "draussen",
     "TWLO|Fallback: MA50-Pullback": "draussen",
     "TWST|EMA Crossback": "draussen",
@@ -474,7 +474,8 @@
     "ILMN|Fallback: 52W-Hoch-Breakout": "2026-09-16",
     "BEST|ILMN|Fallback: 52W-Hoch-Breakout": "2026-09-16",
     "UEBER|FTK|Fallback: MA50-R\u00fcckeroberung": "2026-09-16",
-    "UEBER|SMTC|Rectangle Top": "2026-09-16"
+    "UEBER|SMTC|Rectangle Top": "2026-09-16",
+    "UEBER|SMTC|EMA Crossback": "2026-09-16"
   },
   "gapgo_warten": {
     "FTH": {
