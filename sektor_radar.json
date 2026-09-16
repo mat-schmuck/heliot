@@ -1,7 +1,22 @@
 {
- "gebaut_am": "2026-09-15T22:12:07",
- "handelstag": "2026-09-15",
+ "gebaut_am": "2026-09-16T22:12:53",
+ "handelstag": "2026-09-16",
  "geladen": 36,
  "unfertig": [],
- "treffer": []
+ "treffer": [
+  {
+   "etf": "XOP",
+   "name": "Oil & Gas E&P",
+   "richtung": "runter",
+   "volumen_pct": 134.2,
+   "kurs": 191.8
+  },
+  {
+   "etf": "XLE",
+   "name": "Energy",
+   "richtung": "runter",
+   "volumen_pct": 68.4,
+   "kurs": 64.03
+  }
+ ]
 }

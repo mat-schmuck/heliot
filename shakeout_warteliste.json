@@ -1,13 +1,4 @@
 {
- "ARW": {
-  "spring_index": 501,
-  "spring_datum": "2026-09-04",
-  "zone_min": 210.08999633789062,
-  "zone_max": 210.08999633789062,
-  "spring_low": 209.27999877929688,
-  "spring_volumen": 464400.0,
-  "tage_gewartet": 8
- },
  "FEIM": {
   "spring_index": 500,
   "spring_datum": "2026-09-11",
@@ -15,7 +6,7 @@
   "zone_max": 80.5999984741211,
   "spring_low": 78.31999969482422,
   "spring_volumen": 1552200.0,
-  "tage_gewartet": 3
+  "tage_gewartet": 4
  },
  "CGON": {
   "spring_index": 499,
@@ -24,7 +15,7 @@
   "zone_max": 72.12000274658203,
   "spring_low": 71.77999877929688,
   "spring_volumen": 829916.0,
-  "tage_gewartet": 1
+  "tage_gewartet": 2
  },
  "FROG": {
   "spring_index": 499,
@@ -33,7 +24,7 @@
   "zone_max": 89.16000366210938,
   "spring_low": 86.45500183105469,
   "spring_volumen": 1947345.0,
-  "tage_gewartet": 1
+  "tage_gewartet": 2
  },
  "CBLL": {
   "spring_index": 481,
@@ -42,6 +33,15 @@
   "zone_max": 24.709999084472656,
   "spring_low": 23.899999618530273,
   "spring_volumen": 316452.0,
+  "tage_gewartet": 1
+ },
+ "NRIX": {
+  "spring_index": 500,
+  "spring_datum": "2026-09-16",
+  "zone_min": 24.8799991607666,
+  "zone_max": 25.084999084472656,
+  "spring_low": 24.68000030517578,
+  "spring_volumen": 1236379.0,
   "tage_gewartet": 0
  }
 }
