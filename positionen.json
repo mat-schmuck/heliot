@@ -6144,7 +6144,7 @@
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
-  "status": "offen",
+  "status": "geschlossen",
   "verlauf": [],
   "klasse": "tagesgeschaeft",
   "musterziel": null,
@@ -6155,7 +6155,12 @@
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
-  "wedge_drop_gemeldet": false
+  "wedge_drop_gemeldet": false,
+  "schluss_datum": "2026-09-16",
+  "schluss_grund": "Rückfall unter die Exit-Linie (intraday)",
+  "schluss_kurs": 46.99,
+  "ergebnis_pct": -0.09,
+  "ergebnis_r": -2.0
  },
  "CBLL|Cup & Handle (Wochenbasis) + Darvas Box": {
   "symbol": "CBLL",
