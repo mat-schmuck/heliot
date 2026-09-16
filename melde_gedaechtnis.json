@@ -131,7 +131,7 @@
     "DUOL|Fallback: MA50-Pullback": "draussen",
     "ILMN|Fallback: MA50-Pullback": "draussen",
     "OII|Fallback: MA50-Pullback": "drin",
-    "SCSC|Fallback: MA50-Pullback": "draussen",
+    "SCSC|Fallback: MA50-Pullback": "drin",
     "SEPN|Fallback: MA50-Pullback": "drin",
     "SHIP|Fallback: MA50-Pullback": "draussen",
     "BAND|EMA Crossback": "drin",
@@ -230,7 +230,7 @@
     "SMTC|EMA Crossback": "draussen",
     "GH|Fallback: MA50-Pullback": "draussen",
     "TWLO|Fallback: MA50-Pullback": "draussen",
-    "TWST|EMA Crossback": "drin",
+    "TWST|EMA Crossback": "draussen",
     "CXW|Fallback: MA50-Pullback": "draussen",
     "HCC|Fallback: MA50-R\u00fcckeroberung": "drin",
     "PTGX|Rectangle Top": "drin",
@@ -481,7 +481,8 @@
     "UEBER|SMTC|Rectangle Top": "2026-09-16",
     "UEBER|SMTC|EMA Crossback": "2026-09-16",
     "STNG|Fallback: 52W-Hoch-Breakout": "2026-09-16",
-    "BEST|STNG|Fallback: 52W-Hoch-Breakout": "2026-09-16"
+    "BEST|STNG|Fallback: 52W-Hoch-Breakout": "2026-09-16",
+    "UEBER|TWST|EMA Crossback": "2026-09-16"
   },
   "gapgo_warten": {
     "FTH": {
