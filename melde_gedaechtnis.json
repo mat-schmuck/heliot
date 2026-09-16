@@ -180,7 +180,7 @@
     "RNG|Fallback: MA50-Pullback": "draussen",
     "AMD|EMA Crossback": "drin",
     "FTNT|Fallback: MA50-Pullback": "draussen",
-    "CNC|Fallback: MA50-Pullback": "drin",
+    "CNC|Fallback: MA50-Pullback": "draussen",
     "FROG|Fallback: MA50-Pullback": "draussen",
     "GOLD|Fallback: MA50-Pullback": "draussen",
     "SNX|Rectangle Top": "drin",
@@ -447,7 +447,11 @@
     "UEBER|INTC|Fallback: MA50-R\u00fcckeroberung": "2026-09-16",
     "UEBER|TWST|EMA Crossback": "2026-09-16",
     "TRMD|Fallback: 52W-Hoch-Breakout": "2026-09-16",
-    "BEST|TRMD|Fallback: 52W-Hoch-Breakout": "2026-09-16"
+    "BEST|TRMD|Fallback: 52W-Hoch-Breakout": "2026-09-16",
+    "BLLN|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-16",
+    "BEST|BLLN|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-16",
+    "SEKTORAUF|2026-09-16": "2026-09-16",
+    "INSIDER|RSG|pfad_a|0": "2026-09-16"
   },
   "gapgo_warten": {
     "FTH": {
