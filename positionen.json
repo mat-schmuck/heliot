@@ -6674,5 +6674,32 @@
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
   "wedge_drop_gemeldet": false
+ },
+ "AXTI|Fallback: MA50-Rückeroberung": {
+  "symbol": "AXTI",
+  "firma": "AXT Inc",
+  "strategie": "Fallback: MA50-Rückeroberung",
+  "einstieg": 62.9,
+  "einstieg_datum": "2026-09-16",
+  "einstieg_index": 0,
+  "struktur_stop": 58.83,
+  "aktueller_stop": 58.83,
+  "stop_quelle": "struktur",
+  "hoechstkurs": 62.9,
+  "teilverkauft": false,
+  "halteregel_aktiv": false,
+  "beobachtung": true,
+  "status": "offen",
+  "verlauf": [],
+  "klasse": "standard",
+  "musterziel": null,
+  "zone": null,
+  "zone_gemeldet": null,
+  "ziel_gemeldet": false,
+  "klimax_gemeldet": [],
+  "weinstein_gemeldet": false,
+  "zahlen_hinweis_gemeldet": false,
+  "sektor_hinweis_gemeldet": false,
+  "wedge_drop_gemeldet": false
  }
 }
