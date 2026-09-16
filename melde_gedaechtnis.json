@@ -249,7 +249,9 @@
     "TRMD|Fallback: 52W-Hoch-Breakout": "drin",
     "AAMI|Fallback: MA50-R\u00fcckeroberung": "drin",
     "ANRO|Fallback: MA50-R\u00fcckeroberung": "drin",
-    "ILMN|Fallback: 20-Tage-Hoch (Pivot)": "drin"
+    "ILMN|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "NHC|EMA Crossback": "drin",
+    "CDNA|Cup & Handle (Wochenbasis)": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -460,7 +462,11 @@
     "AAMI|Fallback: MA50-R\u00fcckeroberung": "2026-09-16",
     "BEST|AAMI|Fallback: MA50-R\u00fcckeroberung": "2026-09-16",
     "ILMN|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-16",
-    "BEST|ILMN|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-16"
+    "BEST|ILMN|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-16",
+    "CVI|Cup & Handle (Wochenbasis)": "2026-09-16",
+    "BEST|CVI|Cup & Handle (Wochenbasis)": "2026-09-16",
+    "CVI|Fallback: 52W-Hoch-Breakout": "2026-09-16",
+    "BEST|CVI|Fallback: 52W-Hoch-Breakout": "2026-09-16"
   },
   "gapgo_warten": {
     "FTH": {
