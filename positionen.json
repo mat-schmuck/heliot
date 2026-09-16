@@ -6480,5 +6480,32 @@
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
   "wedge_drop_gemeldet": false
+ },
+ "FTK|Fallback: MA50-Rückeroberung": {
+  "symbol": "FTK",
+  "firma": "Flotek Industries Inc",
+  "strategie": "Fallback: MA50-Rückeroberung",
+  "einstieg": 27.12,
+  "einstieg_datum": "2026-09-16",
+  "einstieg_index": 0,
+  "struktur_stop": 25.36,
+  "aktueller_stop": 25.36,
+  "stop_quelle": "struktur",
+  "hoechstkurs": 27.12,
+  "teilverkauft": false,
+  "halteregel_aktiv": false,
+  "beobachtung": true,
+  "status": "offen",
+  "verlauf": [],
+  "klasse": "standard",
+  "musterziel": null,
+  "zone": null,
+  "zone_gemeldet": null,
+  "ziel_gemeldet": false,
+  "klimax_gemeldet": [],
+  "weinstein_gemeldet": false,
+  "zahlen_hinweis_gemeldet": false,
+  "sektor_hinweis_gemeldet": false,
+  "wedge_drop_gemeldet": false
  }
 }
