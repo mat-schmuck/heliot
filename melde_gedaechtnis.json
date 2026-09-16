@@ -117,7 +117,7 @@
     "ONC|Fallback: MA50-Pullback": "drin",
     "RAPP|Rectangle Top": "drin",
     "RDVT|Fallback: MA50-Pullback": "draussen",
-    "APPS|Fallback: MA50-Pullback": "drin",
+    "APPS|Fallback: MA50-Pullback": "draussen",
     "CLMT|Fallback: MA50-Pullback": "draussen",
     "FEIM|Fallback: MA50-Pullback": "draussen",
     "FTH|Fallback: MA50-Pullback": "draussen",
@@ -135,7 +135,7 @@
     "SEPN|Fallback: MA50-Pullback": "drin",
     "SHIP|Fallback: MA50-Pullback": "draussen",
     "BAND|EMA Crossback": "drin",
-    "BLTE|Fallback: MA50-Pullback": "drin",
+    "BLTE|Fallback: MA50-Pullback": "draussen",
     "LB|Cup & Handle (Wochenbasis)": "drin",
     "NVGS|Fallback: MA50-Pullback": "draussen",
     "NBR|Fallback: MA50-Pullback": "drin",
@@ -149,11 +149,11 @@
     "DK|Fallback: 52W-Hoch-Breakout": "drin",
     "APA|Cup & Handle (Wochenbasis)": "drin",
     "APA|Fallback: 52W-Hoch-Breakout": "drin",
-    "NUTX|Cup & Handle (Wochenbasis)": "drin",
+    "NUTX|Cup & Handle (Wochenbasis)": "draussen",
     "TPC|Fallback: MA50-Pullback": "drin",
     "MRVL|Fallback: MA50-Pullback": "drin",
     "SANM|Fallback: MA50-Pullback": "drin",
-    "NUTX|Fallback: 52W-Hoch-Breakout": "drin",
+    "NUTX|Fallback: 52W-Hoch-Breakout": "draussen",
     "CNC|Rectangle Top": "drin",
     "MPC|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "FROG|Fallback: MA50-R\u00fcckeroberung": "draussen",
@@ -472,7 +472,6 @@
     "BLLN|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-16",
     "BEST|BLLN|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-16",
     "SEKTORAUF|2026-09-16": "2026-09-16",
-    "INSIDER|RSG|pfad_a|0": "2026-09-16",
     "GEWINN|zonenwechsel|GNK|EMA Crossback|mittel": "2026-09-16",
     "GEWINN|zonenwechsel|SEI|SPRING-2026-09-14|mittel": "2026-09-16",
     "AAMI|Fallback: MA50-R\u00fcckeroberung": "2026-09-16",
@@ -502,7 +501,9 @@
     "AXTI|Fallback: MA50-R\u00fcckeroberung": "2026-09-16",
     "BEST|AXTI|Fallback: MA50-R\u00fcckeroberung": "2026-09-16",
     "LB|Cup & Handle (Wochenbasis)": "2026-09-16",
-    "BEST|LB|Cup & Handle (Wochenbasis)": "2026-09-16"
+    "BEST|LB|Cup & Handle (Wochenbasis)": "2026-09-16",
+    "UEBER|NUTX|Cup & Handle (Wochenbasis)": "2026-09-14",
+    "UEBER|NUTX|Fallback: 52W-Hoch-Breakout": "2026-09-14"
   },
   "gapgo_warten": {
     "FTH": {
@@ -510,6 +511,20 @@
       "kp": 36.99,
       "stop": 35.36,
       "firma": "Faeth Therapeutics Inc",
+      "bestaetigt": false
+    },
+    "KGS": {
+      "signal": "2026-09-15",
+      "kp": 57.36,
+      "stop": 56.61,
+      "firma": "Kodiak Gas Services Inc",
+      "bestaetigt": false
+    },
+    "OII": {
+      "signal": "2026-09-15",
+      "kp": 47.03,
+      "stop": 47.01,
+      "firma": "Oceaneering International Inc",
       "bestaetigt": false
     }
   },
