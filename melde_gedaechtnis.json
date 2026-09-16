@@ -132,10 +132,10 @@
     "ILMN|Fallback: MA50-Pullback": "draussen",
     "OII|Fallback: MA50-Pullback": "drin",
     "SCSC|Fallback: MA50-Pullback": "draussen",
-    "SEPN|Fallback: MA50-Pullback": "drin",
+    "SEPN|Fallback: MA50-Pullback": "draussen",
     "SHIP|Fallback: MA50-Pullback": "draussen",
     "BAND|EMA Crossback": "drin",
-    "BLTE|Fallback: MA50-Pullback": "drin",
+    "BLTE|Fallback: MA50-Pullback": "draussen",
     "LB|Cup & Handle (Wochenbasis)": "draussen",
     "NVGS|Fallback: MA50-Pullback": "draussen",
     "NBR|Fallback: MA50-Pullback": "drin",
@@ -246,7 +246,10 @@
     "NTRA|Fallback: 52W-Hoch-Breakout": "drin",
     "FRPT|Rectangle Top": "drin",
     "GNK|Fallback: MA50-Pullback": "draussen",
-    "TRMD|Fallback: 52W-Hoch-Breakout": "drin"
+    "TRMD|Fallback: 52W-Hoch-Breakout": "drin",
+    "AAMI|Fallback: MA50-R\u00fcckeroberung": "drin",
+    "ANRO|Fallback: MA50-R\u00fcckeroberung": "drin",
+    "ILMN|Fallback: 20-Tage-Hoch (Pivot)": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -453,7 +456,11 @@
     "SEKTORAUF|2026-09-16": "2026-09-16",
     "INSIDER|RSG|pfad_a|0": "2026-09-16",
     "GEWINN|zonenwechsel|GNK|EMA Crossback|mittel": "2026-09-16",
-    "GEWINN|zonenwechsel|SEI|SPRING-2026-09-14|mittel": "2026-09-16"
+    "GEWINN|zonenwechsel|SEI|SPRING-2026-09-14|mittel": "2026-09-16",
+    "AAMI|Fallback: MA50-R\u00fcckeroberung": "2026-09-16",
+    "BEST|AAMI|Fallback: MA50-R\u00fcckeroberung": "2026-09-16",
+    "ILMN|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-16",
+    "BEST|ILMN|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-16"
   },
   "gapgo_warten": {
     "FTH": {
