@@ -451,7 +451,9 @@
     "BLLN|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-16",
     "BEST|BLLN|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-16",
     "SEKTORAUF|2026-09-16": "2026-09-16",
-    "INSIDER|RSG|pfad_a|0": "2026-09-16"
+    "INSIDER|RSG|pfad_a|0": "2026-09-16",
+    "GEWINN|zonenwechsel|GNK|EMA Crossback|mittel": "2026-09-16",
+    "GEWINN|zonenwechsel|SEI|SPRING-2026-09-14|mittel": "2026-09-16"
   },
   "gapgo_warten": {
     "FTH": {
