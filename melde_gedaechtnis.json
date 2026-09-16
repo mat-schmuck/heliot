@@ -135,7 +135,7 @@
     "SEPN|Fallback: MA50-Pullback": "drin",
     "SHIP|Fallback: MA50-Pullback": "draussen",
     "BAND|EMA Crossback": "drin",
-    "BLTE|Fallback: MA50-Pullback": "draussen",
+    "BLTE|Fallback: MA50-Pullback": "drin",
     "LB|Cup & Handle (Wochenbasis)": "draussen",
     "NVGS|Fallback: MA50-Pullback": "draussen",
     "NBR|Fallback: MA50-Pullback": "drin",
@@ -230,7 +230,7 @@
     "SMTC|EMA Crossback": "drin",
     "GH|Fallback: MA50-Pullback": "draussen",
     "TWLO|Fallback: MA50-Pullback": "draussen",
-    "TWST|EMA Crossback": "drin",
+    "TWST|EMA Crossback": "draussen",
     "CXW|Fallback: MA50-Pullback": "draussen",
     "HCC|Fallback: MA50-R\u00fcckeroberung": "drin",
     "PTGX|Rectangle Top": "drin",
@@ -238,8 +238,15 @@
     "SCCO|Fallback: MA50-R\u00fcckeroberung": "drin",
     "TRMD|Cup & Handle (Wochenbasis)": "drin",
     "HBM|Fallback: MA50-R\u00fcckeroberung": "drin",
-    "INTC|Fallback: MA50-R\u00fcckeroberung": "drin",
-    "TSAT|Fallback: MA50-Pullback": "draussen"
+    "INTC|Fallback: MA50-R\u00fcckeroberung": "draussen",
+    "TSAT|Fallback: MA50-Pullback": "draussen",
+    "CBLL|Cup & Handle (Wochenbasis) + Darvas Box": "drin",
+    "FTNT|Rectangle Top": "drin",
+    "NTRA|Cup & Handle (Wochenbasis)": "drin",
+    "NTRA|Fallback: 52W-Hoch-Breakout": "drin",
+    "FRPT|Rectangle Top": "drin",
+    "GNK|Fallback: MA50-Pullback": "draussen",
+    "TRMD|Fallback: 52W-Hoch-Breakout": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -423,8 +430,33 @@
     "BEST|INTC|Fallback: MA50-R\u00fcckeroberung": "2026-09-16",
     "UEBER|FTK|Fallback: MA50-R\u00fcckeroberung": "2026-09-16",
     "GAPGOIN|KGS|2026-09-15": "2026-09-16",
-    "GAPGOIN|OII|2026-09-15": "2026-09-16"
+    "GAPGOIN|OII|2026-09-15": "2026-09-16",
+    "GAPGO|FTH|2026-09-16": "2026-09-16",
+    "CBLL|Cup & Handle (Wochenbasis)": "2026-09-16",
+    "CBLL|Darvas Box": "2026-09-16",
+    "BEST|CBLL|Cup & Handle (Wochenbasis)": "2026-09-16",
+    "BEST|CBLL|Darvas Box": "2026-09-16",
+    "FTNT|Rectangle Top": "2026-09-16",
+    "BEST|FTNT|Rectangle Top": "2026-09-16",
+    "NTRA|Fallback: 52W-Hoch-Breakout": "2026-09-16",
+    "BEST|NTRA|Fallback: 52W-Hoch-Breakout": "2026-09-16",
+    "FRPT|Rectangle Top": "2026-09-16",
+    "BEST|FRPT|Rectangle Top": "2026-09-16",
+    "NBR|Rectangle Top": "2026-09-16",
+    "BEST|NBR|Rectangle Top": "2026-09-16",
+    "UEBER|INTC|Fallback: MA50-R\u00fcckeroberung": "2026-09-16",
+    "UEBER|TWST|EMA Crossback": "2026-09-16",
+    "TRMD|Fallback: 52W-Hoch-Breakout": "2026-09-16",
+    "BEST|TRMD|Fallback: 52W-Hoch-Breakout": "2026-09-16"
   },
-  "gapgo_warten": {},
+  "gapgo_warten": {
+    "FTH": {
+      "signal": "2026-09-16",
+      "kp": 36.99,
+      "stop": 35.36,
+      "firma": "Faeth Therapeutics Inc",
+      "bestaetigt": false
+    }
+  },
   "ampel_tag": "2026-09-16"
 }
