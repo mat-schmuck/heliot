@@ -6701,5 +6701,32 @@
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
   "wedge_drop_gemeldet": false
+ },
+ "FTK|INS-2026-09-16": {
+  "symbol": "FTK",
+  "firma": "",
+  "strategie": "Insider-Kauf",
+  "einstieg": 27.8725,
+  "einstieg_datum": "2026-09-16",
+  "einstieg_index": 0,
+  "struktur_stop": null,
+  "aktueller_stop": 25.09,
+  "stop_quelle": "deckel",
+  "hoechstkurs": 27.8725,
+  "teilverkauft": false,
+  "halteregel_aktiv": false,
+  "beobachtung": true,
+  "status": "offen",
+  "verlauf": [],
+  "klasse": "insider",
+  "musterziel": null,
+  "zone": null,
+  "zone_gemeldet": null,
+  "ziel_gemeldet": false,
+  "klimax_gemeldet": [],
+  "weinstein_gemeldet": false,
+  "zahlen_hinweis_gemeldet": false,
+  "sektor_hinweis_gemeldet": false,
+  "wedge_drop_gemeldet": false
  }
 }

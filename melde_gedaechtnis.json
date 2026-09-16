@@ -503,7 +503,9 @@
     "LB|Cup & Handle (Wochenbasis)": "2026-09-16",
     "BEST|LB|Cup & Handle (Wochenbasis)": "2026-09-16",
     "UEBER|NUTX|Cup & Handle (Wochenbasis)": "2026-09-14",
-    "UEBER|NUTX|Fallback: 52W-Hoch-Breakout": "2026-09-14"
+    "UEBER|NUTX|Fallback: 52W-Hoch-Breakout": "2026-09-14",
+    "INSIDER|FTK|pfad_a|1": "2026-09-16",
+    "INSIDER|RSG|pfad_a|0": "2026-09-16"
   },
   "gapgo_warten": {
     "FTH": {
@@ -518,14 +520,16 @@
       "kp": 57.36,
       "stop": 56.61,
       "firma": "Kodiak Gas Services Inc",
-      "bestaetigt": false
+      "bestaetigt": false,
+      "pruef": "2026-09-16"
     },
     "OII": {
       "signal": "2026-09-15",
       "kp": 47.03,
       "stop": 47.01,
       "firma": "Oceaneering International Inc",
-      "bestaetigt": false
+      "bestaetigt": false,
+      "pruef": "2026-09-16"
     }
   },
   "ampel_tag": "2026-09-16"
