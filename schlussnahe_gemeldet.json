@@ -1,54 +1,30 @@
 {
- "handelstag": "2026-09-16",
+ "handelstag": "2026-09-17",
  "gemeldet_um_ny": "15:45",
  "befunde": [
   {
    "praefix": "REGEL",
    "typ": "kapitel11",
-   "key": "WTTR|2",
-   "symbol": "WTTR|2",
+   "key": "ATI|1",
+   "symbol": "ATI|1",
    "zeichen": null,
-   "text": "REGEL: BEOBACHTUNG: WTTR|2 (Select Water Solutions Inc); Stop gerissen, ganz raus; Kurs 20.02, -4.5 % seit Einstieg; Schluss 20.02 unter Stop 20.14"
+   "text": "REGEL: BEOBACHTUNG: ATI|1 (ATI Inc); Stop gerissen, ganz raus; Kurs 183.13, -10.4 % seit Einstieg; Schluss 183.13 unter Stop 185.88"
+  },
+  {
+   "praefix": "REGEL",
+   "typ": "kapitel11",
+   "key": "DNTH|Fallback: MA50-Pullback",
+   "symbol": "DNTH|Fallback: MA50-Pullback",
+   "zeichen": null,
+   "text": "REGEL: BEOBACHTUNG: DNTH|Fallback: MA50-Pullback (Dianthus Therapeutics Inc); Stop gerissen, ganz raus; Kurs 100.37, -5.9 % seit Einstieg; Schluss 100.37 unter Stop 101.12"
   },
   {
    "praefix": "INFORMATION",
-   "typ": "ema8_hinweis",
-   "key": "APA|Cup & Handle (Wochenbasis)",
-   "symbol": "APA",
-   "zeichen": null,
-   "text": "INFORMATION: APA; Cup & Handle (Wochenbasis); Kurs 44.73 unter der 8-Tage-EMA 44.92; reiner Hinweis, kein Ausstiegssignal; Kurs 44,73, seit Trigger -3,0 % gleich -0,3 R"
-  },
-  {
-   "praefix": "INFORMATION",
-   "typ": "ema8_hinweis",
-   "key": "APA|Fallback: 52W-Hoch-Breakout",
-   "symbol": "APA",
-   "zeichen": null,
-   "text": "INFORMATION: APA; Fallback: 52W-Hoch-Breakout; Kurs 44.73 unter der 8-Tage-EMA 44.92; reiner Hinweis, kein Ausstiegssignal; Kurs 44,73, seit Trigger -3,1 % gleich -0,4 R"
-  },
-  {
-   "praefix": "INFORMATION",
-   "typ": "ema8_hinweis",
-   "key": "ARW|Rectangle Top",
-   "symbol": "ARW",
-   "zeichen": null,
-   "text": "INFORMATION: ARW; Rectangle Top; Kurs 211.07 unter der 8-Tage-EMA 214.00; reiner Hinweis, kein Ausstiegssignal; Kurs 211,07, seit Trigger -4,5 % gleich -0,5 R"
-  },
-  {
-   "praefix": "INFORMATION",
-   "typ": "ema8_hinweis",
-   "key": "ASH|1",
-   "symbol": "ASH",
-   "zeichen": null,
-   "text": "INFORMATION: ASH; Cup & Handle (Wochenbasis); Kurs 69.99 unter der 8-Tage-EMA 71.04; reiner Hinweis, kein Ausstiegssignal; Kurs 69,99, seit Trigger +0,5 % gleich 0,0 R"
-  },
-  {
-   "praefix": "INFORMATION",
-   "typ": "ema8_hinweis",
-   "key": "ASX|1",
-   "symbol": "ASX",
-   "zeichen": null,
-   "text": "INFORMATION: ASX; Rectangle Top; Kurs 37.67 unter der 8-Tage-EMA 38.14; reiner Hinweis, kein Ausstiegssignal; Kurs 37,67, seit Trigger -5,1 % gleich -0,6 R"
+   "typ": "klimax_zeichen",
+   "key": "AMD|SPRING-2026-09-14",
+   "symbol": "AMD",
+   "zeichen": "2_groesster_tagesgewinn",
+   "text": "INFORMATION: AMD; Shakeout-Spring; Klimax-Zeichen 2 groesster tagesgewinn (+6,5 %); Verkauf in die Stärke erwägen; Kurs 545,67, seit Trigger +9,5 % gleich 2,7 R"
   },
   {
    "praefix": "INFORMATION",
@@ -56,23 +32,7 @@
    "key": "ATI|1",
    "symbol": "ATI",
    "zeichen": null,
-   "text": "INFORMATION: ATI; Rectangle Top; Kurs 188.16 unter der 8-Tage-EMA 195.38; reiner Hinweis, kein Ausstiegssignal; Kurs 188,16, seit Trigger -7,9 % gleich -0,8 R"
-  },
-  {
-   "praefix": "INFORMATION",
-   "typ": "ema8_hinweis",
-   "key": "AVT|EMA Crossback",
-   "symbol": "AVT",
-   "zeichen": null,
-   "text": "INFORMATION: AVT; EMA Crossback; Kurs 92.16 unter der 8-Tage-EMA 92.81; reiner Hinweis, kein Ausstiegssignal; Kurs 92,16, seit Trigger -1,9 % gleich -0,5 R"
-  },
-  {
-   "praefix": "INFORMATION",
-   "typ": "ema8_hinweis",
-   "key": "AVT|Rectangle Top",
-   "symbol": "AVT",
-   "zeichen": null,
-   "text": "INFORMATION: AVT; Rectangle Top; Kurs 92.16 unter der 8-Tage-EMA 92.81; reiner Hinweis, kein Ausstiegssignal; Kurs 92,16, seit Trigger -1,3 % gleich -0,1 R"
+   "text": "INFORMATION: ATI; Rectangle Top; Kurs 183.13 unter der 8-Tage-EMA 192.91; reiner Hinweis, kein Ausstiegssignal; Kurs 183,13, seit Trigger -10,4 % gleich -1,0 R"
   },
   {
    "praefix": "INFORMATION",
@@ -80,7 +40,7 @@
    "key": "CHRD|1",
    "symbol": "CHRD",
    "zeichen": null,
-   "text": "INFORMATION: CHRD; Cup & Handle (Wochenbasis); Kurs 146.73 unter der 8-Tage-EMA 150.32; reiner Hinweis, kein Ausstiegssignal; Kurs 146,73, seit Trigger -4,1 % gleich -0,4 R"
+   "text": "INFORMATION: CHRD; Cup & Handle (Wochenbasis); Kurs 146.29 unter der 8-Tage-EMA 149.48; reiner Hinweis, kein Ausstiegssignal; Kurs 146,29, seit Trigger -4,4 % gleich -0,4 R"
   },
   {
    "praefix": "INFORMATION",
@@ -88,23 +48,7 @@
    "key": "CHRD|Fallback: 52W-Hoch-Breakout",
    "symbol": "CHRD",
    "zeichen": null,
-   "text": "INFORMATION: CHRD; Fallback: 52W-Hoch-Breakout; Kurs 146.73 unter der 8-Tage-EMA 150.32; reiner Hinweis, kein Ausstiegssignal; Kurs 146,73, seit Trigger -4,8 % gleich -0,7 R"
-  },
-  {
-   "praefix": "INFORMATION",
-   "typ": "ema8_hinweis",
-   "key": "CNC|1",
-   "symbol": "CNC",
-   "zeichen": null,
-   "text": "INFORMATION: CNC; EMA Crossback; Kurs 66.44 unter der 8-Tage-EMA 66.70; reiner Hinweis, kein Ausstiegssignal; Kurs 66,44, seit Trigger -2,2 % gleich -0,6 R"
-  },
-  {
-   "praefix": "INFORMATION",
-   "typ": "ema8_hinweis",
-   "key": "CNC|Rectangle Top",
-   "symbol": "CNC",
-   "zeichen": null,
-   "text": "INFORMATION: CNC; Rectangle Top; Kurs 66.44 unter der 8-Tage-EMA 66.70; reiner Hinweis, kein Ausstiegssignal; Kurs 66,44, seit Trigger -2,9 % gleich -0,3 R"
+   "text": "INFORMATION: CHRD; Fallback: 52W-Hoch-Breakout; Kurs 146.29 unter der 8-Tage-EMA 149.48; reiner Hinweis, kein Ausstiegssignal; Kurs 146,29, seit Trigger -5,1 % gleich -0,7 R"
   },
   {
    "praefix": "INFORMATION",
@@ -112,23 +56,7 @@
    "key": "CVE|1",
    "symbol": "CVE",
    "zeichen": null,
-   "text": "INFORMATION: CVE; Cup & Handle (Wochenbasis), Darvas Box; Kurs 32.58 unter der 8-Tage-EMA 33.07; reiner Hinweis, kein Ausstiegssignal; Kurs 32,58, seit Trigger -2,5 % gleich -0,3 R"
-  },
-  {
-   "praefix": "INFORMATION",
-   "typ": "klimax_zeichen",
-   "key": "DK|Cup & Handle (Wochenbasis)",
-   "symbol": "DK",
-   "zeichen": "4_ma200_abstand",
-   "text": "INFORMATION: DK; Cup & Handle (Wochenbasis); Klimax-Zeichen 4 ma200 abstand (+72,8 %); Verkauf in die Stärke erwägen; Kurs 79,98, seit Trigger +2,8 % gleich 0,3 R"
-  },
-  {
-   "praefix": "INFORMATION",
-   "typ": "klimax_zeichen",
-   "key": "DK|Fallback: 52W-Hoch-Breakout",
-   "symbol": "DK",
-   "zeichen": "4_ma200_abstand",
-   "text": "INFORMATION: DK; Fallback: 52W-Hoch-Breakout; Klimax-Zeichen 4 ma200 abstand (+72,8 %); Verkauf in die Stärke erwägen; Kurs 79,98, seit Trigger +1,9 % gleich 0,3 R"
+   "text": "INFORMATION: CVE; Cup & Handle (Wochenbasis), Darvas Box; Kurs 32.89 unter der 8-Tage-EMA 33.02; reiner Hinweis, kein Ausstiegssignal; Kurs 32,89, seit Trigger -1,6 % gleich -0,2 R"
   },
   {
    "praefix": "INFORMATION",
@@ -136,7 +64,7 @@
    "key": "DNTH|Fallback: MA50-Pullback",
    "symbol": "DNTH",
    "zeichen": null,
-   "text": "INFORMATION: DNTH; Fallback: MA50-Pullback; Kurs 103.09 unter der 8-Tage-EMA 105.74; reiner Hinweis, kein Ausstiegssignal; Kurs 103,09, seit Trigger -3,4 % gleich -0,6 R"
+   "text": "INFORMATION: DNTH; Fallback: MA50-Pullback; Kurs 100.37 unter der 8-Tage-EMA 104.44; reiner Hinweis, kein Ausstiegssignal; Kurs 100,37, seit Trigger -5,9 % gleich -1,1 R"
   },
   {
    "praefix": "INFORMATION",
@@ -144,31 +72,7 @@
    "key": "EC|2",
    "symbol": "EC",
    "zeichen": null,
-   "text": "INFORMATION: EC; EMA Crossback; Kurs 17.48 unter der 8-Tage-EMA 17.70; reiner Hinweis, kein Ausstiegssignal; Kurs 17,48, seit Trigger -2,1 % gleich -0,4 R"
-  },
-  {
-   "praefix": "INFORMATION",
-   "typ": "ema8_hinweis",
-   "key": "EOG|1",
-   "symbol": "EOG",
-   "zeichen": null,
-   "text": "INFORMATION: EOG; Rectangle Top; Kurs 144.54 unter der 8-Tage-EMA 147.71; reiner Hinweis, kein Ausstiegssignal; Kurs 144,54, seit Trigger -0,7 % gleich -0,1 R"
-  },
-  {
-   "praefix": "INFORMATION",
-   "typ": "ema8_hinweis",
-   "key": "EOG|2",
-   "symbol": "EOG",
-   "zeichen": null,
-   "text": "INFORMATION: EOG; Rectangle Top; Kurs 144.54 unter der 8-Tage-EMA 147.71; reiner Hinweis, kein Ausstiegssignal; Kurs 144,54, seit Trigger -2,5 % gleich -0,3 R"
-  },
-  {
-   "praefix": "INFORMATION",
-   "typ": "ema8_hinweis",
-   "key": "EQNR|1",
-   "symbol": "EQNR",
-   "zeichen": null,
-   "text": "INFORMATION: EQNR; Cup & Handle (Wochenbasis); Kurs 44.23 unter der 8-Tage-EMA 44.40; reiner Hinweis, kein Ausstiegssignal; Kurs 44,23, seit Trigger -0,2 % gleich -0,0 R"
+   "text": "INFORMATION: EC; EMA Crossback; Kurs 17.31 unter der 8-Tage-EMA 17.61; reiner Hinweis, kein Ausstiegssignal; Kurs 17,31, seit Trigger -3,0 % gleich -0,6 R"
   },
   {
    "praefix": "INFORMATION",
@@ -176,7 +80,7 @@
    "key": "FIVE|2",
    "symbol": "FIVE",
    "zeichen": null,
-   "text": "INFORMATION: FIVE; Rectangle Top; Kurs 234.88 unter der 8-Tage-EMA 242.31; reiner Hinweis, kein Ausstiegssignal; Kurs 234,88, seit Trigger -4,0 % gleich -0,4 R"
+   "text": "INFORMATION: FIVE; Rectangle Top; Kurs 237.10 unter der 8-Tage-EMA 241.64; reiner Hinweis, kein Ausstiegssignal; Kurs 237,10, seit Trigger -3,0 % gleich -0,3 R"
   },
   {
    "praefix": "INFORMATION",
@@ -184,7 +88,7 @@
    "key": "FLYW|Fallback: MA50-Rückeroberung",
    "symbol": "FLYW",
    "zeichen": null,
-   "text": "INFORMATION: FLYW; Fallback: MA50-Rückeroberung; Kurs 17.57 unter der 8-Tage-EMA 17.94; reiner Hinweis, kein Ausstiegssignal; Kurs 17,57, seit Trigger -2,5 % gleich -0,4 R"
+   "text": "INFORMATION: FLYW; Fallback: MA50-Rückeroberung; Kurs 17.75 unter der 8-Tage-EMA 17.94; reiner Hinweis, kein Ausstiegssignal; Kurs 17,75, seit Trigger -1,5 % gleich -0,2 R"
   },
   {
    "praefix": "INFORMATION",
@@ -192,7 +96,15 @@
    "key": "FRPT|Fallback: MA50-Rückeroberung",
    "symbol": "FRPT",
    "zeichen": null,
-   "text": "INFORMATION: FRPT; Fallback: MA50-Rückeroberung; Kurs 62.20 unter der 8-Tage-EMA 64.99; reiner Hinweis, kein Ausstiegssignal; Kurs 62,20, seit Trigger -4,4 % gleich -0,7 R"
+   "text": "INFORMATION: FRPT; Fallback: MA50-Rückeroberung; Kurs 61.35 unter der 8-Tage-EMA 64.15; reiner Hinweis, kein Ausstiegssignal; Kurs 61,35, seit Trigger -5,7 % gleich -0,9 R"
+  },
+  {
+   "praefix": "INFORMATION",
+   "typ": "ema8_hinweis",
+   "key": "FRPT|Rectangle Top",
+   "symbol": "FRPT",
+   "zeichen": null,
+   "text": "INFORMATION: FRPT; Rectangle Top; Kurs 61.35 unter der 8-Tage-EMA 64.15; reiner Hinweis, kein Ausstiegssignal; Kurs 61,35, seit Trigger -0,7 % gleich -0,1 R"
   },
   {
    "praefix": "INFORMATION",
@@ -200,7 +112,7 @@
    "key": "FTI|2",
    "symbol": "FTI",
    "zeichen": null,
-   "text": "INFORMATION: FTI; Rectangle Top; Kurs 72.52 unter der 8-Tage-EMA 75.28; reiner Hinweis, kein Ausstiegssignal; Kurs 72,52, seit Trigger -4,8 % gleich -0,5 R"
+   "text": "INFORMATION: FTI; Rectangle Top; Kurs 72.80 unter der 8-Tage-EMA 74.78; reiner Hinweis, kein Ausstiegssignal; Kurs 72,80, seit Trigger -4,4 % gleich -0,4 R"
   },
   {
    "praefix": "INFORMATION",
@@ -208,15 +120,23 @@
    "key": "GLNG|Rectangle Top",
    "symbol": "GLNG",
    "zeichen": null,
-   "text": "INFORMATION: GLNG; Rectangle Top; Kurs 50.14 unter der 8-Tage-EMA 51.35; reiner Hinweis, kein Ausstiegssignal; Kurs 50,14, seit Trigger -3,8 % gleich -0,6 R"
+   "text": "INFORMATION: GLNG; Rectangle Top; Kurs 50.78 unter der 8-Tage-EMA 51.26; reiner Hinweis, kein Ausstiegssignal; Kurs 50,78, seit Trigger -2,6 % gleich -0,4 R"
   },
   {
    "praefix": "INFORMATION",
    "typ": "ema8_hinweis",
-   "key": "GSAT|Rectangle Top",
-   "symbol": "GSAT",
+   "key": "HBM|Fallback: MA50-Rückeroberung",
+   "symbol": "HBM",
    "zeichen": null,
-   "text": "INFORMATION: GSAT; Rectangle Top; Kurs 81.83 unter der 8-Tage-EMA 81.96; reiner Hinweis, kein Ausstiegssignal; Kurs 81,83, seit Trigger -0,7 % gleich -0,2 R"
+   "text": "INFORMATION: HBM; Fallback: MA50-Rückeroberung; Kurs 26.36 unter der 8-Tage-EMA 26.42; reiner Hinweis, kein Ausstiegssignal; Kurs 26,36, seit Trigger +3,2 % gleich 0,5 R"
+  },
+  {
+   "praefix": "INFORMATION",
+   "typ": "ema8_hinweis",
+   "key": "HCC|Fallback: MA50-Rückeroberung",
+   "symbol": "HCC",
+   "zeichen": null,
+   "text": "INFORMATION: HCC; Fallback: MA50-Rückeroberung; Kurs 92.32 unter der 8-Tage-EMA 96.51; reiner Hinweis, kein Ausstiegssignal; Kurs 92,32, seit Trigger -0,2 % gleich -0,0 R"
   },
   {
    "praefix": "INFORMATION",
@@ -224,7 +144,7 @@
    "key": "HOPE|Fallback: MA50-Pullback",
    "symbol": "HOPE",
    "zeichen": null,
-   "text": "INFORMATION: HOPE; Fallback: MA50-Pullback; Kurs 13.88 unter der 8-Tage-EMA 13.97; reiner Hinweis, kein Ausstiegssignal; Kurs 13,88, seit Trigger -0,5 % gleich -0,1 R"
+   "text": "INFORMATION: HOPE; Fallback: MA50-Pullback; Kurs 13.96 unter der 8-Tage-EMA 13.98; reiner Hinweis, kein Ausstiegssignal; Kurs 13,96, seit Trigger +0,1 % gleich 0,0 R"
   },
   {
    "praefix": "INFORMATION",
@@ -232,23 +152,7 @@
    "key": "JOE|Rectangle Top",
    "symbol": "JOE",
    "zeichen": null,
-   "text": "INFORMATION: JOE; Rectangle Top; Kurs 64.04 unter der 8-Tage-EMA 64.79; reiner Hinweis, kein Ausstiegssignal; Kurs 64,04, seit Trigger -3,2 % gleich -0,6 R"
-  },
-  {
-   "praefix": "INFORMATION",
-   "typ": "ema8_hinweis",
-   "key": "KEYS|1",
-   "symbol": "KEYS",
-   "zeichen": null,
-   "text": "INFORMATION: KEYS; Rectangle Top; Kurs 319.81 unter der 8-Tage-EMA 322.50; reiner Hinweis, kein Ausstiegssignal; Kurs 319,81, seit Trigger -4,0 % gleich -0,5 R"
-  },
-  {
-   "praefix": "INFORMATION",
-   "typ": "tagesende",
-   "key": "KGS|GG-2026-09-15",
-   "symbol": "KGS",
-   "zeichen": null,
-   "text": "INFORMATION: KGS; Gap and Go; Tagesgeschäft endet mit dem Schluss; Kurs 58,16, seit Trigger +1,4 % gleich 1,1 R"
+   "text": "INFORMATION: JOE; Rectangle Top; Kurs 63.87 unter der 8-Tage-EMA 64.62; reiner Hinweis, kein Ausstiegssignal; Kurs 63,87, seit Trigger -3,4 % gleich -0,7 R"
   },
   {
    "praefix": "INFORMATION",
@@ -256,7 +160,7 @@
    "key": "KRYS|2",
    "symbol": "KRYS",
    "zeichen": null,
-   "text": "INFORMATION: KRYS; Rectangle Top; Kurs 337.14 unter der 8-Tage-EMA 344.52; reiner Hinweis, kein Ausstiegssignal; Kurs 337,14, seit Trigger -7,0 % gleich -0,7 R"
+   "text": "INFORMATION: KRYS; Rectangle Top; Kurs 337.24 unter der 8-Tage-EMA 342.82; reiner Hinweis, kein Ausstiegssignal; Kurs 337,24, seit Trigger -6,9 % gleich -0,7 R"
   },
   {
    "praefix": "INFORMATION",
@@ -264,31 +168,15 @@
    "key": "KRYS|3",
    "symbol": "KRYS",
    "zeichen": null,
-   "text": "INFORMATION: KRYS; Rectangle Top; Kurs 337.14 unter der 8-Tage-EMA 344.52; reiner Hinweis, kein Ausstiegssignal; Kurs 337,14, seit Trigger -7,1 % gleich -0,7 R"
+   "text": "INFORMATION: KRYS; Rectangle Top; Kurs 337.24 unter der 8-Tage-EMA 342.82; reiner Hinweis, kein Ausstiegssignal; Kurs 337,24, seit Trigger -7,0 % gleich -0,7 R"
   },
   {
    "praefix": "INFORMATION",
    "typ": "ema8_hinweis",
-   "key": "MTDR|1",
-   "symbol": "MTDR",
+   "key": "NBR|Rectangle Top",
+   "symbol": "NBR",
    "zeichen": null,
-   "text": "INFORMATION: MTDR; Rectangle Top; Kurs 57.84 unter der 8-Tage-EMA 60.22; reiner Hinweis, kein Ausstiegssignal; Kurs 57,84, seit Trigger +3,1 % gleich 0,3 R"
-  },
-  {
-   "praefix": "INFORMATION",
-   "typ": "ema8_hinweis",
-   "key": "MUR|1",
-   "symbol": "MUR",
-   "zeichen": null,
-   "text": "INFORMATION: MUR; Rectangle Top; Kurs 38.29 unter der 8-Tage-EMA 38.41; reiner Hinweis, kein Ausstiegssignal; Kurs 38,29, seit Trigger -1,1 % gleich -0,1 R"
-  },
-  {
-   "praefix": "INFORMATION",
-   "typ": "ema8_hinweis",
-   "key": "NRIX|Fallback: MA50-Pullback",
-   "symbol": "NRIX",
-   "zeichen": null,
-   "text": "INFORMATION: NRIX; Fallback: MA50-Pullback; Kurs 24.86 unter der 8-Tage-EMA 25.40; reiner Hinweis, kein Ausstiegssignal; Kurs 24,86, seit Trigger -1,3 % gleich -0,2 R"
+   "text": "INFORMATION: NBR; Rectangle Top; Kurs 85.78 unter der 8-Tage-EMA 88.39; reiner Hinweis, kein Ausstiegssignal; Kurs 85,78, seit Trigger -2,3 % gleich -0,3 R"
   },
   {
    "praefix": "INFORMATION",
@@ -296,15 +184,15 @@
    "key": "NX|SPRING-2026-09-10",
    "symbol": "NX",
    "zeichen": null,
-   "text": "INFORMATION: NX; Shakeout-Spring; Kurs 20.52 unter der 8-Tage-EMA 20.93; reiner Hinweis, kein Ausstiegssignal; Kurs 20,52, seit Trigger -1,4 % gleich -0,4 R"
+   "text": "INFORMATION: NX; Shakeout-Spring; Kurs 20.46 unter der 8-Tage-EMA 20.87; reiner Hinweis, kein Ausstiegssignal; Kurs 20,46, seit Trigger -1,7 % gleich -0,5 R"
   },
   {
    "praefix": "INFORMATION",
    "typ": "ema8_hinweis",
-   "key": "OXY|2",
-   "symbol": "OXY",
+   "key": "PAY|Rectangle Top",
+   "symbol": "PAY",
    "zeichen": null,
-   "text": "INFORMATION: OXY; Rectangle Top; Kurs 59.40 unter der 8-Tage-EMA 61.10; reiner Hinweis, kein Ausstiegssignal; Kurs 59,40, seit Trigger +0,2 % gleich 0,0 R"
+   "text": "INFORMATION: PAY; Rectangle Top; Kurs 36.13 unter der 8-Tage-EMA 36.34; reiner Hinweis, kein Ausstiegssignal; Kurs 36,13, seit Trigger -2,6 % gleich -0,4 R"
   },
   {
    "praefix": "INFORMATION",
@@ -312,7 +200,7 @@
    "key": "PBT|Cup & Handle (Wochenbasis)",
    "symbol": "PBT",
    "zeichen": null,
-   "text": "INFORMATION: PBT; Cup & Handle (Wochenbasis); Kurs 34.81 unter der 8-Tage-EMA 35.17; reiner Hinweis, kein Ausstiegssignal; Kurs 34,81, seit Trigger -2,8 % gleich -0,3 R"
+   "text": "INFORMATION: PBT; Cup & Handle (Wochenbasis); Kurs 34.93 unter der 8-Tage-EMA 35.12; reiner Hinweis, kein Ausstiegssignal; Kurs 34,93, seit Trigger -2,5 % gleich -0,2 R"
   },
   {
    "praefix": "INFORMATION",
@@ -320,23 +208,7 @@
    "key": "PBT|Fallback: 52W-Hoch-Breakout",
    "symbol": "PBT",
    "zeichen": null,
-   "text": "INFORMATION: PBT; Fallback: 52W-Hoch-Breakout; Kurs 34.81 unter der 8-Tage-EMA 35.17; reiner Hinweis, kein Ausstiegssignal; Kurs 34,81, seit Trigger -2,9 % gleich -0,4 R"
-  },
-  {
-   "praefix": "INFORMATION",
-   "typ": "ema8_hinweis",
-   "key": "PSIX|1",
-   "symbol": "PSIX",
-   "zeichen": null,
-   "text": "INFORMATION: PSIX; EMA Crossback; Kurs 39.58 unter der 8-Tage-EMA 39.76; reiner Hinweis, kein Ausstiegssignal; Kurs 39,58, seit Trigger -2,9 % gleich -0,3 R"
-  },
-  {
-   "praefix": "INFORMATION",
-   "typ": "ema8_hinweis",
-   "key": "PSIX|2",
-   "symbol": "PSIX",
-   "zeichen": null,
-   "text": "INFORMATION: PSIX; Rectangle Top; Kurs 39.58 unter der 8-Tage-EMA 39.76; reiner Hinweis, kein Ausstiegssignal; Kurs 39,58, seit Trigger -8,5 % gleich -0,8 R"
+   "text": "INFORMATION: PBT; Fallback: 52W-Hoch-Breakout; Kurs 34.93 unter der 8-Tage-EMA 35.12; reiner Hinweis, kein Ausstiegssignal; Kurs 34,93, seit Trigger -2,5 % gleich -0,4 R"
   },
   {
    "praefix": "INFORMATION",
@@ -344,7 +216,15 @@
    "key": "PTGX|1",
    "symbol": "PTGX",
    "zeichen": null,
-   "text": "INFORMATION: PTGX; Rectangle Top; Kurs 141.82 unter der 8-Tage-EMA 145.27; reiner Hinweis, kein Ausstiegssignal; Kurs 141,82, seit Trigger -1,0 % gleich -0,1 R"
+   "text": "INFORMATION: PTGX; Rectangle Top; Kurs 143.03 unter der 8-Tage-EMA 144.95; reiner Hinweis, kein Ausstiegssignal; Kurs 143,03, seit Trigger -0,2 % gleich -0,0 R"
+  },
+  {
+   "praefix": "INFORMATION",
+   "typ": "ema8_hinweis",
+   "key": "PTGX|Fallback: MA50-Rückeroberung",
+   "symbol": "PTGX",
+   "zeichen": null,
+   "text": "INFORMATION: PTGX; Fallback: MA50-Rückeroberung; Kurs 143.03 unter der 8-Tage-EMA 144.95; reiner Hinweis, kein Ausstiegssignal; Kurs 143,03, seit Trigger -0,8 % gleich -0,1 R"
   },
   {
    "praefix": "INFORMATION",
@@ -352,55 +232,23 @@
    "key": "RAPP|Rectangle Top",
    "symbol": "RAPP",
    "zeichen": null,
-   "text": "INFORMATION: RAPP; Rectangle Top; Kurs 41.40 unter der 8-Tage-EMA 43.92; reiner Hinweis, kein Ausstiegssignal; Kurs 41,40, seit Trigger -6,0 % gleich -0,6 R"
+   "text": "INFORMATION: RAPP; Rectangle Top; Kurs 41.75 unter der 8-Tage-EMA 43.43; reiner Hinweis, kein Ausstiegssignal; Kurs 41,75, seit Trigger -5,2 % gleich -0,5 R"
   },
   {
    "praefix": "INFORMATION",
    "typ": "ema8_hinweis",
-   "key": "SCCO|1",
-   "symbol": "SCCO",
+   "key": "RSG|INS-2026-09-16",
+   "symbol": "RSG",
    "zeichen": null,
-   "text": "INFORMATION: SCCO; Rectangle Top; Kurs 188.38 unter der 8-Tage-EMA 194.52; reiner Hinweis, kein Ausstiegssignal; Kurs 188,38, seit Trigger -6,7 % gleich -0,7 R"
+   "text": "INFORMATION: RSG; Insider-Kauf; Kurs 219.61 unter der 8-Tage-EMA 221.69; reiner Hinweis, kein Ausstiegssignal; Kurs 219,61, seit Trigger -1,9 % gleich -0,2 R"
   },
   {
    "praefix": "INFORMATION",
-   "typ": "ema8_hinweis",
-   "key": "SHIP|1",
-   "symbol": "SHIP",
-   "zeichen": null,
-   "text": "INFORMATION: SHIP; Cup & Handle (Wochenbasis); Kurs 18.30 unter der 8-Tage-EMA 18.30; reiner Hinweis, kein Ausstiegssignal; Kurs 18,30, seit Trigger -2,4 % gleich -0,2 R"
-  },
-  {
-   "praefix": "INFORMATION",
-   "typ": "ema8_hinweis",
-   "key": "SU|2",
-   "symbol": "SU",
-   "zeichen": null,
-   "text": "INFORMATION: SU; Rectangle Top; Kurs 68.84 unter der 8-Tage-EMA 69.08; reiner Hinweis, kein Ausstiegssignal; Kurs 68,84, seit Trigger +2,5 % gleich 0,3 R"
-  },
-  {
-   "praefix": "INFORMATION",
-   "typ": "ema8_hinweis",
-   "key": "TBBB|1",
-   "symbol": "TBBB",
-   "zeichen": null,
-   "text": "INFORMATION: TBBB; Cup & Handle (Wochenbasis); Kurs 50.30 unter der 8-Tage-EMA 50.60; reiner Hinweis, kein Ausstiegssignal; Kurs 50,30, seit Trigger -2,7 % gleich -0,3 R"
-  },
-  {
-   "praefix": "INFORMATION",
-   "typ": "ema8_hinweis",
-   "key": "TWIN|EMA Crossback",
-   "symbol": "TWIN",
-   "zeichen": null,
-   "text": "INFORMATION: TWIN; EMA Crossback; Kurs 23.84 unter der 8-Tage-EMA 24.12; reiner Hinweis, kein Ausstiegssignal; Kurs 23,84, seit Trigger -3,5 % gleich -0,8 R"
-  },
-  {
-   "praefix": "INFORMATION",
-   "typ": "ema8_hinweis",
-   "key": "TWIN|Rectangle Top",
-   "symbol": "TWIN",
-   "zeichen": null,
-   "text": "INFORMATION: TWIN; Rectangle Top; Kurs 23.84 unter der 8-Tage-EMA 24.12; reiner Hinweis, kein Ausstiegssignal; Kurs 23,84, seit Trigger -2,9 % gleich -0,3 R"
+   "typ": "klimax_zeichen",
+   "key": "SEI|SPRING-2026-09-14",
+   "symbol": "SEI",
+   "zeichen": "2_groesster_tagesgewinn",
+   "text": "INFORMATION: SEI; Shakeout-Spring; Klimax-Zeichen 2 groesster tagesgewinn (+5,5 %); Verkauf in die Stärke erwägen; Kurs 68,12, seit Trigger +11,0 % gleich 7,4 R"
   },
   {
    "praefix": "INFORMATION",
@@ -408,41 +256,7 @@
    "key": "VIST|1",
    "symbol": "VIST",
    "zeichen": null,
-   "text": "INFORMATION: VIST; Rectangle Top; Kurs 73.90 unter der 8-Tage-EMA 75.66; reiner Hinweis, kein Ausstiegssignal; Kurs 73,90, seit Trigger +2,2 % gleich 0,2 R"
-  },
-  {
-   "praefix": "INFORMATION",
-   "typ": "ema8_hinweis",
-   "key": "VNOM|1",
-   "symbol": "VNOM",
-   "zeichen": null,
-   "text": "INFORMATION: VNOM; Rectangle Top; Kurs 43.03 unter der 8-Tage-EMA 44.59; reiner Hinweis, kein Ausstiegssignal; Kurs 43,03, seit Trigger -4,4 % gleich -0,7 R"
-  },
-  {
-   "praefix": "INFORMATION",
-   "typ": "ema8_hinweis",
-   "key": "WTTR|1",
-   "symbol": "WTTR",
-   "zeichen": null,
-   "text": "INFORMATION: WTTR; Cup & Handle (Wochenbasis); Kurs 20.02 unter der 8-Tage-EMA 20.27; reiner Hinweis, kein Ausstiegssignal; Kurs 20,02, seit Trigger -2,3 % gleich -0,2 R"
-  },
-  {
-   "praefix": "INFORMATION",
-   "typ": "ema8_hinweis",
-   "key": "WTTR|2",
-   "symbol": "WTTR",
-   "zeichen": null,
-   "text": "INFORMATION: WTTR; EMA Crossback; Kurs 20.02 unter der 8-Tage-EMA 20.27; reiner Hinweis, kein Ausstiegssignal; Kurs 20,02, seit Trigger -4,5 % gleich -0,8 R"
+   "text": "INFORMATION: VIST; Rectangle Top; Kurs 73.23 unter der 8-Tage-EMA 75.18; reiner Hinweis, kein Ausstiegssignal; Kurs 73,23, seit Trigger +1,2 % gleich 0,1 R"
   }
- ],
- "geprueft": "2026-09-16",
- "zurueckgenommen": [
-  "WTTR|2",
-  "DK|Cup & Handle (Wochenbasis)",
-  "DK|Fallback: 52W-Hoch-Breakout",
-  "PSIX|1",
-  "PSIX|2",
-  "TWIN|EMA Crossback",
-  "TWIN|Rectangle Top"
  ]
 }

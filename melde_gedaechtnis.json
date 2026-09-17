@@ -123,7 +123,7 @@
     "FTH|Fallback: MA50-Pullback": "draussen",
     "NVCT|Fallback: MA50-Pullback": "drin",
     "PSNL|Fallback: MA50-Pullback": "draussen",
-    "TVTX|Fallback: MA50-Pullback": "drin",
+    "TVTX|Fallback: MA50-Pullback": "draussen",
     "TWST|Fallback: MA50-Pullback": "draussen",
     "ARGX|Fallback: MA50-Pullback": "draussen",
     "ASO|Fallback: MA50-Pullback": "draussen",
@@ -686,7 +686,8 @@
     "VICR|Fallback: MA50-R\u00fcckeroberung": "2026-09-17",
     "BEST|VICR|Fallback: MA50-R\u00fcckeroberung": "2026-09-17",
     "UEBER|FTK|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-17",
-    "GEWINN|klimax_zeichen|CVI|Cup & Handle (Wochenbasis)|4_ma200_abstand": "2026-09-17"
+    "GEWINN|klimax_zeichen|CVI|Cup & Handle (Wochenbasis)|4_ma200_abstand": "2026-09-17",
+    "SCHLUSSNAH|2026-09-17": "2026-09-17"
   },
   "gapgo_warten": {
     "FTH": {
