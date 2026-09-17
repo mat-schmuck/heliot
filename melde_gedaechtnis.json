@@ -117,7 +117,7 @@
     "ONC|Fallback: MA50-Pullback": "drin",
     "RAPP|Rectangle Top": "drin",
     "RDVT|Fallback: MA50-Pullback": "draussen",
-    "APPS|Fallback: MA50-Pullback": "drin",
+    "APPS|Fallback: MA50-Pullback": "draussen",
     "CLMT|Fallback: MA50-Pullback": "draussen",
     "FEIM|Fallback: MA50-Pullback": "draussen",
     "FTH|Fallback: MA50-Pullback": "draussen",
@@ -296,7 +296,7 @@
     "MXL|Fallback: MA50-R\u00fcckeroberung": "drin",
     "RVMD|Fallback: MA50-R\u00fcckeroberung": "drin",
     "TPC|Fallback: MA50-R\u00fcckeroberung": "drin",
-    "XMTR|Fallback: MA50-Pullback": "drin",
+    "XMTR|Fallback: MA50-Pullback": "draussen",
     "FTK|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "MGTX|Fallback: MA50-R\u00fcckeroberung": "drin",
     "EWTX|EMA Crossback": "drin",
@@ -598,7 +598,12 @@
     "BEST|TSAT|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-17",
     "GEWINN|klimax_zeichen|CLMT|Fallback: 20-Tage-Hoch (Pivot)|4_ma200_abstand": "2026-09-17",
     "GEWINN|klimax_zeichen|CVI|Cup & Handle (Wochenbasis)|5_kanaluebershooting": "2026-09-17",
-    "GEWINN|klimax_zeichen|TWST|EMA Crossback|4_ma200_abstand": "2026-09-17"
+    "GEWINN|klimax_zeichen|TWST|EMA Crossback|4_ma200_abstand": "2026-09-17",
+    "SEKTORAUF|2026-09-17": "2026-09-17",
+    "GEWINN|zonenwechsel|AMD|SPRING-2026-09-14|mittel": "2026-09-17",
+    "GEWINN|zonenwechsel|DK|Cup & Handle (Wochenbasis)|stark": "2026-09-17",
+    "GEWINN|zonenwechsel|DK|Fallback: 52W-Hoch-Breakout|stark": "2026-09-17",
+    "GEWINN|zonenwechsel|SEI|SPRING-2026-09-14|stark": "2026-09-17"
   },
   "gapgo_warten": {
     "FTH": {
@@ -612,7 +617,7 @@
     "HUT": {
       "signal": "2026-09-17",
       "kp": 98.58,
-      "stop": 95.99,
+      "stop": 95.39,
       "firma": "Hut 8 Corp",
       "bestaetigt": false
     },
