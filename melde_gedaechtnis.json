@@ -230,7 +230,7 @@
     "SMTC|EMA Crossback": "draussen",
     "GH|Fallback: MA50-Pullback": "draussen",
     "TWLO|Fallback: MA50-Pullback": "draussen",
-    "TWST|EMA Crossback": "drin",
+    "TWST|EMA Crossback": "draussen",
     "CXW|Fallback: MA50-Pullback": "draussen",
     "HCC|Fallback: MA50-R\u00fcckeroberung": "drin",
     "PTGX|Rectangle Top": "drin",
@@ -293,7 +293,7 @@
     "GSAT|Fallback: MA50-Pullback": "drin",
     "HUT|Fallback: MA50-R\u00fcckeroberung": "drin",
     "IESC|Fallback: MA50-R\u00fcckeroberung": "drin",
-    "MXL|Fallback: MA50-R\u00fcckeroberung": "drin",
+    "MXL|Fallback: MA50-R\u00fcckeroberung": "draussen",
     "RVMD|Fallback: MA50-R\u00fcckeroberung": "drin",
     "TPC|Fallback: MA50-R\u00fcckeroberung": "drin",
     "XMTR|Fallback: MA50-Pullback": "draussen",
@@ -628,7 +628,9 @@
     "CLS|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-17",
     "BEST|CLS|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-17",
     "TWST|Fallback: 52W-Hoch-Breakout": "2026-09-17",
-    "BEST|TWST|Fallback: 52W-Hoch-Breakout": "2026-09-17"
+    "BEST|TWST|Fallback: 52W-Hoch-Breakout": "2026-09-17",
+    "UEBER|TWST|EMA Crossback": "2026-09-17",
+    "UEBER|MXL|Fallback: MA50-R\u00fcckeroberung": "2026-09-17"
   },
   "gapgo_warten": {
     "FTH": {
