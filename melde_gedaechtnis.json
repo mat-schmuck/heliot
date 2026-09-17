@@ -280,7 +280,7 @@
     "CGON|Fallback: MA50-Pullback": "drin",
     "CMBT|Cup & Handle (Wochenbasis)": "draussen",
     "CMBT|Fallback: 52W-Hoch-Breakout": "drin",
-    "LB|Fallback: MA50-Pullback": "drin",
+    "LB|Fallback: MA50-Pullback": "draussen",
     "PNTG|EMA Crossback": "drin",
     "PNTG|Fallback: 52W-Hoch-Breakout": "drin",
     "AMD|Fallback: 20-Tage-Hoch (Pivot)": "drin",
@@ -321,7 +321,8 @@
     "TEVA|Fallback: 52W-Hoch-Breakout": "drin",
     "HNGE|Fallback: 52W-Hoch-Breakout": "drin",
     "RLAY|Fallback: MA50-R\u00fcckeroberung": "drin",
-    "APPN|EMA Crossback": "drin"
+    "APPN|EMA Crossback": "drin",
+    "GHRS|Rectangle Top": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -668,7 +669,9 @@
     "BEST|HNGE|Fallback: 52W-Hoch-Breakout": "2026-09-17",
     "RLAY|Fallback: MA50-R\u00fcckeroberung": "2026-09-17",
     "BEST|RLAY|Fallback: MA50-R\u00fcckeroberung": "2026-09-17",
-    "UEBER|TWST|Fallback: 52W-Hoch-Breakout": "2026-09-17"
+    "UEBER|TWST|Fallback: 52W-Hoch-Breakout": "2026-09-17",
+    "GHRS|Rectangle Top": "2026-09-17",
+    "BEST|GHRS|Rectangle Top": "2026-09-17"
   },
   "gapgo_warten": {
     "FTH": {
