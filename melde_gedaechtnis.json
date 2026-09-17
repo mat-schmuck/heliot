@@ -8,7 +8,7 @@
     "GLNG|Rectangle Top": "drin",
     "HOPE|Fallback: MA50-Pullback": "drin",
     "HP|Fallback: MA50-Pullback": "draussen",
-    "MT|Fallback: MA50-Pullback": "drin",
+    "MT|Fallback: MA50-Pullback": "draussen",
     "DK|Fallback: MA50-Pullback": "draussen",
     "DNTH|Fallback: MA50-Pullback": "drin",
     "FET|Fallback: MA50-Pullback": "draussen",
@@ -22,7 +22,7 @@
     "SMTC|Fallback: MA50-Pullback": "draussen",
     "APA|Fallback: MA50-Pullback": "draussen",
     "ARIS|Fallback: MA50-Pullback": "draussen",
-    "AVT|Fallback: MA50-Pullback": "drin",
+    "AVT|Fallback: MA50-Pullback": "draussen",
     "CGAU|Fallback: MA50-Pullback": "draussen",
     "CHRD|Cup & Handle (Wochenbasis)": "drin",
     "CHRD|Fallback: MA50-Pullback": "draussen",
@@ -163,7 +163,7 @@
     "RDVT|Fallback: 52W-Hoch-Breakout": "drin",
     "CGON|Fallback: MA50-R\u00fcckeroberung": "drin",
     "HBM|Fallback: MA50-Pullback": "drin",
-    "MDB|Fallback: MA50-R\u00fcckeroberung": "drin",
+    "MDB|Fallback: MA50-R\u00fcckeroberung": "draussen",
     "TEVA|Cup & Handle (Wochenbasis) + Darvas Box": "drin",
     "AXSM|Fallback: MA50-R\u00fcckeroberung": "drin",
     "CNC|Fallback: 20-Tage-Hoch (Pivot)": "drin",
@@ -316,7 +316,9 @@
     "MTW|Fallback: 52W-Hoch-Breakout": "drin",
     "QMCO|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "HAE|Fallback: 20-Tage-Hoch (Pivot)": "drin",
-    "HAE|Fallback: 52W-Hoch-Breakout": "drin"
+    "HAE|Fallback: 52W-Hoch-Breakout": "drin",
+    "TEVA|Cup & Handle (Wochenbasis)": "drin",
+    "TEVA|Fallback: 52W-Hoch-Breakout": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -653,7 +655,10 @@
     "HAE|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-17",
     "BEST|HAE|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-17",
     "HAE|Fallback: 52W-Hoch-Breakout": "2026-09-17",
-    "BEST|HAE|Fallback: 52W-Hoch-Breakout": "2026-09-17"
+    "BEST|HAE|Fallback: 52W-Hoch-Breakout": "2026-09-17",
+    "TEVA|Fallback: 52W-Hoch-Breakout": "2026-09-17",
+    "BEST|TEVA|Fallback: 52W-Hoch-Breakout": "2026-09-17",
+    "UEBER|MDB|Fallback: MA50-R\u00fcckeroberung": "2026-09-17"
   },
   "gapgo_warten": {
     "FTH": {
