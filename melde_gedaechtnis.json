@@ -275,7 +275,7 @@
     "ALNT|Fallback: MA50-R\u00fcckeroberung": "drin",
     "SMTC|Cup & Handle (Wochenbasis) + EMA Crossback": "draussen",
     "PSIX|EMA Crossback": "draussen",
-    "PSIX|Rectangle Top": "drin",
+    "PSIX|Rectangle Top": "draussen",
     "BE|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "CGON|Fallback: MA50-Pullback": "drin",
     "CMBT|Cup & Handle (Wochenbasis)": "draussen",
@@ -687,7 +687,8 @@
     "BEST|VICR|Fallback: MA50-R\u00fcckeroberung": "2026-09-17",
     "UEBER|FTK|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-17",
     "GEWINN|klimax_zeichen|CVI|Cup & Handle (Wochenbasis)|4_ma200_abstand": "2026-09-17",
-    "SCHLUSSNAH|2026-09-17": "2026-09-17"
+    "SCHLUSSNAH|2026-09-17": "2026-09-17",
+    "UEBER|PSIX|Rectangle Top": "2026-09-17"
   },
   "gapgo_warten": {
     "FTH": {
