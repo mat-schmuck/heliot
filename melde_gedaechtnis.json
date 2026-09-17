@@ -606,7 +606,9 @@
     "GEWINN|zonenwechsel|SEI|SPRING-2026-09-14|stark": "2026-09-17",
     "DK|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-17",
     "BEST|DK|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-17",
-    "R2GX|CVI|2026-09-17": "2026-09-17"
+    "R2GX|CVI|2026-09-17": "2026-09-17",
+    "UMAC|Fallback: MA50-R\u00fcckeroberung": "2026-09-17",
+    "BEST|UMAC|Fallback: MA50-R\u00fcckeroberung": "2026-09-17"
   },
   "gapgo_warten": {
     "FTH": {
@@ -626,7 +628,7 @@
     },
     "PSIX": {
       "signal": "2026-09-17",
-      "kp": 45.21,
+      "kp": 45.41,
       "stop": 43.48,
       "firma": "Power Solutions International Inc",
       "bestaetigt": false
