@@ -278,7 +278,7 @@
     "PSIX|Rectangle Top": "draussen",
     "BE|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "CGON|Fallback: MA50-Pullback": "drin",
-    "CMBT|Cup & Handle (Wochenbasis)": "drin",
+    "CMBT|Cup & Handle (Wochenbasis)": "draussen",
     "CMBT|Fallback: 52W-Hoch-Breakout": "drin",
     "LB|Fallback: MA50-Pullback": "drin",
     "PNTG|EMA Crossback": "drin",
@@ -637,7 +637,7 @@
     },
     "PSIX": {
       "signal": "2026-09-17",
-      "kp": 45.89,
+      "kp": 45.92,
       "stop": 43.48,
       "firma": "Power Solutions International Inc",
       "bestaetigt": false
