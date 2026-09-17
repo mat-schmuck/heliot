@@ -132,7 +132,7 @@
     "ILMN|Fallback: MA50-Pullback": "draussen",
     "OII|Fallback: MA50-Pullback": "drin",
     "SCSC|Fallback: MA50-Pullback": "drin",
-    "SEPN|Fallback: MA50-Pullback": "drin",
+    "SEPN|Fallback: MA50-Pullback": "draussen",
     "SHIP|Fallback: MA50-Pullback": "draussen",
     "BAND|EMA Crossback": "drin",
     "BLTE|Fallback: MA50-Pullback": "draussen",
@@ -275,7 +275,7 @@
     "ALNT|Fallback: MA50-R\u00fcckeroberung": "drin",
     "SMTC|Cup & Handle (Wochenbasis) + EMA Crossback": "drin",
     "PSIX|EMA Crossback": "draussen",
-    "PSIX|Rectangle Top": "drin",
+    "PSIX|Rectangle Top": "draussen",
     "BE|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "CGON|Fallback: MA50-Pullback": "drin",
     "CMBT|Cup & Handle (Wochenbasis)": "drin",
@@ -613,7 +613,8 @@
     "BEST|UMAC|Fallback: MA50-R\u00fcckeroberung": "2026-09-17",
     "INTC|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-17",
     "BEST|INTC|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-17",
-    "UEBER|ALNT|Fallback: MA50-Pullback": "2026-09-17"
+    "UEBER|ALNT|Fallback: MA50-Pullback": "2026-09-17",
+    "UEBER|PSIX|Rectangle Top": "2026-09-17"
   },
   "gapgo_warten": {
     "FTH": {
@@ -633,7 +634,7 @@
     },
     "PSIX": {
       "signal": "2026-09-17",
-      "kp": 45.41,
+      "kp": 45.65,
       "stop": 43.48,
       "firma": "Power Solutions International Inc",
       "bestaetigt": false
