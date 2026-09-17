@@ -300,7 +300,7 @@
     "FTK|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "MGTX|Fallback: MA50-R\u00fcckeroberung": "drin",
     "EWTX|EMA Crossback": "draussen",
-    "EWTX|Rectangle Top": "drin",
+    "EWTX|Rectangle Top": "draussen",
     "DUOL|Rectangle Top": "drin",
     "PGY|Fallback: MA50-Pullback": "draussen",
     "INTC|Fallback: 20-Tage-Hoch (Pivot)": "drin",
@@ -674,7 +674,8 @@
     "GHRS|Rectangle Top": "2026-09-17",
     "BEST|GHRS|Rectangle Top": "2026-09-17",
     "UEBER|MXL|Fallback: MA50-R\u00fcckeroberung": "2026-09-17",
-    "UEBER|EWTX|EMA Crossback": "2026-09-17"
+    "UEBER|EWTX|EMA Crossback": "2026-09-17",
+    "UEBER|EWTX|Rectangle Top": "2026-09-17"
   },
   "gapgo_warten": {
     "FTH": {
@@ -694,7 +695,7 @@
     },
     "PSIX": {
       "signal": "2026-09-17",
-      "kp": 46.31,
+      "kp": 46.32,
       "stop": 43.48,
       "firma": "Power Solutions International Inc",
       "bestaetigt": false
