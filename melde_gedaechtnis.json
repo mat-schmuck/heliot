@@ -305,7 +305,8 @@
     "PGY|Fallback: MA50-Pullback": "draussen",
     "INTC|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "HNGE|Rectangle Top": "drin",
-    "XMTR|Fallback: 20-Tage-Hoch (Pivot)": "drin"
+    "XMTR|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "SITM|Fallback: MA50-R\u00fcckeroberung": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -617,7 +618,9 @@
     "UEBER|ALNT|Fallback: MA50-Pullback": "2026-09-17",
     "UEBER|PSIX|Rectangle Top": "2026-09-17",
     "XMTR|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-17",
-    "BEST|XMTR|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-17"
+    "BEST|XMTR|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-17",
+    "SITM|Fallback: MA50-R\u00fcckeroberung": "2026-09-17",
+    "BEST|SITM|Fallback: MA50-R\u00fcckeroberung": "2026-09-17"
   },
   "gapgo_warten": {
     "FTH": {
@@ -637,7 +640,7 @@
     },
     "PSIX": {
       "signal": "2026-09-17",
-      "kp": 45.92,
+      "kp": 46.01,
       "stop": 43.48,
       "firma": "Power Solutions International Inc",
       "bestaetigt": false
