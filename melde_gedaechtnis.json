@@ -307,7 +307,8 @@
     "HNGE|Rectangle Top": "drin",
     "XMTR|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "SITM|Fallback: MA50-R\u00fcckeroberung": "drin",
-    "CLS|Fallback: 20-Tage-Hoch (Pivot)": "drin"
+    "CLS|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "TWST|Fallback: 52W-Hoch-Breakout": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -625,7 +626,9 @@
     "RDVT|Fallback: 52W-Hoch-Breakout": "2026-09-17",
     "BEST|RDVT|Fallback: 52W-Hoch-Breakout": "2026-09-17",
     "CLS|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-17",
-    "BEST|CLS|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-17"
+    "BEST|CLS|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-17",
+    "TWST|Fallback: 52W-Hoch-Breakout": "2026-09-17",
+    "BEST|TWST|Fallback: 52W-Hoch-Breakout": "2026-09-17"
   },
   "gapgo_warten": {
     "FTH": {
