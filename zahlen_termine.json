@@ -1,15 +1,12 @@
 {
- "gebaut_am": "2026-09-17 00:12 Wien",
+ "gebaut_am": "2026-09-18 00:12 Wien",
  "ohne_termin": [
   "ASND",
-  "ASO",
   "MGRT",
   "SUNB"
  ],
  "nur_nasdaq": [],
- "uneinig": [
-  "AIR"
- ],
+ "uneinig": [],
  "aktien": {
   "AAMI": {
    "datum": "2026-10-29",
@@ -50,8 +47,7 @@
    "quellen": [
     "yahoo",
     "nasdaq"
-   ],
-   "uneinig": "Quellen uneinig: 2026-09-29 (Yahoo, hier bevorzugt) gegen 2026-09-22 (Nasdaq)"
+   ]
   },
   "ALNT": {
    "datum": "2026-11-04",
@@ -160,6 +156,14 @@
   "ASML": {
    "datum": "2026-10-14",
    "uhrzeit": "08:00",
+   "lage": "vorboerslich",
+   "quellen": [
+    "yahoo"
+   ]
+  },
+  "ASO": {
+   "datum": "2026-12-08",
+   "uhrzeit": "07:00",
    "lage": "vorboerslich",
    "quellen": [
     "yahoo"

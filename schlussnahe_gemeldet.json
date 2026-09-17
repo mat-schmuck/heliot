@@ -258,5 +258,10 @@
    "zeichen": null,
    "text": "INFORMATION: VIST; Rectangle Top; Kurs 73.23 unter der 8-Tage-EMA 75.18; reiner Hinweis, kein Ausstiegssignal; Kurs 73,23, seit Trigger +1,2 % gleich 0,1 R"
   }
+ ],
+ "geprueft": "2026-09-17",
+ "zurueckgenommen": [
+  "DNTH|Fallback: MA50-Pullback",
+  "ATI|1"
  ]
 }

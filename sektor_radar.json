@@ -1,22 +1,15 @@
 {
- "gebaut_am": "2026-09-16T22:12:53",
- "handelstag": "2026-09-16",
+ "gebaut_am": "2026-09-17T22:12:49",
+ "handelstag": "2026-09-17",
  "geladen": 36,
  "unfertig": [],
  "treffer": [
   {
-   "etf": "XOP",
-   "name": "Oil & Gas E&P",
-   "richtung": "runter",
-   "volumen_pct": 134.2,
-   "kurs": 191.8
-  },
-  {
-   "etf": "XLE",
-   "name": "Energy",
-   "richtung": "runter",
-   "volumen_pct": 68.4,
-   "kurs": 64.03
+   "etf": "JETS",
+   "name": "Airlines",
+   "richtung": "hoch",
+   "volumen_pct": 219.6,
+   "kurs": 28.17
   }
  ]
 }
