@@ -325,7 +325,11 @@
     "GHRS|Rectangle Top": "drin",
     "KEYS|Rectangle Top": "drin",
     "EC|Rectangle Top": "drin",
-    "GNK|Fallback: 20-Tage-Hoch (Pivot)": "drin"
+    "GNK|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "NGL|Rectangle Top": "drin",
+    "NEO|Darvas Box": "drin",
+    "NEO|Fallback: 52W-Hoch-Breakout": "drin",
+    "MG|Darvas Box": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -678,7 +682,9 @@
     "UEBER|EWTX|EMA Crossback": "2026-09-17",
     "UEBER|EWTX|Rectangle Top": "2026-09-17",
     "GNK|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-17",
-    "BEST|GNK|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-17"
+    "BEST|GNK|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-17",
+    "MG|Darvas Box": "2026-09-17",
+    "BEST|MG|Darvas Box": "2026-09-17"
   },
   "gapgo_warten": {
     "FTH": {
