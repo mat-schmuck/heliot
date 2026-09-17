@@ -4,7 +4,7 @@
   {
    "ticker": "FTK",
    "status": "pfad_a",
-   "marktkap": 1075565568.0,
+   "marktkap": 1108345088.0,
    "stichtag": "2026-09-17",
    "zeilen": [
     "FTK; Großkauf; Marktwert 1,1 Mrd $",
@@ -15,10 +15,10 @@
   {
    "ticker": "RSG",
    "status": "pfad_a",
-   "marktkap": 67112701952.0,
+   "marktkap": 67039207424.0,
    "stichtag": "2026-09-17",
    "zeilen": [
-    "RSG; Großkauf; Marktwert 67,1 Mrd $",
+    "RSG; Großkauf; Marktwert 67,0 Mrd $",
     "Größter Einzelkauf 59,8 Mio $ am 04.09.; CASCADE INVESTMENT, L.L.C., Insider"
    ],
    "kennung": "RSG|pfad_a|0"
