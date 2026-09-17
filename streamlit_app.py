@@ -23,6 +23,9 @@ Auf Streamlit Community Cloud:
      und fuer das Angemeldet-Bleiben. Fehlt HELIOT_PASSWORT, bleibt die App
      offen und sagt das oben an.
 
+NACH EINEM PUSH laedt die App ihre eigenen Module selbst neu (frischhalten.py);
+ohne das liefe in der Cloud neuer Code mit alten Modulen im Speicher.
+
 KEINE EMOJIS (Mathias, 14.09.2026): weder in Titeln, Registerkarten, Knoepfen
 noch in Texten. Beide Nutzer arbeiten mit Screenreader, und jedes Bildzeichen
 wird als Wort vorgelesen. Die Gesamtpruefung (Block H) achtet darauf.
@@ -37,12 +40,33 @@ from datetime import datetime
 import pandas as pd
 import streamlit as st
 
+import frischhalten
 import nachschlagen
 import pattern_scanner as ps
 import scanner_ansicht as sa
 import zugang
 
 st.set_page_config(page_title="Chart-Screening-Tool", layout="wide")
+
+# EIGENE MODULE FRISCH HALTEN (Befund 17.09.2026): Streamlit Community Cloud
+# holt bei einem Push nur den neuen Code und fuehrt dieses Skript neu aus, ohne
+# den Python-Prozess neu zu starten. Die importierten eigenen Module bleiben
+# dabei in der alten Fassung im Speicher; das Nachschlagen-Feld und der
+# Scanner-Reiter brachen deshalb mit "module 'nachschlagen' has no attribute
+# 'analysten_zeile'" ab. Die Pruefung kostet je Lauf einen Blick auf die
+# Zeitstempel; geladen wird nur, wenn sich wirklich etwas geaendert hat.
+_neu_geladen, _lade_fehler = frischhalten.auffrischen(os.path.dirname(os.path.abspath(__file__)),
+                                                      ausser=("frischhalten",))
+if _neu_geladen:
+    # Zwischengespeicherte Werte koennen aus der alten Fassung stammen.
+    try:
+        st.cache_data.clear()
+        st.cache_resource.clear()
+    except Exception:
+        pass
+for _f in _lade_fehler:
+    st.error("Eine Programmdatei ließ sich nach der letzten Änderung nicht laden, es gilt weiter der Stand davor: "
+             + _f)
 
 
 # ---------------------------------------------------------------------------

@@ -175,7 +175,9 @@ def block_b():
                     # Etappe 7, Short-Daten (Gerhard, 13.09.2026)
                     "kennzahlen_short",
                     # Etappe 6, Industry Group RS und Zuordnungsliste (Gerhard, 13.09.2026)
-                    "kennzahlen_gruppen", "zuordnung_bauen"]
+                    "kennzahlen_gruppen", "zuordnung_bauen",
+                    # Eigene Module nach einem Push frisch halten (Befund 17.09.2026)
+                    "frischhalten"]
     for name in mit_schalter:
         r = subprocess.run([sys.executable, f"{name}.py", "--selbsttest"],
                            capture_output=True, text=True, cwd=WURZEL,
