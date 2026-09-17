@@ -72,7 +72,7 @@
     "ARW|Fallback: MA50-Pullback": "drin",
     "ESTC|Fallback: MA50-Pullback": "draussen",
     "FLYW|Fallback: MA50-R\u00fcckeroberung": "drin",
-    "FTK|Fallback: MA50-Pullback": "drin",
+    "FTK|Fallback: MA50-Pullback": "draussen",
     "GCT|Fallback: MA50-Pullback": "draussen",
     "HAE|Fallback: MA50-Pullback": "draussen",
     "INSP|Fallback: MA50-Pullback": "draussen",
@@ -123,7 +123,7 @@
     "FTH|Fallback: MA50-Pullback": "draussen",
     "NVCT|Fallback: MA50-Pullback": "drin",
     "PSNL|Fallback: MA50-Pullback": "draussen",
-    "TVTX|Fallback: MA50-Pullback": "drin",
+    "TVTX|Fallback: MA50-Pullback": "draussen",
     "TWST|Fallback: MA50-Pullback": "draussen",
     "ARGX|Fallback: MA50-Pullback": "draussen",
     "ASO|Fallback: MA50-Pullback": "draussen",
@@ -135,7 +135,7 @@
     "SEPN|Fallback: MA50-Pullback": "drin",
     "SHIP|Fallback: MA50-Pullback": "draussen",
     "BAND|EMA Crossback": "drin",
-    "BLTE|Fallback: MA50-Pullback": "drin",
+    "BLTE|Fallback: MA50-Pullback": "draussen",
     "LB|Cup & Handle (Wochenbasis)": "drin",
     "NVGS|Fallback: MA50-Pullback": "draussen",
     "NBR|Fallback: MA50-Pullback": "drin",
@@ -296,7 +296,13 @@
     "MXL|Fallback: MA50-R\u00fcckeroberung": "drin",
     "RVMD|Fallback: MA50-R\u00fcckeroberung": "drin",
     "TPC|Fallback: MA50-R\u00fcckeroberung": "drin",
-    "XMTR|Fallback: MA50-Pullback": "drin"
+    "XMTR|Fallback: MA50-Pullback": "drin",
+    "FTK|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "MGTX|Fallback: MA50-R\u00fcckeroberung": "drin",
+    "EWTX|EMA Crossback": "drin",
+    "EWTX|Rectangle Top": "drin",
+    "DUOL|Rectangle Top": "drin",
+    "PGY|Fallback: MA50-Pullback": "draussen"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -572,7 +578,25 @@
     "RVMD|Fallback: MA50-R\u00fcckeroberung": "2026-09-17",
     "BEST|RVMD|Fallback: MA50-R\u00fcckeroberung": "2026-09-17",
     "TPC|Fallback: MA50-R\u00fcckeroberung": "2026-09-17",
-    "BEST|TPC|Fallback: MA50-R\u00fcckeroberung": "2026-09-17"
+    "BEST|TPC|Fallback: MA50-R\u00fcckeroberung": "2026-09-17",
+    "UEBER|PSIX|EMA Crossback": "2026-09-17",
+    "GAPGO|HUT|2026-09-17": "2026-09-17",
+    "GAPGO|PSIX|2026-09-17": "2026-09-17",
+    "FTK|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-17",
+    "BEST|FTK|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-17",
+    "MGTX|Fallback: MA50-R\u00fcckeroberung": "2026-09-17",
+    "BEST|MGTX|Fallback: MA50-R\u00fcckeroberung": "2026-09-17",
+    "EWTX|EMA Crossback": "2026-09-17",
+    "BEST|EWTX|EMA Crossback": "2026-09-17",
+    "EWTX|Rectangle Top": "2026-09-17",
+    "BEST|EWTX|Rectangle Top": "2026-09-17",
+    "DUOL|Rectangle Top": "2026-09-17",
+    "BEST|DUOL|Rectangle Top": "2026-09-17",
+    "DIOD|Fallback: MA50-R\u00fcckeroberung": "2026-09-17",
+    "BEST|DIOD|Fallback: MA50-R\u00fcckeroberung": "2026-09-17",
+    "TSAT|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-17",
+    "BEST|TSAT|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-17",
+    "GEWINN|klimax_zeichen|CLMT|Fallback: 20-Tage-Hoch (Pivot)|4_ma200_abstand": "2026-09-17"
   },
   "gapgo_warten": {
     "FTH": {
@@ -580,23 +604,22 @@
       "kp": 36.99,
       "stop": 35.36,
       "firma": "Faeth Therapeutics Inc",
+      "bestaetigt": false,
+      "pruef": "2026-09-17"
+    },
+    "HUT": {
+      "signal": "2026-09-17",
+      "kp": 98.58,
+      "stop": 95.99,
+      "firma": "Hut 8 Corp",
       "bestaetigt": false
     },
-    "KGS": {
-      "signal": "2026-09-15",
-      "kp": 57.36,
-      "stop": 56.61,
-      "firma": "Kodiak Gas Services Inc",
-      "bestaetigt": false,
-      "pruef": "2026-09-16"
-    },
-    "OII": {
-      "signal": "2026-09-15",
-      "kp": 47.03,
-      "stop": 47.01,
-      "firma": "Oceaneering International Inc",
-      "bestaetigt": false,
-      "pruef": "2026-09-16"
+    "PSIX": {
+      "signal": "2026-09-17",
+      "kp": 45.21,
+      "stop": 43.48,
+      "firma": "Power Solutions International Inc",
+      "bestaetigt": false
     }
   },
   "ampel_tag": "2026-09-17"
