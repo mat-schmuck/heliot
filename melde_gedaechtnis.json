@@ -181,7 +181,7 @@
     "AMD|EMA Crossback": "drin",
     "FTNT|Fallback: MA50-Pullback": "draussen",
     "CNC|Fallback: MA50-Pullback": "drin",
-    "FROG|Fallback: MA50-Pullback": "draussen",
+    "FROG|Fallback: MA50-Pullback": "drin",
     "GOLD|Fallback: MA50-Pullback": "draussen",
     "SNX|Rectangle Top": "drin",
     "BE|EMA Crossback": "drin",
@@ -603,7 +603,10 @@
     "GEWINN|zonenwechsel|AMD|SPRING-2026-09-14|mittel": "2026-09-17",
     "GEWINN|zonenwechsel|DK|Cup & Handle (Wochenbasis)|stark": "2026-09-17",
     "GEWINN|zonenwechsel|DK|Fallback: 52W-Hoch-Breakout|stark": "2026-09-17",
-    "GEWINN|zonenwechsel|SEI|SPRING-2026-09-14|stark": "2026-09-17"
+    "GEWINN|zonenwechsel|SEI|SPRING-2026-09-14|stark": "2026-09-17",
+    "DK|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-17",
+    "BEST|DK|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-17",
+    "R2GX|CVI|2026-09-17": "2026-09-17"
   },
   "gapgo_warten": {
     "FTH": {
@@ -617,7 +620,7 @@
     "HUT": {
       "signal": "2026-09-17",
       "kp": 98.58,
-      "stop": 95.39,
+      "stop": 95.37,
       "firma": "Hut 8 Corp",
       "bestaetigt": false
     },
