@@ -117,7 +117,7 @@
     "ONC|Fallback: MA50-Pullback": "drin",
     "RAPP|Rectangle Top": "drin",
     "RDVT|Fallback: MA50-Pullback": "draussen",
-    "APPS|Fallback: MA50-Pullback": "draussen",
+    "APPS|Fallback: MA50-Pullback": "drin",
     "CLMT|Fallback: MA50-Pullback": "draussen",
     "FEIM|Fallback: MA50-Pullback": "draussen",
     "FTH|Fallback: MA50-Pullback": "draussen",
@@ -181,7 +181,7 @@
     "AMD|EMA Crossback": "drin",
     "FTNT|Fallback: MA50-Pullback": "draussen",
     "CNC|Fallback: MA50-Pullback": "drin",
-    "FROG|Fallback: MA50-Pullback": "drin",
+    "FROG|Fallback: MA50-Pullback": "draussen",
     "GOLD|Fallback: MA50-Pullback": "draussen",
     "SNX|Rectangle Top": "drin",
     "BE|EMA Crossback": "drin",
@@ -285,7 +285,7 @@
     "PNTG|Fallback: 52W-Hoch-Breakout": "drin",
     "AMD|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "AMD|Fallback: MA50-Pullback": "draussen",
-    "ALNT|Fallback: MA50-Pullback": "drin",
+    "ALNT|Fallback: MA50-Pullback": "draussen",
     "AUGO|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "AXTI|Fallback: MA50-Pullback": "draussen",
     "COHR|Fallback: MA50-R\u00fcckeroberung": "drin",
@@ -302,7 +302,9 @@
     "EWTX|EMA Crossback": "drin",
     "EWTX|Rectangle Top": "drin",
     "DUOL|Rectangle Top": "drin",
-    "PGY|Fallback: MA50-Pullback": "draussen"
+    "PGY|Fallback: MA50-Pullback": "draussen",
+    "INTC|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "HNGE|Rectangle Top": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -608,7 +610,10 @@
     "BEST|DK|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-17",
     "R2GX|CVI|2026-09-17": "2026-09-17",
     "UMAC|Fallback: MA50-R\u00fcckeroberung": "2026-09-17",
-    "BEST|UMAC|Fallback: MA50-R\u00fcckeroberung": "2026-09-17"
+    "BEST|UMAC|Fallback: MA50-R\u00fcckeroberung": "2026-09-17",
+    "INTC|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-17",
+    "BEST|INTC|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-17",
+    "UEBER|ALNT|Fallback: MA50-Pullback": "2026-09-17"
   },
   "gapgo_warten": {
     "FTH": {
