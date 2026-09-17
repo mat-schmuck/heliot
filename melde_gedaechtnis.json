@@ -329,7 +329,8 @@
     "NGL|Rectangle Top": "drin",
     "NEO|Darvas Box": "drin",
     "NEO|Fallback: 52W-Hoch-Breakout": "drin",
-    "MG|Darvas Box": "drin"
+    "MG|Darvas Box": "drin",
+    "VICR|Fallback: MA50-R\u00fcckeroberung": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -682,7 +683,9 @@
     "GNK|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-17",
     "BEST|GNK|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-17",
     "MG|Darvas Box": "2026-09-17",
-    "BEST|MG|Darvas Box": "2026-09-17"
+    "BEST|MG|Darvas Box": "2026-09-17",
+    "VICR|Fallback: MA50-R\u00fcckeroberung": "2026-09-17",
+    "BEST|VICR|Fallback: MA50-R\u00fcckeroberung": "2026-09-17"
   },
   "gapgo_warten": {
     "FTH": {
