@@ -597,7 +597,8 @@
     "TSAT|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-17",
     "BEST|TSAT|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-17",
     "GEWINN|klimax_zeichen|CLMT|Fallback: 20-Tage-Hoch (Pivot)|4_ma200_abstand": "2026-09-17",
-    "GEWINN|klimax_zeichen|CVI|Cup & Handle (Wochenbasis)|5_kanaluebershooting": "2026-09-17"
+    "GEWINN|klimax_zeichen|CVI|Cup & Handle (Wochenbasis)|5_kanaluebershooting": "2026-09-17",
+    "GEWINN|klimax_zeichen|TWST|EMA Crossback|4_ma200_abstand": "2026-09-17"
   },
   "gapgo_warten": {
     "FTH": {
