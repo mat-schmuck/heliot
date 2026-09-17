@@ -315,7 +315,8 @@
     "MTW|Darvas Box": "drin",
     "MTW|Fallback: 52W-Hoch-Breakout": "drin",
     "QMCO|Fallback: 20-Tage-Hoch (Pivot)": "drin",
-    "HAE|Fallback: 20-Tage-Hoch (Pivot)": "drin"
+    "HAE|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "HAE|Fallback: 52W-Hoch-Breakout": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -650,7 +651,9 @@
     "QMCO|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-17",
     "BEST|QMCO|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-17",
     "HAE|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-17",
-    "BEST|HAE|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-17"
+    "BEST|HAE|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-17",
+    "HAE|Fallback: 52W-Hoch-Breakout": "2026-09-17",
+    "BEST|HAE|Fallback: 52W-Hoch-Breakout": "2026-09-17"
   },
   "gapgo_warten": {
     "FTH": {
