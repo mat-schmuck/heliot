@@ -58,6 +58,8 @@ st.set_page_config(page_title="Chart-Screening-Tool", layout="wide")
 _neu_geladen, _lade_fehler = frischhalten.auffrischen(os.path.dirname(os.path.abspath(__file__)),
                                                       ausser=("frischhalten",))
 if _neu_geladen:
+    # Fuer die Fehlersuche in den Cloud-Protokollen, nicht fuer den Nutzer.
+    print("Eigene Module nach einer Aenderung neu geladen: " + ", ".join(_neu_geladen), flush=True)
     # Zwischengespeicherte Werte koennen aus der alten Fassung stammen.
     try:
         st.cache_data.clear()
