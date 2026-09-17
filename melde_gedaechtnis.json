@@ -685,7 +685,8 @@
     "BEST|MG|Darvas Box": "2026-09-17",
     "VICR|Fallback: MA50-R\u00fcckeroberung": "2026-09-17",
     "BEST|VICR|Fallback: MA50-R\u00fcckeroberung": "2026-09-17",
-    "UEBER|FTK|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-17"
+    "UEBER|FTK|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-17",
+    "GEWINN|klimax_zeichen|CVI|Cup & Handle (Wochenbasis)|4_ma200_abstand": "2026-09-17"
   },
   "gapgo_warten": {
     "FTH": {
