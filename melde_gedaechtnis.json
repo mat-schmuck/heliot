@@ -769,7 +769,8 @@
     "NHC|EMA Crossback": "2026-09-18",
     "BEST|NHC|EMA Crossback": "2026-09-18",
     "COHR|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-18",
-    "BEST|COHR|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-18"
+    "BEST|COHR|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-18",
+    "SCHLUSSNAH|2026-09-18": "2026-09-18"
   },
   "gapgo_warten": {
     "HUT": {
