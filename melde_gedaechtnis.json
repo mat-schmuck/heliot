@@ -39,7 +39,7 @@
     "HNGE|Fallback: MA50-Pullback": "draussen",
     "INSW|Fallback: MA50-Pullback": "draussen",
     "JOE|Rectangle Top": "drin",
-    "KNTK|Fallback: MA50-Pullback": "drin",
+    "KNTK|Fallback: MA50-Pullback": "draussen",
     "LPG|Cup & Handle (Wochenbasis)": "drin",
     "LPG|Fallback: MA50-Pullback": "draussen",
     "LPG|Fallback: 52W-Hoch-Breakout": "drin",
@@ -311,7 +311,7 @@
     "TWST|Fallback: 52W-Hoch-Breakout": "drin",
     "INSW|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "SMTC|Fallback: 52W-Hoch-Breakout": "drin",
-    "MXL|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "MXL|Fallback: 20-Tage-Hoch (Pivot)": "draussen",
     "MTW|Darvas Box": "drin",
     "MTW|Fallback: 52W-Hoch-Breakout": "drin",
     "QMCO|Fallback: 20-Tage-Hoch (Pivot)": "drin",
@@ -351,7 +351,8 @@
     "PARR|Cup & Handle (Wochenbasis)": "drin",
     "PARR|Fallback: 52W-Hoch-Breakout": "drin",
     "AMD|Rectangle Top": "drin",
-    "HAE|Cup & Handle (Wochenbasis)": "drin"
+    "HAE|Cup & Handle (Wochenbasis)": "drin",
+    "MTSI|Fallback: MA50-R\u00fcckeroberung": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -754,7 +755,10 @@
     "HAE|Cup & Handle (Wochenbasis)": "2026-09-18",
     "BEST|HAE|Cup & Handle (Wochenbasis)": "2026-09-18",
     "INSP|Cup & Handle (Wochenbasis)": "2026-09-18",
-    "BEST|INSP|Cup & Handle (Wochenbasis)": "2026-09-18"
+    "BEST|INSP|Cup & Handle (Wochenbasis)": "2026-09-18",
+    "UEBER|MXL|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-18",
+    "MTSI|Fallback: MA50-R\u00fcckeroberung": "2026-09-18",
+    "BEST|MTSI|Fallback: MA50-R\u00fcckeroberung": "2026-09-18"
   },
   "gapgo_warten": {
     "HUT": {
