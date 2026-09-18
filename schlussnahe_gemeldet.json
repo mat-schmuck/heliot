@@ -378,5 +378,15 @@
    "zeichen": null,
    "text": "INFORMATION: VIST; Rectangle Top; Kurs 72.22 unter der 8-Tage-EMA 74.54; reiner Hinweis, kein Ausstiegssignal; Kurs 72,22, seit Trigger -0,2 % gleich -0,0 R"
   }
+ ],
+ "geprueft": "2026-09-18",
+ "zurueckgenommen": [
+  "NUTX|Fallback: 52W-Hoch-Breakout",
+  "DIOD|Fallback: MA50-Rückeroberung",
+  "DNTH|Fallback: MA50-Pullback",
+  "NX|SPRING-2026-09-10",
+  "SCCO|1",
+  "SCCO|Fallback: MA50-Rückeroberung",
+  "TSAT|Fallback: 20-Tage-Hoch (Pivot)"
  ]
 }

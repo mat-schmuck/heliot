@@ -1,5 +1,5 @@
 {
- "gebaut_am": "2026-09-18 00:12 Wien",
+ "gebaut_am": "2026-09-19 00:11 Wien",
  "ohne_termin": [
   "ASND",
   "MGRT",
@@ -618,7 +618,7 @@
    ]
   },
   "FTI": {
-   "datum": "2026-10-22",
+   "datum": "2026-10-29",
    "uhrzeit": "08:00",
    "lage": "vorboerslich",
    "quellen": [
@@ -1123,9 +1123,9 @@
    ]
   },
   "MUSA": {
-   "datum": "2026-11-04",
-   "uhrzeit": "15:00",
-   "lage": "im_handel",
+   "datum": "2026-10-28",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich",
    "quellen": [
     "yahoo"
    ]

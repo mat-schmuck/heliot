@@ -1,15 +1,7 @@
 {
- "gebaut_am": "2026-09-17T22:12:49",
- "handelstag": "2026-09-17",
+ "gebaut_am": "2026-09-18T22:11:48",
+ "handelstag": "2026-09-18",
  "geladen": 36,
  "unfertig": [],
- "treffer": [
-  {
-   "etf": "JETS",
-   "name": "Airlines",
-   "richtung": "hoch",
-   "volumen_pct": 219.6,
-   "kurs": 28.17
-  }
- ]
+ "treffer": []
 }
