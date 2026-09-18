@@ -8649,5 +8649,32 @@
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
   "wedge_drop_gemeldet": false
+ },
+ "COHR|Fallback: 20-Tage-Hoch (Pivot)": {
+  "symbol": "COHR",
+  "firma": "Coherent Corp",
+  "strategie": "Fallback: 20-Tage-Hoch (Pivot)",
+  "einstieg": 315.71,
+  "einstieg_datum": "2026-09-18",
+  "einstieg_index": 0,
+  "struktur_stop": 284.14,
+  "aktueller_stop": 284.14,
+  "stop_quelle": "struktur",
+  "hoechstkurs": 315.71,
+  "teilverkauft": false,
+  "halteregel_aktiv": false,
+  "beobachtung": true,
+  "status": "offen",
+  "verlauf": [],
+  "klasse": "standard",
+  "musterziel": null,
+  "zone": null,
+  "zone_gemeldet": null,
+  "ziel_gemeldet": false,
+  "klimax_gemeldet": [],
+  "weinstein_gemeldet": false,
+  "zahlen_hinweis_gemeldet": false,
+  "sektor_hinweis_gemeldet": false,
+  "wedge_drop_gemeldet": false
  }
 }
