@@ -741,7 +741,8 @@
     "BEST|INSW|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-18",
     "UEBER|COHR|Fallback: MA50-R\u00fcckeroberung": "2026-09-18",
     "R2GX|MPC|2026-09-18": "2026-09-18",
-    "TEIL|SMTC|Rectangle Top": "2026-09-18"
+    "TEIL|SMTC|Rectangle Top": "2026-09-18",
+    "TEIL|SMTC|EMA Crossback": "2026-09-18"
   },
   "gapgo_warten": {
     "HUT": {
