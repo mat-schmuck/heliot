@@ -354,7 +354,9 @@
     "HAE|Cup & Handle (Wochenbasis)": "drin",
     "MTSI|Fallback: MA50-R\u00fcckeroberung": "drin",
     "GCT|Fallback: 20-Tage-Hoch (Pivot)": "drin",
-    "ASX|Rectangle Top": "drin"
+    "ASX|Rectangle Top": "drin",
+    "MTW|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "COHR|Fallback: 20-Tage-Hoch (Pivot)": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -766,7 +768,9 @@
     "BEST|MXL|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-18",
     "UEBER|COHR|Fallback: MA50-R\u00fcckeroberung": "2026-09-18",
     "NHC|EMA Crossback": "2026-09-18",
-    "BEST|NHC|EMA Crossback": "2026-09-18"
+    "BEST|NHC|EMA Crossback": "2026-09-18",
+    "COHR|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-18",
+    "BEST|COHR|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-18"
   },
   "gapgo_warten": {
     "HUT": {
