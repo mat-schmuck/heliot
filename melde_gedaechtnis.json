@@ -729,7 +729,8 @@
     "BEST|SITM|Fallback: MA50-Pullback": "2026-09-18",
     "VICR|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-18",
     "BEST|VICR|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-18",
-    "R2GX|DK|2026-09-18": "2026-09-18"
+    "R2GX|DK|2026-09-18": "2026-09-18",
+    "GEWINN|klimax_zeichen|CDNA|Cup & Handle (Wochenbasis)|4_ma200_abstand": "2026-09-18"
   },
   "gapgo_warten": {
     "HUT": {

@@ -7762,7 +7762,9 @@
   "zone": "stark",
   "zone_gemeldet": "stark",
   "ziel_gemeldet": false,
-  "klimax_gemeldet": [],
+  "klimax_gemeldet": [
+   "4_ma200_abstand"
+  ],
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
@@ -7789,7 +7791,9 @@
   "zone": "stark",
   "zone_gemeldet": "stark",
   "ziel_gemeldet": false,
-  "klimax_gemeldet": [],
+  "klimax_gemeldet": [
+   "4_ma200_abstand"
+  ],
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
