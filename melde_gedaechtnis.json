@@ -22,7 +22,7 @@
     "SMTC|Fallback: MA50-Pullback": "draussen",
     "APA|Fallback: MA50-Pullback": "draussen",
     "ARIS|Fallback: MA50-Pullback": "draussen",
-    "AVT|Fallback: MA50-Pullback": "drin",
+    "AVT|Fallback: MA50-Pullback": "draussen",
     "CGAU|Fallback: MA50-Pullback": "draussen",
     "CHRD|Cup & Handle (Wochenbasis)": "drin",
     "CHRD|Fallback: MA50-Pullback": "drin",
@@ -121,7 +121,7 @@
     "CLMT|Fallback: MA50-Pullback": "draussen",
     "FEIM|Fallback: MA50-Pullback": "draussen",
     "FTH|Fallback: MA50-Pullback": "draussen",
-    "NVCT|Fallback: MA50-Pullback": "draussen",
+    "NVCT|Fallback: MA50-Pullback": "drin",
     "PSNL|Fallback: MA50-Pullback": "draussen",
     "TVTX|Fallback: MA50-Pullback": "drin",
     "TWST|Fallback: MA50-Pullback": "draussen",
@@ -360,7 +360,9 @@
     "AEHR|Fallback: MA50-R\u00fcckeroberung": "drin",
     "TSEM|Fallback: MA50-R\u00fcckeroberung": "drin",
     "NTRA|Fallback: 20-Tage-Hoch (Pivot)": "drin",
-    "ALNT|Rectangle Top": "drin"
+    "ALNT|Rectangle Top": "drin",
+    "TER|Fallback: MA50-R\u00fcckeroberung": "drin",
+    "ASX|Fallback: 20-Tage-Hoch (Pivot)": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -776,7 +778,9 @@
     "BEST|COHR|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-18",
     "SCHLUSSNAH|2026-09-18": "2026-09-18",
     "UEBER|HUT|Fallback: MA50-R\u00fcckeroberung": "2026-09-18",
-    "GAPGOIN|HUT|2026-09-17": "2026-09-18"
+    "GAPGOIN|HUT|2026-09-17": "2026-09-18",
+    "NTRA|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-18",
+    "BEST|NTRA|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-18"
   },
   "gapgo_warten": {
     "PSIX": {
