@@ -706,29 +706,38 @@
     "NEO|Fallback: 52W-Hoch-Breakout": "2026-09-18",
     "BEST|NEO|Fallback: 52W-Hoch-Breakout": "2026-09-18",
     "TRMD|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-18",
-    "BEST|TRMD|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-18"
+    "BEST|TRMD|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-18",
+    "GAPGO|ATI|2026-09-18": "2026-09-18",
+    "GEWINN|zonenwechsel|AMD|EMA Crossback|mittel": "2026-09-18",
+    "GEWINN|zonenwechsel|ECPG|1|mittel": "2026-09-18",
+    "GEWINN|zonenwechsel|HPE|1|stark": "2026-09-18",
+    "GEWINN|zonenwechsel|INTC|EMA Crossback|mittel": "2026-09-18",
+    "GEWINN|zonenwechsel|SMTC|EMA Crossback|stark": "2026-09-18",
+    "GEWINN|zonenwechsel|SWKS|1|mittel": "2026-09-18",
+    "GEWINN|zonenwechsel|VLO|1|mittel": "2026-09-18"
   },
   "gapgo_warten": {
-    "FTH": {
-      "signal": "2026-09-16",
-      "kp": 36.99,
-      "stop": 35.36,
-      "firma": "Faeth Therapeutics Inc",
-      "bestaetigt": false,
-      "pruef": "2026-09-17"
-    },
     "HUT": {
       "signal": "2026-09-17",
       "kp": 98.58,
       "stop": 95.37,
       "firma": "Hut 8 Corp",
-      "bestaetigt": false
+      "bestaetigt": false,
+      "pruef": "2026-09-18"
     },
     "PSIX": {
       "signal": "2026-09-17",
       "kp": 46.93,
       "stop": 43.48,
       "firma": "Power Solutions International Inc",
+      "bestaetigt": false,
+      "pruef": "2026-09-18"
+    },
+    "ATI": {
+      "signal": "2026-09-18",
+      "kp": 186.36,
+      "stop": 183.63,
+      "firma": "ATI Inc",
       "bestaetigt": false
     }
   },
