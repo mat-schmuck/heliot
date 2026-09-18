@@ -349,7 +349,8 @@
     "SMTC|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "SIMO|Fallback: MA50-R\u00fcckeroberung": "drin",
     "PARR|Cup & Handle (Wochenbasis)": "drin",
-    "PARR|Fallback: 52W-Hoch-Breakout": "drin"
+    "PARR|Fallback: 52W-Hoch-Breakout": "drin",
+    "AMD|Rectangle Top": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -747,7 +748,9 @@
     "PARR|Cup & Handle (Wochenbasis)": "2026-09-18",
     "BEST|PARR|Cup & Handle (Wochenbasis)": "2026-09-18",
     "PARR|Fallback: 52W-Hoch-Breakout": "2026-09-18",
-    "BEST|PARR|Fallback: 52W-Hoch-Breakout": "2026-09-18"
+    "BEST|PARR|Fallback: 52W-Hoch-Breakout": "2026-09-18",
+    "AMD|Rectangle Top": "2026-09-18",
+    "BEST|AMD|Rectangle Top": "2026-09-18"
   },
   "gapgo_warten": {
     "HUT": {
