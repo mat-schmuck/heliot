@@ -1,60 +1,60 @@
 {
- "gebaut_am": "2026-09-17T22:13:34+00:00",
- "handelstag": "2026-09-17",
+ "gebaut_am": "2026-09-18T22:12:51+00:00",
+ "handelstag": "2026-09-18",
  "status": "ok",
  "toleranz": 0.05,
  "quellen": {
   "rs": {
-   "stand": "2026-09-17T22:10:01",
+   "stand": "2026-09-18T22:09:03",
    "status": "ok"
   },
   "kurse": {
    "status": "ok",
-   "mit_kursen": 5663,
-   "ohne_kurse": 1,
-   "aktuell": 5598,
-   "abdeckung": 0.9883,
-   "archiv_zeilen": 3928581
+   "mit_kursen": 5661,
+   "ohne_kurse": 5,
+   "aktuell": 5592,
+   "abdeckung": 0.9869,
+   "archiv_zeilen": 3927664
   },
   "screener": {
    "status": "ok",
-   "anzahl": 7135
+   "anzahl": 7137
   },
   "kalender": {
    "status": "ok",
    "tage": 7,
-   "eintraege": 84,
-   "mit_eps_konsens": 36
+   "eintraege": 90,
+   "mit_eps_konsens": 38
   },
   "fundament": {
    "status": "ok",
-   "firmen": 4934,
-   "zuordnung": 5322
+   "firmen": 4933,
+   "zuordnung": 5321
   },
   "konsens": {
    "dateien": [
-    "2026-09-15_0900Z.jsonl.gz",
-    "2026-09-15_1930Z.jsonl.gz",
     "2026-09-16_0900Z.jsonl.gz",
     "2026-09-16_1931Z.jsonl.gz",
     "2026-09-17_0900Z.jsonl.gz",
-    "2026-09-17_1930Z.jsonl.gz"
+    "2026-09-17_1930Z.jsonl.gz",
+    "2026-09-18_0900Z.jsonl.gz",
+    "2026-09-18_1930Z.jsonl.gz"
    ],
    "unlesbar": [],
    "firmen": 5671,
-   "neuester": "2026-09-17T19:30:42Z",
+   "neuester": "2026-09-18T19:30:35Z",
    "aeltester": "2026-09-17T09:00:42Z",
    "status": "ok",
-   "mit_konsens": 4247
+   "mit_konsens": 4246
   },
   "analysten": {
    "status": "ok",
-   "abgerufen": 799,
+   "abgerufen": 830,
    "fehler": 0,
    "abgebrochen": false,
-   "hinweis": "2417 Aktien noch nie abgefragt; volle Abdeckung nach 7 Naechten",
-   "mit_analysten": 2653,
-   "mit_stand": 4045
+   "hinweis": "1618 Aktien noch nie abgefragt; volle Abdeckung nach 7 Naechten",
+   "mit_analysten": 3219,
+   "mit_stand": 4873
   },
   "revisionen": {
    "status": "ok",
@@ -69,12 +69,12 @@
    "fenster": 20,
    "mindest_abdeckung": 0.95,
    "tage": 20,
-   "erster_tag": "2026-08-20",
-   "letzter_tag": "2026-09-17",
-   "abdeckung_letzter_tag": 0.9947,
+   "erster_tag": "2026-08-21",
+   "letzter_tag": "2026-09-18",
+   "abdeckung_letzter_tag": 0.9933,
    "hinweis": null,
-   "mit_anteil": 5634,
-   "median_pct": 52.7,
+   "mit_anteil": 5628,
+   "median_pct": 54.9,
    "fehlend": {}
   },
   "gruppen_rs": {
@@ -83,71 +83,71 @@
   },
   "kennzahlen": {
    "status": "ok",
-   "technik_handelstag": "2026-09-17",
-   "fundament_stand": "2026-09-17T22:10:05",
+   "technik_handelstag": "2026-09-18",
+   "fundament_stand": "2026-09-18T22:09:06",
    "mit_technik": 5588,
-   "mit_fundament": 4956
+   "mit_fundament": 4955
   }
  },
  "hinweise": [],
- "universum": 5664,
+ "universum": 5666,
  "strategien": {
   "darvas": {
    "name": "Darvas Box",
    "toleranz_moeglich": true,
-   "streng": 177,
-   "nur_toleranz": 3,
-   "handelbar": 73,
-   "handelbar_langweilig": 51
+   "streng": 164,
+   "nur_toleranz": 2,
+   "handelbar": 69,
+   "handelbar_langweilig": 47
   },
   "trend_template": {
    "name": "Minervini Trend Template",
    "toleranz_moeglich": true,
-   "streng": 660,
-   "nur_toleranz": 47,
-   "handelbar": 380
+   "streng": 636,
+   "nur_toleranz": 53,
+   "handelbar": 369
   },
   "vcp": {
    "name": "VCP",
    "toleranz_moeglich": true,
-   "streng": 28,
-   "nur_toleranz": 1,
-   "handelbar": 17
+   "streng": 26,
+   "nur_toleranz": 0,
+   "handelbar": 15
   },
   "cup_handle": {
    "name": "Cup & Handle",
    "toleranz_moeglich": true,
-   "streng": 641,
-   "nur_toleranz": 136,
-   "handelbar": 470
+   "streng": 603,
+   "nur_toleranz": 138,
+   "handelbar": 458
   },
   "rectangle": {
    "name": "Rectangle Top",
    "toleranz_moeglich": true,
-   "streng": 2431,
-   "nur_toleranz": 66,
-   "handelbar": 1212
+   "streng": 2434,
+   "nur_toleranz": 71,
+   "handelbar": 1230
   },
   "htf": {
    "name": "High & Tight Flag",
    "toleranz_moeglich": true,
-   "streng": 12,
+   "streng": 9,
    "nur_toleranz": 6,
-   "handelbar": 7
+   "handelbar": 5
   },
   "htf_innen": {
    "name": "HTF Innen-Einstieg",
    "toleranz_moeglich": true,
    "streng": 6,
-   "nur_toleranz": 4,
-   "handelbar": 3
+   "nur_toleranz": 6,
+   "handelbar": 4
   },
   "ema_crossback": {
    "name": "EMA Crossback",
    "toleranz_moeglich": false,
-   "streng": 171,
+   "streng": 204,
    "nur_toleranz": 0,
-   "handelbar": 70
+   "handelbar": 53
   },
   "power_gap": {
    "name": "Power-Gap (Lücken-Bestätigungstag)",
@@ -159,18 +159,18 @@
   "hoch_52w": {
    "name": "Neues 52-Wochen-Hoch",
    "toleranz_moeglich": false,
-   "streng": 100,
+   "streng": 62,
    "nur_toleranz": 0,
-   "handelbar": 64
+   "handelbar": 34
   },
   "hoch_allzeit": {
    "name": "Neues Allzeithoch",
    "toleranz_moeglich": false,
-   "streng": 30,
+   "streng": 20,
    "nur_toleranz": 0,
-   "handelbar": 23
+   "handelbar": 19
   }
  },
- "zeilen": 5663,
- "dauer_s": 1024.3
+ "zeilen": 5661,
+ "dauer_s": 1115.0
 }
