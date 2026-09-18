@@ -181,7 +181,7 @@
     "AMD|EMA Crossback": "drin",
     "FTNT|Fallback: MA50-Pullback": "draussen",
     "CNC|Fallback: MA50-Pullback": "drin",
-    "FROG|Fallback: MA50-Pullback": "draussen",
+    "FROG|Fallback: MA50-Pullback": "drin",
     "GOLD|Fallback: MA50-Pullback": "draussen",
     "SNX|Rectangle Top": "drin",
     "BE|EMA Crossback": "drin",
@@ -288,7 +288,7 @@
     "ALNT|Fallback: MA50-Pullback": "drin",
     "AUGO|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "AXTI|Fallback: MA50-Pullback": "draussen",
-    "COHR|Fallback: MA50-R\u00fcckeroberung": "drin",
+    "COHR|Fallback: MA50-R\u00fcckeroberung": "draussen",
     "DOCN|Fallback: MA50-Pullback": "draussen",
     "GSAT|Fallback: MA50-Pullback": "drin",
     "HUT|Fallback: MA50-R\u00fcckeroberung": "drin",
@@ -738,7 +738,8 @@
     "SMTC|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-18",
     "BEST|SMTC|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-18",
     "INSW|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-18",
-    "BEST|INSW|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-18"
+    "BEST|INSW|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-18",
+    "UEBER|COHR|Fallback: MA50-R\u00fcckeroberung": "2026-09-18"
   },
   "gapgo_warten": {
     "HUT": {
