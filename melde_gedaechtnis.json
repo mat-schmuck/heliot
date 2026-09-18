@@ -291,7 +291,7 @@
     "COHR|Fallback: MA50-R\u00fcckeroberung": "draussen",
     "DOCN|Fallback: MA50-Pullback": "draussen",
     "GSAT|Fallback: MA50-Pullback": "drin",
-    "HUT|Fallback: MA50-R\u00fcckeroberung": "drin",
+    "HUT|Fallback: MA50-R\u00fcckeroberung": "draussen",
     "IESC|Fallback: MA50-R\u00fcckeroberung": "drin",
     "MXL|Fallback: MA50-R\u00fcckeroberung": "draussen",
     "RVMD|Fallback: MA50-R\u00fcckeroberung": "drin",
@@ -311,7 +311,7 @@
     "TWST|Fallback: 52W-Hoch-Breakout": "drin",
     "INSW|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "SMTC|Fallback: 52W-Hoch-Breakout": "drin",
-    "MXL|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "MXL|Fallback: 20-Tage-Hoch (Pivot)": "draussen",
     "MTW|Darvas Box": "drin",
     "MTW|Fallback: 52W-Hoch-Breakout": "drin",
     "QMCO|Fallback: 20-Tage-Hoch (Pivot)": "drin",
@@ -356,7 +356,11 @@
     "GCT|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "ASX|Rectangle Top": "drin",
     "MTW|Fallback: 20-Tage-Hoch (Pivot)": "drin",
-    "COHR|Fallback: 20-Tage-Hoch (Pivot)": "drin"
+    "COHR|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "AEHR|Fallback: MA50-R\u00fcckeroberung": "drin",
+    "TSEM|Fallback: MA50-R\u00fcckeroberung": "drin",
+    "NTRA|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "ALNT|Rectangle Top": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -770,7 +774,8 @@
     "BEST|NHC|EMA Crossback": "2026-09-18",
     "COHR|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-18",
     "BEST|COHR|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-18",
-    "SCHLUSSNAH|2026-09-18": "2026-09-18"
+    "SCHLUSSNAH|2026-09-18": "2026-09-18",
+    "UEBER|HUT|Fallback: MA50-R\u00fcckeroberung": "2026-09-18"
   },
   "gapgo_warten": {
     "HUT": {
