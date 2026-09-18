@@ -362,7 +362,9 @@
     "NTRA|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "ALNT|Rectangle Top": "drin",
     "TER|Fallback: MA50-R\u00fcckeroberung": "drin",
-    "ASX|Fallback: 20-Tage-Hoch (Pivot)": "drin"
+    "ASX|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "FORM|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "AMBQ|Fallback: MA50-R\u00fcckeroberung": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -781,7 +783,9 @@
     "GAPGOIN|HUT|2026-09-17": "2026-09-18",
     "NTRA|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-18",
     "BEST|NTRA|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-18",
-    "TEIL|TWST|EMA Crossback": "2026-09-18"
+    "TEIL|TWST|EMA Crossback": "2026-09-18",
+    "AMBQ|Fallback: MA50-R\u00fcckeroberung": "2026-09-18",
+    "BEST|AMBQ|Fallback: MA50-R\u00fcckeroberung": "2026-09-18"
   },
   "gapgo_warten": {
     "PSIX": {
