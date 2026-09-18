@@ -3,7 +3,7 @@
   "fenster": {
     "OMER|Fallback: MA50-Pullback": "draussen",
     "CBLL|Fallback: MA50-Pullback": "draussen",
-    "ERO|Fallback: MA50-Pullback": "draussen",
+    "ERO|Fallback: MA50-Pullback": "drin",
     "FIVE|Fallback: MA50-Pullback": "drin",
     "GLNG|Rectangle Top": "drin",
     "HOPE|Fallback: MA50-Pullback": "drin",
@@ -39,7 +39,7 @@
     "HNGE|Fallback: MA50-Pullback": "draussen",
     "INSW|Fallback: MA50-Pullback": "draussen",
     "JOE|Rectangle Top": "drin",
-    "KNTK|Fallback: MA50-Pullback": "draussen",
+    "KNTK|Fallback: MA50-Pullback": "drin",
     "LPG|Cup & Handle (Wochenbasis)": "drin",
     "LPG|Fallback: MA50-Pullback": "draussen",
     "LPG|Fallback: 52W-Hoch-Breakout": "drin",
@@ -55,7 +55,7 @@
     "VIST|Fallback: MA50-Pullback": "draussen",
     "WK|Fallback: MA50-Pullback": "draussen",
     "ZIM|Fallback: MA50-Pullback": "draussen",
-    "ANRO|Fallback: MA50-Pullback": "drin",
+    "ANRO|Fallback: MA50-Pullback": "draussen",
     "AYA|Fallback: MA50-Pullback": "draussen",
     "BE|Fallback: MA50-Pullback": "draussen",
     "CGEM|Fallback: MA50-Pullback": "draussen",
@@ -135,7 +135,7 @@
     "SEPN|Fallback: MA50-Pullback": "drin",
     "SHIP|Fallback: MA50-Pullback": "draussen",
     "BAND|EMA Crossback": "drin",
-    "BLTE|Fallback: MA50-Pullback": "draussen",
+    "BLTE|Fallback: MA50-Pullback": "drin",
     "LB|Cup & Handle (Wochenbasis)": "draussen",
     "NVGS|Fallback: MA50-Pullback": "draussen",
     "NBR|Fallback: MA50-Pullback": "drin",
@@ -181,8 +181,8 @@
     "AMD|EMA Crossback": "drin",
     "FTNT|Fallback: MA50-Pullback": "draussen",
     "CNC|Fallback: MA50-Pullback": "drin",
-    "FROG|Fallback: MA50-Pullback": "drin",
-    "GOLD|Fallback: MA50-Pullback": "drin",
+    "FROG|Fallback: MA50-Pullback": "draussen",
+    "GOLD|Fallback: MA50-Pullback": "draussen",
     "SNX|Rectangle Top": "drin",
     "BE|EMA Crossback": "drin",
     "INTC|EMA Crossback": "drin",
@@ -278,7 +278,7 @@
     "PSIX|Rectangle Top": "draussen",
     "BE|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "CGON|Fallback: MA50-Pullback": "drin",
-    "CMBT|Cup & Handle (Wochenbasis)": "drin",
+    "CMBT|Cup & Handle (Wochenbasis)": "draussen",
     "CMBT|Fallback: 52W-Hoch-Breakout": "drin",
     "LB|Fallback: MA50-Pullback": "draussen",
     "PNTG|EMA Crossback": "drin",
@@ -311,7 +311,7 @@
     "TWST|Fallback: 52W-Hoch-Breakout": "drin",
     "INSW|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "SMTC|Fallback: 52W-Hoch-Breakout": "drin",
-    "MXL|Fallback: 20-Tage-Hoch (Pivot)": "draussen",
+    "MXL|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "MTW|Darvas Box": "drin",
     "MTW|Fallback: 52W-Hoch-Breakout": "drin",
     "QMCO|Fallback: 20-Tage-Hoch (Pivot)": "drin",
@@ -761,7 +761,10 @@
     "MTSI|Fallback: MA50-R\u00fcckeroberung": "2026-09-18",
     "BEST|MTSI|Fallback: MA50-R\u00fcckeroberung": "2026-09-18",
     "GCT|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-18",
-    "BEST|GCT|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-18"
+    "BEST|GCT|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-18",
+    "UEBER|FTK|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-17",
+    "MXL|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-18",
+    "BEST|MXL|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-18"
   },
   "gapgo_warten": {
     "HUT": {
@@ -786,6 +789,14 @@
       "stop": 183.63,
       "firma": "ATI Inc",
       "bestaetigt": false
+    },
+    "FTH": {
+      "signal": "2026-09-16",
+      "kp": 36.99,
+      "stop": 35.36,
+      "firma": "Faeth Therapeutics Inc",
+      "bestaetigt": false,
+      "pruef": "2026-09-17"
     }
   },
   "ampel_tag": "2026-09-18"
