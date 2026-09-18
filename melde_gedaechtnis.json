@@ -55,7 +55,7 @@
     "VIST|Fallback: MA50-Pullback": "draussen",
     "WK|Fallback: MA50-Pullback": "draussen",
     "ZIM|Fallback: MA50-Pullback": "draussen",
-    "ANRO|Fallback: MA50-Pullback": "draussen",
+    "ANRO|Fallback: MA50-Pullback": "drin",
     "AYA|Fallback: MA50-Pullback": "draussen",
     "BE|Fallback: MA50-Pullback": "draussen",
     "CGEM|Fallback: MA50-Pullback": "draussen",
@@ -278,7 +278,7 @@
     "PSIX|Rectangle Top": "draussen",
     "BE|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "CGON|Fallback: MA50-Pullback": "drin",
-    "CMBT|Cup & Handle (Wochenbasis)": "draussen",
+    "CMBT|Cup & Handle (Wochenbasis)": "drin",
     "CMBT|Fallback: 52W-Hoch-Breakout": "drin",
     "LB|Fallback: MA50-Pullback": "draussen",
     "PNTG|EMA Crossback": "drin",
@@ -340,7 +340,11 @@
     "CLS|Fallback: MA50-Pullback": "drin",
     "MXL|Fallback: MA50-Pullback": "draussen",
     "TRMD|Fallback: 20-Tage-Hoch (Pivot)": "drin",
-    "UMAC|Fallback: MA50-Pullback": "drin"
+    "UMAC|Fallback: MA50-Pullback": "drin",
+    "BLLN|Fallback: MA50-R\u00fcckeroberung": "drin",
+    "SITM|Fallback: MA50-Pullback": "drin",
+    "VICR|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "VICR|Fallback: MA50-Pullback": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -714,7 +718,18 @@
     "GEWINN|zonenwechsel|INTC|EMA Crossback|mittel": "2026-09-18",
     "GEWINN|zonenwechsel|SMTC|EMA Crossback|stark": "2026-09-18",
     "GEWINN|zonenwechsel|SWKS|1|mittel": "2026-09-18",
-    "GEWINN|zonenwechsel|VLO|1|mittel": "2026-09-18"
+    "GEWINN|zonenwechsel|VLO|1|mittel": "2026-09-18",
+    "R2GX|TWLO|2026-09-18": "2026-09-18",
+    "R2GX|CVE|2026-09-18": "2026-09-18",
+    "ANRO|Fallback: MA50-Pullback": "2026-09-18",
+    "BEST|ANRO|Fallback: MA50-Pullback": "2026-09-18",
+    "BLLN|Fallback: MA50-R\u00fcckeroberung": "2026-09-18",
+    "BEST|BLLN|Fallback: MA50-R\u00fcckeroberung": "2026-09-18",
+    "SITM|Fallback: MA50-Pullback": "2026-09-18",
+    "BEST|SITM|Fallback: MA50-Pullback": "2026-09-18",
+    "VICR|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-18",
+    "BEST|VICR|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-18",
+    "R2GX|DK|2026-09-18": "2026-09-18"
   },
   "gapgo_warten": {
     "HUT": {
