@@ -8514,5 +8514,32 @@
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
   "wedge_drop_gemeldet": false
+ },
+ "HAE|Cup & Handle (Wochenbasis)": {
+  "symbol": "HAE",
+  "firma": "Haemonetics Corp",
+  "strategie": "Cup & Handle (Wochenbasis)",
+  "einstieg": 109.84,
+  "einstieg_datum": "2026-09-18",
+  "einstieg_index": 0,
+  "struktur_stop": 98.86,
+  "aktueller_stop": 98.86,
+  "stop_quelle": "struktur",
+  "hoechstkurs": 109.84,
+  "teilverkauft": false,
+  "halteregel_aktiv": false,
+  "beobachtung": true,
+  "status": "offen",
+  "verlauf": [],
+  "klasse": "standard",
+  "musterziel": 146.16,
+  "zone": null,
+  "zone_gemeldet": null,
+  "ziel_gemeldet": false,
+  "klimax_gemeldet": [],
+  "weinstein_gemeldet": false,
+  "zahlen_hinweis_gemeldet": false,
+  "sektor_hinweis_gemeldet": false,
+  "wedge_drop_gemeldet": false
  }
 }
