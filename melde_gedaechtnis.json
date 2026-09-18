@@ -346,7 +346,8 @@
     "VICR|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "VICR|Fallback: MA50-Pullback": "drin",
     "KEYS|Fallback: MA50-Pullback": "drin",
-    "SMTC|Fallback: 20-Tage-Hoch (Pivot)": "drin"
+    "SMTC|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "SIMO|Fallback: MA50-R\u00fcckeroberung": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -735,7 +736,9 @@
     "GEWINN|klimax_zeichen|CDNA|Cup & Handle (Wochenbasis)|4_ma200_abstand": "2026-09-18",
     "SEKTORAUF|2026-09-18": "2026-09-18",
     "SMTC|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-18",
-    "BEST|SMTC|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-18"
+    "BEST|SMTC|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-18",
+    "INSW|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-18",
+    "BEST|INSW|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-18"
   },
   "gapgo_warten": {
     "HUT": {
