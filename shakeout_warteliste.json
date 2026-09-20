@@ -6,7 +6,7 @@
   "zone_max": 80.5999984741211,
   "spring_low": 78.31999969482422,
   "spring_volumen": 1552200.0,
-  "tage_gewartet": 6
+  "tage_gewartet": 7
  },
  "CGON": {
   "spring_index": 499,
@@ -15,7 +15,7 @@
   "zone_max": 72.12000274658203,
   "spring_low": 71.77999877929688,
   "spring_volumen": 829916.0,
-  "tage_gewartet": 4
+  "tage_gewartet": 5
  },
  "FROG": {
   "spring_index": 499,
@@ -24,16 +24,7 @@
   "zone_max": 89.16000366210938,
   "spring_low": 86.45500183105469,
   "spring_volumen": 1947345.0,
-  "tage_gewartet": 4
- },
- "CBLL": {
-  "spring_index": 481,
-  "spring_datum": "2026-09-15",
-  "zone_min": 24.18000030517578,
-  "zone_max": 24.709999084472656,
-  "spring_low": 23.899999618530273,
-  "spring_volumen": 316452.0,
-  "tage_gewartet": 3
+  "tage_gewartet": 5
  },
  "NRIX": {
   "spring_index": 500,
@@ -42,7 +33,7 @@
   "zone_max": 25.084999084472656,
   "spring_low": 24.68000030517578,
   "spring_volumen": 1236379.0,
-  "tage_gewartet": 2
+  "tage_gewartet": 3
  },
  "VICR": {
   "spring_index": 500,
@@ -51,7 +42,7 @@
   "zone_max": 209.52999877929688,
   "spring_low": 206.5500030517578,
   "spring_volumen": 1675610.0,
-  "tage_gewartet": 1
+  "tage_gewartet": 2
  },
  "UCTT": {
   "spring_index": 500,
@@ -60,7 +51,7 @@
   "zone_max": 69.31999969482422,
   "spring_low": 68.2699966430664,
   "spring_volumen": 1314643.0,
-  "tage_gewartet": 0
+  "tage_gewartet": 1
  },
  "AAOI": {
   "spring_index": 500,
@@ -69,7 +60,7 @@
   "zone_max": 102.0999984741211,
   "spring_low": 98.51499938964844,
   "spring_volumen": 9850427.0,
-  "tage_gewartet": 0
+  "tage_gewartet": 1
  },
  "AVT": {
   "spring_index": 500,
@@ -78,7 +69,7 @@
   "zone_max": 93.37000274658203,
   "spring_low": 92.66999816894531,
   "spring_volumen": 2665078.0,
-  "tage_gewartet": 0
+  "tage_gewartet": 1
  },
  "DIOD": {
   "spring_index": 500,
@@ -87,7 +78,7 @@
   "zone_max": 91.0199966430664,
   "spring_low": 90.26000213623047,
   "spring_volumen": 705069.0,
-  "tage_gewartet": 0
+  "tage_gewartet": 1
  },
  "KLIC": {
   "spring_index": 500,
@@ -96,6 +87,15 @@
   "zone_max": 82.66999816894531,
   "spring_low": 81.43000030517578,
   "spring_volumen": 1438826.0,
+  "tage_gewartet": 1
+ },
+ "IMOS": {
+  "spring_index": 500,
+  "spring_datum": "2026-09-18",
+  "zone_min": 60.060001373291016,
+  "zone_max": 60.060001373291016,
+  "spring_low": 58.59000015258789,
+  "spring_volumen": 205500.0,
   "tage_gewartet": 0
  }
 }
