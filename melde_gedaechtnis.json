@@ -77,7 +77,7 @@
     "IMOS|Fallback: 20-Tage-Hoch (Pivot)": "draussen",
     "IMOS|Fallback: MA50-Pullback": "draussen",
     "INSW|Fallback: MA50-Pullback": "draussen",
-    "MDB|Fallback: MA50-Pullback": "drin",
+    "MDB|Fallback: MA50-Pullback": "draussen",
     "MSTR|Fallback: 20-Tage-Hoch (Pivot)": "draussen",
     "MSTR|Fallback: MA50-Pullback": "draussen",
     "MTSI|Fallback: MA50-Pullback": "drin",
@@ -193,7 +193,11 @@
     "DOCN|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "FRNM|Fallback: 52W-Hoch-Breakout": "drin",
     "FRNM|Fallback: 20-Tage-Hoch (Pivot)": "drin",
-    "AXTI|Fallback: 20-Tage-Hoch (Pivot)": "drin"
+    "AXTI|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "NTRA|Fallback: 52W-Hoch-Breakout": "drin",
+    "BAP|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "BRKR|Rectangle Top": "drin",
+    "EWTX|Rectangle Top": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -328,7 +332,9 @@
     "BEST|NTSK|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
     "TEIL|AXTI|Fallback: MA50-R\u00fcckeroberung": "2026-09-21",
     "DOCN|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
-    "BEST|DOCN|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21"
+    "BEST|DOCN|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
+    "EWTX|Rectangle Top": "2026-09-21",
+    "BEST|EWTX|Rectangle Top": "2026-09-21"
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-09-21"
