@@ -371,7 +371,11 @@
     "BEST|TWLO|Fallback: 52W-Hoch-Breakout": "2026-09-21",
     "UEBER|MRNA|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
     "MRNA|Darvas Box": "2026-09-21",
-    "BEST|MRNA|Darvas Box": "2026-09-21"
+    "BEST|MRNA|Darvas Box": "2026-09-21",
+    "TEVA|Cup & Handle (Wochenbasis)": "2026-09-21",
+    "BEST|TEVA|Cup & Handle (Wochenbasis)": "2026-09-21",
+    "TEVA|Fallback: 52W-Hoch-Breakout": "2026-09-21",
+    "BEST|TEVA|Fallback: 52W-Hoch-Breakout": "2026-09-21"
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-09-21"
