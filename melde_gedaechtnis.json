@@ -140,7 +140,7 @@
     "NESR|Fallback: MA50-Pullback": "drin",
     "AAMI|Fallback: MA50-Pullback": "drin",
     "ALMR|Fallback: MA50-Pullback": "draussen",
-    "ARGX|Fallback: MA50-Pullback": "drin",
+    "ARGX|Fallback: MA50-Pullback": "draussen",
     "AVT|Fallback: MA50-Pullback": "draussen",
     "BLTE|Fallback: MA50-Pullback": "draussen",
     "COHU|Fallback: 20-Tage-Hoch (Pivot)": "drin",
@@ -174,7 +174,9 @@
     "FTK|Fallback: MA50-Pullback": "draussen",
     "ESTC|Fallback: MA50-Pullback": "draussen",
     "RNG|HTF Innen-Einstieg": "drin",
-    "MRNA|Fallback: 20-Tage-Hoch (Pivot)": "drin"
+    "MRNA|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "MTRN|EMA Crossback": "drin",
+    "TSEM|Fallback: MA50-R\u00fcckeroberung": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -290,7 +292,9 @@
     "GEWINN|zonenwechsel|ARW|SPRING-2026-09-16|stark": "2026-09-21",
     "GEWINN|zonenwechsel|FTK|Fallback: MA50-R\u00fcckeroberung|mittel": "2026-09-21",
     "GEWINN|zonenwechsel|FTK|INS-2026-09-16|stark": "2026-09-21",
-    "GEWINN|zonenwechsel|SMTC|Rectangle Top|mittel": "2026-09-21"
+    "GEWINN|zonenwechsel|SMTC|Rectangle Top|mittel": "2026-09-21",
+    "SEKTORAUF|2026-09-21": "2026-09-21",
+    "R2GX|CRWD|2026-09-21": "2026-09-21"
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-09-21"
