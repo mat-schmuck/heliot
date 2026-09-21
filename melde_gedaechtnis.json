@@ -10,7 +10,7 @@
     "AMD|Rectangle Top": "draussen",
     "AMD|Fallback: MA50-Pullback": "draussen",
     "ASX|Rectangle Top": "draussen",
-    "ASX|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "ASX|Fallback: 20-Tage-Hoch (Pivot)": "draussen",
     "CVI|Fallback: MA50-Pullback": "draussen",
     "LITE|Rectangle Top": "drin",
     "MRNA|Fallback: MA50-Pullback": "draussen",
@@ -380,7 +380,8 @@
     "NTRA|Fallback: 52W-Hoch-Breakout": "2026-09-21",
     "BEST|NTRA|Fallback: 52W-Hoch-Breakout": "2026-09-21",
     "NTRA|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
-    "BEST|NTRA|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21"
+    "BEST|NTRA|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
+    "UEBER|ASX|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21"
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-09-21"
