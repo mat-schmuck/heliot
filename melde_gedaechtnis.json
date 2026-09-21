@@ -138,7 +138,7 @@
     "GH|Fallback: MA50-Pullback": "draussen",
     "ILMN|Fallback: MA50-Pullback": "draussen",
     "NESR|Fallback: MA50-Pullback": "drin",
-    "AAMI|Fallback: MA50-Pullback": "drin",
+    "AAMI|Fallback: MA50-Pullback": "draussen",
     "ALMR|Fallback: MA50-Pullback": "draussen",
     "ARGX|Fallback: MA50-Pullback": "draussen",
     "AVT|Fallback: MA50-Pullback": "draussen",
@@ -211,7 +211,8 @@
     "FTK|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "BAND|Fallback: MA50-R\u00fcckeroberung": "drin",
     "TEVA|Cup & Handle (Wochenbasis)": "drin",
-    "TEVA|Fallback: 52W-Hoch-Breakout": "drin"
+    "TEVA|Fallback: 52W-Hoch-Breakout": "drin",
+    "MRNA|Darvas Box": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -368,7 +369,9 @@
     "BEST|TWLO|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
     "TWLO|Fallback: 52W-Hoch-Breakout": "2026-09-21",
     "BEST|TWLO|Fallback: 52W-Hoch-Breakout": "2026-09-21",
-    "UEBER|MRNA|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21"
+    "UEBER|MRNA|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
+    "MRNA|Darvas Box": "2026-09-21",
+    "BEST|MRNA|Darvas Box": "2026-09-21"
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-09-21"
