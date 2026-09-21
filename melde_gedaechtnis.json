@@ -168,7 +168,7 @@
     "CVI|Cup & Handle (Wochenbasis)": "drin",
     "CVI|Fallback: 52W-Hoch-Breakout": "drin",
     "LB|Cup & Handle (Wochenbasis)": "draussen",
-    "LB|Fallback: MA50-Pullback": "drin",
+    "LB|Fallback: MA50-Pullback": "draussen",
     "NUTX|Fallback: MA50-Pullback": "draussen",
     "FTH|Fallback: MA50-Pullback": "draussen",
     "FTK|Fallback: MA50-Pullback": "draussen",
@@ -183,14 +183,14 @@
     "NTRA|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "TSEM|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "FET|Fallback: MA50-Pullback": "draussen",
-    "AMRX|Fallback: 52W-Hoch-Breakout": "drin",
+    "AMRX|Fallback: 52W-Hoch-Breakout": "draussen",
     "NTSK|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "TWLO|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "FTNT|Rectangle Top": "drin",
     "ADPT|Fallback: 52W-Hoch-Breakout": "drin",
     "ADPT|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "SLAB|Fallback: MA50-Pullback": "drin",
-    "DOCN|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "DOCN|Fallback: 20-Tage-Hoch (Pivot)": "draussen",
     "FRNM|Fallback: 52W-Hoch-Breakout": "drin",
     "FRNM|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "AXTI|Fallback: 20-Tage-Hoch (Pivot)": "draussen",
@@ -202,7 +202,9 @@
     "TXG|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "CGON|Rectangle Top": "drin",
     "AXGN|Fallback: MA50-R\u00fcckeroberung": "drin",
-    "QMCO|Fallback: 20-Tage-Hoch (Pivot)": "drin"
+    "QMCO|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "BBNX|EMA Crossback": "drin",
+    "ZIM|Cup & Handle (Wochenbasis) + Darvas Box": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -346,7 +348,9 @@
     "BEST|AXTI|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
     "UEBER|AXTI|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
     "UEBER|TSEM|Fallback: MA50-R\u00fcckeroberung": "2026-09-21",
-    "UEBER|UMAC|Fallback: MA50-R\u00fcckeroberung": "2026-09-21"
+    "UEBER|UMAC|Fallback: MA50-R\u00fcckeroberung": "2026-09-21",
+    "UEBER|DOCN|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
+    "UEBER|AMRX|Fallback: 52W-Hoch-Breakout": "2026-09-21"
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-09-21"
