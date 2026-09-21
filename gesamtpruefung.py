@@ -430,24 +430,91 @@ def block_e():
            ie.indextage(_d(2026, 8, 24), 2) == [_d(2026, 8, 21), _d(2026, 8, 24)])
     # Lebenszeichen-Waechter (Mathias, 26.08.2026, nach dem Ausfall)
     import lebenszeichen as lz
-    # Seit 12.09.2026 zehn Kapitel: RS-Universum, Sektor-Rangliste, Ratings
-    pruefe("E", "Lebenszeichen prueft alle zehn Kapitel",
-           len(lz.pruefe()) == 10)
+    # Seit 12.09.2026 zehn Kapitel: RS-Universum, Sektor-Rangliste, Ratings;
+    # seit 21.09.2026 zwoelf: Fundament und Vorabwerte, beide ueber die
+    # GitHub-Schnittstelle und deshalb hier ohne Netz (netz=False).
+    pruefe("E", "Lebenszeichen prueft alle zwoelf Kapitel",
+           len(lz.pruefe(netz=False)) == 12)
     from datetime import date as _dt
     pruefe("E", "Handelstage statt Kalendertage (Montag schlaegt nicht an)",
            # Freitag auf Montag ist EIN Handelstag, nicht drei Kalendertage
            lz._handelstage_her("2026-08-21", _dt(2026, 8, 24)) == 1
            and lz._handelstage_her("2026-08-21", _dt(2026, 8, 26)) == 3)
-    _echte = [z for z in lz.pruefe() if z[3]]
+    _echte = [z for z in lz.pruefe(netz=False) if z[3]]
     pruefe("E", "Am echten Bestand ist derzeit kein Kapitel still",
            not _echte, ", ".join(z[0] for z in _echte))
     pruefe("E", "Bericht kommt ohne Gedankenstrich (Screenreader)",
            all("—" not in z and "–" not in z
-               for z in lz.bericht(lz.pruefe())))
+               for z in lz.bericht(lz.pruefe(netz=False))))
+    _lz_yml = pathlib.Path(".github/workflows/lebenszeichen.yml").read_text(encoding="utf-8")
     pruefe("E", "Lebenszeichen laeuft taeglich als eigener Workflow",
-           "lebenszeichen.py --melden" in
-           pathlib.Path(".github/workflows/lebenszeichen.yml")
-           .read_text(encoding="utf-8"))
+           "lebenszeichen.py --melden" in _lz_yml)
+    pruefe("E", "Lebenszeichen bekommt beide Token fuer Fundament und Vorabwerte",
+           "DATEN_TOKEN: ${{ secrets.DATEN_TOKEN }}" in _lz_yml
+           and "GITHUB_TOKEN: ${{ github.token }}" in _lz_yml)
+
+    # Fundament und Vorabwerte mit nachgebauten Antworten der Schnittstelle
+    def _rel(tag, zeit, dateien):
+        return {"tag_name": tag, "published_at": zeit, "draft": False, "assets": [{}] * dateien}
+
+    def _fund_holen(liste, latest):
+        return lambda pfad: latest if pfad.endswith("/latest") else liste
+
+    _r_neu = _rel("fundament-roh-20260921-2110", "2026-09-21T21:10:00Z", 95)
+    _r_alt = _rel("fundament-roh-20260918-2105", "2026-09-18T21:05:00Z", 95)
+    _f = lz._fundament(_fund_holen([_r_alt, _r_neu, _rel("scanner-daten", "2026-09-22T05:00:00Z", 4)], _r_neu),
+                       heute=_dt(2026, 9, 22))
+    pruefe("E", "Fundament: Release vom Vorabend ist gesund", _f[3] is False, str(_f))
+    _f = lz._fundament(_fund_holen([_r_alt], _r_alt), heute=_dt(2026, 9, 23))
+    pruefe("E", "Fundament: drei Handelstage ohne neues Release sind still", _f[3] is True, str(_f))
+    _f = lz._fundament(_fund_holen([_r_alt, _rel("fundament-roh-20260921-2110", "2026-09-21T21:10:00Z", 40)],
+                                   _rel("fundament-roh-20260921-2110", "2026-09-21T21:10:00Z", 40)),
+                       heute=_dt(2026, 9, 22))
+    pruefe("E", "Fundament: deutlich weniger Dateien als davor ist still", _f[3] is True, str(_f))
+    _f = lz._fundament(_fund_holen([_r_alt, _r_neu], _rel("scanner-daten", "2026-09-22T05:00:00Z", 4)),
+                       heute=_dt(2026, 9, 22))
+    pruefe("E", "Fundament: ein anderes Release als neuestes markiert ist still",
+           _f[3] is True and "scanner-daten" in _f[2], str(_f))
+    _f = lz._fundament(_fund_holen([], {}), heute=_dt(2026, 9, 22))
+    pruefe("E", "Fundament: ohne Fundament-Release still", _f[3] is True, str(_f))
+
+    import json as _json
+    from datetime import datetime as _dtz, timezone as _tz
+
+    def _vw_holen(laeufe, zuletzt):
+        texte = {"vorabwerte/laeufe.jsonl": "\n".join(_json.dumps(x) for x in laeufe) + "\nkaputt\n",
+                 "vorabwerte/stand.json": _json.dumps({"zuletzt": zuletzt, "gesehen": {}})}
+        return lambda pfad: texte[pfad]
+
+    def _lauf(zeit, **k):
+        return {"zeit": zeit, "modus": "strom", "feed": 5, "vorlaeufig": 1, "abbruch": None, **k}
+
+    # Dienstag 22.09.2026 13:00 UTC = 09:00 New York, mitten in den Laufzeiten
+    _mitte = _dtz(2026, 9, 22, 13, 0, tzinfo=_tz.utc)
+    _v = lz._vorabwerte(_vw_holen([_lauf("2026-09-22T12:30:39+00:00"),
+                                   {"zeit": "2026-09-22T12:50:00+00:00", "modus": "abgleich"}],
+                                  "2026-09-22T12:24:22+00:00"), jetzt=_mitte)
+    pruefe("E", "Vorabwerte: Lauf vor einer halben Stunde ist gesund", _v[3] is False, str(_v))
+    _v = lz._vorabwerte(_vw_holen([_lauf("2026-09-22T08:00:00+00:00")], "2026-09-22T07:55:00+00:00"),
+                        jetzt=_mitte)
+    pruefe("E", "Vorabwerte: fuenf Stunden ohne Lauf in der Laufzeit sind still", _v[3] is True, str(_v))
+    _v = lz._vorabwerte(_vw_holen([_lauf("2026-09-22T00:30:00+00:00")], "2026-09-22T00:20:00+00:00"),
+                        jetzt=_dtz(2026, 9, 22, 8, 0, tzinfo=_tz.utc))
+    pruefe("E", "Vorabwerte: nachts gilt der Lauf vom Abend davor", _v[3] is False, str(_v))
+    _v = lz._vorabwerte(_vw_holen([_lauf("2026-09-17T23:30:00+00:00")], "2026-09-17T23:20:00+00:00"),
+                        jetzt=_dtz(2026, 9, 22, 8, 0, tzinfo=_tz.utc))
+    pruefe("E", "Vorabwerte: zwei Handelstage ohne Lauf sind still", _v[3] is True, str(_v))
+    _v = lz._vorabwerte(_vw_holen([_lauf("2026-09-22T12:30:39+00:00", abbruch="SEC-Feed nicht lesbar")],
+                                  "2026-09-22T12:24:22+00:00"), jetzt=_mitte)
+    pruefe("E", "Vorabwerte: abgebrochener Lauf ist still", _v[3] is True and "abgebrochen" in _v[2], str(_v))
+    _v = lz._vorabwerte(_vw_holen([_lauf("2026-09-22T12:30:39+00:00")], "2026-09-16T20:00:00+00:00"),
+                        jetzt=_mitte)
+    pruefe("E", "Vorabwerte: keine neue 8-K seit Tagen ist still", _v[3] is True, str(_v))
+
+    def _ohne_token(pfad):
+        raise lz.TokenFehlt("DATEN_TOKEN")
+    _v = lz._vorabwerte(_ohne_token, jetzt=_mitte)
+    pruefe("E", "Vorabwerte: ohne DATEN_TOKEN still mit Grund", _v[3] is True and "DATEN_TOKEN" in _v[2], str(_v))
 
     pruefe("E", "Index-Rueckblick deckt Gerhards Cluster-Fenster ab",
            ie.index_rueckblick({"cluster_fenster_tage": 10,

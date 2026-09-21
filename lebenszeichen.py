@@ -18,16 +18,27 @@ Tag nichts findet, ist gesund. Erst wenn es TAGELANG nichts sieht,
 stimmt etwas nicht. Gezaehlt wird in HANDELSTAGEN, sonst schluege jeder
 Montag Alarm.
 
+ZWEI KAPITEL MIT NETZ (21.09.2026, Mathias: "ja, baue bitte" auf die Frage,
+ob das Lebenszeichen auch den Fundament-Lauf und den Strom der Vorabwerte
+pruefen soll): Beide liegen nicht im Repo, sondern als Release
+(fundament-roh) und im privaten Datenrepo (vorabwerte). Der Fundament-Lauf
+meldet einen Ausfall gar nicht; der Strom meldet nur Stoerungen INNERHALB
+eines Laufs (SEC-Feed nicht lesbar, Modellkette ohne Antwort), nicht aber
+einen Lauf, der gar nicht erst startet. Beides faengt dieses Lebenszeichen.
+Ohne Netz (--ohne-netz, Gesamtpruefung) werden die zwei Kapitel nicht
+geprueft und sagen das.
+
 Aufruf:
   python lebenszeichen.py                 nur anzeigen
   python lebenszeichen.py --melden        bei Befund ans ntfy-Thema
+  python lebenszeichen.py --ohne-netz     nur die Kapitel aus dem Repo
 """
 
 import argparse
 import json
 import os
 import sys
-from datetime import datetime, date, timedelta
+from datetime import datetime, date, timedelta, timezone
 
 
 def _json(pfad, vorgabe=None):
@@ -230,12 +241,150 @@ def _ratings():
             + (f" ({d.get('grund')})" if d.get("grund") else ""), krank)
 
 
+# ---------------------------------------------------------------------------
+# Kapitel ausserhalb des Repos (brauchen die GitHub-Schnittstelle)
+# ---------------------------------------------------------------------------
+
+GITHUB_API = "https://api.github.com/"
+REPO = "mat-schmuck/heliot"
+DATEN_REPO = "mat-schmuck/heliot-daten"
+FUNDAMENT_NAME = "Fundament (amtliche Quartalszahlen)"
+VORABWERTE_NAME = "Vorabwerte (8-K-Strom)"
+
+
+class TokenFehlt(Exception):
+    """Das Secret fuer ein privates Repo ist nicht gesetzt."""
+
+
+def _github(pfad, token_name="GITHUB_TOKEN", roh=False, pflicht=False):
+    """Ein Aufruf der GitHub-Schnittstelle. Der Token kommt aus der Umgebung
+    und wird nie ausgegeben; ohne Token geht es bei oeffentlichen Repos auch,
+    dann mit dem kleinen Kontingent ohne Anmeldung."""
+    import requests
+    token = (os.environ.get(token_name) or "").strip()
+    if pflicht and not token:
+        raise TokenFehlt(token_name)
+    kopf = {"Accept": "application/vnd.github.raw" if roh else "application/vnd.github+json",
+            "X-GitHub-Api-Version": "2022-11-28"}
+    if token:
+        kopf["Authorization"] = f"Bearer {token}"
+    r = requests.get(GITHUB_API + pfad, headers=kopf, timeout=30)
+    r.raise_for_status()
+    return r.text if roh else r.json()
+
+
+def _fundament(holen=None, heute=None):
+    """Das amtliche Fundament (Gerhard, S3 vom 20.09.2026): Seit dem 21.09.2026
+    baut fundament_phase1.yml es Montag bis Freitag abends nach dem Schluss in
+    New York neu und veroeffentlicht es als Release fundament-roh-<Zeit>, das
+    zugleich das als neuestes markierte Release sein muss, weil
+    ibd_ratings.lade_kennzahlen releases/latest liest.
+    Krank ist das Kapitel, wenn das juengste Fundament-Release mehr als einen
+    Handelstag alt ist, wenn es deutlich weniger Dateien hat als das davor
+    (unter 90 Prozent), oder wenn ein anderes Release als neuestes markiert ist.
+    holen: Funktion(pfad) -> JSON, fuer die Pruefung ohne Netz."""
+    holen = holen or (lambda pfad: _github(pfad))
+    alle = holen(f"repos/{REPO}/releases?per_page=30") or []
+    fund = sorted([r for r in alle if str(r.get("tag_name") or "").startswith("fundament-roh-")
+                   and not r.get("draft") and r.get("published_at")],
+                  key=lambda r: str(r["published_at"]), reverse=True)
+    if not fund:
+        return (FUNDAMENT_NAME, None, "kein veroeffentlichtes Fundament-Release gefunden", True)
+    neu = fund[0]
+    tag = str(neu["tag_name"])
+    tag_datum = str(neu["published_at"])[:10]
+    her = _handelstage_her(tag_datum, heute)
+    dateien = len(neu.get("assets") or [])
+    davor = len(fund[1].get("assets") or []) if len(fund) > 1 else None
+    latest = holen(f"repos/{REPO}/releases/latest") or {}
+    maengel = []
+    if her is None or her > 1:
+        maengel.append(f"seit {her} Handelstagen kein neues Fundament")
+    if davor and dateien < 0.9 * davor:
+        maengel.append(f"nur {dateien} Dateien statt {davor} wie im Release davor")
+    if str(latest.get("tag_name") or "") != tag:
+        maengel.append(f"als neuestes Release ist {latest.get('tag_name') or 'keines'} markiert, "
+                       "die Ratings lesen dann nicht das Fundament")
+    lage = f"Release {tag}, {dateien} Dateien" + ("; " + "; ".join(maengel) if maengel else "")
+    return (FUNDAMENT_NAME, f"veroeffentlicht {tag_datum}", lage, bool(maengel))
+
+
+def _vorabwerte(holen=None, jetzt=None):
+    """Der Strom der Vorabwerte aus Ergebnis-8-Ks (Gerhard F15; vorabwerte_8k.py
+    auf fundament-phase1, von cron-job.org werktags 06:00 bis 20:00 New York
+    alle 30 Minuten angestossen). Er schreibt ins private Datenrepo:
+    vorabwerte/laeufe.jsonl (eine Bilanz je Lauf) und vorabwerte/stand.json
+    ("zuletzt" = juengste gesehene 8-K-Einreichung).
+    Krank ist das Kapitel,
+      * wenn waehrend der Laufzeiten (werktags 06:30 bis 20:30 New York) der
+        letzte Lauf des Stroms mehr als drei Stunden zurueckliegt, sonst wenn er
+        mehr als einen Handelstag zurueckliegt (ein Lauf, der gar nicht
+        startet, meldet sich nicht selbst);
+      * wenn der letzte Lauf abgebrochen ist;
+      * wenn die juengste gesehene Einreichung mehr als zwei Handelstage alt
+        ist (die SEC nimmt jeden Werktag Hunderte 8-Ks an).
+    holen: Funktion(pfad) -> Text, fuer die Pruefung ohne Netz."""
+    holen = holen or (lambda pfad: _github(f"repos/{DATEN_REPO}/contents/{pfad}",
+                                           "DATEN_TOKEN", roh=True, pflicht=True))
+    try:
+        laeufe_text = holen("vorabwerte/laeufe.jsonl")
+        stand = json.loads(holen("vorabwerte/stand.json") or "{}")
+    except TokenFehlt:
+        return (VORABWERTE_NAME, None, "nicht pruefbar, das Secret DATEN_TOKEN fehlt", True)
+    stroeme = []
+    for zeile in (laeufe_text or "").splitlines():
+        try:
+            d = json.loads(zeile)
+        except ValueError:
+            continue
+        if isinstance(d, dict) and d.get("modus") == "strom" and d.get("zeit"):
+            stroeme.append(d)
+    jetzt = jetzt or datetime.now(timezone.utc)
+    if not stroeme:
+        return (VORABWERTE_NAME, None, "noch kein Lauf des Stroms verzeichnet", True)
+    letzter = max(stroeme, key=lambda d: str(d["zeit"]))
+    zeit = datetime.fromisoformat(str(letzter["zeit"]))
+    if zeit.tzinfo is None:
+        zeit = zeit.replace(tzinfo=timezone.utc)
+    alter_h = (jetzt - zeit).total_seconds() / 3600
+    from zoneinfo import ZoneInfo
+    ny = jetzt.astimezone(ZoneInfo("America/New_York"))
+    laufzeit = ny.weekday() < 5 and (6, 30) <= (ny.hour, ny.minute) <= (20, 30)
+    maengel = []
+    if laufzeit:
+        if alter_h > 3:
+            maengel.append(f"letzter Lauf vor {alter_h:.0f} Stunden, obwohl er alle 30 Minuten laufen soll")
+    else:
+        her_lauf = _handelstage_her(zeit.date().isoformat(), jetzt.date())
+        if her_lauf is None or her_lauf > 1:
+            maengel.append(f"letzter Lauf vor {her_lauf} Handelstagen")
+    if letzter.get("abbruch"):
+        maengel.append(f"letzter Lauf abgebrochen: {str(letzter['abbruch'])[:120]}")
+    zuletzt = str(stand.get("zuletzt") or "")[:10]
+    her_8k = _handelstage_her(zuletzt, jetzt.date()) if zuletzt else None
+    if her_8k is None or her_8k > 2:
+        maengel.append(f"seit {her_8k} Handelstagen keine neue 8-K" if her_8k is not None
+                       else "noch nie eine 8-K gesehen")
+    heute = jetzt.date().isoformat()
+    heute_laeufe = [d for d in stroeme if str(d["zeit"])[:10] == heute]
+    vorl = sum(int(d.get("vorlaeufig") or 0) + int(d.get("unsicher") or 0) for d in heute_laeufe)
+    wien = zeit.astimezone(ZoneInfo("Europe/Vienna"))
+    n_heute = len(heute_laeufe)
+    lage = (f"juengste gesehene 8-K vom {zuletzt or 'nie'}, heute {n_heute} "
+            f"{'Lauf' if n_heute == 1 else 'Laeufe'} mit {vorl} Vorabwerten"
+            + ("; " + "; ".join(maengel) if maengel else ""))
+    return (VORABWERTE_NAME, f"letzter Lauf {wien:%d.%m.%Y %H:%M} Wiener Zeit", lage, bool(maengel))
+
+
 PRUEFUNGEN = [_nachtscan, _volumenkurven, _waechter, _sektor, _insider,
               _termine, _gewinnzonen, _rs_universum, _sektor_rangliste, _ratings]
+NETZ_PRUEFUNGEN = [_fundament, _vorabwerte]
 
 
-def pruefe():
-    """Alle Kapitel durchgehen. Rueckgabe: Liste (Name, Stand, Lage, krank)."""
+def pruefe(netz=True):
+    """Alle Kapitel durchgehen. Rueckgabe: Liste (Name, Stand, Lage, krank).
+    netz=False laesst die zwei Kapitel aus, die die GitHub-Schnittstelle
+    brauchen; sie stehen dann als nicht geprueft da und gelten nicht als still."""
     raus = []
     for f in PRUEFUNGEN:
         try:
@@ -243,6 +392,14 @@ def pruefe():
         except Exception as e:
             raus.append((f.__name__.strip("_"), None,
                          f"Pruefung selbst gescheitert ({type(e).__name__})", True))
+    for f, name in zip(NETZ_PRUEFUNGEN, (FUNDAMENT_NAME, VORABWERTE_NAME)):
+        if not netz:
+            raus.append((name, None, "ohne Netz nicht geprueft", False))
+            continue
+        try:
+            raus.append(f())
+        except Exception as e:
+            raus.append((name, None, f"Pruefung selbst gescheitert ({type(e).__name__})", True))
     return raus
 
 
@@ -260,9 +417,11 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--melden", action="store_true",
                     help="Bei Befund ans ntfy-Thema schicken")
+    ap.add_argument("--ohne-netz", action="store_true",
+                    help="Fundament und Vorabwerte auslassen (brauchen die GitHub-Schnittstelle)")
     args = ap.parse_args()
 
-    zeilen = pruefe()
+    zeilen = pruefe(netz=not args.ohne_netz)
     for z in bericht(zeilen):
         print(z)
     krank = [z for z in zeilen if z[3]]

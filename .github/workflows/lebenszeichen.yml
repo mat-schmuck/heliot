@@ -28,6 +28,10 @@ jobs:
       - name: Lebenszeichen pruefen
         env:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          # Seit 21.09.2026 auch Fundament (Releases dieses Repos) und
+          # Vorabwerte (privates Datenrepo, nur lesend ueber DATEN_TOKEN).
+          GITHUB_TOKEN: ${{ github.token }}
+          DATEN_TOKEN: ${{ secrets.DATEN_TOKEN }}
         # Rueckgabewert 1 heisst "ein Kapitel ist still" - das ist ein
         # Befund, kein Workflow-Fehler; sonst kaeme zusaetzlich eine
         # Fehlermail von GitHub.
