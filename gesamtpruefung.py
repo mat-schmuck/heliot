@@ -2762,6 +2762,9 @@ def gast_abschottung(pfad) -> tuple:
       * _daten_token gibt den Token nur bei rolle "voll" heraus, und
         lade_scanner_analysten prueft die Rolle, bevor es den fuer alle
         Besucher geteilten Zwischenspeicher fragt.
+      * Vorlagen (S1) und Uebergabe (S2) stehen nur unter
+        "if rolle == 'voll':", und wochenliste_einspielen rufen genau die
+        Uebergabe und die Seite zum Hochladen.
     Liefert (ok, Befund)."""
     import ast as _ast
     try:
@@ -2827,17 +2830,17 @@ def gast_abschottung(pfad) -> tuple:
     vorlagen_namen = {"_sc_vorlagen_holen", "_sc_vorlage_laden", "_sc_vorlage_speichern", "_sc_vorlage_loeschen"}
     reiter_f = next((k for k in baum.body if isinstance(k, _ast.FunctionDef) and k.name == "scanner_reiter"), None)
 
-    def offen_verwendet(knoten, geschuetzt):
+    def offen_verwendet(knoten, geschuetzt, namen=vorlagen_namen):
         if isinstance(knoten, _ast.If) and _ast.unparse(knoten.test) in ("rolle == 'voll'", 'rolle == "voll"'):
             for s in knoten.body:
-                yield from offen_verwendet(s, True)
+                yield from offen_verwendet(s, True, namen)
             for s in knoten.orelse:
-                yield from offen_verwendet(s, geschuetzt)
+                yield from offen_verwendet(s, geschuetzt, namen)
             return
-        if isinstance(knoten, _ast.Name) and knoten.id in vorlagen_namen and not geschuetzt:
+        if isinstance(knoten, _ast.Name) and knoten.id in namen and not geschuetzt:
             yield f"{knoten.id} in Zeile {knoten.lineno}"
         for kind in _ast.iter_child_nodes(knoten):
-            yield from offen_verwendet(kind, geschuetzt)
+            yield from offen_verwendet(kind, geschuetzt, namen)
 
     if reiter_f is None:
         maengel.append("Funktion scanner_reiter fehlt")
@@ -2848,9 +2851,37 @@ def gast_abschottung(pfad) -> tuple:
         if not any(True for s in reiter_f.body for k in _ast.walk(s)
                    if isinstance(k, _ast.Name) and k.id == "_sc_vorlagen_holen"):
             maengel.append("scanner_reiter liest die Vorlagen nicht")
+    # Die Uebergabe (S2, 21.09.2026) ersetzt eine Wochen- oder Darvas-Liste: In
+    # _sc_ergebnis_zeigen steht sie nur unter "if rolle == 'voll':", und
+    # wochenliste_einspielen rufen nur die Uebergabe und die Seite zum Hochladen.
+    zeigen_f = next((k for k in baum.body if isinstance(k, _ast.FunctionDef) and k.name == "_sc_ergebnis_zeigen"),
+                    None)
+    if zeigen_f is None:
+        maengel.append("Funktion _sc_ergebnis_zeigen fehlt")
+    else:
+        offen = [x for s in zeigen_f.body for x in offen_verwendet(s, False, {"_sc_uebergabe"})]
+        if offen:
+            maengel.append("Uebergabe ausserhalb von 'if rolle == \"voll\"': " + ", ".join(offen[:4]))
+        if not any(True for s in zeigen_f.body for k in _ast.walk(s)
+                   if isinstance(k, _ast.Name) and k.id == "_sc_uebergabe"):
+            maengel.append("_sc_ergebnis_zeigen bietet die Uebergabe nicht an")
+    einspieler = set()
+    for k in baum.body:
+        for n in _ast.walk(k):
+            if isinstance(n, _ast.Call) and getattr(n.func, "id", "") == "wochenliste_einspielen":
+                if isinstance(k, _ast.FunctionDef):
+                    einspieler.add(k.name)
+                elif isinstance(k, _ast.With):
+                    einspieler.add("with " + _ast.unparse(k.items[0].context_expr))
+                else:
+                    einspieler.add(f"Zeile {n.lineno}")
+    if einspieler != {"_sc_uebergabe_ausfuehren", "with tab_upload"}:
+        maengel.append("wochenliste_einspielen wird nicht genau von Upload und Uebergabe gerufen: "
+                       + ", ".join(sorted(einspieler)))
     if maengel:
         return False, "; ".join(maengel)
-    return True, "Gast: nur Scanner ohne Registerkarten, Schranke dahinter, Nachschlagen und Datenrepo gesperrt"
+    return True, ("Gast: nur Scanner ohne Registerkarten, Schranke dahinter, Nachschlagen, Datenrepo und Uebergabe "
+                  "gesperrt")
 
 
 def scanner_bedienung_pruefen(pfad) -> tuple:

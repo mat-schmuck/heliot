@@ -813,6 +813,181 @@ def rs_mappe(wert) -> str:
     return nachschlagen.lesbar(wert)
 
 
+# --- Wochenliste -----------------------------------------------------------
+# Die Definitionen stehen seit dem 21.09.2026 hier vor dem Scanner, weil auch
+# die Uebergabe aus dem Scanner (Gerhard, 20.09.2026, S2) sie braucht; die
+# Seite zum Hochladen selbst steht weiter hinter der Schranke fuer Gaeste.
+#
+# Gerhard siebt jede Woche den Markt mit seinem Finviz-Screener und liefert
+# eine CSV mit der Spalte 'Ticker' (bestätigt am 22.07.2026: immer CSV, nie
+# Excel). Diese Seite legt die Datei als finviz_3.csv ins Repo; ab dem
+# nächsten nächtlichen Scan arbeitet die Automatik damit.
+# OHNE KENNWORT (Mathias, 13.09.2026): Bis dahin verlangte die Seite das
+# Streamlit-Secret UPLOAD_KENNWORT; das ist herausgenommen, weil niemand
+# wusste, welches Kennwort gemeint war. Geschrieben wird weiter über den
+# GitHub-Token (GITHUB_TOKEN), der NUR auf dieses Repo und NUR auf
+# Dateiinhalte berechtigt ist. Seit der Anmeldung vom selben Abend gibt es
+# diese Seite nur mit dem festen Passwort (HELIOT_PASSWORT); Gaeste sehen sie
+# nicht. Solange das Passwort nicht eingerichtet ist, bleibt sie offen, und
+# die einzige Schranke ist pruefe_wochenliste (CSV mit Spalte Ticker,
+# plausible Kuerzel).
+
+LISTEN_DATEI = "finviz_3.csv"     # REPO ist oben beim Aktuellen Scan definiert
+DARVAS_DATEI = "darvas.csv"
+
+# JEDER ZWEIG, DER EINE WOCHENLISTE FUEHRT (Mathias, 08.09.2026).
+# main ist der Standardzweig, von dem Nachtscan und Waechter laufen;
+# fundament-phase1 ist der Arbeitszweig, auf dem messung_8k.py die
+# Listen ueber dasselbe Modul listen.py liest.
+#
+# WOZU: Bis dahin schrieb der Upload OHNE Angabe eines Zweigs, und
+# GitHub legt das auf dem Standardzweig ab. Auf jedem anderen Zweig
+# blieb die alte Liste liegen, ohne dass irgendwo etwas gemeldet worden
+# waere. Ein Lauf, der von dort gestartet wird, haette still die
+# falschen Aktien gescannt, und genau das faellt niemandem auf.
+#
+# SICHERUNGSZWEIGE GEHOEREN NICHT HIERHER: stand-vor-umbau soll den
+# alten Stand bewahren, nicht mitwandern. Wer einen neuen Arbeitszweig
+# anlegt, traegt ihn hier ein. Vergisst er es, meldet es die
+# Gesamtpruefung (Block H, "Jeder Zweig mit Wochenliste steht in
+# LISTEN_ZWEIGE"): Sie zaehlt die Zweige auf origin seit 10.09.2026 selbst
+# auf und nimmt nur Sicherungszweige aus, deren Name mit stand-, sicherung
+# oder backup beginnt. Bis dahin stand dort dieselbe feste Liste wie hier,
+# und einen dritten Zweig haette sie gar nicht gesehen.
+LISTEN_ZWEIGE = ("main", "fundament-phase1")
+
+# ZWEI LISTEN seit 14.08.2026 (Gerhard): "Die Darvas-Tradingstrategie
+# bekommt eine eigene Liste. Das Tradingmuster Darvas soll in Zukunft
+# ausschliesslich auf diese Liste angewandt werden. Die Darvasliste soll
+# fuer die anderen Strategien herangezogen werden, jedoch nicht
+# umgekehrt." Beide werden getrennt abgelegt und getrennt ersetzt - wer
+# nur eine hochlaedt, laesst die andere unveraendert stehen.
+#
+# WELCHE IST WELCHE: Gerhard nennt die eine "Darvers"/"Darvas", die
+# andere "finviz.csv oder aehnlich". Der Dateiname entscheidet also
+# vor, ABER die Seite sagt vorher an, wohin sie geht, und die Wahl
+# laesst sich umstellen - ein stiller Griff in die falsche Liste waere
+# der teuerste Fehler dieser Seite.
+
+
+def liste_aus_dateiname(name: str) -> str:
+    """Welche Liste ist gemeint? Rueckgabe: DARVAS_DATEI oder LISTEN_DATEI.
+
+    ACHTUNG BEI DER SCHREIBWEISE: Der Name kommt mit drei Varianten
+    vorbei. Gerhard schreibt "Darvers", die Datei vom 15.08.2026 hiess
+    "darwas", das Muster selbst heisst Darvas. Eine Suche nach "darv"
+    allein haette "darwas" NICHT erkannt und die Darvas-Liste
+    stillschweigend in die grosse Liste geschrieben - genau der
+    Fehlgriff, gegen den diese Seite die Wahl sichtbar anzeigt.
+    Erkannt wird deshalb "dar" plus v ODER w."""
+    import re
+    return (DARVAS_DATEI if re.search(r"dar[vw]", (name or "").lower())
+            else LISTEN_DATEI)
+
+
+def pruefe_wochenliste(rohdaten: bytes) -> tuple[str, list[str]]:
+    """Prüft die Datei GRÜNDLICH, bevor irgendetwas ins Repo geschrieben
+    wird — ein Tippfehler beim Hochladen darf nicht die nächtliche
+    Scan-Grundlage zerstören. Liefert (Fehlertext, Tickerliste)."""
+    try:
+        df = pd.read_csv(io.BytesIO(rohdaten))
+    except Exception as e:
+        return f"Die Datei ließ sich nicht als CSV lesen ({e}).", []
+    spalte = next((c for c in df.columns if c.strip().lower() == "ticker"), None)
+    if spalte is None:
+        return "Keine Spalte Ticker gefunden. Ist das wirklich der Finviz-Export?", []
+    ticker = [str(t).strip().upper() for t in df[spalte].dropna() if str(t).strip()]
+    ticker = list(dict.fromkeys(ticker))
+    if not ticker:
+        return "Die Ticker-Spalte ist leer.", []
+    if len(ticker) > 1500:
+        # Grenze am 25.07.2026 von 500 auf 1500 erhoeht: Gerhards
+        # Wochenexport umfasst inzwischen ~780 Aktien.
+        return f"{len(ticker)} Ticker sind verdächtig viele (erwartet: bis 1500).", []
+    muster = re.compile(r"^[A-Z0-9.\-]{1,10}$")
+    komisch = [t for t in ticker if not muster.match(t)]
+    if komisch:
+        return "Unplausible Einträge in der Ticker-Spalte: " + ", ".join(komisch[:5]), []
+    return "", ticker
+
+
+def wochenliste_einspielen(rohdaten: bytes, token: str, anzahl: int,
+                           ziel: str = None, herkunft: str = "Upload über Heliot") -> tuple:
+    """Ersetzt die Zielliste auf JEDEM Zweig, der sie fuehrt.
+
+    Liefert (fehler, geschrieben): fehler ist leer, wenn alles geklappt
+    hat, geschrieben nennt die Zweige, auf denen die Liste jetzt steht.
+
+    DREI FAELLE, und alle drei werden dem Nutzer gesagt:
+      * Ein Zweig fuehrt die Datei gar nicht (GET liefert 404): Er wird
+        uebersprungen und gilt NICHT als Fehler. Die Liste wird dort
+        auch nicht angelegt, denn wer sie nicht fuehrt, braucht sie
+        nicht.
+      * Ein Zweig scheitert: Er wird beim Namen genannt, und was schon
+        geschrieben wurde, steht trotzdem in der Rueckgabe. Niemand soll
+        glauben, es sei nichts passiert, wenn die halbe Arbeit getan ist.
+      * Kein einziger Zweig hat es genommen: harter Fehler.
+    """
+    import base64
+    import requests
+    kopf = {"Authorization": f"Bearer {token}",
+            "Accept": "application/vnd.github+json"}
+    ziel = ziel or LISTEN_DATEI
+    url = f"https://api.github.com/repos/{REPO}/contents/{ziel}"
+    inhalt = base64.b64encode(rohdaten).decode()
+    geschrieben, gescheitert = [], []
+    for zweig in LISTEN_ZWEIGE:
+        try:
+            alt = requests.get(url, headers=kopf, timeout=20,
+                               params={"ref": zweig})
+            if alt.status_code == 404:
+                continue          # Zweig oder Datei gibt es dort nicht
+            sha = alt.json().get("sha") if alt.status_code == 200 else None
+            daten = {"message": f"{ziel}: {anzahl} Aktien ({herkunft})",
+                     "content": inhalt, "branch": zweig}
+            if sha:
+                daten["sha"] = sha
+            antwort = requests.put(url, headers=kopf, json=daten, timeout=30)
+            if antwort.status_code in (200, 201):
+                geschrieben.append(zweig)
+            else:
+                grund = "ohne Begründung"
+                try:
+                    grund = antwort.json().get("message", grund)
+                except Exception:
+                    pass
+                gescheitert.append(f"{zweig} (Code {antwort.status_code}: "
+                                   f"{grund})")
+        except Exception as e:
+            gescheitert.append(f"{zweig} ({type(e).__name__}: {e})")
+    bericht = ", ".join(geschrieben)
+    if not geschrieben:
+        return (("Auf keinem Zweig geschrieben: " + "; ".join(gescheitert))
+                if gescheitert else
+                ("Kein bekannter Zweig führt " + ziel + "."), "")
+    if gescheitert:
+        return ("Nur teilweise übernommen. Geschrieben auf " + bericht
+                + "; NICHT geschrieben auf " + "; ".join(gescheitert),
+                bericht)
+    return "", bericht
+
+
+@st.cache_data(ttl=300, show_spinner=False)
+def aktuelle_listengroesse(datei: str = None) -> int | None:
+    """Wie viele Aktien stehen derzeit im Repo? (öffentlich lesbar)"""
+    import requests
+    datei = datei or LISTEN_DATEI
+    try:
+        r = requests.get(f"https://raw.githubusercontent.com/{REPO}/main/{datei}",
+                         timeout=15)
+        if r.status_code != 200:
+            return None
+        fehler, ticker = pruefe_wochenliste(r.content)
+        return len(ticker) if not fehler else None
+    except Exception:
+        return None
+
+
 # --- Scanner (Mathias, 14.09.2026) ------------------------------------------
 # "Wir bauen nun den scanner ein, erreichbar aus dem web-tool." Teil 1 schickt
 # eine Strategie oder ein Chart-Signal durch den ganzen US-Markt, Teil 2
@@ -825,7 +1000,11 @@ def rs_mappe(wert) -> str:
 # Eingabefelder mit ausgeschriebener Beschriftung, das Ergebnis als
 # nummerierte Liste mit Verweisen, keine Tabelle und kein Chart. Der Scanner
 # beeinflusst weder Waechter noch Alarme (Mathias: "Baue noch keine
-# Vernetzung zu unserem Haupttool").
+# Vernetzung zu unserem Haupttool"), mit einer Ausnahme seit 21.09.2026
+# (Gerhard, S2; Mathias: "2 ja"): Der volle Zugang kann ein Ergebnis per Knopf
+# als Wochen- oder Darvas-Liste uebergeben, nach Abwahl einzelner Aktien und
+# einer Bestaetigung. Das ist derselbe Weg wie der Upload der Wochenliste, und
+# ab dem naechsten Nachtscan arbeitet die Automatik mit der neuen Liste.
 #
 # GESCANNT WIRD NUR MIT DEM KNOPF (Gerhard, 15.09.2026, Auftrag 2): "Den
 # Erklaertext zum Scanner bitte entfernen, den brauche ich nicht. Unten einen
@@ -1275,6 +1454,162 @@ def _sc_ergebnis_zeigen(erg: dict, geaendert: bool):
                        data=lambda: sa.datei(ausw, basis, fmt, stand, erg.get("sektor_tabelle"))[0],
                        file_name=sa.dateiname(ausw, stand, fmt),
                        mime=next(x[3] for x in sa.FORMATE if x[0] == fmt), on_click="ignore", key="sc_download")
+    # UEBERGABE (Gerhard, 20.09.2026, S2): nur mit vollem Zugang, weil sie die
+    # Wochen- oder Darvas-Liste ersetzt.
+    if rolle == "voll":
+        _sc_uebergabe(erg, ausw)
+
+
+def _sc_uebergabe(erg: dict, ausw: dict):
+    """Die Treffer als Wochen- oder Darvas-Liste an das Programm uebergeben
+    (Gerhard, 20.09.2026, S2): "Eine im Scanner erzeugte Liste soll ich direkt
+    an das Programm uebergeben koennen, als Wochenliste oder als Darvas-Liste.
+    Vor der Uebergabe brauche ich einen Bearbeitungsmodus: pro Aktie ein
+    Kontrollfeld, mit dem ich sie abwaehlen kann."
+
+    Uebergeben werden alle Treffer in der eingestellten Reihenfolge, nicht nur
+    die angezeigten. Die Abwahl gehoert zum Ergebnis (erg["nr"]): Ein neuer
+    Scan beginnt wieder mit allen angehakt, und die Abwahl des vorigen faellt
+    weg. Eingespielt wird erst nach Wahl der Liste und Bestaetigung, auf
+    demselben Weg wie beim Upload.
+
+    DIE ABWAHL STEHT IN EINEM EIGENEN EINTRAG (sc_ueb_abgewaehlt), nicht im
+    Zustand der Kontrollfelder: Diese gibt es nur, solange der Bearbeitungsmodus
+    offen ist, und den Wert eines nicht gezeichneten Felds raeumt Streamlit weg
+    (gemessen 21.09.2026 im Testrahmen AppTest sogar trotz persist_state). Ein
+    eigener Eintrag bleibt fuer die ganze Sitzung, und die Kontrollfelder werden
+    bei jedem Zeichnen aus ihm gesetzt. Eine abgewaehlte Aktie kann so nie still
+    wieder in die Liste rutschen."""
+    st.markdown("#### Ergebnis als Liste übergeben", anchors=False)
+    alle = [str(t) for t in ausw["df"]["ticker"].tolist()]
+    if len(alle) > sa.UEBERGABE_GRENZE:
+        st.markdown(f"Übergeben lassen sich höchstens {nachschlagen.zahl(sa.UEBERGABE_GRENZE)} Aktien; dieser Scan "
+                    f"hat {nachschlagen.zahl(len(alle))} Treffer. Mit engeren Einstellungen neu scannen.")
+        return
+    nr = erg.setdefault("nr", time.time_ns())
+    modell = st.session_state.get("sc_ueb_abgewaehlt")
+    if not isinstance(modell, dict) or modell.get("nr") != nr:
+        alt = modell.get("nr") if isinstance(modell, dict) else None
+        for k in list(st.session_state.keys()):
+            if str(k).startswith((f"sc_ueb_{alt}_", f"sc_ueb_ja_{alt}")) or k == "sc_ueb_meldung":
+                del st.session_state[k]
+        modell = {"nr": nr, "ticker": set()}
+        st.session_state["sc_ueb_abgewaehlt"] = modell
+    abgewaehlt = modell["ticker"]
+    namen = dict(zip(alle, ausw["df"]["name"].tolist())) if "name" in ausw["df"].columns else {}
+    st.markdown(f"Übergeben werden alle {nachschlagen.zahl(len(alle))} Treffer, nicht nur die angezeigten; im "
+                "Bearbeitungsmodus lassen sich einzelne abwählen. Die gewählte Liste wird ersetzt, die andere "
+                "bleibt, wie sie ist.")
+    if st.checkbox("Bearbeitungsmodus: Aktien einzeln abwählen", key="sc_ueb_bearbeiten", persist_state="page"):
+        st.button("Alle anhaken", key="sc_ueb_alle", on_click=_sc_uebergabe_setzen, args=(alle, True))
+        st.button("Alle abhaken", key="sc_ueb_keine", on_click=_sc_uebergabe_setzen, args=(alle, False))
+        for t in alle:
+            schluessel = f"sc_ueb_{nr}_{t}"
+            st.session_state[schluessel] = t not in abgewaehlt
+            st.checkbox(sa.uebergabe_zeile(t, namen.get(t)), key=schluessel, on_change=_sc_uebergabe_haken,
+                        args=(schluessel, t))
+    gewaehlt = [t for t in alle if t not in abgewaehlt]
+    ziele = {LISTEN_DATEI: f"Wochenliste {LISTEN_DATEI}: alle Strategien außer Darvas",
+             DARVAS_DATEI: f"Darvas-Liste {DARVAS_DATEI}: dort laufen alle Strategien"}
+    if st.session_state.get("sc_ueb_ziel") not in ziele:
+        st.session_state["sc_ueb_ziel"] = None
+    st.selectbox("Welche Liste ersetzt wird", list(ziele), key="sc_ueb_ziel", format_func=ziele.get,
+                 placeholder="bitte wählen")
+    ziel = st.session_state.get("sc_ueb_ziel")
+    st.markdown(sa.uebergabe_satz(len(gewaehlt), len(alle), ziel))
+    bestaetigt = st.checkbox(f"Ja, die gewählte Liste durch diese {nachschlagen.zahl(len(gewaehlt))} Aktien ersetzen",
+                             key=f"sc_ueb_ja_{nr}", disabled=not (ziel and gewaehlt))
+    if st.button("Liste übergeben", key="sc_ueb_los", type="primary",
+                 disabled=not (ziel and gewaehlt and bestaetigt)):
+        st.session_state["sc_ueb_meldung"] = (nr, _sc_uebergabe_ausfuehren(gewaehlt, namen, ziel))
+    meldung = st.session_state.get("sc_ueb_meldung")
+    if meldung and meldung[0] == nr:
+        art, satz = meldung[1]
+        {"ok": st.success, "teil": st.warning}.get(art, st.error)(satz)
+
+
+def _sc_uebergabe_haken(schluessel: str, t: str):
+    """Ein Kontrollfeld des Bearbeitungsmodus wurde umgeschaltet."""
+    modell = st.session_state.get("sc_ueb_abgewaehlt")
+    if not isinstance(modell, dict):
+        return
+    if st.session_state.get(schluessel, True):
+        modell["ticker"].discard(t)
+    else:
+        modell["ticker"].add(t)
+
+
+def _sc_uebergabe_setzen(alle, an: bool):
+    modell = st.session_state.get("sc_ueb_abgewaehlt")
+    if isinstance(modell, dict):
+        modell["ticker"] = set() if an else set(alle)
+
+
+def _sc_listen_roh() -> tuple:
+    """Die beiden Wochenlisten, wie sie auf main stehen (oeffentlich lesbar),
+    erst die Darvas-Liste, dann die grosse, wie listen.alle_ticker; Rueckfall
+    ist die Datei im Arbeitsverzeichnis der App."""
+    import requests
+    raus = []
+    for datei in (DARVAS_DATEI, LISTEN_DATEI):
+        inhalt = None
+        try:
+            r = requests.get(f"https://raw.githubusercontent.com/{REPO}/main/{datei}", timeout=15)
+            if r.status_code == 200:
+                inhalt = r.content
+        except Exception:  # noqa
+            pass
+        if inhalt is None:
+            try:
+                with open(datei, "rb") as f:
+                    inhalt = f.read()
+            except OSError:
+                inhalt = None
+        raus.append(inhalt)
+    return tuple(raus)
+
+
+def _sc_uebergabe_ausfuehren(gewaehlt: list, namen: dict, ziel: str) -> tuple:
+    """Baut die Liste im Finviz-Format (sa.uebergabe_csv), prueft sie wie einen
+    Upload und spielt sie auf jedem Zweig ein, der die Liste fuehrt. Der Sektor
+    kommt aus der bisherigen Finviz-Zeile einer Aktie, sonst aus dem
+    Nachschlagen (erst Wochenlisten, dann Yahoo). Liefert (Art, Satz) mit Art
+    ok, teil oder fehler."""
+    token = (_secret("GITHUB_TOKEN") or "").strip()
+    if not token:
+        return "fehler", "Nicht übergeben: In den Streamlit-Secrets fehlt GITHUB_TOKEN."
+    finviz = sa.finviz_zeilen(*_sc_listen_roh())
+    fehlend = [t for t in gewaehlt if t not in finviz]
+    sektoren = {}
+    if fehlend:
+        gesamt = nachschlagen.zahl(len(fehlend))
+        balken = st.progress(0.0, text=f"Sektor nachschlagen: 0 von {gesamt}")
+        for i, t in enumerate(fehlend, 1):
+            try:
+                sektoren[t] = nachschlag_sektor(t)[0]
+            except Exception:  # noqa
+                sektoren[t] = None
+            balken.progress(i / len(fehlend), text=f"Sektor nachschlagen: {nachschlagen.zahl(i)} von {gesamt}")
+        balken.empty()
+    roh = sa.uebergabe_csv(gewaehlt, namen, finviz, sektoren)
+    fehler, ticker = pruefe_wochenliste(roh)
+    if fehler:
+        return "fehler", "Nicht übergeben: " + fehler
+    fehler, zweige = wochenliste_einspielen(roh, token, len(ticker), ziel, herkunft="Übergabe aus dem Scanner")
+    # Der Zaehler wird auch bei einem Teilerfolg geleert: Auf mindestens einem
+    # Zweig steht die neue Liste.
+    if zweige:
+        aktuelle_listengroesse.clear()
+    if fehler:
+        return ("teil" if zweige else "fehler"), "Übergabe: " + fehler
+    satz = (f"Übergeben in {ziel} auf {zweige}: {nachschlagen.zahl(len(ticker))} Aktien "
+            f"(die ersten: {', '.join(ticker[:5])}). Ab dem nächsten nächtlichen Scan aktiv.")
+    ohne = [t for t in fehlend if not sektoren.get(t)]
+    if ohne:
+        satz += (f" Für {nachschlagen.zahl(len(ohne))} Aktien war kein Sektor feststellbar ("
+                 + ", ".join(ohne[:5]) + (" und weitere" if len(ohne) > 5 else "")
+                 + "); für sie fehlen Sektor-Rang und Sektorhinweis.")
+    return "ok", satz
 
 
 @st.fragment
@@ -1707,177 +2042,10 @@ if tab_upload is None:
     st.stop()
 
 
-# --- Wochenliste -----------------------------------------------------------
-# Gerhard siebt jede Woche den Markt mit seinem Finviz-Screener und liefert
-# eine CSV mit der Spalte 'Ticker' (bestätigt am 22.07.2026: immer CSV, nie
-# Excel). Diese Seite legt die Datei als finviz_3.csv ins Repo; ab dem
-# nächsten nächtlichen Scan arbeitet die Automatik damit.
-# OHNE KENNWORT (Mathias, 13.09.2026): Bis dahin verlangte die Seite das
-# Streamlit-Secret UPLOAD_KENNWORT; das ist herausgenommen, weil niemand
-# wusste, welches Kennwort gemeint war. Geschrieben wird weiter über den
-# GitHub-Token (GITHUB_TOKEN), der NUR auf dieses Repo und NUR auf
-# Dateiinhalte berechtigt ist. Seit der Anmeldung vom selben Abend gibt es
-# diese Seite nur mit dem festen Passwort (HELIOT_PASSWORT); Gaeste sehen sie
-# nicht. Solange das Passwort nicht eingerichtet ist, bleibt sie offen, und
-# die einzige Schranke ist pruefe_wochenliste (CSV mit Spalte Ticker,
-# plausible Kuerzel).
-
-LISTEN_DATEI = "finviz_3.csv"     # REPO ist oben beim Aktuellen Scan definiert
-DARVAS_DATEI = "darvas.csv"
-
-# JEDER ZWEIG, DER EINE WOCHENLISTE FUEHRT (Mathias, 08.09.2026).
-# main ist der Standardzweig, von dem Nachtscan und Waechter laufen;
-# fundament-phase1 ist der Arbeitszweig, auf dem messung_8k.py die
-# Listen ueber dasselbe Modul listen.py liest.
-#
-# WOZU: Bis dahin schrieb der Upload OHNE Angabe eines Zweigs, und
-# GitHub legt das auf dem Standardzweig ab. Auf jedem anderen Zweig
-# blieb die alte Liste liegen, ohne dass irgendwo etwas gemeldet worden
-# waere. Ein Lauf, der von dort gestartet wird, haette still die
-# falschen Aktien gescannt, und genau das faellt niemandem auf.
-#
-# SICHERUNGSZWEIGE GEHOEREN NICHT HIERHER: stand-vor-umbau soll den
-# alten Stand bewahren, nicht mitwandern. Wer einen neuen Arbeitszweig
-# anlegt, traegt ihn hier ein. Vergisst er es, meldet es die
-# Gesamtpruefung (Block H, "Jeder Zweig mit Wochenliste steht in
-# LISTEN_ZWEIGE"): Sie zaehlt die Zweige auf origin seit 10.09.2026 selbst
-# auf und nimmt nur Sicherungszweige aus, deren Name mit stand-, sicherung
-# oder backup beginnt. Bis dahin stand dort dieselbe feste Liste wie hier,
-# und einen dritten Zweig haette sie gar nicht gesehen.
-LISTEN_ZWEIGE = ("main", "fundament-phase1")
-
-# ZWEI LISTEN seit 14.08.2026 (Gerhard): "Die Darvas-Tradingstrategie
-# bekommt eine eigene Liste. Das Tradingmuster Darvas soll in Zukunft
-# ausschliesslich auf diese Liste angewandt werden. Die Darvasliste soll
-# fuer die anderen Strategien herangezogen werden, jedoch nicht
-# umgekehrt." Beide werden getrennt abgelegt und getrennt ersetzt - wer
-# nur eine hochlaedt, laesst die andere unveraendert stehen.
-#
-# WELCHE IST WELCHE: Gerhard nennt die eine "Darvers"/"Darvas", die
-# andere "finviz.csv oder aehnlich". Der Dateiname entscheidet also
-# vor, ABER die Seite sagt vorher an, wohin sie geht, und die Wahl
-# laesst sich umstellen - ein stiller Griff in die falsche Liste waere
-# der teuerste Fehler dieser Seite.
-
-
-def liste_aus_dateiname(name: str) -> str:
-    """Welche Liste ist gemeint? Rueckgabe: DARVAS_DATEI oder LISTEN_DATEI.
-
-    ACHTUNG BEI DER SCHREIBWEISE: Der Name kommt mit drei Varianten
-    vorbei. Gerhard schreibt "Darvers", die Datei vom 15.08.2026 hiess
-    "darwas", das Muster selbst heisst Darvas. Eine Suche nach "darv"
-    allein haette "darwas" NICHT erkannt und die Darvas-Liste
-    stillschweigend in die grosse Liste geschrieben - genau der
-    Fehlgriff, gegen den diese Seite die Wahl sichtbar anzeigt.
-    Erkannt wird deshalb "dar" plus v ODER w."""
-    import re
-    return (DARVAS_DATEI if re.search(r"dar[vw]", (name or "").lower())
-            else LISTEN_DATEI)
-
-
-def pruefe_wochenliste(rohdaten: bytes) -> tuple[str, list[str]]:
-    """Prüft die Datei GRÜNDLICH, bevor irgendetwas ins Repo geschrieben
-    wird — ein Tippfehler beim Hochladen darf nicht die nächtliche
-    Scan-Grundlage zerstören. Liefert (Fehlertext, Tickerliste)."""
-    try:
-        df = pd.read_csv(io.BytesIO(rohdaten))
-    except Exception as e:
-        return f"Die Datei ließ sich nicht als CSV lesen ({e}).", []
-    spalte = next((c for c in df.columns if c.strip().lower() == "ticker"), None)
-    if spalte is None:
-        return "Keine Spalte Ticker gefunden. Ist das wirklich der Finviz-Export?", []
-    ticker = [str(t).strip().upper() for t in df[spalte].dropna() if str(t).strip()]
-    ticker = list(dict.fromkeys(ticker))
-    if not ticker:
-        return "Die Ticker-Spalte ist leer.", []
-    if len(ticker) > 1500:
-        # Grenze am 25.07.2026 von 500 auf 1500 erhoeht: Gerhards
-        # Wochenexport umfasst inzwischen ~780 Aktien.
-        return f"{len(ticker)} Ticker sind verdächtig viele (erwartet: bis 1500).", []
-    muster = re.compile(r"^[A-Z0-9.\-]{1,10}$")
-    komisch = [t for t in ticker if not muster.match(t)]
-    if komisch:
-        return "Unplausible Einträge in der Ticker-Spalte: " + ", ".join(komisch[:5]), []
-    return "", ticker
-
-
-def wochenliste_einspielen(rohdaten: bytes, token: str, anzahl: int,
-                           ziel: str = None) -> tuple:
-    """Ersetzt die Zielliste auf JEDEM Zweig, der sie fuehrt.
-
-    Liefert (fehler, geschrieben): fehler ist leer, wenn alles geklappt
-    hat, geschrieben nennt die Zweige, auf denen die Liste jetzt steht.
-
-    DREI FAELLE, und alle drei werden dem Nutzer gesagt:
-      * Ein Zweig fuehrt die Datei gar nicht (GET liefert 404): Er wird
-        uebersprungen und gilt NICHT als Fehler. Die Liste wird dort
-        auch nicht angelegt, denn wer sie nicht fuehrt, braucht sie
-        nicht.
-      * Ein Zweig scheitert: Er wird beim Namen genannt, und was schon
-        geschrieben wurde, steht trotzdem in der Rueckgabe. Niemand soll
-        glauben, es sei nichts passiert, wenn die halbe Arbeit getan ist.
-      * Kein einziger Zweig hat es genommen: harter Fehler.
-    """
-    import base64
-    import requests
-    kopf = {"Authorization": f"Bearer {token}",
-            "Accept": "application/vnd.github+json"}
-    ziel = ziel or LISTEN_DATEI
-    url = f"https://api.github.com/repos/{REPO}/contents/{ziel}"
-    inhalt = base64.b64encode(rohdaten).decode()
-    geschrieben, gescheitert = [], []
-    for zweig in LISTEN_ZWEIGE:
-        try:
-            alt = requests.get(url, headers=kopf, timeout=20,
-                               params={"ref": zweig})
-            if alt.status_code == 404:
-                continue          # Zweig oder Datei gibt es dort nicht
-            sha = alt.json().get("sha") if alt.status_code == 200 else None
-            daten = {"message": f"{ziel}: {anzahl} Aktien (Upload über Heliot)",
-                     "content": inhalt, "branch": zweig}
-            if sha:
-                daten["sha"] = sha
-            antwort = requests.put(url, headers=kopf, json=daten, timeout=30)
-            if antwort.status_code in (200, 201):
-                geschrieben.append(zweig)
-            else:
-                grund = "ohne Begründung"
-                try:
-                    grund = antwort.json().get("message", grund)
-                except Exception:
-                    pass
-                gescheitert.append(f"{zweig} (Code {antwort.status_code}: "
-                                   f"{grund})")
-        except Exception as e:
-            gescheitert.append(f"{zweig} ({type(e).__name__}: {e})")
-    bericht = ", ".join(geschrieben)
-    if not geschrieben:
-        return (("Auf keinem Zweig geschrieben: " + "; ".join(gescheitert))
-                if gescheitert else
-                ("Kein bekannter Zweig führt " + ziel + "."), "")
-    if gescheitert:
-        return ("Nur teilweise übernommen. Geschrieben auf " + bericht
-                + "; NICHT geschrieben auf " + "; ".join(gescheitert),
-                bericht)
-    return "", bericht
-
-
-@st.cache_data(ttl=300, show_spinner=False)
-def aktuelle_listengroesse(datei: str = None) -> int | None:
-    """Wie viele Aktien stehen derzeit im Repo? (öffentlich lesbar)"""
-    import requests
-    datei = datei or LISTEN_DATEI
-    try:
-        r = requests.get(f"https://raw.githubusercontent.com/{REPO}/main/{datei}",
-                         timeout=15)
-        if r.status_code != 200:
-            return None
-        fehler, ticker = pruefe_wochenliste(r.content)
-        return len(ticker) if not fehler else None
-    except Exception:
-        return None
-
-
+# --- Wochenliste (Registerkarte) ----------------------------------------
+# Pruefen und Einspielen stehen seit dem 21.09.2026 oben vor dem Scanner, weil
+# auch die Uebergabe aus dem Scanner (Gerhard, 20.09.2026, S2) sie braucht.
+# Die Seite zum Hochladen gibt es weiter nur mit vollem Zugang.
 with tab_upload:
     st.write("Hier lädt Gerhard seine wöchentlichen Aktienlisten hoch "
              "(CSV mit der Spalte 'Ticker'). Es sind ZWEI: die große Liste "

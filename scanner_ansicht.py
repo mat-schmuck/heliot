@@ -1862,6 +1862,85 @@ def vorlage_beschriftung(v):
 
 
 # ---------------------------------------------------------------------------
+# Uebergabe an Wochen- oder Darvas-Liste (Gerhard, 20.09.2026, S2)
+# ---------------------------------------------------------------------------
+# "Eine im Scanner erzeugte Liste soll ich direkt an das Programm uebergeben
+# koennen, als Wochenliste oder als Darvas-Liste. Vor der Uebergabe brauche ich
+# einen Bearbeitungsmodus: pro Aktie ein Kontrollfeld." Die Listen haben das
+# Format des Finviz-Exports, und gelesen werden daraus Ticker, Company und
+# Sector (listen.py; der Sektor fuehrt ueber beobachtungen.SEKTOR_ETF zum
+# Sektor-ETF fuer Sektor-Rang, Logbuch und Sektorhinweis). Eine uebergebene
+# Liste muss dieselben Spalten tragen, sonst fehlte der Sektor still: Steht
+# eine Aktie schon in einer der beiden Listen, wird ihre Finviz-Zeile
+# uebernommen; sonst Ticker, Firmenname und der Sektor im Finviz-Schema, den
+# die App nachschlaegt (erst Wochenlisten, dann Yahoo). Ein Sektor, der sich
+# nicht feststellen laesst, bleibt leer, nichts wird erfunden. Ein fehlender
+# Firmenname heisst "Name unbekannt" wie in der Ergebnisliste: listen.py liest
+# ein leeres Feld als "nan", und so stuende es sonst in den Meldungen.
+
+UEBERGABE_GRENZE = 1500          # dieselbe Grenze wie pruefe_wochenliste in der App
+FINVIZ_SPALTEN = ("No.", "Ticker", "Company", "Sector", "Industry", "Country", "Market Cap", "P/E", "Price",
+                  "Change", "Volume")
+UEBERGABE_ZIELE = {"finviz_3.csv": "Wochenliste finviz_3.csv", "darvas.csv": "Darvas-Liste darvas.csv"}
+
+
+def uebergabe_zeile(ticker, name):
+    """Die Beschriftung des Kontrollfelds im Bearbeitungsmodus."""
+    return f"{ticker}, {nachschlagen.lesbar(_firma(name))}"
+
+
+def uebergabe_satz(gewaehlt, alle, ziel):
+    if not gewaehlt:
+        return "Alle Aktien sind abgewählt; es gibt nichts zu übergeben."
+    teil = (f"alle {nachschlagen.zahl(alle)}" if gewaehlt == alle
+            else f"{nachschlagen.zahl(gewaehlt)} von {nachschlagen.zahl(alle)}")
+    if not ziel:
+        return f"Ausgewählt sind {teil} Aktien; noch fehlt die Wahl der Liste."
+    return f"Ausgewählt sind {teil} Aktien; sie ersetzen die {UEBERGABE_ZIELE.get(ziel, ziel)}."
+
+
+def finviz_zeilen(*inhalte):
+    """{Ticker: Zeile als dict} aus dem Text einer oder mehrerer Listen im
+    Finviz-Format; die erste Nennung eines Tickers gewinnt. Unlesbares faellt
+    still weg."""
+    import csv
+    zeilen = {}
+    for inhalt in inhalte:
+        if not inhalt:
+            continue
+        text = inhalt.decode("utf-8-sig", errors="replace") if isinstance(inhalt, bytes) else str(inhalt)
+        try:
+            leser = csv.DictReader(io.StringIO(text))
+            for z in leser:
+                t = str(z.get("Ticker") or "").strip().upper()
+                if t and t not in zeilen:
+                    zeilen[t] = {k: (v if v is not None else "") for k, v in z.items() if k}
+        except csv.Error:
+            continue
+    return zeilen
+
+
+def uebergabe_csv(ticker, namen, finviz, sektoren):
+    """Die uebergebene Liste als CSV im Finviz-Format (bytes, UTF-8)."""
+    import csv
+    puffer = io.StringIO()
+    schreiber = csv.DictWriter(puffer, fieldnames=FINVIZ_SPALTEN, lineterminator="\n", extrasaction="ignore")
+    schreiber.writeheader()
+    for nr, t in enumerate(ticker, 1):
+        alt = finviz.get(t)
+        if alt:
+            zeile = {k: alt.get(k, "") for k in FINVIZ_SPALTEN}
+        else:
+            zeile = {k: "" for k in FINVIZ_SPALTEN}
+            zeile["Company"] = _firma(namen.get(t))
+            zeile["Sector"] = sektoren.get(t) or ""
+        zeile["No."] = str(nr)
+        zeile["Ticker"] = t
+        schreiber.writerow(zeile)
+    return puffer.getvalue().encode("utf-8")
+
+
+# ---------------------------------------------------------------------------
 # Selbsttest (ohne Netz)
 # ---------------------------------------------------------------------------
 
@@ -2292,6 +2371,32 @@ def selbsttest() -> int:
       vorlage_beschriftung({"name": "Minervini streng", "gespeichert_am": "2026-09-21T10:45:00+00:00"})
       == "Minervini streng, gespeichert am 21.09.2026 um 12:45 Uhr Wiener Zeit"
       and vorlage_beschriftung({"name": "a", "gespeichert_am": ""}) == "a")
+
+    # Uebergabe an Wochen- oder Darvas-Liste (Gerhard, 20.09.2026, S2)
+    haupt = ("﻿No.,Ticker,Company,Sector,Industry,Country,Market Cap,P/E,Price,Change,Volume\n"
+             '1,ADPT,Adaptive Biotechnologies Corp,Healthcare,Diagnostics & Research,USA,4566.04,,28.61,0.21%,2985539\n'
+             '2,"BRK.B","Berkshire Hathaway Inc, Class B",Financial,Insurance,USA,1.0,,1,1%,1\n').encode("utf-8")
+    darv = ("No.,Ticker,Company,Sector,Industry,Country,Market Cap,P/E,Price,Change,Volume\n"
+            "1,ADPT,Adaptive Anders,Technology,,USA,,,,,\n").encode("utf-8")
+    fz = finviz_zeilen(darv, haupt, None)
+    p("Uebergabe: Finviz-Zeilen beider Listen, erste Nennung gewinnt, Beistrich im Namen",
+      sorted(fz) == ["ADPT", "BRK.B"] and fz["ADPT"]["Company"] == "Adaptive Anders"
+      and fz["BRK.B"]["Company"] == "Berkshire Hathaway Inc, Class B", str(sorted(fz)))
+    roh_u = uebergabe_csv(["BRK.B", "NEU", "OHNE"], {"NEU": "Neuer Name Inc. - Common Stock", "OHNE": None}, fz,
+                          {"NEU": "Technology"})
+    df_u = pd.read_csv(io.BytesIO(roh_u), dtype=str, keep_default_na=False)
+    p("Uebergabe: CSV im Finviz-Format, bekannte Aktie mit ihrer Zeile, neue mit Firmenname und Sektor, "
+      "fehlender Sektor leer, fehlender Name wie in der Ergebnisliste, neu nummeriert",
+      list(df_u.columns) == list(FINVIZ_SPALTEN) and list(df_u["Ticker"]) == ["BRK.B", "NEU", "OHNE"]
+      and list(df_u["No."]) == ["1", "2", "3"] and df_u.loc[0, "Sector"] == "Financial"
+      and df_u.loc[0, "Industry"] == "Insurance" and df_u.loc[1, "Company"] == "Neuer Name Inc."
+      and df_u.loc[1, "Sector"] == "Technology" and df_u.loc[1, "Industry"] == ""
+      and df_u.loc[2, "Company"] == "Name unbekannt" and df_u.loc[2, "Sector"] == "", df_u.to_csv(index=False))
+    p("Uebergabe: Saetze",
+      uebergabe_satz(3, 3, "darvas.csv") == "Ausgewählt sind alle 3 Aktien; sie ersetzen die Darvas-Liste darvas.csv."
+      and uebergabe_satz(2, 1200, None) == "Ausgewählt sind 2 von 1.200 Aktien; noch fehlt die Wahl der Liste."
+      and uebergabe_satz(0, 3, "finviz_3.csv").startswith("Alle Aktien sind abgewählt")
+      and uebergabe_zeile("AAOI", "Applied Optoelectronics, Inc. - Common Stock") == "AAOI, Applied Optoelectronics, Inc.")
 
     print(f"\n{len(fehler)} Fehler." if fehler else "\nAlles bestanden.")
     return 1 if fehler else 0
