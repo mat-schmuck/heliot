@@ -40,6 +40,7 @@ from datetime import datetime
 import pandas as pd
 import streamlit as st
 
+import ablaeufe
 import frischhalten
 import nachschlagen
 import pattern_scanner as ps
@@ -329,6 +330,15 @@ def _daten_token() -> str:
         return ""
     return ((_secret("DATEN_TOKEN") or "").strip()
             or (_secret("DATEN_LESE_TOKEN") or "").strip())
+
+
+def _ablauf_token() -> str:
+    """Der Token fuer die Knoepfe im Reiter Ablaeufe (Mathias, 21.09.2026, zu
+    Gerhards S8): ABLAUF_TOKEN darf nur Ablaeufe im Repo heliot lesen und
+    starten. Nur der volle Zugang bekommt ihn."""
+    if globals().get("rolle") != "voll":
+        return ""
+    return (_secret("ABLAUF_TOKEN") or "").strip()
 
 
 @st.cache_resource(show_spinner=False)
@@ -708,14 +718,14 @@ if rolle != "gast":
 # S4 (Gerhard, 20.09.2026): Ein Gast sieht NUR den Scanner, ohne
 # Registerkarten; Liste pruefen, Aktueller Scan und Regelwerk gibt es fuer ihn
 # nicht, der Lauf endet hinter dem Scanner (Schranke "if tab_liste is None").
-tab_upload = tab_gast = None
+tab_upload = tab_gast = tab_ablaeufe = None
 if rolle == "gast":
     st.markdown("### Scanner")
     tab_scanner = st.container()
     tab_liste = tab_scan = tab_info = None
 elif rolle == "voll":
-    tab_liste, tab_scan, tab_scanner, tab_upload, tab_gast, tab_info = st.tabs(
-        ["Liste prüfen", "Aktueller Scan", "Scanner", "Wochenliste", "Gastzugang", "Regelwerk"])
+    tab_liste, tab_scan, tab_scanner, tab_upload, tab_gast, tab_ablaeufe, tab_info = st.tabs(
+        ["Liste prüfen", "Aktueller Scan", "Scanner", "Wochenliste", "Gastzugang", "Abläufe", "Regelwerk"])
 else:
     tab_liste, tab_scan, tab_scanner, tab_upload, tab_info = st.tabs(
         ["Liste prüfen", "Aktueller Scan", "Scanner", "Wochenliste", "Regelwerk"])
@@ -1751,10 +1761,9 @@ with tab_upload:
 if tab_gast is not None:
     with tab_gast:
         st.markdown("#### Gastpasswort erzeugen")
-        st.write("Ein Gastpasswort öffnet die App für mindestens 60 Minuten zum Lesen: "
-                 "Aktie nachschlagen, Liste prüfen, Aktueller Scan und Regelwerk. "
-                 "Die Wochenliste und diese Seite sehen Gäste nicht, verändern können sie "
-                 "nichts. Weitergegeben wird das Passwort von dem, der es erzeugt.")
+        st.write("Ein Gastpasswort öffnet die App für mindestens 60 Minuten, und zwar nur den "
+                 "Scanner (Gerhard, 20.09.2026). Alles andere sehen Gäste nicht, verändern können "
+                 "sie nichts. Weitergegeben wird das Passwort von dem, der es erzeugt.")
         gast_geheimnis = _secret("GAST_GEHEIMNIS") or ""
         if not gast_geheimnis.strip():
             st.warning("Gastpasswörter sind noch nicht eingerichtet: In den "
@@ -1776,3 +1785,65 @@ if tab_gast is not None:
                            "Streamlit-Secrets geändert wird.")
             elif erzeugt:
                 st.info("Das zuletzt erzeugte Gastpasswort ist abgelaufen.")
+
+
+# --- Ablaeufe (Gerhard, 20.09.2026, S8; Mathias, 21.09.2026) -------------------
+# Knoepfe, die Waechter, Nachtscan und Scanner-Tabelle nach einem Absturz oder
+# nach GitHub-Problemen anstossen. Angestossen werden nur Ablaeufe, die selbst
+# pruefen, ob etwas zu tun ist (ablaeufe.py); ein Knopf startet also nichts
+# doppelt und nichts ausserhalb der Zeit. Nur mit vollem Zugang und dem Token
+# ABLAUF_TOKEN, der nur Ablaeufe im Repo heliot lesen und starten darf.
+@st.cache_data(ttl=30, show_spinner=False)
+def _ablauf_laeufe(datei: str):
+    import requests
+    token = _ablauf_token()
+    if not token:
+        raise LookupError("kein Token")
+    r = requests.get(f"https://api.github.com/repos/{REPO}/actions/workflows/{datei}/runs",
+                     params={"per_page": 30},
+                     headers={"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"},
+                     timeout=20)
+    if r.status_code != 200:
+        raise LookupError(f"GitHub antwortete mit Code {r.status_code}")
+    return r.json().get("workflow_runs") or []
+
+
+def _ablauf_anstossen(datei: str):
+    import requests
+    token = _ablauf_token()
+    if not token:
+        return False, "In den Streamlit-Secrets fehlt ABLAUF_TOKEN."
+    try:
+        r = requests.post(f"https://api.github.com/repos/{REPO}/actions/workflows/{datei}/dispatches",
+                          json={"ref": "main"},
+                          headers={"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"},
+                          timeout=20)
+    except Exception as e:  # noqa
+        return False, f"GitHub war nicht erreichbar ({type(e).__name__})."
+    return ablaeufe.anstoss_satz(r.status_code)
+
+
+if tab_ablaeufe is not None:
+    with tab_ablaeufe:
+        ablauf_token_da = bool(_ablauf_token())
+        if not ablauf_token_da:
+            st.warning("In den Streamlit-Secrets fehlt ABLAUF_TOKEN; ohne ihn lassen sich die Abläufe hier "
+                       "weder ansehen noch anstoßen.")
+        for ablauf in ablaeufe.ABLAEUFE:
+            st.markdown(f"#### {ablauf['titel']}")
+            if ablauf_token_da:
+                try:
+                    ablauf_saetze = ablaeufe.zustand_saetze(_ablauf_laeufe(ablauf["zustand"]), ablauf)
+                except LookupError as e:
+                    ablauf_saetze = [f"Der Stand ist gerade nicht abrufbar: {e}."]
+                except Exception as e:  # noqa
+                    ablauf_saetze = [f"Der Stand ist gerade nicht abrufbar ({type(e).__name__})."]
+                for satz in ablauf_saetze:
+                    st.markdown(satz)
+            st.markdown(ablauf["erklaerung"])
+            if st.button(ablauf["knopf"], key=f"ablauf_{ablauf['schluessel']}", disabled=not ablauf_token_da):
+                ablauf_ok, ablauf_satz = _ablauf_anstossen(ablauf["anstoss"])
+                _ablauf_laeufe.clear()
+                (st.success if ablauf_ok else st.error)(ablauf_satz)
+        st.button("Stand neu laden", key="ablauf_neu_laden", disabled=not ablauf_token_da,
+                  on_click=_ablauf_laeufe.clear)

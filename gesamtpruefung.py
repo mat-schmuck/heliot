@@ -177,7 +177,9 @@ def block_b():
                     # Etappe 6, Industry Group RS und Zuordnungsliste (Gerhard, 13.09.2026)
                     "kennzahlen_gruppen", "zuordnung_bauen",
                     # Eigene Module nach einem Push frisch halten (Befund 17.09.2026)
-                    "frischhalten"]
+                    "frischhalten",
+                    # Knoepfe fuer die Ablaeufe (Gerhard, 20.09.2026, S8)
+                    "ablaeufe"]
     for name in mit_schalter:
         r = subprocess.run([sys.executable, f"{name}.py", "--selbsttest"],
                            capture_output=True, text=True, cwd=WURZEL,
@@ -2625,6 +2627,9 @@ def anmeldeschranke(pfad) -> tuple:
         st.stop(), damit der Lauf fuer Gaeste dort endet.
       * Die Seite fuer Gastpasswoerter entsteht nur unter
         "if tab_gast is not None:", nie auf oberster Ebene.
+      * Der Reiter Ablaeufe (S8, 21.09.2026) entsteht nur im Zweig
+        "rolle == 'voll'" und nur unter "if tab_ablaeufe is not None:"
+        hinter der Schranke: Seine Knoepfe stossen Ablaeufe an.
     Liefert (ok, Befund)."""
     import ast as _ast
     try:
@@ -2632,29 +2637,51 @@ def anmeldeschranke(pfad) -> tuple:
     except Exception as e:
         return False, f"nicht lesbar: {type(e).__name__}: {e}"
     maengel = []
-    schranke = upload = gastseite = None
+    schranke = upload = gastseite = ablaufseite = None
     gastzweig = False
+
+    def zugewiesen(koerper):
+        return {n.id for s in koerper for n in _ast.walk(s)
+                if isinstance(n, _ast.Name) and isinstance(n.ctx, _ast.Store)}
+
     for i, knoten in enumerate(baum.body):
         if isinstance(knoten, _ast.If):
             test = _ast.unparse(knoten.test)
             if test in ("rolle == 'gast'", 'rolle == "gast"'):
                 gastzweig = True
-                zuweisungen = {n.id for s in knoten.body for n in _ast.walk(s)
-                               if isinstance(n, _ast.Name) and isinstance(n.ctx, _ast.Store)}
-                for name in ("tab_upload", "tab_gast"):
-                    if name in zuweisungen:
+                for name in ("tab_upload", "tab_gast", "tab_ablaeufe"):
+                    if name in zugewiesen(knoten.body):
                         maengel.append(f"der Zweig fuer Gaeste baut {name}")
+                # Die weiteren Zweige: nur "rolle == 'voll'" darf tab_ablaeufe bauen
+                teil = knoten.orelse
+                while teil:
+                    if len(teil) == 1 and isinstance(teil[0], _ast.If):
+                        test_t = _ast.unparse(teil[0].test)
+                        if ("tab_ablaeufe" in zugewiesen(teil[0].body)
+                                and test_t not in ("rolle == 'voll'", 'rolle == "voll"')):
+                            maengel.append(f"der Zweig '{test_t}' baut tab_ablaeufe")
+                        teil = teil[0].orelse
+                    else:
+                        if "tab_ablaeufe" in zugewiesen(teil):
+                            maengel.append("der letzte Zweig baut tab_ablaeufe")
+                        teil = None
             if (test == "tab_upload is None" and schranke is None
                     and "st.stop()" in _ast.unparse(knoten)):
                 schranke = i
             if test == "tab_gast is not None" and gastseite is None:
                 gastseite = i
+            if test == "tab_ablaeufe is not None" and ablaufseite is None:
+                ablaufseite = i
         if isinstance(knoten, _ast.With):
             ziel = _ast.unparse(knoten.items[0].context_expr)
             if ziel == "tab_upload" and upload is None:
                 upload = i
             if ziel == "tab_gast":
                 maengel.append("die Gastseite steht auf oberster Ebene")
+            if ziel == "tab_ablaeufe":
+                maengel.append("der Reiter Ablaeufe steht auf oberster Ebene")
+    if ablaufseite is not None and schranke is not None and ablaufseite < schranke:
+        maengel.append("der Reiter Ablaeufe steht vor der Schranke")
     if not gastzweig:
         maengel.append("kein Zweig fuer Gaeste gefunden")
     if schranke is None:
