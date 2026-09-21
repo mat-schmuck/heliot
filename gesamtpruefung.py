@@ -179,7 +179,9 @@ def block_b():
                     # Eigene Module nach einem Push frisch halten (Befund 17.09.2026)
                     "frischhalten",
                     # Knoepfe fuer die Ablaeufe (Gerhard, 20.09.2026, S8)
-                    "ablaeufe"]
+                    "ablaeufe",
+                    # Chartmuster der Etappe 1 (Gerhard, 20.09.2026)
+                    "chartmuster"]
     for name in mit_schalter:
         r = subprocess.run([sys.executable, f"{name}.py", "--selbsttest"],
                            capture_output=True, text=True, cwd=WURZEL,
@@ -2537,7 +2539,7 @@ def block_h():
         pruefe("H", "Branchen-Zuordnung: Ablauf lesbar", False, f"{type(e).__name__}: {e}")
     _vernetzt = []
     for _modul in ("scanner_daten.py", "scanner_ansicht.py", "scanner_noetig.py", "kennzahlen_konsens.py",
-                   "kennzahlen_short.py", "kennzahlen_gruppen.py", "zuordnung_bauen.py"):
+                   "kennzahlen_short.py", "kennzahlen_gruppen.py", "zuordnung_bauen.py", "chartmuster.py"):
         _code = "\n".join(z for z in (WURZEL / _modul).read_text(encoding="utf-8").splitlines()
                           if not z.lstrip().startswith("#"))
         for _wort in ("NTFY_" + "TOPIC", "ntfy." + "sh", "requests." + "post(", "traderfox_" + "alarm",

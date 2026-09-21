@@ -1466,8 +1466,139 @@ def termin_teil(r):
     return f"Zahlen am {datum_lang(d)}, {lage}" + (f", laut {quelle}" if isinstance(quelle, str) and quelle else "")
 
 
+# ---------------------------------------------------------------------------
+# Chartmuster der Etappe 1 (Gerhard, 20.09.2026)
+# ---------------------------------------------------------------------------
+# "Sie werden zu einem Treffer dazugeschrieben, so wie wir es bei den
+# bestehenden Kapiteln halten. Wenn ein Muster passt, steht es dabei; wenn
+# nicht, steht nichts dabei. Ausgeschlossen wird nie." Gerechnet wird in der
+# Nachttabelle (chartmuster.py); hier entstehen nur die Saetze. Jede Zeile
+# bekommt sie, gleich was eingestellt ist, und sie filtern nichts. Power Trend
+# steht als Zustand immer dabei, an oder aus (Gerhard: "Als Zusatzzeile bei
+# jedem Treffer"). Bei S und T sind die Kernschwellen unsere Festlegung, das
+# steht in der Zeile selbst; alle Festlegungen nennt chartmuster_erklaerung.
+
+def _cm_ja(r, spalte):
+    v = _num(r.get(spalte))
+    return v is not None and int(v) == 1
+
+
+def _cm_wahr(x):
+    return x is True or (isinstance(x, np.bool_) and bool(x))
+
+
+def _cm_dollar(x):
+    v = _num(x)
+    return f"{zahl(v, 2 if v >= 1 else 4)} Dollar" if v is not None else "unbekannt"
+
+
+def _cm_aufzaehlung(teile):
+    teile = [t for t in teile if t]
+    if not teile:
+        return ""
+    return teile[0] if len(teile) == 1 else ", ".join(teile[:-1]) + " und " + teile[-1]
+
+
+def _cm_tag(iso):
+    try:
+        return date.fromisoformat(str(iso)[:10]).strftime("%d.%m.%Y")
+    except (TypeError, ValueError):
+        return "unbekannt"
+
+
+def muster_saetze(r):
+    """Die Chartmuster einer Trefferzeile als Satzteile, in Gerhards
+    Reihenfolge B, A, D, F, G, S, T; ohne Fund kein Satzteil, nur Power Trend
+    steht immer dabei, sobald er gerechnet ist."""
+    t = []
+    if _cm_ja(r, "cm_b"):
+        s = "Inside Day"
+        if _cm_wahr(r.get("cm_b_steigend")):
+            s += " nach drei steigenden Tagen"
+        if _cm_wahr(r.get("cm_b_vol_schrumpft")):
+            s += ", Volumen kleiner als am Vortag"
+        s += (f", eng über {_cm_dollar(r.get('cm_b_eng_kp'))} mit Stop {_cm_dollar(r.get('cm_b_eng_stop'))}"
+              f", konservativ über {_cm_dollar(r.get('cm_b_kons_kp'))} mit Stop {_cm_dollar(r.get('cm_b_kons_stop'))}")
+        t.append(s)
+    if _cm_ja(r, "cm_a"):
+        w = _num(r.get("cm_a_wochen"))
+        t.append(f"Three Weeks Tight, {int(w) if w else 3} enge Wochen bis {_cm_tag(r.get('cm_a_bis'))}, "
+                 f"Kaufpunkt {_cm_dollar(r.get('cm_a_kp'))}, Stop {_cm_dollar(r.get('cm_a_stop'))}")
+    if _cm_ja(r, "cm_d"):
+        f = _num(r.get("cm_d_vol_faktor"))
+        t.append("Pocket Pivot" + (f", Volumen das {zahl(f, 1)}-Fache des stärksten Abwärtstags der zehn Tage davor"
+                                   if f is not None else "")
+                 + f", Einstieg über {_cm_dollar(r.get('cm_d_kp'))}, Stop {_cm_dollar(r.get('cm_d_stop'))}")
+    pt = _num(r.get("cm_f"))
+    if pt is not None:
+        if int(pt) == 1:
+            tage = _num(r.get("cm_f_tage"))
+            t.append("Power Trend an seit " + ("einem Handelstag" if tage == 1 else
+                                               f"{int(tage)} Handelstagen" if tage else "kurzem"))
+        else:
+            t.append("Power Trend aus")
+    if _cm_ja(r, "cm_g"):
+        w, tief = _num(r.get("cm_g_wochen")), _num(r.get("cm_g_tiefe_pct"))
+        t.append(f"Flat Base über {int(w) if w else 5} Wochen"
+                 + (f", {zahl(tief, 1)} Prozent tief" if tief is not None else "")
+                 + f", Kaufpunkt {_cm_dollar(r.get('cm_g_kp'))}, Stop {_cm_dollar(r.get('cm_g_stop'))}")
+    if _cm_ja(r, "cm_s"):
+        stellen = [x.strip() for x in str(r.get("cm_s_stelle") or "").split(",") if x.strip()]
+        t.append(f"Wick Play am {_cm_tag(r.get('cm_s_tag'))}, Docht {r.get('cm_s_seite') or 'unbekannt'}"
+                 + (f" an {_cm_aufzaehlung(stellen)}" if stellen else "")
+                 + f", Einstieg über {_cm_dollar(r.get('cm_s_kp'))}, Stop {_cm_dollar(r.get('cm_s_stop'))}"
+                 + ", Schwellen eigene Festlegung")
+    if _cm_ja(r, "cm_t"):
+        u, v = _num(r.get("cm_t_unterschreitung_pct")), _num(r.get("cm_t_variante"))
+        t.append("Shakeout am EMA 10" + (f", {zahl(u, 1)} Prozent darunter" if u is not None else "")
+                 + (" und am Folgetag wieder darüber" if v == 2 else " und am selben Tag wieder darüber")
+                 + ", Schwelle eigene Festlegung")
+    return t
+
+
+def chartmuster_erklaerung():
+    """Die sieben Muster der Etappe 1 und alle unsere Festlegungen als Saetze,
+    fuer den Erklaerteil des Scanners (Gerhard: "im Code und in der Ausgabe als
+    unsere eigene Festlegung gekennzeichnet")."""
+    import chartmuster as cm
+    q, f = cm.QUELLE, cm.FESTLEGUNGEN
+
+    def pz(x):
+        return zahl(x * 100, 0)
+
+    return [
+        "Seit dem 21.09.2026 stehen bei jedem Treffer die Chartmuster aus Gerhards Dokument vom 20.09.2026, soweit "
+        "sie nur Tages- und Wochenkerzen brauchen: Inside Day, Three Weeks Tight, Pocket Pivot, Power Trend, Flat "
+        "Base, Wick Play und Shakeout am EMA 10. Sie sind Entscheidungshilfen und filtern nichts. Gerechnet wird am "
+        "letzten Handelstag der Nachttabelle; Three Weeks Tight und Flat Base zählen nur abgeschlossene Wochen.",
+        f"Unsere Festlegungen bei Three Weeks Tight: davor mindestens {pz(f['a_anstieg_min'])} Prozent Anstieg in "
+        f"den {f['a_anstieg_wochen']} Wochen vor der engen Phase, die Woche davor höchstens "
+        f"{pz(f['a_nahe_hoch'])} Prozent unter dem höchsten Wochenschluss dieser Zeit, und höchstens "
+        f"{f['a_wochen_max']} enge Wochen. Länger eng ist ein festgenagelter Kurs, etwa bei einer Übernahme.",
+        f"Unsere Festlegung beim Pocket Pivot: in oder knapp über einer Basis heißt, die {f['d_basis_tage']} "
+        f"Handelstage davor schwanken höchstens {pz(f['d_basis_tiefe_max'])} Prozent vom Hoch zum Tief, und der "
+        f"Pivot-Tag schließt höchstens {pz(f['d_basis_ueber_max'])} Prozent über ihrem Hoch.",
+        f"Unsere Festlegung beim Power Trend: nach dem letzten Tief heißt nach dem tiefsten Tief der "
+        f"{f['f_tief_fenster']} Tage, deren Tiefs über dem EMA 21 liegen.",
+        f"Unsere Festlegung bei der Flat Base: der Anstieg davor zählt vom tiefsten Wochentief der "
+        f"{f['g_anstieg_wochen']} Wochen vor der Basis bis zu ihrem Hoch, und die Basis beginnt an ihrem Hoch.",
+        f"Unsere Festlegungen beim Wick Play: Docht mindestens {zahl(f['s_docht_zu_koerper'], 0)}-mal so lang wie "
+        f"der Körper, Körper höchstens {pz(f['s_koerper_max'])} Prozent der Tagesspanne, die Tagesspanne mindestens "
+        f"so groß wie die durchschnittliche der {f['s_atr_tage']} Tage davor. Die markante Stelle liegt im Docht: "
+        "EMA 10, EMA 21, SMA 50, SMA 200, Hoch oder Tief der 20 Tage davor oder das alte Hoch des Jahres davor. "
+        f"Gesucht wird bis {f['s_tage_zurueck']} Handelstage zurück, solange seither kein Schluss über dem Hoch "
+        f"der Kerze lag; Einstieg über dem Hoch plus {zahl(q['aufschlag'], 2)} Dollar.",
+        f"Unsere Festlegung beim Shakeout am EMA 10: die Unterschreitung beträgt höchstens "
+        f"{pz(f['t_unterschreitung_max'])} Prozent.",
+        "Alle Stops tragen den Zehn-Prozent-Deckel des Systems. Volumen vergleicht der Scanner nach Handelsschluss "
+        "als ganze Tagesvolumina; dort ist die F(t)-Kurve bei eins.",
+    ]
+
+
 def satz_teile(ausw, r, werte=None):
-    """Die Satzteile einer Zeile; werte: {Feldschluessel: schon gerechneter Wert}."""
+    """Die Satzteile einer Zeile; werte: {Feldschluessel: schon gerechneter Wert}.
+    Die Chartmuster (muster_saetze) kommen immer ans Ende, gleich was
+    eingestellt ist."""
     teile = strategie_teile(ausw, r)
     werte = werte or {}
     for feld, fe in ausw.get("felder") or []:
@@ -1476,6 +1607,7 @@ def satz_teile(ausw, r, werte=None):
         teile.append(termin_teil(r))
     if ausw.get("sektor_aktiv"):
         teile.append(f"Sektor {sektor_name(r.get('sektor') if isinstance(r.get('sektor'), str) else '')}")
+    teile += muster_saetze(r)
     return teile
 
 
@@ -1572,7 +1704,9 @@ def ergebnis_tabelle(ausw, basis_url, stand=None):
         raus["Quelle des Termins"] = _sp(df, "termin_quelle")
     if ausw.get("sektor_aktiv"):
         raus["Sektor"] = _sp(df, "sektor").map(lambda s: sektor_name(s if isinstance(s, str) else ""))
-    raus["Schlusskurse vom"] = nachschlagen.datum_text((stand or {}).get("handelstag")) if (stand or {}).get("handelstag") else ""
+    if "cm_f" in df.columns:
+        raus["Chartmuster"] = ["; ".join(muster_saetze(r)) for r in df.to_dict("records")]
+    raus["Schlusskurse vom"] =nachschlagen.datum_text((stand or {}).get("handelstag")) if (stand or {}).get("handelstag") else ""
     raus["Vollständige Daten"] = raus["Kürzel"].map(lambda t: adresse(basis_url, t))
     return raus.reset_index(drop=True)
 
@@ -2391,12 +2525,48 @@ def selbsttest() -> int:
       and list(df_u["No."]) == ["1", "2", "3"] and df_u.loc[0, "Sector"] == "Financial"
       and df_u.loc[0, "Industry"] == "Insurance" and df_u.loc[1, "Company"] == "Neuer Name Inc."
       and df_u.loc[1, "Sector"] == "Technology" and df_u.loc[1, "Industry"] == ""
-      and df_u.loc[2, "Company"] == "Name unbekannt" and df_u.loc[2, "Sector"] == "", df_u.to_csv(index=False))
+      and df_u.loc[2, "Company"] == "Name unbekannt" and df_u.loc[2, "Sector"] == "", " | ".join(df_u["Ticker"]))
     p("Uebergabe: Saetze",
       uebergabe_satz(3, 3, "darvas.csv") == "Ausgewählt sind alle 3 Aktien; sie ersetzen die Darvas-Liste darvas.csv."
       and uebergabe_satz(2, 1200, None) == "Ausgewählt sind 2 von 1.200 Aktien; noch fehlt die Wahl der Liste."
       and uebergabe_satz(0, 3, "finviz_3.csv").startswith("Alle Aktien sind abgewählt")
       and uebergabe_zeile("AAOI", "Applied Optoelectronics, Inc. - Common Stock") == "AAOI, Applied Optoelectronics, Inc.")
+
+    # Chartmuster der Etappe 1 (Gerhard, 20.09.2026)
+    r = {"cm_b": 1, "cm_b_steigend": True, "cm_b_vol_schrumpft": np.bool_(False), "cm_b_eng_kp": 12.34,
+         "cm_b_eng_stop": 11.9, "cm_b_kons_kp": 12.8, "cm_b_kons_stop": 11.5, "cm_a": 0, "cm_d": float("nan"),
+         "cm_f": 1.0, "cm_f_tage": 14.0, "cm_g": 0, "cm_s": 1, "cm_s_tag": "2026-09-18", "cm_s_seite": "unten",
+         "cm_s_stelle": "EMA 10, SMA 50", "cm_s_kp": 45.6, "cm_s_stop": 41.04, "cm_t": 1, "cm_t_variante": 2.0,
+         "cm_t_unterschreitung_pct": 1.43}
+    ms = muster_saetze(r)
+    p("Chartmuster: Reihenfolge B, F, S, T, Preise in Dollar, Festlegung bei S und T genannt",
+      ms == ["Inside Day nach drei steigenden Tagen, eng über 12,34 Dollar mit Stop 11,90 Dollar, konservativ über "
+             "12,80 Dollar mit Stop 11,50 Dollar",
+             "Power Trend an seit 14 Handelstagen",
+             "Wick Play am 18.09.2026, Docht unten an EMA 10 und SMA 50, Einstieg über 45,60 Dollar, Stop 41,04 "
+             "Dollar, Schwellen eigene Festlegung",
+             "Shakeout am EMA 10, 1,4 Prozent darunter und am Folgetag wieder darüber, Schwelle eigene Festlegung"],
+      " | ".join(ms))
+    ms = muster_saetze({"cm_a": 1, "cm_a_wochen": 4.0, "cm_a_bis": "2026-09-18", "cm_a_kp": 0.5123, "cm_a_stop": 0.47,
+                        "cm_d": 1, "cm_d_vol_faktor": 2.4, "cm_d_kp": 18.81, "cm_d_stop": 18.06, "cm_f": 0,
+                        "cm_g": 1, "cm_g_wochen": 5.0, "cm_g_tiefe_pct": 10.0, "cm_g_kp": 51.07, "cm_g_stop": 45.97})
+    p("Chartmuster: A, D, Power Trend aus, G; Kleinstbetraege mit vier Stellen",
+      ms == ["Three Weeks Tight, 4 enge Wochen bis 18.09.2026, Kaufpunkt 0,5123 Dollar, Stop 0,4700 Dollar",
+             "Pocket Pivot, Volumen das 2,4-Fache des stärksten Abwärtstags der zehn Tage davor, Einstieg über "
+             "18,81 Dollar, Stop 18,06 Dollar",
+             "Power Trend aus",
+             "Flat Base über 5 Wochen, 10,0 Prozent tief, Kaufpunkt 51,07 Dollar, Stop 45,97 Dollar"],
+      " | ".join(ms))
+    p("Chartmuster: ohne Spalten und ohne gerechneten Power Trend steht nichts dabei",
+      muster_saetze({"ticker": "AAA"}) == [] and muster_saetze({"cm_f": float("nan"), "cm_b": 0}) == [])
+    import chartmuster as cm
+    erkl = " ".join(chartmuster_erklaerung())
+    p("Chartmuster: Erklaerung nennt jede Festlegung mit ihrer Zahl",
+      all(x in erkl for x in ("höchstens 5 enge Wochen", "höchstens 10 Prozent unter", "höchstens 20 Prozent vom Hoch",
+                              "höchstens 5 Prozent über", "der 26 Wochen", "mindestens 2-mal so lang",
+                              "höchstens 30 Prozent der Tagesspanne", "der 14 Tage davor", "bis 3 Handelstage",
+                              "höchstens 3 Prozent"))
+      and len(cm.FESTLEGUNGEN) == 18, erkl[:200])
 
     print(f"\n{len(fehler)} Fehler." if fehler else "\nAlles bestanden.")
     return 1 if fehler else 0

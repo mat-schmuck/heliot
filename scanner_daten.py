@@ -376,6 +376,18 @@ def power_gap(d):
             "status": f"Lücke {gap * 100:.1f} Prozent, Volumen {v / vol50:.1f} mal der 50-Tage-Schnitt".replace(".", ",")}
 
 
+def chartmuster_werte(d):
+    """Etappe 1 aus Gerhards Dokument vom 20.09.2026 (chartmuster.py): sieben
+    Chartmuster als Zusatzangaben zu jedem Scanner-Treffer, nie als Filter und
+    ohne Einfluss auf Nachtscan und Waechter. Ein Fehler laesst nur diese
+    Spalten leer, der Bau laeuft weiter."""
+    import chartmuster
+    try:
+        return chartmuster.werte(d)
+    except Exception:  # noqa
+        return chartmuster.leer()
+
+
 def _detektoren(di, tt_pass, toleranz, v2cfg):
     """Alle Muster einer Aktie in einer Tolerenzstufe: {kennung: Treffer}."""
     import pattern_scanner as ps
@@ -1340,6 +1352,7 @@ def bauen(pfad_tabelle=TABELLE, pfad_stand=STAND, archiv=ARCHIV, grenze=None, an
                      "rs_linie_qqq_abst_pct": e_rs.get("linie_qqq_abst_pct")}
             zeile["handelbar"] = handelbar(werte, ex)
             zeile.update(muster_werte(d, rs, werte))
+            zeile.update(chartmuster_werte(d))
             zeilen[s] = zeile
             archiv_teile.append(pd.DataFrame({
                 "ticker": s, "datum": pd.to_datetime(voll["datetime"]),
@@ -1965,6 +1978,11 @@ def selbsttest() -> int:
           aaa["tk_perf_1w"] == 2.5 and aaa["tk_stufe"] == 2.0 and aaa["tk_rs_4w"] == 7.0 and aaa["rl_linie_spy_1w"] == 1.25
           and aaa["ib_eps"] == 88.0 and aaa["fu_roe"] == 0.25 and aaa["fu_fcf"] == 1e8 and aaa["fu_streubesitz_wert"] == 5e8
           and all(s in t.columns for s in KENNZAHL_SPALTEN), str({k: aaa.get(k) for k in ("tk_perf_1w", "ib_eps", "fu_roe")}))
+        import chartmuster
+        p("Chartmuster der Etappe 1: alle Spalten in der Tabelle, Merker ganze Zahlen, Power Trend gerechnet",
+          all(s in t.columns for s in chartmuster.SPALTEN)
+          and set(pd.to_numeric(t["cm_b"], errors="coerce").dropna()) <= {0, 1}
+          and t["cm_f"].notna().any(), str([s for s in chartmuster.SPALTEN if s not in t.columns][:5]))
         p("Kennzahlen: Wahrheitswerte bleiben Wahrheitswerte, Doppeltes kommt nicht",
           str(t["tk_burst"].dtype) == "boolean" and bool(aaa["tk_burst"]) and not bool(ccc["tk_burst"])
           and "tk_adr20" not in t.columns, str(t["tk_burst"].dtype))

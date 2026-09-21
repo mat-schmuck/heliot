@@ -1377,6 +1377,9 @@ def _sc_scannen(vergleich: dict) -> dict:
             tabelle = ergaenzt
         if hinweis:
             erg["hinweise"].append(hinweis)
+    if "cm_f" not in tabelle.columns:
+        erg["hinweise"].append("Die Chartmuster der Etappe 1 stehen erst nach dem nächsten Bau der Nachttabelle "
+                               "bei den Treffern.")
     analysten, analysten_grund = lade_scanner_analysten()
     analysten_da = analysten is not None
     if analysten_da:
@@ -2029,6 +2032,11 @@ dafür ist der Breakout-Wächter da.
     st.markdown(sa.md(sa.langweile_text() + "."))
     st.markdown("#### Grenzen des Scanners", anchors=False)
     for satz in sa.grenzen_saetze():
+        st.markdown(sa.md(satz))
+    # Etappe 1 der Chartmuster (Gerhard, 20.09.2026): was bei jedem Treffer
+    # dazugeschrieben wird, und jede Zahl, die von uns stammt.
+    st.markdown("#### Chartmuster bei den Treffern", anchors=False)
+    for satz in sa.chartmuster_erklaerung():
         st.markdown(sa.md(satz))
 
 
