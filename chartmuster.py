@@ -18,6 +18,12 @@ davon filtert, und nichts davon beruehrt Nachtscan, Waechter oder Alarme. Ob A,
 B, D und S zusaetzlich als eigene Strategien pushen, ist eine Regelfrage an
 Gerhard und hier nicht gebaut.
 
+Danach, wie Gerhard es vorsieht ("Danach die Pivot-Erkennung, weil H und N
+beide darauf sitzen"), die Erkennung von Hochs und Tiefs (pivots) und darauf
+N Shakeout plus drei (Tageskerzen) und H Double Bottom (Wochenkerzen), gebaut
+am 21.09.2026. Auch sie filtern nichts; ob N als eigene Strategie pusht und
+welcher Aufschlag dann ausloest, sind Regelfragen an Gerhard.
+
 UNSERE FESTLEGUNGEN: Gerhard: "jede Zahl, die nicht aus der Quelle stammt,
 sondern von uns gesetzt wurde ... wird im Code und in der Ausgabe als unsere
 eigene Festlegung gekennzeichnet." Alle solchen Zahlen stehen in FESTLEGUNGEN
@@ -32,8 +38,8 @@ den ganzen Tag also das Tagesvolumen selbst. Dieses Modul vergleicht deshalb
 ganze Tagesvolumina. Im laufenden Handel muesste dieselbe Bedingung ueber die
 F(t)-Kurve laufen; das kommt erst mit den Alarm-Strategien.
 
-WOCHEN: Wochenkerzen entstehen aus den Tageskerzen (Montag bis Freitag). A und
-G rechnen nur mit ABGESCHLOSSENEN Wochen: Die letzte Woche zaehlt, wenn ihr
+WOCHEN: Wochenkerzen entstehen aus den Tageskerzen (Montag bis Freitag). A, G
+und H rechnen nur mit ABGESCHLOSSENEN Wochen: Die letzte Woche zaehlt, wenn ihr
 letzter Handelstag ein Freitag ist; faellt der Freitag auf einen Feiertag,
 zaehlt sie ab dem ersten Handelstag der Folgewoche.
 
@@ -52,13 +58,17 @@ import pandas as pd
 QUELLE = {
     "a_eng": 0.015,               # A: Wochenschluss hoechstens 1,5 Prozent vom Vorwochenschluss
     "a_wochen_min": 3,            # A: drei enge Wochen, vier zaehlen genauso
-    "aufschlag": 0.10,            # A und G: Kaufpunkt Hoch plus 0,10 Dollar
+    "aufschlag": 0.10,            # A, G und H: Kaufpunkt Hoch plus 0,10 Dollar (H: Zwischenhoch)
     "d_fenster": 10,              # D: Abwaertstage der letzten zehn Handelstage
     "f_tage_ueber_ema": 10,       # F: seit zehn Handelstagen jedes Tief ueber dem EMA 21
     "f_sma50_steigt": 20,         # F: SMA 50 steigt seit zwanzig Tagen
     "g_wochen_min": 5,            # G: mindestens fuenf Wochen
     "g_tiefe_max": 0.15,          # G: hoechstens 15 Prozent tief
     "g_anstieg_min": 0.20,        # G: davor mindestens 20 Prozent Anstieg
+    "h_wochen_min": 7,            # H: Dauer ueblicherweise mindestens sieben Wochen
+    "h_tiefe_min": 0.15,          # H: Tiefe zwischen 15 und 50 Prozent vom linken Hoch
+    "h_tiefe_max": 0.50,
+    "n_aufschlag": (0.05, 0.10),  # N: Einstieg Tief mal (1 + p), p zwischen 0,05 und 0,10; beide nebeneinander
 }
 
 # UNSERE FESTLEGUNGEN (die Quelle nennt dazu keine Zahl)
@@ -120,6 +130,39 @@ FESTLEGUNGEN = {
     # T: Unterschreitung des EMA 10 hoechstens 3 Prozent (Gerhards Vorschlag,
     # ausdruecklich unsere Festlegung).
     "t_unterschreitung_max": 0.03,
+    # HOCHS UND TIEFS (Pivots, fuer H und N): Ein Hoch ist das hoechste Hoch,
+    # ein Tief das tiefste Tief von fuenf Kerzen, zwei davor und zwei danach;
+    # bei gleichen Werten zaehlt die erste Kerze. Ein Tief gilt also erst, wenn
+    # zwei Kerzen danach hoeher lagen. Bei H sind es Wochen-, bei N Tageskerzen.
+    "pivot_kerzen": 2,
+    # H: Das linke Hoch ist ein Hoch hoechstens 52 Wochen zurueck, das seither
+    # nicht ueberschritten wurde (die Formation beginnt an ihrem Hoch, wie die
+    # Flat Base). Das zweite Tief ist das tiefste Tief seit dem linken Hoch,
+    # das erste Tief das tiefste Tief zwischen linkem Hoch und Zwischenhoch,
+    # das Zwischenhoch das hoechste Hoch zwischen den beiden Tiefs.
+    "h_suche_wochen": 52,
+    # H: Das zweite Tief liegt hoechstens 10 Prozent unter dem ersten. Gerhard
+    # nennt den Undercut den, "der die schwachen Haende herausschuettelt", und
+    # keine Grenze. Gemessen am 21.09.2026 an 800 Aktien: Ohne Grenze kamen
+    # Faelle mit 20 bis 35 Prozent Unterschreitung durch (etwa MTSI mit 32),
+    # also ein zweiter Absturz weit unter das erste Tief und kein W.
+    "h_unterschreitung_max": 0.10,
+    # H: Das zweite Tief liegt hoechstens 13 Wochen zurueck. Gemessen am
+    # 21.09.2026: Ohne Grenze kamen Formationen durch, deren zweites Tief ein
+    # halbes Jahr zurueckliegt und die seither seitwaerts laufen, also laengst
+    # eine andere Basis sind. Gezeigt wird bis zum ersten Wochenschluss ueber
+    # dem Kaufpunkt.
+    "h_tief2_wochen_max": 13,
+    # N: "aus einem Hoch heraus": das hoechste Hoch der 63 Handelstage (drei
+    # Monate) bis zu ihm. "scharfer Abverkauf": mindestens 10 Prozent vom Hoch
+    # zum Tief in hoechstens 15 Handelstagen. Es zaehlt nur der ERSTE scharfe
+    # Abverkauf nach dem Hoch (siehe shakeout_plus3). Gezeigt wird, solange das
+    # Tief hoechstens 20 Handelstage zurueckliegt, seither nicht unterschritten
+    # wurde und der Kurs den Einstieg bei 10 Prozent noch nicht erreicht hat.
+    "n_hoch_tage": 63,
+    "n_abverkauf_min": 0.10,
+    "n_abverkauf_tage": 15,
+    "n_tief_tage_max": 20,
 }
 
 SPALTEN = (
@@ -131,14 +174,19 @@ SPALTEN = (
     "cm_g", "cm_g_wochen", "cm_g_tiefe_pct", "cm_g_anstieg_pct", "cm_g_kp", "cm_g_stop",
     "cm_s", "cm_s_tag", "cm_s_seite", "cm_s_stelle", "cm_s_kp", "cm_s_stop",
     "cm_t", "cm_t_variante", "cm_t_unterschreitung_pct",
+    "cm_n", "cm_n_tief_tag", "cm_n_abverkauf_pct", "cm_n_tage", "cm_n_kp5", "cm_n_kp10", "cm_n_kp5_erreicht",
+    "cm_n_stop",
+    "cm_h", "cm_h_wochen", "cm_h_tiefe_pct", "cm_h_unter_pct", "cm_h_kp", "cm_h_stop",
 )
+
+MERKER = ("cm_b", "cm_a", "cm_d", "cm_g", "cm_s", "cm_t", "cm_n", "cm_h")
 
 
 def leer():
     """Alle Spalten ohne Fund: Merker 0, alles andere leer. Power Trend (cm_f)
     bleibt leer, bis genug Kurse da sind; 0 hiesse dort 'aus'."""
     raus = {s: None for s in SPALTEN}
-    for s in ("cm_b", "cm_a", "cm_d", "cm_g", "cm_s", "cm_t"):
+    for s in MERKER:
         raus[s] = 0
     return raus
 
@@ -443,6 +491,128 @@ def shakeout_ema(x):
     return {}
 
 
+# ---------------------------------------------------------------------------
+# Hochs und Tiefs (Pivots), die Grundlage von H und N
+# ---------------------------------------------------------------------------
+
+def pivots(hoch, tief, ab=0):
+    """Hochs und Tiefs (unsere Festlegung, siehe FESTLEGUNGEN): Stellen i,
+    deren Hoch das hoechste bzw. deren Tief das tiefste der Kerzen i minus k
+    bis i plus k ist (k = pivot_kerzen); bei gleichen Werten zaehlt die erste.
+    Gesucht wird ab der Stelle ab. Zurueck: (Stellen der Hochs, der Tiefs)."""
+    k = FESTLEGUNGEN["pivot_kerzen"]
+    hoch, tief = np.asarray(hoch, dtype=float), np.asarray(tief, dtype=float)
+    hochs, tiefs = [], []
+    for i in range(max(k, int(ab)), len(hoch) - k):
+        if np.isfinite(hoch[i]) and int(np.nanargmax(hoch[i - k:i + k + 1])) == k:
+            hochs.append(i)
+        if np.isfinite(tief[i]) and int(np.nanargmin(tief[i - k:i + k + 1])) == k:
+            tiefs.append(i)
+    return hochs, tiefs
+
+
+# ---------------------------------------------------------------------------
+# N  Shakeout plus drei
+# ---------------------------------------------------------------------------
+
+def shakeout_plus3(x):
+    """Nach dem ersten scharfen Abverkauf aus einem Hoch heraus wird ueber dem
+    Tief dieses Abverkaufs eingestiegen, mit Aufschlag: Tief mal 1,05 und mal
+    1,10 nebeneinander, Stop unter dem Tief (Gerhard nach O'Neil). Das Tief
+    ist ein Tief der Pivot-Erkennung auf Tageskerzen; was ein Hoch und was
+    scharf ist, und wie lange der Einstieg gilt, ist unsere Festlegung (siehe
+    FESTLEGUNGEN)."""
+    f = FESTLEGUNGEN
+    k, n = f["pivot_kerzen"], len(x)
+    if n < f["n_hoch_tage"] + f["n_abverkauf_tage"] + 2 * k + 1:
+        return {}
+    h, lo = x["high"].to_numpy(dtype=float), x["low"].to_numpy(dtype=float)
+    p5, p10 = QUELLE["n_aufschlag"]
+    _, tiefs = pivots(h, lo, ab=n - 1 - f["n_tief_tage_max"] - f["n_abverkauf_tage"])
+    for iT in reversed(tiefs):
+        if n - 1 - iT > f["n_tief_tage_max"]:
+            break
+        if lo[iT] > np.nanmin(lo[iT:]):
+            continue                              # seither unterschritten
+        von = max(0, iT - f["n_abverkauf_tage"])
+        iH = von + int(np.nanargmax(h[von:iT]))
+        if h[iH] < np.nanmax(h[max(0, iH - f["n_hoch_tage"] + 1):iH + 1]):
+            continue                              # kein Hoch der drei Monate bis dahin
+        if lo[iT] > np.nanmin(lo[iH:iT + 1]):
+            continue                              # das Tief des Abverkaufs liegt frueher
+        abverkauf = 1.0 - lo[iT] / h[iH]
+        if abverkauf < f["n_abverkauf_min"]:
+            continue
+        # "nach dem ERSTEN scharfen Abverkauf": Lag zwischen Hoch und Tief schon
+        # ein Tief, das selbst scharf war und ueber das der Kurs danach um 10
+        # Prozent stieg, war das der erste Abverkauf samt Einstieg, und das
+        # jetzige Tief ist ein zweiter. Gemessen am 21.09.2026 an FTH: 17 Prozent
+        # hinunter, 16 Prozent hinauf, dann ein neues Tief.
+        if any(1.0 - lo[j] / h[iH] >= f["n_abverkauf_min"] and np.nanmax(h[j + 1:iT]) >= lo[j] * (1.0 + p10)
+               for j in tiefs if iH < j < iT - 1):
+            continue
+        kp5, kp10 = lo[iT] * (1.0 + p5), lo[iT] * (1.0 + p10)
+        seit = h[iT + 1:]
+        if len(seit) and np.nanmax(seit) >= kp10:
+            return {}                             # der Einstieg bei 10 Prozent war schon erreicht
+        return {"cm_n": 1, "cm_n_tief_tag": pd.Timestamp(x["datetime"].iloc[iT]).strftime("%Y-%m-%d"),
+                "cm_n_abverkauf_pct": _r(abverkauf * 100.0, 1), "cm_n_tage": int(iT - iH),
+                "cm_n_kp5": _r(kp5), "cm_n_kp10": _r(kp10),
+                "cm_n_kp5_erreicht": bool(len(seit) and np.nanmax(seit) >= kp5),
+                "cm_n_stop": _r(_deckel(kp10, lo[iT]))}
+    return {}
+
+
+# ---------------------------------------------------------------------------
+# H  Double Bottom, das W
+# ---------------------------------------------------------------------------
+
+def double_bottom(wk):
+    """Das W nach IBD auf abgeschlossenen Wochenkerzen: linkes Hoch, erstes
+    Tief, Zwischenhoch, zweites Tief UNTER dem ersten. Dauer mindestens sieben
+    Wochen, Tiefe 15 bis 50 Prozent vom linken Hoch. Kaufpunkt Zwischenhoch
+    plus 0,10 Dollar, Stop unter dem zweiten Tief, gedeckelt. Hochs und Tiefs
+    kommen aus der Pivot-Erkennung; alles Weitere siehe FESTLEGUNGEN."""
+    q, f = QUELLE, FESTLEGUNGEN
+    n = len(wk)
+    if n < q["h_wochen_min"] + f["pivot_kerzen"]:
+        return {}
+    h, lo, c = (wk[s].to_numpy(dtype=float) for s in ("high", "low", "close"))
+    hochs, tiefs = pivots(h, lo, ab=n - f["h_suche_wochen"])
+    ist_tief = set(tiefs)
+    for i0 in reversed(hochs):
+        if n - i0 < q["h_wochen_min"]:
+            continue                              # noch keine sieben Wochen
+        if h[i0] < np.nanmax(h[i0:]):
+            continue                              # das linke Hoch wurde seither ueberschritten
+        i2 = i0 + int(np.nanargmin(lo[i0:]))
+        if i2 not in ist_tief or n - 1 - i2 > f["h_tief2_wochen_max"]:
+            continue                              # zweites Tief nicht bestaetigt oder zu alt
+        tiefe = (h[i0] - lo[i2]) / h[i0]
+        if not q["h_tiefe_min"] <= tiefe <= q["h_tiefe_max"]:
+            continue
+        paar = None
+        for i1 in tiefs:
+            if not (i0 < i1 < i2 - 1 and lo[i1] > lo[i2]):
+                continue                          # das zweite Tief muss das erste unterschreiten
+            iM = i1 + 1 + int(np.nanargmax(h[i1 + 1:i2]))
+            if lo[i1] > np.nanmin(lo[i0 + 1:iM + 1]):
+                continue                          # das erste Tief ist das Tief vor dem Zwischenhoch
+            if not h[iM] < h[i0] or 1.0 - lo[i2] / lo[i1] > f["h_unterschreitung_max"]:
+                continue
+            paar = (i1, iM)                       # das juengste passende Paar
+        if paar is None:
+            continue
+        i1, iM = paar
+        kp = h[iM] + q["aufschlag"]
+        if np.nanmax(c[i2 + 1:]) > kp:
+            continue                              # schon ueber dem Kaufpunkt geschlossen: vorbei
+        return {"cm_h": 1, "cm_h_wochen": int(n - i0), "cm_h_tiefe_pct": _r(tiefe * 100.0, 1),
+                "cm_h_unter_pct": _r((1.0 - lo[i2] / lo[i1]) * 100.0, 1), "cm_h_kp": _r(kp),
+                "cm_h_stop": _r(_deckel(kp, lo[i2]))}
+    return {}
+
+
 def werte(d):
     """Alle Muster der Etappe 1 fuer eine Aktie am letzten Handelstag der
     Kurse d (Spalten datetime, open, high, low, close, volume). Jedes Muster
@@ -453,7 +623,7 @@ def werte(d):
     x = vorbereiten(d)
     wk = wochen(x)
     for fn, arg in ((inside_day, x), (three_weeks_tight, wk), (pocket_pivot, x), (power_trend, x),
-                    (flat_base, wk), (wick_play, x), (shakeout_ema, x)):
+                    (flat_base, wk), (shakeout_plus3, x), (wick_play, x), (shakeout_ema, x), (double_bottom, wk)):
         try:
             raus.update(fn(arg))
         except Exception:  # noqa: BLE001, ein Muster darf die anderen nie mitreissen
@@ -607,10 +777,85 @@ def selbsttest() -> int:
     x.loc[t, "close"] = e1 * 0.999
     p("T: Schluss unter dem EMA des Vortags ist noch kein Shakeout", shakeout_ema(x) == {})
 
+    # Hochs und Tiefs: Spitze und Mulde mit je zwei Kerzen links und rechts,
+    # gleiche Werte zaehlen an der ersten Stelle, der Rand zaehlt nicht
+    ph, pt = pivots([1, 2, 5, 3, 2, 2, 4, 1, 0, 3, 3, 1], [1, 2, 5, 3, 2, 2, 4, 1, 0, 3, 3, 1])
+    p("Pivots: Hochs bei 2, 6 und 9, Tiefs bei 4 und 8, gleiche Werte an der ersten Stelle",
+      ph == [2, 6, 9] and pt == [4, 8], f"{ph} {pt}")
+    p("Pivots: zu nah am Rand zaehlt nicht", pivots([3, 1, 2], [3, 1, 2]) == ([], []))
+
+    # N Shakeout plus drei: 100 Tage Anstieg zum Hoch, dann in sechs Tagen 15
+    # Prozent Abverkauf, drei Tage leichte Erholung
+    def n_reihe(nach):
+        return _reihe(list(np.linspace(50, 100, 100)) + list(np.linspace(97, 85, 5)) + nach, spanne=0.005)
+
+    nn = shakeout_plus3(vorbereiten(n_reihe([86.0, 87.0, 88.0])))
+    tief_roh = 85.0 * (1 - 0.005)
+    p("N: Tief nach scharfem Abverkauf, Einstieg bei 5 und 10 Prozent, Stop am Tief",
+      nn.get("cm_n") == 1 and nn["cm_n_kp5"] == round(tief_roh * 1.05, 4)
+      and nn["cm_n_kp10"] == round(tief_roh * 1.10, 4) and nn["cm_n_stop"] == round(tief_roh, 4) and nn["cm_n_kp5_erreicht"] is False and nn["cm_n_tage"] == 5
+      and 15.0 <= nn["cm_n_abverkauf_pct"] <= 16.0, str(nn))
+    nn = shakeout_plus3(vorbereiten(n_reihe([86.0, 90.0, 88.0])))
+    p("N: fuenf Prozent schon erreicht, zehn noch nicht", nn.get("cm_n") == 1 and nn["cm_n_kp5_erreicht"] is True, str(nn))
+    p("N: der Einstieg bei zehn Prozent war schon erreicht, vorbei",
+      shakeout_plus3(vorbereiten(n_reihe([86.0, 88.0, 94.0]))) == {})
+    p("N: ein Tag nach dem Tief ist es noch nicht bestaetigt",
+      shakeout_plus3(vorbereiten(n_reihe([86.0]))) == {})
+    p("N: unter das Tief gefallen, keines bestaetigt",
+      shakeout_plus3(vorbereiten(n_reihe([86.0, 87.0, 88.0, 84.0]))) == {})
+    flach = _reihe(list(np.linspace(50, 100, 100)) + list(np.linspace(99, 94, 5)) + [95.0, 96.0, 96.5], spanne=0.005)
+    p("N: sieben Prozent sind kein scharfer Abverkauf (unsere Festlegung)", shakeout_plus3(vorbereiten(flach)) == {})
+    lang = _reihe(list(np.linspace(50, 100, 100)) + list(np.linspace(99.5, 85, 25)) + [86.0, 87.0, 88.0], spanne=0.005)
+    p("N: 15 Prozent in 25 Tagen sind nicht scharf (unsere Festlegung)", shakeout_plus3(vorbereiten(lang)) == {})
+    seit = _reihe([100.0] * 40 + list(np.linspace(100, 80, 60)) + list(np.linspace(79, 68, 5)) + [69.0, 70.0, 71.0],
+                  spanne=0.005)
+    p("N: im Abwaertstrend gibt es kein Hoch, keinen Shakeout plus drei (unsere Festlegung)",
+      shakeout_plus3(vorbereiten(seit)) == {})
+    auf = list(np.linspace(50, 100, 100))
+    zweiter = _reihe(auf + list(np.linspace(97, 88, 3)) + list(np.linspace(91, 97, 3)) + list(np.linspace(94, 84, 3))
+                     + [85.0, 86.0, 87.0], spanne=0.005)
+    p("N: nach einem scharfen Tief samt 10 Prozent Erholung ist das neue Tief ein zweiter Abverkauf",
+      shakeout_plus3(vorbereiten(zweiter)) == {})
+    erster = _reihe(auf + list(np.linspace(97, 91.5, 3)) + list(np.linspace(94, 100, 3)) + list(np.linspace(94, 80, 4))
+                    + [81.0, 82.0, 83.0], spanne=0.005)
+    nn = shakeout_plus3(vorbereiten(erster))
+    p("N: ein erstes Tief unter 10 Prozent war nicht scharf, das neue Tief ist der erste scharfe Abverkauf",
+      nn.get("cm_n") == 1 and nn["cm_n_abverkauf_pct"] >= 20.0, str(nn))
+
+    # H Double Bottom: 15 Wochen Anstieg zum linken Hoch, drei Wochen Abverkauf
+    # zum ersten Tief, zwei Wochen Erholung zum Zwischenhoch, zwei Wochen zum
+    # zweiten Tief unter dem ersten, drei Wochen rechte Seite
+    def w_reihe(tief1=30.0, mitte=36.0, tief2=29.0, rechts=34.0, rechts_tage=15, dazu=()):
+        s = (list(np.linspace(20, 40, 75)) + list(np.linspace(39.3, tief1, 15)) + list(np.linspace(tief1 + 0.6, mitte, 10))
+             + list(np.linspace(mitte - 0.6, tief2, 10)) + list(np.linspace(tief2 + 0.4, rechts, rechts_tage)) + list(dazu))
+        return wochen(vorbereiten(_reihe(s, start="2025-09-01", spanne=0.005)))
+
+    wk = w_reihe()
+    hh = double_bottom(wk)
+    kp_h = round(36.0 * (1 + 0.005) + 0.10, 4)
+    p("H: W mit zweitem Tief unter dem ersten, Kaufpunkt am Zwischenhoch plus 0,10 Dollar",
+      hh.get("cm_h") == 1 and hh["cm_h_kp"] == kp_h and hh["cm_h_wochen"] >= 7
+      and 3.0 <= hh["cm_h_unter_pct"] <= 3.6 and 25.0 <= hh["cm_h_tiefe_pct"] <= 30.0, str(hh))
+    p("H: der Stop traegt den Zehn-Prozent-Deckel", hh.get("cm_h_stop") is not None
+      and 0.099 < (kp_h - hh["cm_h_stop"]) / kp_h <= 0.10, str(hh))
+    p("H: zweites Tief ueber dem ersten ist kein Double Bottom", double_bottom(w_reihe(tief2=31.0)) == {})
+    p("H: nach dem Wochenschluss ueber dem Kaufpunkt vorbei",
+      double_bottom(w_reihe(dazu=list(np.linspace(34.5, 38.0, 5)))) == {})
+    p("H: acht Prozent tief ist kein Double Bottom", double_bottom(w_reihe(tief1=37.5, mitte=38.8, tief2=37.2, rechts=38.0)) == {})
+    alt_unter = FESTLEGUNGEN["h_unterschreitung_max"]
+    FESTLEGUNGEN["h_unterschreitung_max"] = 1.0            # Gegenprobe: ohne die Grenze waere es ein Treffer
+    ohne_grenze = double_bottom(w_reihe(tief2=24.0)).get("cm_h") == 1
+    FESTLEGUNGEN["h_unterschreitung_max"] = alt_unter
+    p("H: Gegenprobe, ohne Grenze haette der zweite Absturz getroffen", ohne_grenze)
+    p("H: zweites Tief 20 Prozent unter dem ersten ist ein zweiter Absturz (unsere Festlegung)",
+      double_bottom(w_reihe(tief2=24.0)) == {})
+    p("H: zweites Tief vor mehr als 13 Wochen (unsere Festlegung)",
+      double_bottom(w_reihe(rechts=33.0, rechts_tage=75)) == {} and double_bottom(w_reihe(rechts=33.0, rechts_tage=60)).get("cm_h") == 1)
+
     # Gesamt: werte liefert immer alle Spalten, auch bei Unsinn
     w = werte(_reihe(list(np.linspace(20, 60, 400)), spanne=0.004))
     p("Alle Spalten da, Merker ganze Zahlen", set(w) == set(SPALTEN)
-      and all(isinstance(w[s], int) for s in ("cm_b", "cm_a", "cm_d", "cm_g", "cm_s", "cm_t")))
+      and all(isinstance(w[s], int) for s in MERKER))
     kaputt = _reihe([10, 11, 12, 13, 14])
     kaputt["close"] = ["x", None, 12, 13, 14]
     p("Unlesbare Kurse brechen nichts", set(werte(kaputt)) == set(SPALTEN))
