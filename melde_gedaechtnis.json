@@ -349,7 +349,14 @@
     "VICR|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
     "BEST|VICR|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
     "XMTR|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
-    "BEST|XMTR|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21"
+    "BEST|XMTR|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
+    "GEWINN|klimax_zeichen|AMD|EMA Crossback|4_ma200_abstand": "2026-09-21",
+    "GEWINN|klimax_zeichen|AMD|Fallback: 20-Tage-Hoch (Pivot)|4_ma200_abstand": "2026-09-21",
+    "GEWINN|klimax_zeichen|AMD|Rectangle Top|4_ma200_abstand": "2026-09-21",
+    "GEWINN|klimax_zeichen|AMD|SPRING-2026-09-14|4_ma200_abstand": "2026-09-21",
+    "GEWINN|klimax_zeichen|MXL|Fallback: 20-Tage-Hoch (Pivot)|4_ma200_abstand": "2026-09-21",
+    "GEWINN|klimax_zeichen|MXL|Fallback: MA50-R\u00fcckeroberung|4_ma200_abstand": "2026-09-21",
+    "SCHLUSSNAH|2026-09-21": "2026-09-21"
   },
   "gapgo_warten": {
     "ATI": {
