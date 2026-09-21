@@ -101,7 +101,7 @@
     "BHE|EMA Crossback": "drin",
     "DAVE|Cup & Handle (Wochenbasis)": "draussen",
     "ZIM|Fallback: MA50-Pullback": "draussen",
-    "AMD|Fallback: 52W-Hoch-Breakout": "drin",
+    "AMD|Fallback: 52W-Hoch-Breakout": "draussen",
     "CDNA|Fallback: MA50-Pullback": "draussen",
     "ETON|Cup & Handle (Wochenbasis)": "draussen",
     "ETON|Fallback: MA50-Pullback": "draussen",
@@ -351,7 +351,8 @@
     "UEBER|UMAC|Fallback: MA50-R\u00fcckeroberung": "2026-09-21",
     "UEBER|DOCN|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
     "UEBER|AMRX|Fallback: 52W-Hoch-Breakout": "2026-09-21",
-    "UEBER|MRNA|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21"
+    "UEBER|MRNA|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
+    "UEBER|AMD|Fallback: 52W-Hoch-Breakout": "2026-09-21"
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-09-21"
