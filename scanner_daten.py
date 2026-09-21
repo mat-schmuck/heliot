@@ -9,10 +9,12 @@ zumindest 3 Jahre zurueck, mache es, der Scanner braucht zugriff darauf.
 Sichere die Charts und speichere sie, so du das nicht schon gemacht hast."
 
 WAS DIESER LAUF BAUT
-  scanner_tabelle.parquet  eine Zeile je Stammaktie von Nasdaq, NYSE und
-                           NYSE American mit allen Werten, nach denen der
-                           Scanner filtert, und den Mustertreffern samt
-                           Rating. Der Ablauf legt sie als Release-Anhang
+  scanner_tabelle.parquet  eine Zeile je Stammaktie von Nasdaq, NYSE, NYSE
+                           American und Cboe (dasselbe Universum wie das
+                           RS-Universum samt Entscheidung 2, siehe
+                           universum() und bauen()) mit allen Werten, nach
+                           denen der Scanner filtert, und den Mustertreffern
+                           samt Rating. Der Ablauf legt sie als Release-Anhang
                            "scanner-daten" in dieses Repo (nicht in die
                            Versionsgeschichte: rund vier Megabyte je Nacht
                            wuerden das Repo in einem Jahr um ueber einen
@@ -1023,7 +1025,10 @@ def viele_abrufe(ticker_liste, fn, faeden, fehlergrenze, mindestproben, leise=Tr
 # ---------------------------------------------------------------------------
 
 def universum(leise=True):
-    """Alle Stammaktien von Nasdaq, NYSE und NYSE American (wie das RS-Universum)."""
+    """Alle Stammaktien von Nasdaq, NYSE, NYSE American und Cboe, genau wie
+    das RS-Universum: Die Verzeichnisse samt Namensteil von Entscheidung 2
+    kommen aus rs_universum; den Typ-Teil wendet bauen() an, weil er die
+    Zuordnungsliste braucht."""
     import rs_universum
     nas, _g = rs_universum.nasdaq_liste(leise=leise)
     andere, _g2 = rs_universum.andere_liste(leise=leise)
@@ -1276,6 +1281,23 @@ def bauen(pfad_tabelle=TABELLE, pfad_stand=STAND, archiv=ARCHIV, grenze=None, an
              "status": "ok", "toleranz": SC["toleranz"], "quellen": {}, "hinweise": []}
 
     liste = universum_liste if universum_liste is not None else universum(leise=leise)
+    # E2 (Gerhard, 13.09.2026, Entscheidung 2, bestaetigt am 15.09.2026 mit
+    # Antwort N1), der Typ-Teil: Was die eigene Zuordnungsliste nicht als
+    # Stammaktie fuehrt, gehoert nicht ins Universum, genau wie beim
+    # RS-Universum. Bis zum 21.09.2026 fehlte dieser Schritt hier: Die Tabelle
+    # fuehrte 22 solche Titel, und die Gruppen-RS rechnete sie in ihre Mediane
+    # (ihre Basis lag um genau diese Zahl ueber dem Bezug des RS-Universums).
+    # Der Befund im Stand nennt nur Zahlen, die Liste ist lizenziert.
+    try:
+        zuordnung_g, zb_g = kg.zuordnung_lesen(zuordnung_pfad)
+    except Exception as e:  # noqa  die Zuordnung darf den Bau nie aufhalten
+        zuordnung_g, zb_g = None, {"status": "nicht verfuegbar",
+                                   "grund": f"die Zuordnungsliste ist nicht lesbar ({type(e).__name__})"}
+    try:
+        liste, typ_befund = rs_universum.typ_filter(liste, zuordnung=zuordnung_g, befund=zb_g)
+    except Exception as e:  # noqa  der Typ-Teil darf den Bau nie aufhalten
+        typ_befund = {"status": f"fehler: {type(e).__name__}"}
+    stand["quellen"]["typ_filter"] = typ_befund
     if grenze and int(grenze) < len(liste):
         # Probelauf: gleichmaessig ueber das Alphabet verteilt statt der ersten N.
         schritt = max(1, len(liste) // int(grenze))
@@ -1522,8 +1544,8 @@ def bauen(pfad_tabelle=TABELLE, pfad_stand=STAND, archiv=ARCHIV, grenze=None, an
     # --- Industry Group RS (Etappe 6) ------------------------------------------------
     # Median der RS-Rohwerte je Gruppe, Rang heute und vor drei und sechs Wochen,
     # aus den Kursen dieses Laufs; ohne Zuordnungsliste nicht verfuegbar.
+    # Die Zuordnungsliste ist schon gelesen (Typ-Teil von Entscheidung 2 oben).
     try:
-        zuordnung_g, zb_g = kg.zuordnung_lesen(zuordnung_pfad)
         werte_g, liste_g, befund_g = kg.gruppen_werte({s: auszuege[s] for s in zeilen if s in auszuege}, zuordnung_g,
                                                       handelstag=handelstag, zuordnung_befund=zb_g)
     except Exception as e:  # noqa  die Gruppen duerfen den Bau nie aufhalten
@@ -1822,7 +1844,10 @@ def selbsttest() -> int:
 
     # Ganzer Lauf ohne Netz
     with tempfile.TemporaryDirectory() as tmp:
+        # DDD fuehrt die Zuordnungsliste als Fonds (Typ-Teil von Entscheidung 2):
+        # Er darf weder in der Tabelle noch in den Medianen der Gruppen stehen.
         kunst = {"AAA": _kunstreihe(seed=11, schritt=0.002), "BBB": _kunstreihe(seed=12, schritt=-0.001),
+                 "DDD": _kunstreihe(seed=14, schritt=0.004),
                  "CCC": _kunstreihe(seed=13, tage=40)}
         abrufe = []
 
@@ -1848,7 +1873,8 @@ def selbsttest() -> int:
         with open(pfad_z, "w", encoding="utf-8") as f:
             json.dump({"stand": "2026-09-16", "quelle": "Selbsttest",
                        "titel": {"AAA": {"typ": "Common Stock", "gics_unterbranche": "Application Software"},
-                                 "BBB": {"typ": "Common Stock", "gics_unterbranche": "Regional Banks"}}}, f)
+                                 "BBB": {"typ": "Common Stock", "gics_unterbranche": "Regional Banks"},
+                                 "DDD": {"typ": "FUND", "gics_unterbranche": "Asset Management & Custody Banks"}}}, f)
         pfad_g = os.path.join(tmp, "g.json")
         # Etappe 7: FINRA-Tagesdateien der letzten 20 Handelstage der Kunstreihen
         tage_k = [d.strftime("%Y-%m-%d") for d in pd.bdate_range("2023-06-01", periods=800)[-20:]]
@@ -1896,6 +1922,7 @@ def selbsttest() -> int:
                    zuordnung_pfad=pfad_z, pfad_gruppen=pfad_g)
         t = pd.read_parquet(os.path.join(tmp, "t.parquet"))
         a = pd.read_parquet(pfad_a)
+        g1 = json.load(open(pfad_g, encoding="utf-8"))
         p("Ganzer Lauf: drei Zeilen, Stand geschrieben", len(t) == 3 and st["zeilen"] == 3)
         aaa = t[t["ticker"] == "AAA"].iloc[0]
         p("Ganzer Lauf: Marktkapitalisierung in Milliarden, Sektor, Wochenliste",
@@ -1999,6 +2026,22 @@ def selbsttest() -> int:
           and str(a_ccc["gruppe_hinweis"]).startswith("die Aktie steht nicht in der Zuordnungsliste vom 16.09.2026; "
                                                      "der Rang heute fehlt, am ")
           and "trug keine Aktie der Gruppe einen Rohwert" in str(a_ccc["gruppe_hinweis"]), str(a_ccc["gruppe_hinweis"]))
+        p("E2, Typteil: was die Zuordnungsliste nicht als Stammaktie fuehrt, fehlt in Tabelle, Analysten und Gruppen",
+          "DDD" not in set(t["ticker"]) and "DDD" not in set(a["ticker"]) and st["universum"] == 3
+          and len(g1["gruppen"]) == 2
+          and "Asset Management & Custody Banks" not in {z["gruppe"] for z in g1["gruppen"]}
+          and st["quellen"]["typ_filter"]["status"] == "ok" and st["quellen"]["typ_filter"]["raus"] == 1
+          and st["quellen"]["typ_filter"]["geprueft"] == 4 and st["quellen"]["typ_filter"]["ohne_eintrag"] == 1,
+          f"{sorted(t['ticker'])} {st['quellen']['typ_filter']} {[z['gruppe'] for z in g1['gruppen']]}")
+        p("E2, Typteil: der Stand nennt nur Zahlen, nie Kuerzel oder Typen",
+          all(k in ("status", "stand", "eintraege", "geprueft", "raus", "ohne_eintrag")
+              for k in st["quellen"]["typ_filter"])
+          and not any(isinstance(v, (list, dict)) for v in st["quellen"]["typ_filter"].values()),
+          str(st["quellen"]["typ_filter"]))
+        p("E2, Typteil: ohne Zuordnungsliste bleibt der Titel, und der Stand sagt warum",
+          st2["universum"] == 4 and st2["quellen"]["typ_filter"]["status"] == "nicht verfuegbar"
+          and st2["quellen"]["typ_filter"]["grund"] == "die eigene Zuordnungsliste der Branchen liegt noch nicht vor",
+          str(st2["quellen"]["typ_filter"]))
         g2 = json.load(open(pfad_g, encoding="utf-8"))
         p("Gruppen-RS: zweite Nacht ohne Zuordnungsliste nicht verfuegbar, Rangliste leer statt der Vornacht",
           pd.isna(a2_aaa["gruppe_rang"]) and a2_aaa["gruppe_hinweis"] == "die eigene Zuordnungsliste der Branchen liegt "
