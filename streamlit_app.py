@@ -997,6 +997,153 @@ def _sc_einstellung(sektoren) -> dict:
             "sortierung": st.session_state.get("sc_sortierung") or ""}
 
 
+# VORLAGEN DES SCANNERS (Gerhard, 20.09.2026, S1; Mathias, 21.09.2026: "3
+# Datenrepo"). Eine Vorlage ist der Stand aller Bedienfelder des Scanners; die
+# Datei scanner_vorlagen.json liegt im PRIVATEN Datenrepo und wird mit
+# DATEN_TOKEN gelesen und geschrieben, also nur im vollen Zugang. Lesen,
+# Pruefen und Schreiben der Datei rechnet scanner_ansicht.py ohne Netz.
+def _sc_vorlage_schluessel(sektoren) -> list:
+    k = ["sc_strategie", "sc_toleranz", "sc_handelbar", "sc_langweilig", "sc_rs_vorlaeufig", "sc_termine_an",
+         "sc_termine_ohne_zeit", "sc_termine_umfang", "sc_sortierung", "sc_anzahl", "sc_format",
+         "sc_gruppe_sektoren"]
+    for f in sa.FELDER:
+        k += [_sc_schluessel(f.schluessel, teil) for teil in ("an", "min", "max")]
+    for g, _name in sa.GRUPPEN:
+        k.append(f"sc_gruppe_{g}")
+    for key, _text, _plus, _lage in sa.TERMIN_TEILE:
+        k.append(f"sc_termine_{key}")
+    for s in sektoren:
+        k.append(_sc_sektor_schluessel(s))
+    return k
+
+
+def _datenrepo_kopf(token: str) -> dict:
+    return {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"}
+
+
+@st.cache_data(ttl=60, show_spinner=False)
+def _sc_vorlagen_holen():
+    """(Vorlagen, sha der Datei oder None). Fehlschlaege werfen und landen
+    nicht im Speicher."""
+    import base64
+    import requests
+    token = _daten_token()
+    if not token:
+        raise LookupError("kein Token für das Datenrepo")
+    r = requests.get(f"https://api.github.com/repos/{DATEN_REPO}/contents/{sa.VORLAGE_DATEI}",
+                     headers=_datenrepo_kopf(token), timeout=20)
+    if r.status_code == 404:
+        return [], None
+    if r.status_code != 200:
+        raise LookupError(f"GitHub antwortete mit Code {r.status_code}")
+    j = r.json()
+    inhalt = base64.b64decode(j.get("content") or "").decode("utf-8")
+    return sa.vorlagen_lesen(inhalt), j.get("sha")
+
+
+def _sc_vorlagen_schreiben(vorlagen, sha, nachricht):
+    """(ok, Grund). Schreibt die ganze Datei; mit sha nur, wenn sie seit dem
+    Lesen niemand geaendert hat."""
+    import base64
+    import requests
+    token = _daten_token()
+    if not token:
+        return False, "kein Token für das Datenrepo"
+    koerper = {"message": nachricht,
+               "content": base64.b64encode(sa.vorlagen_text(vorlagen).encode("utf-8")).decode("ascii")}
+    if sha:
+        koerper["sha"] = sha
+    try:
+        r = requests.put(f"https://api.github.com/repos/{DATEN_REPO}/contents/{sa.VORLAGE_DATEI}",
+                         json=koerper, headers=_datenrepo_kopf(token), timeout=30)
+    except Exception as e:  # noqa
+        return False, f"GitHub war nicht erreichbar ({type(e).__name__})"
+    finally:
+        _sc_vorlagen_holen.clear()
+    if r.status_code in (200, 201):
+        return True, ""
+    if r.status_code in (409, 422):
+        return False, "die Vorlagen wurden inzwischen woanders geändert; bitte noch einmal versuchen"
+    if r.status_code in (401, 403):
+        return False, f"GitHub hat das Schreiben abgelehnt (Code {r.status_code}); der Token darf das Datenrepo nicht beschreiben"
+    return False, f"GitHub antwortete mit Code {r.status_code}"
+
+
+def _sc_vorlagen_frisch():
+    """Vor dem Schreiben immer den neuesten Stand: (Vorlagen, sha) oder
+    (None, Grund)."""
+    _sc_vorlagen_holen.clear()
+    try:
+        return _sc_vorlagen_holen()
+    except LookupError as e:
+        return None, str(e)
+    except Exception as e:  # noqa
+        return None, f"Netzwerkfehler {type(e).__name__}"
+
+
+def _sc_vorlage_laden():
+    name = st.session_state.get("sc_vorlage_wahl")
+    vorlagen, sha_oder_grund = _sc_vorlagen_frisch()
+    if vorlagen is None:
+        st.session_state["sc_vorlage_meldung_oben"] = ("fehler", f"Nicht geladen: {sha_oder_grund}.")
+        return
+    v = next((x for x in vorlagen if x["name"] == name), None)
+    if v is None:
+        st.session_state["sc_vorlage_meldung_oben"] = ("fehler", "Diese Vorlage gibt es nicht mehr.")
+        return
+    sektoren = st.session_state.get("sc_sektorliste") or []
+    _sc_alles_zuruecksetzen()
+    for schluessel, wert in sa.vorlage_anwenden(v["werte"], _sc_vorlage_schluessel(sektoren)).items():
+        st.session_state[schluessel] = wert
+    st.session_state["sc_vorlage_name"] = v["name"]
+    st.session_state["sc_vorlage_meldung_oben"] = (
+        "ok", f"Vorlage {v['name']} geladen. Zum Rechnen unten Scan starten drücken.")
+
+
+def _sc_vorlage_speichern():
+    ok, name = sa.vorlage_name_pruefen(st.session_state.get("sc_vorlage_name"))
+    if not ok:
+        st.session_state["sc_vorlage_meldung_unten"] = ("fehler", name)
+        return
+    sektoren = st.session_state.get("sc_sektorliste") or []
+    werte = sa.vorlage_werte(st.session_state, _sc_vorlage_schluessel(sektoren))
+    vorlagen, sha_oder_grund = _sc_vorlagen_frisch()
+    if vorlagen is None:
+        st.session_state["sc_vorlage_meldung_unten"] = ("fehler", f"Nicht gespeichert: {sha_oder_grund}.")
+        return
+    neu, ersetzt = sa.vorlage_setzen(vorlagen, name, werte)
+    ok, grund = _sc_vorlagen_schreiben(neu, sha_oder_grund,
+                                       f"Scanner-Vorlage {'ersetzt' if ersetzt else 'gespeichert'}: {name}")
+    if ok:
+        st.session_state["sc_vorlage_meldung_unten"] = (
+            "ok", f"Vorlage {name} {'ersetzt' if ersetzt else 'gespeichert'}; sie steht oben unter Vorlagen.")
+    else:
+        st.session_state["sc_vorlage_meldung_unten"] = ("fehler", f"Nicht gespeichert: {grund}.")
+
+
+def _sc_vorlage_loeschen():
+    name = st.session_state.get("sc_vorlage_wahl")
+    if not (name and st.session_state.get("sc_vorlage_loeschen_ja")):
+        st.session_state["sc_vorlage_meldung_oben"] = ("fehler", "Bitte zuerst eine Vorlage wählen und das Löschen "
+                                                                 "bestätigen.")
+        return
+    vorlagen, sha_oder_grund = _sc_vorlagen_frisch()
+    if vorlagen is None:
+        st.session_state["sc_vorlage_meldung_oben"] = ("fehler", f"Nicht gelöscht: {sha_oder_grund}.")
+        return
+    rest, gefunden = sa.vorlage_entfernen(vorlagen, name)
+    if not gefunden:
+        st.session_state["sc_vorlage_meldung_oben"] = ("fehler", "Diese Vorlage gibt es nicht mehr.")
+        return
+    ok, grund = _sc_vorlagen_schreiben(rest, sha_oder_grund, f"Scanner-Vorlage gelöscht: {name}")
+    st.session_state["sc_vorlage_loeschen_ja"] = False
+    if ok:
+        st.session_state["sc_vorlage_wahl"] = None
+        st.session_state["sc_vorlage_meldung_oben"] = ("ok", f"Vorlage {name} gelöscht.")
+    else:
+        st.session_state["sc_vorlage_meldung_oben"] = ("fehler", f"Nicht gelöscht: {grund}.")
+
+
 def _sc_scan_anfordern():
     st.session_state["sc_scan_auftrag"] = True
 
@@ -1151,6 +1298,39 @@ def scanner_reiter():
             st.session_state[_sc_sektor_schluessel(s)] = True
     heute = sa.ny_jetzt().date()
 
+    # VORLAGEN (Gerhard, 20.09.2026, S1): Die Datei liegt im privaten Datenrepo,
+    # deshalb nur im vollen Zugang (S4). Laden setzt alle Bedienfelder, dann
+    # rechnet wie immer erst der Knopf Scan starten.
+    if rolle == "voll":
+        st.markdown("#### Vorlagen", anchors=False)
+        try:
+            sc_vorlagen, _sc_sha = _sc_vorlagen_holen()
+            sc_vorlagen_grund = ""
+        except LookupError as e:
+            sc_vorlagen, sc_vorlagen_grund = [], str(e)
+        except Exception as e:  # noqa
+            sc_vorlagen, sc_vorlagen_grund = [], f"Netzwerkfehler {type(e).__name__}"
+        if sc_vorlagen_grund:
+            st.markdown(f"Die Vorlagen lassen sich gerade nicht laden: {sc_vorlagen_grund}.")
+        sc_namen = [v["name"] for v in sc_vorlagen]
+        if sc_namen:
+            sc_beschriftung = {v["name"]: sa.vorlage_beschriftung(v) for v in sc_vorlagen}
+            if st.session_state.get("sc_vorlage_wahl") not in sc_namen:
+                st.session_state["sc_vorlage_wahl"] = None
+            st.selectbox("Gespeicherte Vorlage", sc_namen, key="sc_vorlage_wahl",
+                         format_func=lambda n: sc_beschriftung.get(n, n), placeholder="bitte wählen",
+                         persist_state="page")
+            sc_gewaehlt = bool(st.session_state.get("sc_vorlage_wahl"))
+            st.button("Vorlage laden", key="sc_vorlage_laden", on_click=_sc_vorlage_laden, disabled=not sc_gewaehlt)
+            st.checkbox("Ja, die gewählte Vorlage löschen", key="sc_vorlage_loeschen_ja", persist_state="page")
+            st.button("Vorlage löschen", key="sc_vorlage_loeschen", on_click=_sc_vorlage_loeschen,
+                      disabled=not (sc_gewaehlt and st.session_state.get("sc_vorlage_loeschen_ja")))
+        elif not sc_vorlagen_grund:
+            st.markdown("Noch keine Vorlage gespeichert; speichern lässt sich unten vor dem Scan.")
+        sc_meldung = st.session_state.pop("sc_vorlage_meldung_oben", None)
+        if sc_meldung:
+            (st.success if sc_meldung[0] == "ok" else st.error)(sc_meldung[1])
+
     # Teil 1
     st.markdown("#### Teil 1: Strategie oder Chart-Signal", anchors=False)
     ids = [k for k, _name in sa.AUSWAHL]
@@ -1243,6 +1423,15 @@ def scanner_reiter():
                   else f"Scan fertig: {nachschlagen.zahl(ergebnis['treffer'])} Treffer.")
     else:
         status = ""
+    if rolle == "voll":
+        st.markdown("#### Einstellungen als Vorlage speichern", anchors=False)
+        st.text_input("Name der Vorlage", key="sc_vorlage_name", max_chars=sa.VORLAGE_NAME_LAENGE,
+                      placeholder="zum Beispiel Minervini streng", persist_state="page")
+        st.button("Aktuelle Einstellungen als Vorlage speichern", key="sc_vorlage_speichern",
+                  on_click=_sc_vorlage_speichern)
+        sc_meldung_u = st.session_state.pop("sc_vorlage_meldung_unten", None)
+        if sc_meldung_u:
+            (st.success if sc_meldung_u[0] == "ok" else st.error)(sc_meldung_u[1])
     st.markdown("#### Scan", anchors=False)
     st.button(beschriftung, key="sc_scan", type="primary", on_click=_sc_scan_anfordern)
     _sc_status(key="sc_scan_status", data={"text": status})

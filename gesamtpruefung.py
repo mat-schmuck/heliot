@@ -2822,6 +2822,32 @@ def gast_abschottung(pfad) -> tuple:
     lsa = funktionen.get("lade_scanner_analysten", "")
     if not lsa or "'voll'" not in lsa or lsa.find("'voll'") > lsa.find("_scanner_analysten_holen"):
         maengel.append("lade_scanner_analysten prueft die Rolle nicht vor dem Zwischenspeicher")
+    # Die Vorlagen des Scanners (S1, 21.09.2026) liegen im privaten Datenrepo:
+    # In scanner_reiter steht alles dazu nur unter "if rolle == 'voll':".
+    vorlagen_namen = {"_sc_vorlagen_holen", "_sc_vorlage_laden", "_sc_vorlage_speichern", "_sc_vorlage_loeschen"}
+    reiter_f = next((k for k in baum.body if isinstance(k, _ast.FunctionDef) and k.name == "scanner_reiter"), None)
+
+    def offen_verwendet(knoten, geschuetzt):
+        if isinstance(knoten, _ast.If) and _ast.unparse(knoten.test) in ("rolle == 'voll'", 'rolle == "voll"'):
+            for s in knoten.body:
+                yield from offen_verwendet(s, True)
+            for s in knoten.orelse:
+                yield from offen_verwendet(s, geschuetzt)
+            return
+        if isinstance(knoten, _ast.Name) and knoten.id in vorlagen_namen and not geschuetzt:
+            yield f"{knoten.id} in Zeile {knoten.lineno}"
+        for kind in _ast.iter_child_nodes(knoten):
+            yield from offen_verwendet(kind, geschuetzt)
+
+    if reiter_f is None:
+        maengel.append("Funktion scanner_reiter fehlt")
+    else:
+        offen = [x for s in reiter_f.body for x in offen_verwendet(s, False)]
+        if offen:
+            maengel.append("Vorlagen ausserhalb von 'if rolle == \"voll\"': " + ", ".join(offen[:4]))
+        if not any(True for s in reiter_f.body for k in _ast.walk(s)
+                   if isinstance(k, _ast.Name) and k.id == "_sc_vorlagen_holen"):
+            maengel.append("scanner_reiter liest die Vorlagen nicht")
     if maengel:
         return False, "; ".join(maengel)
     return True, "Gast: nur Scanner ohne Registerkarten, Schranke dahinter, Nachschlagen und Datenrepo gesperrt"

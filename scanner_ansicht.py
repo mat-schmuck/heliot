@@ -1739,8 +1739,9 @@ def grenzen_saetze():
         "Change from Open und Red to Green beschreiben den letzten abgeschlossenen Handelstag. Live während des "
         "Handels rechnet der Scanner nicht: Die Tabelle entsteht nachts aus Tageskerzen für den ganzen Markt. "
         "Live-Signale bleiben beim Breakout-Wächter.",
-        "Die Fundamentzahlen sind so frisch wie das SEC-Fundament-Release; ein neuer Quartalsbericht erscheint "
-        "erst nach dessen nächstem Lauf.",
+        "Die Fundamentzahlen kommen aus dem SEC-Fundament, das seit dem 21.09.2026 an jedem Abend Montag bis "
+        "Freitag neu entsteht; ein neuer Quartalsbericht steht in der Regel in der zweiten Nacht nach seiner "
+        "Einreichung darin, weil die SEC ihren Gesamtbestand einmal je Nacht neu zusammenstellt.",
         "Analystenempfehlungen und Gewinnüberraschungen holt der Scanner je Nacht für ein Siebtel des Markts und "
         "für alle, die gerade Zahlen gemeldet haben; nach sieben Nächten ist jede Aktie einmal dran. Nasdaq nennt "
         "die Überraschungen der letzten vier Quartale, weiter zurück reicht die Quote deshalb nicht.",
@@ -1754,6 +1755,110 @@ def grenzen_saetze():
         "Das alte Excel-Format XLS lässt sich nicht mehr schreiben: Pandas hat den Schreiber mit Version 2.0 "
         "entfernt, und die dafür nötige Bibliothek wird nicht mehr gepflegt. XLSX öffnet jedes Excel seit 2007.",
     ]
+
+
+# ---------------------------------------------------------------------------
+# Vorlagen (Gerhard, 20.09.2026, S1; Mathias, 21.09.2026)
+# ---------------------------------------------------------------------------
+# "Im Scanner moechte ich meine eigenen Kriterien-Sets einstellen und unter
+# einem selbstgewaehlten Namen abspeichern koennen. Fuer den Schnellzugriff
+# spaeter: wenn ich genau diese Kombination irgendwann wieder scannen will,
+# will ich sie mit einem Klick laden koennen." Eine Vorlage ist der Stand
+# aller Bedienfelder des Scanners (die Schluessel nennt die App); die Datei
+# liegt im PRIVATEN Datenrepo heliot-daten (Mathias: "3 Datenrepo") und gilt
+# fuer beide, die den vollen Zugang haben. Hier nur Lesen, Pruefen und
+# Schreiben der Datei, ohne Netz pruefbar.
+
+VORLAGE_DATEI = "scanner_vorlagen.json"
+VORLAGE_NAME_LAENGE = 60
+
+
+def vorlagen_lesen(text):
+    """Die Liste der Vorlagen aus dem Text der Datei; unlesbare oder fremde
+    Eintraege fallen still weg. Ohne Datei (None, leer) eine leere Liste."""
+    if not text:
+        return []
+    try:
+        daten = json.loads(text)
+    except ValueError:
+        return []
+    liste = daten.get("vorlagen") if isinstance(daten, dict) else None
+    ergebnis = []
+    for v in liste or []:
+        if (isinstance(v, dict) and isinstance(v.get("name"), str) and v["name"].strip()
+                and isinstance(v.get("werte"), dict)):
+            ergebnis.append({"name": v["name"].strip(), "gespeichert_am": str(v.get("gespeichert_am") or ""),
+                             "werte": v["werte"]})
+    return ergebnis
+
+
+def vorlage_name_pruefen(name):
+    """(ok, bereinigter Name oder Grund). Ein Name hat 1 bis 60 Zeichen und
+    keine Steuerzeichen; Leerraum am Rand faellt weg."""
+    name = re.sub(r"\s+", " ", str(name or "")).strip()
+    if not name:
+        return False, "Bitte einen Namen für die Vorlage eingeben."
+    if len(name) > VORLAGE_NAME_LAENGE:
+        return False, f"Der Name ist länger als {VORLAGE_NAME_LAENGE} Zeichen."
+    if any(ord(z) < 32 for z in name):
+        return False, "Der Name enthält ein Steuerzeichen."
+    return True, name
+
+
+def vorlage_werte(zustand, schluessel):
+    """Die Werte der Bedienfelder als Vorlage: nur die genannten Schluessel und
+    nur einfache Werte (Wahrheitswert, Text, Zahl)."""
+    werte = {}
+    for s in schluessel:
+        w = zustand.get(s)
+        if isinstance(w, (bool, str, int, float)):
+            werte[s] = w
+    return werte
+
+
+def vorlage_anwenden(werte, schluessel):
+    """Was beim Laden einer Vorlage gesetzt wird: nur Schluessel, die der
+    Scanner heute noch kennt, und nur einfache Werte. Merkmale, die es beim
+    Speichern noch nicht gab, fehlen hier und bleiben beim Laden aus, weil die
+    App vorher alles zuruecksetzt."""
+    bekannt = set(schluessel)
+    return {s: w for s, w in (werte or {}).items() if s in bekannt and isinstance(w, (bool, str, int, float))}
+
+
+def vorlage_setzen(vorlagen, name, werte, jetzt=None):
+    """(neue Liste, ersetzt): speichert unter dem Namen, ein gleicher Name
+    ohne Ruecksicht auf Gross- und Kleinschreibung wird ersetzt. Die Liste ist
+    nach Namen sortiert."""
+    jetzt = jetzt or datetime.now(timezone.utc)
+    neu = {"name": name, "gespeichert_am": jetzt.isoformat(timespec="seconds"), "werte": dict(werte)}
+    rest = [v for v in vorlagen if v["name"].casefold() != name.casefold()]
+    ersetzt = len(rest) != len(vorlagen)
+    return sorted(rest + [neu], key=lambda v: v["name"].casefold()), ersetzt
+
+
+def vorlage_entfernen(vorlagen, name):
+    """(neue Liste, gefunden)."""
+    rest = [v for v in vorlagen if v["name"] != name]
+    return rest, len(rest) != len(vorlagen)
+
+
+def vorlagen_text(vorlagen, jetzt=None):
+    """Der Inhalt der Datei, lesbar eingerueckt."""
+    jetzt = jetzt or datetime.now(timezone.utc)
+    return json.dumps({"version": 1, "stand": jetzt.isoformat(timespec="seconds"), "vorlagen": vorlagen},
+                      ensure_ascii=False, indent=1) + "\n"
+
+
+def vorlage_beschriftung(v):
+    """'Minervini streng, gespeichert am 21.09.2026 um 12:45 Uhr Wiener Zeit'."""
+    teile = [v["name"]]
+    try:
+        zeit = wiener_zeit(v["gespeichert_am"])
+    except Exception:  # noqa
+        zeit = None
+    if zeit:
+        teile.append(f"gespeichert am {zeit}")
+    return ", ".join(teile)
 
 
 # ---------------------------------------------------------------------------
@@ -2150,6 +2255,43 @@ def selbsttest() -> int:
     p("Jede Kennzahl der Nachttabelle aus Nachtscan und Fundament hat ein Feld", not fehlend, ", ".join(fehlend))
     p("Nur noch Spannen und Bedingungen, keine Stufen- oder Lagewahl mehr",
       all(f.art in ("bereich", "ja") for f in FELDER) and not any(hasattr(f, "wahl") for f in FELDER))
+
+    # Vorlagen (Gerhard, 20.09.2026, S1)
+    t0 = datetime(2026, 9, 21, 10, 45, tzinfo=timezone.utc)
+    schl = ["sc_strategie", "sc_rs_an", "sc_rs_min", "sc_sektor_technology"]
+    zustand = {"sc_strategie": "vcp", "sc_rs_an": True, "sc_rs_min": "80", "sc_sektor_technology": False,
+               "sc_ergebnis": {"treffer": 3}, "sc_fremd": "x", "sc_liste": [1, 2]}
+    w = vorlage_werte(zustand, schl)
+    p("Vorlage: nur die Schluessel des Scanners und nur einfache Werte",
+      w == {"sc_strategie": "vcp", "sc_rs_an": True, "sc_rs_min": "80", "sc_sektor_technology": False}, str(w))
+    v1, ersetzt1 = vorlage_setzen([], "Minervini streng", w, t0)
+    v2, ersetzt2 = vorlage_setzen(v1, "  Anfang  ", {"sc_strategie": ""}, t0)
+    v3, ersetzt3 = vorlage_setzen(v2, "minervini STRENG", {"sc_strategie": "vcp"}, t0)
+    p("Vorlage: nach Namen sortiert, gleicher Name ohne Gross- und Kleinschreibung wird ersetzt",
+      [v["name"] for v in v2] == ["  Anfang  ", "Minervini streng"] and not ersetzt1 and not ersetzt2 and ersetzt3
+      and [v["name"] for v in v3] == ["  Anfang  ", "minervini STRENG"], str([v["name"] for v in v3]))
+    text = vorlagen_text(v3, t0)
+    gelesen = vorlagen_lesen(text)
+    p("Vorlage: Datei hin und zurueck, Rand-Leerraum faellt beim Lesen weg, Umlaute bleiben",
+      [v["name"] for v in gelesen] == ["Anfang", "minervini STRENG"] and gelesen[1]["werte"] == {"sc_strategie": "vcp"}
+      and '"version": 1' in text and vorlagen_lesen(vorlagen_text([{"name": "Größe", "gespeichert_am": "",
+                                                                   "werte": {}}]))[0]["name"] == "Größe")
+    p("Vorlage: unlesbare Datei und fremde Eintraege",
+      vorlagen_lesen("kaputt") == [] and vorlagen_lesen(None) == []
+      and vorlagen_lesen('{"vorlagen": [{"name": ""}, {"name": "a", "werte": 3}, "x", {"name": "b", "werte": {}}]}')
+      == [{"name": "b", "gespeichert_am": "", "werte": {}}])
+    p("Vorlage: Name pruefen",
+      vorlage_name_pruefen("  Minervini   streng ") == (True, "Minervini streng")
+      and not vorlage_name_pruefen("")[0] and not vorlage_name_pruefen("x" * 61)[0]
+      and not vorlage_name_pruefen("a\x07b")[0])
+    p("Vorlage: beim Laden nur heute bekannte Schluessel und einfache Werte",
+      vorlage_anwenden({"sc_rs_min": "80", "sc_alt_weg": True, "sc_rs_an": [1]}, schl) == {"sc_rs_min": "80"})
+    p("Vorlage: entfernen",
+      vorlage_entfernen(gelesen, "Anfang") == ([gelesen[1]], True) and vorlage_entfernen(gelesen, "fehlt")[1] is False)
+    p("Vorlage: Beschriftung mit Wiener Zeit",
+      vorlage_beschriftung({"name": "Minervini streng", "gespeichert_am": "2026-09-21T10:45:00+00:00"})
+      == "Minervini streng, gespeichert am 21.09.2026 um 12:45 Uhr Wiener Zeit"
+      and vorlage_beschriftung({"name": "a", "gespeichert_am": ""}) == "a")
 
     print(f"\n{len(fehler)} Fehler." if fehler else "\nAlles bestanden.")
     return 1 if fehler else 0
