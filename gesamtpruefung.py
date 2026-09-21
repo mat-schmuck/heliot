@@ -181,7 +181,9 @@ def block_b():
                     # Knoepfe fuer die Ablaeufe (Gerhard, 20.09.2026, S8)
                     "ablaeufe",
                     # Chartmuster der Etappe 1 (Gerhard, 20.09.2026)
-                    "chartmuster"]
+                    "chartmuster",
+                    # Katalog der EODHD-Daten (Gerhard, 20.09.2026, S11)
+                    "eodhd_katalog"]
     for name in mit_schalter:
         r = subprocess.run([sys.executable, f"{name}.py", "--selbsttest"],
                            capture_output=True, text=True, cwd=WURZEL,
@@ -2606,9 +2608,29 @@ def block_h():
                f"Ausloeser {list(_zw_an.keys())}")
     except Exception as e:
         pruefe("H", "Branchen-Zuordnung: Ablauf lesbar", False, f"{type(e).__name__}: {e}")
+    # S11 (Gerhard, 20.09.2026): Der Katalog der EODHD-Daten entsteht aus dem
+    # schon abgelegten Vollabzug, ohne EODHD-Schluessel und ohne Abruf, ohne
+    # Artefakt, und liegt nur im privaten Datenrepo, neben dem Register.
+    try:
+        _ka_text = (_wf / "eodhd_katalog.yml").read_text(encoding="utf-8")
+        _ka = yaml.safe_load(_ka_text)
+        _ka_an = _ka.get("on") or _ka.get(True) or {}
+        _ka_quelle = ((_ka_an.get("workflow_run") or {}).get("workflows") or [None])[0]
+        _ka_name = yaml.safe_load((_wf / "eodhd_voll.yml").read_text(encoding="utf-8")).get("name")
+        pruefe("H", "EODHD-Katalog: nach dem Vollabzug oder von Hand, nur mit dem Datenrepo-Token, ohne "
+                    "EODHD-Schluessel und ohne Artefakt, Ablage im privaten Datenrepo",
+               sorted(_ka_an.keys()) == ["workflow_dispatch", "workflow_run"] and _ka_quelle == _ka_name
+               and "EODHD_API_KEY" not in _ka_text and "upload-artifact" not in _ka_text
+               and "secrets.DATEN_TOKEN" in _ka_text and "repository: mat-schmuck/heliot-daten" in _ka_text
+               and "git add -A -- eodhd_voll/katalog.json eodhd_voll/katalog.md" in _ka_text
+               and "gh release upload" not in _ka_text,
+               f"Ausloeser {sorted(_ka_an.keys())}, nach {_ka_quelle}")
+    except Exception as e:
+        pruefe("H", "EODHD-Katalog: Ablauf lesbar", False, f"{type(e).__name__}: {e}")
     _vernetzt = []
     for _modul in ("scanner_daten.py", "scanner_ansicht.py", "scanner_noetig.py", "kennzahlen_konsens.py",
-                   "kennzahlen_short.py", "kennzahlen_gruppen.py", "zuordnung_bauen.py", "chartmuster.py"):
+                   "kennzahlen_short.py", "kennzahlen_gruppen.py", "zuordnung_bauen.py", "chartmuster.py",
+                   "eodhd_katalog.py"):
         _code = "\n".join(z for z in (WURZEL / _modul).read_text(encoding="utf-8").splitlines()
                           if not z.lstrip().startswith("#"))
         for _wort in ("NTFY_" + "TOPIC", "ntfy." + "sh", "requests." + "post(", "traderfox_" + "alarm",

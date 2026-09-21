@@ -1,0 +1,125 @@
+name: EODHD-Katalog
+
+# Gerhard, 20.09.2026, S11: Die EODHD-Daten sollen so katalogisiert sein, dass
+# "Heliot und der Scanner selbst wissen, was drinsteht und wo es liegt".
+# Dieser Ablauf baut den Katalog (eodhd_katalog.py) aus dem, was der
+# Vollabzug schon im privaten Datenrepo abgelegt hat: Register, Symbollisten,
+# Release-Archive, Konsens-Historie und Zuordnung. Er fragt EODHD NICHT an und
+# braucht keinen EODHD-Schluessel. Der Katalog geht nach
+# eodhd_voll/katalog.json (fuer Programme) und eodhd_voll/katalog.md (zum
+# Lesen) im privaten Datenrepo; er nennt nie einen Wert, nur Felder, Anteile,
+# Stichtage und Zahlen. Das Log nennt nur Zahlen: Die Daten sind lizenziert,
+# dieses Repo oeffentlich. Bewusst KEIN Artefakt.
+#
+# Ausloeser: nach jedem Lauf des Vollabzugs; neu gebaut wird nur, wenn sich
+# dessen Register seit dem letzten Katalog geaendert hat. Von Hand auch
+# erzwungen.
+
+on:
+  workflow_run:
+    workflows: ["EODHD-Vollabzug (bis zum Ende des Abos)"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      erzwingen:
+        description: "Auch bauen, wenn sich das Register nicht geaendert hat (ja/nein)"
+        required: false
+        default: "nein"
+
+concurrency:
+  group: eodhd-katalog
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  katalog:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Ist das Datenrepo-Token da?
+        id: token
+        env:
+          DATEN_TOKEN: ${{ secrets.DATEN_TOKEN }}
+        run: |
+          if [ -z "$DATEN_TOKEN" ]; then
+            echo "Secret DATEN_TOKEN fehlt; ohne Zugang zum privaten Datenrepo wird nichts gebaut."
+            echo "da=nein" >> "$GITHUB_OUTPUT"
+          else
+            echo "da=ja" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.token.outputs.da == 'ja'
+        with:
+          ref: main
+
+      - uses: actions/checkout@v4
+        if: steps.token.outputs.da == 'ja'
+        with:
+          repository: mat-schmuck/heliot-daten
+          token: ${{ secrets.DATEN_TOKEN }}
+          path: daten
+
+      # Nur Standardbibliothek, keine Abhaengigkeiten.
+      - uses: actions/setup-python@v5
+        if: steps.token.outputs.da == 'ja'
+        with:
+          python-version: "3.12"
+
+      - name: Selbsttest
+        if: steps.token.outputs.da == 'ja'
+        run: python eodhd_katalog.py --selbsttest
+
+      - name: Noetig?
+        id: noetig
+        if: steps.token.outputs.da == 'ja'
+        env:
+          ERZWINGEN: ${{ github.event.inputs.erzwingen || 'nein' }}
+        run: |
+          noetig=$(python eodhd_katalog.py --noetig --daten daten)
+          if [ "$ERZWINGEN" = "ja" ]; then
+            noetig=ja
+          fi
+          echo "Neu bauen: $noetig"
+          echo "noetig=$noetig" >> "$GITHUB_OUTPUT"
+
+      - name: Archive des Vollabzugs holen
+        if: steps.token.outputs.da == 'ja' && steps.noetig.outputs.noetig == 'ja'
+        env:
+          GH_TOKEN: ${{ secrets.DATEN_TOKEN }}
+        run: |
+          mkdir -p .cache/eodhd
+          python eodhd_katalog.py --archive-liste --daten daten > .cache/archive.txt
+          echo "Benoetigte Archive: $(wc -l < .cache/archive.txt)"
+          while IFS='|' read -r RELEASE ARCHIV; do
+            if [ -z "$ARCHIV" ]; then
+              continue
+            fi
+            gh release download "$RELEASE" --repo mat-schmuck/heliot-daten --pattern "$ARCHIV" --dir .cache/eodhd --clobber
+          done < .cache/archive.txt
+          echo "Heruntergeladen: $(ls .cache/eodhd | wc -l) Archive, $(du -sm .cache/eodhd | cut -f1) MB"
+
+      - name: Katalog bauen und ins Datenrepo legen
+        if: steps.token.outputs.da == 'ja' && steps.noetig.outputs.noetig == 'ja'
+        run: |
+          python eodhd_katalog.py --bauen --daten daten --archive .cache/eodhd
+          cd daten
+          git config user.name "pattern-scanner"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A -- eodhd_voll/katalog.json eodhd_voll/katalog.md
+          if git diff --cached --quiet; then
+            echo "Katalog unveraendert."
+            exit 0
+          fi
+          git commit -q -m "EODHD-Katalog $(date -u +%Y-%m-%d_%H%MZ)"
+          for versuch in 1 2 3; do
+            if git push -q; then
+              echo "Abgelegt (Versuch $versuch)."
+              exit 0
+            fi
+            git pull -q --rebase
+          done
+          echo "Der Katalog liess sich nach drei Anlaeufen nicht ablegen."
+          exit 1
