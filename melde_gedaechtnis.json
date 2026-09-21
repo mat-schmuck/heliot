@@ -174,7 +174,7 @@
     "FTK|Fallback: MA50-Pullback": "draussen",
     "ESTC|Fallback: MA50-Pullback": "draussen",
     "RNG|HTF Innen-Einstieg": "drin",
-    "MRNA|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "MRNA|Fallback: 20-Tage-Hoch (Pivot)": "draussen",
     "MTRN|EMA Crossback": "drin",
     "TSEM|Fallback: MA50-R\u00fcckeroberung": "draussen",
     "ZS|Cup & Handle (Wochenbasis)": "drin",
@@ -350,7 +350,8 @@
     "UEBER|TSEM|Fallback: MA50-R\u00fcckeroberung": "2026-09-21",
     "UEBER|UMAC|Fallback: MA50-R\u00fcckeroberung": "2026-09-21",
     "UEBER|DOCN|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
-    "UEBER|AMRX|Fallback: 52W-Hoch-Breakout": "2026-09-21"
+    "UEBER|AMRX|Fallback: 52W-Hoch-Breakout": "2026-09-21",
+    "UEBER|MRNA|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21"
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-09-21"
