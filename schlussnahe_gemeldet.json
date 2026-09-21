@@ -418,5 +418,21 @@
    "zeichen": null,
    "text": "INFORMATION: VIST; Rectangle Top; Kurs 70.21 unter der 8-Tage-EMA 73.59; reiner Hinweis, kein Ausstiegssignal; Kurs 70,21, seit Trigger -2,9 % gleich -0,3 R"
   }
+ ],
+ "geprueft": "2026-09-21",
+ "zurueckgenommen": [
+  "ELF|1",
+  "AMD|EMA Crossback",
+  "AMD|Fallback: 20-Tage-Hoch (Pivot)",
+  "AMD|Rectangle Top",
+  "AMD|SPRING-2026-09-14",
+  "ASX|1",
+  "CHRD|1",
+  "MXL|Fallback: 20-Tage-Hoch (Pivot)",
+  "MXL|Fallback: MA50-Rückeroberung",
+  "NUTX|Cup & Handle (Wochenbasis)",
+  "NUTX|Fallback: 52W-Hoch-Breakout",
+  "PAY|Rectangle Top",
+  "RLAY|Fallback: MA50-Rückeroberung"
  ]
 }

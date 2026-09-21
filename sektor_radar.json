@@ -1,7 +1,22 @@
 {
- "gebaut_am": "2026-09-20T22:10:04",
- "handelstag": "2026-09-18",
+ "gebaut_am": "2026-09-21T22:11:24",
+ "handelstag": "2026-09-21",
  "geladen": 36,
  "unfertig": [],
- "treffer": []
+ "treffer": [
+  {
+   "etf": "FINX",
+   "name": "Fintech",
+   "richtung": "hoch",
+   "volumen_pct": 90.9,
+   "kurs": 25.99
+  },
+  {
+   "etf": "XLC",
+   "name": "Communication Services",
+   "richtung": "hoch",
+   "volumen_pct": 66.0,
+   "kurs": 114.75
+  }
+ ]
 }
