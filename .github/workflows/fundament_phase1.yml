@@ -2,11 +2,37 @@ name: Fundament Phase 1
 
 # Gerhards Fundamentaldaten-Tool, Phase 1 (Freigabe 01.09.2026): amtliche
 # XBRL-Fakten der SEC normalisieren und gegen echte Berichte validieren.
-# Nur per Hand ausloesbar. Laeuft auf dem Branch, von dem es gestartet
-# wird (Bausicherheit ueber Branches, F6). Ergebnisse als Artefakt; der
+# Per Hand laeuft es auf dem Branch, von dem es gestartet wird
+# (Bausicherheit ueber Branches, F6). Ergebnisse als Artefakt; der
 # Vollmodus legt die Parquet-Bestaende zusaetzlich als Release ab.
+#
+# JEDE NACHT VON SELBST (Mathias, 21.09.2026, zu Gerhards Frage S3 vom
+# 20.09.2026 "Holt das Tool kuenftige Quartalsberichte automatisch ein?").
+# Bis dahin lief der Vollmodus nur per Hand: Seit dem 08.09. waren 69
+# amtlich gewordene Quartale der Wochenliste nicht im Fundament. Die SEC
+# stellt companyfacts.zip jede Nacht neu zusammen; der Zeitplan holt es an
+# den Abenden Montag bis Freitag nach dem Handelsschluss in New York, damit
+# der Nachtscan um 18:00 New York schon mit dem frischen Bestand rechnet.
+#  * Der Zeitplan startet immer vom Hauptzweig; die Skripte liegen auf
+#    fundament-phase1 und werden deshalb dann ausdruecklich ausgecheckt.
+#  * GitHubs Zeitplan verspaetet sich oft, deshalb mehrere Termine am Abend.
+#    Gerechnet wird nur, wenn das letzte veroeffentlichte Release aelter als
+#    acht Stunden ist (die Termine eines Abends liegen sieben Stunden
+#    auseinander) und in New York nicht gerade gehandelt wird.
+#  * Das Release entsteht als Entwurf und wird erst mit allen Dateien
+#    veroeffentlicht: Die Leser (ibd_ratings.lade_kennzahlen) holen
+#    releases/latest und saehen sonst ein halb hochgeladenes Release.
+#  * Behalten werden die sieben neuesten Releases; aeltere Bestaende lassen
+#    sich aus companyfacts jederzeit neu rechnen, weil es jede Fassung eines
+#    Wertes samt Einreichungstag fuehrt.
 
 on:
+  schedule:
+    # 20:37 bis 23:37 UTC Montag bis Freitag und 00:37 bis 03:37 UTC Dienstag
+    # bis Samstag: die Abende Montag bis Freitag in New York, im Sommer wie im
+    # Winter. Ein voller Lauf dauert rund eine halbe Stunde.
+    - cron: "37 20-23 * * 1-5"
+    - cron: "37 0-3 * * 2-6"
   workflow_dispatch:
     inputs:
       modus:
@@ -29,11 +55,57 @@ permissions:
   contents: write
 
 jobs:
+  pruefen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      los: ${{ steps.faellig.outputs.los }}
+    steps:
+      - name: Faellig?
+        id: faellig
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ANLASS: ${{ github.event_name }}
+        run: |
+          if [ "$ANLASS" != "schedule" ]; then
+            echo "Von Hand gestartet, laeuft immer."
+            echo "los=ja" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          ny_tag=$(TZ=America/New_York date +%u)
+          ny_zeit=$(TZ=America/New_York date +%H%M)
+          ny_min=$((10#$ny_zeit))
+          if [ "$ny_tag" -le 5 ] && [ "$ny_min" -ge 900 ] && [ "$ny_min" -lt 1605 ]; then
+            echo "In New York ist es $ny_zeit an einem Werktag, dort wird gehandelt; kein Lauf."
+            echo "los=nein" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          letzt=$(gh release list --repo "$GITHUB_REPOSITORY" --limit 100 --json tagName,createdAt,isDraft \
+            --jq '[.[] | select(.tagName | startswith("fundament-roh-")) | select(.isDraft | not)] | sort_by(.createdAt) | last | .createdAt // ""')
+          if [ -n "$letzt" ]; then
+            alter=$(( $(date -u +%s) - $(date -u -d "$letzt" +%s) ))
+            if [ "$alter" -lt 28800 ]; then
+              echo "Das letzte Release entstand $letzt, vor weniger als acht Stunden; kein Lauf."
+              echo "los=nein" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          fi
+          echo "Letztes Release: ${letzt:-keines}; in New York $ny_zeit. Der Lauf beginnt."
+          echo "los=ja" >> "$GITHUB_OUTPUT"
+
   lauf:
+    needs: pruefen
+    if: needs.pruefen.outputs.los == 'ja'
     runs-on: ubuntu-latest
     timeout-minutes: 340
+    env:
+      # Der Zeitplan kennt keine Eingaben: Er rechnet immer voll.
+      MODUS: ${{ inputs.modus || 'voll' }}
+      HOECHSTENS: ${{ inputs.hoechstens || '' }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'schedule' && 'fundament-phase1' || github.ref }}
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -45,29 +117,47 @@ jobs:
         env:
           SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
         run: |
-          if [ -n "${{ inputs.hoechstens }}" ]; then
-            python fundament_lauf.py --modus "${{ inputs.modus }}" --hoechstens "${{ inputs.hoechstens }}"
+          if [ -n "$HOECHSTENS" ]; then
+            python fundament_lauf.py --modus "$MODUS" --hoechstens "$HOECHSTENS"
           else
-            python fundament_lauf.py --modus "${{ inputs.modus }}"
+            python fundament_lauf.py --modus "$MODUS"
           fi
       - name: Berichte als Artefakt
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: fundament-${{ inputs.modus }}-${{ github.run_id }}
+          name: fundament-${{ env.MODUS }}-${{ github.run_id }}
           path: |
             fundament_ausgabe/*.md
             fundament_ausgabe/*.json
             fundament_ausgabe/*.csv
           if-no-files-found: warn
+          retention-days: 14
       - name: Release mit den Parquet-Bestaenden (nur voll)
-        if: inputs.modus == 'voll' && inputs.hoechstens == ''
+        if: env.MODUS == 'voll' && env.HOECHSTENS == ''
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           rm -f fundament_daten/companyfacts.zip
+          # Liegen gebliebene Entwuerfe eines abgebrochenen Laufs zuerst weg.
+          gh release list --repo "$GITHUB_REPOSITORY" --limit 100 --json tagName,isDraft \
+            --jq '.[] | select(.tagName | startswith("fundament-roh-")) | select(.isDraft) | .tagName' |
+          while read -r entwurf; do
+            gh release delete "$entwurf" --repo "$GITHUB_REPOSITORY" --yes && echo "Entwurf $entwurf entfernt."
+          done
           tag="fundament-roh-$(date -u +%Y%m%d-%H%M)"
+          zweig="$(git rev-parse --abbrev-ref HEAD)"
           gh release create "$tag" fundament_ausgabe/*.parquet fundament_ausgabe/fundament_firmen.csv fundament_ausgabe/abdeckung.md fundament_ausgabe/fundament_fehler.json \
-            --target "${{ github.sha }}" \
+            --repo "$GITHUB_REPOSITORY" \
+            --draft \
+            --target "$(git rev-parse HEAD)" \
             --title "Fundament Rohbestand $tag" \
-            --notes "Phase 1, Vollarchiv companyfacts der SEC, normalisiert (Kennzahlen je Jahr) samt Rohdaten aller Felder je Jahr. Erzeugt vom Lauf ${{ github.run_id }} auf Branch ${{ github.ref_name }}."
+            --notes "Phase 1, Vollarchiv companyfacts der SEC, normalisiert (Kennzahlen je Jahr) samt Rohdaten aller Felder je Jahr. Erzeugt vom Lauf ${{ github.run_id }} (${{ github.event_name }}) auf Branch $zweig."
+          gh release edit "$tag" --repo "$GITHUB_REPOSITORY" --draft=false --latest
+          echo "Release $tag veroeffentlicht."
+          # Behalten werden die sieben neuesten veroeffentlichten Releases.
+          gh release list --repo "$GITHUB_REPOSITORY" --limit 100 --json tagName,isDraft,createdAt \
+            --jq '[.[] | select(.tagName | startswith("fundament-roh-")) | select(.isDraft | not)] | sort_by(.createdAt) | reverse | .[7:] | .[].tagName' |
+          while read -r alt; do
+            gh release delete "$alt" --repo "$GITHUB_REPOSITORY" --cleanup-tag --yes && echo "Aelteres Release $alt entfernt."
+          done
