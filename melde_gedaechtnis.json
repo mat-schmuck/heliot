@@ -193,7 +193,7 @@
     "DOCN|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "FRNM|Fallback: 52W-Hoch-Breakout": "drin",
     "FRNM|Fallback: 20-Tage-Hoch (Pivot)": "drin",
-    "AXTI|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "AXTI|Fallback: 20-Tage-Hoch (Pivot)": "draussen",
     "NTRA|Fallback: 52W-Hoch-Breakout": "drin",
     "BAP|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "BRKR|Rectangle Top": "drin",
@@ -341,7 +341,8 @@
     "CGON|Rectangle Top": "2026-09-21",
     "BEST|CGON|Rectangle Top": "2026-09-21",
     "AXTI|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
-    "BEST|AXTI|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21"
+    "BEST|AXTI|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
+    "UEBER|AXTI|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21"
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-09-21"
