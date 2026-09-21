@@ -189,7 +189,11 @@
     "FTNT|Rectangle Top": "drin",
     "ADPT|Fallback: 52W-Hoch-Breakout": "drin",
     "ADPT|Fallback: 20-Tage-Hoch (Pivot)": "drin",
-    "SLAB|Fallback: MA50-Pullback": "drin"
+    "SLAB|Fallback: MA50-Pullback": "drin",
+    "DOCN|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "FRNM|Fallback: 52W-Hoch-Breakout": "drin",
+    "FRNM|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "AXTI|Fallback: 20-Tage-Hoch (Pivot)": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -322,7 +326,9 @@
     "TEIL|AMD|EMA Crossback": "2026-09-21",
     "NTSK|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
     "BEST|NTSK|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
-    "TEIL|AXTI|Fallback: MA50-R\u00fcckeroberung": "2026-09-21"
+    "TEIL|AXTI|Fallback: MA50-R\u00fcckeroberung": "2026-09-21",
+    "DOCN|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
+    "BEST|DOCN|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21"
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-09-21"
