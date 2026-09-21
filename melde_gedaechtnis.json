@@ -2,7 +2,7 @@
   "fenster_tag": "2026-09-21",
   "fenster": {
     "PBF|Fallback: MA50-Pullback": "draussen",
-    "CVE|Fallback: MA50-Pullback": "draussen",
+    "CVE|Fallback: MA50-Pullback": "drin",
     "HNGE|Cup & Handle (Wochenbasis)": "drin",
     "HNGE|Rectangle Top": "drin",
     "KNTK|Fallback: MA50-Pullback": "drin",
@@ -147,7 +147,7 @@
     "COHU|Fallback: MA50-Pullback": "draussen",
     "DUOL|Fallback: MA50-Pullback": "draussen",
     "ELMT|Fallback: MA50-Pullback": "draussen",
-    "FROG|Fallback: MA50-Pullback": "draussen",
+    "FROG|Fallback: MA50-Pullback": "drin",
     "FTRE|Fallback: MA50-Pullback": "draussen",
     "LBRX|Fallback: MA50-R\u00fcckeroberung": "drin",
     "MEDP|Fallback: MA50-Pullback": "draussen",
@@ -174,7 +174,7 @@
     "FTK|Fallback: MA50-Pullback": "draussen",
     "ESTC|Fallback: MA50-Pullback": "draussen",
     "RNG|HTF Innen-Einstieg": "drin",
-    "MRNA|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "MRNA|Fallback: 20-Tage-Hoch (Pivot)": "draussen",
     "MTRN|EMA Crossback": "drin",
     "TSEM|Fallback: MA50-R\u00fcckeroberung": "drin",
     "ZS|Cup & Handle (Wochenbasis)": "drin",
@@ -367,7 +367,8 @@
     "TWLO|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
     "BEST|TWLO|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
     "TWLO|Fallback: 52W-Hoch-Breakout": "2026-09-21",
-    "BEST|TWLO|Fallback: 52W-Hoch-Breakout": "2026-09-21"
+    "BEST|TWLO|Fallback: 52W-Hoch-Breakout": "2026-09-21",
+    "UEBER|MRNA|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21"
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-09-21"
