@@ -673,7 +673,10 @@ CFG = {
         # nur ETFs und bleiben draussen).
         "quelle": "https://www.nasdaqtrader.com/dynamic/SymDir/nasdaqlisted.txt",
         "quelle_andere": "https://www.nasdaqtrader.com/dynamic/SymDir/otherlisted.txt",
-        "andere_boersen": {"N": "NYSE", "A": "NYSE American"},
+        # Gerhard, 13.09.2026, Entscheidung 3, bestaetigt am 15.09.2026 mit
+        # Antwort N2: dazu die Cboe (Exchange Z). Nach den Filtern bleibt dort
+        # heute genau Cboe Global Markets uebrig.
+        "andere_boersen": {"N": "NYSE", "A": "NYSE American", "Z": "Cboe"},
         # R2: Mindestkurs 15 Dollar, Tagesumsatz 10 Millionen Dollar im
         # 50-Tage-Schnitt; ETFs und Fonds draussen, SPACs erst nach der
         # Uebernahme. Seit 12.09.2026 abends NUR KENNZEICHNUNG ("im

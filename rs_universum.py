@@ -21,6 +21,23 @@ WAS GERECHNET WIRD
       tragen bei NYSE ein Dollarzeichen im Symbol, Optionsscheine,
       Einheiten und Rechte enden auf .W, .U und .R); ADRs bleiben drin
       (Antwort 8: Auslaender laufen ueberall voll mit).
+      E3 (Gerhard, 13.09.2026, Entscheidung 3, bestaetigt am 15.09.2026 mit
+      Antwort N2 "JA, nur Cboe Global Markets"): dazu die Cboe (Exchange Z).
+      Von ihren 1.639 Zeilen bleibt nach den Filtern genau Cboe Global
+      Markets uebrig; die uebrigen sind ETFs, ETNs, ein Goldtrust und
+      Einheiten. Kommt dort eine Stammaktie dazu, laeuft sie kuenftig mit,
+      und die Zahl je Boerse im Befund zeigt es.
+  E2 (Gerhard, 13.09.2026, Entscheidung 2, bestaetigt am 15.09.2026 mit
+      Antwort N1): Fondsvehikel und Mantelgesellschaften gehoeren nicht in
+      den Bezug, auch wenn das Verzeichnis sie als Stammaktie fuehrt. Zwei
+      Wege, beide zaehlen: der NAME (der Nasdaq-Zusatz "Closed End Fund"
+      sowie die Woerter "Fund" und "Acquisition", siehe E2_NAME) und der
+      TYP aus der eigenen Zuordnungsliste (Entscheidung 10, siehe
+      typ_filter). Gemessen am 21.09.2026: von 5.666 Titeln fallen 317
+      heraus, 214 ueber beide Wege, 81 nur ueber den Namen, 22 nur ueber
+      den Typ. Gerhard nimmt in Kauf, dass Business Development Companies
+      ohne diese Woerter im Namen weiter mitlaufen. Ohne Zuordnungsliste
+      greift nur der Name, und der Befund sagt es.
   R2  Schwellen: Mindestkurs 15 Dollar und Tagesumsatz von 10 Millionen
       Dollar im 50-Tage-Schnitt. Seit 12.09.2026 abends NUR KENNZEICHNUNG
       ("im Universum"): Die Vergleichsbasis fuer das Perzentil sind ALLE
@@ -95,6 +112,10 @@ import red_to_green
 
 CFGU = CFG["rs_universum"]
 DATEI = "rs_universum.json"
+# Die Zuordnungsliste der Branchen und Typen (Entscheidung 10) liegt im
+# PRIVATEN Datenrepo; die Ablaeufe holen sie mit dem Datenrepo-Token hierher.
+# Fehlt sie, greift von E2 nur der Namensteil, und der Befund sagt es.
+ZUORDNUNG = os.path.join(".cache", "zuordnung", "branchen.json")
 # Die Mappe des letzten Nachtscans; ihre Aktien sind die "listen" eines
 # Baus ohne Scan (Etappe 0, Punkt 2).
 MAPPE = "kaufpunkte_aktuell.xlsx"
@@ -104,8 +125,16 @@ MAPPE = "kaufpunkte_aktuell.xlsx"
 # ausdruecklich drin.
 AUSSCHLUSS = re.compile(
     r"warrant|\brights?\b|\bunits?\b|preferred|\bnotes?\b|debenture|subordinated|"
-    r"\bbonds?\b|acquisition (corp|co\b|company|holdings)|\bSPAC\b|trust preferred|"
+    r"\bbonds?\b|\bSPAC\b|trust preferred|"
     r"capital securities|\bETN\b", re.I)
+
+# E2, der Namensteil (Gerhard, Antwort N1 vom 15.09.2026): "Der Zusatz Closed
+# End Fund und die Woerter Fund und Acquisition im Namen duerfen einen Titel
+# aus dem Bezug nehmen, zusaetzlich zum Typ." Die Wortgrenzen halten
+# Firmennamen wie Fundamental oder Refund draussen; gegengelesen am
+# 21.09.2026 an allen 81 Titeln, die NUR ueber den Namen herausfallen: lauter
+# Closed-End-Fonds, BDCs mit diesem Zusatz und Mantelgesellschaften.
+E2_NAME = re.compile(r"closed end fund|\bfunds?\b|\bacquisitions?\b", re.I)
 
 
 # ---------------------------------------------------------------------------
@@ -161,12 +190,42 @@ def _verzeichnis(text, symbol_spalte, boerse_von, leise, titel):
             raus("kein Stammtitel (Symbol: Vorzug, Optionsschein, Einheit, Recht)"); continue
         if AUSSCHLUSS.search(name):
             raus("kein Stammtitel (Optionsschein, Einheit, Recht, Vorzug, Anleihe, SPAC)"); continue
+        if E2_NAME.search(name):
+            raus("Fondsvehikel oder Mantel laut Name (Entscheidung 2)"); continue
         liste.append({"symbol": sym, "name": name, "boerse": boerse,
                       "markt": str(z.get("Market Category") or "").strip()})
     if not leise:
         print(f"  {titel}: {len(zeilen)} Zeilen, {len(liste)} Stammaktien; "
               + "; ".join(f"{k} {v}" for k, v in gruende.items()))
     return liste, gruende
+
+
+def typ_filter(liste, zuordnung_pfad=None, zuordnung=None, befund=None):
+    """E2, der Typ-Teil: Was die eigene Zuordnungsliste (Entscheidung 10)
+    nicht als Stammaktie fuehrt, gehoert nicht in den Bezug.
+    -> (gefilterte Liste, Befund). Der Befund nennt NUR Zahlen: Die Liste
+    stammt aus dem lizenzierten EODHD-Abzug, rs_universum.json ist
+    oeffentlich.
+    Ohne Liste bleibt die Liste unveraendert, und der Befund sagt warum."""
+    import kennzahlen_gruppen as kg
+    if zuordnung is None and zuordnung_pfad:
+        zuordnung, befund = kg.zuordnung_lesen(zuordnung_pfad)
+    befund = befund or {}
+    if not zuordnung:
+        return liste, {"status": "nicht verfuegbar",
+                       "grund": befund.get("grund") or "die eigene Zuordnungsliste der Branchen liegt nicht vor"}
+    bleibt, raus, ohne_eintrag = [], 0, 0
+    for e in liste:
+        typ = str((zuordnung.get(kg.schluessel(e["symbol"])) or {}).get("typ") or "").strip()
+        if not typ:
+            ohne_eintrag += 1
+            bleibt.append(e)
+        elif typ.lower() == "common stock":
+            bleibt.append(e)
+        else:
+            raus += 1
+    return bleibt, {"status": "ok", "stand": befund.get("stand"), "eintraege": befund.get("eintraege"),
+                    "geprueft": len(liste), "raus": raus, "ohne_eintrag": ohne_eintrag}
 
 
 def _text_holen(url):
@@ -680,7 +739,8 @@ def _marktbreite_rechnen(gruppen, kurse, leise=True):
 
 
 def bauen(loaded=None, pfad=DATEI, holen_liste=None, holen_kurse=None, leise=False, alt=None,
-          liste_text=None, liste_text_andere=None, jetzt=None, listen_ticker=None, holen_allzeit=None):
+          liste_text=None, liste_text_andere=None, jetzt=None, listen_ticker=None, holen_allzeit=None,
+          zuordnung_pfad=None, zuordnung=None):
     """Der naechtliche Lauf. loaded: {Ticker: (df, Firma)} des Nachtscans,
     dessen Aktien GEGEN den Bezug gerechnet werden (Luecke 5).
 
@@ -699,6 +759,15 @@ def bauen(loaded=None, pfad=DATEI, holen_liste=None, holen_kurse=None, leise=Fal
     liste2, gruende2 = andere_liste(text=liste_text_andere, holen=holen_liste, leise=leise)
     bekannt = {e["symbol"] for e in liste}
     liste = liste + [e for e in liste2 if e["symbol"] not in bekannt]
+    # E2, Typ-Teil: nach dem Namensfilter der Verzeichnisse.
+    if zuordnung is None and not zuordnung_pfad and os.path.exists(ZUORDNUNG):
+        zuordnung_pfad = ZUORDNUNG
+    liste, typ_befund = typ_filter(liste, zuordnung_pfad=zuordnung_pfad, zuordnung=zuordnung)
+    if not leise:
+        print(f"  Typ laut Zuordnungsliste: {typ_befund.get('status')}"
+              + (f", {typ_befund['raus']} von {typ_befund['geprueft']} Titeln nicht als Stammaktie gefuehrt, "
+                 f"{typ_befund['ohne_eintrag']} ohne Eintrag" if typ_befund.get("status") == "ok"
+                 else f" ({typ_befund.get('grund')})"))
     symbole = [e["symbol"] for e in liste]
     boerse_von = {e["symbol"]: e["boerse"] for e in liste}
     indizes_namen = list(cfg["indizes"]) + [cfg["markt_index"]]
@@ -872,7 +941,8 @@ def bauen(loaded=None, pfad=DATEI, holen_liste=None, holen_kurse=None, leise=Fal
                     f"eine Kennzeichnung, keine Vergleichsbasis. Titel mit 64 bis 252 Schlusskursen tragen ein "
                     f"vorläufiges RS aus den vorhandenen Quartalen, gekennzeichnet und nicht Teil des Bezugs. "
                     f"Kurse splitbereinigt, nicht dividendenbereinigt."),
-        "universum": {"quelle": cfg["quelle"], "quelle_andere": cfg["quelle_andere"], "verzeichnis": len(liste),
+        "universum": {"quelle": cfg["quelle"], "quelle_andere": cfg["quelle_andere"], "typ_filter": typ_befund,
+                      "verzeichnis": len(liste),
                       "ausgeschlossen": gruende, "ausgeschlossen_andere": gruende2,
                       "geladen": len(geladen), "abdeckung": round(abdeckung, 4),
                       "mindest_abdeckung": float(cfg["mindest_abdeckung"]),
@@ -1020,11 +1090,18 @@ def selbsttest() -> int:
             "AACI|Armada Acquisition Corp. III - Class A Ordinary Share|G|N|N|100|N|N\n"
             "AACG|ATA Creativity Global - American Depositary Shares|S|N|N|100|N|N\n"
             "BRK.B|Berkshire Class B - Common Stock|Q|N|N|100|N|N\n"
+            "ARCC|Ares Capital Corporation - Closed End Fund|Q|N|N|100|N|N\n"
+            "FUNDA|Beispiel Income Fund Inc. - Common Stock|Q|N|N|100|N|N\n"
+            "FUNDX|Fundamental Systems Inc. - Common Stock|Q|N|N|100|N|N\n"
             "File Creation Time: 0911202621:31|||||||\n")
     liste, gruende = nasdaq_liste(text=text)
     p("Verzeichnis: ETF, Test-Titel, Optionsschein und SPAC fallen, ADR und Stammaktie bleiben",
-      [e["symbol"] for e in liste] == ["AAPL", "AACG", "BRK.B"] and gruende.get("ETF") == 1
+      [e["symbol"] for e in liste] == ["AAPL", "AACG", "BRK.B", "FUNDX"] and gruende.get("ETF") == 1
       and gruende.get("Test-Titel") == 1, f"{[e['symbol'] for e in liste]} {gruende}")
+    p("E2, Namensteil: Closed End Fund, Fund und Acquisition fallen; Fundamental bleibt",
+      gruende.get("Fondsvehikel oder Mantel laut Name (Entscheidung 2)") == 3
+      and "FUNDX" in [e["symbol"] for e in liste] and "ARCC" not in [e["symbol"] for e in liste]
+      and "FUNDA" not in [e["symbol"] for e in liste], f"{[e['symbol'] for e in liste]} {gruende}")
     p("Yahoo-Schreibweise: BRK.B wird BRK-B", yahoo_symbol("BRK.B") == "BRK-B")
     text_andere = ("ACT Symbol|Security Name|Exchange|CQS Symbol|ETF|Round Lot Size|Test Issue|NASDAQ Symbol\n"
                    "IBM|International Business Machines Corporation Common Stock|N|IBM|N|100|N|IBM\n"
@@ -1036,13 +1113,35 @@ def selbsttest() -> int:
                    "BE|Bloom Energy Corporation Class A Common Stock|N|BE|N|100|N|BE\n"
                    "LODE|Comstock Inc. Common Stock|A|LODE|N|100|N|LODE\n"
                    "ZTST|Test Title|N|ZTST|N|100|Y|ZTST\n"
+                   "CBOE|Cboe Global Markets, Inc. Common Stock|Z|CBOE|N|100|N|CBOE\n"
+                   "MLPB|ETRACS Alerian MLP Index ETN|Z|MLPB|N|100|N|MLPB\n"
+                   "BAR|GraniteShares Gold Trust|Z|BAR|Y|100|N|BAR\n"
+                   "ESRT.U|Empire State Realty OP Units|Z|ESRT.U|N|100|N|ESRT=U\n"
                    "File Creation Time: 0911202621:31|||||||\n")
     liste2, gruende2 = andere_liste(text=text_andere)
     p("NYSE-Verzeichnis: Stammaktien von NYSE und NYSE American bleiben, Arca, ETF, Vorzug, Optionsschein, Test fallen",
-      [(e["symbol"], e["boerse"]) for e in liste2] == [("IBM", "NYSE"), ("BRK.B", "NYSE"), ("BE", "NYSE"), ("LODE", "NYSE American")]
-      and gruende2.get("andere Boerse") == 1 and gruende2.get("ETF") == 1 and gruende2.get("Test-Titel") == 1
-      and gruende2.get("kein Stammtitel (Symbol: Vorzug, Optionsschein, Einheit, Recht)") == 2,
+      [(e["symbol"], e["boerse"]) for e in liste2][:4] == [("IBM", "NYSE"), ("BRK.B", "NYSE"), ("BE", "NYSE"), ("LODE", "NYSE American")]
+      and gruende2.get("andere Boerse") == 1 and gruende2.get("ETF") == 2 and gruende2.get("Test-Titel") == 1
+      and gruende2.get("kein Stammtitel (Symbol: Vorzug, Optionsschein, Einheit, Recht)") == 3,
       f"{[e['symbol'] for e in liste2]} {gruende2}")
+    p("E3: von der Cboe bleibt Cboe Global Markets, ETN, Goldtrust und Einheiten fallen (Entscheidung 3, Antwort N2)",
+      [(e["symbol"], e["boerse"]) for e in liste2 if e["boerse"] == "Cboe"] == [("CBOE", "Cboe")],
+      f"{[(e['symbol'], e['boerse']) for e in liste2]}")
+    # E2, Typ-Teil (Gerhard, Entscheidung 2, Antwort N1)
+    zu_probe = {"AAPL": {"typ": "Common Stock"}, "BRK.B": {"typ": "FUND"}, "BE": {"typ": "Preferred Stock"}}
+    bleibt_t, bf_t = typ_filter([{"symbol": s, "name": s} for s in ("AAPL", "BRK.B", "BE", "NEUX")],
+                                zuordnung=zu_probe, befund={"stand": "2026-09-21", "eintraege": 3})
+    p("E2, Typteil: was die Zuordnungsliste nicht als Stammaktie fuehrt, faellt; wer fehlt, bleibt",
+      [e["symbol"] for e in bleibt_t] == ["AAPL", "NEUX"] and bf_t["raus"] == 2 and bf_t["ohne_eintrag"] == 1
+      and bf_t["geprueft"] == 4 and bf_t["stand"] == "2026-09-21", f"{[e['symbol'] for e in bleibt_t]} {bf_t}")
+    bleibt_o, bf_o = typ_filter([{"symbol": "AAPL", "name": "AAPL"}], zuordnung=None,
+                                befund={"grund": "die Liste liegt nicht vor"})
+    p("E2, Typteil: ohne Zuordnungsliste bleibt die Liste, der Befund nennt den Grund",
+      [e["symbol"] for e in bleibt_o] == ["AAPL"] and bf_o["status"] == "nicht verfuegbar"
+      and bf_o["grund"] == "die Liste liegt nicht vor", str(bf_o))
+    p("E2, Typteil: der Befund nennt nur Zahlen, nie Kuerzel oder Typen",
+      not any(isinstance(v, (list, dict)) for v in bf_t.values())
+      and all(k in ("status", "stand", "eintraege", "geprueft", "raus", "ohne_eintrag") for k in bf_t), str(bf_t))
     flach = [100.0] * 253
     hoch = flach[:-1] + [400.0]
     mittel = flach[:-1] + [130.0]
@@ -1355,12 +1454,14 @@ def main() -> int:
     ap.add_argument("--ausgabe", default=DATEI)
     ap.add_argument("--mappe", default=MAPPE,
                     help="Kaufpunkte-Mappe, deren Aktien als Listen gerechnet werden")
+    ap.add_argument("--zuordnung", default=None,
+                    help="Zuordnungsliste der Branchen und Typen; Vorgabe " + ZUORDNUNG + ", falls vorhanden")
     ap.add_argument("--selbsttest", action="store_true")
     args = ap.parse_args()
     if args.selbsttest:
         return selbsttest()
     if args.bauen:
-        bauen(pfad=args.ausgabe, listen_ticker=listen_aus_mappe(args.mappe))
+        bauen(pfad=args.ausgabe, listen_ticker=listen_aus_mappe(args.mappe), zuordnung_pfad=args.zuordnung)
         return 0
     ap.print_help()
     return 0
