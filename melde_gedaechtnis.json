@@ -150,7 +150,7 @@
     "FROG|Fallback: MA50-Pullback": "draussen",
     "FTRE|Fallback: MA50-Pullback": "draussen",
     "LBRX|Fallback: MA50-R\u00fcckeroberung": "drin",
-    "MEDP|Fallback: MA50-Pullback": "drin",
+    "MEDP|Fallback: MA50-Pullback": "draussen",
     "MXL|Fallback: 20-Tage-Hoch (Pivot)": "draussen",
     "MXL|Fallback: MA50-Pullback": "draussen",
     "PBLS|Fallback: MA50-Pullback": "draussen",
@@ -182,7 +182,8 @@
     "RBRK|Fallback: 52W-Hoch-Breakout": "drin",
     "NTRA|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "TSEM|Fallback: 20-Tage-Hoch (Pivot)": "drin",
-    "FET|Fallback: MA50-Pullback": "draussen"
+    "FET|Fallback: MA50-Pullback": "draussen",
+    "AMRX|Fallback: 52W-Hoch-Breakout": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -309,7 +310,10 @@
     "BEST|ZS|Cup & Handle (Wochenbasis)": "2026-09-21",
     "UEBER|MXL|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
     "TEIL|AMD|SPRING-2026-09-14": "2026-09-21",
-    "TEIL|MXL|Fallback: MA50-R\u00fcckeroberung": "2026-09-21"
+    "TEIL|MXL|Fallback: MA50-R\u00fcckeroberung": "2026-09-21",
+    "AMRX|Fallback: 52W-Hoch-Breakout": "2026-09-21",
+    "BEST|AMRX|Fallback: 52W-Hoch-Breakout": "2026-09-21",
+    "TEIL|AMD|EMA Crossback": "2026-09-21"
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-09-21"
