@@ -1692,7 +1692,10 @@ def letzter_handelstag_ny(jetzt=None):
     return tag
 
 
-def stand_saetze(stand, jetzt=None, analysten_da=True):
+def stand_saetze(stand, jetzt=None, analysten_da=True, nur_voll=False):
+    """Saetze zum Stand der Tabelle. nur_voll: der Besucher ist nicht voll
+    angemeldet (Gast, S4 vom 20.09.2026); dann heisst es nur, dass es die
+    Analystendaten im vollen Zugang gibt, ohne Secrets oder Repos zu nennen."""
     stand = stand or {}
     s = []
     ht = stand.get("handelstag")
@@ -1719,9 +1722,11 @@ def stand_saetze(stand, jetzt=None, analysten_da=True):
         s.append(f"Die technischen Kennzahlen fehlen in dieser Tabelle: Der Nachtscan gehört zum "
                  f"{datum_lang(kz.get('technik_handelstag'))}.")
     an = q.get("analysten") or {}
-    if not analysten_da:
+    if nur_voll:
+        s.append("Analystendaten gibt es nur im vollen Zugang.")
+    elif not analysten_da:
         s.append("Analystendaten sind nicht geladen: Sie liegen im privaten Datenrepo, und in den Streamlit-Secrets "
-                 "fehlt der Lese-Token DATEN_LESE_TOKEN.")
+                 "fehlt der Token DATEN_TOKEN.")
     elif an and stand.get("zeilen") and (an.get("mit_stand") or 0) < stand.get("zeilen"):
         s.append(f"Analystendaten bisher für {nachschlagen.zahl(an.get('mit_stand') or 0)} von "
                  f"{nachschlagen.zahl(stand.get('zeilen'))} Aktien; jede Nacht kommt ein Siebtel dazu.")
@@ -2092,7 +2097,12 @@ def selbsttest() -> int:
     s3 = stand_saetze({"handelstag": "2026-09-11"}, jetzt=datetime(2026, 9, 14, 12, 0, tzinfo=timezone.utc),
                       analysten_da=False)
     p("Stand: vor Handelsschluss ist der Freitag aktuell, fehlende Analystendaten benannt",
-      not any("nach dem Nachtscan" in x for x in s3) and any("DATEN_LESE_TOKEN" in x for x in s3), " | ".join(s3))
+      not any("nach dem Nachtscan" in x for x in s3) and any("DATEN_TOKEN" in x for x in s3), " | ".join(s3))
+    s4 = stand_saetze({"handelstag": "2026-09-11", "quellen": {"analysten": {"mit_stand": 950}}, "zeilen": 6500},
+                      jetzt=datetime(2026, 9, 14, 12, 0, tzinfo=timezone.utc), analysten_da=False, nur_voll=True)
+    p("Stand fuer Gaeste (S4): nur der Hinweis auf den vollen Zugang, kein Secret, kein Repo",
+      "Analystendaten gibt es nur im vollen Zugang." in s4
+      and not any("TOKEN" in x or "Datenrepo" in x or "Secrets" in x for x in s4), " | ".join(s4))
 
     # Texte: kein langer Strich, keine Bildzeichen
     texte = [f.titel for f in FELDER] + [f.erklaerung for f in FELDER] + [f.einheit for f in FELDER]

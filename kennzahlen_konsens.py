@@ -11,7 +11,8 @@ Wochenliste."
 
 Alles ist Anzeige, nichts filtert (Grundsatz der Entscheidungen 1 bis 13).
 Die Werte liegen wie die Analystenwerte im PRIVATEN Datenrepo heliot-daten
-(scanner_analysten.parquet); die App liest sie nur mit DATEN_LESE_TOKEN.
+(scanner_analysten.parquet); die App liest sie nur mit DATEN_TOKEN und nur im
+vollen Zugang.
 
 DREI QUELLEN
   1. Der eingefrorene Yahoo-Konsens (konsens_einfrieren.py, zweimal je

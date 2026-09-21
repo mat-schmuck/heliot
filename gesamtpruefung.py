@@ -2548,9 +2548,13 @@ def block_h():
     pruefe("H", "App-Abhaengigkeiten fuer den Scanner (Parquet, OpenDocument)",
            "pyarrow" in _req and "odfpy" in _req)
     _ign = (WURZEL / ".gitignore").read_text(encoding="utf-8")
-    pruefe("H", "Scanner-Tabellen nie im Repo, Analystenwerte nur mit Lese-Token aus dem privaten Datenrepo",
+    pruefe("H", "Scanner-Tabellen nie im Repo, Analystenwerte nur mit Token aus dem privaten Datenrepo",
            "scanner_analysten.parquet" in _ign and "scanner_tabelle.parquet" in _ign and "scanner_gruppen.json" in _ign
-           and '_secret("DATEN_LESE_TOKEN")' in _app_code and "heliot-daten" in _app_code)
+           and '_secret("DATEN_TOKEN")' in _app_code and "heliot-daten" in _app_code)
+    # S4 (Gerhard, 20.09.2026): Gaeste sehen nur den Scanner und nichts aus dem
+    # privaten Datenrepo.
+    ok, zusatz = gast_abschottung(WURZEL / "streamlit_app.py")
+    pruefe("H", "Gastzugang abgeschottet: nur der Scanner, kein Nachschlagen, nichts aus dem Datenrepo", ok, zusatz)
 
 
 def bildzeichen_im_quelltext(wurzel) -> list:
@@ -2715,6 +2719,85 @@ def scanner_reiter_pruefen(pfad) -> tuple:
     if maengel:
         return False, "; ".join(maengel)
     return True, f"{zweige} Zweige mit Scanner-Reiter, Scanner vor der Schranke"
+
+
+def gast_abschottung(pfad) -> tuple:
+    """S4 (Gerhard, 20.09.2026): "Der Gastzugang darf keinen Zugriff auf die
+    GitHub-Anbindung in Streamlit bekommen. Ein Gast soll wirklich nur den
+    Scanner sehen und sonst nichts von dem, was dahinter laeuft."
+    Geprueft wird am Quelltext:
+      * Der Zweig fuer Gaeste baut keine Registerkarten, setzt tab_liste,
+        tab_scan und tab_info auf None und legt tab_scanner an.
+      * "if tab_liste is None:" mit st.stop() steht auf oberster Ebene hinter
+        "with tab_scanner:" und vor Liste pruefen, Aktueller Scan und Regelwerk.
+      * Das Feld des Nachschlagens (key "aktie") entsteht nur unter
+        "if rolle != 'gast':".
+      * _daten_token gibt den Token nur bei rolle "voll" heraus, und
+        lade_scanner_analysten prueft die Rolle, bevor es den fuer alle
+        Besucher geteilten Zwischenspeicher fragt.
+    Liefert (ok, Befund)."""
+    import ast as _ast
+    try:
+        quelle = open(pfad, encoding="utf-8").read()
+        baum = _ast.parse(quelle)
+    except Exception as e:
+        return False, f"nicht lesbar: {type(e).__name__}: {e}"
+    maengel = []
+    gast_zweig = None
+    stelle = {}
+    for i, knoten in enumerate(baum.body):
+        if isinstance(knoten, _ast.If):
+            test = _ast.unparse(knoten.test)
+            if test in ("rolle == 'gast'", 'rolle == "gast"') and gast_zweig is None:
+                gast_zweig = knoten
+            if test == "tab_liste is None" and "st.stop()" in _ast.unparse(knoten):
+                stelle.setdefault("schranke", i)
+        if isinstance(knoten, _ast.With):
+            ziel = _ast.unparse(knoten.items[0].context_expr)
+            if ziel in ("tab_scanner", "tab_liste", "tab_scan", "tab_info"):
+                stelle.setdefault(ziel, i)
+    if gast_zweig is None:
+        maengel.append("kein Zweig fuer Gaeste")
+    else:
+        rumpf = "\n".join(_ast.unparse(s) for s in gast_zweig.body)
+        if "st.tabs(" in rumpf:
+            maengel.append("der Zweig fuer Gaeste baut Registerkarten")
+        none_gesetzt = set()
+        for s in gast_zweig.body:
+            if isinstance(s, _ast.Assign) and isinstance(s.value, _ast.Constant) and s.value.value is None:
+                none_gesetzt |= {t.id for t in s.targets if isinstance(t, _ast.Name)}
+        for name in ("tab_liste", "tab_scan", "tab_info"):
+            if name not in none_gesetzt:
+                maengel.append(f"{name} ist fuer Gaeste nicht None")
+        if "tab_scanner =" not in rumpf:
+            maengel.append("der Zweig fuer Gaeste legt tab_scanner nicht an")
+    if "schranke" not in stelle:
+        maengel.append("keine Schranke 'if tab_liste is None: st.stop()'")
+    else:
+        if stelle.get("tab_scanner", 10 ** 9) > stelle["schranke"]:
+            maengel.append("der Scanner steht hinter der Gast-Schranke")
+        for ziel in ("tab_liste", "tab_scan", "tab_info"):
+            if stelle.get(ziel, -1) < stelle["schranke"]:
+                maengel.append(f"'with {ziel}:' steht vor der Gast-Schranke")
+    # Das Nachschlagen-Feld nur unter "if rolle != 'gast':"
+    feld_geschuetzt = False
+    for knoten in baum.body:
+        if isinstance(knoten, _ast.If) and _ast.unparse(knoten.test) in ("rolle != 'gast'", 'rolle != "gast"'):
+            if "key='aktie'" in _ast.unparse(_ast.Module(body=knoten.body, type_ignores=[])):
+                feld_geschuetzt = True
+    feld_oben = [k for k in baum.body if not isinstance(k, _ast.If) and "key='aktie'" in _ast.unparse(k)]
+    if not feld_geschuetzt or feld_oben:
+        maengel.append("das Nachschlagen-Feld steht nicht nur unter 'if rolle != \"gast\":'")
+    funktionen = {k.name: _ast.unparse(k) for k in baum.body if isinstance(k, _ast.FunctionDef)}
+    dt = funktionen.get("_daten_token", "")
+    if not dt or "'voll'" not in dt or "DATEN_TOKEN" not in dt:
+        maengel.append("_daten_token prueft die Rolle nicht oder liest DATEN_TOKEN nicht")
+    lsa = funktionen.get("lade_scanner_analysten", "")
+    if not lsa or "'voll'" not in lsa or lsa.find("'voll'") > lsa.find("_scanner_analysten_holen"):
+        maengel.append("lade_scanner_analysten prueft die Rolle nicht vor dem Zwischenspeicher")
+    if maengel:
+        return False, "; ".join(maengel)
+    return True, "Gast: nur Scanner ohne Registerkarten, Schranke dahinter, Nachschlagen und Datenrepo gesperrt"
 
 
 def scanner_bedienung_pruefen(pfad) -> tuple:

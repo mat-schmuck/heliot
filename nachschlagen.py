@@ -1146,17 +1146,25 @@ def _revisionen_saetze(a):
     return s
 
 
+# S4 (Gerhard, 20.09.2026): Gaeste bekommen nichts aus dem privaten Datenrepo.
+# Die App reicht diesen Grund weiter, die Kapitel sagen dann nur, dass es die
+# Werte angemeldet gibt, ohne Secrets oder Repos zu nennen.
+NUR_VOLLER_ZUGANG = "nur im vollen Zugang"
+
+
 def konsens_saetze(a, in_wochenliste=False, grund=None):
     """Kapitel 'Analysten und Konsens'. a: die Zeile der Aktie aus
     scanner_analysten.parquet (analysten_zeile); grund: warum die
     Analystendaten fehlen, None heisst nicht uebergeben."""
     if a is None:
+        if grund == NUR_VOLLER_ZUGANG:
+            return ["Analysten und Konsens stehen nur im vollen Zugang."]
         if grund is None:
             return ["Analysten und Konsens liegen im privaten Datenrepo; sie stehen nur in der App mit dem "
-                    "Lese-Token DATEN_LESE_TOKEN."]
+                    "Token DATEN_TOKEN."]
         if grund:
             return [f"Analystendaten nicht geladen: {grund}. Sie liegen im privaten Datenrepo; die App braucht dafür "
-                    "den Lese-Token DATEN_LESE_TOKEN in den Streamlit-Secrets."]
+                    "den Token DATEN_TOKEN in den Streamlit-Secrets."]
         return ["Für diese Aktie stehen in der Nachttabelle des Scanners keine Analystendaten."]
     s = []
     # Eingefrorener Yahoo-Konsens
@@ -1233,9 +1241,11 @@ def short_saetze(a, grund=None):
     import kennzahlen_short as ks
     fenster = int(ks.KS["fenster_tage"])
     if a is None:
+        if grund == NUR_VOLLER_ZUGANG:
+            return ["Die Short-Daten stehen nur im vollen Zugang."]
         if grund is None:
-            return ["Die Short-Daten liegen im privaten Datenrepo; sie stehen nur in der App mit dem Lese-Token "
-                    "DATEN_LESE_TOKEN."]
+            return ["Die Short-Daten liegen im privaten Datenrepo; sie stehen nur in der App mit dem Token "
+                    "DATEN_TOKEN."]
         if grund:
             return [f"Short-Daten nicht geladen: {grund}."]
         return ["Für diese Aktie stehen in der Nachttabelle des Scanners keine Short-Daten."]
@@ -1273,9 +1283,11 @@ def gruppe_saetze(a, grund=None):
     scanner_analysten.parquet; grund wie bei konsens_saetze."""
     import kennzahlen_gruppen as kg
     if a is None:
+        if grund == NUR_VOLLER_ZUGANG:
+            return ["Die Branchengruppe steht nur im vollen Zugang."]
         if grund is None:
-            return ["Die Branchengruppe liegt im privaten Datenrepo; sie steht nur in der App mit dem Lese-Token "
-                    "DATEN_LESE_TOKEN."]
+            return ["Die Branchengruppe liegt im privaten Datenrepo; sie steht nur in der App mit dem Token "
+                    "DATEN_TOKEN."]
         if grund:
             return [f"Branchengruppe nicht geladen: {grund}."]
         return ["Für diese Aktie steht in der Nachttabelle des Scanners keine Branchengruppe."]
@@ -2012,9 +2024,14 @@ def selbsttest() -> int:
       "Revisionen und Einstufungen gibt es nur für Aktien der Wochenliste." in konsens_saetze(zeile_k, False, "")
       and not any("Needham" in x for x in konsens_saetze(zeile_k, False, "")))
     p("Ohne Analystendaten: Grund, fehlende Zeile, nicht uebergeben",
-      konsens_saetze(None, True, "kein Lese-Token")[0].startswith("Analystendaten nicht geladen: kein Lese-Token.")
+      konsens_saetze(None, True, "kein Token für das Datenrepo")[0].startswith(
+          "Analystendaten nicht geladen: kein Token für das Datenrepo.")
       and konsens_saetze(None, True, "") == ["Für diese Aktie stehen in der Nachttabelle des Scanners keine Analystendaten."]
-      and "DATEN_LESE_TOKEN" in konsens_saetze(None)[0])
+      and "DATEN_TOKEN" in konsens_saetze(None)[0] and "DATEN_TOKEN" in konsens_saetze(None, True, "x")[0])
+    p("Gast (S4): Kapitel ohne Secrets und Repos, nur der Hinweis auf den vollen Zugang",
+      konsens_saetze(None, True, NUR_VOLLER_ZUGANG) == ["Analysten und Konsens stehen nur im vollen Zugang."]
+      and short_saetze(None, NUR_VOLLER_ZUGANG) == ["Die Short-Daten stehen nur im vollen Zugang."]
+      and gruppe_saetze(None, NUR_VOLLER_ZUGANG) == ["Die Branchengruppe steht nur im vollen Zugang."])
     p("Quartal von Nasdaq in Worten", quartal_text("Jun/2026") == "Juni 2026" and quartal_text("Jan/2027") == "Jänner 2027"
       and quartal_text(None) == "unbekannt")
     df_a = pd.DataFrame([{"ticker": "AAOI", "konsens_fwd_kgv": 14.02, "konsens_stand": None, "rev_hoch_7t_0q": float("nan")},
@@ -2048,8 +2065,8 @@ def selbsttest() -> int:
     ohne_h = short_saetze(dict(zeile_s, short_anteil_pct=None, short_volumen=0.0, short_gesamtvolumen=0.0), "")
     p("Leerverkaeufe: kein ausserboerslicher Umsatz am Tag",
       ohne_h[0] == "Am 14.09.2026 meldete FINRA für diese Aktie keine außerbörslichen Umsätze.", str(ohne_h))
-    p("Leerverkaeufe: ohne Daten wie beim Konsens", short_saetze(None, "kein Lese-Token")[0].startswith("Short-Daten nicht geladen")
-      and "DATEN_LESE_TOKEN" in short_saetze(None)[0])
+    p("Leerverkaeufe: ohne Daten wie beim Konsens", short_saetze(None, "kein Token für das Datenrepo")[0].startswith(
+        "Short-Daten nicht geladen") and "DATEN_TOKEN" in short_saetze(None)[0])
     # Etappe 6: Branchengruppe
     zeile_g = {"gruppe": "Semiconductors", "gruppe_ebene": "GICS-Unterbranche", "gruppe_rang": 12.0,
                "gruppe_rang_3w": 20.0, "gruppe_rang_6w": None, "gruppen_zahl": 158.0, "gruppe_titel": 42.0,
@@ -2083,8 +2100,8 @@ def selbsttest() -> int:
     p("Branchengruppe: ohne Zuordnungsliste nicht verfuegbar", gn == ["Branchengruppe nicht verfügbar: die eigene "
                                                                     "Zuordnungsliste der Branchen liegt noch nicht vor."],
       str(gn))
-    p("Branchengruppe: ohne Daten wie beim Konsens", gruppe_saetze(None, "kein Lese-Token")[0].startswith(
-        "Branchengruppe nicht geladen") and "DATEN_LESE_TOKEN" in gruppe_saetze(None)[0])
+    p("Branchengruppe: ohne Daten wie beim Konsens", gruppe_saetze(None, "kein Token für das Datenrepo")[0].startswith(
+        "Branchengruppe nicht geladen") and "DATEN_TOKEN" in gruppe_saetze(None)[0])
     rs_w = dict(rs, listen={"AAOI": {}})
     teile_k = bericht("AAOI", rs_w, ratings, sektoren, live=live_auf, analysten=zeile_k, analysten_grund="")
     p("Bericht: Kapitel Analysten und Konsens nach der Bewertung, Wochenliste aus der Nachtdatei",

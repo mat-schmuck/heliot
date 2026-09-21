@@ -32,7 +32,7 @@ WAS DIESER LAUF BAUT
                            (kennzahlen_gruppen.py). Sie gehen wie der
                            eingefrorene Konsens (F17) in das PRIVATE
                            Datenrepo heliot-daten; die App liest sie nur mit
-                           dem Lese-Token DATEN_LESE_TOKEN.
+                           dem Token DATEN_TOKEN und nur im vollen Zugang.
   scanner_gruppen.json     die Rangliste der Industry Group RS (Etappe 6),
                            ebenfalls nur im PRIVATEN Datenrepo, weil die
                            Gruppen aus dem EODHD-Abzug stammen.

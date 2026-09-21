@@ -318,6 +318,19 @@ def _secret(name: str):
     return None
 
 
+def _daten_token() -> str:
+    """Der Token fuer das private Datenrepo heliot-daten (Mathias, 21.09.2026):
+    DATEN_TOKEN darf genau dieses Repo lesen und beschreiben; der aeltere
+    DATEN_LESE_TOKEN gilt als Rueckfall weiter. Nur der volle Zugang bekommt
+    ihn (Gerhard, 20.09.2026, S4: "Der Gastzugang darf keinen Zugriff auf die
+    GitHub-Anbindung in Streamlit bekommen"); Gaeste und die offene
+    Uebergangsseite ohne Passwort sehen nichts aus dem privaten Datenrepo."""
+    if globals().get("rolle") != "voll":
+        return ""
+    return ((_secret("DATEN_TOKEN") or "").strip()
+            or (_secret("DATEN_LESE_TOKEN") or "").strip())
+
+
 @st.cache_resource(show_spinner=False)
 def _anmelde_bremse():
     """Eine Bremse fuer alle Sitzungen dieses App-Prozesses, siehe zugang.Bremse."""
@@ -531,13 +544,15 @@ DATEN_REPO = "mat-schmuck/heliot-daten"
 @st.cache_data(ttl=600, show_spinner=False)
 def _scanner_analysten_holen():
     """Die Analystenwerte liegen im PRIVATEN Datenrepo (wie der eingefrorene
-    Konsens, F17). Gelesen wird mit DATEN_LESE_TOKEN aus den Streamlit-
-    Secrets, einem Token nur zum Lesen dieses einen Repos; der Wert erscheint
-    in keiner Meldung. Fehlschlaege werfen und landen nicht im Speicher."""
+    Konsens, F17). Gelesen wird mit DATEN_TOKEN aus den Streamlit-Secrets,
+    einem Token nur fuer dieses eine Repo (siehe _daten_token); der Wert
+    erscheint in keiner Meldung. Fehlschlaege werfen und landen nicht im
+    Speicher. Aufgerufen wird nur ueber lade_scanner_analysten, das Gaeste
+    vorher abweist: Der Zwischenspeicher gilt fuer alle Besucher."""
     import requests
-    token = (_secret("DATEN_LESE_TOKEN") or "").strip()
+    token = _daten_token()
     if not token:
-        raise LookupError("kein Lese-Token")
+        raise LookupError("kein Token für das Datenrepo")
     kopf = {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"}
     r = requests.get(f"https://api.github.com/repos/{DATEN_REPO}/releases/tags/scanner-daten",
                      headers=kopf, timeout=20)
@@ -553,6 +568,10 @@ def _scanner_analysten_holen():
 
 
 def lade_scanner_analysten():
+    # S4: Die Rolle wird VOR dem Zwischenspeicher geprueft, sonst bekaeme ein
+    # Gast die Tabelle, die ein voll angemeldeter Besucher geladen hat.
+    if globals().get("rolle") != "voll":
+        return None, nachschlagen.NUR_VOLLER_ZUGANG
     try:
         return _scanner_analysten_holen(), ""
     except LookupError as e:
@@ -588,14 +607,20 @@ def nachschlag_stichtagkurs(ticker: str, stichtag: str):
     return nachschlagen.kurs_am(ticker, stichtag)
 
 
-st.markdown("### Aktie nachschlagen")
-# DAS FELD STEHT IN DER ADRESSE (Mathias, 14.09.2026): bind="query-params"
-# schreibt die Eingabe als ?aktie=... in die Adresse der Seite und liest sie
-# beim Oeffnen wieder. So fuehrt ein Verweis wie ?aktie=AAOI direkt zu den
-# vollstaendigen Daten einer Aktie, und ein Lesezeichen merkt sich die Aktie.
-nachschlag_eingabe = (st.text_input("Kürzel oder Firmenname eingeben, dann Eingabetaste", key="aktie",
-                                    bind="query-params", placeholder="zum Beispiel AAOI oder Apple")
-                      or "").strip()
+# S4 (Gerhard, 20.09.2026): "Ein Gast soll wirklich nur den Scanner sehen und
+# sonst nichts von dem, was dahinter laeuft." Das Nachschlagen gibt es deshalb
+# nur angemeldet; ein Verweis mit ?aktie=... bleibt fuer Gaeste ohne Wirkung.
+if rolle != "gast":
+    st.markdown("### Aktie nachschlagen")
+    # DAS FELD STEHT IN DER ADRESSE (Mathias, 14.09.2026): bind="query-params"
+    # schreibt die Eingabe als ?aktie=... in die Adresse der Seite und liest sie
+    # beim Oeffnen wieder. So fuehrt ein Verweis wie ?aktie=AAOI direkt zu den
+    # vollstaendigen Daten einer Aktie, und ein Lesezeichen merkt sich die Aktie.
+    nachschlag_eingabe = (st.text_input("Kürzel oder Firmenname eingeben, dann Eingabetaste", key="aktie",
+                                        bind="query-params", placeholder="zum Beispiel AAOI oder Apple")
+                          or "").strip()
+else:
+    nachschlag_eingabe = ""
 if nachschlag_eingabe:
     nachschlag_daten = nachschlag_dateien()
     nachschlag_ticker, nachschlag_kandidaten = nachschlagen.finde(nachschlag_eingabe,
@@ -669,7 +694,8 @@ if nachschlag_eingabe:
         st.markdown("#### Aktienchart")
         aktienchart(nachschlag_ticker, nachschlag_df)
 
-st.markdown("---")
+if rolle != "gast":
+    st.markdown("---")
 
 # Gaeste bekommen weder die Wochenliste noch die Seite fuer Gastpasswoerter.
 # Ohne eingerichtetes Passwort gibt es keine Gastpasswoerter, also auch die
@@ -679,9 +705,14 @@ st.markdown("---")
 # Kaufpunkte und Chart stehen jetzt beim Nachschlagen oben, mit dem echten RS.
 # DER SCANNER (Mathias, 14.09.2026) steht allen offen, auch Gaesten: Er liest
 # nur und veraendert nichts.
+# S4 (Gerhard, 20.09.2026): Ein Gast sieht NUR den Scanner, ohne
+# Registerkarten; Liste pruefen, Aktueller Scan und Regelwerk gibt es fuer ihn
+# nicht, der Lauf endet hinter dem Scanner (Schranke "if tab_liste is None").
 tab_upload = tab_gast = None
 if rolle == "gast":
-    tab_liste, tab_scan, tab_scanner, tab_info = st.tabs(["Liste prüfen", "Aktueller Scan", "Scanner", "Regelwerk"])
+    st.markdown("### Scanner")
+    tab_scanner = st.container()
+    tab_liste = tab_scan = tab_info = None
 elif rolle == "voll":
     tab_liste, tab_scan, tab_scanner, tab_upload, tab_gast, tab_info = st.tabs(
         ["Liste prüfen", "Aktueller Scan", "Scanner", "Wochenliste", "Gastzugang", "Regelwerk"])
@@ -706,103 +737,6 @@ def mappe_text(wert) -> str:
     s = s.replace("\u2713", "erfüllt ").replace("\u2717", "nicht erfüllt ")
     return nachschlagen.lesbar(s) or "unbekannt"
 
-
-# --- Liste pruefen ---------------------------------------------------------
-with tab_liste:
-    st.write("Mehrere Aktien auf einmal prüfen: Finviz-CSV hochladen oder Kürzel mit Beistrich getrennt "
-             "eintippen.")
-    hoch = st.file_uploader("Finviz-CSV mit der Spalte Ticker", type=["csv"])
-    manuell = st.text_input("oder Kürzel mit Beistrich getrennt", placeholder="AAOI, ETON, NVDA, LASR")
-
-    tickers = []
-    if hoch is not None:
-        try:
-            df_csv = pd.read_csv(hoch)
-            spalte = next((c for c in df_csv.columns if c.strip().lower() == "ticker"), None)
-            if spalte:
-                tickers = [str(t).strip().upper() for t in df_csv[spalte].dropna()]
-            else:
-                st.error("Keine Spalte Ticker in der CSV gefunden.")
-        except Exception as e:
-            st.error(f"Die CSV ließ sich nicht lesen: {e}")
-    elif manuell:
-        tickers = [t.strip().upper() for t in manuell.replace(";", ",").split(",") if t.strip()]
-
-    tickers = list(dict.fromkeys([t for t in tickers if t]))  # Duplikate raus
-
-    if tickers:
-        st.info(f"{len(tickers)} Kürzel erkannt. Für jede Aktie werden die Kurse von Yahoo geholt; "
-                "bei vielen Aktien dauert das einige Minuten.")
-        nur_treffer = st.checkbox("Nur Aktien mit aktivem Chartmuster anzeigen", value=True)
-        if st.button("Liste durchrechnen", type="primary"):
-            fortschritt = st.progress(0.0)
-            status = st.empty()
-            zeilen, fehler = [], []
-            rs_eintraege = nachschlagen.eintraege(nachschlag_dateien().get("rs_universum.json"))
-            for i, t in enumerate(tickers, 1):
-                status.text(f"{i} von {len(tickers)}: {t}")
-                rs_wert, _ = nachschlagen.rs_fuer_muster(rs_eintraege.get(t))
-                try:
-                    df, res = analysiere(t, api_key, rs_wert)
-                except Exception:
-                    df, res = None, None
-                if df is None:
-                    fehler.append(t)
-                else:
-                    echte = [p for p in res["points"] if not p["strategie"].startswith("Fallback")]
-                    if not (nur_treffer and not echte):
-                        zeile = {
-                            "Ticker": t,
-                            "Kurs": round(res["close"], 2),
-                            "RS": int(rs_wert) if rs_wert is not None else "",
-                            "52W-Hoch": round(res["hi52"], 2),
-                            "Abst. Hoch": f"{(res['close'] / res['hi52'] - 1) * 100:+.1f}%",
-                            "Trend Template": ("erfüllt, 8 von 8" if res["tt_pass"]
-                                               else f"{res['tt_count']} von 8"),
-                            "Muster": len(echte),
-                        }
-                        for n, p in enumerate(res["points"], 1):
-                            zeile[f"KP{n} Strategie"] = p["strategie"]
-                            zeile[f"KP{n} Preis"] = p["kaufpunkt"]
-                            zeile[f"KP{n} Stop"] = p["stop"]
-                            zeile[f"KP{n} Ziel"] = p["ziel"] if p["ziel"] else ""
-                            zeile[f"KP{n} Status"] = p["status"]
-                        zeilen.append(zeile)
-                fortschritt.progress(i / len(tickers))
-            status.empty()
-            fortschritt.empty()
-
-            if zeilen:
-                erg = pd.DataFrame(zeilen).sort_values("Muster", ascending=False)
-                st.success(f"{len(erg)} Treffer" + (f", {len(fehler)} ohne Daten" if fehler else ""))
-                # ALS LISTE, nicht als Tabelle: Die Tabelle von Streamlit ist
-                # eine Zeichenflaeche, die kein Screenreader lesen kann. Sie
-                # steht zusaetzlich im Ausklapper darunter.
-                for _, z in erg.iterrows():
-                    teile = [f"{z['Ticker']}", f"Kurs {nachschlagen.zahl(z['Kurs'], 2)} Dollar"]
-                    if z["RS"] != "":
-                        teile.append(f"RS {z['RS']}")
-                    teile.append(f"Trend Template {z['Trend Template']}")
-                    kps = []
-                    for n in (1, 2, 3):
-                        s = z.get(f"KP{n} Strategie")
-                        if isinstance(s, str) and s and not s.startswith("Fallback"):
-                            kps.append(f"{nachschlagen.lesbar(s)} Kaufpunkt {nachschlagen.zahl(z[f'KP{n} Preis'], 2)}")
-                    teile.append(("Muster: " + ", ".join(kps)) if kps else "kein Muster")
-                    st.markdown("; ".join(teile) + ".")
-                puffer = io.BytesIO()
-                with pd.ExcelWriter(puffer, engine="openpyxl") as w:
-                    erg.to_excel(w, sheet_name="Kaufpunkte", index=False)
-                st.download_button("Als Excel herunterladen", puffer.getvalue(),
-                                   file_name=f"kaufpunkte_{datetime.now():%Y-%m-%d}.xlsx",
-                                   mime="application/vnd.openxmlformats-officedocument."
-                                        "spreadsheetml.sheet")
-                with st.expander("Alle Werte als Tabelle, für das Auge"):
-                    st.dataframe(erg, hide_index=True)
-            else:
-                st.warning("Keine Treffer" + (", nur Aktien mit Muster sind angehakt" if nur_treffer else "") + ".")
-            if fehler:
-                st.caption("Keine Daten für: " + ", ".join(fehler))
 
 # --- Aktueller Scan --------------------------------------------------------
 # Fenster auf die Nachtergebnisse (Mathias' Auftrag vom 23.07.2026): Der
@@ -867,77 +801,6 @@ def rs_mappe(wert) -> str:
     if isinstance(wert, (int, float)):
         return str(int(round(wert)))
     return nachschlagen.lesbar(wert)
-
-
-with tab_scan:
-    df_scan, scan_info, scan_roh = lade_nachtscan()
-    if df_scan is None:
-        st.info(scan_info)
-    else:
-        if scan_info:
-            st.caption(f"Stand: {scan_info}.")
-        # R1 bis R3 (Gerhard, 12.09.2026, ergaenzt am selben Abend): der
-        # Bezug steht in der App. Die Spalte heisst aus Bestandsgruenden
-        # weiter "RS Nasdaq", gerechnet wird gegen den ganzen US-Markt.
-        st.caption("RS: relative Stärke gegen alle Stammaktien des US-Markts (Nasdaq, NYSE, "
-                   "NYSE American, mindestens 253 Schlusskurse), jede Einzelrendite bei plus "
-                   "50 Prozent gekappt; Entscheidungshilfe, kein Filter. Jüngere Titel ab 64 "
-                   "Schlusskursen tragen ein vorläufiges RS aus den vorhandenen Quartalen. "
-                   "RS-Rank dagegen ist das Perzentil innerhalb der Wochenliste.")
-
-        treffer_zeilen = []
-        for _, z in df_scan.iterrows():
-            muster = []
-            for k in (1, 2, 3):
-                s = z.get(f"KP{k} Strategie")
-                if isinstance(s, str) and s and not s.startswith("Fallback"):
-                    muster.append((k, s))
-            if muster:
-                treffer_zeilen.append((z, muster))
-        anzahl_muster = sum(len(m) for _, m in treffer_zeilen)
-        if len(df_scan) == 0:
-            # WOCHENPUTZ (Mathias, 13.09.2026): Nach Freitag 16:02 New York
-            # ist die Mappe leer, bis eine neue Wochenliste hochgeladen und
-            # gescannt ist (wochenputz.py). Das ist gewollt, kein Fehler.
-            st.info("Zurzeit gibt es keine Kaufpunkte: Der Wochenputz hat die "
-                    "alte Woche geleert. Sobald eine neue Wochenliste hochgeladen "
-                    "und gescannt ist, stehen hier wieder Kaufpunkte.")
-        else:
-            st.write(f"Geprüft wurden {len(df_scan)} Aktien. {len(treffer_zeilen)} "
-                     f"davon tragen ein echtes Chartmuster, zusammen "
-                     f"{anzahl_muster} Muster-Kaufpunkte. Genau diese überwachen "
-                     "die TraderFox-Alarme und der Breakout-Wächter.")
-
-        # Beste zuerst: volle Trend-Template-Punktzahl nach oben
-        def _rang(paar):
-            m = re.search(r"(\d)\s*(?:/|von)\s*8", str(paar[0].get("Trend Template", "")))
-            return -(int(m.group(1)) if m else -1)
-
-        for z, muster in sorted(treffer_zeilen, key=_rang):
-            with st.container(border=True):
-                st.markdown(f"**{z['Ticker']}, {nachschlagen.lesbar(z.get('Firma', ''))}**")
-                st.write(f"Kurs {_zahl(z.get('Kurs'))} Dollar; "
-                         f"RS {rs_mappe(z.get('RS Nasdaq'))}; "
-                         f"Trend Template {tt_text(z.get('Trend Template'))}; "
-                         f"Umsatzwachstum {mappe_text(z.get('Umsatzwachstum', '?'))}")
-                for k, s in muster:
-                    teile = [f"{nachschlagen.anzeige_text(s)}: Kaufpunkt {_zahl(z.get(f'KP{k} Preis'))} Dollar"]
-                    if _zahl(z.get(f"KP{k} Stop")):
-                        teile.append(f"Stop {_zahl(z.get(f'KP{k} Stop'))}")
-                    if _zahl(z.get(f"KP{k} Ziel")):
-                        teile.append(f"Ziel {_zahl(z.get(f'KP{k} Ziel'))}")
-                    status = z.get(f"KP{k} Status")
-                    if isinstance(status, str) and nachschlagen.anzeige_text(status):
-                        teile.append(nachschlagen.anzeige_text(status))
-                    st.write("; ".join(teile))
-
-        if scan_roh:
-            st.download_button("Nachtscan als Excel herunterladen", scan_roh,
-                               file_name=SCAN_DATEI,
-                               mime="application/vnd.openxmlformats-"
-                                    "officedocument.spreadsheetml.sheet")
-        with st.expander("Alle Werte als Tabelle, für das Auge"):
-            st.dataframe(df_scan, hide_index=True)
 
 
 # --- Scanner (Mathias, 14.09.2026) ------------------------------------------
@@ -1182,7 +1045,7 @@ def _sc_scannen(vergleich: dict) -> dict:
     analysten_da = analysten is not None
     if analysten_da:
         tabelle = tabelle.merge(analysten, on="ticker", how="left")
-    elif (_secret("DATEN_LESE_TOKEN") or "").strip():
+    elif _daten_token():
         erg["hinweise"].append(f"Die Analystendaten ließen sich nicht laden: {analysten_grund}.")
     sektoren = sa.sektoren_in(tabelle)
     heute = sa.ny_jetzt().date()
@@ -1262,8 +1125,8 @@ def scanner_reiter():
     """Der Reiter als Fragment: Ein Klick im Scanner rechnet nur den Scanner
     neu, nicht die ganze Seite. Die Tabelle holt erst der Knopf Scan starten."""
     stand = lade_scanner_stand() or {}
-    lese_token = bool((_secret("DATEN_LESE_TOKEN") or "").strip())
-    for satz in sa.stand_saetze(stand, analysten_da=lese_token):
+    lese_token = bool(_daten_token())
+    for satz in sa.stand_saetze(stand, analysten_da=lese_token, nur_voll=rolle != "voll"):
         st.markdown(sa.md(satz))
 
     sektoren = sa.sektoren_in(None)
@@ -1392,6 +1255,184 @@ with tab_scanner:
     st.html("<style>.st-key-scanner_bereich [data-testid='InputInstructions'] {display: none;}</style>")
     with st.container(key="scanner_bereich"):
         scanner_reiter()
+
+
+# S4 GASTZUGANG ABGESCHOTTET (Gerhard, 20.09.2026): Fuer Gaeste endet der Lauf
+# hier, hinter dem Scanner. Liste pruefen, Aktueller Scan und Regelwerk gibt es
+# fuer sie nicht (tab_liste ist None). Die Gesamtpruefung (Block H) achtet
+# darauf, dass das so bleibt.
+if tab_liste is None:
+    st.stop()
+
+
+# --- Liste pruefen ---------------------------------------------------------
+with tab_liste:
+    st.write("Mehrere Aktien auf einmal prüfen: Finviz-CSV hochladen oder Kürzel mit Beistrich getrennt "
+             "eintippen.")
+    hoch = st.file_uploader("Finviz-CSV mit der Spalte Ticker", type=["csv"])
+    manuell = st.text_input("oder Kürzel mit Beistrich getrennt", placeholder="AAOI, ETON, NVDA, LASR")
+
+    tickers = []
+    if hoch is not None:
+        try:
+            df_csv = pd.read_csv(hoch)
+            spalte = next((c for c in df_csv.columns if c.strip().lower() == "ticker"), None)
+            if spalte:
+                tickers = [str(t).strip().upper() for t in df_csv[spalte].dropna()]
+            else:
+                st.error("Keine Spalte Ticker in der CSV gefunden.")
+        except Exception as e:
+            st.error(f"Die CSV ließ sich nicht lesen: {e}")
+    elif manuell:
+        tickers = [t.strip().upper() for t in manuell.replace(";", ",").split(",") if t.strip()]
+
+    tickers = list(dict.fromkeys([t for t in tickers if t]))  # Duplikate raus
+
+    if tickers:
+        st.info(f"{len(tickers)} Kürzel erkannt. Für jede Aktie werden die Kurse von Yahoo geholt; "
+                "bei vielen Aktien dauert das einige Minuten.")
+        nur_treffer = st.checkbox("Nur Aktien mit aktivem Chartmuster anzeigen", value=True)
+        if st.button("Liste durchrechnen", type="primary"):
+            fortschritt = st.progress(0.0)
+            status = st.empty()
+            zeilen, fehler = [], []
+            rs_eintraege = nachschlagen.eintraege(nachschlag_dateien().get("rs_universum.json"))
+            for i, t in enumerate(tickers, 1):
+                status.text(f"{i} von {len(tickers)}: {t}")
+                rs_wert, _ = nachschlagen.rs_fuer_muster(rs_eintraege.get(t))
+                try:
+                    df, res = analysiere(t, api_key, rs_wert)
+                except Exception:
+                    df, res = None, None
+                if df is None:
+                    fehler.append(t)
+                else:
+                    echte = [p for p in res["points"] if not p["strategie"].startswith("Fallback")]
+                    if not (nur_treffer and not echte):
+                        zeile = {
+                            "Ticker": t,
+                            "Kurs": round(res["close"], 2),
+                            "RS": int(rs_wert) if rs_wert is not None else "",
+                            "52W-Hoch": round(res["hi52"], 2),
+                            "Abst. Hoch": f"{(res['close'] / res['hi52'] - 1) * 100:+.1f}%",
+                            "Trend Template": ("erfüllt, 8 von 8" if res["tt_pass"]
+                                               else f"{res['tt_count']} von 8"),
+                            "Muster": len(echte),
+                        }
+                        for n, p in enumerate(res["points"], 1):
+                            zeile[f"KP{n} Strategie"] = p["strategie"]
+                            zeile[f"KP{n} Preis"] = p["kaufpunkt"]
+                            zeile[f"KP{n} Stop"] = p["stop"]
+                            zeile[f"KP{n} Ziel"] = p["ziel"] if p["ziel"] else ""
+                            zeile[f"KP{n} Status"] = p["status"]
+                        zeilen.append(zeile)
+                fortschritt.progress(i / len(tickers))
+            status.empty()
+            fortschritt.empty()
+
+            if zeilen:
+                erg = pd.DataFrame(zeilen).sort_values("Muster", ascending=False)
+                st.success(f"{len(erg)} Treffer" + (f", {len(fehler)} ohne Daten" if fehler else ""))
+                # ALS LISTE, nicht als Tabelle: Die Tabelle von Streamlit ist
+                # eine Zeichenflaeche, die kein Screenreader lesen kann. Sie
+                # steht zusaetzlich im Ausklapper darunter.
+                for _, z in erg.iterrows():
+                    teile = [f"{z['Ticker']}", f"Kurs {nachschlagen.zahl(z['Kurs'], 2)} Dollar"]
+                    if z["RS"] != "":
+                        teile.append(f"RS {z['RS']}")
+                    teile.append(f"Trend Template {z['Trend Template']}")
+                    kps = []
+                    for n in (1, 2, 3):
+                        s = z.get(f"KP{n} Strategie")
+                        if isinstance(s, str) and s and not s.startswith("Fallback"):
+                            kps.append(f"{nachschlagen.lesbar(s)} Kaufpunkt {nachschlagen.zahl(z[f'KP{n} Preis'], 2)}")
+                    teile.append(("Muster: " + ", ".join(kps)) if kps else "kein Muster")
+                    st.markdown("; ".join(teile) + ".")
+                puffer = io.BytesIO()
+                with pd.ExcelWriter(puffer, engine="openpyxl") as w:
+                    erg.to_excel(w, sheet_name="Kaufpunkte", index=False)
+                st.download_button("Als Excel herunterladen", puffer.getvalue(),
+                                   file_name=f"kaufpunkte_{datetime.now():%Y-%m-%d}.xlsx",
+                                   mime="application/vnd.openxmlformats-officedocument."
+                                        "spreadsheetml.sheet")
+                with st.expander("Alle Werte als Tabelle, für das Auge"):
+                    st.dataframe(erg, hide_index=True)
+            else:
+                st.warning("Keine Treffer" + (", nur Aktien mit Muster sind angehakt" if nur_treffer else "") + ".")
+            if fehler:
+                st.caption("Keine Daten für: " + ", ".join(fehler))
+
+
+# --- Aktueller Scan (Registerkarte) ------------------------------------
+with tab_scan:
+    df_scan, scan_info, scan_roh = lade_nachtscan()
+    if df_scan is None:
+        st.info(scan_info)
+    else:
+        if scan_info:
+            st.caption(f"Stand: {scan_info}.")
+        # R1 bis R3 (Gerhard, 12.09.2026, ergaenzt am selben Abend): der
+        # Bezug steht in der App. Die Spalte heisst aus Bestandsgruenden
+        # weiter "RS Nasdaq", gerechnet wird gegen den ganzen US-Markt.
+        st.caption("RS: relative Stärke gegen alle Stammaktien des US-Markts (Nasdaq, NYSE, "
+                   "NYSE American, mindestens 253 Schlusskurse), jede Einzelrendite bei plus "
+                   "50 Prozent gekappt; Entscheidungshilfe, kein Filter. Jüngere Titel ab 64 "
+                   "Schlusskursen tragen ein vorläufiges RS aus den vorhandenen Quartalen. "
+                   "RS-Rank dagegen ist das Perzentil innerhalb der Wochenliste.")
+
+        treffer_zeilen = []
+        for _, z in df_scan.iterrows():
+            muster = []
+            for k in (1, 2, 3):
+                s = z.get(f"KP{k} Strategie")
+                if isinstance(s, str) and s and not s.startswith("Fallback"):
+                    muster.append((k, s))
+            if muster:
+                treffer_zeilen.append((z, muster))
+        anzahl_muster = sum(len(m) for _, m in treffer_zeilen)
+        if len(df_scan) == 0:
+            # WOCHENPUTZ (Mathias, 13.09.2026): Nach Freitag 16:02 New York
+            # ist die Mappe leer, bis eine neue Wochenliste hochgeladen und
+            # gescannt ist (wochenputz.py). Das ist gewollt, kein Fehler.
+            st.info("Zurzeit gibt es keine Kaufpunkte: Der Wochenputz hat die "
+                    "alte Woche geleert. Sobald eine neue Wochenliste hochgeladen "
+                    "und gescannt ist, stehen hier wieder Kaufpunkte.")
+        else:
+            st.write(f"Geprüft wurden {len(df_scan)} Aktien. {len(treffer_zeilen)} "
+                     f"davon tragen ein echtes Chartmuster, zusammen "
+                     f"{anzahl_muster} Muster-Kaufpunkte. Genau diese überwachen "
+                     "die TraderFox-Alarme und der Breakout-Wächter.")
+
+        # Beste zuerst: volle Trend-Template-Punktzahl nach oben
+        def _rang(paar):
+            m = re.search(r"(\d)\s*(?:/|von)\s*8", str(paar[0].get("Trend Template", "")))
+            return -(int(m.group(1)) if m else -1)
+
+        for z, muster in sorted(treffer_zeilen, key=_rang):
+            with st.container(border=True):
+                st.markdown(f"**{z['Ticker']}, {nachschlagen.lesbar(z.get('Firma', ''))}**")
+                st.write(f"Kurs {_zahl(z.get('Kurs'))} Dollar; "
+                         f"RS {rs_mappe(z.get('RS Nasdaq'))}; "
+                         f"Trend Template {tt_text(z.get('Trend Template'))}; "
+                         f"Umsatzwachstum {mappe_text(z.get('Umsatzwachstum', '?'))}")
+                for k, s in muster:
+                    teile = [f"{nachschlagen.anzeige_text(s)}: Kaufpunkt {_zahl(z.get(f'KP{k} Preis'))} Dollar"]
+                    if _zahl(z.get(f"KP{k} Stop")):
+                        teile.append(f"Stop {_zahl(z.get(f'KP{k} Stop'))}")
+                    if _zahl(z.get(f"KP{k} Ziel")):
+                        teile.append(f"Ziel {_zahl(z.get(f'KP{k} Ziel'))}")
+                    status = z.get(f"KP{k} Status")
+                    if isinstance(status, str) and nachschlagen.anzeige_text(status):
+                        teile.append(nachschlagen.anzeige_text(status))
+                    st.write("; ".join(teile))
+
+        if scan_roh:
+            st.download_button("Nachtscan als Excel herunterladen", scan_roh,
+                               file_name=SCAN_DATEI,
+                               mime="application/vnd.openxmlformats-"
+                                    "officedocument.spreadsheetml.sheet")
+        with st.expander("Alle Werte als Tabelle, für das Auge"):
+            st.dataframe(df_scan, hide_index=True)
 
 
 # --- Regelwerk -------------------------------------------------------------
