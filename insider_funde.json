@@ -1,11 +1,11 @@
 {
- "stand": "2026-09-18",
+ "stand": "2026-09-21",
  "funde": [
   {
    "ticker": "FTK",
    "status": "pfad_a",
-   "marktkap": 1137321472.0,
-   "stichtag": "2026-09-18",
+   "marktkap": 1134423808.0,
+   "stichtag": "2026-09-21",
    "zeilen": [
     "FTK; Großkauf; Marktwert 1,1 Mrd $",
     "Größter Einzelkauf 34,3 Mio $ am 11.09.; Wilks Matthew, Direktor"
@@ -15,11 +15,11 @@
   {
    "ticker": "RSG",
    "status": "pfad_a",
-   "marktkap": 66775867392.0,
-   "stichtag": "2026-09-18",
+   "marktkap": 65915408384.0,
+   "stichtag": "2026-09-21",
    "zeilen": [
-    "RSG; Großkauf; Marktwert 66,8 Mrd $",
-    "Größter Einzelkauf 59,8 Mio $ am 04.09.; CASCADE INVESTMENT, L.L.C., Insider"
+    "RSG; Großkauf; Marktwert 65,9 Mrd $",
+    "Größter Einzelkauf 55,4 Mio $ am 08.09.; CASCADE INVESTMENT, L.L.C., Insider"
    ],
    "kennung": "RSG|pfad_a|0"
   }
