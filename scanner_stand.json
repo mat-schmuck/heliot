@@ -1,20 +1,28 @@
 {
- "gebaut_am": "2026-09-21T05:10:53+00:00",
+ "gebaut_am": "2026-09-21T05:40:14+00:00",
  "handelstag": "2026-09-18",
  "status": "ok",
  "toleranz": 0.05,
  "quellen": {
+  "typ_filter": {
+   "status": "ok",
+   "stand": "2026-09-21",
+   "eintraege": 13436,
+   "geprueft": 5373,
+   "raus": 22,
+   "ohne_eintrag": 31
+  },
   "rs": {
    "stand": "2026-09-21T05:08:35",
    "status": "ok"
   },
   "kurse": {
    "status": "ok",
-   "mit_kursen": 5372,
-   "ohne_kurse": 1,
-   "aktuell": 5370,
+   "mit_kursen": 5349,
+   "ohne_kurse": 2,
+   "aktuell": 5348,
    "abdeckung": 0.9994,
-   "archiv_zeilen": 3721007
+   "archiv_zeilen": 3704440
   },
   "screener": {
    "status": "ok",
@@ -45,7 +53,7 @@
    "neuester": "2026-09-18T19:30:35Z",
    "aeltester": "2026-09-17T09:00:42Z",
    "status": "ok",
-   "mit_konsens": 4223
+   "mit_konsens": 4219
   },
   "analysten": {
    "status": "aus",
@@ -53,7 +61,7 @@
    "fehler": 0,
    "abgebrochen": false,
    "mit_analysten": 3207,
-   "mit_stand": 4618
+   "mit_stand": 4603
   },
   "revisionen": {
    "status": "ok",
@@ -70,10 +78,10 @@
    "tage": 20,
    "erster_tag": "2026-08-21",
    "letzter_tag": "2026-09-18",
-   "abdeckung_letzter_tag": 0.994,
+   "abdeckung_letzter_tag": 0.9942,
    "hinweis": null,
-   "mit_anteil": 5341,
-   "median_pct": 55.5,
+   "mit_anteil": 5320,
+   "median_pct": 55.6,
    "fehlend": {}
   },
   "gruppen_rs": {
@@ -81,9 +89,9 @@
    "zuordnung_stand": "2026-09-21",
    "zuordnung_eintraege": 13436,
    "ebene": "gics_unterbranche",
-   "aktien": 5372,
-   "mit_gruppe": 5233,
-   "unbekannt": 139,
+   "aktien": 5349,
+   "mit_gruppe": 5226,
+   "unbekannt": 123,
    "gruppen_heute": 165,
    "stichtage": {
     "heute": "2026-09-18",
@@ -93,20 +101,20 @@
    "abdeckung": {
     "0": {
      "tag": "2026-09-18",
-     "basis": 5076,
-     "mit_rohwert": 5075,
+     "basis": 5054,
+     "mit_rohwert": 5053,
      "anteil": 0.9998
     },
     "15": {
      "tag": "2026-08-27",
-     "basis": 5056,
-     "mit_rohwert": 5056,
+     "basis": 5034,
+     "mit_rohwert": 5034,
      "anteil": 1.0
     },
     "30": {
      "tag": "2026-08-06",
-     "basis": 5037,
-     "mit_rohwert": 5037,
+     "basis": 5015,
+     "mit_rohwert": 5015,
      "anteil": 1.0
     }
    },
@@ -121,7 +129,7 @@
   }
  },
  "hinweise": [],
- "universum": 5373,
+ "universum": 5351,
  "strategien": {
   "darvas": {
    "name": "Darvas Box",
@@ -148,15 +156,15 @@
   "cup_handle": {
    "name": "Cup & Handle",
    "toleranz_moeglich": true,
-   "streng": 594,
-   "nur_toleranz": 136,
+   "streng": 593,
+   "nur_toleranz": 135,
    "handelbar": 458
   },
   "rectangle": {
    "name": "Rectangle Top",
    "toleranz_moeglich": true,
-   "streng": 2312,
-   "nur_toleranz": 70,
+   "streng": 2303,
+   "nur_toleranz": 69,
    "handelbar": 1225
   },
   "htf": {
@@ -202,6 +210,6 @@
    "handelbar": 19
   }
  },
- "zeilen": 5372,
- "dauer_s": 1060.7
+ "zeilen": 5349,
+ "dauer_s": 1112.2
 }
