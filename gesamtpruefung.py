@@ -1642,12 +1642,22 @@ def block_e():
                           "main:melde_gedaechtnis.json").stdout
         _ids = json.loads(pathlib.Path("ntfy_ids.json").read_text(
             encoding="utf-8"))
+        # Seit 21.09.2026 (Luecke eins) liegen Logbuch und Kennungen nach
+        # der Sicherung auch schon AM SERVER, nicht erst nach dem Endkommit.
+        _log_server = [json.loads(z)["n"] for z in _git(
+            "--git-dir", _server, "show",
+            "main:trigger_logbuch.jsonl").stdout.splitlines() if z.strip()]
+        _ids_server = json.loads(_git("--git-dir", _server, "show",
+                                      "main:ntfy_ids.json").stdout or "[]")
         _ok = (not _marken and "UU" not in _status and not _stash
                and sorted(json.loads(z)["n"] for z in _zeilen) == [1, 2, 3]
                and sorted(_ids) == ["a", "b", "c"]
-               and "PROBE|Rectangle Top" in _am_server)
+               and "PROBE|Rectangle Top" in _am_server
+               and sorted(_log_server) == [1, 2, 3]
+               and sorted(_ids_server) == ["a", "b", "c"])
         _befund = (f"{len(_zeilen)} Zeilen, Marken {_marken}, Kennungen "
-                   f"{sorted(_ids)}, Stash {_stash!r}")
+                   f"{sorted(_ids)}, Stash {_stash!r}, am Server "
+                   f"{sorted(_log_server)} und {sorted(_ids_server)}")
     except Exception as _e:
         _befund = f"{type(_e).__name__}: {_e}"
     finally:
@@ -1657,6 +1667,166 @@ def block_e():
         _sh.rmtree(_probe, ignore_errors=True)
     pruefe("E", "Stash-Kollision nachgestellt: Die Sicherung im Lauf legt "
            "keine Konfliktmarken ab und verliert keine Zeile", _ok, _befund)
+
+    # LUECKE EINS (Gerhard, 20.09.2026, C10): Trigger-Logbuch und
+    # ntfy-Kennungen gehen seit 21.09.2026 schon IM LAUF ins Repo, nicht
+    # erst mit dem Endkommit; am 18.09.2026 fehlten sonst 26 Signale.
+    # Nachgestellt in einem eigenen Probe-Repo: Nur das Logbuch waechst und
+    # muss ohne neue Meldung an den Server; dann weist der Server einen Push
+    # ab, die Zeile muss lokal bleiben und kein Commit haengen bleiben;
+    # danach holt der naechste Anlauf sie nach.
+    _ort_vorher, _stand_vorher = os.getcwd(), dict(bw._repo_stand)
+    _probe = _tf.mkdtemp(prefix="logbuchprobe_")
+    _ok, _befund = False, ""
+    try:
+        _server = os.path.join(_probe, "server.git")
+        _git("init", "-q", "--bare", "-b", "main", _server)
+        _lauf = os.path.join(_probe, "lauf")
+        _git("clone", "-q", "--config", "core.autocrlf=false", _server, _lauf)
+        if not os.path.isdir(os.path.join(_lauf, ".git")):
+            raise RuntimeError("Probe-Klon fehlt")
+        for _name, _inhalt in (("trigger_logbuch.jsonl", '{"n": 1}\n'),
+                               ("ntfy_ids.json", '[\n  "a"\n]'),
+                               ("melde_gedaechtnis.json", "{}"),
+                               ("positionen.json", "{}")):
+            pathlib.Path(_lauf, _name).write_text(_inhalt, encoding="utf-8")
+        _git("add", ".", ort=_lauf)
+        _git("commit", "-q", "-m", "Start", ort=_lauf)
+        _git("push", "-q", "origin", "HEAD:main", ort=_lauf)
+        os.chdir(_lauf)
+        _zustand = {"fenster_tag": "2026-09-21", "fenster": {},
+                    "gemeldet": {}}
+        # Laufbeginn wie in main(): Was im Checkout steht, gilt als gesichert.
+        bw._repo_stand.update({"keys": None, "zeit": 0.0,
+                               "dateien": bw._anhang_stand()})
+        bw._repo_sichern(_zustand)
+
+        def _dazu(n):
+            with open("trigger_logbuch.jsonl", "a", encoding="utf-8") as _f:
+                _f.write('{"n": %d}\n' % n)
+
+        def _am_server():
+            return sorted(json.loads(z)["n"] for z in _git(
+                "--git-dir", _server, "show",
+                "main:trigger_logbuch.jsonl").stdout.splitlines()
+                if z.strip())
+
+        def _sauber():
+            return not _git("status", "--porcelain", ort=_lauf).stdout.strip()
+
+        _dazu(2)
+        bw._repo_stand["zeit"] = 0.0
+        bw._repo_sichern(_zustand)
+        _nur_log = _am_server() == [1, 2] and _sauber()
+        _haken = os.path.join(_server, "hooks", "pre-receive")
+        with open(_haken, "w", encoding="utf-8", newline="\n") as _f:
+            _f.write("#!/bin/sh\nexit 1\n")
+        _dazu(3)
+        bw._repo_stand["zeit"] = 0.0
+        bw._repo_sichern(_zustand)
+        _abgewiesen = (_am_server() == [1, 2]
+                       and _git("rev-list", "--count", "origin/main..HEAD",
+                                ort=_lauf).stdout.strip() == "0"
+                       and '{"n": 3}' in pathlib.Path(
+                           "trigger_logbuch.jsonl").read_text(encoding="utf-8")
+                       and bw._repo_stand["dateien"] != bw._anhang_stand())
+        os.remove(_haken)
+        bw._repo_stand["zeit"] = 0.0
+        bw._repo_sichern(_zustand)
+        _nachgeholt = _am_server() == [1, 2, 3] and _sauber()
+        _ok = _nur_log and _abgewiesen and _nachgeholt
+        _befund = (f"nur Logbuch {_nur_log}, abgewiesen {_abgewiesen}, "
+                   f"nachgeholt {_nachgeholt}")
+    except Exception as _e:
+        _befund = f"{type(_e).__name__}: {_e}"
+    finally:
+        os.chdir(_ort_vorher)
+        bw._repo_stand.clear()
+        bw._repo_stand.update(_stand_vorher)
+        _sh.rmtree(_probe, ignore_errors=True)
+    pruefe("E", "Logbuch im Lauf gesichert: Eine neue Zeile geht ohne neue "
+           "Meldung ins Repo, ein abgewiesener Push laesst sie lokal und "
+           "nichts haengen, der naechste Anlauf holt sie nach", _ok, _befund)
+    pruefe("E", "Der Datenabruf sichert ein gewachsenes Logbuch auch ohne "
+           "neue Meldung (Luecke eins)",
+           '_anhang_stand() != _repo_stand["dateien"]' in quelle_bw
+           and '_repo_stand["dateien"] = _anhang_stand()' in quelle_bw)
+
+    # LUECKEN ZWEI UND DREI (Gerhard, 20.09.2026, C10): Insider-Kaeufe und
+    # nachgereichte Volumenbestaetigungen bekommen seit 21.09.2026 je eine
+    # eigene Logbuch-Zeile. Geschrieben wird in ein eigenes Verzeichnis;
+    # Senden, Zustand und Marktwert sind abgefangen, es geht nichts hinaus.
+    import insider_edgar as _ie2
+    import trigger_logbuch as _tl2
+    _ort_vorher = os.getcwd()
+    _probe = _tf.mkdtemp(prefix="logbuchzeilen_")
+    _alt = {n: getattr(bw, n) for n in ("_marktwert_heute", "push_frei",
+                                        "sende", "save_state",
+                                        "beobachtungen_eintragen")}
+    _alt_ie = {n: getattr(_ie2, n) for n in ("lies_speicher", "lies_rollen")}
+    _ins, _nach, _befund = False, False, ""
+    try:
+        os.chdir(_probe)
+        from datetime import date as _dz
+        _heute = _dz.today()
+        _kauf = _ie2.isc.InsiderKauf("Probe", 30_000_000.0, _heute, "P",
+                                     "Direktor")
+        _fund = {"ticker": "PRB", "status": "pfad_a", "marktkap": 5.0e9,
+                 "stichtag": _heute.isoformat(), "zeilen": ["Probe"],
+                 "kennung": "PRB|pfad_a|0"}
+        _gesendet, _gesichert = [], []
+        bw._marktwert_heute = lambda s, k, h: 5.0e9
+        bw.push_frei = lambda jetzt=None: True
+        bw.sende = lambda *a, **k: (_gesendet.append(a) or True)
+        bw.save_state = lambda *a, **k: _gesichert.append(k)
+        bw.beobachtungen_eintragen = lambda *a, **k: None
+        _ie2.lies_speicher = lambda *a, **k: {"PRB": [_kauf]}
+        _ie2.lies_rollen = lambda *a, **k: {}
+        _erg = bw.nachtbefunde_schritt(
+            "probe-kein-thema",
+            {"offen": [("insider", _fund)], "live": [], "insider": [_fund],
+             "verlaeufe": {}},
+            {"PRB": {"close": 50.0, "prev_close": 49.0}}, None, set(),
+            {"gemeldet": {}}, dry_run=False)
+        _z = _tl2.lies("trigger_logbuch.jsonl")
+        _ins = (_erg is True and len(_gesendet) == 1 and len(_z) == 1
+                and _z[0].get("quelle") == "waechter/insider"
+                and _z[0].get("kaufpunkt") == 50.0
+                and _z[0].get("pfad_a") is True
+                and _z[0].get("groesster_kauf_dollar") == 30_000_000.0
+                and _z[0].get("trockenlauf") is False
+                and _tl2.zaehlt_mit(_z[0])
+                and _gesichert == [{"sofort": True}])
+        _t = {"ticker": "PRB", "strategie": "Rectangle Top",
+              "kaufpunkt": 10.0, "kurs": 10.4, "vol_ok": True,
+              "vol_ratio": 1.6, "vol_anteil": 0.4,
+              "key": "PRB|Rectangle Top|10.0",
+              "key_best": "PRB|Rectangle Top|10.0|b"}
+        _im = set()
+        _n1 = bw.nachtrag_ins_logbuch([_t], _im, trocken=False)
+        _n2 = bw.nachtrag_ins_logbuch([_t], _im, trocken=False)
+        _zn = [z for z in _tl2.lies("trigger_logbuch.jsonl")
+               if z.get("quelle") == "waechter/nachtrag"]
+        _nach = (_n1 == 1 and _n2 == 0 and len(_zn) == 1
+                 and _zn[0].get("nachtrag") is True
+                 and _zn[0].get("vol_bestaetigt") is True
+                 and _zn[0].get("kurs") == 10.4
+                 and not _tl2.zaehlt_mit(_zn[0]))
+        _befund = (f"Insider {_ins} (Rueckgabe {_erg}, {len(_z)} Zeile(n)), "
+                   f"Nachtrag {_nach} ({_n1} und {_n2})")
+    except Exception as _e:
+        _befund = f"{type(_e).__name__}: {_e}"
+    finally:
+        os.chdir(_ort_vorher)
+        for _n, _v in _alt.items():
+            setattr(bw, _n, _v)
+        for _n, _v in _alt_ie.items():
+            setattr(_ie2, _n, _v)
+        _sh.rmtree(_probe, ignore_errors=True)
+    pruefe("E", "Ein gemeldeter Insider-Kauf steht mit Einstieg und "
+           "Signalzahlen im Logbuch (Luecke zwei)", _ins, _befund)
+    pruefe("E", "Ein Nachtrag steht genau einmal im Logbuch und zaehlt "
+           "nicht als eigenes Signal (Luecke drei)", _nach, _befund)
 
     # DIE EINTRITTSKARTE: kam der Kaufpunkt von UNTEN? (Mathias,
     # 14.08.2026). Ohne sie meldet der Waechter Ruecksetzer-Marken, unter

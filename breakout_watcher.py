@@ -847,7 +847,22 @@ def load_state() -> dict:
             AMPEL_TAG: ampel_tag or None}
 
 
-_repo_stand = {"keys": None, "zeit": 0.0}
+_repo_stand = {"keys": None, "zeit": 0.0, "dateien": None}
+
+
+def _anhang_stand() -> tuple:
+    """Groesse von Trigger-Logbuch und ntfy-Kennungen (seit 21.09.2026).
+
+    Daran sieht _repo_sichern, ob seit der letzten Sicherung etwas
+    dazugekommen ist. Beide Dateien werden nur angehaengt, jede neue Zeile
+    aendert also die Groesse; eine fehlende Datei zaehlt als -1."""
+    raus = []
+    for datei in (trigger_logbuch.DATEI, str(ntfy_verlauf.VERLAUF_DATEI)):
+        try:
+            raus.append(Path(datei).stat().st_size)
+        except OSError:
+            raus.append(-1)
+    return tuple(raus)
 
 
 def _repo_sichern(state: dict, sofort: bool = False):
@@ -857,8 +872,10 @@ def _repo_sichern(state: dict, sofort: bool = False):
     Uebergabe zu spaet (siehe load_state). Deshalb committet der Waechter
     nach jeder Meldung; die Schlussstunde findet den Stand dann im
     Checkout vor. Gedrosselt auf eine Sicherung je 60 Sekunden und nur
-    bei veraenderter Meldungsmenge; jeder Fehler ist eine Protokollzeile
-    und KEIN Abbruch — im Zweifel greift der Endkommit des Workflows."""
+    bei veraenderter Meldungsmenge oder, seit dem 21.09.2026, bei
+    gewachsenem Trigger-Logbuch (siehe unten); jeder Fehler ist eine
+    Protokollzeile und KEIN Abbruch — im Zweifel greift der Endkommit des
+    Workflows."""
     # DIE WARTELISTE ZAEHLT MIT (11.09.2026): Ein vorgemerkter Luecken-Tag
     # aendert die MELDUNGS-Menge nicht, muss aber ins Repo — sein Einstieg
     # wird erst am Folgetag geprueft, und der Actions-Cache ist zwischen
@@ -871,6 +888,10 @@ def _repo_sichern(state: dict, sofort: bool = False):
     # des Tages traegt die Marktampel; ohne Sicherung im Repo stellte die
     # Schlussstunde sie ein zweites Mal voran.
     keys = keys | {"AMPEL|" + str(state.get(AMPEL_TAG) or "")}
+    # LUECKE EINS (Gerhard, 20.09.2026, C10): Auch ein gewachsenes
+    # Trigger-Logbuch oder neue ntfy-Kennungen sind ein Grund zu sichern,
+    # siehe den eigenen Commit weiter unten.
+    anhang = _anhang_stand()
     jetzt = time.time()
     # sofort (seit 10.09.2026, Nachtbefunde): ohne die Minutendrossel, weil
     # die Melde-Merker in positionen.json stehen und der Endkommit des
@@ -884,7 +905,8 @@ def _repo_sichern(state: dict, sofort: bool = False):
     # Fall RCUS — die Exit-Meldung ging am 11.09.2026 um 15:47 hinaus, die
     # Beobachtung stand danach im Repo weiter OFFEN und haette denselben
     # Ausstieg am naechsten Handelstag erneut gemeldet.
-    if (not sofort and (keys == _repo_stand["keys"]
+    if (not sofort and ((keys == _repo_stand["keys"]
+                         and anhang == _repo_stand["dateien"])
                         or jetzt - _repo_stand["zeit"] < 60)):
         return
     _repo_stand["keys"] = keys
@@ -906,7 +928,7 @@ def _repo_sichern(state: dict, sofort: bool = False):
         r = subprocess.run(g + ["commit", "-m",
                                 "Melde-Gedächtnis (im Lauf gesichert)"],
                            capture_output=True, timeout=30)
-        if r.returncode != 0:
+        if r.returncode != 0 and anhang == _repo_stand["dateien"]:
             return                     # nichts zu committen
         # KEINE STASH-KOLLISION MEHR (Befund 10.09.2026, belegt am 18.08.
         # und am 31.08.2026). Logbuch und ntfy-Kennungen haengt der Lauf nur
@@ -944,11 +966,40 @@ def _repo_sichern(state: dict, sofort: bool = False):
             if ntfy_datei in beiseite:
                 ntfy_verlauf.vereine(beiseite[ntfy_datei])
             shutil.rmtree(ablage, ignore_errors=True)
+        # LUECKE EINS (Gerhard, 20.09.2026, C10): Logbuch und
+        # ntfy-Kennungen gingen bis hierher erst mit dem Endkommit des
+        # Workflows ins Repo. Am 18.09.2026 schaltete GitHub den Waechter
+        # vorher ab, und 26 Signale fehlten im Logbuch. Seither gehen beide
+        # Dateien im Lauf mit, in einem EIGENEN Commit NACH dem Pull: Er
+        # entsteht auf dem frischen Serverstand und muss nie umgesetzt
+        # werden, die Stash-Kollision oben kann also nicht wiederkommen.
+        # Scheitert der Push, wird genau dieser Commit zurueckgenommen (die
+        # Dateien bleiben, wie sie sind), und die naechste Sicherung
+        # versucht es von vorn; der Endkommit bleibt die letzte Instanz.
+        anhang_dateien = [d for d in (trigger_logbuch.DATEI,
+                                      str(ntfy_verlauf.VERLAUF_DATEI))
+                          if Path(d).exists()]
+        anhang_commit = False
+        if anhang_dateien:
+            subprocess.run(g + ["add"] + anhang_dateien,
+                           capture_output=True, timeout=30)
+            a = subprocess.run(g + ["commit", "-m", "Trigger-Logbuch und "
+                                    "ntfy-Kennungen (im Lauf gesichert)"],
+                               capture_output=True, timeout=30)
+            anhang_commit = a.returncode == 0
+        if r.returncode != 0 and not anhang_commit:
+            _repo_stand["dateien"] = _anhang_stand()
+            return                     # nichts zu pushen
         p = subprocess.run(g + ["push", "origin", "main"],
                            capture_output=True, timeout=60)
         if p.returncode != 0:
+            if anhang_commit:
+                subprocess.run(g + ["reset", "--mixed", "-q", "HEAD~1"],
+                               capture_output=True, timeout=30)
             print("  Melde-Gedächtnis: Push ins Repo fehlgeschlagen — "
                   "der Endkommit des Laufs holt es nach.")
+        else:
+            _repo_stand["dateien"] = _anhang_stand()
     except Exception as e:
         print(f"  Melde-Gedächtnis: Repo-Sicherung übersprungen ({e}).")
 
@@ -2395,6 +2446,13 @@ def gapgo_einstiege_pruefen(state: dict, quotes: dict) -> tuple:
 NACHT_MARKE = "GEWINN|"
 INSIDER_MAX_VERSUCHE = 5
 _insider_versuche: dict = {}
+# LUECKE ZWEI (Gerhard, 20.09.2026, C10): das heutige Signal je Fund, damit
+# das Trigger-Logbuch seine Zahlen bekommt (siehe _insider_ins_logbuch).
+_insider_signal: dict = {}
+
+
+def _insider_kennung(f: dict) -> str:
+    return str(f.get("kennung", f.get("ticker", "?")))
 
 
 def nachtbefunde_laden() -> dict:
@@ -2558,7 +2616,61 @@ def _insider_heute(f: dict, sym: str, kurs: float, heute):
                                        cfg=CFG["insider"])
     if signal["status"] in ("kein_signal", "firma_zu_klein"):
         return None
+    _insider_signal[_insider_kennung(f)] = signal
     return isc.meldungszeilen(sym, signal, rollen=insider_edgar.lies_rollen())
+
+
+def _insider_ins_logbuch(gesendet, trocken: bool) -> int:
+    """LUECKE ZWEI (Gerhard, 20.09.2026, C10): Insider-Kaeufe landeten nie
+    im Trigger-Logbuch, anders als jeder Ausbruch.
+
+    Jetzt steht jeder gemeldete Fund genau einmal darin: mit dem HEUTIGEN
+    Kurs als Einstieg (derselbe, mit dem Kapitel 12 die Beobachtung
+    eroeffnet), dem Stop, den diese Beobachtung bekommt (Kapitel-11-Deckel,
+    ein Insider-Fund hat keinen Strukturpunkt), und den Zahlen seines
+    heutigen Signals. Eingetragen wird, sobald die Meldung hinausging oder
+    im Trockenlauf angezeigt wurde; ein gescheiterter Versand kommt im
+    naechsten Durchlauf wieder und wird erst dann eingetragen. Fehler
+    brechen die Meldekette nie.
+
+    gesendet: die Tupel aus nachtbefunde_schritt, (eintrag, fund, zeilen,
+    kuerzel, kurs). Rueckgabe: die Zahl der geschriebenen Zeilen."""
+    n = 0
+    for _, f, _, sym, kurs in gesendet:
+        try:
+            signal = _insider_signal.get(_insider_kennung(f)) or {}
+            a = signal.get("pfad_a") or {}
+            b = signal.get("pfad_b") or {}
+            kauf = a.get("groesster_kauf")
+            try:
+                stop = exit_regeln.berechne_initialen_stop(float(kurs), None)[0]
+            except Exception:
+                stop = None
+            stichtag = signal.get("stichtag") or f.get("stichtag")
+            trigger_logbuch.protokolliere(
+                {"ticker": sym, "firma": f.get("firma", ""),
+                 "strategie": "Insider-Kauf",
+                 "kaufpunkt": kurs, "kurs": kurs, "stop": stop,
+                 "insider_status": signal.get("status"),
+                 "marktwert": signal.get("marktkap"),
+                 "pfad_a": bool(a.get("erfuellt")),
+                 "groesster_kauf_dollar": (float(kauf.wert_dollar)
+                                           if kauf is not None else None),
+                 "pfad_a_schwelle": a.get("schwelle_dollar"),
+                 "pfad_b": bool(b.get("erfuellt")),
+                 "insider_zahl": len(b.get("qualifizierte_insider") or {}),
+                 "pfad_b_schwelle": b.get("schwelle_dollar"),
+                 "stichtag": str(stichtag)[:10] if stichtag else None,
+                 "kennung": f.get("kennung"),
+                 "gemeldet": True,
+                 **zusatz_logbuch(sym),
+                 "trockenlauf": bool(trocken)},
+                quelle="waechter/insider")
+            n += 1
+        except Exception as e:
+            print(f"  Insider-Fund {sym}: Logbuch-Eintrag übersprungen "
+                  f"({type(e).__name__}: {e}).")
+    return n
 
 
 def nachtbefunde_schritt(topic, nacht, basis, ws, schon_gemeldet, state,
@@ -2658,6 +2770,7 @@ def nachtbefunde_schritt(topic, nacht, basis, ws, schon_gemeldet, state,
         print(f"(Dry-Run) Nachtbefund, heute nachgerechnet: {titel}")
         for a in absaetze:
             print("  " + a.replace("\n", "\n  "))
+        _insider_ins_logbuch(gesendet_insider, trocken=True)
     elif not sende(topic, titel, absaetze, prio):
         return False
     else:
@@ -2679,6 +2792,7 @@ def nachtbefunde_schritt(topic, nacht, basis, ws, schon_gemeldet, state,
                 k = INSIDER_MARKE + f.get("kennung", f.get("ticker", "?"))
                 schon_gemeldet.add(k)
                 state["gemeldet"][k] = heute_s
+            _insider_ins_logbuch(gesendet_insider, trocken=False)
             # Kapitel 12: Insider-Funde sind marktweit und haben keinen
             # Chart-Kaufpunkt — Einstieg ist der HEUTIGE Kurs (bis
             # 10.09.2026 kam er aus history(period="1d") und war in den
@@ -3891,6 +4005,60 @@ def format_aktie(gruppe: list[dict], nummer: int | None = None) -> str:
     return "\n".join(zeilen)
 
 
+def nachtrag_ins_logbuch(nachtrag: list[dict], im_logbuch: set,
+                         trocken: bool) -> int:
+    """LUECKE DREI (Gerhard, 20.09.2026, C10): Zog das Volumen nach einer
+    unbestaetigten Meldung nach, stand davon nichts im Trigger-Logbuch. Der
+    Ausbruch galt dort fuer immer als unbestaetigt, obwohl "Vol jetzt
+    bestätigt" hinausging, und wie sich spaet bestaetigte Ausbrueche
+    schlagen, liess sich nicht nachmessen.
+
+    Jetzt bekommt jeder Nachtrag EINE eigene Zeile mit dem Kennzeichen
+    nachtrag und den Zahlen zum Zeitpunkt der Bestaetigung: Kurs,
+    Volumenverhaeltnis, Anteil des Handelstags laut Volumenkurve. Die erste
+    Zeile des Ausbruchs bleibt, wie sie ist; das Logbuch wird nur
+    angehaengt, nie umgeschrieben. Die Auswertung zaehlt Nachtrag-Zeilen
+    nicht als eigenes Signal (trigger_logbuch.zaehlt_mit), sonst stuende
+    derselbe Ausbruch zweimal darin. Ein eigener Schluessel je Ausbruch in
+    im_logbuch haelt es auch bei einem Sendefehler bei einer Zeile. Fehler
+    brechen die Meldekette nie. Rueckgabe: die Zahl der geschriebenen
+    Zeilen."""
+    n = 0
+    for t in nachtrag:
+        schluessel = "NACHTRAG|" + str(t.get("key_best") or t.get("key"))
+        if schluessel in im_logbuch:
+            continue
+        im_logbuch.add(schluessel)
+        try:
+            try:
+                karenz = (bool(t.get("zahlen_karenz"))
+                          or im_zahlen_karenzfenster(t.get("ticker")))
+            except Exception:
+                karenz = bool(t.get("zahlen_karenz"))
+            trigger_logbuch.protokolliere(
+                {"ticker": t.get("ticker"), "firma": t.get("firma", ""),
+                 "strategie": t.get("strategie"),
+                 "kaufpunkt": t.get("kaufpunkt"), "kurs": t.get("kurs"),
+                 "stop": t.get("stop"), "ziel": t.get("ziel"),
+                 "vol_ratio": t.get("vol_ratio"),
+                 "vol_noetig": t.get("vol_noetig"),
+                 "vol_bestaetigt": t.get("vol_ok"),
+                 "vol_anteil": t.get("vol_anteil"),
+                 "ueber_pct": t.get("ueber_pct"),
+                 "nachtrag": True,
+                 "gemeldet": True,
+                 "zahlen_karenz": bool(karenz),
+                 "folgetag": bool(t.get("folgetag")),
+                 **zusatz_logbuch(t.get("ticker")),
+                 "trockenlauf": bool(trocken)},
+                quelle="waechter/nachtrag")
+            n += 1
+        except Exception as e:
+            print(f"  Nachtrag {t.get('ticker')}: Logbuch-Eintrag "
+                  f"übersprungen ({type(e).__name__}: {e}).")
+    return n
+
+
 def push_nachtrag(topic: str, treffer: list[dict]) -> bool:
     """Meldet, dass ein zuvor UNBESTAETIGT gemeldeter Ausbruch inzwischen
     die Volumenbestaetigung bekommen hat.
@@ -4247,6 +4415,9 @@ def main():
     # Was in DIESEM Lauf schon im Trigger-Logbuch steht. Getrennt von
     # schon_gemeldet, das erst ein erfolgreicher Push fuellt.
     _im_logbuch = set()
+    # LUECKE EINS: der Stand von Logbuch und ntfy-Kennungen beim Start. Was
+    # danach dazukommt, sichert der Lauf selbst (siehe _repo_sichern).
+    _repo_stand["dateien"] = _anhang_stand()
 
     # ZWEI TAKTE STATT EINEM (Mathias, 28.07.2026: "Stelle auf Echtzeit um").
     #
@@ -4320,6 +4491,14 @@ def main():
             if runde > 1:
                 print(f"\n——— Datenabruf {runde} "
                       f"({datetime.now():%H:%M:%S}) ———")
+            # LUECKE EINS (Gerhard, 20.09.2026, C10): Einmal je Datenabruf
+            # nachsehen, ob Logbuch oder ntfy-Kennungen seit der letzten
+            # Sicherung gewachsen sind, und dann sichern. Die Minutendrossel
+            # steht in _repo_sichern. Ohne diesen Aufruf ginge ein Eintrag,
+            # dem keine Meldung folgt (etwa ein Ausbruch ohne
+            # Volumenbestaetigung), erst mit dem Endkommit ins Repo.
+            if not args.dry_run and _anhang_stand() != _repo_stand["dateien"]:
+                save_state(state)
 
         # Hauptquelle Yahoo (ein Abruf, kein Limit), Twelve Data als Rueckfall.
         if laut:
@@ -4660,6 +4839,11 @@ def main():
                       f"Volumenbestätigung nachgereicht:")
                 for t in nachtrag:
                     print("  " + format_treffer(t).replace("\n", "\n  ") + "\n")
+                # LUECKE DREI (Gerhard, 20.09.2026, C10), siehe
+                # nachtrag_ins_logbuch: einmal je Ausbruch, auch im
+                # Trockenlauf und auch, wenn der Push gleich scheitert.
+                nachtrag_ins_logbuch(nachtrag, _im_logbuch,
+                                     bool(args.dry_run))
                 if args.dry_run:
                     print("(Dry-Run — kein Nachtrag gesendet)")
                     for t in nachtrag:

@@ -162,6 +162,25 @@ def vereinen(sicherung, pfad=DATEI):
 # Auswerten
 # ---------------------------------------------------------------------------
 
+def zaehlt_mit(e) -> bool:
+    """Misst die Auswertung diesen Eintrag als eigenes Signal?
+
+    TROCKENLÄUFE BLEIBEN DRAUSSEN. Sie stehen absichtlich im Logbuch —
+    ein Trockenlauf hat ein echtes Signal erkannt, das gehoert
+    mitgeschrieben — aber sie entstehen beim Pruefen und Entwickeln
+    oft mehrfach am selben Tag zur selben Aktie. Wer sie mitmisst,
+    gewichtet Zufaelliges hoch (gemessen 06.08.2026: drei Probelaeufe
+    erzeugten 68 Eintraege neben 28 echten).
+
+    NACHTRAEGE EBENSO (seit 21.09.2026): Eine nachgereichte
+    Volumenbestaetigung gehoert zu einem Ausbruch, der schon mit seiner
+    ersten Meldung im Logbuch steht. Als eigenes Signal gezaehlt, stuende
+    derselbe Ausbruch zweimal in der Rechnung. Die Zeile bleibt fuer
+    Fragen wie "wie schlagen sich spaet bestaetigte Ausbrueche?"."""
+    return (bool(e.get("ticker")) and not e.get("trockenlauf")
+            and not e.get("nachtrag"))
+
+
 def auswerten(eintraege, tage=(5, 10, 20), leise=False):
     """Was ist aus den protokollierten Signalen geworden?
 
@@ -172,14 +191,8 @@ def auswerten(eintraege, tage=(5, 10, 20), leise=False):
     import yfinance as yf
     from statistics import median
 
-    # TROCKENLÄUFE BLEIBEN DRAUSSEN. Sie stehen absichtlich im Logbuch —
-    # ein Trockenlauf hat ein echtes Signal erkannt, das gehoert
-    # mitgeschrieben — aber sie entstehen beim Pruefen und Entwickeln
-    # oft mehrfach am selben Tag zur selben Aktie. Wer sie mitmisst,
-    # gewichtet Zufaelliges hoch (gemessen 06.08.2026: drei Probelaeufe
-    # erzeugten 68 Eintraege neben 28 echten).
-    mit_kaufpunkt = [e for e in eintraege
-                     if e.get("ticker") and not e.get("trockenlauf")]
+    # Was als eigenes Signal zaehlt, steht in zaehlt_mit.
+    mit_kaufpunkt = [e for e in eintraege if zaehlt_mit(e)]
     if not mit_kaufpunkt:
         return {}
     ticker = sorted({e["ticker"].upper() for e in mit_kaufpunkt})
@@ -287,13 +300,17 @@ def selbsttest() -> int:
     pruefe("Nicht darstellbare Werte werden ausgelassen",
            letzte["ticker"] == "DDD" and "objekt" not in letzte)
 
-    # Trockenläufe stehen im Logbuch, zählen aber nicht mit
-    trocken = [{"ticker": "TROCK", "trockenlauf": True},
-               {"ticker": "ECHT", "trockenlauf": False}]
-    gefiltert = [e for e in trocken
-                 if e.get("ticker") and not e.get("trockenlauf")]
+    # Trockenläufe und Nachträge stehen im Logbuch, zählen aber nicht als
+    # eigenes Signal mit
+    proben = [{"ticker": "TROCK", "trockenlauf": True},
+              {"ticker": "ECHT", "trockenlauf": False},
+              {"ticker": "NACH", "nachtrag": True, "vol_bestaetigt": True},
+              {"ticker": "", "strategie": "ohne Kuerzel"}]
+    gezaehlt = [e["ticker"] for e in proben if zaehlt_mit(e)]
     pruefe("Trockenläufe werden bei der Auswertung übersprungen",
-           [e["ticker"] for e in gefiltert] == ["ECHT"])
+           "TROCK" not in gezaehlt and "ECHT" in gezaehlt, str(gezaehlt))
+    pruefe("Nachgereichte Bestätigungen zählen nicht als eigenes Signal",
+           gezaehlt == ["ECHT"], str(gezaehlt))
 
     # --- Zusammenfuehren (Waechter-Lauf in der Cloud) ---------------------
     ordner = os.path.dirname(pfad)
