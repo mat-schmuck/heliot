@@ -690,6 +690,12 @@ if nachschlag_eingabe:
         st.markdown("#### Chartmuster und Trend Template")
         for satz in nachschlagen.muster_saetze(nachschlag_res, nachschlag_rs_satz if nachschlag_res else None):
             st.markdown(satz)
+        # CHARTMUSTER AUS GERHARDS PAPIER VOM 20.09.2026 (Etappe 1): dieselben
+        # Worte wie bei den Treffern des Scanners, gerechnet am letzten
+        # abgeschlossenen Handelstag; waehrend des Handels zaehlt der Vortag.
+        st.markdown("#### Weitere Chartmuster")
+        for satz in nachschlagen.chartmuster_saetze(nachschlag_df):
+            st.markdown(satz)
         st.markdown("#### Kaufpunkte")
         if nachschlag_res:
             for satz in nachschlagen.kaufpunkt_saetze(nachschlag_res):

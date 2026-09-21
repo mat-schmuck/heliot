@@ -1560,6 +1560,45 @@ def muster_saetze(res, rs_satz=None, cfg=None):
     return s
 
 
+def abgeschlossene_kerzen(df, jetzt=None):
+    """Nur Tageskerzen abgeschlossener Handelstage: Solange in New York
+    gehandelt wird, faellt die Kerze des laufenden Tages weg. Ein Inside Day
+    oder ein Pocket Pivot steht erst mit dem Schluss fest; eine halbe Kerze
+    wuerde ein Muster zeigen, das es am Abend vielleicht nicht gibt.
+    jetzt: Zeitpunkt mit Zeitzone, fuer die Pruefung."""
+    import pandas as pd
+    from zoneinfo import ZoneInfo
+    if df is None or len(df) == 0:
+        return None
+    d = df[["datetime", "open", "high", "low", "close", "volume"]].dropna(subset=["open", "high", "low", "close"])
+    d = d.sort_values("datetime").reset_index(drop=True)
+    if len(d) == 0:
+        return None
+    ny = (jetzt or datetime.now(ZoneInfo("UTC"))).astimezone(ZoneInfo("America/New_York"))
+    letzter = pd.Timestamp(d["datetime"].iloc[-1]).date()
+    if letzter >= ny.date() and (ny.hour, ny.minute) < (16, 0):
+        d = d.iloc[:-1].reset_index(drop=True)
+    return d
+
+
+def chartmuster_saetze(df, jetzt=None):
+    """Die Chartmuster aus Gerhards Papier vom 20.09.2026 (chartmuster.py) fuer
+    eine Aktie, mit denselben Worten wie bei den Treffern des Scanners
+    (scanner_ansicht.muster_saetze). Gerechnet wird am letzten abgeschlossenen
+    Handelstag; der Satz nennt ihn. Nichts davon filtert."""
+    import chartmuster
+    import scanner_ansicht
+    d = abgeschlossene_kerzen(df, jetzt)
+    if d is None or len(d) < 4:
+        return ["Ohne Kursdaten gibt es keine Chartmuster."]
+    teile = scanner_ansicht.muster_saetze(chartmuster.werte(d))
+    tag = datum_text(str(d["datetime"].iloc[-1])[:10])
+    s = [f"Mit dem Schluss vom {tag}: " + ("; ".join(teile) if teile else "keines der Muster trifft zu") + "."]
+    s.append("Die Muster sind Entscheidungshilfen und filtern nichts. Unsere eigenen Schwellen, wo Gerhards "
+             "Quellen keine Zahl nennen, stehen im Reiter Regelwerk.")
+    return s
+
+
 # Kuerzel der Detektoren in Worten, damit ein Screenreader nicht "52 W" oder
 # "M A 50" vorliest. Nur fuer die Anzeige; die Mappe behaelt ihre Namen.
 _ANZEIGE_WOERTER = (("Fallback: ", "allgemeine Marke, "), ("52W-Hoch", "52-Wochen-Hoch"),
@@ -2200,7 +2239,30 @@ def selbsttest() -> int:
     kjs = kerzen_saetze(kj, "jahr", heute=datetime(2026, 2, 20).date())
     p("Jahreskerzen als Saetze: laufendes Jahr mit bisher",
       kjs[0].startswith("Jahr 2026, bisher:") and "plus 4,2 Prozent gegenüber dem Vorjahr" in kjs[0], kjs)
-    alle_saetze = ms + ohne + ks + kt + km + kjs
+    # Chartmuster aus Gerhards Papier vom 20.09.2026: nur abgeschlossene Tage.
+    # 300 Handelstage leicht steigend, der letzte (18.09.2026) ein Inside Day.
+    from zoneinfo import ZoneInfo
+    cm_tage = pd.bdate_range(end="2026-09-18", periods=300)
+    cm_c = [50.0 + 0.1 * i for i in range(300)]
+    cm_df = pd.DataFrame({"datetime": cm_tage, "open": [c - 0.2 for c in cm_c], "high": [c + 0.5 for c in cm_c],
+                          "low": [c - 0.5 for c in cm_c], "close": cm_c, "volume": [1_000_000.0] * 300})
+    cm_df.loc[298, ["high", "low"]] = [cm_c[298] + 2.0, cm_c[298] - 2.0]
+    cm_df.loc[299, ["open", "high", "low", "close", "volume"]] = [cm_c[298], cm_c[298] + 1.0, cm_c[298] - 1.0,
+                                                                  cm_c[298] + 0.3, 800_000.0]
+    ny = ZoneInfo("America/New_York")
+    cm_mittag = chartmuster_saetze(cm_df, jetzt=datetime(2026, 9, 18, 12, 0, tzinfo=ny))
+    cm_abend = chartmuster_saetze(cm_df, jetzt=datetime(2026, 9, 18, 16, 30, tzinfo=ny))
+    cm_montag = chartmuster_saetze(cm_df, jetzt=datetime(2026, 9, 21, 10, 0, tzinfo=ny))
+    p("Chartmuster: waehrend des Handels zaehlt der Vortag, der Inside Day steht noch nicht fest",
+      cm_mittag[0].startswith("Mit dem Schluss vom 17.09.2026:") and "Inside Day" not in cm_mittag[0], cm_mittag)
+    p("Chartmuster: nach dem Schluss zaehlt der Tag selbst, mit beiden Einstiegen",
+      cm_abend[0].startswith("Mit dem Schluss vom 18.09.2026:") and "Inside Day" in cm_abend[0]
+      and "eng über" in cm_abend[0] and "konservativ über" in cm_abend[0], cm_abend)
+    p("Chartmuster: ein abgeschlossener Vortag bleibt am naechsten Handelstag stehen",
+      cm_montag[0] == cm_abend[0], cm_montag)
+    p("Chartmuster: ohne Kurse ein ehrlicher Satz",
+      chartmuster_saetze(None) == ["Ohne Kursdaten gibt es keine Chartmuster."])
+    alle_saetze = ms + ohne + ks + kt + km + kjs + cm_mittag + cm_abend
     p("Keine Bildzeichen und keine Gedankenstriche in den neuen Saetzen",
       not any(bildzeichen_in(x) or "—" in x or "–" in x for x in alle_saetze))
     print(f"\n{len(fehler)} Fehler." if fehler else "\nAlles bestanden.")
@@ -2222,6 +2284,14 @@ def zeige(ticker):
     print(bericht_text(bericht(t, daten["rs_universum.json"], daten["ibd_ratings.json"], daten["sektor_rangliste.json"],
                                live=live, kurve=kurve, kurve_quelle=kq, sektor_name=sektor, sektor_quelle=sq,
                                streubesitz_kurs=sb_kurs)))
+    try:
+        import pattern_scanner as ps
+        kurse = ps.yahoo_einzeln(t)
+    except Exception:  # noqa: BLE001, ohne Kurse sagt der Satz das selbst
+        kurse = None
+    print("\nChartmuster aus Gerhards Papier vom 20.09.2026")
+    for satz in chartmuster_saetze(kurse):
+        print(satz)
     return 0
 
 
