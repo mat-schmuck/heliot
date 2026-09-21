@@ -156,24 +156,11 @@
     "SEI|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
     "BEST|SEI|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
     "UMAC|Fallback: MA50-R\u00fcckeroberung": "2026-09-21",
-    "BEST|UMAC|Fallback: MA50-R\u00fcckeroberung": "2026-09-21"
+    "BEST|UMAC|Fallback: MA50-R\u00fcckeroberung": "2026-09-21",
+    "UEBER|IMOS|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
+    "UEBER|MSTR|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
+    "GAPGOIN|ATI|2026-09-18": "2026-09-21"
   },
-  "gapgo_warten": {
-    "PSIX": {
-      "signal": "2026-09-17",
-      "kp": 46.93,
-      "stop": 43.48,
-      "firma": "Power Solutions International Inc",
-      "bestaetigt": false,
-      "pruef": "2026-09-18"
-    },
-    "ATI": {
-      "signal": "2026-09-18",
-      "kp": 186.36,
-      "stop": 183.63,
-      "firma": "ATI Inc",
-      "bestaetigt": false
-    }
-  },
+  "gapgo_warten": {},
   "ampel_tag": "2026-09-21"
 }
