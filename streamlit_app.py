@@ -42,6 +42,7 @@ import streamlit as st
 
 import ablaeufe
 import frischhalten
+import listen
 import nachschlagen
 import pattern_scanner as ps
 import scanner_ansicht as sa
@@ -551,6 +552,9 @@ if not api_key and rolle != "gast":
 # Forward-KGV, erwartetes Wachstum, Revisionen der Wochenliste); deshalb
 # stehen die Lesefunktionen hier vor dem Suchfeld und nicht beim Scanner.
 DATEN_REPO = "mat-schmuck/heliot-daten"
+# Das oeffentliche Repo mit Listen, Mappe und Ablaeufen. Seit dem 21.09.2026 hier
+# oben, weil das Nachschlagen die einzeln ueberwachten Aktien (S7) liest.
+REPO = "mat-schmuck/heliot"
 @st.cache_data(ttl=600, show_spinner=False)
 def _scanner_analysten_holen():
     """Die Analystenwerte liegen im PRIVATEN Datenrepo (wie der eingefrorene
@@ -617,212 +621,13 @@ def nachschlag_stichtagkurs(ticker: str, stichtag: str):
     return nachschlagen.kurs_am(ticker, stichtag)
 
 
-# S4 (Gerhard, 20.09.2026): "Ein Gast soll wirklich nur den Scanner sehen und
-# sonst nichts von dem, was dahinter laeuft." Das Nachschlagen gibt es deshalb
-# nur angemeldet; ein Verweis mit ?aktie=... bleibt fuer Gaeste ohne Wirkung.
-if rolle != "gast":
-    st.markdown("### Aktie nachschlagen")
-    # DAS FELD STEHT IN DER ADRESSE (Mathias, 14.09.2026): bind="query-params"
-    # schreibt die Eingabe als ?aktie=... in die Adresse der Seite und liest sie
-    # beim Oeffnen wieder. So fuehrt ein Verweis wie ?aktie=AAOI direkt zu den
-    # vollstaendigen Daten einer Aktie, und ein Lesezeichen merkt sich die Aktie.
-    nachschlag_eingabe = (st.text_input("Kürzel oder Firmenname eingeben, dann Eingabetaste", key="aktie",
-                                        bind="query-params", placeholder="zum Beispiel AAOI oder Apple")
-                          or "").strip()
-else:
-    nachschlag_eingabe = ""
-if nachschlag_eingabe:
-    nachschlag_daten = nachschlag_dateien()
-    nachschlag_ticker, nachschlag_kandidaten = nachschlagen.finde(nachschlag_eingabe,
-                                                                  nachschlag_daten.get("rs_universum.json"))
-    if nachschlag_ticker is None:
-        if nachschlag_kandidaten:
-            st.markdown("Mehrere Aktien passen. Bitte das Kürzel eingeben:")
-            for k, n in nachschlag_kandidaten:
-                st.markdown(f"{k}, {n}")
-        else:
-            st.markdown("Nichts gefunden. Bitte Kürzel oder Namen prüfen.")
-    else:
-        with st.spinner(f"Hole Kurs, Volumen und Chartmuster für {nachschlag_ticker}"):
-            try:
-                nachschlag_live_werte = nachschlag_live(nachschlag_ticker)
-            except Exception:
-                nachschlag_live_werte = None
-            try:
-                nachschlag_k, nachschlag_kq = nachschlag_kurve(nachschlag_ticker)
-            except Exception:
-                nachschlag_k, nachschlag_kq = None, "keine"
-            try:
-                nachschlag_s, nachschlag_sq = nachschlag_sektor(nachschlag_ticker)
-            except Exception:
-                nachschlag_s, nachschlag_sq = None, "keine"
-            try:
-                nachschlag_stichtag = nachschlagen.streubesitz_stichtag(nachschlag_daten.get("ibd_ratings.json"),
-                                                                       nachschlag_ticker)
-                nachschlag_sb_kurs = (nachschlag_stichtagkurs(nachschlag_ticker, nachschlag_stichtag)
-                                      if nachschlag_stichtag else None)
-            except Exception:
-                nachschlag_sb_kurs = None
-            # ETAPPE 5 (Gerhard, 13.09.2026, Entscheidung 9): Analysten und
-            # Konsens aus dem privaten Datenrepo, nur mit dem Lese-Token; ohne
-            # ihn nennt das Kapitel den Grund.
-            nachschlag_an_tab, nachschlag_an_grund = lade_scanner_analysten()
-            nachschlag_an = nachschlagen.analysten_zeile(nachschlag_an_tab, nachschlag_ticker)
-            # Die Muster laufen mit dem echten RS aus der Nachtdatei, nicht mit
-            # einer Schaetzung (siehe analysiere).
-            nachschlag_e = nachschlagen.eintraege(nachschlag_daten.get("rs_universum.json")).get(nachschlag_ticker, {})
-            nachschlag_rs, nachschlag_rs_satz = nachschlagen.rs_fuer_muster(nachschlag_e)
-            try:
-                nachschlag_df, nachschlag_res = muster_fuer(nachschlag_ticker, api_key, nachschlag_rs)
-            except Exception:
-                nachschlag_df, nachschlag_res = None, None
-        for ueberschrift, saetze in nachschlagen.bericht(
-                nachschlag_ticker, nachschlag_daten.get("rs_universum.json"), nachschlag_daten.get("ibd_ratings.json"),
-                nachschlag_daten.get("sektor_rangliste.json"), live=nachschlag_live_werte, kurve=nachschlag_k,
-                kurve_quelle=nachschlag_kq, sektor_name=nachschlag_s, sektor_quelle=nachschlag_sq,
-                streubesitz_kurs=nachschlag_sb_kurs, analysten=nachschlag_an, analysten_grund=nachschlag_an_grund):
-            st.markdown(f"#### {ueberschrift}")
-            for satz in saetze:
-                st.markdown(satz)
-
-        # MUSTER, KAUFPUNKTE, CHARTS (Mathias, 14.09.2026). Diese Teile
-        # stammen aus der frueheren Einzelabfrage, die damit entfaellt.
-        st.markdown("#### Chartmuster und Trend Template")
-        for satz in nachschlagen.muster_saetze(nachschlag_res, nachschlag_rs_satz if nachschlag_res else None):
-            st.markdown(satz)
-        # CHARTMUSTER AUS GERHARDS PAPIER VOM 20.09.2026 (Etappe 1): dieselben
-        # Worte wie bei den Treffern des Scanners, gerechnet am letzten
-        # abgeschlossenen Handelstag; waehrend des Handels zaehlt der Vortag.
-        st.markdown("#### Weitere Chartmuster")
-        for satz in nachschlagen.chartmuster_saetze(nachschlag_df):
-            st.markdown(satz)
-        st.markdown("#### Kaufpunkte")
-        if nachschlag_res:
-            for satz in nachschlagen.kaufpunkt_saetze(nachschlag_res):
-                st.markdown(satz)
-            st.caption("Der folgende Chart zeigt die letzten 180 Handelstage mit den Kaufpunkten als waagrechte "
-                       "Linien; alle Werte stehen darüber als Text.")
-            zeichne_kaufpunkt_chart(nachschlag_df, nachschlag_res, nachschlag_ticker)
-        else:
-            st.markdown("Ohne Kursdaten gibt es keine Kaufpunkte. Zwei mögliche Gründe: Die Schreibweise stimmt "
-                        "nicht, oder die Kursquelle bremst gerade auf den geteilten Servern; dann in ein paar "
-                        "Minuten noch einmal nachschlagen.")
-        st.markdown("#### Aktienchart")
-        aktienchart(nachschlag_ticker, nachschlag_df)
-
-if rolle != "gast":
-    st.markdown("---")
-
-# Gaeste bekommen weder die Wochenliste noch die Seite fuer Gastpasswoerter.
-# Ohne eingerichtetes Passwort gibt es keine Gastpasswoerter, also auch die
-# Seite dafuer nicht.
-# DIE EINZELABFRAGE IST ENTFALLEN (Mathias, 14.09.2026): Sie zeigte Muster,
-# Kaufpunkte und Chart einer Aktie mit einem geschaetzten RS. Muster,
-# Kaufpunkte und Chart stehen jetzt beim Nachschlagen oben, mit dem echten RS.
-# DER SCANNER (Mathias, 14.09.2026) steht allen offen, auch Gaesten: Er liest
-# nur und veraendert nichts.
-# S4 (Gerhard, 20.09.2026): Ein Gast sieht NUR den Scanner, ohne
-# Registerkarten; Liste pruefen, Aktueller Scan und Regelwerk gibt es fuer ihn
-# nicht, der Lauf endet hinter dem Scanner (Schranke "if tab_liste is None").
-tab_upload = tab_gast = tab_ablaeufe = None
-if rolle == "gast":
-    st.markdown("### Scanner")
-    tab_scanner = st.container()
-    tab_liste = tab_scan = tab_info = None
-elif rolle == "voll":
-    tab_liste, tab_scan, tab_scanner, tab_upload, tab_gast, tab_ablaeufe, tab_info = st.tabs(
-        ["Liste prüfen", "Aktueller Scan", "Scanner", "Wochenliste", "Gastzugang", "Abläufe", "Regelwerk"])
-else:
-    tab_liste, tab_scan, tab_scanner, tab_upload, tab_info = st.tabs(
-        ["Liste prüfen", "Aktueller Scan", "Scanner", "Wochenliste", "Regelwerk"])
-
-
-def tt_text(wert) -> str:
-    """Die Spalte Trend Template einer Mappe in Worten: 'erfüllt, 8 von 8'
-    oder '7 von 8'. Versteht die alte Schreibweise mit Haken und Kreuz."""
-    m = re.search(r"(\d)\s*(?:/|von)\s*8", str(wert or ""))
-    if not m:
-        return nachschlagen.lesbar(wert) or "unbekannt"
-    return ("erfüllt, " if m.group(1) == "8" else "") + f"{m.group(1)} von 8"
-
-
-def mappe_text(wert) -> str:
-    """Eine Zelle der Mappe in Worten: Haken und Kreuz der alten Schreibweise
-    werden zu 'erfüllt' und 'nicht erfüllt', andere Bildzeichen fallen weg."""
-    s = str(wert if wert is not None else "")
-    s = s.replace("\u2713", "erfüllt ").replace("\u2717", "nicht erfüllt ")
-    return nachschlagen.lesbar(s) or "unbekannt"
-
-
-# --- Aktueller Scan --------------------------------------------------------
-# Fenster auf die Nachtergebnisse (Mathias' Auftrag vom 23.07.2026): Der
-# Scanner legt sein Ergebnis seit demselben Tag als kaufpunkte_aktuell.xlsx
-# ins Repo (scanner.yml, Schritt 'Ergebnis für die Heliot-Anzeige
-# veröffentlichen'). Diese Karte zeigt es gut vorlesbar an — als Liste,
-# nicht als Tabelle (JAWS), die Tabelle gibt es zusätzlich im Ausklapper.
-
-REPO = "mat-schmuck/heliot"
-SCAN_DATEI = "kaufpunkte_aktuell.xlsx"
-
-
-@st.cache_data(ttl=600, show_spinner=False)
-def lade_nachtscan():
-    """Liefert (DataFrame, Standtext, Rohbytes) — oder (None, Hinweis, None)."""
-    import requests
-    try:
-        r = requests.get(
-            f"https://raw.githubusercontent.com/{REPO}/main/{SCAN_DATEI}",
-            timeout=20)
-    except Exception as e:
-        return None, f"Netzwerkfehler beim Laden: {e}", None
-    if r.status_code == 404:
-        return None, ("Noch kein Nachtscan abgelegt. Die Datei entsteht beim "
-                      "nächsten Lauf des Scanners und liegt dann jeden Morgen "
-                      "hier bereit."), None
-    if r.status_code != 200:
-        return None, f"GitHub antwortete mit Code {r.status_code}.", None
-    try:
-        df = pd.read_excel(io.BytesIO(r.content), sheet_name="Kaufpunkte")
-    except Exception as e:
-        return None, f"Die Ergebnisdatei ließ sich nicht lesen ({e}).", None
-    stand = ""
-    try:
-        from zoneinfo import ZoneInfo
-        c = requests.get(f"https://api.github.com/repos/{REPO}/commits",
-                         params={"path": SCAN_DATEI, "per_page": 1}, timeout=15)
-        if c.status_code == 200 and c.json():
-            utc = datetime.fromisoformat(
-                c.json()[0]["commit"]["committer"]["date"].replace("Z", "+00:00"))
-            wien = utc.astimezone(ZoneInfo("Europe/Vienna"))
-            stand = f"{wien:%d.%m.%Y um %H:%M} Uhr Wiener Zeit"
-    except Exception:
-        pass
-    return df, stand, r.content
-
-
-def _zahl(wert) -> str:
-    """Excel-Werte lesbar machen: deutsche Schreibweise mit zwei
-    Nachkommastellen (119.26 wird 119,26), NaN und leer werden leer."""
-    if wert is None or (isinstance(wert, float) and pd.isna(wert)):
-        return ""
-    if isinstance(wert, (int, float)):
-        return nachschlagen.zahl(wert, 2)
-    return nachschlagen.anzeige_text(wert)
-
-
-def rs_mappe(wert) -> str:
-    """Die Spalte RS Nasdaq der Mappe: ganze Zahl, 'vorläufig' bleibt stehen."""
-    if wert is None or (isinstance(wert, float) and pd.isna(wert)) or str(wert).strip() in ("", "n/a"):
-        return "nicht verfügbar"
-    if isinstance(wert, (int, float)):
-        return str(int(round(wert)))
-    return nachschlagen.lesbar(wert)
-
-
 # --- Wochenliste -----------------------------------------------------------
-# Die Definitionen stehen seit dem 21.09.2026 hier vor dem Scanner, weil auch
-# die Uebergabe aus dem Scanner (Gerhard, 20.09.2026, S2) sie braucht; die
-# Seite zum Hochladen selbst steht weiter hinter der Schranke fuer Gaeste.
+# Die Definitionen stehen seit dem 21.09.2026 vor dem Scanner, weil auch die
+# Uebergabe aus dem Scanner (Gerhard, 20.09.2026, S2) sie braucht, und seit dem
+# Abend desselben Tages vor dem Nachschlagen, weil der Knopf zum einzeln
+# Ueberwachen (S7) sie beim Klick braucht: Streamlit fuehrt das Skript von oben
+# nach unten aus. Die Seite zum Hochladen selbst steht weiter hinter der
+# Schranke fuer Gaeste.
 #
 # Gerhard siebt jede Woche den Markt mit seinem Finviz-Screener und liefert
 # eine CSV mit der Spalte 'Ticker' (bestätigt am 22.07.2026: immer CSV, nie
@@ -838,7 +643,7 @@ def rs_mappe(wert) -> str:
 # die einzige Schranke ist pruefe_wochenliste (CSV mit Spalte Ticker,
 # plausible Kuerzel).
 
-LISTEN_DATEI = "finviz_3.csv"     # REPO ist oben beim Aktuellen Scan definiert
+LISTEN_DATEI = "finviz_3.csv"     # REPO steht oben bei DATEN_REPO
 DARVAS_DATEI = "darvas.csv"
 
 # JEDER ZWEIG, DER EINE WOCHENLISTE FUEHRT (Mathias, 08.09.2026).
@@ -949,7 +754,7 @@ def wochenliste_einspielen(rohdaten: bytes, token: str, anzahl: int,
             if alt.status_code == 404:
                 continue          # Zweig oder Datei gibt es dort nicht
             sha = alt.json().get("sha") if alt.status_code == 200 else None
-            daten = {"message": f"{ziel}: {anzahl} Aktien ({herkunft})",
+            daten = {"message": f"{ziel}: {anzahl} {'Aktie' if anzahl == 1 else 'Aktien'} ({herkunft})",
                      "content": inhalt, "branch": zweig}
             if sha:
                 daten["sha"] = sha
@@ -992,6 +797,339 @@ def aktuelle_listengroesse(datei: str = None) -> int | None:
         return len(ticker) if not fehler else None
     except Exception:
         return None
+
+
+# --- Einzeln ueberwachte Aktien (S7, Gerhard, 20.09.2026) -------------------
+# Gerhard: "Wenn ich eine einzelne Aktie ins Tool eintrage, auch nur eine oder
+# zwei, moechte ich sie per Button auf ueberwachen setzen koennen." Die Aktien
+# stehen in einer EIGENEN Datei (listen.EINZEL_DATEI) auf jedem Zweig der
+# Wochenlisten, damit ein Eintrag nicht als neue Wochenliste zaehlt; geschrieben
+# wird ueber denselben Weg wie der Upload (wochenliste_einspielen).
+# UEBERWACHT WIRD NOCH NICHT (21.09.2026): Wie der Waechter solche Aktien
+# behandelt, klaeren Gerhards Regelfragen O11 bis O13; bis dahin ist die Liste
+# vorgemerkt, und die Seite sagt das bei jeder Aktie. Lesen und Schreiben nur
+# im vollen Zugang (gesamtpruefung, gast_abschottung).
+EINZEL_HINWEIS = ("Überwacht wird noch nicht: Wie der Wächter einzeln eingetragene Aktien behandelt, klären "
+                  "Gerhards offene Regelfragen dazu. Bis sie beantwortet sind, ist die Liste nur vorgemerkt.")
+
+
+def _einzel_roh() -> bytes:
+    """Der Inhalt der Datei auf main, frisch ueber die GitHub-API; die
+    oeffentliche Adresse raw.githubusercontent.com liefert bis zu fuenf
+    Minuten alte Staende."""
+    import base64
+    import requests
+    token = (_secret("GITHUB_TOKEN") or "").strip()
+    if not token:
+        raise LookupError("In den Streamlit-Secrets fehlt GITHUB_TOKEN.")
+    r = requests.get(f"https://api.github.com/repos/{REPO}/contents/{listen.EINZEL_DATEI}",
+                     params={"ref": "main"},
+                     headers={"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"},
+                     timeout=20)
+    if r.status_code == 404:
+        raise LookupError(f"Die Datei {listen.EINZEL_DATEI} fehlt im Repo.")
+    if r.status_code != 200:
+        raise LookupError(f"GitHub antwortete mit Code {r.status_code}.")
+    return base64.b64decode(r.json().get("content") or "")
+
+
+@st.cache_data(ttl=60, show_spinner=False)
+def _einzel_holen() -> bytes:
+    return _einzel_roh()
+
+
+def _einzel_setzen(ticker: str, firma: str, an: bool) -> tuple:
+    """Eine Aktie ein- oder austragen, auf jedem Zweig der Wochenlisten.
+    Gelesen wird vorher frisch, nicht aus dem Zwischenspeicher. Liefert
+    (Art, Satz) mit Art ok, teil oder fehler."""
+    from zoneinfo import ZoneInfo
+    token = (_secret("GITHUB_TOKEN") or "").strip()
+    if not token:
+        return "fehler", "Nicht geändert: In den Streamlit-Secrets fehlt GITHUB_TOKEN."
+    try:
+        neu, geaendert, anzahl = listen.einzel_aendern(
+            _einzel_roh(), ticker, firma, an, datetime.now(ZoneInfo("Europe/Vienna")).strftime("%Y-%m-%d %H:%M"))
+    except Exception as e:  # noqa
+        return "fehler", f"Nicht geändert: {e}"
+    if not geaendert:
+        return "ok", (f"{ticker} steht schon auf der Liste." if an else f"{ticker} stand nicht auf der Liste.")
+    fehler, zweige = wochenliste_einspielen(neu, token, anzahl, listen.EINZEL_DATEI,
+                                           herkunft=f"{ticker} {'eingetragen' if an else 'ausgetragen'} über Heliot")
+    if zweige:
+        _einzel_holen.clear()
+    if fehler:
+        return ("teil" if zweige else "fehler"), "Einzelüberwachung: " + fehler
+    if an:
+        return "ok", f"{ticker} steht jetzt auf der Liste der einzeln überwachten Aktien, auf {zweige}."
+    return "ok", f"{ticker} ist von der Liste der einzeln überwachten Aktien genommen, auf {zweige}."
+
+
+def _einzel_meldung(schluessel: str):
+    art, satz = st.session_state.pop(schluessel, (None, None))
+    if art == "ok":
+        st.success(satz)
+    elif art:
+        st.error(satz)
+
+
+def _einzel_eingetragen(wann: str) -> str:
+    wann = str(wann or "")
+    if len(wann) >= 16:
+        return f", eingetragen am {nachschlagen.datum_text(wann[:10])} um {wann[11:16]} Wiener Zeit"
+    return f", eingetragen am {nachschlagen.datum_text(wann[:10])}" if wann else ""
+
+
+def einzel_bereich(ticker: str, firma: str):
+    """Der Knopf im Nachschlagen: diese Aktie ueberwachen oder nicht mehr."""
+    st.markdown("#### Einzeln überwachen")
+    _einzel_meldung("einzel_meldung_nachschlagen")
+    try:
+        zeilen = listen.einzel_zeilen(_einzel_holen())
+    except Exception as e:  # noqa
+        st.markdown(f"Die Liste der einzeln überwachten Aktien ist gerade nicht lesbar: {e}")
+        return
+    eintrag = next((z for z in zeilen if z[0] == ticker), None)
+    if eintrag:
+        st.markdown(f"{ticker} steht auf der Liste der einzeln überwachten Aktien{_einzel_eingetragen(eintrag[2])}. "
+                    + EINZEL_HINWEIS)
+        if st.button("Diese Aktie nicht mehr überwachen", key=f"einzel_aus_{ticker}"):
+            st.session_state["einzel_meldung_nachschlagen"] = _einzel_setzen(ticker, firma, False)
+            st.rerun()
+    else:
+        st.markdown(f"{ticker} steht nicht auf der Liste der einzeln überwachten Aktien. " + EINZEL_HINWEIS)
+        if st.button("Diese Aktie überwachen", key=f"einzel_an_{ticker}"):
+            st.session_state["einzel_meldung_nachschlagen"] = _einzel_setzen(ticker, firma, True)
+            st.rerun()
+
+
+def einzel_liste_zeigen():
+    """Die Liste im Reiter Wochenliste, je Aktie ein Knopf zum Austragen."""
+    st.markdown("#### Einzeln überwachte Aktien")
+    _einzel_meldung("einzel_meldung_liste")
+    try:
+        zeilen = listen.einzel_zeilen(_einzel_holen())
+    except Exception as e:  # noqa
+        st.markdown(f"Die Liste ist gerade nicht lesbar: {e}")
+        return
+    if not zeilen:
+        st.markdown("Keine Aktie ist einzeln eingetragen. Eingetragen wird beim Nachschlagen einer Aktie mit dem "
+                    "Knopf Diese Aktie überwachen. " + EINZEL_HINWEIS)
+        return
+    st.markdown(("Eine Aktie ist" if len(zeilen) == 1 else f"{nachschlagen.zahl(len(zeilen))} Aktien sind")
+                + " einzeln eingetragen; weitere kommen beim Nachschlagen dazu. " + EINZEL_HINWEIS)
+    for t, firma, wann in zeilen:
+        st.markdown(t + (f", {firma}" if firma else "") + _einzel_eingetragen(wann))
+        if st.button(f"{t} nicht mehr überwachen", key=f"einzel_liste_aus_{t}"):
+            st.session_state["einzel_meldung_liste"] = _einzel_setzen(t, firma, False)
+            st.rerun()
+
+
+# S4 (Gerhard, 20.09.2026): "Ein Gast soll wirklich nur den Scanner sehen und
+# sonst nichts von dem, was dahinter laeuft." Das Nachschlagen gibt es deshalb
+# nur angemeldet; ein Verweis mit ?aktie=... bleibt fuer Gaeste ohne Wirkung.
+if rolle != "gast":
+    st.markdown("### Aktie nachschlagen")
+    # DAS FELD STEHT IN DER ADRESSE (Mathias, 14.09.2026): bind="query-params"
+    # schreibt die Eingabe als ?aktie=... in die Adresse der Seite und liest sie
+    # beim Oeffnen wieder. So fuehrt ein Verweis wie ?aktie=AAOI direkt zu den
+    # vollstaendigen Daten einer Aktie, und ein Lesezeichen merkt sich die Aktie.
+    nachschlag_eingabe = (st.text_input("Kürzel oder Firmenname eingeben, dann Eingabetaste", key="aktie",
+                                        bind="query-params", placeholder="zum Beispiel AAOI oder Apple")
+                          or "").strip()
+else:
+    nachschlag_eingabe = ""
+if nachschlag_eingabe:
+    nachschlag_daten = nachschlag_dateien()
+    nachschlag_ticker, nachschlag_kandidaten = nachschlagen.finde(nachschlag_eingabe,
+                                                                  nachschlag_daten.get("rs_universum.json"))
+    if nachschlag_ticker is None:
+        if nachschlag_kandidaten:
+            st.markdown("Mehrere Aktien passen. Bitte das Kürzel eingeben:")
+            for k, n in nachschlag_kandidaten:
+                st.markdown(f"{k}, {n}")
+        else:
+            st.markdown("Nichts gefunden. Bitte Kürzel oder Namen prüfen.")
+    else:
+        with st.spinner(f"Hole Kurs, Volumen und Chartmuster für {nachschlag_ticker}"):
+            try:
+                nachschlag_live_werte = nachschlag_live(nachschlag_ticker)
+            except Exception:
+                nachschlag_live_werte = None
+            try:
+                nachschlag_k, nachschlag_kq = nachschlag_kurve(nachschlag_ticker)
+            except Exception:
+                nachschlag_k, nachschlag_kq = None, "keine"
+            try:
+                nachschlag_s, nachschlag_sq = nachschlag_sektor(nachschlag_ticker)
+            except Exception:
+                nachschlag_s, nachschlag_sq = None, "keine"
+            try:
+                nachschlag_stichtag = nachschlagen.streubesitz_stichtag(nachschlag_daten.get("ibd_ratings.json"),
+                                                                       nachschlag_ticker)
+                nachschlag_sb_kurs = (nachschlag_stichtagkurs(nachschlag_ticker, nachschlag_stichtag)
+                                      if nachschlag_stichtag else None)
+            except Exception:
+                nachschlag_sb_kurs = None
+            # ETAPPE 5 (Gerhard, 13.09.2026, Entscheidung 9): Analysten und
+            # Konsens aus dem privaten Datenrepo, nur mit dem Lese-Token; ohne
+            # ihn nennt das Kapitel den Grund.
+            nachschlag_an_tab, nachschlag_an_grund = lade_scanner_analysten()
+            nachschlag_an = nachschlagen.analysten_zeile(nachschlag_an_tab, nachschlag_ticker)
+            # Die Muster laufen mit dem echten RS aus der Nachtdatei, nicht mit
+            # einer Schaetzung (siehe analysiere).
+            nachschlag_e = nachschlagen.eintraege(nachschlag_daten.get("rs_universum.json")).get(nachschlag_ticker, {})
+            nachschlag_rs, nachschlag_rs_satz = nachschlagen.rs_fuer_muster(nachschlag_e)
+            try:
+                nachschlag_df, nachschlag_res = muster_fuer(nachschlag_ticker, api_key, nachschlag_rs)
+            except Exception:
+                nachschlag_df, nachschlag_res = None, None
+        for ueberschrift, saetze in nachschlagen.bericht(
+                nachschlag_ticker, nachschlag_daten.get("rs_universum.json"), nachschlag_daten.get("ibd_ratings.json"),
+                nachschlag_daten.get("sektor_rangliste.json"), live=nachschlag_live_werte, kurve=nachschlag_k,
+                kurve_quelle=nachschlag_kq, sektor_name=nachschlag_s, sektor_quelle=nachschlag_sq,
+                streubesitz_kurs=nachschlag_sb_kurs, analysten=nachschlag_an, analysten_grund=nachschlag_an_grund):
+            st.markdown(f"#### {ueberschrift}")
+            for satz in saetze:
+                st.markdown(satz)
+
+        # MUSTER, KAUFPUNKTE, CHARTS (Mathias, 14.09.2026). Diese Teile
+        # stammen aus der frueheren Einzelabfrage, die damit entfaellt.
+        st.markdown("#### Chartmuster und Trend Template")
+        for satz in nachschlagen.muster_saetze(nachschlag_res, nachschlag_rs_satz if nachschlag_res else None):
+            st.markdown(satz)
+        # CHARTMUSTER AUS GERHARDS PAPIER VOM 20.09.2026 (Etappe 1): dieselben
+        # Worte wie bei den Treffern des Scanners, gerechnet am letzten
+        # abgeschlossenen Handelstag; waehrend des Handels zaehlt der Vortag.
+        st.markdown("#### Weitere Chartmuster")
+        for satz in nachschlagen.chartmuster_saetze(nachschlag_df):
+            st.markdown(satz)
+        st.markdown("#### Kaufpunkte")
+        if nachschlag_res:
+            for satz in nachschlagen.kaufpunkt_saetze(nachschlag_res):
+                st.markdown(satz)
+            st.caption("Der folgende Chart zeigt die letzten 180 Handelstage mit den Kaufpunkten als waagrechte "
+                       "Linien; alle Werte stehen darüber als Text.")
+            zeichne_kaufpunkt_chart(nachschlag_df, nachschlag_res, nachschlag_ticker)
+        else:
+            st.markdown("Ohne Kursdaten gibt es keine Kaufpunkte. Zwei mögliche Gründe: Die Schreibweise stimmt "
+                        "nicht, oder die Kursquelle bremst gerade auf den geteilten Servern; dann in ein paar "
+                        "Minuten noch einmal nachschlagen.")
+        st.markdown("#### Aktienchart")
+        aktienchart(nachschlag_ticker, nachschlag_df)
+        # S7 (Gerhard, 20.09.2026): der Knopf zum einzeln Ueberwachen, als letzter
+        # Abschnitt, weil er der naechste Schritt nach dem Lesen ist; nur im
+        # vollen Zugang.
+        if rolle == "voll":
+            einzel_bereich(nachschlag_ticker,
+                           nachschlagen.firmenname(nachschlag_e.get("name") or nachschlag_e.get("firma")) or "")
+
+if rolle != "gast":
+    st.markdown("---")
+
+# Gaeste bekommen weder die Wochenliste noch die Seite fuer Gastpasswoerter.
+# Ohne eingerichtetes Passwort gibt es keine Gastpasswoerter, also auch die
+# Seite dafuer nicht.
+# DIE EINZELABFRAGE IST ENTFALLEN (Mathias, 14.09.2026): Sie zeigte Muster,
+# Kaufpunkte und Chart einer Aktie mit einem geschaetzten RS. Muster,
+# Kaufpunkte und Chart stehen jetzt beim Nachschlagen oben, mit dem echten RS.
+# DER SCANNER (Mathias, 14.09.2026) steht allen offen, auch Gaesten: Er liest
+# nur und veraendert nichts.
+# S4 (Gerhard, 20.09.2026): Ein Gast sieht NUR den Scanner, ohne
+# Registerkarten; Liste pruefen, Aktueller Scan und Regelwerk gibt es fuer ihn
+# nicht, der Lauf endet hinter dem Scanner (Schranke "if tab_liste is None").
+tab_upload = tab_gast = tab_ablaeufe = None
+if rolle == "gast":
+    st.markdown("### Scanner")
+    tab_scanner = st.container()
+    tab_liste = tab_scan = tab_info = None
+elif rolle == "voll":
+    tab_liste, tab_scan, tab_scanner, tab_upload, tab_gast, tab_ablaeufe, tab_info = st.tabs(
+        ["Liste prüfen", "Aktueller Scan", "Scanner", "Wochenliste", "Gastzugang", "Abläufe", "Regelwerk"])
+else:
+    tab_liste, tab_scan, tab_scanner, tab_upload, tab_info = st.tabs(
+        ["Liste prüfen", "Aktueller Scan", "Scanner", "Wochenliste", "Regelwerk"])
+
+
+def tt_text(wert) -> str:
+    """Die Spalte Trend Template einer Mappe in Worten: 'erfüllt, 8 von 8'
+    oder '7 von 8'. Versteht die alte Schreibweise mit Haken und Kreuz."""
+    m = re.search(r"(\d)\s*(?:/|von)\s*8", str(wert or ""))
+    if not m:
+        return nachschlagen.lesbar(wert) or "unbekannt"
+    return ("erfüllt, " if m.group(1) == "8" else "") + f"{m.group(1)} von 8"
+
+
+def mappe_text(wert) -> str:
+    """Eine Zelle der Mappe in Worten: Haken und Kreuz der alten Schreibweise
+    werden zu 'erfüllt' und 'nicht erfüllt', andere Bildzeichen fallen weg."""
+    s = str(wert if wert is not None else "")
+    s = s.replace("\u2713", "erfüllt ").replace("\u2717", "nicht erfüllt ")
+    return nachschlagen.lesbar(s) or "unbekannt"
+
+
+# --- Aktueller Scan --------------------------------------------------------
+# Fenster auf die Nachtergebnisse (Mathias' Auftrag vom 23.07.2026): Der
+# Scanner legt sein Ergebnis seit demselben Tag als kaufpunkte_aktuell.xlsx
+# ins Repo (scanner.yml, Schritt 'Ergebnis für die Heliot-Anzeige
+# veröffentlichen'). Diese Karte zeigt es gut vorlesbar an — als Liste,
+# nicht als Tabelle (JAWS), die Tabelle gibt es zusätzlich im Ausklapper.
+
+# REPO steht oben bei DATEN_REPO.
+SCAN_DATEI = "kaufpunkte_aktuell.xlsx"
+
+
+@st.cache_data(ttl=600, show_spinner=False)
+def lade_nachtscan():
+    """Liefert (DataFrame, Standtext, Rohbytes) — oder (None, Hinweis, None)."""
+    import requests
+    try:
+        r = requests.get(
+            f"https://raw.githubusercontent.com/{REPO}/main/{SCAN_DATEI}",
+            timeout=20)
+    except Exception as e:
+        return None, f"Netzwerkfehler beim Laden: {e}", None
+    if r.status_code == 404:
+        return None, ("Noch kein Nachtscan abgelegt. Die Datei entsteht beim "
+                      "nächsten Lauf des Scanners und liegt dann jeden Morgen "
+                      "hier bereit."), None
+    if r.status_code != 200:
+        return None, f"GitHub antwortete mit Code {r.status_code}.", None
+    try:
+        df = pd.read_excel(io.BytesIO(r.content), sheet_name="Kaufpunkte")
+    except Exception as e:
+        return None, f"Die Ergebnisdatei ließ sich nicht lesen ({e}).", None
+    stand = ""
+    try:
+        from zoneinfo import ZoneInfo
+        c = requests.get(f"https://api.github.com/repos/{REPO}/commits",
+                         params={"path": SCAN_DATEI, "per_page": 1}, timeout=15)
+        if c.status_code == 200 and c.json():
+            utc = datetime.fromisoformat(
+                c.json()[0]["commit"]["committer"]["date"].replace("Z", "+00:00"))
+            wien = utc.astimezone(ZoneInfo("Europe/Vienna"))
+            stand = f"{wien:%d.%m.%Y um %H:%M} Uhr Wiener Zeit"
+    except Exception:
+        pass
+    return df, stand, r.content
+
+
+def _zahl(wert) -> str:
+    """Excel-Werte lesbar machen: deutsche Schreibweise mit zwei
+    Nachkommastellen (119.26 wird 119,26), NaN und leer werden leer."""
+    if wert is None or (isinstance(wert, float) and pd.isna(wert)):
+        return ""
+    if isinstance(wert, (int, float)):
+        return nachschlagen.zahl(wert, 2)
+    return nachschlagen.anzeige_text(wert)
+
+
+def rs_mappe(wert) -> str:
+    """Die Spalte RS Nasdaq der Mappe: ganze Zahl, 'vorläufig' bleibt stehen."""
+    if wert is None or (isinstance(wert, float) and pd.isna(wert)) or str(wert).strip() in ("", "n/a"):
+        return "nicht verfügbar"
+    if isinstance(wert, (int, float)):
+        return str(int(round(wert)))
+    return nachschlagen.lesbar(wert)
 
 
 # --- Scanner (Mathias, 14.09.2026) ------------------------------------------
@@ -2123,6 +2261,11 @@ with tab_upload:
                                f"{zweige}: {len(ticker)} Aktien "
                                f"(die ersten: {', '.join(ticker[:5])}). "
                                "Ab dem nächsten nächtlichen Scan aktiv.")
+
+    # S7 (Gerhard, 20.09.2026): die einzeln eingetragenen Aktien, nur im
+    # vollen Zugang
+    if rolle == "voll":
+        einzel_liste_zeigen()
 
 
 # --- Gastzugang (Mathias, 13.09.2026) ---------------------------------------

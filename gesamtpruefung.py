@@ -2234,7 +2234,9 @@ def block_h():
            + ("; ausgenommen: " + ", ".join(_ausgenommen)
               if _ausgenommen else ""))
     _mit_liste = set()
-    for _datei in ("finviz_3.csv", "darvas.csv"):
+    # einzelaktien.csv seit 21.09.2026 (S7): dieselbe Pflicht wie die beiden
+    # Wochenlisten, der Upload-Weg schreibt sie auf jeden Zweig.
+    for _datei in ("finviz_3.csv", "darvas.csv", "einzelaktien.csv"):
         _stand = {}
         for _z in _listen_zweige:
             _r = sp.run(["git", "show", f"origin/{_z}:{_datei}"],
@@ -2833,7 +2835,10 @@ def gast_abschottung(pfad) -> tuple:
         Besucher geteilten Zwischenspeicher fragt.
       * Vorlagen (S1) und Uebergabe (S2) stehen nur unter
         "if rolle == 'voll':", und wochenliste_einspielen rufen genau die
-        Uebergabe und die Seite zum Hochladen.
+        Uebergabe, die Seite zum Hochladen und das Ein- und Austragen
+        einzelner Aktien (S7, _einzel_setzen).
+      * S7 (21.09.2026): Die Einzelaktien lesen und schreiben nur Funktionen,
+        die ausserhalb ihrer selbst nur unter "if rolle == 'voll':" stehen.
     Liefert (ok, Befund)."""
     import ast as _ast
     try:
@@ -2944,13 +2949,27 @@ def gast_abschottung(pfad) -> tuple:
                     einspieler.add("with " + _ast.unparse(k.items[0].context_expr))
                 else:
                     einspieler.add(f"Zeile {n.lineno}")
-    if einspieler != {"_sc_uebergabe_ausfuehren", "with tab_upload"}:
-        maengel.append("wochenliste_einspielen wird nicht genau von Upload und Uebergabe gerufen: "
+    if einspieler != {"_sc_uebergabe_ausfuehren", "with tab_upload", "_einzel_setzen"}:
+        maengel.append("wochenliste_einspielen wird nicht genau von Upload, Uebergabe und Einzelaktien gerufen: "
                        + ", ".join(sorted(einspieler)))
+    # Einzelaktien (S7, 21.09.2026): Lesen und Schreiben nur im vollen Zugang.
+    # Ausserhalb ihrer eigenen Definitionen stehen die Funktionen nur unter
+    # "if rolle == 'voll':", und die beiden Anzeigen werden wirklich gerufen.
+    einzel_namen = {"einzel_bereich", "einzel_liste_zeigen", "_einzel_setzen", "_einzel_holen", "_einzel_roh"}
+    einzel_da = {k.name for k in baum.body if isinstance(k, _ast.FunctionDef) and k.name in einzel_namen}
+    if einzel_da != einzel_namen:
+        maengel.append("Einzelaktien: es fehlen " + ", ".join(sorted(einzel_namen - einzel_da)))
+    ausserhalb = [s for s in baum.body if not (isinstance(s, _ast.FunctionDef) and s.name in einzel_namen)]
+    offen = [x for s in ausserhalb for x in offen_verwendet(s, False, einzel_namen)]
+    if offen:
+        maengel.append("Einzelaktien ausserhalb von 'if rolle == \"voll\"': " + ", ".join(offen[:4]))
+    for name in ("einzel_bereich", "einzel_liste_zeigen"):
+        if not any(isinstance(n, _ast.Name) and n.id == name for s in ausserhalb for n in _ast.walk(s)):
+            maengel.append(f"Einzelaktien: {name} wird nirgends gerufen")
     if maengel:
         return False, "; ".join(maengel)
-    return True, ("Gast: nur Scanner ohne Registerkarten, Schranke dahinter, Nachschlagen, Datenrepo und Uebergabe "
-                  "gesperrt")
+    return True, ("Gast: nur Scanner ohne Registerkarten, Schranke dahinter, Nachschlagen, Datenrepo, Uebergabe und "
+                  "Einzelaktien gesperrt")
 
 
 def scanner_bedienung_pruefen(pfad) -> tuple:

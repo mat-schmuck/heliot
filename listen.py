@@ -40,10 +40,19 @@ Aufruf:
 """
 
 import os
+import re
 import sys
 
 HAUPT_DATEI = "finviz_3.csv"
 DARVAS_DATEI = "darvas.csv"
+
+# S7 (Gerhard, 20.09.2026): einzeln eingetragene Aktien. Eine EIGENE Datei,
+# damit ein einzelner Eintrag nicht als neue Wochenliste zaehlt: Der
+# Freitagsputz sieht nur die beiden Wochenlisten (wochenputz.LISTEN).
+EINZEL_DATEI = "einzelaktien.csv"
+EINZEL_SPALTEN = ("Ticker", "Company", "Eingetragen")
+# Dieselbe Pruefung wie beim Upload der Wochenliste (pruefe_wochenliste)
+EINZEL_MUSTER = re.compile(r"^[A-Z0-9.\-]{1,10}$")
 
 # Das Muster, das ausschliesslich auf der Darvas-Liste laufen darf. Der
 # Name ist der, den der Scanner erzeugt (pattern_scanner.detect_darvas).
@@ -147,6 +156,70 @@ def erlaubte_muster(ticker, alle_muster, darvas=None):
     return [m for m in alle_muster if m not in NUR_DARVAS_LISTE]
 
 
+# ---------------------------------------------------------------------------
+# Einzeln eingetragene Aktien (S7, Gerhard, 20.09.2026)
+# ---------------------------------------------------------------------------
+# NOCH OHNE WIRKUNG AUF DEN WAECHTER (21.09.2026): Die Liste wird gefuehrt,
+# aber weder alle_ticker() noch ein Scan liest sie. Wie der Waechter solche
+# Aktien behandelt (alle Strategien samt Darvas, ueber den Freitagsputz
+# hinaus, ab dem naechsten Nachtscan), sind Gerhards offene Regelfragen O11
+# bis O13; erst mit seinen Antworten kommt die Liste in den Umfang. Die App
+# sagt das beim Eintragen.
+
+def einzel_liste(pfad=None):
+    """Die einzeln eingetragenen Aktien, [(Ticker, Firma)]."""
+    return _lies(pfad or EINZEL_DATEI)
+
+
+def einzel_zeilen(roh):
+    """[(Ticker, Firma, Eingetragen)] aus dem Inhalt der Datei (bytes oder
+    str); ohne Inhalt eine leere Liste, Doppelte nur einmal."""
+    import csv
+    import io
+    if not roh:
+        return []
+    text = roh.decode("utf-8-sig") if isinstance(roh, bytes) else str(roh)
+    raus, gesehen = [], set()
+    for z in csv.DictReader(io.StringIO(text)):
+        t = str(z.get("Ticker") or "").strip().upper()
+        if not t or t in gesehen:
+            continue
+        gesehen.add(t)
+        raus.append((t, str(z.get("Company") or "").strip(), str(z.get("Eingetragen") or "").strip()))
+    return raus
+
+
+def einzel_csv(zeilen):
+    """Der Inhalt der Datei aus [(Ticker, Firma, Eingetragen)], mit Kopfzeile."""
+    import csv
+    import io
+    puffer = io.StringIO()
+    schreiber = csv.writer(puffer, lineterminator="\n")
+    schreiber.writerow(EINZEL_SPALTEN)
+    for z in zeilen:
+        schreiber.writerow(z)
+    return puffer.getvalue().encode("utf-8")
+
+
+def einzel_aendern(roh, ticker, firma, an, zeit):
+    """Traegt eine Aktie ein (an) oder aus. Rueckgabe (neuer Inhalt, geaendert,
+    Anzahl danach). Ein zweites Eintragen und das Austragen einer Aktie, die
+    nicht drin steht, aendern nichts. Ein unplausibles Kuerzel wirft
+    ValueError."""
+    t = str(ticker or "").strip().upper()
+    if not EINZEL_MUSTER.match(t):
+        raise ValueError(f"Unplausibles Kürzel: {ticker}")
+    zeilen = einzel_zeilen(roh)
+    drin = any(z[0] == t for z in zeilen)
+    if an and not drin:
+        zeilen.append((t, str(firma or "").strip(), str(zeit or "").strip()))
+    elif not an and drin:
+        zeilen = [z for z in zeilen if z[0] != t]
+    else:
+        return einzel_csv(zeilen), False, len(zeilen)
+    return einzel_csv(zeilen), True, len(zeilen)
+
+
 def fehlende_liste(haupt=None, darvas=None):
     """Fehlt eine der beiden Listen? Rueckgabe: Klartext oder None.
 
@@ -240,6 +313,33 @@ def selbsttest() -> int:
           _lies(str(o / "falsch.csv")) == [])
         p("Die Übersicht nennt beide Listen und die Schnittmenge",
           "1 in beiden" in uebersicht(g, d), uebersicht(g, d))
+
+        # S7: einzeln eingetragene Aktien
+        leer_roh = einzel_csv([])
+        p("S7: die leere Datei hat nur die Kopfzeile", leer_roh == b"Ticker,Company,Eingetragen\n", leer_roh)
+        roh, geaendert, n = einzel_aendern(leer_roh, "aaoi", "Applied Optoelectronics, Inc.", True,
+                                           "2026-09-21 15:40")
+        p("S7: eintragen, der Firmenname mit Beistrich bleibt ganz",
+          geaendert and n == 1 and einzel_zeilen(roh) == [("AAOI", "Applied Optoelectronics, Inc.",
+                                                          "2026-09-21 15:40")], roh)
+        roh2, geaendert2, n2 = einzel_aendern(roh, "AAOI", "anders", True, "später")
+        p("S7: ein zweites Eintragen ändert nichts", not geaendert2 and n2 == 1 and roh2 == roh)
+        roh3, geaendert3, n3 = einzel_aendern(roh, "AAOI", "", False, "")
+        p("S7: austragen", geaendert3 and n3 == 0 and roh3 == leer_roh, roh3)
+        p("S7: austragen, was nicht drin steht, ändert nichts",
+          einzel_aendern(roh3, "XYZ", "", False, "")[1] is False)
+        try:
+            einzel_aendern(leer_roh, "A B", "", True, "")
+            abgelehnt = False
+        except ValueError:
+            abgelehnt = True
+        p("S7: ein unplausibles Kürzel wird abgelehnt", abgelehnt)
+        (o / "einzel.csv").write_bytes(roh)
+        (o / "einzel_leer.csv").write_bytes(leer_roh)
+        p("S7: einzel_liste liest die Datei wie eine Wochenliste, die leere ergibt nichts",
+          einzel_liste(str(o / "einzel.csv")) == [("AAOI", "Applied Optoelectronics, Inc.")]
+          and einzel_liste(str(o / "einzel_leer.csv")) == [], einzel_liste(str(o / "einzel.csv")))
+        p("S7: ohne Inhalt keine Zeilen", einzel_zeilen(None) == [] and einzel_zeilen(b"") == [])
 
     print("\n" + ("Alles bestanden." if not fehler
                   else f"{len(fehler)} FEHLER: " + ", ".join(fehler)))
