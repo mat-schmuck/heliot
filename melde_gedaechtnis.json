@@ -176,7 +176,7 @@
     "RNG|HTF Innen-Einstieg": "drin",
     "MRNA|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "MTRN|EMA Crossback": "drin",
-    "TSEM|Fallback: MA50-R\u00fcckeroberung": "drin",
+    "TSEM|Fallback: MA50-R\u00fcckeroberung": "draussen",
     "ZS|Cup & Handle (Wochenbasis)": "drin",
     "RBRK|Cup & Handle (Wochenbasis)": "drin",
     "RBRK|Fallback: 52W-Hoch-Breakout": "drin",
@@ -200,7 +200,8 @@
     "EWTX|Rectangle Top": "drin",
     "TXG|Fallback: 52W-Hoch-Breakout": "drin",
     "TXG|Fallback: 20-Tage-Hoch (Pivot)": "drin",
-    "CGON|Rectangle Top": "drin"
+    "CGON|Rectangle Top": "drin",
+    "AXGN|Fallback: MA50-R\u00fcckeroberung": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -342,7 +343,8 @@
     "BEST|CGON|Rectangle Top": "2026-09-21",
     "AXTI|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
     "BEST|AXTI|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
-    "UEBER|AXTI|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21"
+    "UEBER|AXTI|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
+    "UEBER|TSEM|Fallback: MA50-R\u00fcckeroberung": "2026-09-21"
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-09-21"
