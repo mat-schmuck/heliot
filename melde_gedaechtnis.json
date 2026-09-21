@@ -212,7 +212,8 @@
     "BAND|Fallback: MA50-R\u00fcckeroberung": "drin",
     "TEVA|Cup & Handle (Wochenbasis)": "drin",
     "TEVA|Fallback: 52W-Hoch-Breakout": "drin",
-    "MRNA|Darvas Box": "drin"
+    "MRNA|Darvas Box": "drin",
+    "XMTR|Fallback: 20-Tage-Hoch (Pivot)": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -346,23 +347,18 @@
     "NTRA|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
     "BEST|NTRA|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
     "VICR|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
-    "BEST|VICR|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21"
+    "BEST|VICR|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
+    "XMTR|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
+    "BEST|XMTR|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21"
   },
   "gapgo_warten": {
-    "PSIX": {
-      "signal": "2026-09-17",
-      "kp": 46.93,
-      "stop": 43.48,
-      "firma": "Power Solutions International Inc",
-      "bestaetigt": false,
-      "pruef": "2026-09-18"
-    },
     "ATI": {
       "signal": "2026-09-18",
       "kp": 186.36,
       "stop": 183.63,
       "firma": "ATI Inc",
-      "bestaetigt": false
+      "bestaetigt": false,
+      "pruef": "2026-09-21"
     }
   },
   "ampel_tag": "2026-09-21"
