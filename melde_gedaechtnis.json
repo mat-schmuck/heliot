@@ -174,7 +174,7 @@
     "FTK|Fallback: MA50-Pullback": "draussen",
     "ESTC|Fallback: MA50-Pullback": "draussen",
     "RNG|HTF Innen-Einstieg": "drin",
-    "MRNA|Fallback: 20-Tage-Hoch (Pivot)": "draussen",
+    "MRNA|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "MTRN|EMA Crossback": "drin",
     "TSEM|Fallback: MA50-R\u00fcckeroberung": "drin",
     "ZS|Cup & Handle (Wochenbasis)": "drin",
@@ -208,7 +208,9 @@
     "SDGR|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "SDGR|Fallback: 52W-Hoch-Breakout": "drin",
     "TWLO|Fallback: 52W-Hoch-Breakout": "drin",
-    "FTK|Fallback: 20-Tage-Hoch (Pivot)": "drin"
+    "FTK|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "BAND|Fallback: MA50-R\u00fcckeroberung": "drin",
+    "TEVA|Cup & Handle (Wochenbasis)": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -354,7 +356,6 @@
     "UEBER|UMAC|Fallback: MA50-R\u00fcckeroberung": "2026-09-21",
     "UEBER|DOCN|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
     "UEBER|AMRX|Fallback: 52W-Hoch-Breakout": "2026-09-21",
-    "UEBER|MRNA|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
     "UEBER|AMD|Fallback: 52W-Hoch-Breakout": "2026-09-21",
     "SDGR|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
     "BEST|SDGR|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
