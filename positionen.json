@@ -9954,5 +9954,32 @@
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
   "wedge_drop_gemeldet": false
+ },
+ "TWLO|Fallback: 20-Tage-Hoch (Pivot)": {
+  "symbol": "TWLO",
+  "firma": "Twilio Inc",
+  "strategie": "Fallback: 20-Tage-Hoch (Pivot)",
+  "einstieg": 249.46,
+  "einstieg_datum": "2026-09-21",
+  "einstieg_index": 0,
+  "struktur_stop": 224.52,
+  "aktueller_stop": 224.52,
+  "stop_quelle": "struktur",
+  "hoechstkurs": 249.46,
+  "teilverkauft": false,
+  "halteregel_aktiv": false,
+  "beobachtung": true,
+  "status": "offen",
+  "verlauf": [],
+  "klasse": "standard",
+  "musterziel": null,
+  "zone": null,
+  "zone_gemeldet": null,
+  "ziel_gemeldet": false,
+  "klimax_gemeldet": [],
+  "weinstein_gemeldet": false,
+  "zahlen_hinweis_gemeldet": false,
+  "sektor_hinweis_gemeldet": false,
+  "wedge_drop_gemeldet": false
  }
 }
