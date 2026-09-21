@@ -15,7 +15,7 @@
     "LITE|Rectangle Top": "drin",
     "MRNA|Fallback: MA50-Pullback": "draussen",
     "MU|Rectangle Top": "drin",
-    "PARR|Fallback: MA50-Pullback": "draussen",
+    "PARR|Fallback: MA50-Pullback": "drin",
     "QMCO|Fallback: MA50-Pullback": "draussen",
     "TH|Cup & Handle (Wochenbasis)": "drin",
     "TH|Fallback: MA50-Pullback": "draussen",
@@ -376,7 +376,11 @@
     "TEVA|Fallback: 52W-Hoch-Breakout": "2026-09-21",
     "BEST|TEVA|Fallback: 52W-Hoch-Breakout": "2026-09-21",
     "UEBER|TWLO|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
-    "UEBER|RNG|HTF Innen-Einstieg": "2026-09-21"
+    "UEBER|RNG|HTF Innen-Einstieg": "2026-09-21",
+    "NTRA|Fallback: 52W-Hoch-Breakout": "2026-09-21",
+    "BEST|NTRA|Fallback: 52W-Hoch-Breakout": "2026-09-21",
+    "NTRA|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
+    "BEST|NTRA|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21"
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-09-21"
