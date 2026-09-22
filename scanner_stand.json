@@ -1,6 +1,6 @@
 {
- "gebaut_am": "2026-09-21T22:12:21+00:00",
- "handelstag": "2026-09-21",
+ "gebaut_am": "2026-09-22T22:11:40+00:00",
+ "handelstag": "2026-09-22",
  "status": "ok",
  "toleranz": 0.05,
  "quellen": {
@@ -10,19 +10,19 @@
    "eintraege": 13436,
    "geprueft": 5372,
    "raus": 22,
-   "ohne_eintrag": 31
+   "ohne_eintrag": 34
   },
   "rs": {
-   "stand": "2026-09-21T22:08:39",
+   "stand": "2026-09-22T22:07:56",
    "status": "ok"
   },
   "kurse": {
    "status": "ok",
-   "mit_kursen": 5349,
-   "ohne_kurse": 1,
-   "aktuell": 5292,
-   "abdeckung": 0.9892,
-   "archiv_zeilen": 3709722
+   "mit_kursen": 5347,
+   "ohne_kurse": 3,
+   "aktuell": 5288,
+   "abdeckung": 0.9884,
+   "archiv_zeilen": 3710336
   },
   "screener": {
    "status": "ok",
@@ -31,37 +31,37 @@
   "kalender": {
    "status": "ok",
    "tage": 9,
-   "eintraege": 116,
-   "mit_eps_konsens": 57
+   "eintraege": 113,
+   "mit_eps_konsens": 55
   },
   "fundament": {
    "status": "ok",
-   "firmen": 4912,
+   "firmen": 4911,
    "zuordnung": 5036
   },
   "konsens": {
    "dateien": [
-    "2026-09-17_0900Z.jsonl.gz",
-    "2026-09-17_1930Z.jsonl.gz",
     "2026-09-18_0900Z.jsonl.gz",
     "2026-09-18_1930Z.jsonl.gz",
     "2026-09-21_0900Z.jsonl.gz",
-    "2026-09-21_1930Z.jsonl.gz"
+    "2026-09-21_1930Z.jsonl.gz",
+    "2026-09-22_0900Z.jsonl.gz",
+    "2026-09-22_1931Z.jsonl.gz"
    ],
    "unlesbar": [],
-   "firmen": 5671,
-   "neuester": "2026-09-21T19:30:39Z",
-   "aeltester": "2026-09-17T09:00:42Z",
+   "firmen": 5669,
+   "neuester": "2026-09-22T19:31:06Z",
+   "aeltester": "2026-09-18T19:30:35Z",
    "status": "ok",
-   "mit_konsens": 4218
+   "mit_konsens": 4217
   },
   "analysten": {
    "status": "ok",
-   "abgerufen": 785,
-   "fehler": 1,
+   "abgerufen": 756,
+   "fehler": 0,
    "abgebrochen": false,
    "mit_analysten": 3209,
-   "mit_stand": 4604
+   "mit_stand": 4606
   },
   "revisionen": {
    "status": "ok",
@@ -76,12 +76,12 @@
    "fenster": 20,
    "mindest_abdeckung": 0.95,
    "tage": 20,
-   "erster_tag": "2026-08-24",
-   "letzter_tag": "2026-09-21",
-   "abdeckung_letzter_tag": 0.9948,
+   "erster_tag": "2026-08-25",
+   "letzter_tag": "2026-09-22",
+   "abdeckung_letzter_tag": 0.994,
    "hinweis": null,
-   "mit_anteil": 5322,
-   "median_pct": 50.7,
+   "mit_anteil": 5318,
+   "median_pct": 51.4,
    "fehlend": {}
   },
   "gruppen_rs": {
@@ -89,32 +89,32 @@
    "zuordnung_stand": "2026-09-21",
    "zuordnung_eintraege": 13436,
    "ebene": "gics_unterbranche",
-   "aktien": 5349,
-   "mit_gruppe": 5226,
-   "unbekannt": 123,
+   "aktien": 5347,
+   "mit_gruppe": 5223,
+   "unbekannt": 124,
    "gruppen_heute": 165,
    "stichtage": {
-    "heute": "2026-09-21",
-    "vor_3_wochen": "2026-08-28",
-    "vor_6_wochen": "2026-08-07"
+    "heute": "2026-09-22",
+    "vor_3_wochen": "2026-08-31",
+    "vor_6_wochen": "2026-08-10"
    },
    "abdeckung": {
     "0": {
-     "tag": "2026-09-21",
+     "tag": "2026-09-22",
      "basis": 5055,
      "mit_rohwert": 5014,
      "anteil": 0.9919
     },
     "15": {
-     "tag": "2026-08-28",
-     "basis": 5035,
-     "mit_rohwert": 5034,
+     "tag": "2026-08-31",
+     "basis": 5036,
+     "mit_rohwert": 5035,
      "anteil": 0.9998
     },
     "30": {
-     "tag": "2026-08-07",
-     "basis": 5016,
-     "mit_rohwert": 5016,
+     "tag": "2026-08-10",
+     "basis": 5017,
+     "mit_rohwert": 5017,
      "anteil": 1.0
     }
    },
@@ -122,10 +122,10 @@
   },
   "kennzahlen": {
    "status": "ok",
-   "technik_handelstag": "2026-09-21",
-   "fundament_stand": "2026-09-21T22:08:42",
-   "mit_technik": 5283,
-   "mit_fundament": 4930
+   "technik_handelstag": "2026-09-22",
+   "fundament_stand": "2026-09-22T22:07:58",
+   "mit_technik": 5284,
+   "mit_fundament": 4929
   }
  },
  "hinweise": [],
@@ -134,82 +134,82 @@
   "darvas": {
    "name": "Darvas Box",
    "toleranz_moeglich": true,
-   "streng": 153,
-   "nur_toleranz": 3,
-   "handelbar": 63,
-   "handelbar_langweilig": 42
+   "streng": 159,
+   "nur_toleranz": 4,
+   "handelbar": 73,
+   "handelbar_langweilig": 50
   },
   "trend_template": {
    "name": "Minervini Trend Template",
    "toleranz_moeglich": true,
-   "streng": 621,
-   "nur_toleranz": 46,
-   "handelbar": 375
+   "streng": 619,
+   "nur_toleranz": 56,
+   "handelbar": 379
   },
   "vcp": {
    "name": "VCP",
    "toleranz_moeglich": true,
-   "streng": 22,
+   "streng": 24,
    "nur_toleranz": 0,
-   "handelbar": 13
+   "handelbar": 12
   },
   "cup_handle": {
    "name": "Cup & Handle",
    "toleranz_moeglich": true,
-   "streng": 645,
-   "nur_toleranz": 142,
-   "handelbar": 465
+   "streng": 621,
+   "nur_toleranz": 123,
+   "handelbar": 442
   },
   "rectangle": {
    "name": "Rectangle Top",
    "toleranz_moeglich": true,
-   "streng": 2283,
-   "nur_toleranz": 78,
-   "handelbar": 1223
+   "streng": 2267,
+   "nur_toleranz": 83,
+   "handelbar": 1225
   },
   "htf": {
    "name": "High & Tight Flag",
    "toleranz_moeglich": true,
-   "streng": 11,
-   "nur_toleranz": 6,
+   "streng": 10,
+   "nur_toleranz": 7,
    "handelbar": 10
   },
   "htf_innen": {
    "name": "HTF Innen-Einstieg",
    "toleranz_moeglich": true,
-   "streng": 8,
+   "streng": 9,
    "nur_toleranz": 5,
-   "handelbar": 7
+   "handelbar": 8
   },
   "ema_crossback": {
    "name": "EMA Crossback",
    "toleranz_moeglich": false,
-   "streng": 180,
+   "streng": 229,
    "nur_toleranz": 0,
-   "handelbar": 56
+   "handelbar": 76
   },
   "power_gap": {
    "name": "Power-Gap (Lücken-Bestätigungstag)",
    "toleranz_moeglich": false,
-   "streng": 5,
+   "streng": 2,
    "nur_toleranz": 0,
-   "handelbar": 2
+   "handelbar": 1
   },
   "hoch_52w": {
    "name": "Neues 52-Wochen-Hoch",
    "toleranz_moeglich": false,
-   "streng": 64,
+   "streng": 72,
    "nur_toleranz": 0,
-   "handelbar": 32
+   "handelbar": 37
   },
   "hoch_allzeit": {
    "name": "Neues Allzeithoch",
    "toleranz_moeglich": false,
    "streng": 21,
    "nur_toleranz": 0,
-   "handelbar": 16
+   "handelbar": 13
   }
  },
- "zeilen": 5349,
- "dauer_s": 1197.7
+ "zeilen": 5347,
+ "dauer_s": 1212.0
 }
