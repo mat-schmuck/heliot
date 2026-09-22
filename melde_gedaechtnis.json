@@ -250,7 +250,7 @@
     "OUST|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "OUST|Fallback: MA50-R\u00fcckeroberung": "drin",
     "IMOS|VCP": "drin",
-    "BAND|EMA Crossback": "drin",
+    "BAND|EMA Crossback": "draussen",
     "GNRC|Fallback: MA50-Pullback": "drin",
     "RNG|Darvas Box + High & Tight Flag": "drin",
     "MGTX|Fallback: MA50-R\u00fcckeroberung": "drin"
@@ -472,7 +472,10 @@
     "BAND|EMA Crossback": "2026-09-22",
     "BEST|BAND|EMA Crossback": "2026-09-22",
     "TEIL|TWLO|1": "2026-09-22",
-    "R2GX|CLMT|2026-09-22": "2026-09-22"
+    "R2GX|CLMT|2026-09-22": "2026-09-22",
+    "UEBER|BAND|EMA Crossback": "2026-09-22",
+    "BEST|HTF|RNG|Darvas Box": "2026-09-22",
+    "BEST|HTF|RNG|High & Tight Flag": "2026-09-22"
   },
   "gapgo_warten": {
     "VICR": {
