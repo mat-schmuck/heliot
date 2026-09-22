@@ -239,7 +239,8 @@
     "OMER|Cup & Handle (Wochenbasis)": "drin",
     "OMER|Fallback: 52W-Hoch-Breakout": "drin",
     "GH|Rectangle Top": "drin",
-    "AXGN|Fallback: MA50-Pullback": "drin"
+    "AXGN|Fallback: MA50-Pullback": "drin",
+    "ALNT|Fallback: MA50-Pullback": "draussen"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -440,12 +441,13 @@
     "GEWINN|zonenwechsel|INTC|Fallback: MA50-R\u00fcckeroberung|stark": "2026-09-22",
     "GEWINN|zonenwechsel|MXL|Fallback: MA50-R\u00fcckeroberung|mittel": "2026-09-22",
     "GEWINN|zonenwechsel|TEAM|2|stark": "2026-09-22",
-    "GEWINN|zonenwechsel|UMAC|SPRING-2026-09-18|mittel": "2026-09-22"
+    "GEWINN|zonenwechsel|UMAC|SPRING-2026-09-18|mittel": "2026-09-22",
+    "GEWINN|zonenwechsel|ALNT|Fallback: MA50-Pullback|mittel": "2026-09-22"
   },
   "gapgo_warten": {
     "VICR": {
       "signal": "2026-09-22",
-      "kp": 242.58,
+      "kp": 242.76,
       "stop": 229.27,
       "firma": "Vicor Corp",
       "bestaetigt": false
