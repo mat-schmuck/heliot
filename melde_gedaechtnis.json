@@ -394,7 +394,9 @@
     "GAPGO|VICR|2026-09-22": "2026-09-22",
     "NTSK|Cup & Handle (Wochenbasis)": "2026-09-22",
     "BEST|NTSK|Cup & Handle (Wochenbasis)": "2026-09-22",
-    "GEWINN|klimax_zeichen|OKTA|Cup & Handle (Wochenbasis)|4_ma200_abstand": "2026-09-22"
+    "GEWINN|klimax_zeichen|OKTA|Cup & Handle (Wochenbasis)|4_ma200_abstand": "2026-09-22",
+    "TEIL|INTC|EMA Crossback": "2026-09-22",
+    "TEIL|INTC|Fallback: MA50-R\u00fcckeroberung": "2026-09-22"
   },
   "gapgo_warten": {
     "VICR": {
