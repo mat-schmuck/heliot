@@ -564,7 +564,9 @@
     "GEWINN|zonenwechsel|XMTR|Fallback: MA50-R\u00fcckeroberung|mittel": "2026-09-22",
     "UEBER|COHU|Cup & Handle (Wochenbasis)": "2026-09-22",
     "SIMO|Rectangle Top": "2026-09-22",
-    "BEST|SIMO|Rectangle Top": "2026-09-22"
+    "BEST|SIMO|Rectangle Top": "2026-09-22",
+    "GEWINN|klimax_zeichen|UMC|Fallback: 20-Tage-Hoch (Pivot)|4_ma200_abstand": "2026-09-22",
+    "SCHLUSSNAH|2026-09-22": "2026-09-22"
   },
   "gapgo_warten": {
     "VICR": {
