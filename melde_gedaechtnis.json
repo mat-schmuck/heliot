@@ -560,7 +560,9 @@
     "UEBER|MRNA|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
     "INSIDER|GRAB|pfad_a|0": "2026-09-22",
     "INSIDER|GSAT|pfad_a|0": "2026-09-22",
-    "INSIDER|QVCG|pfad_a|1": "2026-09-22"
+    "INSIDER|QVCG|pfad_a|1": "2026-09-22",
+    "GEWINN|zonenwechsel|TWLO|1|mittel": "2026-09-22",
+    "GEWINN|zonenwechsel|XMTR|Fallback: MA50-R\u00fcckeroberung|mittel": "2026-09-22"
   },
   "gapgo_warten": {
     "VICR": {
