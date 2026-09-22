@@ -140,7 +140,7 @@
     "NESR|Fallback: MA50-Pullback": "drin",
     "AAMI|Fallback: MA50-Pullback": "draussen",
     "ALMR|Fallback: MA50-Pullback": "draussen",
-    "ARGX|Fallback: MA50-Pullback": "draussen",
+    "ARGX|Fallback: MA50-Pullback": "drin",
     "AVT|Fallback: MA50-Pullback": "draussen",
     "BLTE|Fallback: MA50-Pullback": "draussen",
     "COHU|Fallback: 20-Tage-Hoch (Pivot)": "drin",
@@ -215,13 +215,13 @@
     "MRNA|Darvas Box": "drin",
     "XMTR|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "CAI|Cup & Handle (Wochenbasis) + High & Tight Flag": "drin",
-    "CAI|HTF Innen-Einstieg": "drin",
+    "CAI|HTF Innen-Einstieg": "draussen",
     "RNG|Fallback: MA50-Pullback": "draussen",
     "ASX|Fallback: MA50-Pullback": "draussen",
     "TWLO|Cup & Handle (Wochenbasis)": "draussen",
     "ESTC|EMA Crossback": "drin",
     "TENB|EMA Crossback": "drin",
-    "VICR|Cup & Handle (Wochenbasis)": "drin",
+    "VICR|Cup & Handle (Wochenbasis)": "draussen",
     "XMTR|Rectangle Top": "drin",
     "SKE|Fallback: MA50-Pullback": "draussen",
     "TSEM|Fallback: MA50-Pullback": "drin",
@@ -253,7 +253,9 @@
     "BAND|EMA Crossback": "draussen",
     "GNRC|Fallback: MA50-Pullback": "drin",
     "RNG|Darvas Box + High & Tight Flag": "drin",
-    "MGTX|Fallback: MA50-R\u00fcckeroberung": "drin"
+    "MGTX|Fallback: MA50-R\u00fcckeroberung": "drin",
+    "NTRA|Cup & Handle (Wochenbasis)": "drin",
+    "BAND|Fallback: 20-Tage-Hoch (Pivot)": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -475,12 +477,16 @@
     "R2GX|CLMT|2026-09-22": "2026-09-22",
     "UEBER|BAND|EMA Crossback": "2026-09-22",
     "BEST|HTF|RNG|Darvas Box": "2026-09-22",
-    "BEST|HTF|RNG|High & Tight Flag": "2026-09-22"
+    "BEST|HTF|RNG|High & Tight Flag": "2026-09-22",
+    "UEBER|CAI|HTF Innen-Einstieg": "2026-09-22",
+    "BAND|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-22",
+    "BEST|BAND|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-22",
+    "UEBER|VICR|Cup & Handle (Wochenbasis)": "2026-09-22"
   },
   "gapgo_warten": {
     "VICR": {
       "signal": "2026-09-22",
-      "kp": 244.15,
+      "kp": 244.74,
       "stop": 229.27,
       "firma": "Vicor Corp",
       "bestaetigt": false
