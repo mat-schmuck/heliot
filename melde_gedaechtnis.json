@@ -237,7 +237,7 @@
     "PLXS|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "PLXS|Fallback: MA50-R\u00fcckeroberung": "drin",
     "OMER|Cup & Handle (Wochenbasis)": "draussen",
-    "OMER|Fallback: 52W-Hoch-Breakout": "drin",
+    "OMER|Fallback: 52W-Hoch-Breakout": "draussen",
     "GH|Rectangle Top": "drin",
     "AXGN|Fallback: MA50-Pullback": "drin",
     "ALNT|Fallback: MA50-Pullback": "draussen",
@@ -535,7 +535,8 @@
     "TEIL|VICR|Fallback: MA50-R\u00fcckeroberung": "2026-09-22",
     "DIOD|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-22",
     "BEST|DIOD|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-22",
-    "UEBER|OMER|Cup & Handle (Wochenbasis)": "2026-09-22"
+    "UEBER|OMER|Cup & Handle (Wochenbasis)": "2026-09-22",
+    "UEBER|OMER|Fallback: 52W-Hoch-Breakout": "2026-09-22"
   },
   "gapgo_warten": {
     "VICR": {
