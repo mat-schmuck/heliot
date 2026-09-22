@@ -4,7 +4,7 @@
   {
    "ticker": "FTK",
    "status": "pfad_a",
-   "marktkap": 1140400256.0,
+   "marktkap": 1117762432.0,
    "stichtag": "2026-09-22",
    "zeilen": [
     "FTK; Großkauf; Marktwert 1,1 Mrd $",
@@ -15,7 +15,7 @@
   {
    "ticker": "GME",
    "status": "pfad_a",
-   "marktkap": 12093999104.0,
+   "marktkap": 12123159552.0,
    "stichtag": "2026-09-22",
    "zeilen": [
     "GME; Großkauf; Marktwert 12,1 Mrd $",
@@ -26,10 +26,10 @@
   {
    "ticker": "GRAB",
    "status": "pfad_a",
-   "marktkap": 13112622080.0,
+   "marktkap": 12969426944.0,
    "stichtag": "2026-09-22",
    "zeilen": [
-    "GRAB; Großkauf; Marktwert 13,1 Mrd $",
+    "GRAB; Großkauf; Marktwert 13,0 Mrd $",
     "Größter Einzelkauf 29,9 Mio $ am 21.09.; Tan Anthony Ping Yeow, Chief Executive Officer"
    ],
    "kennung": "GRAB|pfad_a|0"
@@ -37,7 +37,7 @@
   {
    "ticker": "GSAT",
    "status": "pfad_a",
-   "marktkap": 10685092864.0,
+   "marktkap": 10691570688.0,
    "stichtag": "2026-09-22",
    "zeilen": [
     "GSAT; Großkauf; Marktwert 10,7 Mrd $",
@@ -48,10 +48,10 @@
   {
    "ticker": "LEN, LEN.B",
    "status": "pfad_a",
-   "marktkap": 19827548160.0,
+   "marktkap": 20008749056.0,
    "stichtag": "2026-09-22",
    "zeilen": [
-    "LEN, LEN.B; Großkauf; Marktwert 19,8 Mrd $",
+    "LEN, LEN.B; Großkauf; Marktwert 20,0 Mrd $",
     "Größter Einzelkauf 93,1 Mio $ am 18.09.; BERKSHIRE HATHAWAY INC, Insider"
    ],
    "kennung": "LEN, LEN.B|pfad_a|0"
@@ -59,10 +59,10 @@
   {
    "ticker": "QVCG",
    "status": "pfad_a",
-   "marktkap": 787498368.0,
+   "marktkap": 794498368.0,
    "stichtag": "2026-09-22",
    "zeilen": [
-    "QVCG; Großkauf; Marktwert 787,5 Mio $",
+    "QVCG; Großkauf; Marktwert 794,5 Mio $",
     "Größter Einzelkauf 26,0 Mio $ am 08.09.; GOLDENTREE ASSET MANAGEMENT LP, Insider"
    ],
    "kennung": "QVCG|pfad_a|1"
@@ -70,10 +70,10 @@
   {
    "ticker": "RSG",
    "status": "pfad_a",
-   "marktkap": 65662783488.0,
+   "marktkap": 65492836352.0,
    "stichtag": "2026-09-22",
    "zeilen": [
-    "RSG; Großkauf; Marktwert 65,7 Mrd $",
+    "RSG; Großkauf; Marktwert 65,5 Mrd $",
     "Größter Einzelkauf 55,4 Mio $ am 08.09.; CASCADE INVESTMENT, L.L.C., Insider"
    ],
    "kennung": "RSG|pfad_a|0"
