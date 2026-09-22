@@ -264,7 +264,8 @@
     "COHU|Cup & Handle (Wochenbasis)": "drin",
     "TWST|Cup & Handle (Wochenbasis)": "drin",
     "PNTG|Fallback: MA50-R\u00fcckeroberung": "drin",
-    "PVLA|Rectangle Top": "drin"
+    "PVLA|Rectangle Top": "drin",
+    "BLLN|Fallback: MA50-R\u00fcckeroberung": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -506,7 +507,9 @@
     "UEBER|TWLO|Cup & Handle (Wochenbasis)": "2026-09-22",
     "UEBER|TWLO|Fallback: 52W-Hoch-Breakout": "2026-09-22",
     "MRNA|Fallback: 52W-Hoch-Breakout": "2026-09-22",
-    "BEST|MRNA|Fallback: 52W-Hoch-Breakout": "2026-09-22"
+    "BEST|MRNA|Fallback: 52W-Hoch-Breakout": "2026-09-22",
+    "BLLN|Fallback: MA50-R\u00fcckeroberung": "2026-09-22",
+    "BEST|BLLN|Fallback: MA50-R\u00fcckeroberung": "2026-09-22"
   },
   "gapgo_warten": {
     "VICR": {
