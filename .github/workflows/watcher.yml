@@ -91,7 +91,13 @@ jobs:
         # Kurs UND Tagesvolumen für alle 265 Aktien gleichzeitig. Er hat den
         # Finnhub-Strom abgelöst, der nur 51 Symbole trug und drei Aktien
         # der Liste überhaupt nicht (Vodafone, Ovintiv, Lowe's).
-        run: pip install requests pandas openpyxl "yfinance>=1.5"
+        #
+        # numpy und scipy seit 22.09.2026 (Gerhards Antwort O13): Trägt einer
+        # von uns während des Handels eine Aktie einzeln zur Überwachung ein,
+        # rechnet der Wächter ihre Kaufpunkte selbst, statt auf den nächsten
+        # Nachtscan zu warten. Dafür lädt er pattern_scanner, und der braucht
+        # scipy; ohne die beiden Pakete gäbe es das Nachziehen nicht.
+        run: pip install requests pandas numpy scipy openpyxl "yfinance>=1.5"
 
       # EINE Wahrheit fuer Alarme UND Waechter: die im Repo eingecheckte
       # kaufpunkte_aktuell.xlsx (naechtlich vom Scanner aktualisiert, bei

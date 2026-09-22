@@ -805,12 +805,13 @@ def aktuelle_listengroesse(datei: str = None) -> int | None:
 # stehen in einer EIGENEN Datei (listen.EINZEL_DATEI) auf jedem Zweig der
 # Wochenlisten, damit ein Eintrag nicht als neue Wochenliste zaehlt; geschrieben
 # wird ueber denselben Weg wie der Upload (wochenliste_einspielen).
-# UEBERWACHT WIRD NOCH NICHT (21.09.2026): Wie der Waechter solche Aktien
-# behandelt, klaeren Gerhards Regelfragen O11 bis O13; bis dahin ist die Liste
-# vorgemerkt, und die Seite sagt das bei jeder Aktie. Lesen und Schreiben nur
-# im vollen Zugang (gesamtpruefung, gast_abschottung).
-EINZEL_HINWEIS = ("Überwacht wird noch nicht: Wie der Wächter einzeln eingetragene Aktien behandelt, klären "
-                  "Gerhards offene Regelfragen dazu. Bis sie beantwortet sind, ist die Liste nur vorgemerkt.")
+# UEBERWACHT WIRD SEIT 22.09.2026 (Gerhards Antworten O11 bis O13): alle
+# Strategien samt Darvas, sofort im laufenden Handel, und der Freitagsputz
+# beendet die Ueberwachung wieder. Lesen und Schreiben nur im vollen Zugang
+# (gesamtpruefung, gast_abschottung).
+EINZEL_HINWEIS = ("Überwacht wird ab sofort: Auf einer einzeln eingetragenen Aktie laufen alle Strategien, "
+                  "auch Darvas. Der Wächter nimmt sie im laufenden Handel binnen einer Minute auf und rechnet "
+                  "ihre Kaufpunkte selbst; der Freitagsputz beendet die Überwachung wieder.")
 
 
 def _einzel_roh() -> bytes:

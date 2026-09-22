@@ -215,6 +215,28 @@ class YahooWebSocket:
                   f"stützt sich solange auf die Tagesdaten.")
         return True
 
+    def dazu(self, symbole):
+        """Weitere Aktien live dazunehmen, waehrend die Wache laeuft.
+
+        Gebraucht seit dem 22.09.2026 (Gerhards Antwort O13): Eine einzeln
+        eingetragene Aktie wird SOFORT ueberwacht, nicht erst ab dem naechsten
+        Nachtscan. Die laufenden Verbindungen bleiben unangetastet, die neuen
+        Symbole bekommen eigene. Liefert die wirklich dazugekommenen."""
+        if not self._laeuft:
+            return []
+        neu = sorted({str(s).upper() for s in symbole if s} - set(self._symbole))
+        if not neu:
+            return []
+        self._symbole = sorted(set(self._symbole) | set(neu))
+        haufen = [neu[i:i + self.pro_verbindung]
+                  for i in range(0, len(neu), self.pro_verbindung)]
+        with self._lock:
+            nummer = len(self._verbindungen) + 1
+        for i, teil in enumerate(haufen, nummer):
+            self._starte_haufen(teil, i)
+        self._sag(f"{len(neu)} Aktie(n) dazu: {', '.join(neu)}.")
+        return neu
+
     def stop(self):
         self._laeuft = False
         with self._lock:

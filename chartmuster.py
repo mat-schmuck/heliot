@@ -14,15 +14,39 @@ Gerhards Reihenfolge: B Inside Day, A Three Weeks Tight, D Pocket Pivot,
 F Power Trend, G Flat Base, S Wick Play, T Shakeout am EMA 10. Gerechnet wird
 in der Nachttabelle (scanner_daten.py) am letzten Handelstag; die App schreibt
 die Funde zu jedem Scanner-Treffer (scanner_ansicht.muster_saetze). Nichts
-davon filtert, und nichts davon beruehrt Nachtscan, Waechter oder Alarme. Ob A,
-B, D und S zusaetzlich als eigene Strategien pushen, ist eine Regelfrage an
-Gerhard und hier nicht gebaut.
+davon filtert.
 
 Danach, wie Gerhard es vorsieht ("Danach die Pivot-Erkennung, weil H und N
 beide darauf sitzen"), die Erkennung von Hochs und Tiefs (pivots) und darauf
-N Shakeout plus drei (Tageskerzen) und H Double Bottom (Wochenkerzen), gebaut
-am 21.09.2026. Auch sie filtern nichts; ob N als eigene Strategie pusht und
-welcher Aufschlag dann ausloest, sind Regelfragen an Gerhard.
+N Shakeout plus drei (Tageskerzen), gebaut am 21.09.2026. Auch N filtert nichts.
+
+L IPO BASE, seit 22.09.2026: Gerhards sechs Alarm-Muster sind A, B, D, L, N und
+S; L fehlte noch. Es braucht als einziges Muster die Erstnotiz je Aktie, und
+die kommt aus der Kurshistorie selbst (erstnotiz, samt der Mantel-Regel aus
+seiner Antwort O14).
+
+DIE ALARME SIND EIN EIGENER WEG (Gerhard, 22.09.2026, Antworten O1 bis O10):
+A, B, D, L, N und S rechnen ihre Kaufpunkte im Nachtscan mit und melden im
+Handel ueber den Waechter, ohne je einen bestehenden Kaufpunkt zu verdraengen.
+Dieses Modul erkennt nur die Muster; der Weg dorthin steht in alarm_muster.py.
+
+H DOUBLE BOTTOM IST GESTRICHEN (Gerhard, 22.09.2026, Antwort auf O35 bis O37):
+"H fliegt raus. Nicht nur als Alarm-Kandidat ausschliessen, sondern komplett,
+aus dem Scanner, aus jeder Datei-Spalte und aus dem Nachschlagen." Weg sind
+damit die Funktion double_bottom, die Spalten cm_h, die Zahlen zu H in QUELLE
+und FESTLEGUNGEN und die Saetze in der App. Die Pivot-Erkennung bleibt, N sitzt
+darauf.
+
+NOCH NICHT GEBAUT, aber schon entschieden (Gerhards Antworten vom 22.09.2026,
+damit die Regeln beim Bau gelten):
+  K Base-on-Base und M Stufenzaehlung der Basen: nur Scanner, kein Alarm. M ist
+    das groesste Stueck seiner Liste und Voraussetzung fuer K.
+  Q Green Line Breakout: O15, "erst nach bestaetigtem Monatsschluss anzeigen,
+    keine Zwischenstufe". Ein Tagesschluss ueber der Linie wird also NICHT
+    gezeigt, auch nicht mit dem Vermerk, dass der Monatsschluss noch aussteht.
+  V Episodic Pivot: O16, eine grosse Luecke nach einer toten Phase, zu der sich
+    keine Nachricht finden laesst, wird GETRENNT vom Episodic Pivot angezeigt,
+    mit dem Vermerk "Luecke ohne erkannten Ausloeser".
 
 UNSERE FESTLEGUNGEN: Gerhard: "jede Zahl, die nicht aus der Quelle stammt,
 sondern von uns gesetzt wurde ... wird im Code und in der Ausgabe als unsere
@@ -39,7 +63,7 @@ ganze Tagesvolumina. Im laufenden Handel muesste dieselbe Bedingung ueber die
 F(t)-Kurve laufen; das kommt erst mit den Alarm-Strategien.
 
 WOCHEN: Wochenkerzen entstehen aus den Tageskerzen (Montag bis Freitag). A, G
-und H rechnen nur mit ABGESCHLOSSENEN Wochen: Die letzte Woche zaehlt, wenn ihr
+und L rechnen nur mit ABGESCHLOSSENEN Wochen: Die letzte Woche zaehlt, wenn ihr
 letzter Handelstag ein Freitag ist; faellt der Freitag auf einen Feiertag,
 zaehlt sie ab dem ersten Handelstag der Folgewoche.
 
@@ -58,16 +82,16 @@ import pandas as pd
 QUELLE = {
     "a_eng": 0.015,               # A: Wochenschluss hoechstens 1,5 Prozent vom Vorwochenschluss
     "a_wochen_min": 3,            # A: drei enge Wochen, vier zaehlen genauso
-    "aufschlag": 0.10,            # A, G und H: Kaufpunkt Hoch plus 0,10 Dollar (H: Zwischenhoch)
+    "aufschlag": 0.10,            # A und G: Kaufpunkt Hoch plus 0,10 Dollar
     "d_fenster": 10,              # D: Abwaertstage der letzten zehn Handelstage
     "f_tage_ueber_ema": 10,       # F: seit zehn Handelstagen jedes Tief ueber dem EMA 21
     "f_sma50_steigt": 20,         # F: SMA 50 steigt seit zwanzig Tagen
     "g_wochen_min": 5,            # G: mindestens fuenf Wochen
     "g_tiefe_max": 0.15,          # G: hoechstens 15 Prozent tief
     "g_anstieg_min": 0.20,        # G: davor mindestens 20 Prozent Anstieg
-    "h_wochen_min": 7,            # H: Dauer ueblicherweise mindestens sieben Wochen
-    "h_tiefe_min": 0.15,          # H: Tiefe zwischen 15 und 50 Prozent vom linken Hoch
-    "h_tiefe_max": 0.50,
+    "l_wochen_min": 3,            # L: Basis schon nach drei bis vier Wochen statt der sonst geforderten fuenf bis sieben
+    "l_tiefe_min": 0.20,          # L: Tiefe zwanzig bis fuenfzig Prozent (bei einer normalen Basis waere das zu viel)
+    "l_tiefe_max": 0.50,
     "n_aufschlag": (0.05, 0.10),  # N: Einstieg Tief mal (1 + p), p zwischen 0,05 und 0,10; beide nebeneinander
 }
 
@@ -78,11 +102,15 @@ FESTLEGUNGEN = {
     # bis zum Schluss der Woche davor (die 20 Prozent wie bei G).
     "a_anstieg_min": 0.20,
     "a_anstieg_wochen": 12,
-    # A: hoechstens fuenf enge Wochen ("Vier Wochen zaehlen genauso"). Laenger
-    # eng ist keine Pause nach einem Ausbruch, sondern ein festgenagelter Kurs;
-    # gemessen am 21.09.2026 an 800 Aktien: SLAB 24 Wochen eng nach einem
-    # Sprung, der typische Verlauf einer laufenden Uebernahme.
-    "a_wochen_max": 5,
+    # A: hoechstens DREI enge Wochen (Gerhard, 22.09.2026, Antwort auf O19:
+    # "hoechstens 3 Wochen, nicht 5"). Laenger eng ist keine Pause nach einem
+    # Ausbruch, sondern ein festgenagelter Kurs; gemessen am 21.09.2026 an 800
+    # Aktien: SLAB 24 Wochen eng nach einem Sprung, der typische Verlauf einer
+    # laufenden Uebernahme. ACHTUNG, Spannung zu seinem eigenen Papier vom
+    # 20.09.2026: Dort steht "Vier Wochen zaehlen genauso, wenn alle vier eng
+    # bleiben" (QUELLE["a_wochen_min"] ist drei). Die neuere Regel gilt; die
+    # vierte enge Woche zaehlt seither nicht mehr. An Mathias gemeldet.
+    "a_wochen_max": 3,
     # A: Der Anstieg muss IN die enge Phase fuehren: Der Schluss der Woche davor
     # liegt hoechstens 10 Prozent unter dem hoechsten Wochenschluss der zwoelf
     # Wochen davor. Gemessen am 21.09.2026: AAOI kam sonst mit drei engen
@@ -102,6 +130,26 @@ FESTLEGUNGEN = {
     # G: "davor ein Anstieg von mindestens zwanzig Prozent": gemessen vom
     # tiefsten Wochentief der 26 Wochen vor der Basis bis zu ihrem Hoch.
     "g_anstieg_wochen": 26,
+    # L: "eine frisch notierte Aktie". Gerhard nennt keine Grenze, wie lange
+    # eine Aktie frisch ist; IBD betrachtet IPO-Basen im ersten Jahr nach der
+    # Erstnotiz. Unsere Festlegung: hoechstens 52 Wochen seit der Erstnotiz.
+    "l_erstnotiz_wochen_max": 52,
+    # L, BOERSENMANTEL (Gerhard, 22.09.2026, Antwort auf O14: "Ja", der erste
+    # Handelstag nach der Uebernahme des Mantels gilt als Erstnotiz, "wenn der
+    # Mantel so erkennbar ist; sonst steht an der Aktie, dass die Erstnotiz
+    # unsicher ist"). Erkennbar heisst bei uns: Die Kurshistorie beginnt mit
+    # mindestens 20 Handelstagen im Band 9 bis 11 Dollar, deren Spanne
+    # hoechstens 5 Prozent betraegt, und danach verlaesst der Kurs das Band um
+    # mindestens 20 Prozent. Dann gilt der erste Tag danach als Erstnotiz.
+    # Sieht der Anfang nach Mantel aus, ohne diese Bedingungen zu erfuellen
+    # (mindestens 5 Tage im Band), bleibt der erste Kurstag die Erstnotiz und
+    # die Aktie traegt den Vermerk, dass sie unsicher ist.
+    "l_mantel_von": 9.0,
+    "l_mantel_bis": 11.0,
+    "l_mantel_tage": 20,
+    "l_mantel_tage_min": 5,
+    "l_mantel_enge": 0.05,
+    "l_mantel_sprung": 0.20,
     # S: Gerhards Startwerte, ausdruecklich unsere Festlegung: Docht mindestens
     # doppelt so lang wie der Koerper, Koerper hoechstens 30 Prozent der Spanne.
     # Gezaehlt wird der laengere Docht, oben oder unten ("eine Seite wurde
@@ -133,26 +181,8 @@ FESTLEGUNGEN = {
     # HOCHS UND TIEFS (Pivots, fuer H und N): Ein Hoch ist das hoechste Hoch,
     # ein Tief das tiefste Tief von fuenf Kerzen, zwei davor und zwei danach;
     # bei gleichen Werten zaehlt die erste Kerze. Ein Tief gilt also erst, wenn
-    # zwei Kerzen danach hoeher lagen. Bei H sind es Wochen-, bei N Tageskerzen.
+    # zwei Kerzen danach hoeher lagen. Bei N sind es Tageskerzen.
     "pivot_kerzen": 2,
-    # H: Das linke Hoch ist ein Hoch hoechstens 52 Wochen zurueck, das seither
-    # nicht ueberschritten wurde (die Formation beginnt an ihrem Hoch, wie die
-    # Flat Base). Das zweite Tief ist das tiefste Tief seit dem linken Hoch,
-    # das erste Tief das tiefste Tief zwischen linkem Hoch und Zwischenhoch,
-    # das Zwischenhoch das hoechste Hoch zwischen den beiden Tiefs.
-    "h_suche_wochen": 52,
-    # H: Das zweite Tief liegt hoechstens 10 Prozent unter dem ersten. Gerhard
-    # nennt den Undercut den, "der die schwachen Haende herausschuettelt", und
-    # keine Grenze. Gemessen am 21.09.2026 an 800 Aktien: Ohne Grenze kamen
-    # Faelle mit 20 bis 35 Prozent Unterschreitung durch (etwa MTSI mit 32),
-    # also ein zweiter Absturz weit unter das erste Tief und kein W.
-    "h_unterschreitung_max": 0.10,
-    # H: Das zweite Tief liegt hoechstens 13 Wochen zurueck. Gemessen am
-    # 21.09.2026: Ohne Grenze kamen Formationen durch, deren zweites Tief ein
-    # halbes Jahr zurueckliegt und die seither seitwaerts laufen, also laengst
-    # eine andere Basis sind. Gezeigt wird bis zum ersten Wochenschluss ueber
-    # dem Kaufpunkt.
-    "h_tief2_wochen_max": 13,
     # N: "aus einem Hoch heraus": das hoechste Hoch der 63 Handelstage (drei
     # Monate) bis zu ihm. "scharfer Abverkauf": mindestens 10 Prozent vom Hoch
     # zum Tief in hoechstens 15 Handelstagen. Es zaehlt nur der ERSTE scharfe
@@ -176,10 +206,11 @@ SPALTEN = (
     "cm_t", "cm_t_variante", "cm_t_unterschreitung_pct",
     "cm_n", "cm_n_tief_tag", "cm_n_abverkauf_pct", "cm_n_tage", "cm_n_kp5", "cm_n_kp10", "cm_n_kp5_erreicht",
     "cm_n_stop",
-    "cm_h", "cm_h_wochen", "cm_h_tiefe_pct", "cm_h_unter_pct", "cm_h_kp", "cm_h_stop",
+    "cm_l", "cm_l_wochen", "cm_l_tiefe_pct", "cm_l_seit_wochen", "cm_l_erstnotiz", "cm_l_mantel",
+    "cm_l_unsicher", "cm_l_kp", "cm_l_stop",
 )
 
-MERKER = ("cm_b", "cm_a", "cm_d", "cm_g", "cm_s", "cm_t", "cm_n", "cm_h")
+MERKER = ("cm_b", "cm_a", "cm_d", "cm_g", "cm_s", "cm_t", "cm_n", "cm_l")
 
 
 def leer():
@@ -564,53 +595,78 @@ def shakeout_plus3(x):
 
 
 # ---------------------------------------------------------------------------
-# H  Double Bottom, das W
+# L  IPO Base (Gerhard, 20.09.2026; Erstnotiz-Regel aus seiner Antwort O14)
 # ---------------------------------------------------------------------------
 
-def double_bottom(wk):
-    """Das W nach IBD auf abgeschlossenen Wochenkerzen: linkes Hoch, erstes
-    Tief, Zwischenhoch, zweites Tief UNTER dem ersten. Dauer mindestens sieben
-    Wochen, Tiefe 15 bis 50 Prozent vom linken Hoch. Kaufpunkt Zwischenhoch
-    plus 0,10 Dollar, Stop unter dem zweiten Tief, gedeckelt. Hochs und Tiefs
-    kommen aus der Pivot-Erkennung; alles Weitere siehe FESTLEGUNGEN."""
+def erstnotiz(x):
+    """Der erste Handelstag der Aktie nach Gerhards Regel (O14), als
+    (Stelle in den Tageskerzen, Mantel erkannt, Erstnotiz unsicher).
+
+    Kam eine Firma ueber einen Boersenmantel an die Boerse, beginnt ihre
+    Kurshistorie mit dem Mantel, der meist flach um 10 Dollar notiert. Ist er
+    erkennbar (siehe FESTLEGUNGEN), gilt der erste Handelstag nach der
+    Uebernahme als Erstnotiz; sieht der Anfang nur nach Mantel aus, bleibt der
+    erste Kurstag die Erstnotiz und die Aktie traegt den Vermerk unsicher."""
+    f = FESTLEGUNGEN
+    c = x["close"].to_numpy(dtype=float)
+    n = len(c)
+    im_band = 0
+    while im_band < n and f["l_mantel_von"] <= c[im_band] <= f["l_mantel_bis"]:
+        im_band += 1
+    if im_band < f["l_mantel_tage_min"] or im_band >= n:
+        return 0, False, False
+    band = c[:im_band]
+    hoch, tief = float(np.nanmax(band)), float(np.nanmin(band))
+    mitte = float(np.nanmean(band))
+    eng = hoch > 0 and (hoch - tief) / hoch <= f["l_mantel_enge"]
+    sprung = mitte > 0 and abs(c[im_band] / mitte - 1.0) >= f["l_mantel_sprung"]
+    if im_band >= f["l_mantel_tage"] and eng and sprung:
+        return im_band, True, False
+    return 0, False, True
+
+
+def ipo_base(x, wk):
+    """Die erste Basis einer frisch notierten Aktie: Sie darf frueher und
+    tiefer sein als bei einer etablierten (Gerhard: drei bis vier Wochen statt
+    fuenf bis sieben, Tiefe zwanzig bis fuenfzig Prozent). Sie beginnt an
+    ihrem hoechsten Wochenhoch, dem linken Hoch, und reicht bis zur letzten
+    abgeschlossenen Woche; gesucht wird die laengste solche Basis. Kaufpunkt
+    linkes Hoch plus 0,10 Dollar, Stop das Basistief, gedeckelt. Wie lange
+    eine Aktie als frisch gilt, ist unsere Festlegung."""
     q, f = QUELLE, FESTLEGUNGEN
     n = len(wk)
-    if n < q["h_wochen_min"] + f["pivot_kerzen"]:
+    if n < q["l_wochen_min"] or x is None or len(x) == 0:
         return {}
-    h, lo, c = (wk[s].to_numpy(dtype=float) for s in ("high", "low", "close"))
-    hochs, tiefs = pivots(h, lo, ab=n - f["h_suche_wochen"])
-    ist_tief = set(tiefs)
-    for i0 in reversed(hochs):
-        if n - i0 < q["h_wochen_min"]:
-            continue                              # noch keine sieben Wochen
-        if h[i0] < np.nanmax(h[i0:]):
-            continue                              # das linke Hoch wurde seither ueberschritten
-        i2 = i0 + int(np.nanargmin(lo[i0:]))
-        if i2 not in ist_tief or n - 1 - i2 > f["h_tief2_wochen_max"]:
-            continue                              # zweites Tief nicht bestaetigt oder zu alt
-        tiefe = (h[i0] - lo[i2]) / h[i0]
-        if not q["h_tiefe_min"] <= tiefe <= q["h_tiefe_max"]:
-            continue
-        paar = None
-        for i1 in tiefs:
-            if not (i0 < i1 < i2 - 1 and lo[i1] > lo[i2]):
-                continue                          # das zweite Tief muss das erste unterschreiten
-            iM = i1 + 1 + int(np.nanargmax(h[i1 + 1:i2]))
-            if lo[i1] > np.nanmin(lo[i0 + 1:iM + 1]):
-                continue                          # das erste Tief ist das Tief vor dem Zwischenhoch
-            if not h[iM] < h[i0] or 1.0 - lo[i2] / lo[i1] > f["h_unterschreitung_max"]:
-                continue
-            paar = (i1, iM)                       # das juengste passende Paar
-        if paar is None:
-            continue
-        i1, iM = paar
-        kp = h[iM] + q["aufschlag"]
-        if np.nanmax(c[i2 + 1:]) > kp:
-            continue                              # schon ueber dem Kaufpunkt geschlossen: vorbei
-        return {"cm_h": 1, "cm_h_wochen": int(n - i0), "cm_h_tiefe_pct": _r(tiefe * 100.0, 1),
-                "cm_h_unter_pct": _r((1.0 - lo[i2] / lo[i1]) * 100.0, 1), "cm_h_kp": _r(kp),
-                "cm_h_stop": _r(_deckel(kp, lo[i2]))}
-    return {}
+    i0, mantel, unsicher = erstnotiz(x)
+    tag0 = pd.Timestamp(x["datetime"].iloc[i0])
+    bis = pd.to_datetime(wk["bis"])
+    nach = [j for j in range(n) if bis.iloc[j] >= tag0]
+    if not nach:
+        return {}
+    start_frueh = nach[0]
+    seit = n - start_frueh                    # abgeschlossene Wochen seit der Erstnotiz
+    if seit > f["l_erstnotiz_wochen_max"]:
+        return {}
+    h, lo = wk["high"].to_numpy(dtype=float), wk["low"].to_numpy(dtype=float)
+    start = None
+    for j in range(n - q["l_wochen_min"], start_frueh - 1, -1):
+        hoch = h[j]
+        if not hoch > 0 or hoch < float(np.nanmax(h[j:])):
+            continue                          # die Basis beginnt an ihrem Hoch
+        if (hoch - float(np.nanmin(lo[j:]))) / hoch > q["l_tiefe_max"]:
+            break                             # frueher beginnende Basen waeren noch tiefer
+        start = j
+    if start is None:
+        return {}
+    hoch, tief = float(h[start]), float(np.nanmin(lo[start:]))
+    tiefe = (hoch - tief) / hoch
+    if not q["l_tiefe_min"] <= tiefe <= q["l_tiefe_max"]:
+        return {}
+    kp = hoch + q["aufschlag"]
+    return {"cm_l": 1, "cm_l_wochen": int(n - start), "cm_l_tiefe_pct": _r(tiefe * 100.0, 1),
+            "cm_l_seit_wochen": int(seit), "cm_l_erstnotiz": tag0.strftime("%Y-%m-%d"),
+            "cm_l_mantel": bool(mantel), "cm_l_unsicher": bool(unsicher),
+            "cm_l_kp": _r(kp), "cm_l_stop": _r(_deckel(kp, tief))}
 
 
 def werte(d):
@@ -622,10 +678,11 @@ def werte(d):
         return raus
     x = vorbereiten(d)
     wk = wochen(x)
-    for fn, arg in ((inside_day, x), (three_weeks_tight, wk), (pocket_pivot, x), (power_trend, x),
-                    (flat_base, wk), (shakeout_plus3, x), (wick_play, x), (shakeout_ema, x), (double_bottom, wk)):
+    for fn, args in ((inside_day, (x,)), (three_weeks_tight, (wk,)), (pocket_pivot, (x,)), (power_trend, (x,)),
+                     (flat_base, (wk,)), (shakeout_plus3, (x,)), (wick_play, (x,)), (shakeout_ema, (x,)),
+                     (ipo_base, (x, wk))):
         try:
-            raus.update(fn(arg))
+            raus.update(fn(*args))
         except Exception:  # noqa: BLE001, ein Muster darf die anderen nie mitreissen
             pass
     return raus
@@ -685,6 +742,9 @@ def selbsttest() -> int:
     lang = schluesse[:60] + [28.1, 28.2, 28.15, 28.25, 28.3] * 6 + schluesse[70:]
     p("A: sechs und mehr enge Wochen sind festgenagelt, kein Three Weeks Tight (unsere Festlegung)",
       three_weeks_tight(wochen(vorbereiten(_reihe(lang, start="2026-06-01", spanne=0.005)))) == {})
+    vier = schluesse[:60] + [28.1, 28.2, 28.15, 28.25, 28.3] * 4
+    p("A: vier enge Wochen sind seit Gerhards Antwort vom 22.09.2026 kein Three Weeks Tight mehr (O19)",
+      three_weeks_tight(wochen(vorbereiten(_reihe(vier, start="2026-06-01", spanne=0.005)))) == {})
     unruhig = schluesse[:60] + [28.1, 29.5, 28.0, 29.6, 28.2, 29.9, 28.1, 30.0, 28.3, 30.2, 28.4, 30.3, 28.5, 30.5, 28.6]
     absturz = list(np.linspace(15, 28, 55)) + [26.0, 25.0, 24.2, 24.0, 23.8] + [23.9, 23.95, 23.9, 24.0, 23.95] * 3
     x_ab = vorbereiten(_reihe(absturz, start="2026-06-01", spanne=0.005))
@@ -822,35 +882,55 @@ def selbsttest() -> int:
     p("N: ein erstes Tief unter 10 Prozent war nicht scharf, das neue Tief ist der erste scharfe Abverkauf",
       nn.get("cm_n") == 1 and nn["cm_n_abverkauf_pct"] >= 20.0, str(nn))
 
-    # H Double Bottom: 15 Wochen Anstieg zum linken Hoch, drei Wochen Abverkauf
-    # zum ersten Tief, zwei Wochen Erholung zum Zwischenhoch, zwei Wochen zum
-    # zweiten Tief unter dem ersten, drei Wochen rechte Seite
-    def w_reihe(tief1=30.0, mitte=36.0, tief2=29.0, rechts=34.0, rechts_tage=15, dazu=()):
-        s = (list(np.linspace(20, 40, 75)) + list(np.linspace(39.3, tief1, 15)) + list(np.linspace(tief1 + 0.6, mitte, 10))
-             + list(np.linspace(mitte - 0.6, tief2, 10)) + list(np.linspace(tief2 + 0.4, rechts, rechts_tage)) + list(dazu))
-        return wochen(vorbereiten(_reihe(s, start="2025-09-01", spanne=0.005)))
+    # L IPO Base: junge Aktie, sechs Wochen Anstieg, danach eine Basis, die an
+    # ihrem Hoch beginnt und rund 25 Prozent tief ist
+    def l_reihe(tief=0.75, basis_wochen=5, anstieg_tage=30, vorlauf=0, start="2026-05-04"):
+        hoch = 40.0
+        s = list(np.linspace(20, hoch, anstieg_tage))
+        for _ in range(basis_wochen):
+            s += [hoch * tief, hoch * (tief + 0.05), hoch * (tief + 0.10), hoch * (tief + 0.08), hoch * (tief + 0.12)]
+        return [10.0] * vorlauf + s
 
-    wk = w_reihe()
-    hh = double_bottom(wk)
-    kp_h = round(36.0 * (1 + 0.005) + 0.10, 4)
-    p("H: W mit zweitem Tief unter dem ersten, Kaufpunkt am Zwischenhoch plus 0,10 Dollar",
-      hh.get("cm_h") == 1 and hh["cm_h_kp"] == kp_h and hh["cm_h_wochen"] >= 7
-      and 3.0 <= hh["cm_h_unter_pct"] <= 3.6 and 25.0 <= hh["cm_h_tiefe_pct"] <= 30.0, str(hh))
-    p("H: der Stop traegt den Zehn-Prozent-Deckel", hh.get("cm_h_stop") is not None
-      and 0.099 < (kp_h - hh["cm_h_stop"]) / kp_h <= 0.10, str(hh))
-    p("H: zweites Tief ueber dem ersten ist kein Double Bottom", double_bottom(w_reihe(tief2=31.0)) == {})
-    p("H: nach dem Wochenschluss ueber dem Kaufpunkt vorbei",
-      double_bottom(w_reihe(dazu=list(np.linspace(34.5, 38.0, 5)))) == {})
-    p("H: acht Prozent tief ist kein Double Bottom", double_bottom(w_reihe(tief1=37.5, mitte=38.8, tief2=37.2, rechts=38.0)) == {})
-    alt_unter = FESTLEGUNGEN["h_unterschreitung_max"]
-    FESTLEGUNGEN["h_unterschreitung_max"] = 1.0            # Gegenprobe: ohne die Grenze waere es ein Treffer
-    ohne_grenze = double_bottom(w_reihe(tief2=24.0)).get("cm_h") == 1
-    FESTLEGUNGEN["h_unterschreitung_max"] = alt_unter
-    p("H: Gegenprobe, ohne Grenze haette der zweite Absturz getroffen", ohne_grenze)
-    p("H: zweites Tief 20 Prozent unter dem ersten ist ein zweiter Absturz (unsere Festlegung)",
-      double_bottom(w_reihe(tief2=24.0)) == {})
-    p("H: zweites Tief vor mehr als 13 Wochen (unsere Festlegung)",
-      double_bottom(w_reihe(rechts=33.0, rechts_tage=75)) == {} and double_bottom(w_reihe(rechts=33.0, rechts_tage=60)).get("cm_h") == 1)
+    x_l = vorbereiten(_reihe(l_reihe(), start="2026-05-04", spanne=0.002))
+    wk_l = wochen(x_l)
+    ll = ipo_base(x_l, wk_l)
+    kp_l = round(float(np.nanmax(wk_l["high"].to_numpy())) + 0.10, 4)
+    p("L: junge Aktie mit Basis, Kaufpunkt am linken Hoch plus 0,10 Dollar",
+      ll.get("cm_l") == 1 and ll["cm_l_kp"] == kp_l and ll["cm_l_wochen"] >= 3
+      and 20.0 <= ll["cm_l_tiefe_pct"] <= 30.0 and ll["cm_l_mantel"] is False
+      and ll["cm_l_unsicher"] is False, str(ll))
+    p("L: der Stop traegt den Zehn-Prozent-Deckel", ll.get("cm_l_stop") is not None
+      and 0.099 < (kp_l - ll["cm_l_stop"]) / kp_l <= 0.10, str(ll))
+    p("L: eine Basis von zehn Prozent ist keine IPO Base (Gerhard: zwanzig bis fuenfzig Prozent)",
+      ipo_base(*(lambda z: (z, wochen(z)))(vorbereiten(_reihe(l_reihe(tief=0.90), start="2026-05-04",
+                                                              spanne=0.002)))) == {})
+    tiefe_v = list(np.linspace(20, 40, 30)) + list(np.linspace(39, 16, 15)) + list(np.linspace(17, 38, 15))
+    v_x = vorbereiten(_reihe(tiefe_v, start="2026-05-04", spanne=0.002))
+    p("L: sechzig Prozent tief ist keine IPO Base (Gerhard: hoechstens fuenfzig)",
+      ipo_base(v_x, wochen(v_x)) == {})
+    alt = vorbereiten(_reihe(list(np.linspace(20, 40, 330)) + l_reihe(anstieg_tage=10)[10:],
+                             start="2024-01-01", spanne=0.002))
+    p("L: eine Aktie mit mehr als einem Jahr Kurshistorie ist nicht mehr frisch notiert (unsere Festlegung)",
+      ipo_base(alt, wochen(alt)) == {})
+    # Boersenmantel (O14): 25 Tage flach um 10 Dollar, dann die Uebernahme
+    mantel_x = vorbereiten(_reihe([10.0, 10.1, 9.95, 10.05] * 6 + [10.0] + l_reihe(anstieg_tage=30),
+                                  start="2025-09-01", spanne=0.002))
+    i_m, m_erkannt, m_unsicher = erstnotiz(mantel_x)
+    p("L: der Boersenmantel wird erkannt, die Erstnotiz ist der erste Tag danach (Gerhard, O14)",
+      i_m == 25 and m_erkannt is True and m_unsicher is False, f"{i_m}, {m_erkannt}, {m_unsicher}")
+    lm = ipo_base(mantel_x, wochen(mantel_x))
+    p("L: mit der Mantel-Regel zaehlen nur die Wochen nach der Uebernahme",
+      lm.get("cm_l") == 1 and lm["cm_l_mantel"] is True
+      and lm["cm_l_erstnotiz"] == pd.Timestamp(mantel_x["datetime"].iloc[25]).strftime("%Y-%m-%d"), str(lm))
+    kurz_x = vorbereiten(_reihe([10.0, 10.1, 9.95, 10.05, 10.0, 10.1] + l_reihe(anstieg_tage=30),
+                                start="2026-04-01", spanne=0.002))
+    i_k, k_erkannt, k_unsicher = erstnotiz(kurz_x)
+    p("L: ein kurzer flacher Anfang ist kein sicherer Mantel, die Erstnotiz bleibt der erste Kurstag und gilt als unsicher",
+      i_k == 0 and k_erkannt is False and k_unsicher is True, f"{i_k}, {k_erkannt}, {k_unsicher}")
+    p("L: die unsichere Erstnotiz steht am Fund",
+      ipo_base(kurz_x, wochen(kurz_x)).get("cm_l_unsicher") is True, str(ipo_base(kurz_x, wochen(kurz_x))))
+    p("L: eine gewoehnliche Aktie ohne flachen Anfang hat keine Mantel-Vermutung",
+      erstnotiz(x_l) == (0, False, False))
 
     # Gesamt: werte liefert immer alle Spalten, auch bei Unsinn
     w = werte(_reihe(list(np.linspace(20, 60, 400)), spanne=0.004))

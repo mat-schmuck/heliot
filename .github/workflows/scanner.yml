@@ -64,14 +64,14 @@ jobs:
           python3 wochenputz.py
           git config user.name "pattern-scanner"
           git config user.email "actions@users.noreply.github.com"
-          PUTZ="kaufpunkte_aktuell.xlsx fokusliste.json melde_gedaechtnis.json"
+          PUTZ="kaufpunkte_aktuell.xlsx fokusliste.json melde_gedaechtnis.json alarm_kaufpunkte.json einzelaktien.csv"
           for versuch in 1 2 3; do
             for f in $PUTZ; do git add -A -- "$f" 2>/dev/null || true; done
             if git diff --cached --quiet; then
               echo "Wochenputz: nichts einzuchecken."
               break
             fi
-            git commit -q -m "Wochenputz: Kaufpunkte, Fokusliste und Melde-Gedächtnis der alten Woche geleert"
+            git commit -q -m "Wochenputz: Kaufpunkte, Alarm-Muster, Fokusliste, Melde-Gedächtnis und Einzelüberwachung der alten Woche geleert"
             if git push --quiet origin main; then
               echo "Wochenputz eingecheckt (Versuch $versuch)."
               break
@@ -283,7 +283,7 @@ jobs:
             # beiseitelegen, hart auf den Serverstand, wieder
             # einspielen, pushen. Die Scan-Ergebnisse DIESES Laufs sind
             # die frischeren, sie duerfen gewinnen.
-            DATEIEN="kaufpunkte_aktuell.xlsx sektor_radar.json ntfy_ids.json fokusliste.json shakeout_warteliste.json positionen.json exit_befunde.json volumenkurven.json zahlen_termine.json trigger_logbuch.jsonl ausgelassen.json rs_universum.json sektor_rangliste.json ibd_ratings.json abendbericht_gedaechtnis.json schlussnahe_gemeldet.json marktampel.json"
+            DATEIEN="kaufpunkte_aktuell.xlsx alarm_kaufpunkte.json sektor_radar.json ntfy_ids.json fokusliste.json shakeout_warteliste.json positionen.json exit_befunde.json volumenkurven.json zahlen_termine.json trigger_logbuch.jsonl ausgelassen.json rs_universum.json sektor_rangliste.json ibd_ratings.json abendbericht_gedaechtnis.json schlussnahe_gemeldet.json marktampel.json"
             SICHERUNG=$(mktemp -d)
             for f in $DATEIEN; do cp "$f" "$SICHERUNG/" 2>/dev/null || true; done
             for versuch in 1 2 3; do

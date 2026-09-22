@@ -1508,7 +1508,7 @@ def _cm_tag(iso):
 
 def muster_saetze(r):
     """Die Chartmuster einer Trefferzeile als Satzteile, in der Reihenfolge
-    von Gerhards Tabelle B, A, D, F, G, N, S, T, H; ohne Fund kein Satzteil,
+    von Gerhards Tabelle B, A, D, F, G, N, S, T, L; ohne Fund kein Satzteil,
     nur Power Trend steht immer dabei, sobald er gerechnet ist."""
     t = []
     if _cm_ja(r, "cm_b"):
@@ -1563,12 +1563,16 @@ def muster_saetze(r):
         t.append("Shakeout am EMA 10" + (f", {zahl(u, 1)} Prozent darunter" if u is not None else "")
                  + (" und am Folgetag wieder darüber" if v == 2 else " und am selben Tag wieder darüber")
                  + ", Schwelle eigene Festlegung")
-    if _cm_ja(r, "cm_h"):
-        w, tief, unter = _num(r.get("cm_h_wochen")), _num(r.get("cm_h_tiefe_pct")), _num(r.get("cm_h_unter_pct"))
-        t.append(f"Double Bottom über {int(w) if w else 7} Wochen"
+    if _cm_ja(r, "cm_l"):
+        w, tief = _num(r.get("cm_l_wochen")), _num(r.get("cm_l_tiefe_pct"))
+        seit = _num(r.get("cm_l_seit_wochen"))
+        t.append(f"IPO Base über {int(w) if w else 3} Wochen"
                  + (f", {zahl(tief, 1)} Prozent tief" if tief is not None else "")
-                 + (f", zweites Tief {zahl(unter, 1)} Prozent unter dem ersten" if unter is not None else "")
-                 + f", Kaufpunkt am Zwischenhoch {_cm_dollar(r.get('cm_h_kp'))}, Stop {_cm_dollar(r.get('cm_h_stop'))}")
+                 + (f", Erstnotiz vor {int(seit)} Wochen am {_cm_tag(r.get('cm_l_erstnotiz'))}"
+                    if seit is not None else "")
+                 + (", der Börsenmantel davor zählt nicht mit" if _cm_wahr(r.get("cm_l_mantel")) else "")
+                 + (", die Erstnotiz ist unsicher" if _cm_wahr(r.get("cm_l_unsicher")) else "")
+                 + f", Kaufpunkt {_cm_dollar(r.get('cm_l_kp'))}, Stop {_cm_dollar(r.get('cm_l_stop'))}")
     return t
 
 
@@ -1586,9 +1590,10 @@ def chartmuster_erklaerung():
     return [
         "Seit dem 21.09.2026 stehen bei jedem Treffer die Chartmuster aus Gerhards Dokument vom 20.09.2026, soweit "
         "sie nur Tages- und Wochenkerzen brauchen: Inside Day, Three Weeks Tight, Pocket Pivot, Power Trend, Flat "
-        "Base, Shakeout plus drei, Wick Play, Shakeout am EMA 10 und Double Bottom. Sie sind Entscheidungshilfen "
-        "und filtern nichts. Gerechnet wird am letzten Handelstag der Nachttabelle; Three Weeks Tight, Flat Base "
-        "und Double Bottom zählen nur abgeschlossene Wochen.",
+        "Base, Shakeout plus drei, Wick Play, Shakeout am EMA 10 und seit dem 22.09.2026 die IPO Base. Sie sind "
+        "Entscheidungshilfen und filtern nichts. Gerechnet wird am letzten Handelstag der Nachttabelle; Three "
+        "Weeks Tight, Flat Base und IPO Base zählen nur abgeschlossene Wochen. Das W, also das Double Bottom, "
+        "ist am 22.09.2026 auf Gerhards Entscheid ganz entfallen.",
         f"Unsere Festlegungen bei Three Weeks Tight: davor mindestens {pz(f['a_anstieg_min'])} Prozent Anstieg in "
         f"den {f['a_anstieg_wochen']} Wochen vor der engen Phase, die Woche davor höchstens "
         f"{pz(f['a_nahe_hoch'])} Prozent unter dem höchsten Wochenschluss dieser Zeit, und höchstens "
@@ -1608,8 +1613,8 @@ def chartmuster_erklaerung():
         f"der Kerze lag; Einstieg über dem Hoch plus {zahl(q['aufschlag'], 2)} Dollar.",
         f"Unsere Festlegung beim Shakeout am EMA 10: die Unterschreitung beträgt höchstens "
         f"{pz(f['t_unterschreitung_max'])} Prozent.",
-        f"Unsere Festlegung bei der Erkennung von Hochs und Tiefs, auf der Shakeout plus drei und Double Bottom "
-        f"sitzen: Ein Hoch oder Tief ist das höchste oder tiefste von {2 * k + 1} Kerzen, {k} davor und {k} danach; "
+        f"Unsere Festlegung bei der Erkennung von Hochs und Tiefs, auf der Shakeout plus drei sitzt: "
+        f"Ein Hoch oder Tief ist das höchste oder tiefste von {2 * k + 1} Kerzen, {k} davor und {k} danach; "
         f"ein Tief gilt also erst, wenn {k} Kerzen danach höher lagen.",
         f"Unsere Festlegungen beim Shakeout plus drei: aus einem Hoch heißt aus dem höchsten Hoch der "
         f"{f['n_hoch_tage']} Handelstage bis dahin, scharf heißt mindestens {pz(f['n_abverkauf_min'])} Prozent "
@@ -1619,10 +1624,23 @@ def chartmuster_erklaerung():
         f"höchstens {f['n_tief_tage_max']} Handelstage zurückliegt, seither nicht unterschritten wurde und der Kurs "
         f"den Einstieg bei {pz(q['n_aufschlag'][1])} Prozent noch nicht erreicht hat. Die Einstiege bei "
         f"{pz(q['n_aufschlag'][0])} und {pz(q['n_aufschlag'][1])} Prozent über dem Tief stehen nebeneinander.",
-        f"Unsere Festlegungen beim Double Bottom: das linke Hoch liegt höchstens {f['h_suche_wochen']} Wochen "
-        f"zurück und wurde seither nicht überschritten; das zweite Tief liegt höchstens "
-        f"{pz(f['h_unterschreitung_max'])} Prozent unter dem ersten und höchstens {f['h_tief2_wochen_max']} Wochen "
-        "zurück. Gezeigt wird bis zum ersten Wochenschluss über dem Kaufpunkt.",
+        f"Unsere Festlegungen bei der IPO Base: Eine Aktie gilt höchstens {f['l_erstnotiz_wochen_max']} Wochen "
+        "nach ihrer Erstnotiz als frisch notiert. Die Basis beginnt an ihrem Hoch wie die Flat Base, dauert "
+        f"mindestens {q['l_wochen_min']} Wochen und ist {pz(q['l_tiefe_min'])} bis {pz(q['l_tiefe_max'])} Prozent "
+        f"tief; Kaufpunkt am linken Hoch plus {zahl(q['aufschlag'], 2)} Dollar. Kam die Firma über einen "
+        "Börsenmantel an die Börse, gilt der erste Handelstag nach der Übernahme als Erstnotiz, wenn der Mantel "
+        f"erkennbar ist: mindestens {f['l_mantel_tage']} Handelstage zwischen {zahl(f['l_mantel_von'], 0)} und "
+        f"{zahl(f['l_mantel_bis'], 0)} Dollar mit höchstens {pz(f['l_mantel_enge'])} Prozent Spanne, danach ein "
+        f"Sprung von mindestens {pz(f['l_mantel_sprung'])} Prozent. Sieht der Anfang nur nach Mantel aus, bleibt "
+        "der erste Kurstag die Erstnotiz und der Fund sagt, dass sie unsicher ist.",
+        "Sechs dieser Muster melden seit dem 22.09.2026 auch im Handel, auf Gerhards Entscheid: Three Weeks "
+        "Tight, Inside Day, Pocket Pivot, IPO Base, Shakeout plus drei und Wick Play. Der Nachtscan rechnet "
+        "ihre Einstiege, der Wächter meldet, sobald der Kurs sie überschreitet, und zwar nur für die Aktien "
+        "der beiden Wochenlisten und die einzeln überwachten. Es gelten dieselben Melderegeln wie bei den "
+        "bestehenden Strategien; beim Inside Day meldet nur die Fassung mit drei steigenden Tagen davor, beim "
+        "Shakeout plus drei der Einstieg bei 10 Prozent. Die Meldungen kommen vorerst als Auskunft und nicht "
+        "als Alarm in der Handels-App, bis das Logbuch zeigt, wie die Muster laufen. Bestehende Kaufpunkte "
+        "verdrängen sie nie.",
         "Alle Stops tragen den Zehn-Prozent-Deckel des Systems. Volumen vergleicht der Scanner nach Handelsschluss "
         "als ganze Tagesvolumina; dort ist die F(t)-Kurve bei eins.",
     ]
@@ -2594,16 +2612,26 @@ def selbsttest() -> int:
       muster_saetze({"ticker": "AAA"}) == [] and muster_saetze({"cm_f": float("nan"), "cm_b": 0}) == [])
     ms = muster_saetze({"cm_n": 1, "cm_n_tief_tag": "2026-09-16", "cm_n_abverkauf_pct": 20.3, "cm_n_tage": 15.0,
                         "cm_n_kp5": 31.3635, "cm_n_kp10": 32.857, "cm_n_kp5_erreicht": np.bool_(True),
-                        "cm_n_stop": 29.87, "cm_t": 0,
-                        "cm_h": 1.0, "cm_h_wochen": 13.0, "cm_h_tiefe_pct": 42.6, "cm_h_unter_pct": 0.3,
-                        "cm_h_kp": 25.27, "cm_h_stop": 22.75})
-    p("Chartmuster: Shakeout plus drei mit beiden Einstiegen und Double Bottom, in der Reihenfolge der Tabelle",
+                        "cm_n_stop": 29.87, "cm_t": 0})
+    p("Chartmuster: Shakeout plus drei mit beiden Einstiegen, in der Reihenfolge der Tabelle",
       ms == ["Shakeout plus drei nach 20,3 Prozent Abverkauf in 15 Handelstagen, Tief am 16.09.2026, Einstieg "
              "plus 5 Prozent über 31,36 Dollar schon erreicht, plus 10 Prozent über 32,86 Dollar, Stop 29,87 Dollar, "
-             "Hoch und Abverkauf nach eigener Festlegung",
-             "Double Bottom über 13 Wochen, 42,6 Prozent tief, zweites Tief 0,3 Prozent unter dem ersten, "
-             "Kaufpunkt am Zwischenhoch 25,27 Dollar, Stop 22,75 Dollar"],
+             "Hoch und Abverkauf nach eigener Festlegung"],
       " | ".join(ms))
+    p("Chartmuster: das W ist gestrichen, alte Spalten ergeben keinen Satz mehr (Gerhard, 22.09.2026)",
+      muster_saetze({"cm_h": 1.0, "cm_h_wochen": 13.0, "cm_h_kp": 25.27, "cm_h_stop": 22.75}) == [])
+    ms = muster_saetze({"cm_l": 1, "cm_l_wochen": 6.0, "cm_l_tiefe_pct": 28.4, "cm_l_seit_wochen": 11.0,
+                        "cm_l_erstnotiz": "2026-05-04", "cm_l_mantel": np.bool_(True),
+                        "cm_l_unsicher": False, "cm_l_kp": 40.18, "cm_l_stop": 36.17})
+    p("Chartmuster: IPO Base samt Erstnotiz und Boersenmantel",
+      ms == ["IPO Base über 6 Wochen, 28,4 Prozent tief, Erstnotiz vor 11 Wochen am 04.05.2026, "
+             "der Börsenmantel davor zählt nicht mit, Kaufpunkt 40,18 Dollar, Stop 36,17 Dollar"], " | ".join(ms))
+    ms = muster_saetze({"cm_l": 1, "cm_l_wochen": 3.0, "cm_l_tiefe_pct": 22.0, "cm_l_seit_wochen": 5.0,
+                        "cm_l_erstnotiz": "2026-08-17", "cm_l_mantel": False, "cm_l_unsicher": True,
+                        "cm_l_kp": 12.6, "cm_l_stop": 11.34})
+    p("Chartmuster: IPO Base mit unsicherer Erstnotiz sagt das (Gerhard, O14)",
+      ms == ["IPO Base über 3 Wochen, 22,0 Prozent tief, Erstnotiz vor 5 Wochen am 17.08.2026, "
+             "die Erstnotiz ist unsicher, Kaufpunkt 12,60 Dollar, Stop 11,34 Dollar"], " | ".join(ms))
     ms = muster_saetze({"cm_n": 1, "cm_n_tief_tag": "2026-09-16", "cm_n_abverkauf_pct": 16.3, "cm_n_tage": 6,
                         "cm_n_kp5": 174.57, "cm_n_kp10": 182.89, "cm_n_kp5_erreicht": False, "cm_n_stop": 166.26})
     p("Chartmuster: Shakeout plus drei, fuenf Prozent noch nicht erreicht",
@@ -2613,14 +2641,16 @@ def selbsttest() -> int:
     import chartmuster as cm
     erkl = " ".join(chartmuster_erklaerung())
     p("Chartmuster: Erklaerung nennt jede Festlegung mit ihrer Zahl",
-      all(x in erkl for x in ("höchstens 5 enge Wochen", "höchstens 10 Prozent unter", "höchstens 20 Prozent vom Hoch",
+      all(x in erkl for x in ("höchstens 3 enge Wochen", "höchstens 10 Prozent unter", "höchstens 20 Prozent vom Hoch",
                               "höchstens 5 Prozent über", "der 26 Wochen", "mindestens 2-mal so lang",
                               "höchstens 30 Prozent der Tagesspanne", "der 14 Tage davor", "bis 3 Handelstage",
                               "höchstens 3 Prozent", "von 5 Kerzen, 2 davor und 2 danach", "der 63 Handelstage",
                               "mindestens 10 Prozent vom Hoch zum Tief in höchstens 15 Handelstagen",
                               "höchstens 20 Handelstage zurückliegt", "bei 5 und 10 Prozent",
-                              "höchstens 52 Wochen", "höchstens 10 Prozent unter dem ersten", "höchstens 13 Wochen"))
-      and len(cm.FESTLEGUNGEN) == 26, erkl[:200])
+                              "höchstens 52 Wochen nach ihrer Erstnotiz", "mindestens 3 Wochen und ist 20 bis 50",
+                              "mindestens 20 Handelstage zwischen 9 und 11 Dollar"))
+      and not any(x in erkl for x in ("Double Bottom:", "höchstens 13 Wochen"))
+      and len(cm.FESTLEGUNGEN) == 30, erkl[:200])
 
     print(f"\n{len(fehler)} Fehler." if fehler else "\nAlles bestanden.")
     return 1 if fehler else 0

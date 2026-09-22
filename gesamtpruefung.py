@@ -182,6 +182,8 @@ def block_b():
                     "ablaeufe",
                     # Chartmuster der Etappe 1 (Gerhard, 20.09.2026)
                     "chartmuster",
+                    # Die sechs Alarm-Muster (Gerhard, 22.09.2026, O1 bis O10)
+                    "alarm_muster",
                     # Katalog der EODHD-Daten (Gerhard, 20.09.2026, S11)
                     "eodhd_katalog"]
     for name in mit_schalter:
@@ -375,6 +377,87 @@ def block_d(namen_aus_c=None):
                                           if any(k not in _kopf for k in _soll) else "Reihenfolge weicht ab"))
     except Exception as e:
         pruefe("D", "Leere Mappe des Wochenputzes lesbar", False, f"{type(e).__name__}: {e}")
+
+    # ---------------------------------------------------------------
+    # GERHARDS ANTWORTEN VOM 22.09.2026 (O1 bis O37): jede an einer Stelle
+    # ---------------------------------------------------------------
+    import alarm_muster as am
+    import chartmuster as cm
+    import listen as li
+    import wochenputz as wp
+    from config import CFG
+
+    # O35 bis O37: H Double Bottom ist komplett gestrichen.
+    pruefe("D", "O35 bis O37: das Double Bottom ist weg, aus Muster, Spalten und Saetzen",
+           not hasattr(cm, "double_bottom") and not any(s.startswith("cm_h") for s in cm.SPALTEN)
+           and "cm_h" not in cm.MERKER and not any(k.startswith("h_") for k in cm.QUELLE)
+           and not any(k.startswith("h_") for k in cm.FESTLEGUNGEN),
+           ", ".join(s for s in cm.SPALTEN if s.startswith("cm_h")))
+
+    # O19: Three Weeks Tight, hoechstens drei enge Wochen.
+    pruefe("D", "O19: Three Weeks Tight zaehlt hoechstens drei enge Wochen",
+           cm.FESTLEGUNGEN["a_wochen_max"] == 3, str(cm.FESTLEGUNGEN["a_wochen_max"]))
+
+    # L IPO Base samt Erstnotiz-Regel (O14).
+    pruefe("D", "L: die IPO Base ist gebaut, mit Erstnotiz und Mantel-Regel (O14)",
+           hasattr(cm, "ipo_base") and hasattr(cm, "erstnotiz")
+           and "cm_l" in cm.MERKER and "cm_l_mantel" in cm.SPALTEN
+           and "cm_l_unsicher" in cm.SPALTEN)
+
+    # O1: die sechs Alarm-Muster sind ein eigener Weg, keine Rangfolge-Plaetze.
+    alarm_namen = set(am.NAMEN.values())
+    pruefe("D", "O1: die Alarm-Muster stehen in keiner Rangfolge des Nachtscans",
+           not (alarm_namen & set(ps.PRIORITY)) and hasattr(ps, "alarm_durchgang"),
+           ", ".join(sorted(alarm_namen & set(ps.PRIORITY))))
+    pruefe("D", "O1: es sind genau die sechs Muster A, B, D, L, N und S",
+           sorted(alarm_namen) == sorted(["Three Weeks Tight", "Inside Day", "Pocket Pivot",
+                                          "IPO Base", "Shakeout plus drei", "Wick Play"]),
+           ", ".join(sorted(alarm_namen)))
+
+    # O5: dieselben Melderegeln, bei Three Weeks Tight 40 Prozent ueber dem Schnitt.
+    ohne = sorted(alarm_namen - set(bw.VOL_FAKTOR))
+    pruefe("D", "O5: jedes Alarm-Muster hat seine Volumenhuerde, Three Weeks Tight 40 Prozent",
+           not ohne and bw.VOL_FAKTOR["Three Weeks Tight"] == CFG["volumen"]["breakout_faktor_vcp"]
+           and bw.VOL_FAKTOR["Inside Day"] == CFG["volumen"]["breakout_faktor"],
+           ", ".join(ohne))
+
+    # O6: nur der Inside Day nach drei steigenden Tagen meldet.
+    _b = dict(cm.leer(), cm_b=1, cm_b_steigend=False, cm_b_eng_kp=10.0, cm_b_eng_stop=9.2)
+    pruefe("D", "O6: ein Inside Day ohne drei steigende Tage loest keinen Alarm aus",
+           am.kaufpunkte(_b) == []
+           and len(am.kaufpunkte(dict(_b, cm_b_steigend=True))) == 1)
+
+    # O7 und O8: welcher Einstieg ausloest.
+    _bb = am.kaufpunkte(dict(_b, cm_b_steigend=True, cm_b_kons_kp=10.5, cm_b_kons_stop=9.6))
+    pruefe("D", "O7: beim Inside Day loest der enge Einstieg aus, der konservative steht daneben",
+           _bb[0]["kaufpunkt"] == 10.0 and "konservativ" in _bb[0]["zusatz"])
+    _n = am.kaufpunkte(dict(cm.leer(), cm_n=1, cm_n_kp5=10.5, cm_n_kp10=11.0, cm_n_stop=10.0))
+    pruefe("D", "O8: beim Shakeout plus drei loesen die 10 Prozent aus",
+           _n[0]["kaufpunkt"] == 11.0 and "5 Prozent" in _n[0]["zusatz"])
+
+    # O10: die Meldung ist eine Auskunft, kein Alarm in der Handels-App.
+    _t = {"ticker": "TEST", "firma": "Probe AG", "strategie": "Inside Day",
+          "kaufpunkt": 10.0, "kurs": 10.2, "ueber_pct": 2.0, "stop": 9.2,
+          "vol_ok": True, "vol_pct": 30.0, "vol_noetig": 1.0, "zusatz": "Probe"}
+    _text = bw.format_alarm(_t)
+    pruefe("D", "O10: die Alarm-Meldung traegt INFORMATION und kein Wort, aus dem eine Order wird",
+           _text.startswith("INFORMATION: ") and not am.kein_kaufwort(_text),
+           ", ".join(am.kein_kaufwort(_text)))
+    _quelle = (WURZEL / "breakout_watcher.py").read_text(encoding="utf-8")
+    pruefe("D", "O10: push_alarm sendet ohne die Klick-Adresse der Handels-App",
+           "def push_alarm" in _quelle
+           and "handel_adresse" not in _quelle.split("def push_alarm")[1].split("def format_treffer")[0])
+
+    # O11 bis O13: die einzeln eingetragenen Aktien.
+    pruefe("D", "O11: eine einzeln eingetragene Aktie darf alle Strategien, auch Darvas",
+           li.darf_darvas.__code__.co_argcount == 3 and "einzel_liste" in li.darf_darvas.__doc__ + str(
+               li.darf_darvas.__code__.co_names))
+    pruefe("D", "O12: der Freitagsputz beendet die Einzelueberwachung",
+           hasattr(wp, "einzel_regel") and "einzel_regel" in wp.putz.__code__.co_names)
+    pruefe("D", "O13: der Waechter zieht eine neu eingetragene Aktie im Datentakt nach",
+           _quelle.count("einzel_nachziehen(items, firmen, gewuenscht, abruf_ticker") == 2
+           and "def einzel_frisch" in _quelle and "def einzel_kaufpunkte" in _quelle,
+           str(_quelle.count("einzel_nachziehen(items, firmen, gewuenscht, abruf_ticker")))
 
 
 # ---------------------------------------------------------------------------

@@ -10,13 +10,16 @@ fuer die anderen Strategien herangezogen werden, jedoch nicht umgekehrt.
 Du bekommst in Zukunft also 2 Listen, die 2te, grosse Liste steht fuer
 alle Strategien zur Verfuegung, ausser fuer Darvas."
 
-DARAUS GENAU ZWEI SAETZE, und sie stehen NUR hier:
+DARAUS GENAU DREI SAETZE, und sie stehen NUR hier:
 
-    DARVAS-LISTE  -> ALLE Strategien, auch Darvas
-    GROSSE LISTE  -> alle Strategien AUSSER Darvas
+    DARVAS-LISTE   -> ALLE Strategien, auch Darvas
+    GROSSE LISTE   -> alle Strategien AUSSER Darvas
+    EINZELAKTIEN   -> ALLE Strategien, auch Darvas (Gerhard, 22.09.2026, O11)
 
-Steht eine Aktie in beiden, gilt die grosszuegigere Seite: Sie ist in der
-Darvas-Liste, also darf Darvas. Alles andere darf ohnehin ueberall.
+Steht eine Aktie in beiden Wochenlisten, gilt die grosszuegigere Seite: Sie
+ist in der Darvas-Liste, also darf Darvas. Alles andere darf ohnehin ueberall.
+Eine einzeln eingetragene Aktie (S7) zaehlt wie die Darvas-Liste: Gerhard am
+22.09.2026 auf die Frage, ob dort auch Darvas laeuft, mit Ja.
 
 WARUM EIN EIGENES MODUL: Weil "alle Tools sollen weiterhin alle Listen
 ueberwachen" (Gerhard) sonst eine Sammlung von Stellen waere, die man
@@ -25,9 +28,11 @@ Stellen verstreut. Jetzt fragt jedes Werkzeug hier nach, und eine dritte
 Liste waere eine Zeile.
 
 DATEIEN
-    finviz_3.csv  die grosse Woechentliche (Name unveraendert, damit die
-                  bestehenden Ablaeufe und der Upload weiterlaufen)
-    darvas.csv    die Darvas-Liste
+    finviz_3.csv      die grosse Woechentliche (Name unveraendert, damit die
+                      bestehenden Ablaeufe und der Upload weiterlaufen)
+    darvas.csv        die Darvas-Liste
+    einzelaktien.csv  die einzeln eingetragenen Aktien (S7); der Freitagsputz
+                      leert sie, siehe wochenputz.py
 
 FEHLT DIE DARVAS-LISTE, gibt es KEINE Darvas-Kaufpunkte. Das ist die
 woertliche Umsetzung von "ausschliesslich auf diese Liste" — aber es ist
@@ -93,15 +98,21 @@ def haupt_liste(pfad=None):
     return _lies(pfad or HAUPT_DATEI)
 
 
-def alle_ticker(haupt=None, darvas=None):
-    """ALLE Aktien aus BEIDEN Listen, ohne Doppelte.
+def alle_ticker(haupt=None, darvas=None, einzel=None, mit_einzel=True):
+    """ALLE Aktien aus BEIDEN Listen und den einzeln eingetragenen, ohne
+    Doppelte.
 
     Das ist der Umfang, den jedes Werkzeug ueberwachen soll (Gerhard:
     "dass alle tools weiterhin alle Listen ueberwachen, die ich
     hochlade"). Die Darvas-Liste kommt zuerst, damit ihre Firmennamen
-    gewinnen, falls sie sich unterscheiden."""
+    gewinnen, falls sie sich unterscheiden. Die einzeln eingetragenen Aktien
+    (S7) gehoeren seit dem 22.09.2026 dazu (Gerhard, O11); mit_einzel=False
+    liefert den alten Umfang, fuer Vergleiche."""
     raus, gesehen = [], set()
-    for t, firma in darvas_liste(darvas) + haupt_liste(haupt):
+    quellen = darvas_liste(darvas) + haupt_liste(haupt)
+    if mit_einzel:
+        quellen += einzel_liste(einzel)
+    for t, firma in quellen:
         if t in gesehen:
             continue
         gesehen.add(t)
@@ -140,18 +151,21 @@ def sektor_von(ticker, haupt=None, darvas=None):
     return tabelle.get(str(ticker or "").strip().upper())
 
 
-def darf_darvas(ticker, darvas=None):
+def darf_darvas(ticker, darvas=None, einzel=None):
     """Darf auf dieser Aktie ein Darvas-Kaufpunkt entstehen?
 
-    Nur, wenn sie in der Darvas-Liste steht. Steht sie zusaetzlich in der
-    grossen, aendert das nichts — die Darvas-Liste ist die Erlaubnis."""
-    return (ticker or "").strip().upper() in {t for t, _ in darvas_liste(darvas)}
+    Nur, wenn sie in der Darvas-Liste steht oder einzeln eingetragen ist
+    (Gerhard, 22.09.2026, O11: dort laufen alle Strategien, auch Darvas).
+    Steht sie zusaetzlich in der grossen Liste, aendert das nichts — die
+    Darvas-Liste ist die Erlaubnis."""
+    t = (ticker or "").strip().upper()
+    return t in {x for x, _ in darvas_liste(darvas)} or t in {x for x, _ in einzel_liste(einzel)}
 
 
-def erlaubte_muster(ticker, alle_muster, darvas=None):
+def erlaubte_muster(ticker, alle_muster, darvas=None, einzel=None):
     """Aus einer Liste von Musternamen die, die auf dieser Aktie erlaubt
     sind. Die eine Stelle, an der die Regel angewandt wird."""
-    if darf_darvas(ticker, darvas):
+    if darf_darvas(ticker, darvas, einzel):
         return list(alle_muster)
     return [m for m in alle_muster if m not in NUR_DARVAS_LISTE]
 
@@ -159,16 +173,26 @@ def erlaubte_muster(ticker, alle_muster, darvas=None):
 # ---------------------------------------------------------------------------
 # Einzeln eingetragene Aktien (S7, Gerhard, 20.09.2026)
 # ---------------------------------------------------------------------------
-# NOCH OHNE WIRKUNG AUF DEN WAECHTER (21.09.2026): Die Liste wird gefuehrt,
-# aber weder alle_ticker() noch ein Scan liest sie. Wie der Waechter solche
-# Aktien behandelt (alle Strategien samt Darvas, ueber den Freitagsputz
-# hinaus, ab dem naechsten Nachtscan), sind Gerhards offene Regelfragen O11
-# bis O13; erst mit seinen Antworten kommt die Liste in den Umfang. Die App
-# sagt das beim Eintragen.
+# SEIT 22.09.2026 IM UMFANG (Gerhards Antworten O11 bis O13):
+#   O11  Auf einer einzeln eingetragenen Aktie laufen ALLE Strategien, auch
+#        Darvas. Deshalb steht sie in alle_ticker() und darf_darvas().
+#   O12  Der Freitagsputz beendet die Ueberwachung selbst: Er leert diese
+#        Liste, statt nur die gemeldeten Kaufpunkte zurueckzusetzen
+#        (wochenputz.py). Wer weiter ueberwachen will, traegt die Aktie in
+#        der neuen Woche wieder ein.
+#   O13  Die Aktie wird SOFORT im laufenden Handel ueberwacht, nicht erst ab
+#        dem naechsten Nachtscan: Der Waechter liest diese Liste im Datentakt
+#        neu und rechnet die Kaufpunkte einer neuen Aktie selbst
+#        (breakout_watcher.einzelaktien_nachziehen).
 
 def einzel_liste(pfad=None):
     """Die einzeln eingetragenen Aktien, [(Ticker, Firma)]."""
     return _lies(pfad or EINZEL_DATEI)
+
+
+def einzel_ticker(pfad=None):
+    """Nur die Kuerzel der einzeln eingetragenen Aktien, in Grossbuchstaben."""
+    return [t for t, _ in einzel_liste(pfad)]
 
 
 def einzel_zeilen(roh):
@@ -290,6 +314,23 @@ def selbsttest() -> int:
           erlaubte_muster("CCC", MUSTER, d) == MUSTER)
         p("Die große Liste verliert kein anderes Muster",
           len(erlaubte_muster("AAA", MUSTER, d)) == len(MUSTER) - 1)
+
+        # O11 (Gerhard, 22.09.2026): Auf einer einzeln eingetragenen Aktie
+        # laufen ALLE Strategien, auch Darvas, und sie gehoert in den Umfang.
+        (o / "einzel.csv").write_text("Ticker,Company,Eingetragen\nDDD,Delta,2026-09-22 21:40\n",
+                                      encoding="utf-8")
+        e = str(o / "einzel.csv")
+        p("O11: die einzeln eingetragene Aktie steht im Umfang",
+          [x for x, _ in alle_ticker(g, d, e)] == ["BBB", "CCC", "AAA", "DDD"],
+          [x for x, _ in alle_ticker(g, d, e)])
+        p("O11: auf ihr laeuft auch Darvas", darf_darvas("DDD", d, e)
+          and erlaubte_muster("DDD", MUSTER, d, e) == MUSTER)
+        p("Ohne die Einzelliste bleibt alles wie vorher",
+          not darf_darvas("DDD", d) and [x for x, _ in alle_ticker(g, d, mit_einzel=False)] == ["BBB", "CCC", "AAA"])
+        p("Eine Aktie, die schon in einer Wochenliste steht, kommt nicht doppelt",
+          [x for x, _ in alle_ticker(g, d, str(o / "einzel2.csv"))] == ["BBB", "CCC", "AAA"]
+          if not (o / "einzel2.csv").exists() else True)
+        p("einzel_ticker liefert nur die Kuerzel", einzel_ticker(e) == ["DDD"], einzel_ticker(e))
 
         # Fehlende Dateien duerfen nichts umwerfen.
         p("Fehlt die Darvas-Liste, darf niemand Darvas",

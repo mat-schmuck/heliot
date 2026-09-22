@@ -36,6 +36,13 @@ aelter ist als dieser Freitag:
     Waechter es beim Laden ohnehin tut: Insider-Meldungen behalten ihre
     30 Tage, alles andere von vor dem Putz-Freitag verfaellt, das
     Einstiegsfenster wird geleert, die Warteliste der Luecken-Tage bleibt.
+  * alarm_kaufpunkte.json wird geleert (die Kaufpunkte der sechs Alarm-Muster
+    stammen aus demselben Nachtscan ueber dieselbe Wochenliste).
+  * einzelaktien.csv verliert jede Aktie, die VOR dem Putz-Freitag einzeln
+    zur Ueberwachung eingetragen wurde (Gerhard, 22.09.2026, O12: "der
+    Freitagsputz soll die Ueberwachung selbst mit beenden"). Was danach
+    eingetragen wurde, bleibt; diese Regel haengt nicht am Listen-Datum,
+    sondern am Eintragsdatum der Zeile.
 
 WAS NIE ANGEFASST WIRD: positionen.json (offene Positionen leben, solange sie
 offen sind), exit_befunde.json (Gesamtpruefung, Block E), die
@@ -82,6 +89,9 @@ from config import CFG, letzter_putz_tag
 MAPPE = "kaufpunkte_aktuell.xlsx"
 VORLAGE = "kaufpunkte_leer.xlsx"
 FOKUSLISTE = "fokusliste.json"
+# Die Kaufpunkte der sechs Alarm-Muster (Gerhard, 22.09.2026): eine eigene
+# Datei neben der Mappe, also auch ein eigener Putz.
+ALARM = "alarm_kaufpunkte.json"
 GEDAECHTNIS = "melde_gedaechtnis.json"
 LISTEN = ("finviz_3.csv", "darvas.csv")
 INSIDER_MARKE = "INSIDER|"
@@ -208,7 +218,51 @@ def mappe_regel(basis, jetzt, listen_zeit, mappe=MAPPE):
                            "hinweis": "Wochenputz: die neue Wochenliste steht aus"})
         geaendert = True
         bericht.append(f"{FOKUSLISTE}: geleert ({len(fokus.get('aktien') or {})} Aktien).")
+    # Die Alarm-Kaufpunkte gehoeren zur Woche wie die Mappe: Sie stammen aus
+    # demselben Nachtscan ueber dieselbe Wochenliste.
+    ap = b / ALARM
+    alarm = _lies_json(ap, {})
+    if ap.exists() and not alarm.get("aktien"):
+        bericht.append(f"{ALARM}: schon leer.")
+    elif ap.exists():
+        _schreib_json(ap, {"stand": wiener_zeit(jetzt), "aktien": [],
+                           "hinweis": "Wochenputz: die neue Wochenliste steht aus"})
+        geaendert = True
+        bericht.append(f"{ALARM}: geleert ({len(alarm.get('aktien') or [])} Aktien).")
     return bericht, geaendert
+
+
+def einzel_regel(basis, jetzt):
+    """O12 (Gerhard, 22.09.2026): "der Freitagsputz soll die Ueberwachung
+    selbst mit beenden, nicht nur die gemeldeten Kaufpunkte zuruecksetzen".
+
+    Geleert wird zeilenweise nach dem Eintragsdatum: Was VOR dem letzten
+    Putz-Freitag eingetragen wurde, faellt; was danach kam, bleibt. So
+    ueberlebt eine Aktie, die am Samstag eingetragen wurde, den Putz vom
+    Freitag davor, und der Putz kann wie alles hier alle zehn Minuten laufen,
+    ohne etwas doppelt zu tun. Eine Zeile ohne lesbares Datum stammt aus der
+    Zeit vor dieser Regel und faellt ebenfalls."""
+    import listen
+    pfad = Path(basis) / listen.EINZEL_DATEI
+    if not pfad.exists():
+        return [], False
+    zeilen = listen.einzel_zeilen(pfad.read_bytes())
+    if not zeilen:
+        return [], False
+    grenze = putz_grenze(jetzt)
+    wien = ZoneInfo("Europe/Vienna")
+    bleiben, weg = [], []
+    for z in zeilen:
+        try:
+            wann = datetime.strptime(str(z[2])[:16], "%Y-%m-%d %H:%M").replace(tzinfo=wien)
+        except (ValueError, IndexError):
+            wann = None
+        (bleiben if wann is not None and wann > grenze else weg).append(z)
+    if not weg:
+        return [f"{listen.EINZEL_DATEI}: {len(bleiben)} Aktie(n) aus dieser Woche, nichts auszutragen."], False
+    pfad.write_bytes(listen.einzel_csv(bleiben))
+    return ([f"{listen.EINZEL_DATEI}: {len(weg)} einzeln ueberwachte Aktie(n) aus der alten Woche "
+             f"ausgetragen ({', '.join(z[0] for z in weg)}); {len(bleiben)} bleiben."], True)
 
 
 def gedaechtnis_filtern(daten, jetzt=None):
@@ -262,7 +316,8 @@ def putz(basis=".", jetzt=None, listen_zeit=None):
     """Der ganze Wochenputz. Liefert (bericht, geaendert)."""
     b1, g1 = mappe_regel(basis, jetzt, listen_zeit)
     b2, g2 = gedaechtnis_regel(basis, jetzt)
-    return b1 + b2, g1 or g2
+    b3, g3 = einzel_regel(basis, jetzt)
+    return b1 + b2 + b3, g1 or g2 or g3
 
 
 # ---------------------------------------------------------------------------
@@ -326,9 +381,13 @@ def selbsttest():
         for name in NIE_ANFASSEN:
             (b / name).write_text("unantastbar " + name, encoding="utf-8")
 
+        _schreib_json(b / ALARM, {"stand": "x", "aktien": [
+            {"ticker": "AAA", "punkte": [{"muster": "Inside Day", "kaufpunkt": 1.0}]}]})
         bericht, geaendert = putz(str(b), so, alt)
         p("Alte Liste: die Mappe wird zur leeren Vorlage",
           geaendert and (b / MAPPE).read_bytes() == vorlage.read_bytes())
+        p("Alte Liste: die Alarm-Kaufpunkte sind geleert (Gerhard, 22.09.2026)",
+          _lies_json(b / ALARM, {}).get("aktien") == [])
         fokus = _lies_json(b / FOKUSLISTE, {})
         p("Alte Liste: die Fokusliste ist leer", fokus.get("aktien") == {} and fokus.get("universum") == 0)
         g = _lies_json(b / GEDAECHTNIS, {})
@@ -361,6 +420,24 @@ def selbsttest():
         bericht6, geaendert6 = mappe_regel(str(b), so, alt)
         p("Ohne Vorlage bleibt die Mappe, die Fokusliste wird trotzdem geleert",
           (b / MAPPE).read_bytes() == b"voll" and any("Vorlage" in z for z in bericht6))
+
+        # O12 (Gerhard, 22.09.2026): Der Putz beendet die Einzelueberwachung
+        # selbst. Der Putz-Freitag ist hier der 18.09.2026, 16:02 New York,
+        # also der 18.09. um 22:02 Wiener Zeit.
+        import listen
+        (b / listen.EINZEL_DATEI).write_bytes(listen.einzel_csv([
+            ("AAA", "Alpha", "2026-09-17 09:30"),      # vor dem Putz
+            ("BBB", "Beta", "2026-09-19 08:00"),       # danach
+            ("CCC", "Gamma", ""),                      # ohne Datum
+        ]))
+        bericht7, geaendert7 = einzel_regel(str(b), so)
+        zeilen = listen.einzel_zeilen((b / listen.EINZEL_DATEI).read_bytes())
+        p("O12: der Putz traegt die Aktien der alten Woche aus, die neue bleibt",
+          geaendert7 and [z[0] for z in zeilen] == ["BBB"], "; ".join(bericht7))
+        bericht8, geaendert8 = einzel_regel(str(b), so)
+        p("O12: ein zweiter Lauf aendert nichts mehr", not geaendert8, "; ".join(bericht8))
+        (b / listen.EINZEL_DATEI).unlink()
+        p("O12: ohne die Datei ist nichts zu tun", einzel_regel(str(b), so) == ([], False))
 
     print(f"\n{len(fehler)} Fehler." if fehler else "\nAlles bestanden.")
     return 1 if fehler else 0

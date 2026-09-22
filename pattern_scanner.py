@@ -1063,6 +1063,47 @@ def shakeout_durchgang(loaded: dict) -> list[dict]:
     return signale
 
 
+def alarm_durchgang(loaded: dict) -> list[dict]:
+    """DIE SECHS ALARM-MUSTER (Gerhard, 22.09.2026, Antworten O1 bis O10).
+
+    Ein EIGENER WEG neben den bestehenden Strategien (O1): Diese Kaufpunkte
+    kommen nicht in die Rangfolge PRIORITY und damit nie in die Spalten KP1
+    bis KP3 der Mappe; sie stehen in einer eigenen Datei, die der Waechter
+    zusaetzlich liest (alarm_muster.DATEI). Gerechnet wird ueber dieselben
+    Aktien wie der uebrige Scan, also die beiden Wochenlisten und die einzeln
+    eingetragenen (O2), aus denselben Kursen, die schon geladen sind.
+
+    Faellt der Durchgang aus, bleibt die alte Datei liegen und der Scan laeuft
+    weiter: Die Alarm-Muster sind Zusatz, kein Kern."""
+    import alarm_muster
+    import chartmuster
+    aktien, fehler = [], 0
+    for ticker, (df, company) in loaded.items():
+        try:
+            punkte = alarm_muster.kaufpunkte(chartmuster.werte(df))
+        except Exception as e:
+            fehler += 1
+            print(f"    Alarm-Muster-Fehler bei {ticker}: {type(e).__name__}: {e}")
+            continue
+        if not punkte:
+            continue
+        try:
+            kurs = float(df["close"].iloc[-1])
+        except Exception:
+            kurs = None
+        aktien.append({"ticker": ticker, "firma": company, "kurs": kurs,
+                       "punkte": punkte})
+    anzahl = alarm_muster.datei_schreiben(aktien, wiener_zeit())
+    je_muster = {}
+    for a in aktien:
+        for e in a["punkte"]:
+            je_muster[e["muster"]] = je_muster.get(e["muster"], 0) + 1
+    print(f"Alarm-Muster: {anzahl} Kaufpunkt(e) ueber {len(aktien)} Aktie(n)"
+          + (f", {fehler} Aktie(n) uebersprungen" if fehler else "")
+          + (" (" + ", ".join(f"{k} {v}" for k, v in sorted(je_muster.items())) + ")" if je_muster else ""))
+    return aktien
+
+
 def crash_support_durchgang(loaded: dict, api_key, limiter) -> list[dict]:
     """Kapitel 8, REKONSTRUIERT — laeuft nur zur Beobachtung mit.
 
@@ -1699,6 +1740,14 @@ def main():
     # weil sie eine eigene Warteliste ueber Tage hinweg fuehrt und nicht
     # in die Excel-Mappe gehoert.
     shakeout_signale = shakeout_durchgang(loaded)
+
+    # DIE SECHS ALARM-MUSTER (Gerhard, 22.09.2026): eigener Weg, eigene Datei,
+    # keine Beruehrung mit den Kaufpunkten der Mappe (siehe alarm_durchgang).
+    try:
+        alarm_durchgang(loaded)
+    except Exception as e:
+        print(f"  Alarm-Muster fehlgeschlagen ({type(e).__name__}: {e}); "
+              f"die alte Datei bleibt liegen.")
 
     # RS-UNIVERSUM, SEKTOR-RANGLISTE UND RATINGS (Gerhard, 12.09.2026):
     # Entscheidungshilfen, keine Filter. Faellt eines aus, wird der Scan
