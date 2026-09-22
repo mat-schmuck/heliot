@@ -226,7 +226,19 @@
     "SKE|Fallback: MA50-Pullback": "drin",
     "TSEM|Fallback: MA50-Pullback": "drin",
     "UMAC|Fallback: MA50-Pullback": "drin",
-    "NTSK|Cup & Handle (Wochenbasis)": "drin"
+    "NTSK|Cup & Handle (Wochenbasis)": "drin",
+    "APPN|EMA Crossback": "drin",
+    "CGON|EMA Crossback + Rectangle Top": "drin",
+    "IRDM|Rectangle Top": "drin",
+    "IRDM|Fallback: MA50-Pullback": "drin",
+    "SCCO|Rectangle Top": "drin",
+    "LBRX|Fallback: MA50-Pullback": "drin",
+    "BBNX|Fallback: MA50-Pullback": "draussen",
+    "PLXS|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "PLXS|Fallback: MA50-R\u00fcckeroberung": "drin",
+    "OMER|Cup & Handle (Wochenbasis)": "drin",
+    "OMER|Fallback: 52W-Hoch-Breakout": "drin",
+    "GH|Rectangle Top": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -396,13 +408,32 @@
     "BEST|NTSK|Cup & Handle (Wochenbasis)": "2026-09-22",
     "GEWINN|klimax_zeichen|OKTA|Cup & Handle (Wochenbasis)|4_ma200_abstand": "2026-09-22",
     "TEIL|INTC|EMA Crossback": "2026-09-22",
-    "TEIL|INTC|Fallback: MA50-R\u00fcckeroberung": "2026-09-22"
+    "TEIL|INTC|Fallback: MA50-R\u00fcckeroberung": "2026-09-22",
+    "APPN|EMA Crossback": "2026-09-22",
+    "BEST|APPN|EMA Crossback": "2026-09-22",
+    "IRDM|Rectangle Top": "2026-09-22",
+    "BEST|IRDM|Rectangle Top": "2026-09-22",
+    "SCCO|Rectangle Top": "2026-09-22",
+    "BEST|SCCO|Rectangle Top": "2026-09-22",
+    "LBRX|Fallback: MA50-Pullback": "2026-09-22",
+    "BEST|LBRX|Fallback: MA50-Pullback": "2026-09-22",
+    "PLXS|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-22",
+    "BEST|PLXS|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-22",
+    "PLXS|Fallback: MA50-R\u00fcckeroberung": "2026-09-22",
+    "BEST|PLXS|Fallback: MA50-R\u00fcckeroberung": "2026-09-22",
+    "OMER|Cup & Handle (Wochenbasis)": "2026-09-22",
+    "BEST|OMER|Cup & Handle (Wochenbasis)": "2026-09-22",
+    "OMER|Fallback: 52W-Hoch-Breakout": "2026-09-22",
+    "BEST|OMER|Fallback: 52W-Hoch-Breakout": "2026-09-22",
+    "GH|Rectangle Top": "2026-09-22",
+    "BEST|GH|Rectangle Top": "2026-09-22",
+    "GEWINN|klimax_zeichen|SDGR|Fallback: 20-Tage-Hoch (Pivot)|4_ma200_abstand": "2026-09-22"
   },
   "gapgo_warten": {
     "VICR": {
       "signal": "2026-09-22",
       "kp": 242.58,
-      "stop": 229.56,
+      "stop": 229.27,
       "firma": "Vicor Corp",
       "bestaetigt": false
     }
