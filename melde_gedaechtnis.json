@@ -207,7 +207,7 @@
     "ZIM|Cup & Handle (Wochenbasis) + Darvas Box": "drin",
     "SDGR|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "SDGR|Fallback: 52W-Hoch-Breakout": "drin",
-    "TWLO|Fallback: 52W-Hoch-Breakout": "drin",
+    "TWLO|Fallback: 52W-Hoch-Breakout": "draussen",
     "FTK|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "BAND|Fallback: MA50-R\u00fcckeroberung": "drin",
     "TEVA|Cup & Handle (Wochenbasis)": "drin",
@@ -218,7 +218,7 @@
     "CAI|HTF Innen-Einstieg": "drin",
     "RNG|Fallback: MA50-Pullback": "draussen",
     "ASX|Fallback: MA50-Pullback": "draussen",
-    "TWLO|Cup & Handle (Wochenbasis)": "drin",
+    "TWLO|Cup & Handle (Wochenbasis)": "draussen",
     "ESTC|EMA Crossback": "drin",
     "TENB|EMA Crossback": "drin",
     "VICR|Cup & Handle (Wochenbasis)": "drin",
@@ -252,7 +252,8 @@
     "IMOS|VCP": "drin",
     "BAND|EMA Crossback": "drin",
     "GNRC|Fallback: MA50-Pullback": "drin",
-    "RNG|Darvas Box + High & Tight Flag": "drin"
+    "RNG|Darvas Box + High & Tight Flag": "drin",
+    "MGTX|Fallback: MA50-R\u00fcckeroberung": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -465,7 +466,12 @@
     "OUST|Fallback: MA50-R\u00fcckeroberung": "2026-09-22",
     "BEST|OUST|Fallback: MA50-R\u00fcckeroberung": "2026-09-22",
     "HTF|RNG|Darvas Box": "2026-09-22",
-    "HTF|RNG|High & Tight Flag": "2026-09-22"
+    "HTF|RNG|High & Tight Flag": "2026-09-22",
+    "UEBER|TWLO|Cup & Handle (Wochenbasis)": "2026-09-22",
+    "UEBER|TWLO|Fallback: 52W-Hoch-Breakout": "2026-09-22",
+    "BAND|EMA Crossback": "2026-09-22",
+    "BEST|BAND|EMA Crossback": "2026-09-22",
+    "TEIL|TWLO|1": "2026-09-22"
   },
   "gapgo_warten": {
     "VICR": {
