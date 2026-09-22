@@ -1,7 +1,7 @@
 {
   "fenster_tag": "2026-09-22",
   "fenster": {
-    "PBF|Fallback: MA50-Pullback": "draussen",
+    "PBF|Fallback: MA50-Pullback": "drin",
     "CVE|Fallback: MA50-Pullback": "drin",
     "HNGE|Cup & Handle (Wochenbasis)": "drin",
     "HNGE|Rectangle Top": "drin",
@@ -35,7 +35,7 @@
     "HAE|Fallback: MA50-Pullback": "draussen",
     "MT|Fallback: MA50-Pullback": "drin",
     "ONC|Fallback: MA50-Pullback": "draussen",
-    "PVLA|Fallback: MA50-Pullback": "drin",
+    "PVLA|Fallback: MA50-Pullback": "draussen",
     "RBRK|Fallback: MA50-Pullback": "draussen",
     "RDVT|Fallback: MA50-Pullback": "draussen",
     "RIOT|Rectangle Top": "drin",
@@ -261,7 +261,7 @@
     "CLS|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "MRNA|Fallback: 52W-Hoch-Breakout": "drin",
     "KLIC|Fallback: 20-Tage-Hoch (Pivot)": "drin",
-    "COHU|Cup & Handle (Wochenbasis)": "drin",
+    "COHU|Cup & Handle (Wochenbasis)": "draussen",
     "TWST|Cup & Handle (Wochenbasis)": "drin",
     "PNTG|Fallback: MA50-R\u00fcckeroberung": "drin",
     "PVLA|Rectangle Top": "drin",
@@ -561,7 +561,8 @@
     "INSIDER|GSAT|pfad_a|0": "2026-09-22",
     "INSIDER|QVCG|pfad_a|1": "2026-09-22",
     "GEWINN|zonenwechsel|TWLO|1|mittel": "2026-09-22",
-    "GEWINN|zonenwechsel|XMTR|Fallback: MA50-R\u00fcckeroberung|mittel": "2026-09-22"
+    "GEWINN|zonenwechsel|XMTR|Fallback: MA50-R\u00fcckeroberung|mittel": "2026-09-22",
+    "UEBER|COHU|Cup & Handle (Wochenbasis)": "2026-09-22"
   },
   "gapgo_warten": {
     "VICR": {
