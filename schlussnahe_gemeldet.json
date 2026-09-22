@@ -482,5 +482,11 @@
    "zeichen": "2_groesster_tagesgewinn",
    "text": "INFORMATION: XMTR; Fallback: MA50-Rückeroberung; Klimax-Zeichen 2 groesster tagesgewinn (+4,2 %); Verkauf in die Stärke erwägen; Kurs 103,75, seit Trigger +13,8 % gleich 2,1 R"
   }
+ ],
+ "geprueft": "2026-09-22",
+ "zurueckgenommen": [
+  "MGTX|Fallback: MA50-Rückeroberung",
+  "APA|Cup & Handle (Wochenbasis)",
+  "UMC|Fallback: 20-Tage-Hoch (Pivot)"
  ]
 }
