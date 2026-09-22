@@ -223,7 +223,7 @@
     "TENB|EMA Crossback": "drin",
     "VICR|Cup & Handle (Wochenbasis)": "drin",
     "XMTR|Rectangle Top": "drin",
-    "SKE|Fallback: MA50-Pullback": "drin",
+    "SKE|Fallback: MA50-Pullback": "draussen",
     "TSEM|Fallback: MA50-Pullback": "drin",
     "UMAC|Fallback: MA50-Pullback": "drin",
     "NTSK|Cup & Handle (Wochenbasis)": "drin",
@@ -471,7 +471,8 @@
     "UEBER|TWLO|Fallback: 52W-Hoch-Breakout": "2026-09-22",
     "BAND|EMA Crossback": "2026-09-22",
     "BEST|BAND|EMA Crossback": "2026-09-22",
-    "TEIL|TWLO|1": "2026-09-22"
+    "TEIL|TWLO|1": "2026-09-22",
+    "R2GX|CLMT|2026-09-22": "2026-09-22"
   },
   "gapgo_warten": {
     "VICR": {
