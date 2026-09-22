@@ -1,7 +1,7 @@
 {
-  "fenster_tag": "2026-09-21",
+  "fenster_tag": "2026-09-22",
   "fenster": {
-    "PBF|Fallback: MA50-Pullback": "draussen",
+    "PBF|Fallback: MA50-Pullback": "drin",
     "CVE|Fallback: MA50-Pullback": "drin",
     "HNGE|Cup & Handle (Wochenbasis)": "drin",
     "HNGE|Rectangle Top": "drin",
@@ -213,7 +213,19 @@
     "TEVA|Cup & Handle (Wochenbasis)": "drin",
     "TEVA|Fallback: 52W-Hoch-Breakout": "drin",
     "MRNA|Darvas Box": "drin",
-    "XMTR|Fallback: 20-Tage-Hoch (Pivot)": "drin"
+    "XMTR|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "CAI|Cup & Handle (Wochenbasis) + High & Tight Flag": "drin",
+    "CAI|HTF Innen-Einstieg": "drin",
+    "RNG|Fallback: MA50-Pullback": "draussen",
+    "ASX|Fallback: MA50-Pullback": "draussen",
+    "TWLO|Cup & Handle (Wochenbasis)": "drin",
+    "ESTC|EMA Crossback": "drin",
+    "TENB|EMA Crossback": "drin",
+    "VICR|Cup & Handle (Wochenbasis)": "drin",
+    "XMTR|Rectangle Top": "drin",
+    "SKE|Fallback: MA50-Pullback": "drin",
+    "TSEM|Fallback: MA50-Pullback": "drin",
+    "UMAC|Fallback: MA50-Pullback": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -284,7 +296,6 @@
     "DINO|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
     "BEST|DINO|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
     "UEBER|AMD|Rectangle Top": "2026-09-21",
-    "HTF|RNG|HTF Innen-Einstieg": "2026-09-21",
     "MRNA|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
     "BEST|MRNA|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
     "GEWINN|zonenwechsel|AMD|EMA Crossback|stark": "2026-09-21",
@@ -356,7 +367,29 @@
     "GEWINN|klimax_zeichen|AMD|SPRING-2026-09-14|4_ma200_abstand": "2026-09-21",
     "GEWINN|klimax_zeichen|MXL|Fallback: 20-Tage-Hoch (Pivot)|4_ma200_abstand": "2026-09-21",
     "GEWINN|klimax_zeichen|MXL|Fallback: MA50-R\u00fcckeroberung|4_ma200_abstand": "2026-09-21",
-    "SCHLUSSNAH|2026-09-21": "2026-09-21"
+    "SCHLUSSNAH|2026-09-21": "2026-09-21",
+    "HTF|CAI|Cup & Handle (Wochenbasis)": "2026-09-22",
+    "HTF|CAI|High & Tight Flag": "2026-09-22",
+    "BEST|HTF|CAI|Cup & Handle (Wochenbasis)": "2026-09-22",
+    "BEST|HTF|CAI|High & Tight Flag": "2026-09-22",
+    "HTF|CAI|HTF Innen-Einstieg": "2026-09-22",
+    "BEST|HTF|CAI|HTF Innen-Einstieg": "2026-09-22",
+    "HNGE|Cup & Handle (Wochenbasis)": "2026-09-22",
+    "BEST|HNGE|Cup & Handle (Wochenbasis)": "2026-09-22",
+    "TWLO|Cup & Handle (Wochenbasis)": "2026-09-22",
+    "BEST|TWLO|Cup & Handle (Wochenbasis)": "2026-09-22",
+    "BRKR|Rectangle Top": "2026-09-22",
+    "BEST|BRKR|Rectangle Top": "2026-09-22",
+    "ESTC|EMA Crossback": "2026-09-22",
+    "BEST|ESTC|EMA Crossback": "2026-09-22",
+    "PTGX|Rectangle Top": "2026-09-22",
+    "BEST|PTGX|Rectangle Top": "2026-09-22",
+    "TENB|EMA Crossback": "2026-09-22",
+    "BEST|TENB|EMA Crossback": "2026-09-22",
+    "VICR|Cup & Handle (Wochenbasis)": "2026-09-22",
+    "BEST|VICR|Cup & Handle (Wochenbasis)": "2026-09-22",
+    "XMTR|Rectangle Top": "2026-09-22",
+    "BEST|XMTR|Rectangle Top": "2026-09-22"
   },
   "gapgo_warten": {
     "ATI": {
@@ -368,5 +401,5 @@
       "pruef": "2026-09-21"
     }
   },
-  "ampel_tag": "2026-09-21"
+  "ampel_tag": "2026-09-22"
 }
