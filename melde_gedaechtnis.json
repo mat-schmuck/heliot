@@ -43,7 +43,7 @@
     "ROIV|Fallback: MA50-Pullback": "draussen",
     "S|Fallback: MA50-Pullback": "draussen",
     "SCCO|Fallback: MA50-Pullback": "drin",
-    "STNG|Fallback: MA50-Pullback": "draussen",
+    "STNG|Fallback: MA50-Pullback": "drin",
     "TEVA|Fallback: MA50-Pullback": "draussen",
     "ZS|Fallback: MA50-Pullback": "draussen",
     "CRWD|Fallback: MA50-Pullback": "draussen",
@@ -225,7 +225,8 @@
     "XMTR|Rectangle Top": "drin",
     "SKE|Fallback: MA50-Pullback": "drin",
     "TSEM|Fallback: MA50-Pullback": "drin",
-    "UMAC|Fallback: MA50-Pullback": "drin"
+    "UMAC|Fallback: MA50-Pullback": "drin",
+    "NTSK|Cup & Handle (Wochenbasis)": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -389,16 +390,19 @@
     "VICR|Cup & Handle (Wochenbasis)": "2026-09-22",
     "BEST|VICR|Cup & Handle (Wochenbasis)": "2026-09-22",
     "XMTR|Rectangle Top": "2026-09-22",
-    "BEST|XMTR|Rectangle Top": "2026-09-22"
+    "BEST|XMTR|Rectangle Top": "2026-09-22",
+    "GAPGO|VICR|2026-09-22": "2026-09-22",
+    "NTSK|Cup & Handle (Wochenbasis)": "2026-09-22",
+    "BEST|NTSK|Cup & Handle (Wochenbasis)": "2026-09-22",
+    "GEWINN|klimax_zeichen|OKTA|Cup & Handle (Wochenbasis)|4_ma200_abstand": "2026-09-22"
   },
   "gapgo_warten": {
-    "ATI": {
-      "signal": "2026-09-18",
-      "kp": 186.36,
-      "stop": 183.63,
-      "firma": "ATI Inc",
-      "bestaetigt": false,
-      "pruef": "2026-09-21"
+    "VICR": {
+      "signal": "2026-09-22",
+      "kp": 242.58,
+      "stop": 229.56,
+      "firma": "Vicor Corp",
+      "bestaetigt": false
     }
   },
   "ampel_tag": "2026-09-22"
