@@ -267,7 +267,10 @@
     "PVLA|Rectangle Top": "drin",
     "BLLN|Fallback: MA50-R\u00fcckeroberung": "drin",
     "CDNA|Cup & Handle (Wochenbasis)": "drin",
-    "CDNA|Fallback: 52W-Hoch-Breakout": "drin"
+    "CDNA|Fallback: 52W-Hoch-Breakout": "drin",
+    "SIMO|Rectangle Top": "drin",
+    "KEYS|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "SANM|EMA Crossback": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -510,7 +513,9 @@
     "MRNA|Fallback: 52W-Hoch-Breakout": "2026-09-22",
     "BEST|MRNA|Fallback: 52W-Hoch-Breakout": "2026-09-22",
     "BLLN|Fallback: MA50-R\u00fcckeroberung": "2026-09-22",
-    "BEST|BLLN|Fallback: MA50-R\u00fcckeroberung": "2026-09-22"
+    "BEST|BLLN|Fallback: MA50-R\u00fcckeroberung": "2026-09-22",
+    "COHU|Cup & Handle (Wochenbasis)": "2026-09-22",
+    "BEST|COHU|Cup & Handle (Wochenbasis)": "2026-09-22"
   },
   "gapgo_warten": {
     "VICR": {
