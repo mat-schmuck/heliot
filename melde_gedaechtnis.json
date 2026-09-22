@@ -265,7 +265,7 @@
     "TWST|Cup & Handle (Wochenbasis)": "drin",
     "PNTG|Fallback: MA50-R\u00fcckeroberung": "drin",
     "PVLA|Rectangle Top": "drin",
-    "BLLN|Fallback: MA50-R\u00fcckeroberung": "drin",
+    "BLLN|Fallback: MA50-R\u00fcckeroberung": "draussen",
     "CDNA|Cup & Handle (Wochenbasis)": "drin",
     "CDNA|Fallback: 52W-Hoch-Breakout": "drin",
     "SIMO|Rectangle Top": "drin",
@@ -528,7 +528,8 @@
     "UEBER|CAI|HTF Innen-Einstieg": "2026-09-22",
     "UEBER|BHE|EMA Crossback": "2026-09-22",
     "NTRA|Cup & Handle (Wochenbasis)": "2026-09-22",
-    "BEST|NTRA|Cup & Handle (Wochenbasis)": "2026-09-22"
+    "BEST|NTRA|Cup & Handle (Wochenbasis)": "2026-09-22",
+    "UEBER|BLLN|Fallback: MA50-R\u00fcckeroberung": "2026-09-22"
   },
   "gapgo_warten": {
     "VICR": {
