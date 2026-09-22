@@ -207,7 +207,7 @@
     "ZIM|Cup & Handle (Wochenbasis) + Darvas Box": "drin",
     "SDGR|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "SDGR|Fallback: 52W-Hoch-Breakout": "drin",
-    "TWLO|Fallback: 52W-Hoch-Breakout": "drin",
+    "TWLO|Fallback: 52W-Hoch-Breakout": "draussen",
     "FTK|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "BAND|Fallback: MA50-R\u00fcckeroberung": "drin",
     "TEVA|Cup & Handle (Wochenbasis)": "drin",
@@ -218,7 +218,7 @@
     "CAI|HTF Innen-Einstieg": "draussen",
     "RNG|Fallback: MA50-Pullback": "draussen",
     "ASX|Fallback: MA50-Pullback": "draussen",
-    "TWLO|Cup & Handle (Wochenbasis)": "drin",
+    "TWLO|Cup & Handle (Wochenbasis)": "draussen",
     "ESTC|EMA Crossback": "drin",
     "TENB|EMA Crossback": "drin",
     "VICR|Cup & Handle (Wochenbasis)": "draussen",
@@ -502,7 +502,9 @@
     "BHE|EMA Crossback": "2026-09-22",
     "BEST|BHE|EMA Crossback": "2026-09-22",
     "PVLA|Rectangle Top": "2026-09-22",
-    "BEST|PVLA|Rectangle Top": "2026-09-22"
+    "BEST|PVLA|Rectangle Top": "2026-09-22",
+    "UEBER|TWLO|Cup & Handle (Wochenbasis)": "2026-09-22",
+    "UEBER|TWLO|Fallback: 52W-Hoch-Breakout": "2026-09-22"
   },
   "gapgo_warten": {
     "VICR": {
