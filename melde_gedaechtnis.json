@@ -101,7 +101,7 @@
     "BHE|EMA Crossback": "drin",
     "DAVE|Cup & Handle (Wochenbasis)": "draussen",
     "ZIM|Fallback: MA50-Pullback": "draussen",
-    "AMD|Fallback: 52W-Hoch-Breakout": "draussen",
+    "AMD|Fallback: 52W-Hoch-Breakout": "drin",
     "CDNA|Fallback: MA50-Pullback": "draussen",
     "ETON|Cup & Handle (Wochenbasis)": "draussen",
     "ETON|Fallback: MA50-Pullback": "draussen",
@@ -170,7 +170,7 @@
     "LB|Cup & Handle (Wochenbasis)": "draussen",
     "LB|Fallback: MA50-Pullback": "draussen",
     "NUTX|Fallback: MA50-Pullback": "draussen",
-    "FTH|Fallback: MA50-Pullback": "drin",
+    "FTH|Fallback: MA50-Pullback": "draussen",
     "FTK|Fallback: MA50-Pullback": "draussen",
     "ESTC|Fallback: MA50-Pullback": "draussen",
     "RNG|HTF Innen-Einstieg": "draussen",
@@ -243,7 +243,11 @@
     "ALNT|Fallback: MA50-Pullback": "draussen",
     "PENG|Fallback: MA50-Pullback": "drin",
     "ASX|Cup & Handle (Wochenbasis)": "drin",
-    "MSTR|Cup & Handle (Wochenbasis)": "drin"
+    "MSTR|Cup & Handle (Wochenbasis)": "drin",
+    "MTRN|Fallback: MA50-Pullback": "drin",
+    "AMD|Cup & Handle (Wochenbasis)": "drin",
+    "GCT|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "OUST|Fallback: 20-Tage-Hoch (Pivot)": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -347,7 +351,6 @@
     "UEBER|AXTI|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
     "UEBER|DOCN|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
     "UEBER|AMRX|Fallback: 52W-Hoch-Breakout": "2026-09-21",
-    "UEBER|AMD|Fallback: 52W-Hoch-Breakout": "2026-09-21",
     "SDGR|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
     "BEST|SDGR|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
     "SDGR|Fallback: 52W-Hoch-Breakout": "2026-09-21",
@@ -447,7 +450,13 @@
     "GEWINN|zonenwechsel|UMAC|SPRING-2026-09-18|mittel": "2026-09-22",
     "GEWINN|zonenwechsel|ALNT|Fallback: MA50-Pullback|mittel": "2026-09-22",
     "MSTR|Cup & Handle (Wochenbasis)": "2026-09-22",
-    "BEST|MSTR|Cup & Handle (Wochenbasis)": "2026-09-22"
+    "BEST|MSTR|Cup & Handle (Wochenbasis)": "2026-09-22",
+    "AMD|Cup & Handle (Wochenbasis)": "2026-09-22",
+    "BEST|AMD|Cup & Handle (Wochenbasis)": "2026-09-22",
+    "GCT|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-22",
+    "BEST|GCT|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-22",
+    "OUST|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-22",
+    "BEST|OUST|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-22"
   },
   "gapgo_warten": {
     "VICR": {
