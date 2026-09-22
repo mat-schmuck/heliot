@@ -43,7 +43,7 @@
     "ROIV|Fallback: MA50-Pullback": "draussen",
     "S|Fallback: MA50-Pullback": "draussen",
     "SCCO|Fallback: MA50-Pullback": "drin",
-    "STNG|Fallback: MA50-Pullback": "drin",
+    "STNG|Fallback: MA50-Pullback": "draussen",
     "TEVA|Fallback: MA50-Pullback": "draussen",
     "ZS|Fallback: MA50-Pullback": "draussen",
     "CRWD|Fallback: MA50-Pullback": "draussen",
@@ -207,7 +207,7 @@
     "ZIM|Cup & Handle (Wochenbasis) + Darvas Box": "drin",
     "SDGR|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "SDGR|Fallback: 52W-Hoch-Breakout": "drin",
-    "TWLO|Fallback: 52W-Hoch-Breakout": "drin",
+    "TWLO|Fallback: 52W-Hoch-Breakout": "draussen",
     "FTK|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "BAND|Fallback: MA50-R\u00fcckeroberung": "drin",
     "TEVA|Cup & Handle (Wochenbasis)": "drin",
@@ -255,7 +255,8 @@
     "RNG|Darvas Box + High & Tight Flag": "drin",
     "MGTX|Fallback: MA50-R\u00fcckeroberung": "drin",
     "NTRA|Cup & Handle (Wochenbasis)": "drin",
-    "BAND|Fallback: 20-Tage-Hoch (Pivot)": "drin"
+    "BAND|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "ANRO|Fallback: MA50-R\u00fcckeroberung": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -480,12 +481,13 @@
     "UEBER|CAI|HTF Innen-Einstieg": "2026-09-22",
     "BAND|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-22",
     "BEST|BAND|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-22",
-    "UEBER|VICR|Cup & Handle (Wochenbasis)": "2026-09-22"
+    "UEBER|VICR|Cup & Handle (Wochenbasis)": "2026-09-22",
+    "UEBER|TWLO|Fallback: 52W-Hoch-Breakout": "2026-09-22"
   },
   "gapgo_warten": {
     "VICR": {
       "signal": "2026-09-22",
-      "kp": 245.63,
+      "kp": 247.0,
       "stop": 229.27,
       "firma": "Vicor Corp",
       "bestaetigt": false
