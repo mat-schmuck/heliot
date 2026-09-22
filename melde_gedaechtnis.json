@@ -254,7 +254,7 @@
     "GNRC|Fallback: MA50-Pullback": "drin",
     "RNG|Darvas Box + High & Tight Flag": "drin",
     "MGTX|Fallback: MA50-R\u00fcckeroberung": "drin",
-    "NTRA|Cup & Handle (Wochenbasis)": "drin",
+    "NTRA|Cup & Handle (Wochenbasis)": "draussen",
     "BAND|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "ANRO|Fallback: MA50-R\u00fcckeroberung": "drin",
     "SDGR|Cup & Handle (Wochenbasis)": "drin",
@@ -546,7 +546,8 @@
     "BEST|CDNA|Cup & Handle (Wochenbasis)": "2026-09-22",
     "CDNA|Fallback: 52W-Hoch-Breakout": "2026-09-22",
     "BEST|CDNA|Fallback: 52W-Hoch-Breakout": "2026-09-22",
-    "TEIL|VICR|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-22"
+    "TEIL|VICR|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-22",
+    "UEBER|NTRA|Cup & Handle (Wochenbasis)": "2026-09-22"
   },
   "gapgo_warten": {
     "VICR": {
