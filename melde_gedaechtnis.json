@@ -431,7 +431,16 @@
     "GEWINN|klimax_zeichen|SDGR|Fallback: 20-Tage-Hoch (Pivot)|4_ma200_abstand": "2026-09-22",
     "GEWINN|klimax_zeichen|SDGR|Fallback: 20-Tage-Hoch (Pivot)|5_kanaluebershooting": "2026-09-22",
     "SEKTORAUF|2026-09-22": "2026-09-22",
-    "INSIDER|GME|pfad_a|0": "2026-09-22"
+    "INSIDER|GME|pfad_a|0": "2026-09-22",
+    "GEWINN|zonenwechsel|AMD|Fallback: 20-Tage-Hoch (Pivot)|stark": "2026-09-22",
+    "GEWINN|zonenwechsel|AMD|Rectangle Top|stark": "2026-09-22",
+    "GEWINN|zonenwechsel|ASX|1|mittel": "2026-09-22",
+    "GEWINN|zonenwechsel|AXTI|Fallback: MA50-R\u00fcckeroberung|stark": "2026-09-22",
+    "GEWINN|zonenwechsel|INTC|EMA Crossback|stark": "2026-09-22",
+    "GEWINN|zonenwechsel|INTC|Fallback: MA50-R\u00fcckeroberung|stark": "2026-09-22",
+    "GEWINN|zonenwechsel|MXL|Fallback: MA50-R\u00fcckeroberung|mittel": "2026-09-22",
+    "GEWINN|zonenwechsel|TEAM|2|stark": "2026-09-22",
+    "GEWINN|zonenwechsel|UMAC|SPRING-2026-09-18|mittel": "2026-09-22"
   },
   "gapgo_warten": {
     "VICR": {
