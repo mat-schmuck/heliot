@@ -273,7 +273,7 @@
     "SANM|EMA Crossback": "drin",
     "BBNX|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "OKTA|Fallback: 52W-Hoch-Breakout": "drin",
-    "BLLN|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "BLLN|Fallback: 20-Tage-Hoch (Pivot)": "draussen",
     "MEDP|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "DIOD|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "ZIM|Cup & Handle (Wochenbasis)": "drin",
@@ -553,7 +553,8 @@
     "UEBER|NTRA|Cup & Handle (Wochenbasis)": "2026-09-22",
     "MEDP|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-22",
     "BEST|MEDP|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-22",
-    "UEBER|BAND|EMA Crossback": "2026-09-22"
+    "UEBER|BAND|EMA Crossback": "2026-09-22",
+    "UEBER|BLLN|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-22"
   },
   "gapgo_warten": {
     "VICR": {
