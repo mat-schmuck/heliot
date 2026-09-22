@@ -265,7 +265,8 @@
     "TWST|Cup & Handle (Wochenbasis)": "drin",
     "PNTG|Fallback: MA50-R\u00fcckeroberung": "drin",
     "PVLA|Rectangle Top": "drin",
-    "BLLN|Fallback: MA50-R\u00fcckeroberung": "drin"
+    "BLLN|Fallback: MA50-R\u00fcckeroberung": "drin",
+    "CDNA|Cup & Handle (Wochenbasis)": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -514,8 +515,8 @@
   "gapgo_warten": {
     "VICR": {
       "signal": "2026-09-22",
-      "kp": 254.96,
-      "stop": 229.47,
+      "kp": 255.01,
+      "stop": 229.51,
       "firma": "Vicor Corp",
       "bestaetigt": false
     }
