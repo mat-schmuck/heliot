@@ -170,7 +170,7 @@
     "LB|Cup & Handle (Wochenbasis)": "draussen",
     "LB|Fallback: MA50-Pullback": "draussen",
     "NUTX|Fallback: MA50-Pullback": "draussen",
-    "FTH|Fallback: MA50-Pullback": "draussen",
+    "FTH|Fallback: MA50-Pullback": "drin",
     "FTK|Fallback: MA50-Pullback": "draussen",
     "ESTC|Fallback: MA50-Pullback": "draussen",
     "RNG|HTF Innen-Einstieg": "draussen",
@@ -256,7 +256,8 @@
     "MGTX|Fallback: MA50-R\u00fcckeroberung": "drin",
     "NTRA|Cup & Handle (Wochenbasis)": "drin",
     "BAND|Fallback: 20-Tage-Hoch (Pivot)": "drin",
-    "ANRO|Fallback: MA50-R\u00fcckeroberung": "drin"
+    "ANRO|Fallback: MA50-R\u00fcckeroberung": "drin",
+    "SDGR|Cup & Handle (Wochenbasis)": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -484,12 +485,15 @@
     "TXG|Fallback: 52W-Hoch-Breakout": "2026-09-22",
     "BEST|TXG|Fallback: 52W-Hoch-Breakout": "2026-09-22",
     "TXG|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-22",
-    "BEST|TXG|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-22"
+    "BEST|TXG|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-22",
+    "R2GX|CVI|2026-09-22": "2026-09-22",
+    "SDGR|Cup & Handle (Wochenbasis)": "2026-09-22",
+    "BEST|SDGR|Cup & Handle (Wochenbasis)": "2026-09-22"
   },
   "gapgo_warten": {
     "VICR": {
       "signal": "2026-09-22",
-      "kp": 250.0,
+      "kp": 251.01,
       "stop": 229.27,
       "firma": "Vicor Corp",
       "bestaetigt": false
