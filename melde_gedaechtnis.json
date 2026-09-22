@@ -215,7 +215,7 @@
     "MRNA|Darvas Box": "drin",
     "XMTR|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "CAI|Cup & Handle (Wochenbasis) + High & Tight Flag": "drin",
-    "CAI|HTF Innen-Einstieg": "drin",
+    "CAI|HTF Innen-Einstieg": "draussen",
     "RNG|Fallback: MA50-Pullback": "draussen",
     "ASX|Fallback: MA50-Pullback": "draussen",
     "TWLO|Cup & Handle (Wochenbasis)": "draussen",
@@ -273,7 +273,8 @@
     "SANM|EMA Crossback": "drin",
     "BBNX|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "OKTA|Fallback: 52W-Hoch-Breakout": "drin",
-    "BLLN|Fallback: 20-Tage-Hoch (Pivot)": "drin"
+    "BLLN|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "MEDP|Fallback: 20-Tage-Hoch (Pivot)": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -523,7 +524,8 @@
     "OKTA|Fallback: 52W-Hoch-Breakout": "2026-09-22",
     "BEST|OKTA|Fallback: 52W-Hoch-Breakout": "2026-09-22",
     "BLLN|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-22",
-    "BEST|BLLN|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-22"
+    "BEST|BLLN|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-22",
+    "UEBER|CAI|HTF Innen-Einstieg": "2026-09-22"
   },
   "gapgo_warten": {
     "VICR": {
