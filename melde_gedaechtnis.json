@@ -259,7 +259,8 @@
     "ANRO|Fallback: MA50-R\u00fcckeroberung": "drin",
     "SDGR|Cup & Handle (Wochenbasis)": "drin",
     "CLS|Fallback: 20-Tage-Hoch (Pivot)": "drin",
-    "MRNA|Fallback: 52W-Hoch-Breakout": "drin"
+    "MRNA|Fallback: 52W-Hoch-Breakout": "drin",
+    "KLIC|Fallback: 20-Tage-Hoch (Pivot)": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -489,12 +490,14 @@
     "BEST|TXG|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-22",
     "R2GX|CVI|2026-09-22": "2026-09-22",
     "SDGR|Cup & Handle (Wochenbasis)": "2026-09-22",
-    "BEST|SDGR|Cup & Handle (Wochenbasis)": "2026-09-22"
+    "BEST|SDGR|Cup & Handle (Wochenbasis)": "2026-09-22",
+    "KLIC|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-22",
+    "BEST|KLIC|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-22"
   },
   "gapgo_warten": {
     "VICR": {
       "signal": "2026-09-22",
-      "kp": 251.01,
+      "kp": 251.85,
       "stop": 229.27,
       "firma": "Vicor Corp",
       "bestaetigt": false
