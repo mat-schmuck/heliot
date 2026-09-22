@@ -137,7 +137,7 @@
     "CLMT|Fallback: MA50-Pullback": "draussen",
     "GH|Fallback: MA50-Pullback": "draussen",
     "ILMN|Fallback: MA50-Pullback": "draussen",
-    "NESR|Fallback: MA50-Pullback": "drin",
+    "NESR|Fallback: MA50-Pullback": "draussen",
     "AAMI|Fallback: MA50-Pullback": "draussen",
     "ALMR|Fallback: MA50-Pullback": "draussen",
     "ARGX|Fallback: MA50-Pullback": "drin",
@@ -509,8 +509,8 @@
   "gapgo_warten": {
     "VICR": {
       "signal": "2026-09-22",
-      "kp": 254.91,
-      "stop": 229.42,
+      "kp": 254.96,
+      "stop": 229.47,
       "firma": "Vicor Corp",
       "bestaetigt": false
     }
