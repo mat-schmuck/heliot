@@ -10031,7 +10031,8 @@
   "zone_gemeldet": "stark",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
-   "4_ma200_abstand"
+   "4_ma200_abstand",
+   "5_kanaluebershooting"
   ],
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
@@ -10060,7 +10061,8 @@
   "zone_gemeldet": "stark",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
-   "4_ma200_abstand"
+   "4_ma200_abstand",
+   "5_kanaluebershooting"
   ],
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
