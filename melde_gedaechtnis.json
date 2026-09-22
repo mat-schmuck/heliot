@@ -247,8 +247,8 @@
     "MTRN|Fallback: MA50-Pullback": "drin",
     "AMD|Cup & Handle (Wochenbasis)": "drin",
     "GCT|Fallback: 20-Tage-Hoch (Pivot)": "drin",
-    "OUST|Fallback: 20-Tage-Hoch (Pivot)": "drin",
-    "OUST|Fallback: MA50-R\u00fcckeroberung": "drin",
+    "OUST|Fallback: 20-Tage-Hoch (Pivot)": "draussen",
+    "OUST|Fallback: MA50-R\u00fcckeroberung": "draussen",
     "IMOS|VCP": "drin",
     "BAND|EMA Crossback": "draussen",
     "GNRC|Fallback: MA50-Pullback": "drin",
@@ -567,7 +567,9 @@
     "BEST|SIMO|Rectangle Top": "2026-09-22",
     "GEWINN|klimax_zeichen|UMC|Fallback: 20-Tage-Hoch (Pivot)|4_ma200_abstand": "2026-09-22",
     "SCHLUSSNAH|2026-09-22": "2026-09-22",
-    "UEBER|XMTR|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-22"
+    "UEBER|XMTR|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-22",
+    "UEBER|OUST|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-22",
+    "UEBER|OUST|Fallback: MA50-R\u00fcckeroberung": "2026-09-22"
   },
   "gapgo_warten": {
     "VICR": {
