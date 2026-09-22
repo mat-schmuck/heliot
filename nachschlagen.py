@@ -1529,6 +1529,50 @@ def rs_fuer_muster(e):
     return None, "Ohne RS-Wert gilt die RS-Bedingung als nicht erfüllt."
 
 
+def rs_spalte_als_zahl(df, spalte="RS Nasdaq", kennzeichen="RS vorläufig"):
+    """Fuer die Tabelle "Nutzung ohne Screenreader" im Reiter Aktueller Scan
+    (Mathias, 22.09.2026). Die Spalte RS Nasdaq der Mappe traegt Zahlen, bei
+    jungen Titeln aber Text wie '98 vorläufig' und ohne RS 'n/a'. Steht auch
+    nur ein Text darin, macht Streamlit die ganze Spalte zu Text und sortiert
+    sie nach Zeichen: Ein RS von 7 stuende zwischen 69 und 71 (Mappe vom
+    22.09.2026 gemessen, Sortierung im Tabellencode von Streamlit
+    nachgelesen). Liefert eine Kopie mit der Spalte als ganzer Zahl und
+    direkt dahinter der Spalte 'RS vorläufig' mit ja oder nein, wie im
+    Scanner-Reiter. Ohne RS bleibt die Zelle leer. Die Mappe selbst bleibt,
+    wie sie ist."""
+    import math
+    import pandas as pd
+    if df is None or spalte not in df.columns:
+        return df
+    werte, vorlaeufig = [], []
+    for v in df[spalte].tolist():
+        zahl_wert, vorl = None, False
+        if isinstance(v, str):
+            t = v.strip()
+            if t.endswith("vorläufig"):
+                vorl, t = True, t[:-len("vorläufig")].strip()
+            try:
+                zahl_wert = float(t.replace(",", "."))
+            except ValueError:
+                zahl_wert = None
+        elif v is not None and not isinstance(v, bool):
+            try:
+                zahl_wert = None if pd.isna(v) else float(v)
+            except (TypeError, ValueError):
+                zahl_wert = None
+        if zahl_wert is not None and not math.isfinite(zahl_wert):
+            zahl_wert = None
+        werte.append(None if zahl_wert is None else int(round(zahl_wert)))
+        vorlaeufig.append("ja" if vorl and zahl_wert is not None else "nein")
+    raus = df.copy()
+    raus[spalte] = pd.array(werte, dtype="Int64")
+    if kennzeichen in raus.columns:
+        raus[kennzeichen] = vorlaeufig
+    else:
+        raus.insert(raus.columns.get_loc(spalte) + 1, kennzeichen, vorlaeufig)
+    return raus
+
+
 def muster_saetze(res, rs_satz=None, cfg=None):
     """Chartmuster und Trend Template als Saetze."""
     if not res:
@@ -2178,6 +2222,21 @@ def selbsttest() -> int:
       rs_fuer_muster({"rs": 91})[0] == 91.0 and "RS 91 gegen den ganzen US-Markt" in rs_fuer_muster({"rs": 91})[1]
       and rs_fuer_muster({"rs_vorlaeufig": 80})[0] == 80.0 and "vorläufigen RS 80" in rs_fuer_muster({"rs_vorlaeufig": 80})[1]
       and rs_fuer_muster({}) == (None, "Ohne RS-Wert gilt die RS-Bedingung als nicht erfüllt."))
+    # Tabelle "Nutzung ohne Screenreader" im Reiter Aktueller Scan (Mathias, 22.09.2026)
+    rs_tab = pd.DataFrame({"Ticker": ["A", "B", "C", "D", "E", "F", "G"],
+                           "RS Nasdaq": [98, "7 vorläufig", "n/a", None, 69.0, float("nan"), "nan"],
+                           "Trend Template": ["8 von 8"] * 7})
+    rs_neu = rs_spalte_als_zahl(rs_tab)
+    rs_zahlen = [None if pd.isna(x) else int(x) for x in rs_neu["RS Nasdaq"]]
+    p("Tabelle ohne Screenreader: RS Nasdaq als ganze Zahl, dahinter RS vorlaeufig, die Mappe bleibt",
+      list(rs_neu.columns) == ["Ticker", "RS Nasdaq", "RS vorläufig", "Trend Template"]
+      and str(rs_neu["RS Nasdaq"].dtype) == "Int64" and rs_zahlen == [98, 7, None, None, 69, None, None]
+      and rs_neu["RS vorläufig"].tolist() == ["nein", "ja", "nein", "nein", "nein", "nein", "nein"]
+      and rs_tab["RS Nasdaq"].tolist()[1] == "7 vorläufig" and "RS vorläufig" not in rs_tab.columns,
+      [rs_zahlen, rs_neu["RS vorläufig"].tolist()])
+    p("Tabelle ohne Screenreader: ohne Spalte RS Nasdaq bleibt alles, wie es ist",
+      rs_spalte_als_zahl(None) is None
+      and list(rs_spalte_als_zahl(pd.DataFrame({"Ticker": ["A"]})).columns) == ["Ticker"])
     res = {"close": 100.0, "pattern_count": 1, "tt_pass": False, "tt_count": 6,
            "tt_failed": ["Kurs > MA50", "RS-Rank ≥ 70"],
            "points": [{"strategie": "VCP", "kaufpunkt": 105.0, "stop": 96.6, "ziel": 126.0,

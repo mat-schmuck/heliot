@@ -2701,6 +2701,13 @@ def block_h():
     pruefe("H", "Webtool: Skripte kommen aus den geprueften Bausteinen",
            "zugang.speicher_js(" in _app and "nachschlagen.chart_skript(" in _app
            and "function(" not in _app and "document.cookie" not in _app and "localStorage" not in _app)
+    # NUTZUNG OHNE SCREENREADER (Mathias, 22.09.2026): So heisst die Tabelle
+    # im Reiter Aktueller Scan, und RS Nasdaq steht dort als Zahl; den Umbau
+    # prueft der Selbsttest von nachschlagen.rs_spalte_als_zahl.
+    pruefe("H", "Aktueller Scan: Tabelle heisst Nutzung ohne Screenreader, RS Nasdaq als Zahl",
+           'st.expander("Nutzung ohne Screenreader")' in _app_code
+           and "st.dataframe(nachschlagen.rs_spalte_als_zahl(df_scan)" in _app_code
+           and "st.dataframe(df_scan" not in _app_code)
 
     # DER SCANNER (Mathias, 14.09.2026): ein Reiter fuer alle, auch fuer
     # Gaeste, "in jeder Hinsicht und absolut mit Screenreader bedienbar",

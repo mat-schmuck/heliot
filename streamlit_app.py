@@ -2112,8 +2112,12 @@ with tab_scan:
                                file_name=SCAN_DATEI,
                                mime="application/vnd.openxmlformats-"
                                     "officedocument.spreadsheetml.sheet")
-        with st.expander("Alle Werte als Tabelle, für das Auge"):
-            st.dataframe(df_scan, hide_index=True)
+        # NUTZUNG OHNE SCREENREADER (Mathias, 22.09.2026): So heisst der
+        # Ausklapper jetzt. RS Nasdaq kommt als Zahl, dahinter "RS vorlaeufig"
+        # mit ja oder nein; sonst machte Streamlit die ganze Spalte zu Text und
+        # sortierte sie nach Zeichen. Die Mappe selbst bleibt, wie sie ist.
+        with st.expander("Nutzung ohne Screenreader"):
+            st.dataframe(nachschlagen.rs_spalte_als_zahl(df_scan), hide_index=True)
 
 
 # --- Regelwerk -------------------------------------------------------------
