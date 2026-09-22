@@ -259,7 +259,7 @@
     "ANRO|Fallback: MA50-R\u00fcckeroberung": "drin",
     "SDGR|Cup & Handle (Wochenbasis)": "drin",
     "CLS|Fallback: 20-Tage-Hoch (Pivot)": "drin",
-    "MRNA|Fallback: 52W-Hoch-Breakout": "drin",
+    "MRNA|Fallback: 52W-Hoch-Breakout": "draussen",
     "KLIC|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "COHU|Cup & Handle (Wochenbasis)": "drin",
     "TWST|Cup & Handle (Wochenbasis)": "drin",
@@ -517,7 +517,8 @@
     "BEST|BLLN|Fallback: MA50-R\u00fcckeroberung": "2026-09-22",
     "COHU|Cup & Handle (Wochenbasis)": "2026-09-22",
     "BEST|COHU|Cup & Handle (Wochenbasis)": "2026-09-22",
-    "UEBER|MRNA|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-22"
+    "UEBER|MRNA|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-22",
+    "UEBER|MRNA|Fallback: 52W-Hoch-Breakout": "2026-09-22"
   },
   "gapgo_warten": {
     "VICR": {
