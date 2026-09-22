@@ -138,7 +138,7 @@
     "GH|Fallback: MA50-Pullback": "draussen",
     "ILMN|Fallback: MA50-Pullback": "draussen",
     "NESR|Fallback: MA50-Pullback": "draussen",
-    "AAMI|Fallback: MA50-Pullback": "draussen",
+    "AAMI|Fallback: MA50-Pullback": "drin",
     "ALMR|Fallback: MA50-Pullback": "draussen",
     "ARGX|Fallback: MA50-Pullback": "drin",
     "AVT|Fallback: MA50-Pullback": "draussen",
@@ -504,7 +504,9 @@
     "PVLA|Rectangle Top": "2026-09-22",
     "BEST|PVLA|Rectangle Top": "2026-09-22",
     "UEBER|TWLO|Cup & Handle (Wochenbasis)": "2026-09-22",
-    "UEBER|TWLO|Fallback: 52W-Hoch-Breakout": "2026-09-22"
+    "UEBER|TWLO|Fallback: 52W-Hoch-Breakout": "2026-09-22",
+    "MRNA|Fallback: 52W-Hoch-Breakout": "2026-09-22",
+    "BEST|MRNA|Fallback: 52W-Hoch-Breakout": "2026-09-22"
   },
   "gapgo_warten": {
     "VICR": {
