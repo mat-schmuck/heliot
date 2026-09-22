@@ -486,7 +486,7 @@
   "gapgo_warten": {
     "VICR": {
       "signal": "2026-09-22",
-      "kp": 244.74,
+      "kp": 245.63,
       "stop": 229.27,
       "firma": "Vicor Corp",
       "bestaetigt": false
