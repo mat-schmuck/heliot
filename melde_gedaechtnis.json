@@ -529,7 +529,8 @@
     "UEBER|BHE|EMA Crossback": "2026-09-22",
     "NTRA|Cup & Handle (Wochenbasis)": "2026-09-22",
     "BEST|NTRA|Cup & Handle (Wochenbasis)": "2026-09-22",
-    "UEBER|BLLN|Fallback: MA50-R\u00fcckeroberung": "2026-09-22"
+    "UEBER|BLLN|Fallback: MA50-R\u00fcckeroberung": "2026-09-22",
+    "TEIL|VICR|Fallback: MA50-R\u00fcckeroberung": "2026-09-22"
   },
   "gapgo_warten": {
     "VICR": {
