@@ -222,7 +222,7 @@
     "ESTC|EMA Crossback": "drin",
     "TENB|EMA Crossback": "drin",
     "VICR|Cup & Handle (Wochenbasis)": "draussen",
-    "XMTR|Rectangle Top": "drin",
+    "XMTR|Rectangle Top": "draussen",
     "SKE|Fallback: MA50-Pullback": "draussen",
     "TSEM|Fallback: MA50-Pullback": "drin",
     "UMAC|Fallback: MA50-Pullback": "drin",
@@ -231,7 +231,7 @@
     "CGON|EMA Crossback + Rectangle Top": "drin",
     "IRDM|Rectangle Top": "drin",
     "IRDM|Fallback: MA50-Pullback": "drin",
-    "SCCO|Rectangle Top": "drin",
+    "SCCO|Rectangle Top": "draussen",
     "LBRX|Fallback: MA50-Pullback": "drin",
     "BBNX|Fallback: MA50-Pullback": "draussen",
     "PLXS|Fallback: 20-Tage-Hoch (Pivot)": "drin",
@@ -277,7 +277,8 @@
     "MEDP|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "DIOD|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "ZIM|Cup & Handle (Wochenbasis)": "drin",
-    "ZIM|Fallback: 52W-Hoch-Breakout": "drin"
+    "ZIM|Fallback: 52W-Hoch-Breakout": "drin",
+    "BAP|EMA Crossback": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -544,7 +545,8 @@
     "CDNA|Cup & Handle (Wochenbasis)": "2026-09-22",
     "BEST|CDNA|Cup & Handle (Wochenbasis)": "2026-09-22",
     "CDNA|Fallback: 52W-Hoch-Breakout": "2026-09-22",
-    "BEST|CDNA|Fallback: 52W-Hoch-Breakout": "2026-09-22"
+    "BEST|CDNA|Fallback: 52W-Hoch-Breakout": "2026-09-22",
+    "TEIL|VICR|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-22"
   },
   "gapgo_warten": {
     "VICR": {

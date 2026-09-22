@@ -8566,11 +8566,18 @@
   "aktueller_stop": 201.5,
   "stop_quelle": "struktur",
   "hoechstkurs": 223.9,
-  "teilverkauft": false,
+  "teilverkauft": true,
   "halteregel_aktiv": false,
   "beobachtung": true,
   "status": "offen",
-  "verlauf": [],
+  "verlauf": [
+   {
+    "datum": "2026-09-22",
+    "aktion": "teilverkauf",
+    "grund": "+20.8 % im Handel erreicht (M2)",
+    "kurs": 265.09
+   }
+  ],
   "klasse": "standard",
   "musterziel": null,
   "zone": "leicht",
