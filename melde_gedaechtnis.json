@@ -190,7 +190,7 @@
     "ADPT|Fallback: 52W-Hoch-Breakout": "drin",
     "ADPT|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "SLAB|Fallback: MA50-Pullback": "drin",
-    "DOCN|Fallback: 20-Tage-Hoch (Pivot)": "draussen",
+    "DOCN|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "FRNM|Fallback: 52W-Hoch-Breakout": "drin",
     "FRNM|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "AXTI|Fallback: 20-Tage-Hoch (Pivot)": "draussen",
@@ -262,7 +262,8 @@
     "MRNA|Fallback: 52W-Hoch-Breakout": "drin",
     "KLIC|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "COHU|Cup & Handle (Wochenbasis)": "drin",
-    "TWST|Cup & Handle (Wochenbasis)": "drin"
+    "TWST|Cup & Handle (Wochenbasis)": "drin",
+    "PNTG|Fallback: MA50-R\u00fcckeroberung": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -364,7 +365,6 @@
     "AXTI|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
     "BEST|AXTI|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
     "UEBER|AXTI|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
-    "UEBER|DOCN|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
     "UEBER|AMRX|Fallback: 52W-Hoch-Breakout": "2026-09-21",
     "SDGR|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
     "BEST|SDGR|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
@@ -503,8 +503,8 @@
   "gapgo_warten": {
     "VICR": {
       "signal": "2026-09-22",
-      "kp": 254.72,
-      "stop": 229.27,
+      "kp": 254.91,
+      "stop": 229.42,
       "firma": "Vicor Corp",
       "bestaetigt": false
     }
