@@ -1,7 +1,7 @@
 {
   "fenster_tag": "2026-09-23",
   "fenster": {
-    "PBF|Fallback: MA50-Pullback": "drin",
+    "PBF|Fallback: MA50-Pullback": "draussen",
     "CVE|Fallback: MA50-Pullback": "drin",
     "HNGE|Cup & Handle (Wochenbasis)": "drin",
     "HNGE|Rectangle Top": "drin",
@@ -298,7 +298,9 @@
     "PLXS|Fallback: MA50-Pullback": "drin",
     "RIOT|Fallback: MA50-Pullback": "draussen",
     "TENB|Fallback: MA50-Pullback": "drin",
-    "MU|Pocket Pivot": "drin"
+    "MU|Pocket Pivot": "drin",
+    "BLLN|Fallback: MA50-Pullback": "draussen",
+    "CDNA|Pocket Pivot": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -595,13 +597,21 @@
     "OUST|Fallback: MA50-Pullback": "2026-09-23",
     "BEST|OUST|Fallback: MA50-Pullback": "2026-09-23",
     "PLXS|Fallback: MA50-Pullback": "2026-09-23",
-    "BEST|PLXS|Fallback: MA50-Pullback": "2026-09-23"
+    "BEST|PLXS|Fallback: MA50-Pullback": "2026-09-23",
+    "MU|Pocket Pivot": "2026-09-23",
+    "BEST|MU|Pocket Pivot": "2026-09-23",
+    "GAPGOUEBER|VICR|2026-09-22": "2026-09-23",
+    "GAPGO|VICR|2026-09-23": "2026-09-23",
+    "CDNA|Pocket Pivot": "2026-09-23",
+    "BEST|CDNA|Pocket Pivot": "2026-09-23",
+    "UEBER|BLLN|Fallback: MA50-Pullback": "2026-09-23",
+    "GAPGO|OMER|2026-09-23": "2026-09-23"
   },
   "gapgo_warten": {
     "VICR": {
-      "signal": "2026-09-22",
-      "kp": 256.43,
-      "stop": 230.79,
+      "signal": "2026-09-23",
+      "kp": 268.35,
+      "stop": 262.49,
       "firma": "Vicor Corp",
       "bestaetigt": false
     }
