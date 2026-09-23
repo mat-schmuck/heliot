@@ -312,7 +312,10 @@
     "UMAC|EMA Crossback": "drin",
     "SANM|Pocket Pivot": "drin",
     "SANM|Rectangle Top": "drin",
-    "KLIC|EMA Crossback": "drin"
+    "KLIC|EMA Crossback": "drin",
+    "AVT|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "KLIC|Fallback: MA50-R\u00fcckeroberung": "drin",
+    "AVT|Fallback: 52W-Hoch-Breakout": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -629,7 +632,11 @@
     "BEST|DAVE|Cup & Handle (Wochenbasis)": "2026-09-23",
     "QMCO|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-23",
     "BEST|QMCO|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-23",
-    "TEIL|CRWD|1": "2026-09-23"
+    "TEIL|CRWD|1": "2026-09-23",
+    "AVT|Fallback: 52W-Hoch-Breakout": "2026-09-23",
+    "BEST|AVT|Fallback: 52W-Hoch-Breakout": "2026-09-23",
+    "AVT|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-23",
+    "BEST|AVT|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-23"
   },
   "gapgo_warten": {
     "VICR": {
