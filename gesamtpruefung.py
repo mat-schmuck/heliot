@@ -184,6 +184,8 @@ def block_b():
                     "chartmuster",
                     # Die sechs Alarm-Muster (Gerhard, 22.09.2026, O1 bis O10)
                     "alarm_muster",
+                    # Die Signale als JSON fuer den degirobot (23.09.2026)
+                    "bot_kanal",
                     # Katalog der EODHD-Daten (Gerhard, 20.09.2026, S11)
                     "eodhd_katalog"]
     for name in mit_schalter:
@@ -458,6 +460,66 @@ def block_d(namen_aus_c=None):
            _quelle.count("einzel_nachziehen(items, firmen, gewuenscht, abruf_ticker") == 2
            and "def einzel_frisch" in _quelle and "def einzel_kaufpunkte" in _quelle,
            str(_quelle.count("einzel_nachziehen(items, firmen, gewuenscht, abruf_ticker")))
+
+    # ---------------------------------------------------------------
+    # DER BOT-KANAL (Vertrag degirobot/KANAL.md, 23.09.2026): je Kaufpunkt
+    # und je Ausstieg eine JSON-Zeile, neben der unveraenderten Meldung
+    # ---------------------------------------------------------------
+    import bot_kanal as bk
+    from datetime import date as _date
+
+    pruefe("D", "Bot: der Waechter sendet an drei Kauf- und drei Ausstiegs-Stellen",
+           "import bot_kanal" in _quelle
+           and _quelle.count("bot_kanal.sende_kauf(") == 3
+           and _quelle.count("bot_kanal.sende_verkauf(") == 3,
+           f"{_quelle.count('bot_kanal.sende_kauf(')} Kauf, "
+           f"{_quelle.count('bot_kanal.sende_verkauf(')} Verkauf")
+    pruefe("D", "Bot: gesendet wird erst, wenn die lesbare Meldung durch ist",
+           "    ok = sende(topic, titel, absaetze,\n" in _quelle
+           and _quelle.count("    if ok:\n        # DEM BOT") == 1
+           and "if not sende(topic, titel, absaetze, prio):\n        return False\n    # DEM BOT"
+           in _quelle)
+    _soll = ('{"ticker":"PVLA","name":"Palvella Therapeutics Inc","woche":"2026-W39",'
+             '"kaufpunkt":158.01,"stop":142.21}')
+    pruefe("D", "Bot: die Kaufzeile ist Zeichen fuer Zeichen die des Vertrags",
+           bk.kauf_zeile("PVLA", "Palvella Therapeutics Inc", 158.01, 142.21,
+                         _date(2026, 9, 23)) == _soll)
+    pruefe("D", "Bot: die Verkaufszeile ebenso, mit Anteil 1",
+           bk.verkauf_zeile("PVLA", "Palvella Therapeutics Inc", 1, _date(2026, 9, 23))
+           == '{"ticker":"PVLA","name":"Palvella Therapeutics Inc","woche":"2026-W39","anteil":1}')
+    pruefe("D", "Bot: Aktienklassen gehen mit Punkt hinaus, wie der Broker sie fuehrt",
+           bk.broker_symbol("BRK-B") == "BRK.B")
+    pruefe("D", "Bot: ohne Stop kein Kaufsignal, sonst laege die Position ungesichert",
+           bk.kauf_zeile("PVLA", "P", 158.01, None, _date(2026, 9, 23)) is None)
+    pruefe("D", "Bot: nur die drei ganzen Ausstiege und der halbe Teilverkauf gelten",
+           bk.anteil_fuer("stop_raus") == 1 and bk.anteil_fuer("round_trip_raus") == 1
+           and bk.anteil_fuer("trail_raus") == 1 and bk.anteil_fuer("teilverkauf") == 0.5
+           and bk.anteil_fuer("wedge_drop") is None and bk.anteil_fuer(None) is None)
+    pruefe("D", "Bot: O10, die Alarm-Muster kommen nicht in den Kaufkanal",
+           bk.sende_kauf([{"ticker": "AAA", "firma": "A", "kaufpunkt": 10.0,
+                           "stop": 9.0, "alarm": True}], _date(2026, 9, 23),
+                         melder=lambda *_a: None) == 0)
+    pruefe("D", "Bot: ohne die zwei Geheimnisse geschieht gar nichts",
+           bk.kanal(bk.KAUF) is None and bk.kanal(bk.VERKAUF) is None
+           and bk.sende_kauf([{"ticker": "AAA", "firma": "A", "kaufpunkt": 10.0,
+                               "stop": 9.0}], melder=lambda *_a: None) == 0)
+    _yml = (WURZEL / ".github" / "workflows" / "watcher.yml").read_text(encoding="utf-8")
+    pruefe("D", "Bot: der Ablauf gibt beide Kanaele weiter",
+           "BOT_KAUFKANAL: ${{ secrets.BOT_KAUFKANAL }}" in _yml
+           and "BOT_VERKAUFSKANAL: ${{ secrets.BOT_VERKAUFSKANAL }}" in _yml)
+    import beobachtungen as _bo
+    import positionen as _po
+    _bb = {}
+    _bo.oeffnen(_bb, "RNG", "fb", "Flat Base", 80.0, 74.0, firma="RingCentral")
+    _m = _po.pruefe_bestand(_bb, {"RNG": 60.0}, 30)
+    pruefe("D", "Bot: das Kuerzel eines Ausstiegs traegt nie den Schluessel-Zusatz",
+           bool(_m) and _m[0]["kuerzel"] == "RNG" and "|" in _m[0]["symbol"]
+           and _po.melde_text(_m[0]).startswith("BEOBACHTUNG: RNG (RingCentral);"),
+           str(_m[:1])[:90])
+    _kq = (WURZEL / "bot_kanal.py").read_text(encoding="utf-8")
+    pruefe("D", "Bot: der Kanalname steht in keiner Meldung und keinem Protokoll",
+           "melder(f\"  Bot-{art}kanal nicht erreicht" in _kq
+           and "{ziel}" not in _kq and "ziel}" not in _kq)
 
 
 # ---------------------------------------------------------------------------

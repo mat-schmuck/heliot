@@ -130,6 +130,11 @@ jobs:
           # Adresse der Handels-App: haengt an jede Meldung die
           # Klick-Adresse mit den Zahlen des Alarms.
           HANDEL_URL: ${{ secrets.HANDEL_URL }}
+          # Die zwei Kanaele des degirobot (Vertrag degirobot/KANAL.md):
+          # je Kaufpunkt und je Ausstieg eine JSON-Zeile, zusaetzlich zur
+          # lesbaren Meldung. Fehlt ein Secret, geschieht dafuer nichts.
+          BOT_KAUFKANAL: ${{ secrets.BOT_KAUFKANAL }}
+          BOT_VERKAUFSKANAL: ${{ secrets.BOT_VERKAUFSKANAL }}
         run: |
           if [ ! -f kaufpunkte.xlsx ]; then
             echo "Keine kaufpunkte.xlsx gefunden — erst den Scanner laufen lassen."

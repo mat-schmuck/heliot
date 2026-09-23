@@ -182,6 +182,11 @@ def pruefe_bestand(bestand, kurse, heute_index, ma21=None, ma50=None,
                 e["ergebnis_pct"] = round((kurs / e["einstieg"] - 1) * 100, 2)
             meldungen.append({
                 "symbol": symbol, "firma": e.get("firma", ""),
+                # DAS ECHTE KUERZEL, nicht der Schluessel: Beobachtungen
+                # heissen "TICKER|Zusatz" (RNG|FB). Gefunden am 23.09.2026,
+                # als der Bot-Kanal ein Verkaufssignal fuer "RNG|FB" gebaut
+                # haette; ein solches Kuerzel gibt es an keiner Boerse.
+                "kuerzel": str(e.get("symbol") or symbol).upper(),
                 "aktion": aktion, "grund": grund, "kurs": float(kurs),
                 "beobachtung": e.get("beobachtung", False),
                 "gewinn_pct": round((kurs / e["einstieg"] - 1) * 100, 1),
@@ -196,7 +201,8 @@ def melde_text(m):
                 "round_trip_raus": "Gewinn verpufft, ganz raus",
                 "teilverkauf": "Teilverkauf fällig",
                 "trail_raus": "Nachzieh-Linie unterschritten, Rest raus"}
-    kopf = f"{m['symbol']}" + (f" ({m['firma']})" if m["firma"] else "")
+    kuerzel = m.get("kuerzel") or m["symbol"]
+    kopf = f"{kuerzel}" + (f" ({m['firma']})" if m["firma"] else "")
     vorsatz = "BEOBACHTUNG: " if m["beobachtung"] else ""
     return (f"{vorsatz}{kopf}; {wortlaut.get(m['aktion'], m['aktion'])}; "
             f"Kurs {m['kurs']:.2f}, {m['gewinn_pct']:+.1f} % seit Einstieg; "

@@ -65,6 +65,7 @@ import beobachtungen   # Kapitel 12: Trigger werden Beobachtungen
 import handelskalender  # Fragt den Datenanbieter, ob heute ueberhaupt gehandelt wird
 import alarm_muster    # Gerhards sechs Alarm-Muster (22.09.2026, O1 bis O10)
 import listen          # Wochenlisten und die einzeln eingetragenen Aktien (O11 bis O13)
+import bot_kanal       # Die Signale als JSON für den degirobot (Vertrag KANAL.md)
 import gewinnzonen_lauf  # Kapitel 12: Nachtbefunde zum Handelsstart mit heutigen Kursen nachrechnen
 import gewinn_zonen as gz  # Kapitel 12: Klimax-Katalog fuer die schlussnahen Befunde (M1, 12.09.2026)
 from config import CFG, hoechstens, mind_erreicht, pruefe_config
@@ -2340,6 +2341,11 @@ def tagesgeschaeft_wache(topic, quotes, dry_run, state=None):
                               for _, e, kurs in raus],
                              art="verkauf", anlass="exit")
         if sende(topic, titel, absaetze, "high", handel_adresse(paket)):
+            # DEM BOT: ganze Position raus (Mathias, 22.09.2026,
+            # "Ausstiege gemaess den Meldungen durchfuehren").
+            bot_kanal.sende_verkauf(
+                [{"ticker": e["symbol"], "firma": e.get("firma", ""), "anteil": 1}
+                 for _, e, _ in raus], heute_ny() or date.today())
             positionen.speichern(bestand)
             # UND SOFORT INS REPO: Ein geschlossener Exit steht nur in
             # positionen.json; ohne diese Zeile war er nach dem Lauf weg
@@ -2414,6 +2420,11 @@ def teilverkauf_wache(topic, quotes, dry_run, state, schon_gemeldet):
                                "key": k} for _, e, kurs, _, k in faellig],
                              art="verkauf", anlass="teilverkauf")
         if sende(topic, titel, absaetze, "high", handel_adresse(paket)):
+            # DEM BOT: die Haelfte raus. Der Bot kennt nur ganz oder halb;
+            # der eingestellte Anteil ist die Haelfte (CFG exit).
+            bot_kanal.sende_verkauf(
+                [{"ticker": e["symbol"], "firma": e.get("firma", ""), "anteil": 0.5}
+                 for _, e, _, _, _ in faellig], heute_ny() or date.today())
             heute_s = date.today().isoformat()
             for key, e, kurs, gewinn, k in faellig:
                 e["teilverkauft"] = True
@@ -3137,6 +3148,12 @@ def schlussnahe_befunde(topic, nacht, basis, ws, state, schon_gemeldet,
             eintraege.append({"praefix": "REGEL", "typ": "kapitel11",
                               "key": m["symbol"], "symbol": m["symbol"],
                               "zeichen": None,
+                              # Fuer den Bot: Kuerzel, Ausstieg und Firma. Das
+                              # Kuerzel NICHT aus "symbol" - das ist bei einer
+                              # Beobachtung der Schluessel "TICKER|Zusatz".
+                              "kuerzel": m.get("kuerzel") or m["symbol"],
+                              "aktion": m.get("aktion"),
+                              "firma": m.get("firma", ""),
                               "text": "REGEL: " + positionen.melde_text(m)})
     except Exception as ex:
         print(f"  Schlussnah, Exit-Regelwerk: {type(ex).__name__}: {ex}")
@@ -3262,6 +3279,15 @@ def schlussnahe_befunde(topic, nacht, basis, ws, state, schon_gemeldet,
         return True
     if not sende(topic, titel, absaetze, prio):
         return False
+    # DEM BOT die Ausstiege des Exit-Regelwerks, jeden einzeln. Wedge Drop
+    # und Zeitdeckel lassen eine Wahl, INFORMATIONEN sind keine Ausstiege;
+    # bot_kanal.anteil_fuer traegt diese Unterscheidung.
+    bot_kanal.sende_verkauf(
+        [{"ticker": x.get("kuerzel") or x["symbol"], "firma": x.get("firma", ""),
+          "anteil": bot_kanal.anteil_fuer(x.get("aktion"))}
+         for x in eintraege
+         if x["typ"] == "kapitel11"
+         and bot_kanal.anteil_fuer(x.get("aktion")) is not None], heute)
     Path(SCHLUSSNAH_DATEI).write_text(json.dumps(ablage, ensure_ascii=False, indent=1),
                                       encoding="utf-8")
     for x in eintraege:
@@ -3304,7 +3330,15 @@ def push_uebersprungen(topic: str, treffer: list[dict]) -> bool:
                 for i, t in enumerate(treffer, 1)]
     titel = (f"{len(treffer)} Kaufpunkt(e) übersprungen"
              + tagesanteil_titel(treffer))
-    return sende(topic, titel, absaetze, "default")
+    ok = sende(topic, titel, absaetze, "default")
+    if ok:
+        # AUCH DIE UEBERSPRUNGENEN (Vertrag KANAL.md, Gerhard R15, von
+        # Mathias am 23.09.2026 bestaetigt): Die Marke war gerissen. Der
+        # Bot legt sein Limit 3,5 Prozent ueber dem Kaufpunkt; liegt der
+        # Kurs schon weiter darueber, kommt die Order erst zum Zug, wenn
+        # er zurueckfaellt.
+        bot_kanal.sende_kauf(treffer, heute_ny() or date.today())
+    return ok
 
 
 def vol_satz(t: dict) -> str:
@@ -4361,9 +4395,17 @@ def push(topic: str, treffer: list[dict]) -> bool:
     titel = (f"{len(bestaetigt)} bestätigt"
              + (f", {len(rest)} offen" if rest else "")
              + tagesanteil_titel(treffer))
-    return sende(topic, titel, absaetze,
-                 "high" if bestaetigt else "default",
-                 handel_adresse(handel_paket(erster_je_aktie(bestaetigt + rest))))
+    ok = sende(topic, titel, absaetze,
+               "high" if bestaetigt else "default",
+               handel_adresse(handel_paket(erster_je_aktie(bestaetigt + rest))))
+    if ok:
+        # DEM BOT JE KAUFPUNKT EINE ZEILE (Vertrag degirobot/KANAL.md,
+        # Gerhard R15): nicht je Aktie wie bei der Handels-App, und auch
+        # die unbestaetigten - der Bot entscheidet nicht, er fuehrt aus
+        # (Mathias, 23.09.2026). Ohne die zwei Kanal-Geheimnisse in der
+        # Umgebung geschieht hier gar nichts.
+        bot_kanal.sende_kauf(treffer, heute_ny() or date.today())
+    return ok
 
 
 def testpush(topic: str) -> int:
@@ -5431,6 +5473,9 @@ def main():
                     if sende(topic, titel,
                              [format_gapgo_einstieg(g) for g in gap_ein],
                              "high", handel_adresse(paket)):
+                        # Fuer den Bot ist der EINSTIEG der Kaufpunkt.
+                        bot_kanal.sende_kauf(gap_ein, heute_ny() or date.today(),
+                                             feld="einstieg")
                         warten = state.get(GAPGO_WARTEN) or {}
                         for g in gap_ein:
                             schon_gemeldet.add(g["key"])
