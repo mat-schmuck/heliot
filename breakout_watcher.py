@@ -3317,6 +3317,27 @@ def schlussnahe_befunde(topic, nacht, basis, ws, state, schon_gemeldet,
     return True
 
 
+def r2g_bot_eintrag(t: dict) -> dict:
+    """Ein Red-to-Green-Signal so, wie der degirobot es braucht.
+
+    Diese Meldungen haben keinen Kaufpunkt aus der Mappe: Eingestiegen
+    wird beim Kurs, mit dem die Signatur zuschlaegt, und der Stop sitzt am
+    Vortagesschluss. Gerechnet wird er durch DENSELBEN Deckel wie bei der
+    Beobachtung, die der Waechter gleich danach eroeffnet (exit_regeln),
+    damit Bot und Mitschrift nie verschiedene Stops fuehren.
+
+    Mathias am 23.09.2026: "ja, red-to-green bitte senden" - der alte
+    Klickbot hat diese Meldungen am Wort im Text erkannt und gekauft; ohne
+    diesen Weg waere der Handel mit dem Bot weggefallen."""
+    kurs = t.get("kurs")
+    stop = None
+    if kurs:
+        stop, _quelle = exit_regeln.berechne_initialen_stop(
+            float(kurs), t.get("vortagesschluss"))
+    return {"ticker": t.get("ticker"), "firma": t.get("firma", ""),
+            "kaufpunkt": kurs, "stop": stop}
+
+
 def push_uebersprungen(topic: str, treffer: list[dict]) -> bool:
     """Meldet uebersprungene Kaufpunkte, getrennt von den Ausbruechen.
 
@@ -5315,6 +5336,8 @@ def main():
                              + ", ".join(t["ticker"] for t in r2g_neu))
                     if push_text(topic, titel,
                                  nummeriert([format_r2g(t) for t in r2g_neu])):
+                        bot_kanal.sende_kauf([r2g_bot_eintrag(t) for t in r2g_neu],
+                                             heute_ny() or date.today())
                         for t in r2g_neu:
                             schon_gemeldet.add(t["key"])
                             state["gemeldet"][t["key"]] = date.today().isoformat()
@@ -5396,6 +5419,8 @@ def main():
                              + ", ".join(t["ticker"] for t in r2gx_neu))
                     if push_text(topic, titel,
                                  nummeriert([format_r2g(t) for t in r2gx_neu])):
+                        bot_kanal.sende_kauf([r2g_bot_eintrag(t) for t in r2gx_neu],
+                                             heute_ny() or date.today())
                         for t in r2gx_neu:
                             schon_gemeldet.add(t["key"])
                             state["gemeldet"][t["key"]] = date.today().isoformat()

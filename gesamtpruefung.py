@@ -468,9 +468,9 @@ def block_d(namen_aus_c=None):
     import bot_kanal as bk
     from datetime import date as _date
 
-    pruefe("D", "Bot: der Waechter sendet an drei Kauf- und drei Ausstiegs-Stellen",
+    pruefe("D", "Bot: der Waechter sendet an fuenf Kauf- und drei Ausstiegs-Stellen",
            "import bot_kanal" in _quelle
-           and _quelle.count("bot_kanal.sende_kauf(") == 3
+           and _quelle.count("bot_kanal.sende_kauf(") == 5
            and _quelle.count("bot_kanal.sende_verkauf(") == 3,
            f"{_quelle.count('bot_kanal.sende_kauf(')} Kauf, "
            f"{_quelle.count('bot_kanal.sende_verkauf(')} Verkauf")
@@ -516,6 +516,14 @@ def block_d(namen_aus_c=None):
            bool(_m) and _m[0]["kuerzel"] == "RNG" and "|" in _m[0]["symbol"]
            and _po.melde_text(_m[0]).startswith("BEOBACHTUNG: RNG (RingCentral);"),
            str(_m[:1])[:90])
+    _r2g = bw.r2g_bot_eintrag({"ticker": "CAI", "firma": "Caci", "kurs": 50.0,
+                               "vortagesschluss": 48.0})
+    _r2g_weit = bw.r2g_bot_eintrag({"ticker": "CAI", "firma": "Caci", "kurs": 50.0,
+                                    "vortagesschluss": 40.0})
+    pruefe("D", "Bot: Red-to-Green mit dem Kurs als Einstieg und gedeckeltem Stop",
+           _r2g["kaufpunkt"] == 50.0 and _r2g["stop"] == 48.0
+           and _r2g_weit["stop"] == 45.0,
+           f"{_r2g['stop']} und {_r2g_weit['stop']}")
     _kq = (WURZEL / "bot_kanal.py").read_text(encoding="utf-8")
     pruefe("D", "Bot: der Kanalname steht in keiner Meldung und keinem Protokoll",
            "melder(f\"  Bot-{art}kanal nicht erreicht" in _kq
