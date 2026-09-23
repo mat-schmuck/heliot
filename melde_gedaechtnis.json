@@ -1,7 +1,7 @@
 {
   "fenster_tag": "2026-09-23",
   "fenster": {
-    "PBF|Fallback: MA50-Pullback": "draussen",
+    "PBF|Fallback: MA50-Pullback": "drin",
     "CVE|Fallback: MA50-Pullback": "drin",
     "HNGE|Cup & Handle (Wochenbasis)": "drin",
     "HNGE|Rectangle Top": "drin",
@@ -35,7 +35,7 @@
     "HAE|Fallback: MA50-Pullback": "draussen",
     "MT|Fallback: MA50-Pullback": "drin",
     "ONC|Fallback: MA50-Pullback": "draussen",
-    "PVLA|Fallback: MA50-Pullback": "draussen",
+    "PVLA|Fallback: MA50-Pullback": "drin",
     "RBRK|Fallback: MA50-Pullback": "draussen",
     "RDVT|Fallback: MA50-Pullback": "draussen",
     "RIOT|Rectangle Top": "drin",
@@ -99,7 +99,7 @@
     "XMTR|Fallback: MA50-Pullback": "draussen",
     "PBF|Rectangle Top": "drin",
     "BHE|EMA Crossback": "draussen",
-    "DAVE|Cup & Handle (Wochenbasis)": "draussen",
+    "DAVE|Cup & Handle (Wochenbasis)": "drin",
     "ZIM|Fallback: MA50-Pullback": "draussen",
     "AMD|Fallback: 52W-Hoch-Breakout": "drin",
     "CDNA|Fallback: MA50-Pullback": "draussen",
@@ -133,7 +133,7 @@
     "RVTY|Fallback: MA50-Pullback": "draussen",
     "SHIP|Fallback: MA50-Pullback": "drin",
     "ADPT|Fallback: MA50-Pullback": "draussen",
-    "CGEM|Fallback: MA50-Pullback": "draussen",
+    "CGEM|Fallback: MA50-Pullback": "drin",
     "CLMT|Fallback: MA50-Pullback": "draussen",
     "GH|Fallback: MA50-Pullback": "draussen",
     "ILMN|Fallback: MA50-Pullback": "draussen",
@@ -170,7 +170,7 @@
     "LB|Cup & Handle (Wochenbasis)": "draussen",
     "LB|Fallback: MA50-Pullback": "draussen",
     "NUTX|Fallback: MA50-Pullback": "draussen",
-    "FTH|Fallback: MA50-Pullback": "drin",
+    "FTH|Fallback: MA50-Pullback": "draussen",
     "FTK|Fallback: MA50-Pullback": "draussen",
     "ESTC|Fallback: MA50-Pullback": "draussen",
     "RNG|HTF Innen-Einstieg": "draussen",
@@ -308,7 +308,9 @@
     "VSAT|Fallback: MA50-R\u00fcckeroberung": "drin",
     "FORM|Cup & Handle (Wochenbasis)": "drin",
     "LB|Inside Day": "drin",
-    "FTNT|EMA Crossback": "drin"
+    "FTNT|EMA Crossback": "drin",
+    "UMAC|EMA Crossback": "drin",
+    "SANM|Pocket Pivot": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
