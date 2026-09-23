@@ -320,7 +320,9 @@
     "FIX|EMA Crossback": "drin",
     "QMCO|Fallback: 52W-Hoch-Breakout": "drin",
     "NTRA|Pocket Pivot": "drin",
-    "ACMR|Fallback: MA50-R\u00fcckeroberung": "drin"
+    "ACMR|Fallback: MA50-R\u00fcckeroberung": "drin",
+    "S|Cup & Handle (Wochenbasis)": "drin",
+    "S|Fallback: 52W-Hoch-Breakout": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -647,7 +649,8 @@
     "ACMR|Fallback: MA50-R\u00fcckeroberung": "2026-09-23",
     "BEST|ACMR|Fallback: MA50-R\u00fcckeroberung": "2026-09-23",
     "KEYS|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-23",
-    "BEST|KEYS|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-23"
+    "BEST|KEYS|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-23",
+    "TEIL|VICR|Cup & Handle (Wochenbasis)": "2026-09-23"
   },
   "gapgo_warten": {
     "VICR": {
