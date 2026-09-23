@@ -112,7 +112,7 @@ BETRIEB = ["config", "volumen", "kurs_cache", "pattern_scanner",
            "red_to_green_explosive", "zahlen_termine", "sektor_radar",
            "insider_scanner", "insider_edgar", "listen",
            "scan_noetig", "waechter_noetig", "wartung", "ntfy_verlauf",
-           "yahoo_ws", "staffelung", "traderfox_alarm_bot"]
+           "yahoo_ws", "staffelung", "traderfox_alarm_bot", "einstellungen"]
 
 
 def block_a():
@@ -3508,6 +3508,263 @@ def scanner_bedienung_pruefen(pfad) -> tuple:
     return True, "geprueft an der Funktion scanner_reiter"
 
 
+# ---------------------------------------------------------------------------
+# I — OBERFLAECHE UND KOHAERENZ, der Pruefstand (Mathias und Gerhard, 23.09.2026)
+# ---------------------------------------------------------------------------
+# Der Auftrag: "Baue einen Pruefstand ein, damit egal was dazukommt
+# (Scankriterien, Strategien etc.) automatisch und immer dem von uns dir
+# spaeter vorgelegten Design und Kohaerenzkriterien entspricht." Geprueft wird,
+# was schon feststeht: Jede Strategie ist in den Einstellungen abwaehlbar, jedes
+# Kriterium im Scanner hat seinen Erklaerungsknopf, die Marktampel steht fuer
+# alle ganz oben, jede Erfolgsmeldung hat ihren Ton, und die Texte halten die
+# Schreibregeln (kein Gedankenstrich, kein senkrechter Strich, keine Emojis).
+# Die spaeter vorgelegten Kriterien kommen in KOHAERENZ_KRITERIEN dazu, je eines
+# als Name und Pruefung, die (bestanden, Befund) liefert.
+KOHAERENZ_KRITERIEN = []
+
+_EMOJI = None
+
+
+def _schreibregel_verstoesse(texte) -> list:
+    """Texte mit Gedankenstrich, senkrechtem Strich oder Emoji, gekuerzt."""
+    import re as _re
+    global _EMOJI
+    if _EMOJI is None:
+        _EMOJI = _re.compile("[\U0001F300-\U0001FAFF\U00002600-\U000027BF\U0001F000-\U0001F2FF"
+                             "\u2B00-\u2BFF\uFE0F]")
+    raus = []
+    for s in texte:
+        s = str(s or "")
+        if "\u2013" in s or "\u2014" in s or "|" in s or _EMOJI.search(s):
+            raus.append(s[:60])
+    return raus
+
+
+def erzeugbare_strategien() -> set:
+    """Alle Strategienamen, die im System entstehen koennen: Muster des
+    Nachtscans, Ausweichmarken, Alarm-Muster und die eigenen Wege des Waechters."""
+    import re as _re
+    import alarm_muster
+    import pattern_scanner as ps
+    namen = set(ps.PRIORITY) | set(alarm_muster.NAMEN.values())
+    namen |= {"Lücken-Bestätigungstag", "Gap and Go", "Red-to-Green", "Red-to-Green Explosive",
+              "Shakeout-Spring", "Crash-Support", "Insider-Kauf"}
+    quelle = (WURZEL / "pattern_scanner.py").read_text(encoding="utf-8")
+    namen |= set(_re.findall(r'"strategie": "(Fallback: [^"]+)"', quelle))
+    return namen
+
+
+def erklaerungsknoepfe_pruefen(pfad) -> tuple:
+    """Im Scanner steht unter JEDEM Kriterium ein Erklaerungsknopf (Mathias und
+    Gerhard, 23.09.2026). Geprueft am Quelltext von scanner_reiter, von Teil 1
+    bis zum Scan: Auf jedes Kontrollfeld, jede Auswahl und jede Auswahlliste folgt
+    unmittelbar ein Aufruf von _sc_erklaerung. Ausgenommen sind nur die
+    Kontrollfelder, die eine Gruppe aufklappen (Beschriftung beginnt mit
+    "Gruppe "). Liefert (ok, Befund)."""
+    import ast as _ast
+    baum = _ast.parse(open(pfad, encoding="utf-8").read())
+    reiter = next((k for k in baum.body if isinstance(k, _ast.FunctionDef) and k.name == "scanner_reiter"), None)
+    if reiter is None:
+        return False, "Funktion scanner_reiter fehlt"
+    start = ende = None
+    for i, s in enumerate(reiter.body):
+        q = _ast.unparse(s)
+        if start is None and "Teil 1:" in q and "st.markdown" in q:
+            start = i
+        if start is not None and ende is None and q.startswith("vergleich = sa.wirksame_einstellung"):
+            ende = i
+    if start is None or ende is None:
+        return False, "Teil 1 oder der Scan-Teil in scanner_reiter nicht gefunden"
+    widgets = {"checkbox", "radio", "selectbox", "multiselect", "toggle", "slider", "number_input", "select_slider"}
+
+    def widget_call(stmt):
+        for n in _ast.walk(stmt):
+            if (isinstance(n, _ast.Call) and isinstance(n.func, _ast.Attribute)
+                    and isinstance(n.func.value, _ast.Name) and n.func.value.id == "st" and n.func.attr in widgets):
+                return n
+        return None
+
+    def ist_gruppe(call):
+        a = call.args[0] if call.args else None
+        if isinstance(a, _ast.Constant) and isinstance(a.value, str):
+            return a.value.startswith("Gruppe ")
+        if isinstance(a, _ast.JoinedStr) and a.values and isinstance(a.values[0], _ast.Constant):
+            return str(a.values[0].value).startswith("Gruppe ")
+        if isinstance(a, _ast.BinOp):
+            return ist_gruppe(_ast.Call(func=call.func, args=[a.left], keywords=[]))
+        return False
+
+    def ist_erklaerung(stmt):
+        return (isinstance(stmt, _ast.Expr) and isinstance(stmt.value, _ast.Call)
+                and getattr(stmt.value.func, "id", "") == "_sc_erklaerung")
+
+    fehlend, gezaehlt = [], [0]
+
+    def body_pruefen(koerper):
+        for i, s in enumerate(koerper):
+            if isinstance(s, (_ast.If, _ast.For, _ast.With, _ast.While)):
+                if isinstance(s, _ast.If):
+                    c = widget_call(s.test)
+                    if c is not None and not ist_gruppe(c):
+                        fehlend.append(f"Zeile {s.lineno}")
+                for teil in ("body", "orelse"):
+                    body_pruefen(getattr(s, teil, []) or [])
+                continue
+            c = widget_call(s)
+            if c is None or ist_gruppe(c):
+                continue
+            gezaehlt[0] += 1
+            if not (i + 1 < len(koerper) and ist_erklaerung(koerper[i + 1])):
+                fehlend.append(f"Zeile {s.lineno}")
+
+    body_pruefen(reiter.body[start:ende])
+    if fehlend:
+        return False, "ohne Erklaerungsknopf: " + ", ".join(fehlend[:8])
+    return True, f"{gezaehlt[0]} Kriterien im Quelltext, jedes mit Knopf"
+
+
+def ampel_oben_pruefen(pfad) -> tuple:
+    """Die Marktampel steht ganz oben, fuer alle Rollen: Der Platz entsteht vor
+    der Anmeldung, gefuellt wird er direkt danach auf oberster Ebene, also fuer
+    volle, offene und Gast-Sitzungen gleich."""
+    import ast as _ast
+    baum = _ast.parse(open(pfad, encoding="utf-8").read())
+    platz = anmeldung = fuellen = None
+    for i, k in enumerate(baum.body):
+        q = _ast.unparse(k)
+        if platz is None and q.startswith("_ampel_platz = st.empty()"):
+            platz = i
+        if anmeldung is None and q.startswith("rolle = anmeldung()"):
+            anmeldung = i
+        if (fuellen is None and isinstance(k, _ast.With) and "_ampel_platz.container()" in _ast.unparse(k.items[0].context_expr)
+                and "_ampel_zeigen()" in q):
+            fuellen = i
+    if None in (platz, anmeldung, fuellen):
+        return False, f"Platz {platz}, Anmeldung {anmeldung}, Fuellen {fuellen}"
+    if not platz < anmeldung < fuellen or fuellen != anmeldung + 1:
+        return False, "falsche Reihenfolge: Platz, Anmeldung, gleich danach die Ampel"
+    davor = [_ast.unparse(k) for k in baum.body[:platz]]
+    if not any(s.startswith("st.title(") for s in davor):
+        return False, "die Ampel steht vor dem Titel"
+    return True, "Platz vor der Anmeldung, gefuellt gleich danach fuer alle Rollen"
+
+
+def einstellungen_reiter_pruefen(pfad) -> tuple:
+    """Der Reiter Einstellungen: nur fuer vollen und offenen Zugang, hinter der
+    Gast-Schranke; gespeichert wird nur im vollen Zugang."""
+    import ast as _ast
+    quelle = open(pfad, encoding="utf-8").read()
+    baum = _ast.parse(quelle)
+    maengel = []
+    schranke = reiter = None
+    for i, k in enumerate(baum.body):
+        q = _ast.unparse(k)
+        if isinstance(k, _ast.If) and q.startswith("if tab_liste is None:") and "st.stop()" in q:
+            schranke = i
+        if isinstance(k, _ast.If) and q.startswith("if tab_einst is not None:"):
+            reiter = i
+    if schranke is None or reiter is None or reiter < schranke:
+        maengel.append("der Reiter steht nicht hinter der Gast-Schranke")
+    funktionen = {k.name: _ast.unparse(k) for k in baum.body if isinstance(k, _ast.FunctionDef)}
+    sp = funktionen.get("_einst_speichern", "")
+    if not sp or "rolle != 'voll'" not in sp or sp.find("rolle != 'voll'") > sp.find("requests.put"):
+        maengel.append("_einst_speichern prueft den vollen Zugang nicht vor dem Schreiben")
+    la = funktionen.get("_einst_laden", "")
+    if not la or la.find("if rolle == 'voll':") < 0 or la.find("_einst_api()") < la.find("if rolle == 'voll':"):
+        maengel.append("_einst_laden liest die GitHub-Schnittstelle nicht nur im vollen Zugang")
+    if "tab_upload = tab_gast = tab_ablaeufe = tab_einst = None" not in quelle:
+        maengel.append("tab_einst ist fuer Gaeste nicht None")
+    if maengel:
+        return False, "; ".join(maengel)
+    return True, "hinter der Gast-Schranke, Schreiben nur im vollen Zugang"
+
+
+def block_i():
+    ueberschrift("I — OBERFLAECHE UND KOHAERENZ: der Pruefstand")
+    import ast as _ast
+    import re as _re
+    import einstellungen
+    import oberflaeche
+    import scanner_ansicht as sa
+
+    app = WURZEL / "streamlit_app.py"
+    fehlend = sorted(n for n in erzeugbare_strategien() if einstellungen.schluessel_fuer(n) is None)
+    pruefe("I", "Jede Strategie, die entstehen kann, ist in den Einstellungen abwaehlbar",
+           not fehlend, nennen(fehlend))
+    waechter = (WURZEL / "breakout_watcher.py").read_text(encoding="utf-8")
+    direkt = set(_re.findall(r'alarm_an\("([a-z0-9_]+)"\)', waechter))
+    bekannt = {a["schluessel"] for a in einstellungen.ALARME}
+    pruefe("I", "Jeder Schalter, den der Waechter fragt, steht im Register",
+           direkt <= bekannt, nennen(sorted(direkt - bekannt)))
+    tot = [a["name"] for a in einstellungen.ALARME
+           if not (a.get("namen") or a.get("anfaenge")) and a["schluessel"] not in direkt]
+    pruefe("I", "Jeder Eintrag im Register wirkt im Waechter", not tot, nennen(tot))
+    gruppen = {g for g, _n in einstellungen.GRUPPEN}
+    leer = [a["schluessel"] for a in einstellungen.ALARME
+            if a.get("gruppe") not in gruppen or not a.get("name") or not a.get("erklaerung")]
+    doppelt = len(bekannt) != len(einstellungen.ALARME)
+    pruefe("I", "Jeder Eintrag hat Gruppe, Namen und Erklaerung, jeder Schluessel einmal",
+           not leer and not doppelt, nennen(leer) + (" doppelte Schluessel" if doppelt else ""))
+    pruefe("I", "Der Waechter prueft nur eingeschaltete Muster und liest die Einstellungen in jedem Datentakt",
+           "for item in wirksame_items(items):" in waechter and waechter.count("einstellungen_nachziehen()") >= 3)
+
+    ok, zusatz = erklaerungsknoepfe_pruefen(app)
+    pruefe("I", "Unter jedem Kriterium im Scanner steht ein Erklaerungsknopf", ok, zusatz)
+    ohne = [f.schluessel for f in sa.FELDER if not str(f.erklaerung or "").strip()]
+    pruefe("I", "Jedes Merkmal des Scanners hat eine Erklaerung", not ohne, nennen(ohne))
+    ohne = [s for s in list(sa.SEKTOREN) + [""] if s not in oberflaeche.SEKTOR_ERKLAERUNGEN]
+    pruefe("I", "Jeder Sektor hat eine Erklaerung", not ohne, nennen(ohne))
+    ohne = [k for k, *_r in sa.TERMIN_TEILE if f"termine_{k}" not in oberflaeche.SCANNER_ERKLAERUNGEN]
+    pruefe("I", "Jeder Zahlentermin hat eine Erklaerung", not ohne, nennen(ohne))
+
+    ok, zusatz = ampel_oben_pruefen(app)
+    pruefe("I", "Die Marktampel steht fuer alle ganz oben", ok, zusatz)
+    ok, zusatz = einstellungen_reiter_pruefen(app)
+    pruefe("I", "Reiter Einstellungen abgeschottet", ok, zusatz)
+    quelle = app.read_text(encoding="utf-8")
+    pruefe("I", "Jede Erfolgsmeldung spielt ihren Ton (st.success nur in erfolg)",
+           quelle.count("st.success(") == 1 and "def erfolg(" in quelle)
+    toene = [k for k, _n, _b in einstellungen.KLAENGE if k != "aus" and f"      {k}: function" not in oberflaeche.KLANG_JS]
+    pruefe("I", "Jeder waehlbare Ton hat einen Klang im Browser", not toene, nennen(toene))
+    pruefe("I", "Das Zukunftsdesign: kein Kleiner-Zeichen, kein erzeugter Text, Stillstand auf Wunsch",
+           "<" not in oberflaeche.DESIGN_ZUKUNFT and "<" not in oberflaeche.AMPEL_CSS
+           and all(x.startswith('""') for x in oberflaeche.DESIGN_ZUKUNFT.split("content:")[1:])
+           and "prefers-reduced-motion" in oberflaeche.DESIGN_ZUKUNFT)
+
+    # Die Schreibregeln fuer alles, was die Oberflaeche zeigt.
+    texte = [a["name"] for a in einstellungen.ALARME] + [a["erklaerung"] for a in einstellungen.ALARME]
+    texte += [einstellungen.NIE_ABWAEHLBAR] + [n for _k, n in einstellungen.DESIGNS]
+    texte += [x for _k, n, b in einstellungen.KLAENGE for x in (n, b)]
+    texte += list(oberflaeche.SCANNER_ERKLAERUNGEN.values()) + list(oberflaeche.SEKTOR_ERKLAERUNGEN.values())
+    texte += [x for f in sa.FELDER for x in (f.titel, f.erklaerung)]
+    anzeige = {"markdown", "caption", "write", "info", "warning", "error", "success", "button", "checkbox", "radio",
+               "selectbox", "text_input", "title", "header", "subheader", "download_button", "file_uploader", "toggle",
+               "multiselect", "number_input", "text_area", "tabs", "progress", "form_submit_button", "expander"}
+    for n in _ast.walk(_ast.parse(quelle)):
+        if not isinstance(n, _ast.Call):
+            continue
+        f = n.func
+        if not ((isinstance(f, _ast.Attribute) and isinstance(f.value, _ast.Name) and f.value.id == "st"
+                 and f.attr in anzeige) or (isinstance(f, _ast.Name) and f.id in ("erfolg", "_sc_erklaerung"))):
+            continue
+        for a in list(n.args) + [k.value for k in n.keywords if k.arg in ("label", "help", "placeholder",
+                                                                          "beschriftung")]:
+            texte += [k.value for k in _ast.walk(a) if isinstance(k, _ast.Constant) and isinstance(k.value, str)]
+    verstoesse = _schreibregel_verstoesse(texte)
+    pruefe("I", "Texte der Oberflaeche ohne Gedankenstrich, senkrechten Strich und Emoji",
+           not verstoesse, nennen(verstoesse))
+
+    # Die spaeter vorgelegten Design- und Kohaerenzkriterien
+    if not KOHAERENZ_KRITERIEN:
+        print("  (Die spaeter vorgelegten Design- und Kohaerenzkriterien kommen in KOHAERENZ_KRITERIEN.)")
+    for name, pruefung in KOHAERENZ_KRITERIEN:
+        try:
+            ok, zusatz = pruefung()
+        except Exception as e:  # noqa
+            ok, zusatz = False, f"{type(e).__name__}: {e}"
+        pruefe("I", name, ok, zusatz)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Das ganze Regelwerk pruefen.")
     ap.add_argument("--ohne-netz", action="store_true",
@@ -3525,6 +3782,7 @@ def main() -> int:
     block_f()
     block_g()
     block_h()
+    block_i()
 
     ueberschrift("ZUSAMMENFASSUNG")
     fehler = [(b, n, z) for b, n, ok, z in ERGEBNISSE if not ok]
