@@ -11694,5 +11694,32 @@
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
   "wedge_drop_gemeldet": false
+ },
+ "DAVE|Cup & Handle (Wochenbasis)": {
+  "symbol": "DAVE",
+  "firma": "Dave Inc",
+  "strategie": "Cup & Handle (Wochenbasis)",
+  "einstieg": 318.67,
+  "einstieg_datum": "2026-09-23",
+  "einstieg_index": 0,
+  "struktur_stop": 286.81,
+  "aktueller_stop": 286.81,
+  "stop_quelle": "struktur",
+  "hoechstkurs": 318.67,
+  "teilverkauft": false,
+  "halteregel_aktiv": false,
+  "beobachtung": true,
+  "status": "offen",
+  "verlauf": [],
+  "klasse": "standard",
+  "musterziel": 411.96,
+  "zone": null,
+  "zone_gemeldet": null,
+  "ziel_gemeldet": false,
+  "klimax_gemeldet": [],
+  "weinstein_gemeldet": false,
+  "zahlen_hinweis_gemeldet": false,
+  "sektor_hinweis_gemeldet": false,
+  "wedge_drop_gemeldet": false
  }
 }
