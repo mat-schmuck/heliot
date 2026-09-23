@@ -300,7 +300,8 @@
     "TENB|Fallback: MA50-Pullback": "drin",
     "MU|Pocket Pivot": "drin",
     "BLLN|Fallback: MA50-Pullback": "draussen",
-    "CDNA|Pocket Pivot": "drin"
+    "CDNA|Pocket Pivot": "drin",
+    "AMRX|Inside Day": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -605,7 +606,10 @@
     "CDNA|Pocket Pivot": "2026-09-23",
     "BEST|CDNA|Pocket Pivot": "2026-09-23",
     "UEBER|BLLN|Fallback: MA50-Pullback": "2026-09-23",
-    "GAPGO|OMER|2026-09-23": "2026-09-23"
+    "GAPGO|OMER|2026-09-23": "2026-09-23",
+    "SEKTORAUF|2026-09-23": "2026-09-23",
+    "AMRX|Inside Day": "2026-09-23",
+    "BEST|AMRX|Inside Day": "2026-09-23"
   },
   "gapgo_warten": {
     "VICR": {
@@ -613,6 +617,13 @@
       "kp": 268.35,
       "stop": 262.49,
       "firma": "Vicor Corp",
+      "bestaetigt": false
+    },
+    "OMER": {
+      "signal": "2026-09-23",
+      "kp": 21.06,
+      "stop": 20.62,
+      "firma": "Omeros Corp",
       "bestaetigt": false
     }
   },
