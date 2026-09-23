@@ -1,5 +1,5 @@
 {
- "gebaut_am": "2026-09-23 00:10 Wien",
+ "gebaut_am": "2026-09-24 00:15 Wien",
  "ohne_termin": [
   "ASND",
   "FRNM",
@@ -417,7 +417,7 @@
    ]
   },
   "DINO": {
-   "datum": "2026-10-29",
+   "datum": "2026-10-28",
    "uhrzeit": "08:00",
    "lage": "vorboerslich",
    "quellen": [
@@ -849,7 +849,7 @@
    ]
   },
   "MEDP": {
-   "datum": "2026-10-19",
+   "datum": "2026-10-21",
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
@@ -1102,7 +1102,8 @@
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "PGY": {
