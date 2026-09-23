@@ -49,7 +49,7 @@
     "CRWD|Fallback: MA50-Pullback": "draussen",
     "DELL|Fallback: MA50-Pullback": "draussen",
     "DINO|Fallback: MA50-Pullback": "draussen",
-    "DK|Fallback: MA50-Pullback": "drin",
+    "DK|Fallback: MA50-Pullback": "draussen",
     "PSNL|Fallback: MA50-Pullback": "draussen",
     "PSX|Fallback: MA50-Pullback": "draussen",
     "SMTC|Fallback: 52W-Hoch-Breakout": "drin",
@@ -76,7 +76,7 @@
     "HP|Fallback: MA50-Pullback": "drin",
     "IMOS|Fallback: 20-Tage-Hoch (Pivot)": "draussen",
     "IMOS|Fallback: MA50-Pullback": "draussen",
-    "INSW|Fallback: MA50-Pullback": "drin",
+    "INSW|Fallback: MA50-Pullback": "draussen",
     "MDB|Fallback: MA50-Pullback": "draussen",
     "MSTR|Fallback: 20-Tage-Hoch (Pivot)": "draussen",
     "MSTR|Fallback: MA50-Pullback": "draussen",
@@ -202,7 +202,7 @@
     "TXG|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "CGON|Rectangle Top": "drin",
     "AXGN|Fallback: MA50-R\u00fcckeroberung": "drin",
-    "QMCO|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "QMCO|Fallback: 20-Tage-Hoch (Pivot)": "draussen",
     "BBNX|EMA Crossback": "drin",
     "ZIM|Cup & Handle (Wochenbasis) + Darvas Box": "drin",
     "SDGR|Fallback: 20-Tage-Hoch (Pivot)": "drin",
@@ -322,7 +322,8 @@
     "NTRA|Pocket Pivot": "drin",
     "ACMR|Fallback: MA50-R\u00fcckeroberung": "drin",
     "S|Cup & Handle (Wochenbasis)": "drin",
-    "S|Fallback: 52W-Hoch-Breakout": "drin"
+    "S|Fallback: 52W-Hoch-Breakout": "drin",
+    "SCSC|Rectangle Top": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -650,7 +651,8 @@
     "BEST|ACMR|Fallback: MA50-R\u00fcckeroberung": "2026-09-23",
     "KEYS|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-23",
     "BEST|KEYS|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-23",
-    "TEIL|VICR|Cup & Handle (Wochenbasis)": "2026-09-23"
+    "TEIL|VICR|Cup & Handle (Wochenbasis)": "2026-09-23",
+    "UEBER|QMCO|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-23"
   },
   "gapgo_warten": {
     "VICR": {
