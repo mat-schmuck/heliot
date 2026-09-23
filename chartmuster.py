@@ -54,12 +54,18 @@ O15, "erst nach bestaetigtem Monatsschluss anzeigen, keine Zwischenstufe". Ein
 Tagesschluss ueber der Linie wird also NICHT gezeigt, auch nicht mit dem
 Vermerk, dass der Monatsschluss noch aussteht.
 
-NOCH NICHT GEBAUT: V Episodic Pivot. O16, eine grosse Luecke nach einer toten
-Phase, zu der sich keine Nachricht finden laesst, wird GETRENNT vom Episodic
-Pivot angezeigt, mit dem Vermerk "Luecke ohne erkannten Ausloeser". Seine
-Zahlen stehen seit dem 23.09.2026 fest: tote Phase mindestens zwei Monate,
-mindestens 15 Prozent unter dem Zweihundert-Tage-Hoch, Volumen mindestens das
-Dreifache des Fuenfzig-Tage-Schnitts ueber die F(t)-Kurve.
+V EPISODIC PIVOT, seit 23.09.2026 mit Gerhards Zahlen vom selben Tag: tote
+Phase mindestens zwei Monate, mindestens 15 Prozent unter dem
+Zweihundert-Tage-Hoch, Volumen mindestens das Dreifache des
+Fuenfzig-Tage-Schnitts ueber die F(t)-Kurve. Der Ausloeser sind Zahlen am
+Lueckentag oder am Handelstag davor laut Nasdaq-Kalender; eine Luecke ohne
+erkannten Ausloeser steht nach O16 GETRENNT da, mit dem Vermerk "Luecke ohne
+erkannten Ausloeser" (cm_vl). Zulassung, Auftrag und Uebernahme erkennt der
+Scanner nicht, dafuer fehlt eine Nachrichtenquelle; solche Luecken stehen
+deshalb ebenfalls als Luecke ohne erkannten Ausloeser da. Den
+Eroeffnungsbereich (das Hoch der ersten fuenf Minuten) holt die Nachttabelle
+aus Fuenf-Minuten-Kursen und setzt Einstieg und Stop danach
+(episodic_einstieg).
 
 UNSERE FESTLEGUNGEN: Gerhard: "jede Zahl, die nicht aus der Quelle stammt,
 sondern von uns gesetzt wurde ... wird im Code und in der Ausgabe als unsere
@@ -116,6 +122,13 @@ QUELLE = {
     "k_gewinn_min": 0.20,         # K: unter 20 Prozent Gewinn zwischen zwei Basen zaehlen beide als eine Stufe
     # Q (Papier vom 20.09.2026)
     "q_tage_ohne_hoch": 63,       # Q: seit dem Allzeithoch mindestens 63 Handelstage ohne neues Hoch
+    # V (Papier vom 20.09.2026, Zahlen vom 23.09.2026, Frage 4)
+    "v_luecke": 0.10,             # V: Open[t] durch Close[t-1] minus 1 ueber zehn Prozent
+    "v_tote_tage": 42,            # V: tote Phase mindestens zwei Monate, gerechnet wie bei Q (drei Monate sind 63)
+    "v_hoch_tage": 200,           # V: das Zweihundert-Tage-Hoch
+    "v_abstand_200": 0.15,        # V: mindestens 15 Prozent darunter
+    "v_vol_faktor": 3.0,          # V: Volumen mindestens das Dreifache ...
+    "v_vol_tage": 50,             # V: ... des Fuenfzig-Tage-Schnitts
 }
 
 # UNSERE FESTLEGUNGEN (die Quelle nennt dazu keine Zahl)
@@ -220,6 +233,14 @@ FESTLEGUNGEN = {
     # dem Durchschnitt", wie beim strengeren Ausbruchsvolumen der VCP.
     "q_vol_tage": 50,
     "q_vol_faktor": 1.4,
+    # V: "flach oder fallend" heisst: Der Schluss vor der Luecke liegt
+    # hoechstens 5 Prozent ueber dem Schluss zwei Monate davor.
+    "v_tot_anstieg_max": 0.05,
+    # V: gezeigt wird die juengste Luecke der letzten zehn Handelstage, der
+    # Lueckentag eingeschlossen.
+    "v_tage_max": 10,
+    # V: der Eroeffnungsbereich ist das Hoch der ersten fuenf Minuten.
+    "v_eroeffnung_minuten": 5,
 }
 
 SPALTEN = (
@@ -240,9 +261,11 @@ SPALTEN = (
     "cm_q_ausbruch_tag", "cm_q_kp", "cm_q_stop",
     "cm_m", "cm_m_stufe", "cm_m_status", "cm_m_wochen", "cm_m_tiefe_pct", "cm_m_seit", "cm_m_hoch",
     "cm_m_ausbruch", "cm_m_bob", "cm_m_gewinn_pct", "cm_m_neu_grund", "cm_m_neu_tag",
+    "cm_v", "cm_vl", "cm_v_tag", "cm_v_ausloeser", "cm_v_luecke_pct", "cm_v_vol_faktor", "cm_v_abstand_pct",
+    "cm_v_tot_pct", "cm_v_tief", "cm_v_kante", "cm_v_kp", "cm_v_stop",
 )
 
-MERKER = ("cm_b", "cm_a", "cm_d", "cm_g", "cm_s", "cm_t", "cm_n", "cm_l", "cm_k", "cm_q", "cm_m")
+MERKER = ("cm_b", "cm_a", "cm_d", "cm_g", "cm_s", "cm_t", "cm_n", "cm_l", "cm_k", "cm_q", "cm_m", "cm_v", "cm_vl")
 
 
 def leer():
@@ -926,7 +949,81 @@ def green_line(x):
             "cm_q_kp": _r(linie), "cm_q_stop": _r(_deckel(linie, stop_roh))}
 
 
-def werte(d, voll=None, markttiefs=None):
+# ---------------------------------------------------------------------------
+# V  Episodic Pivot (Gerhard, 20.09.2026, Zahlen vom 23.09.2026)
+# ---------------------------------------------------------------------------
+
+def episodic_pivot(x, termine):
+    """Eine grosse Eroeffnungsluecke nach einer toten Phase: Open[t] durch
+    Close[t-1] minus 1 ueber zehn Prozent; davor mindestens zwei Monate flach
+    oder fallend (was flach heisst, ist unsere Festlegung) und mindestens 15
+    Prozent unter dem Zweihundert-Tage-Hoch; Volumen mindestens das Dreifache
+    des Fuenfzig-Tage-Schnitts (in der Nacht ist F(t) eins). Gesucht wird die
+    juengste solche Luecke der letzten zehn Handelstage (unsere Festlegung).
+
+    termine: die Tage, an denen die Firma Zahlen gebracht hat (Nasdaq-Kalender
+    der vergangenen Tage). Zahlen am Lueckentag oder am Handelstag davor sind
+    der Ausloeser; der Kalender nennt fuer vergangene Tage keine Uhrzeit,
+    deshalb zaehlen vor Eroeffnung und nach Schluss gleich. Ohne erkannten
+    Ausloeser steht die Luecke GETRENNT da (O16: "Luecke ohne erkannten
+    Ausloeser"): cm_vl statt cm_v.
+
+    Einstieg und Stop kommen spaeter dazu (episodic_einstieg), weil der
+    Eroeffnungsbereich Fuenf-Minuten-Kurse braucht; hier stehen das Tief des
+    Lueckentags und die Lueckenunterkante (der Schluss davor)."""
+    q, f = QUELLE, FESTLEGUNGEN
+    n = len(x)
+    bedarf = max(q["v_hoch_tage"], q["v_tote_tage"] + 1, q["v_vol_tage"]) + 1
+    if n < bedarf + 1:
+        return {}
+    o, h, lo = x["open"].to_numpy(dtype=float), x["high"].to_numpy(dtype=float), x["low"].to_numpy(dtype=float)
+    c, v = x["close"].to_numpy(dtype=float), x["volume"].to_numpy(dtype=float)
+    tage = pd.to_datetime(x["datetime"]).reset_index(drop=True)
+    for t in range(n - 1, max(n - 1 - f["v_tage_max"], bedarf - 1), -1):
+        c1 = c[t - 1]
+        if not (c1 > 0 and o[t] / c1 - 1.0 > q["v_luecke"]):
+            continue
+        schnitt = float(np.nanmean(v[t - q["v_vol_tage"]:t]))
+        if not (schnitt > 0 and np.isfinite(v[t]) and v[t] >= q["v_vol_faktor"] * schnitt):
+            continue
+        hoch200 = float(np.nanmax(h[t - q["v_hoch_tage"]:t]))
+        if not c1 <= hoch200 * (1.0 - q["v_abstand_200"]):
+            continue
+        vorher = c[t - 1 - q["v_tote_tage"]]
+        if not (vorher > 0 and c1 <= vorher * (1.0 + f["v_tot_anstieg_max"])):
+            continue
+        tag = tage.iloc[t].strftime("%Y-%m-%d")
+        vortag = tage.iloc[t - 1].strftime("%Y-%m-%d")
+        zahlen = bool(termine) and (tag in termine or vortag in termine)
+        return {"cm_v" if zahlen else "cm_vl": 1, "cm_v_tag": tag,
+                "cm_v_ausloeser": "zahlen" if zahlen else None,
+                "cm_v_luecke_pct": _r((o[t] / c1 - 1.0) * 100.0, 1), "cm_v_vol_faktor": _r(v[t] / schnitt, 1),
+                "cm_v_abstand_pct": _r((1.0 - c1 / hoch200) * 100.0, 1),
+                "cm_v_tot_pct": _r((c1 / vorher - 1.0) * 100.0, 1),
+                "cm_v_tief": _r(lo[t]), "cm_v_kante": _r(c1)}
+    return {}
+
+
+def episodic_einstieg(eroeffnung, tief, kante):
+    """Einstieg ueber dem Eroeffnungsbereich des Lueckentags (dem Hoch seiner
+    ersten fuenf Minuten, unsere Festlegung). Stop nach Gerhard unter dem
+    Tagestief oder unter der Lueckenunterkante, "je nachdem, was den
+    Zehn-Prozent-Deckel einhaelt": erst das Tagestief; liegt es mehr als zehn
+    Prozent unter dem Einstieg, die Lueckenunterkante, wenn sie den Deckel
+    einhaelt (das ist sie nur, wenn die Luecke am Tag teilweise geschlossen
+    wurde); sonst greift der Deckel. Rueckgabe (Einstieg, Stop) oder
+    (None, None) ohne Eroeffnungsbereich."""
+    if eroeffnung is None or not np.isfinite(eroeffnung) or eroeffnung <= 0:
+        return None, None
+    grenze = eroeffnung * 0.90
+    if tief is not None and tief >= grenze:
+        return _r(eroeffnung), _r(tief)
+    if kante is not None and grenze <= kante < eroeffnung:
+        return _r(eroeffnung), _r(kante)
+    return _r(eroeffnung), _r(_deckel(eroeffnung, tief if tief is not None else grenze))
+
+
+def werte(d, voll=None, markttiefs=None, termine=None):
     """Alle Muster fuer eine Aktie am letzten Handelstag der Kurse d (Spalten
     datetime, open, high, low, close, volume). Jedes Muster rechnet fuer sich;
     scheitert eines, bleiben nur seine Spalten leer.
@@ -935,7 +1032,11 @@ def werte(d, voll=None, markttiefs=None):
     Allzeithoch) und M samt K (die Zaehlung ueber Jahre); das tut allein die
     Nachttabelle. M und K brauchen dazu die Markttiefs der Nacht: Ohne sie
     waere die Zaehlung zu hoch, deshalb bleibt sie dann leer (None heisst
-    nicht geholt, eine leere Liste heisst keine)."""
+    nicht geholt, eine leere Liste heisst keine).
+
+    termine: die Tage, an denen die Firma zuletzt Zahlen gebracht hat (die
+    Nachttabelle holt sie aus dem Nasdaq-Kalender der vergangenen Tage). Nur
+    mit ihnen rechnet V, der Episodic Pivot; None heisst nicht geholt."""
     raus = leer()
     if d is None or len(d) < 4:
         return raus
@@ -947,6 +1048,11 @@ def werte(d, voll=None, markttiefs=None):
         try:
             raus.update(fn(*args))
         except Exception:  # noqa: BLE001, ein Muster darf die anderen nie mitreissen
+            pass
+    if termine is not None:
+        try:
+            raus.update(episodic_pivot(x, termine))
+        except Exception:  # noqa: BLE001
             pass
     if voll is None or len(voll) < 4:
         return raus
@@ -1317,6 +1423,52 @@ def selbsttest() -> int:
     frisch += [46, 45, 43.5, 44.8, 46.2, 46.8]
     p("Q: ein Hoch, das keine 63 Handelstage stand, ist keine gruene Linie",
       green_line(q_x(frisch, aug)) == {})
+
+    # V Episodic Pivot: 100 Tage Anstieg auf 40, 60 Tage Abstieg auf 30, 60
+    # Tage tot um 30, dann die Luecke mit vierfachem Volumen
+    def v_x(tot=None, luecke=34.0, vol=4_000_000.0, danach=(35.0,), abstieg_bis=30.0):
+        s = list(np.linspace(20, 40, 100)) + list(np.linspace(39.5, abstieg_bis, 60))
+        s += tot if tot is not None else [30.2, 29.8, 30.1, 29.9, 30.0] * 12
+        n_vor = len(s)
+        s += list(danach)
+        d = _reihe(s, start="2025-06-02", spanne=0.005, volumen=1_000_000.0)
+        d.loc[n_vor, ["open", "high", "low", "volume"]] = [luecke, max(luecke, s[n_vor]) * 1.01,
+                                                           min(luecke, s[n_vor]) * 0.99, vol]
+        return vorbereiten(d), d["datetime"].iloc[n_vor].strftime("%Y-%m-%d"), \
+            d["datetime"].iloc[n_vor - 1].strftime("%Y-%m-%d")
+
+    xv, tag_v, vortag_v = v_x()
+    ep = episodic_pivot(xv, {vortag_v})
+    p("V: Luecke nach toter Phase mit Zahlen am Vortag ist ein Episodic Pivot",
+      ep.get("cm_v") == 1 and "cm_vl" not in ep and ep["cm_v_tag"] == tag_v and ep["cm_v_ausloeser"] == "zahlen"
+      and ep["cm_v_luecke_pct"] == round((34.0 / 30.0 - 1) * 100, 1) and ep["cm_v_vol_faktor"] == 4.0
+      and ep["cm_v_kante"] == 30.0 and ep["cm_v_abstand_pct"] >= 15.0, str(ep))
+    p("V: Zahlen am Lueckentag selbst zaehlen ebenso", episodic_pivot(xv, {tag_v}).get("cm_v") == 1)
+    ohne = episodic_pivot(xv, set())
+    p("V: ohne erkannten Ausloeser steht die Luecke getrennt da (O16)",
+      ohne.get("cm_vl") == 1 and "cm_v" not in ohne and ohne["cm_v_ausloeser"] is None, str(ohne))
+    p("V: zehn Tage spaeter noch gezeigt, danach nicht mehr (unsere Festlegung)",
+      episodic_pivot(v_x(danach=[35.0] * 10)[0], set()).get("cm_vl") == 1
+      and episodic_pivot(v_x(danach=[35.0] * 11)[0], set()) == {})
+    p("V: doppeltes Volumen ist zu wenig (Gerhard: das Dreifache)",
+      episodic_pivot(v_x(vol=2_000_000.0)[0], {vortag_v}) == {})
+    p("V: acht Prozent Luecke sind zu wenig (Gerhard: ueber zehn)",
+      episodic_pivot(v_x(luecke=32.4)[0], {vortag_v}) == {})
+    p("V: nur acht Prozent unter dem 200-Tage-Hoch ist zu nah (Gerhard: mindestens 15)",
+      episodic_pivot(v_x(abstieg_bis=37.0, tot=[37.2, 36.8, 37.1, 36.9, 37.0] * 12, luecke=41.5)[0], set()) == {})
+    steigend = list(np.linspace(27, 33, 60))
+    p("V: zwei Monate Anstieg vor der Luecke sind keine tote Phase (unsere Festlegung)",
+      episodic_pivot(v_x(tot=steigend, luecke=37.0)[0], set()) == {})
+    p("V: Einstieg ueber den ersten fuenf Minuten, Stop am Tagestief, wenn der Deckel haelt",
+      episodic_einstieg(35.5, 33.0, 30.0) == (35.5, 33.0))
+    p("V: Tagestief zu weit weg, die Lueckenunterkante haelt den Deckel",
+      episodic_einstieg(35.5, 30.0, 32.0) == (35.5, 32.0))
+    p("V: haelt keines den Deckel, greift der Deckel", episodic_einstieg(35.5, 30.0, 31.0) == (35.5, 31.95))
+    p("V: ohne Eroeffnungsbereich kein Einstieg", episodic_einstieg(None, 30.0, 31.0) == (None, None))
+    w_v = werte(xv.tail(300), termine={vortag_v})
+    p("V: werte rechnet V nur mit den Zahlenterminen der Nacht",
+      w_v["cm_v"] == 1 and werte(xv.tail(300))["cm_v"] == 0 and werte(xv.tail(300))["cm_vl"] == 0
+      and set(w_v) == set(SPALTEN), str({k: w_v[k] for k in ("cm_v", "cm_vl", "cm_v_tag")}))
 
     # werte: die Stufenzaehlung und Q nur mit der ganzen Historie
     ganz = _reihe(anstieg + basis1 + lauf30 + basis2, start="2024-01-01", spanne=0.005)

@@ -66,6 +66,11 @@ WOHER DIE WERTE KOMMEN (gemessen 14.09.2026)
               Nacht: die Tiefs, deren Erholungsversuch ein Follow-through
               Day bestaetigt hat, nach den Regeln der Marktampel. Sie setzen
               die Stufenzaehlung zurueck (Gerhard, 23.09.2026, Frage 3).
+  Ausloeser   Episodic Pivot: der Nasdaq-Kalender der vergangenen gut zwei
+              Wochen, wer an welchem Tag Zahlen gebracht hat (fuer
+              vergangene Tage ohne Uhrzeit); fuer die wenigen Kandidaten
+              dazu Yahoos Fuenf-Minuten-Kurse, aus denen der
+              Eroeffnungsbereich des Lueckentags kommt.
   RS          rs_universum.json des Nachtscans: RS 1 bis 99, RS-Linie.
   Kennzahlen  (Gerhard, 15.09.2026, Auftrag 1: jede gebaute Kennzahl als
               Spanne im Scanner) die technischen Kennzahlen der Etappe 2 aus
@@ -384,18 +389,103 @@ def power_gap(d):
             "status": f"Lücke {gap * 100:.1f} Prozent, Volumen {v / vol50:.1f} mal der 50-Tage-Schnitt".replace(".", ",")}
 
 
-def chartmuster_werte(d, voll=None, markttiefs=None):
+def chartmuster_werte(d, voll=None, markttiefs=None, termine=None):
     """Gerhards Chartmuster (chartmuster.py) als Zusatzangaben zu jedem
     Scanner-Treffer, nie als Filter und ohne Einfluss auf Nachtscan und
     Waechter. d sind die letzten drei Jahre, voll die ganze Historie fuer
     Base-on-Base, Green Line und die Stufenzaehlung; diese braucht dazu die
-    Markttiefs der Nacht. Ein Fehler laesst nur diese Spalten leer, der Bau
-    laeuft weiter."""
+    Markttiefs der Nacht. termine sind die Tage, an denen die Firma zuletzt
+    Zahlen gebracht hat, fuer den Episodic Pivot. Ein Fehler laesst nur diese
+    Spalten leer, der Bau laeuft weiter."""
     import chartmuster
     try:
-        return chartmuster.werte(d, voll=voll, markttiefs=markttiefs)
+        return chartmuster.werte(d, voll=voll, markttiefs=markttiefs, termine=termine)
     except Exception:  # noqa
         return chartmuster.leer()
+
+
+def vergangene_termine(heute, holen=None, tage=None):
+    """Wer an den vergangenen Tagen Zahlen gebracht hat, aus dem
+    Nasdaq-Kalender (dieselbe Quelle wie die anstehenden Termine), heute
+    eingeschlossen: ({Ticker: Menge der Tage}, Befund). Der Ausloeser des
+    Episodic Pivot sind Zahlen am Lueckentag oder am Handelstag davor, und die
+    Luecke darf zehn Handelstage alt sein; so viele Kalendertage werden
+    geholt, dass das auch ueber Feiertage reicht. Fuer vergangene Tage nennt
+    der Kalender keine Uhrzeit. holen(url) liefert (Status, JSON) wie
+    _json_holen. Kam kein einziger Tag, ist die Menge None: Ohne Kalender
+    wuerde sonst jede Luecke als Luecke ohne Ausloeser dastehen."""
+    import chartmuster
+    holen = holen or _json_holen
+    tage = int(tage or (chartmuster.FESTLEGUNGEN["v_tage_max"] + 1) * 7 // 5 + 5)
+    raus, geholt = {}, 0
+    for i in range(0, tage + 1):
+        tag = heute - timedelta(days=i)
+        if tag.weekday() >= 5:
+            continue
+        code, antwort = holen(KALENDER_URL + tag.isoformat())
+        if code != 200 or not isinstance(antwort, dict):
+            continue
+        geholt += 1
+        for z in ((antwort.get("data") or {}).get("rows") or []):
+            tk = str(z.get("symbol") or "").strip().upper()
+            if tk:
+                raus.setdefault(tk, set()).add(tag.isoformat())
+    if not geholt:
+        return None, {"status": "nicht verfuegbar", "tage": 0}
+    return raus, {"status": "ok", "tage": geholt, "ticker": len(raus)}
+
+
+def _fuenf_minuten(liste):
+    """Fuenf-Minuten-Kerzen des letzten Monats von Yahoo (sie reichen 60 Tage
+    zurueck): {Ticker: DataFrame mit Spalte High}."""
+    import yfinance as yf
+    import rs_universum
+    ys = {rs_universum.yahoo_symbol(s): s for s in liste}
+    roh = yf.download(" ".join(ys), period="1mo", interval="5m", auto_adjust=False, group_by="ticker",
+                      progress=False, threads=True)
+    raus = {}
+    if roh is None or len(roh) == 0:
+        return raus
+    for y, s in ys.items():
+        try:
+            df = roh[y] if isinstance(roh.columns, pd.MultiIndex) else roh
+        except KeyError:
+            continue
+        df = df.dropna(subset=["High"])
+        if len(df):
+            raus[s] = df
+    return raus
+
+
+def eroeffnungsbereiche(kandidaten, holen=None):
+    """{Ticker: Hoch der ersten Minuten des Lueckentags} fuer die Kandidaten
+    des Episodic Pivot ({Ticker: Lueckentag}); wie viele Minuten, sagt
+    chartmuster.FESTLEGUNGEN["v_eroeffnung_minuten"]. holen(liste) liefert
+    {Ticker: DataFrame mit Zeitindex und Spalte High}; ohne Angabe Yahoo.
+    Rueckgabe (Werte, Befund)."""
+    import chartmuster
+    minuten = int(chartmuster.FESTLEGUNGEN["v_eroeffnung_minuten"])
+    try:
+        daten = (holen or _fuenf_minuten)(sorted(kandidaten)) or {}
+    except Exception as e:  # noqa  die Kurse duerfen den Bau nie aufhalten
+        return {}, {"status": f"fehler: {type(e).__name__}", "kandidaten": len(kandidaten), "mit_eroeffnung": 0}
+    raus = {}
+    for s, tag in kandidaten.items():
+        df = daten.get(s)
+        if df is None or len(df) == 0:
+            continue
+        zeit = pd.DatetimeIndex(pd.to_datetime(df.index))
+        if zeit.tz is not None:
+            zeit = zeit.tz_convert("America/New_York").tz_localize(None)
+        am_tag = zeit.strftime("%Y-%m-%d") == str(tag)[:10]
+        if not am_tag.any():
+            continue
+        beginn = zeit[am_tag].min()
+        fenster = am_tag & (zeit < beginn + pd.Timedelta(minutes=minuten))
+        hoch = pd.to_numeric(pd.Series(df["High"].to_numpy()[fenster]), errors="coerce").max()
+        if pd.notna(hoch) and hoch > 0:
+            raus[s] = float(hoch)
+    return raus, {"status": "ok", "kandidaten": len(kandidaten), "mit_eroeffnung": len(raus)}
 
 
 def markttiefs_laden():
@@ -1308,7 +1398,7 @@ def bauen(pfad_tabelle=TABELLE, pfad_stand=STAND, archiv=ARCHIV, grenze=None, an
           heute=None, universum_liste=None, kurse_download=None, rs_daten=None, ratings=None, termine_listen=None,
           screener=None, kalender=None, je_aktie=None, kennzahlen=None, leise=False, pfad_analysten=ANALYSTEN,
           konsens_pfade=None, revisionen="an", short="an", zuordnung_pfad=None, pfad_gruppen=GRUPPEN,
-          markttiefs=None):
+          markttiefs=None, termine_vergangen=None, fuenf_minuten=None):
     """Die ganze Nachttabelle. Alle Quellen lassen sich fuer den Selbsttest
     uebergeben; ohne Angabe wird geholt. Die Analystenwerte der Vornacht
     stehen in pfad_analysten (der Ablauf holt sie vorher aus dem privaten
@@ -1320,7 +1410,10 @@ def bauen(pfad_tabelle=TABELLE, pfad_stand=STAND, archiv=ARCHIV, grenze=None, an
     Text) fuer die FINRA-Tagesdateien. zuordnung_pfad: die eigene
     Zuordnungsliste der Branchen (Etappe 6), None heisst keine; pfad_gruppen:
     wohin die Rangliste der Gruppen geht, None heisst nirgends. markttiefs: die
-    Tage der Markttiefs fuer die Stufenzaehlung, None heisst holen."""
+    Tage der Markttiefs fuer die Stufenzaehlung, None heisst holen.
+    termine_vergangen: {Ticker: Menge der Tage mit Zahlen} fuer den Ausloeser
+    des Episodic Pivot, None heisst holen; fuenf_minuten: ein Abruf
+    holen(liste) fuer den Eroeffnungsbereich, None heisst Yahoo."""
     import rs_universum
     t0 = time.time()
     heute = heute or ny_heute()
@@ -1366,6 +1459,12 @@ def bauen(pfad_tabelle=TABELLE, pfad_stand=STAND, archiv=ARCHIV, grenze=None, an
     else:
         befund_mt = {"status": "uebergeben", "anzahl": len(markttiefs)}
     stand["quellen"]["markttiefs"] = befund_mt
+    # Wer zuletzt Zahlen gebracht hat, fuer den Ausloeser des Episodic Pivot
+    if termine_vergangen is None:
+        termine_vergangen, befund_tv = vergangene_termine(heute)
+    else:
+        befund_tv = {"status": "uebergeben", "ticker": len(termine_vergangen)}
+    stand["quellen"]["termine_vergangen"] = befund_tv
 
     # --- Kurse, Kennzahlen und Muster je Block ------------------------------
     zeilen, archiv_teile, ohne_kurse = {}, [], 0
@@ -1395,7 +1494,8 @@ def bauen(pfad_tabelle=TABELLE, pfad_stand=STAND, archiv=ARCHIV, grenze=None, an
                      "rs_linie_qqq_abst_pct": e_rs.get("linie_qqq_abst_pct")}
             zeile["handelbar"] = handelbar(werte, ex)
             zeile.update(muster_werte(d, rs, werte))
-            zeile.update(chartmuster_werte(d, voll, markttiefs))
+            zeile.update(chartmuster_werte(d, voll, markttiefs,
+                                           None if termine_vergangen is None else termine_vergangen.get(s, set())))
             zeilen[s] = zeile
             archiv_teile.append(pd.DataFrame({
                 "ticker": s, "datum": pd.to_datetime(voll["datetime"]),
@@ -1405,6 +1505,19 @@ def bauen(pfad_tabelle=TABELLE, pfad_stand=STAND, archiv=ARCHIV, grenze=None, an
         if not leise:
             print(f"  Kurse und Muster: {len(zeilen)} von {len(symbole)} Aktien, {time.time() - t0:.0f} s")
     ohne_kurse = len(symbole) - len(zeilen)
+    # Episodic Pivot: Einstieg und Stop aus dem Eroeffnungsbereich des
+    # Lueckentags, nur fuer die wenigen Kandidaten
+    import chartmuster
+    kandidaten_v = {s: z["cm_v_tag"] for s, z in zeilen.items() if z.get("cm_v_tag")}
+    if kandidaten_v:
+        eroeffnung, befund_er = eroeffnungsbereiche(kandidaten_v, holen=fuenf_minuten)
+    else:
+        eroeffnung, befund_er = {}, {"status": "keine Kandidaten", "kandidaten": 0, "mit_eroeffnung": 0}
+    for s in kandidaten_v:
+        z = zeilen[s]
+        z["cm_v_kp"], z["cm_v_stop"] = chartmuster.episodic_einstieg(eroeffnung.get(s), z.get("cm_v_tief"),
+                                                                    z.get("cm_v_kante"))
+    stand["quellen"]["eroeffnung"] = befund_er
     letzte = pd.Series([z["datum"] for z in zeilen.values()])
     handelstag = letzte.mode().iloc[0] if len(letzte) else None
     stand["handelstag"] = handelstag
@@ -1975,7 +2088,8 @@ def selbsttest() -> int:
                                                                     "termin_vorjahr_datum": "2025-09-04"})},
                    je_aktie=je, kennzahlen=pd.DataFrame(), leise=True,
                    pfad_analysten=pfad_a, konsens_pfade=[pfad_k], revisionen=rev, short=finra,
-                   zuordnung_pfad=pfad_z, pfad_gruppen=pfad_g, markttiefs=["2024-10-01"])
+                   zuordnung_pfad=pfad_z, pfad_gruppen=pfad_g, markttiefs=["2024-10-01"],
+                   termine_vergangen={}, fuenf_minuten=lambda liste: {})
         t = pd.read_parquet(os.path.join(tmp, "t.parquet"))
         a = pd.read_parquet(pfad_a)
         g1 = json.load(open(pfad_g, encoding="utf-8"))
@@ -2026,6 +2140,33 @@ def selbsttest() -> int:
           all(s in t.columns for s in chartmuster.SPALTEN)
           and set(pd.to_numeric(t["cm_b"], errors="coerce").dropna()) <= {0, 1}
           and t["cm_f"].notna().any(), str([s for s in chartmuster.SPALTEN if s not in t.columns][:5]))
+        # Episodic Pivot: der Kalender der vergangenen Tage und der
+        # Eroeffnungsbereich, ohne Netz
+        def kal_holen(url):
+            tag = url.rsplit("=", 1)[1]
+            if tag == "2026-09-10":
+                return 200, {"data": {"rows": [{"symbol": "orcl", "time": "time-not-supplied"}, {"symbol": "PBR.A"}]}}
+            if tag == "2026-09-09":
+                return 500, None
+            return 200, {"data": {"rows": []}}
+        tv, btv = vergangene_termine(date(2026, 9, 14), holen=kal_holen)
+        tv0, btv0 = vergangene_termine(date(2026, 9, 14), holen=lambda url: (500, None))
+        p("Episodic Pivot: der Kalender der vergangenen Tage, ohne Wochenenden und ohne gescheiterte Tage",
+          tv == {"ORCL": {"2026-09-10"}, "PBR.A": {"2026-09-10"}} and btv["status"] == "ok" and btv["tage"] >= 10
+          and tv0 is None and btv0["status"] == "nicht verfuegbar", f"{btv} {btv0}")
+        zeit5 = pd.date_range("2026-09-10 09:30", periods=6, freq="5min", tz="America/New_York").append(
+            pd.date_range("2026-09-11 09:30", periods=3, freq="5min", tz="America/New_York"))
+        fm = pd.DataFrame({"High": [35.2, 36.0, 35.5, 35.0, 34.8, 35.1, 40.0, 41.0, 39.0]}, index=zeit5)
+        er, ber = eroeffnungsbereiche({"AAA": "2026-09-10", "BBB": "2026-09-11", "CCC": "2026-09-10"},
+                                      holen=lambda liste: {"AAA": fm, "BBB": fm})
+        p("Episodic Pivot: der Eroeffnungsbereich ist das Hoch der ersten fuenf Minuten des Lueckentags",
+          er == {"AAA": 35.2, "BBB": 40.0} and ber["mit_eroeffnung"] == 2 and ber["kandidaten"] == 3, str(er))
+        p("Episodic Pivot: ein gescheiterter Abruf haelt den Bau nicht auf",
+          eroeffnungsbereiche({"AAA": "2026-09-10"}, holen=lambda liste: 1 / 0)[1]["status"]
+          == "fehler: ZeroDivisionError")
+        p("Episodic Pivot: der Bau nennt Kalender und Eroeffnungsbereich im Stand",
+          st["quellen"]["termine_vergangen"] == {"status": "uebergeben", "ticker": 0}
+          and st["quellen"]["eroeffnung"]["status"] in ("keine Kandidaten", "ok"), str(st["quellen"]["eroeffnung"]))
         _m = chartmuster.stufenzaehlung(chartmuster.vorbereiten(kunst["AAA"]), ["2024-10-01"])
         p("Stufenzaehlung aus der ganzen Historie mit den uebergebenen Markttiefs, wie chartmuster sie rechnet",
           st["quellen"]["markttiefs"] == {"status": "uebergeben", "anzahl": 1}
@@ -2062,7 +2203,7 @@ def selbsttest() -> int:
                     kurse_download=lambda teil: {s: kunst[s] for s in teil if s in kunst},
                     rs_daten={}, ratings={}, termine_listen={}, screener={}, kalender={}, kennzahlen=pd.DataFrame(),
                     leise=True, pfad_analysten=pfad_a, short=lambda tag: (404, ""), pfad_gruppen=pfad_g,
-                    markttiefs=[])
+                    markttiefs=[], termine_vergangen={}, fuenf_minuten=lambda liste: {})
         a2 = pd.read_parquet(pfad_a)
         p("Zweite Nacht ohne Abruf behaelt die Analysten der ersten",
           a2[a2["ticker"] == "AAA"].iloc[0]["analysten_anzahl"] == 4 and st2["quellen"]["analysten"]["status"] == "aus")

@@ -416,7 +416,7 @@ def block_d(namen_aus_c=None):
            and "q_vol_faktor" not in cm.QUELLE)
     pruefe("D", "M, K und Q sind Spalten mit Merker, und kein Alarm-Muster",
            all(s in cm.MERKER for s in ("cm_m", "cm_k", "cm_q"))
-           and not any(k.startswith(("cm_m", "cm_k", "cm_q"))
+           and not any(k.startswith(("cm_m", "cm_k", "cm_q", "cm_v"))
                        for k in pathlib.Path("alarm_muster.py").read_text(encoding="utf-8").split('"')))
     _gerade = cm._reihe(list(__import__("numpy").linspace(20, 60, 300)), spanne=0.005)
     pruefe("D", "M rechnet nur mit der ganzen Historie und den Markttiefs der Nacht",
@@ -424,7 +424,7 @@ def block_d(namen_aus_c=None):
            and set(cm.werte(_gerade, voll=_gerade, markttiefs=[])) == set(cm.SPALTEN))
     _sdq = pathlib.Path("scanner_daten.py").read_text(encoding="utf-8")
     pruefe("D", "Die Nachttabelle gibt die ganze Historie und die Markttiefs an die Muster",
-           "zeile.update(chartmuster_werte(d, voll, markttiefs))" in _sdq
+           "zeile.update(chartmuster_werte(d, voll, markttiefs," in _sdq
            and 'stand["quellen"]["markttiefs"] = befund_mt' in _sdq
            and "marktbreite.markttiefs(" in _sdq)
     import marktbreite as _mb
@@ -433,8 +433,21 @@ def block_d(namen_aus_c=None):
            and "tiefs" in __import__("inspect").signature(_mb.follow_through).parameters)
     _nsq = pathlib.Path("nachschlagen.py").read_text(encoding="utf-8")
     _stq = pathlib.Path("streamlit_app.py").read_text(encoding="utf-8")
-    pruefe("D", "Das Nachschlagen nimmt M, K und Q aus der Nachttabelle, die Ladefunktion steht davor",
-           'LANGE_MUSTER = ("cm_k", "cm_q", "cm_m")' in _nsq
+    # V Episodic Pivot (Gerhard, 23.09.2026, Frage 4)
+    pruefe("D", "V: Gerhards Zahlen vom 23.09.2026 stehen in QUELLE, die toten Tage und das Fenster sind unsere",
+           cm.QUELLE["v_luecke"] == 0.10 and cm.QUELLE["v_abstand_200"] == 0.15
+           and cm.QUELLE["v_vol_faktor"] == 3.0 and cm.QUELLE["v_vol_tage"] == 50
+           and cm.QUELLE["v_tote_tage"] == 42 and cm.QUELLE["v_hoch_tage"] == 200
+           and all(k in cm.FESTLEGUNGEN for k in ("v_tot_anstieg_max", "v_tage_max", "v_eroeffnung_minuten")))
+    pruefe("D", "V: Episodic Pivot und die Luecke ohne erkannten Ausloeser sind getrennte Merker (O16)",
+           "cm_v" in cm.MERKER and "cm_vl" in cm.MERKER
+           and cm.werte(_gerade)["cm_v"] == 0 and cm.werte(_gerade)["cm_vl"] == 0)
+    pruefe("D", "V: die Nachttabelle holt die Zahlentermine und den Eroeffnungsbereich",
+           "termine_vergangen.get(s, set())" in _sdq and "chartmuster.episodic_einstieg(" in _sdq
+           and 'stand["quellen"]["termine_vergangen"] = befund_tv' in _sdq
+           and 'stand["quellen"]["eroeffnung"] = befund_er' in _sdq)
+    pruefe("D", "Das Nachschlagen nimmt M, K, Q und V aus der Nachttabelle, die Ladefunktion steht davor",
+           'LANGE_MUSTER = ("cm_k", "cm_q", "cm_m", "cm_v")' in _nsq
            and "chartmuster_saetze(nachschlag_df, nachtzeile=nachschlag_nacht)" in _stq
            and _stq.index("def lade_scanner_tabelle():") < _stq.index("if nachschlag_eingabe:"))
 

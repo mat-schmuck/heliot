@@ -1534,8 +1534,9 @@ def _cm_gezaehlt(r):
 
 def muster_saetze(r):
     """Die Chartmuster einer Trefferzeile als Satzteile, in der Reihenfolge
-    von Gerhards Tabelle B, A, D, F, G, N, S, T, L, K, Q, M; ohne Fund kein
-    Satzteil, nur Power Trend steht immer dabei, sobald er gerechnet ist."""
+    von Gerhards Tabelle B, A, D, F, G, N, S, T, L, K, Q, M, V; ohne Fund kein
+    Satzteil, nur Power Trend steht immer dabei, sobald er gerechnet ist. Eine
+    Luecke ohne erkannten Ausloeser steht getrennt vom Episodic Pivot (O16)."""
     t = []
     if _cm_ja(r, "cm_b"):
         s = "Inside Day"
@@ -1632,6 +1633,22 @@ def muster_saetze(r):
         if _cm_wahr(r.get("cm_m_bob")):
             satz += ", als Base-on-Base gleiche Stufe wie die Basis darunter"
         t.append(satz + ", " + _cm_gezaehlt(r))
+    for merker, kopf in (("cm_v", "Episodic Pivot am {tag} nach Quartalszahlen"),
+                         ("cm_vl", "Lücke ohne erkannten Auslöser am {tag}")):
+        if not _cm_ja(r, merker):
+            continue
+        lu, f, ab = _num(r.get("cm_v_luecke_pct")), _num(r.get("cm_v_vol_faktor")), _num(r.get("cm_v_abstand_pct"))
+        satz = kopf.format(tag=_cm_tag(r.get("cm_v_tag")))
+        satz += (f", Lücke {zahl(lu, 1)} Prozent" if lu is not None else "")
+        satz += (f", Volumen das {zahl(f, 1)}-Fache des 50-Tage-Schnitts" if f is not None else "")
+        satz += (f", davor {zahl(ab, 1)} Prozent unter dem 200-Tage-Hoch" if ab is not None else "")
+        satz += " und zwei Monate flach oder fallend"
+        if _num(r.get("cm_v_kp")) is not None:
+            satz += (f", Einstieg über {_cm_dollar(r.get('cm_v_kp'))}, dem Hoch der ersten fünf Minuten, "
+                     f"Stop {_cm_dollar(r.get('cm_v_stop'))}")
+        else:
+            satz += ", Einstieg über dem Eröffnungsbereich, ohne Fünf-Minuten-Kurse nicht bestimmbar"
+        t.append(satz + ", tote Phase und Eröffnungsbereich nach eigener Festlegung")
     return t
 
 
@@ -1650,7 +1667,8 @@ def chartmuster_erklaerung():
         "Seit dem 21.09.2026 stehen bei jedem Treffer die Chartmuster aus Gerhards Dokument vom 20.09.2026: "
         "Inside Day, Three Weeks Tight, Pocket Pivot, Power Trend, Flat Base, Shakeout plus drei, Wick Play, "
         "Shakeout am EMA 10, seit dem 22.09.2026 die IPO Base und seit dem 23.09.2026 Base-on-Base, der Green "
-        "Line Breakout und die Stufenzählung der Basen. Sie sind Entscheidungshilfen und filtern nichts. "
+        "Line Breakout, die Stufenzählung der Basen und der Episodic Pivot. Sie sind Entscheidungshilfen und "
+        "filtern nichts. "
         "Gerechnet wird am letzten Handelstag der Nachttabelle; Three Weeks Tight, Flat Base und IPO Base zählen "
         "nur abgeschlossene Wochen, Base-on-Base, Green Line und die Stufenzählung brauchen die ganze "
         "Kurshistorie. Das W, also das Double Bottom, ist am 22.09.2026 auf Gerhards Entscheid ganz entfallen.",
@@ -1724,6 +1742,21 @@ def chartmuster_erklaerung():
         f"je Handelstag im Ausbruchsmonat beträgt mindestens das {zahl(f['q_vol_faktor'], 1)}-Fache des Schnitts "
         f"der {f['q_vol_tage']} Handelstage vor diesem Monat. Ein Monat gilt als abgeschlossen, wenn sein letzter "
         "Werktag vorbei ist.",
+        f"Episodic Pivot nach Gerhards Regeln vom 23.09.2026: eine Eröffnungslücke von mehr als "
+        f"{pz(q['v_luecke'])} Prozent über dem Schluss des Vortags mit mindestens dem "
+        f"{zahl(q['v_vol_faktor'], 0)}-Fachen des Schnittvolumens der {q['v_vol_tage']} Tage davor, nachdem die "
+        f"Aktie mindestens zwei Monate tot war und mindestens {pz(q['v_abstand_200'])} Prozent unter ihrem "
+        f"{q['v_hoch_tage']}-Tage-Hoch lag. Der Auslöser sind Zahlen am Lückentag oder am Handelstag davor laut "
+        "Nasdaq-Kalender; eine Lücke ohne erkannten Auslöser steht getrennt da. Zulassung, Auftrag und "
+        "Übernahme erkennt der Scanner nicht, dafür fehlt eine Nachrichtenquelle; solche Lücken stehen ebenfalls "
+        "als Lücke ohne erkannten Auslöser da. Einstieg über dem Eröffnungsbereich des Lückentags. Stop am "
+        "Tagestief; liegt es mehr als zehn Prozent unter dem Einstieg, an der Lückenunterkante, dem Schluss des "
+        "Vortags, wenn diese den Zehn-Prozent-Deckel einhält, sonst greift der Deckel.",
+        f"Unsere Festlegungen beim Episodic Pivot: Tot heißt, der Schluss vor der Lücke liegt höchstens "
+        f"{pz(f['v_tot_anstieg_max'])} Prozent über dem Schluss zwei Monate davor, also {q['v_tote_tage']} "
+        f"Handelstage, gerechnet wie die drei Monate beim Green Line Breakout. Gezeigt wird die jüngste Lücke "
+        f"der letzten {f['v_tage_max']} Handelstage. Der Eröffnungsbereich ist das Hoch der ersten "
+        f"{f['v_eroeffnung_minuten']} Minuten.",
         "Sechs dieser Muster melden seit dem 22.09.2026 auch im Handel, auf Gerhards Entscheid: Three Weeks "
         "Tight, Inside Day, Pocket Pivot, IPO Base, Shakeout plus drei und Wick Play. Der Nachtscan rechnet "
         "ihre Einstiege, der Wächter meldet, sobald der Kurs sie überschreitet, und zwar nur für die Aktien "
@@ -2762,6 +2795,19 @@ def selbsttest() -> int:
                    "Kurshistorie am 18.06.2025"], " | ".join(ms + ms4 + ms_b))
     p("Chartmuster: ohne Treffer bei K, Q und M kein Satz",
       muster_saetze({"cm_k": 0, "cm_q": 0.0, "cm_m": 0, "cm_m_stufe": float("nan")}) == [])
+    v_zeile = {"cm_v_tag": "2026-09-17", "cm_v_luecke_pct": 13.3, "cm_v_vol_faktor": 4.0,
+               "cm_v_abstand_pct": 25.4, "cm_v_kp": 35.2, "cm_v_stop": 33.66}
+    ms = muster_saetze({"cm_v": 1, "cm_vl": 0, **v_zeile})
+    ms_l = muster_saetze({"cm_v": 0, "cm_vl": 1.0, **v_zeile, "cm_v_kp": None, "cm_v_stop": None})
+    p("Chartmuster: Episodic Pivot mit Ausloeser und getrennt die Luecke ohne erkannten Ausloeser (O16)",
+      ms == ["Episodic Pivot am 17.09.2026 nach Quartalszahlen, Lücke 13,3 Prozent, Volumen das 4,0-Fache des "
+             "50-Tage-Schnitts, davor 25,4 Prozent unter dem 200-Tage-Hoch und zwei Monate flach oder fallend, "
+             "Einstieg über 35,20 Dollar, dem Hoch der ersten fünf Minuten, Stop 33,66 Dollar, tote Phase und "
+             "Eröffnungsbereich nach eigener Festlegung"]
+      and ms_l == ["Lücke ohne erkannten Auslöser am 17.09.2026, Lücke 13,3 Prozent, Volumen das 4,0-Fache des "
+                   "50-Tage-Schnitts, davor 25,4 Prozent unter dem 200-Tage-Hoch und zwei Monate flach oder "
+                   "fallend, Einstieg über dem Eröffnungsbereich, ohne Fünf-Minuten-Kurse nicht bestimmbar, tote "
+                   "Phase und Eröffnungsbereich nach eigener Festlegung"], " | ".join(ms + ms_l))
     import chartmuster as cm
     erkl = " ".join(chartmuster_erklaerung())
     p("Chartmuster: Erklaerung nennt jede Festlegung mit ihrer Zahl",
@@ -2777,9 +2823,12 @@ def selbsttest() -> int:
                               "mindestens das 1,4-Fache des Schnitts der 50 Handelstage vor diesem Monat",
                               "nur für Aktien über 10 Dollar", "mindestens 5 Wochen, ist höchstens 35 Prozent tief",
                               "mindestens 20 Prozent gewonnen hat", "Follow-through Day bestätigt hat",
-                              "mindestens 63 Handelstage ohne neues Hoch"))
+                              "mindestens 63 Handelstage ohne neues Hoch",
+                              "Eröffnungslücke von mehr als 10 Prozent", "mindestens dem 3-Fachen",
+                              "mindestens 15 Prozent unter ihrem 200-Tage-Hoch", "höchstens 5 Prozent über dem Schluss",
+                              "der letzten 10 Handelstage", "der ersten 5 Minuten"))
       and not any(x in erkl for x in ("Double Bottom:", "höchstens 13 Wochen", "höchstens 3 enge Wochen"))
-      and len(cm.FESTLEGUNGEN) == 31 and "a_wochen_max" not in cm.FESTLEGUNGEN, erkl[:200])
+      and len(cm.FESTLEGUNGEN) == 34 and "a_wochen_max" not in cm.FESTLEGUNGEN, erkl[:200])
 
     print(f"\n{len(fehler)} Fehler." if fehler else "\nAlles bestanden.")
     return 1 if fehler else 0

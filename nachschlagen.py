@@ -1625,10 +1625,11 @@ def abgeschlossene_kerzen(df, jetzt=None):
     return d
 
 
-# Die Muster, die die ganze Kurshistorie brauchen (Base-on-Base, Green Line,
-# Stufenzaehlung). Das Nachschlagen holt nur zwei Jahre Kurse und nimmt sie
-# deshalb aus der Nachttabelle.
-LANGE_MUSTER = ("cm_k", "cm_q", "cm_m")
+# Die Muster, die die ganze Kurshistorie oder die Zahlentermine der Nacht
+# brauchen (Base-on-Base, Green Line, Stufenzaehlung, Episodic Pivot samt der
+# Luecke ohne erkannten Ausloeser). Das Nachschlagen holt nur zwei Jahre Kurse
+# und nimmt sie deshalb aus der Nachttabelle.
+LANGE_MUSTER = ("cm_k", "cm_q", "cm_m", "cm_v")
 
 
 def chartmuster_saetze(df, jetzt=None, nachtzeile=None):
@@ -1653,12 +1654,13 @@ def chartmuster_saetze(df, jetzt=None, nachtzeile=None):
     tag = datum_text(str(d["datetime"].iloc[-1])[:10])
     s = [f"Mit dem Schluss vom {tag}: " + ("; ".join(teile) if teile else "keines der Muster trifft zu") + "."]
     if nachtzeile and nachtzeile.get("datum"):
-        s.append(f"Base-on-Base, Green Line und die Stufenzählung der Basen stammen aus der Nachttabelle mit dem "
-                 f"Schluss vom {datum_text(str(nachtzeile['datum'])[:10])}, weil sie die ganze Kurshistorie "
-                 "brauchen.")
+        s.append(f"Base-on-Base, Green Line, die Stufenzählung der Basen und der Episodic Pivot stammen aus der "
+                 f"Nachttabelle mit dem Schluss vom {datum_text(str(nachtzeile['datum'])[:10])}, weil sie die "
+                 "ganze Kurshistorie oder die Zahlentermine brauchen.")
     else:
-        s.append("Base-on-Base, Green Line und die Stufenzählung der Basen brauchen die ganze Kurshistorie und "
-                 "stehen deshalb nur mit einer Zeile der Nachttabelle; für diese Aktie liegt keine vor.")
+        s.append("Base-on-Base, Green Line, die Stufenzählung der Basen und der Episodic Pivot brauchen die ganze "
+                 "Kurshistorie oder die Zahlentermine und stehen deshalb nur mit einer Zeile der Nachttabelle; für "
+                 "diese Aktie liegt keine vor.")
     s.append("Die Muster sind Entscheidungshilfen und filtern nichts. Unsere eigenen Schwellen, wo Gerhards "
              "Quellen keine Zahl nennen, stehen im Reiter Regelwerk.")
     return s
@@ -2349,10 +2351,11 @@ def selbsttest() -> int:
     p("Chartmuster: die Stufe kommt aus der Nachttabelle samt ihrem Tag, die kurzen Muster bleiben gerechnet",
       "Basis Stufe 3, spät, in Bildung seit 6 Wochen" in cm_nacht[0] and "eng über 999" not in cm_nacht[0]
       and "Inside Day" in cm_nacht[0]
-      and cm_nacht[1].startswith("Base-on-Base, Green Line und die Stufenzählung der Basen stammen aus der "
-                                 "Nachttabelle mit dem Schluss vom 18.09.2026"), cm_nacht)
+      and cm_nacht[1].startswith("Base-on-Base, Green Line, die Stufenzählung der Basen und der Episodic Pivot "
+                                 "stammen aus der Nachttabelle mit dem Schluss vom 18.09.2026"), cm_nacht)
     p("Chartmuster: ohne Zeile der Nachttabelle sagt ein Satz, warum die langen Muster fehlen",
       "stehen deshalb nur mit einer Zeile der Nachttabelle; für diese Aktie liegt keine vor." in cm_abend[1]
+      and "Episodic Pivot" in cm_abend[1]
       and "Basis Stufe" not in cm_abend[0], cm_abend)
     alle_saetze = ms + ohne + ks + kt + km + kjs + cm_mittag + cm_abend + cm_nacht
     p("Keine Bildzeichen und keine Gedankenstriche in den neuen Saetzen",
