@@ -641,7 +641,8 @@
     "AVT|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-23",
     "BEST|AVT|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-23",
     "QMCO|Fallback: 52W-Hoch-Breakout": "2026-09-23",
-    "BEST|QMCO|Fallback: 52W-Hoch-Breakout": "2026-09-23"
+    "BEST|QMCO|Fallback: 52W-Hoch-Breakout": "2026-09-23",
+    "UEBER|QMCO|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-23"
   },
   "gapgo_warten": {
     "VICR": {
