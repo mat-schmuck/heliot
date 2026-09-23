@@ -1896,11 +1896,13 @@ def _sc_erkl_umschalten(k: str, sichtbar: bool):
     st.session_state[k] = not sichtbar
 
 
-def _sc_erklaerung(schluessel: str, titel: str, text: str, angehakt: bool = False, beschriftung: str = ""):
+def _sc_erklaerung(schluessel: str, titel: str, text: str, angehakt: bool = False):
     """Der Erklaerungsknopf unter einem Kriterium (Mathias und Gerhard, 23.09.2026):
     "eine Schaltflaeche unter wirklich jedem Kriterium, die bei Anklicken eine
-    kurze Erklaerung des Kriteriums auf Deutsch liefert". Die Beschriftung bleibt
-    immer dieselbe, damit der Fokus beim Klick nicht verloren geht. Ein Klick zeigt
+    kurze Erklaerung des Kriteriums auf Deutsch liefert". Die Beschriftung lautet
+    "Erklaerung: <Kriterium>"; die Form "Erklaerung zu <Kriterium>" haette die Namen
+    beugen muessen ("zu Operative Marge" ist falsch). Sie bleibt immer dieselbe,
+    damit der Fokus beim Klick nicht verloren geht. Ein Klick zeigt
     die Erklaerung direkt darunter, der naechste blendet sie aus. Bei den Merkmalen
     steht sie wie bisher von selbst da, solange das Merkmal angehakt ist; dort
     blendet der erste Klick sie aus."""
@@ -1908,7 +1910,7 @@ def _sc_erklaerung(schluessel: str, titel: str, text: str, angehakt: bool = Fals
     sichtbar = st.session_state.get(k)
     if sichtbar is None:
         sichtbar = angehakt
-    st.button(beschriftung or f"Erklärung zu {titel}", key=f"{k}_knopf", type="tertiary",
+    st.button(f"Erklärung: {titel}", key=f"{k}_knopf", type="tertiary",
               on_click=_sc_erkl_umschalten, args=(k, sichtbar))
     if sichtbar:
         st.caption(text)
@@ -1990,15 +1992,13 @@ def scanner_reiter():
                               "toleranz": f"Mit {tol} Prozent Toleranz: Schwellen dürfen um {tol} Prozent "
                                           "verfehlt werden"}.get,
                  key="sc_toleranz", on_change=_sc_toleranz_geaendert, persist_state="page")
-        _sc_erklaerung("toleranz", "", oberflaeche.SCANNER_ERKLAERUNGEN["toleranz"],
-                       beschriftung="Erklärung zur Genauigkeit des Musters")
+        _sc_erklaerung("toleranz", "Wie genau das Muster passen muss", oberflaeche.SCANNER_ERKLAERUNGEN["toleranz"])
     st.checkbox(sa.handelbar_text(), key="sc_handelbar")
-    _sc_erklaerung("handelbar", "", oberflaeche.SCANNER_ERKLAERUNGEN["handelbar"],
-                   beschriftung="Erklärung zu den handelbaren Aktien")
+    _sc_erklaerung("handelbar", "Nur handelbare Aktien", oberflaeche.SCANNER_ERKLAERUNGEN["handelbar"])
     if k == "darvas":
         st.checkbox(sa.langweile_text(), key="sc_langweilig", persist_state="page")
-        _sc_erklaerung("langweilig", "", oberflaeche.SCANNER_ERKLAERUNGEN["langweilig"],
-                       beschriftung="Erklärung zu den langweiligen Darvas-Boxen")
+        _sc_erklaerung("langweilig", "Langweilige Darvas-Boxen aussortieren",
+                       oberflaeche.SCANNER_ERKLAERUNGEN["langweilig"])
     st.button("Alle Einstellungen zurücksetzen", key="sc_zuruecksetzen", on_click=_sc_alles_zuruecksetzen)
 
     # Teil 2
@@ -2025,13 +2025,12 @@ def scanner_reiter():
                 if f.schluessel == "rs":
                     st.checkbox("Junge Titel mit vorläufigem RS mitnehmen", key="sc_rs_vorlaeufig",
                                 persist_state="page")
-                    _sc_erklaerung("rs_vorlaeufig", "", oberflaeche.SCANNER_ERKLAERUNGEN["rs_vorlaeufig"],
-                                   beschriftung="Erklärung zu jungen Titeln mit vorläufigem RS")
+                    _sc_erklaerung("rs_vorlaeufig", "Junge Titel mit vorläufigem RS mitnehmen",
+                                   oberflaeche.SCANNER_ERKLAERUNGEN["rs_vorlaeufig"])
 
     st.markdown("##### Zahlentermine", anchors=False)
     termine_an = st.checkbox("Nach Zahlenterminen filtern", key="sc_termine_an")
-    _sc_erklaerung("termine", "", oberflaeche.SCANNER_ERKLAERUNGEN["termine"],
-                   beschriftung="Erklärung zum Filtern nach Zahlenterminen")
+    _sc_erklaerung("termine", "Nach Zahlenterminen filtern", oberflaeche.SCANNER_ERKLAERUNGEN["termine"])
     if termine_an:
         st.caption(f"Heute ist in New York {sa.datum_lang(heute.isoformat())}; morgen heißt der nächste "
                    f"Werktag, {sa.datum_lang(sa.naechster_handelstag(heute).isoformat())}.")
@@ -2040,12 +2039,11 @@ def scanner_reiter():
             _sc_erklaerung(f"termine_{key}", f"Zahlen {text}", oberflaeche.SCANNER_ERKLAERUNGEN[f"termine_{key}"])
         st.checkbox("Auch Termine während des Handels oder ohne bekannte Tageszeit",
                     key="sc_termine_ohne_zeit", persist_state="page")
-        _sc_erklaerung("termine_ohne_zeit", "", oberflaeche.SCANNER_ERKLAERUNGEN["termine_ohne_zeit"],
-                       beschriftung="Erklärung zu Terminen während des Handels oder ohne bekannte Tageszeit")
+        _sc_erklaerung("termine_ohne_zeit", "Auch Termine während des Handels oder ohne bekannte Tageszeit",
+                       oberflaeche.SCANNER_ERKLAERUNGEN["termine_ohne_zeit"])
         st.radio("Welche Aktien", [u[0] for u in sa.UMFANG], format_func=dict(sa.UMFANG).get,
                  key="sc_termine_umfang", persist_state="page")
-        _sc_erklaerung("termine_umfang", "", oberflaeche.SCANNER_ERKLAERUNGEN["termine_umfang"],
-                       beschriftung="Erklärung zur Auswahl der Aktien")
+        _sc_erklaerung("termine_umfang", "Welche Aktien", oberflaeche.SCANNER_ERKLAERUNGEN["termine_umfang"])
 
     gewaehlt = sum(1 for s in sektoren if st.session_state.get(_sc_sektor_schluessel(s), True))
     st.markdown("##### Sektoren", anchors=False)
