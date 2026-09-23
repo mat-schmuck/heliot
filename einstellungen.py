@@ -58,36 +58,37 @@ ALARME = [
     # pattern_scanner.PRIORITY
     {"schluessel": "htf", "gruppe": "kauf", "name": "High & Tight Flag",
      "namen": ["High & Tight Flag"],
-     "erklaerung": "Ein Anstieg von mindestens 90 Prozent in weniger als 42 Tagen, danach eine enge Flagge von "
-                   "höchstens 35 Kalendertagen; Alarm beim Ausbruch aus der Flagge."},
+     "erklaerung": "Ein Anstieg um mindestens 90 Prozent in höchstens 42 Handelstagen, danach eine enge Flagge "
+                   "von höchstens 35 Kalendertagen; Alarm beim Ausbruch über die Flagge."},
     {"schluessel": "htf_innen", "gruppe": "kauf", "name": "HTF Innen-Einstieg",
      "namen": ["HTF Innen-Einstieg"],
-     "erklaerung": "Dieselbe Flagge mit einer engeren Marke innerhalb der Flagge; der Alarm kommt früher als beim "
-                   "Ausbruch aus der ganzen Flagge."},
+     "erklaerung": "Der Einstieg innerhalb der Flagge einer High & Tight Flag; der Alarm kommt früher als beim "
+                   "Ausbruch über die ganze Flagge."},
     {"schluessel": "vcp", "gruppe": "kauf", "name": "VCP",
      "namen": ["VCP"],
-     "erklaerung": "Volatility Contraction Pattern: mindestens zwei bis drei Rücksetzer mit abnehmender Tiefe und "
-                   "austrocknendem Volumen; Alarm beim Ausbruch über den Pivot."},
+     "erklaerung": "Volatility Contraction Pattern: Trend Template erfüllt, dazu mindestens zwei immer engere "
+                   "Rücksetzer mit austrocknendem Volumen; Alarm beim Ausbruch über den Pivot."},
     {"schluessel": "cup", "gruppe": "kauf", "name": "Cup & Handle",
      "namen": ["Cup & Handle"],
-     "erklaerung": "Tasse mit Henkel auf Tageskerzen: eine U-förmige Basis, 12 bis 50 Prozent tief, mit einem kleinen "
-                   "Rücksetzer im oberen Drittel; Alarm beim Ausbruch über den Henkel."},
+     "erklaerung": "Tasse mit Henkel auf Tageskerzen: eine runde Tasse, 12 bis 50 Prozent tief, mit einem Henkel im "
+                   "oberen Drittel; Alarm beim Ausbruch über das Henkelhoch."},
     {"schluessel": "cup_woche", "gruppe": "kauf", "name": "Cup & Handle (Wochenbasis)",
      "namen": ["Cup & Handle (Wochenbasis)"],
      "erklaerung": "Dieselbe Tasse mit Henkel auf Wochenkerzen, also über einen längeren Zeitraum; Alarm beim "
-                   "Ausbruch über den Henkel."},
+                   "Ausbruch über das Henkelhoch."},
     {"schluessel": "darvas", "gruppe": "kauf", "name": "Darvas Box",
      "namen": ["Darvas Box"],
-     "erklaerung": "Ein neues 52-Wochen-Hoch, danach eine Box aus drei plus drei Tagen; Alarm beim Ausbruch über die "
-                   "Oberkante der Box. Läuft auf der Darvas-Liste und bei einzeln überwachten Aktien."},
+     "erklaerung": "Ein neues 52-Wochen-Hoch, danach eine Box aus mindestens drei plus drei Tagen; Alarm beim "
+                   "Ausbruch über die Oberkante der Box. Läuft auf der Darvas-Liste und bei einzeln überwachten "
+                   "Aktien."},
     {"schluessel": "earnings", "gruppe": "kauf", "name": "Earnings-Pullback",
      "namen": ["Earnings-Pullback"],
      "erklaerung": "Nach starken Quartalszahlen wird nicht der Sprung gekauft, sondern die erste ruhige "
                    "Konsolidierung darüber; Alarm beim Ausbruch aus dieser Konsolidierung."},
     {"schluessel": "ema", "gruppe": "kauf", "name": "EMA Crossback",
      "namen": ["EMA Crossback"],
-     "erklaerung": "Nach einer frischen Rückeroberung der 10-Tage- und 20-Tage-Linie der erste Rücksetzer an diese "
-                   "Linien; Alarm, wenn der Kurs das Hoch des Umkehrtags überschreitet."},
+     "erklaerung": "EMA Crossback nach Oliver Kell: der erste Rücksetzer an die 10- und 20-Tage-Linie nach ihrer "
+                   "Rückeroberung; Alarm, wenn der Kurs das Hoch des Umkehrtags überschreitet."},
     {"schluessel": "rechteck", "gruppe": "kauf", "name": "Rectangle Top",
      "namen": ["Rectangle Top"],
      "erklaerung": "Eine waagrechte Handelsspanne mit mindestens zwei Berührungen oben und unten; Alarm einen Cent über "
