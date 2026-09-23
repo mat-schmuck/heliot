@@ -1625,19 +1625,40 @@ def abgeschlossene_kerzen(df, jetzt=None):
     return d
 
 
-def chartmuster_saetze(df, jetzt=None):
+# Die Muster, die die ganze Kurshistorie brauchen (Base-on-Base, Green Line,
+# Stufenzaehlung). Das Nachschlagen holt nur zwei Jahre Kurse und nimmt sie
+# deshalb aus der Nachttabelle.
+LANGE_MUSTER = ("cm_k", "cm_q", "cm_m")
+
+
+def chartmuster_saetze(df, jetzt=None, nachtzeile=None):
     """Die Chartmuster aus Gerhards Papier vom 20.09.2026 (chartmuster.py) fuer
     eine Aktie, mit denselben Worten wie bei den Treffern des Scanners
     (scanner_ansicht.muster_saetze). Gerechnet wird am letzten abgeschlossenen
-    Handelstag; der Satz nennt ihn. Nichts davon filtert."""
+    Handelstag; der Satz nennt ihn. Base-on-Base, Green Line und die
+    Stufenzaehlung kommen aus der Zeile der Nachttabelle (nachtzeile, ein
+    dict), weil sie die ganze Kurshistorie brauchen; ein eigener Satz nennt
+    deren Tag. Nichts davon filtert."""
     import chartmuster
     import scanner_ansicht
     d = abgeschlossene_kerzen(df, jetzt)
     if d is None or len(d) < 4:
         return ["Ohne Kursdaten gibt es keine Chartmuster."]
-    teile = scanner_ansicht.muster_saetze(chartmuster.werte(d))
+    werte = chartmuster.werte(d)
+    if nachtzeile:
+        for spalte in chartmuster.SPALTEN:
+            if spalte.startswith(LANGE_MUSTER) and spalte in nachtzeile:
+                werte[spalte] = nachtzeile[spalte]
+    teile = scanner_ansicht.muster_saetze(werte)
     tag = datum_text(str(d["datetime"].iloc[-1])[:10])
     s = [f"Mit dem Schluss vom {tag}: " + ("; ".join(teile) if teile else "keines der Muster trifft zu") + "."]
+    if nachtzeile and nachtzeile.get("datum"):
+        s.append(f"Base-on-Base, Green Line und die Stufenzählung der Basen stammen aus der Nachttabelle mit dem "
+                 f"Schluss vom {datum_text(str(nachtzeile['datum'])[:10])}, weil sie die ganze Kurshistorie "
+                 "brauchen.")
+    else:
+        s.append("Base-on-Base, Green Line und die Stufenzählung der Basen brauchen die ganze Kurshistorie und "
+                 "stehen deshalb nur mit einer Zeile der Nachttabelle; für diese Aktie liegt keine vor.")
     s.append("Die Muster sind Entscheidungshilfen und filtern nichts. Unsere eigenen Schwellen, wo Gerhards "
              "Quellen keine Zahl nennen, stehen im Reiter Regelwerk.")
     return s
@@ -2321,7 +2342,19 @@ def selbsttest() -> int:
       cm_montag[0] == cm_abend[0], cm_montag)
     p("Chartmuster: ohne Kurse ein ehrlicher Satz",
       chartmuster_saetze(None) == ["Ohne Kursdaten gibt es keine Chartmuster."])
-    alle_saetze = ms + ohne + ks + kt + km + kjs + cm_mittag + cm_abend
+    nz = {"datum": "2026-09-18", "cm_m": 1.0, "cm_m_stufe": 3.0, "cm_m_status": "bildung", "cm_m_wochen": 6.0,
+          "cm_m_tiefe_pct": 12.0, "cm_m_neu_grund": "markttief", "cm_m_neu_tag": "2026-07-29", "cm_k": 0,
+          "cm_q": 0.0, "cm_b": 1, "cm_b_eng_kp": 999.0}
+    cm_nacht = chartmuster_saetze(cm_df, jetzt=datetime(2026, 9, 18, 16, 30, tzinfo=ny), nachtzeile=nz)
+    p("Chartmuster: die Stufe kommt aus der Nachttabelle samt ihrem Tag, die kurzen Muster bleiben gerechnet",
+      "Basis Stufe 3, spät, in Bildung seit 6 Wochen" in cm_nacht[0] and "eng über 999" not in cm_nacht[0]
+      and "Inside Day" in cm_nacht[0]
+      and cm_nacht[1].startswith("Base-on-Base, Green Line und die Stufenzählung der Basen stammen aus der "
+                                 "Nachttabelle mit dem Schluss vom 18.09.2026"), cm_nacht)
+    p("Chartmuster: ohne Zeile der Nachttabelle sagt ein Satz, warum die langen Muster fehlen",
+      "stehen deshalb nur mit einer Zeile der Nachttabelle; für diese Aktie liegt keine vor." in cm_abend[1]
+      and "Basis Stufe" not in cm_abend[0], cm_abend)
+    alle_saetze = ms + ohne + ks + kt + km + kjs + cm_mittag + cm_abend + cm_nacht
     p("Keine Bildzeichen und keine Gedankenstriche in den neuen Saetzen",
       not any(bildzeichen_in(x) or "—" in x or "–" in x for x in alle_saetze))
     print(f"\n{len(fehler)} Fehler." if fehler else "\nAlles bestanden.")

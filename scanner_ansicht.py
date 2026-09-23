@@ -1506,10 +1506,36 @@ def _cm_tag(iso):
         return "unbekannt"
 
 
+_CM_MONATE = ("Jänner", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober",
+              "November", "Dezember")
+
+
+def _cm_monat(iso):
+    """'2026-08' wird 'August 2026'."""
+    try:
+        jahr, monat = str(iso)[:7].split("-")
+        return f"{_CM_MONATE[int(monat) - 1]} {int(jahr)}"
+    except (ValueError, IndexError):
+        return "unbekannt"
+
+
+def _cm_gezaehlt(r):
+    """Seit wann die Stufenzaehlung laeuft, als Satzteil."""
+    import chartmuster as cm
+    grund, tag = r.get("cm_m_neu_grund"), _cm_tag(r.get("cm_m_neu_tag"))
+    if grund == "markttief":
+        return f"gezählt seit dem Markttief am {tag}"
+    if grund == "korrektur":
+        return f"gezählt seit der eigenen Korrektur um {zahl(cm.QUELLE['m_korrektur'] * 100, 0)} Prozent am {tag}"
+    if grund == "basistief":
+        return f"gezählt, seit der Kurs am {tag} das Tief der letzten Basis unterschritt"
+    return f"gezählt seit Beginn der Kurshistorie am {tag}"
+
+
 def muster_saetze(r):
     """Die Chartmuster einer Trefferzeile als Satzteile, in der Reihenfolge
-    von Gerhards Tabelle B, A, D, F, G, N, S, T, L; ohne Fund kein Satzteil,
-    nur Power Trend steht immer dabei, sobald er gerechnet ist."""
+    von Gerhards Tabelle B, A, D, F, G, N, S, T, L, K, Q, M; ohne Fund kein
+    Satzteil, nur Power Trend steht immer dabei, sobald er gerechnet ist."""
     t = []
     if _cm_ja(r, "cm_b"):
         s = "Inside Day"
@@ -1573,6 +1599,39 @@ def muster_saetze(r):
                  + (", der Börsenmantel davor zählt nicht mit" if _cm_wahr(r.get("cm_l_mantel")) else "")
                  + (", die Erstnotiz ist unsicher" if _cm_wahr(r.get("cm_l_unsicher")) else "")
                  + f", Kaufpunkt {_cm_dollar(r.get('cm_l_kp'))}, Stop {_cm_dollar(r.get('cm_l_stop'))}")
+    if _cm_ja(r, "cm_k"):
+        w, g = _num(r.get("cm_k_wochen")), _num(r.get("cm_k_gewinn_pct"))
+        t.append("Base-on-Base, die obere Basis"
+                 + (f" seit {int(w)} Wochen" if w else "")
+                 + (f" nur {zahl(g, 1)} Prozent über dem Ausbruch der unteren" if g is not None else "")
+                 + ", beide zählen als eine Stufe"
+                 + f", Kaufpunkt {_cm_dollar(r.get('cm_k_kp'))}, Stop {_cm_dollar(r.get('cm_k_stop'))}")
+    if _cm_ja(r, "cm_q"):
+        n, f = _num(r.get("cm_q_tage_ohne_hoch")), _num(r.get("cm_q_vol_faktor"))
+        t.append(f"Green Line Breakout mit dem Monatsschluss {_cm_monat(r.get('cm_q_monat'))} über dem Allzeithoch "
+                 f"von {_cm_dollar(r.get('cm_q_linie'))} vom {_cm_tag(r.get('cm_q_linie_tag'))}"
+                 + (f", das {int(n)} Handelstage stand" if n else "")
+                 + f", erster Schluss darüber am {_cm_tag(r.get('cm_q_ausbruch_tag'))}"
+                 + (f", Volumen je Tag das {zahl(f, 1)}-Fache der 50 Tage davor" if f is not None else "")
+                 + f", Einstieg über {_cm_dollar(r.get('cm_q_kp'))}, Stop {_cm_dollar(r.get('cm_q_stop'))}"
+                 + ", Volumenschwelle eigene Festlegung")
+    if _cm_ja(r, "cm_m"):
+        s = _num(r.get("cm_m_stufe"))
+        w, tief = _num(r.get("cm_m_wochen")), _num(r.get("cm_m_tiefe_pct"))
+        satz = f"Basis Stufe {int(s)}" if s else "Basis"
+        if s and int(s) == 3:
+            satz += ", spät"
+        elif s and int(s) >= 4:
+            satz += ", sehr spät"
+        if r.get("cm_m_status") == "ausbruch":
+            satz += f", Ausbruch am {_cm_tag(r.get('cm_m_ausbruch'))}" + (f" aus {int(w)} Wochen" if w else "")
+        else:
+            satz += ", in Bildung" + (f" seit {int(w)} Wochen" if w else "")
+        if tief is not None:
+            satz += f", {zahl(tief, 1)} Prozent tief"
+        if _cm_wahr(r.get("cm_m_bob")):
+            satz += ", als Base-on-Base gleiche Stufe wie die Basis darunter"
+        t.append(satz + ", " + _cm_gezaehlt(r))
     return t
 
 
@@ -1588,16 +1647,19 @@ def chartmuster_erklaerung():
 
     k = f["pivot_kerzen"]
     return [
-        "Seit dem 21.09.2026 stehen bei jedem Treffer die Chartmuster aus Gerhards Dokument vom 20.09.2026, soweit "
-        "sie nur Tages- und Wochenkerzen brauchen: Inside Day, Three Weeks Tight, Pocket Pivot, Power Trend, Flat "
-        "Base, Shakeout plus drei, Wick Play, Shakeout am EMA 10 und seit dem 22.09.2026 die IPO Base. Sie sind "
-        "Entscheidungshilfen und filtern nichts. Gerechnet wird am letzten Handelstag der Nachttabelle; Three "
-        "Weeks Tight, Flat Base und IPO Base zählen nur abgeschlossene Wochen. Das W, also das Double Bottom, "
-        "ist am 22.09.2026 auf Gerhards Entscheid ganz entfallen.",
-        f"Unsere Festlegungen bei Three Weeks Tight: davor mindestens {pz(f['a_anstieg_min'])} Prozent Anstieg in "
-        f"den {f['a_anstieg_wochen']} Wochen vor der engen Phase, die Woche davor höchstens "
-        f"{pz(f['a_nahe_hoch'])} Prozent unter dem höchsten Wochenschluss dieser Zeit, und höchstens "
-        f"{f['a_wochen_max']} enge Wochen. Länger eng ist ein festgenagelter Kurs, etwa bei einer Übernahme.",
+        "Seit dem 21.09.2026 stehen bei jedem Treffer die Chartmuster aus Gerhards Dokument vom 20.09.2026: "
+        "Inside Day, Three Weeks Tight, Pocket Pivot, Power Trend, Flat Base, Shakeout plus drei, Wick Play, "
+        "Shakeout am EMA 10, seit dem 22.09.2026 die IPO Base und seit dem 23.09.2026 Base-on-Base, der Green "
+        "Line Breakout und die Stufenzählung der Basen. Sie sind Entscheidungshilfen und filtern nichts. "
+        "Gerechnet wird am letzten Handelstag der Nachttabelle; Three Weeks Tight, Flat Base und IPO Base zählen "
+        "nur abgeschlossene Wochen, Base-on-Base, Green Line und die Stufenzählung brauchen die ganze "
+        "Kurshistorie. Das W, also das Double Bottom, ist am 22.09.2026 auf Gerhards Entscheid ganz entfallen.",
+        f"Bei Three Weeks Tight zählen {q['a_wochen_min']} oder {q['a_wochen_max']} enge Wochen, ab "
+        f"{q['a_wochen_max'] + 1} nicht mehr, auf Gerhards Entscheid vom 23.09.2026; länger eng ist ein "
+        "festgenagelter Kurs, etwa bei einer Übernahme. Unsere Festlegungen dazu: davor mindestens "
+        f"{pz(f['a_anstieg_min'])} Prozent Anstieg in den {f['a_anstieg_wochen']} Wochen vor der engen Phase, "
+        f"und die Woche davor liegt höchstens {pz(f['a_nahe_hoch'])} Prozent unter dem höchsten Wochenschluss "
+        "dieser Zeit.",
         f"Unsere Festlegung beim Pocket Pivot: in oder knapp über einer Basis heißt, die {f['d_basis_tage']} "
         f"Handelstage davor schwanken höchstens {pz(f['d_basis_tiefe_max'])} Prozent vom Hoch zum Tief, und der "
         f"Pivot-Tag schließt höchstens {pz(f['d_basis_ueber_max'])} Prozent über ihrem Hoch.",
@@ -1633,6 +1695,35 @@ def chartmuster_erklaerung():
         f"{zahl(f['l_mantel_bis'], 0)} Dollar mit höchstens {pz(f['l_mantel_enge'])} Prozent Spanne, danach ein "
         f"Sprung von mindestens {pz(f['l_mantel_sprung'])} Prozent. Sieht der Anfang nur nach Mantel aus, bleibt "
         "der erste Kurstag die Erstnotiz und der Fund sagt, dass sie unsicher ist.",
+        f"Stufenzählung der Basen nach Gerhards Regeln vom 23.09.2026, nur für Aktien über "
+        f"{zahl(q['m_kurs_min'], 0)} Dollar: Eine Basis dauert mindestens {q['m_wochen_min']} Wochen, ist höchstens "
+        f"{pz(q['m_tiefe_max'])} Prozent tief vom linken Hoch zum tiefsten Tief und ist ausgebrochen mit einem "
+        "Tagesschluss über dem linken Hoch. Stufe 1 ist die erste Basis nach einem Markttief oder einer eigenen "
+        "Korrektur; jede weitere zählt eine Stufe höher, wenn die Aktie aus der vorigen ausgebrochen ist und bis "
+        f"zum linken Hoch der neuen mindestens {pz(q['k_gewinn_min'])} Prozent gewonnen hat. Darunter ist es "
+        "Base-on-Base, beide Basen zählen als eine Stufe; Einstieg über dem Hoch der oberen Basis plus "
+        f"{zahl(q['aufschlag'], 2)} Dollar, Stop an ihrem Tief. Die Zählung beginnt von vorn an einem Markttief, "
+        f"sobald der Kurs das Tief der letzten Basis unterschreitet und sobald er {pz(q['m_korrektur'])} Prozent "
+        f"unter dem letzten Hoch liegt; jede Basis, die tiefer als {pz(q['m_korrektur'])} Prozent korrigiert, ist "
+        "damit Stufe 1, so gewollt. Ab Stufe 3 heißt die Basis spät, ab Stufe 4 sehr spät.",
+        "Unsere Festlegungen bei der Stufenzählung: Ein Markttief ist das Tief einer Korrektur des S&P 500 oder "
+        "des Nasdaq, deren Erholungsversuch ein Follow-through Day bestätigt hat, nach denselben Regeln wie in der "
+        "Marktampel. Das linke Hoch einer Basis ist das höchste Hoch seit dem letzten Ausbruch; ein neues Hoch, "
+        "bevor die Basis fünf Wochen alt ist, lässt sie dort neu beginnen. Gezählt wird in Kalenderwochen, die "
+        f"Woche des linken Hochs zählt mit. Fällt der Kurs mehr als {pz(q['m_tiefe_max'])} Prozent unter das "
+        "linke Hoch, beginnt die nächste Basis erst am höchsten Hoch nach dem tiefsten Tief dieses Rückgangs; eine "
+        "bloße Erholung auf das alte Niveau zählt so nie als Basis. Unterschritten heißt mit dem Tagestief. Die "
+        f"{zahl(q['m_kurs_min'], 0)} Dollar gelten für den letzten Schluss, gezählt wird die ganze Kurshistorie. "
+        "Gezeigt wird die Basis, die sich bildet, sobald sie fünf Wochen alt ist, sonst die letzte, aus der die "
+        "Aktie ausgebrochen ist.",
+        f"Green Line Breakout nach Gerhards Regeln: Die grüne Linie ist das Allzeithoch, das mindestens "
+        f"{q['q_tage_ohne_hoch']} Handelstage ohne neues Hoch stand. Das Signal ist ein Monatsschluss darüber; "
+        "gezeigt wird es erst nach dem bestätigten Monatsschluss und dann im ganzen Folgemonat. Einstieg über der "
+        "Linie, Stop am letzten Tief der Erkennung von Hochs und Tiefs vor dem ersten Schluss über der Linie, mit "
+        "dem Zehn-Prozent-Deckel. Unsere Festlegung dazu: Volumen deutlich über dem Schnitt heißt, der Schnitt "
+        f"je Handelstag im Ausbruchsmonat beträgt mindestens das {zahl(f['q_vol_faktor'], 1)}-Fache des Schnitts "
+        f"der {f['q_vol_tage']} Handelstage vor diesem Monat. Ein Monat gilt als abgeschlossen, wenn sein letzter "
+        "Werktag vorbei ist.",
         "Sechs dieser Muster melden seit dem 22.09.2026 auch im Handel, auf Gerhards Entscheid: Three Weeks "
         "Tight, Inside Day, Pocket Pivot, IPO Base, Shakeout plus drei und Wick Play. Der Nachtscan rechnet "
         "ihre Einstiege, der Wächter meldet, sobald der Kurs sie überschreitet, und zwar nur für die Aktien "
@@ -2638,19 +2729,57 @@ def selbsttest() -> int:
       ms == ["Shakeout plus drei nach 16,3 Prozent Abverkauf in 6 Handelstagen, Tief am 16.09.2026, Einstieg "
              "plus 5 Prozent über 174,57 Dollar, plus 10 Prozent über 182,89 Dollar, Stop 166,26 Dollar, "
              "Hoch und Abverkauf nach eigener Festlegung"], " | ".join(ms))
+    ms = muster_saetze({"cm_k": 1, "cm_k_gewinn_pct": 3.1, "cm_k_wochen": 7.0, "cm_k_kp": 287.3,
+                        "cm_k_stop": 258.57, "cm_q": 1, "cm_q_monat": "2026-08", "cm_q_linie": 50.25,
+                        "cm_q_linie_tag": "2025-11-28", "cm_q_tage_ohne_hoch": 179.0, "cm_q_vol_faktor": 2.0,
+                        "cm_q_ausbruch_tag": "2026-08-07", "cm_q_kp": 50.25, "cm_q_stop": 45.23,
+                        "cm_m": 1, "cm_m_stufe": 1.0, "cm_m_status": "bildung", "cm_m_wochen": 7.0,
+                        "cm_m_tiefe_pct": 14.9, "cm_m_bob": np.bool_(True), "cm_m_neu_grund": "markttief",
+                        "cm_m_neu_tag": "2026-07-29"})
+    p("Chartmuster: Base-on-Base, Green Line und Stufe in der Reihenfolge der Tabelle",
+      ms == ["Base-on-Base, die obere Basis seit 7 Wochen nur 3,1 Prozent über dem Ausbruch der unteren, beide "
+             "zählen als eine Stufe, Kaufpunkt 287,30 Dollar, Stop 258,57 Dollar",
+             "Green Line Breakout mit dem Monatsschluss August 2026 über dem Allzeithoch von 50,25 Dollar vom "
+             "28.11.2025, das 179 Handelstage stand, erster Schluss darüber am 07.08.2026, Volumen je Tag das "
+             "2,0-Fache der 50 Tage davor, Einstieg über 50,25 Dollar, Stop 45,23 Dollar, Volumenschwelle eigene "
+             "Festlegung",
+             "Basis Stufe 1, in Bildung seit 7 Wochen, 14,9 Prozent tief, als Base-on-Base gleiche Stufe wie die "
+             "Basis darunter, gezählt seit dem Markttief am 29.07.2026"], " | ".join(ms))
+    ms = muster_saetze({"cm_m": 1, "cm_m_stufe": 3.0, "cm_m_status": "ausbruch", "cm_m_wochen": 9.0,
+                        "cm_m_tiefe_pct": 25.1, "cm_m_ausbruch": "2026-08-03", "cm_m_bob": False,
+                        "cm_m_neu_grund": "korrektur", "cm_m_neu_tag": "2026-06-10"})
+    ms4 = muster_saetze({"cm_m": 1, "cm_m_stufe": 4.0, "cm_m_status": "bildung", "cm_m_wochen": 6.0,
+                         "cm_m_tiefe_pct": 11.0, "cm_m_bob": None, "cm_m_neu_grund": "basistief",
+                         "cm_m_neu_tag": "2026-02-02"})
+    ms_b = muster_saetze({"cm_m": 1, "cm_m_stufe": 2.0, "cm_m_status": "bildung", "cm_m_wochen": 8.0,
+                          "cm_m_tiefe_pct": 12.0, "cm_m_neu_grund": "beginn", "cm_m_neu_tag": "2025-06-18"})
+    p("Chartmuster: Stufe 3 heißt spät, Stufe 4 sehr spät, jede Ruecksetzung nennt ihren Grund",
+      ms == ["Basis Stufe 3, spät, Ausbruch am 03.08.2026 aus 9 Wochen, 25,1 Prozent tief, gezählt seit der "
+             "eigenen Korrektur um 20 Prozent am 10.06.2026"]
+      and ms4 == ["Basis Stufe 4, sehr spät, in Bildung seit 6 Wochen, 11,0 Prozent tief, gezählt, seit der Kurs "
+                  "am 02.02.2026 das Tief der letzten Basis unterschritt"]
+      and ms_b == ["Basis Stufe 2, in Bildung seit 8 Wochen, 12,0 Prozent tief, gezählt seit Beginn der "
+                   "Kurshistorie am 18.06.2025"], " | ".join(ms + ms4 + ms_b))
+    p("Chartmuster: ohne Treffer bei K, Q und M kein Satz",
+      muster_saetze({"cm_k": 0, "cm_q": 0.0, "cm_m": 0, "cm_m_stufe": float("nan")}) == [])
     import chartmuster as cm
     erkl = " ".join(chartmuster_erklaerung())
     p("Chartmuster: Erklaerung nennt jede Festlegung mit ihrer Zahl",
-      all(x in erkl for x in ("höchstens 3 enge Wochen", "höchstens 10 Prozent unter", "höchstens 20 Prozent vom Hoch",
+      all(x in erkl for x in ("zählen 3 oder 4 enge Wochen, ab 5 nicht mehr", "höchstens 10 Prozent unter",
+                              "höchstens 20 Prozent vom Hoch",
                               "höchstens 5 Prozent über", "der 26 Wochen", "mindestens 2-mal so lang",
                               "höchstens 30 Prozent der Tagesspanne", "der 14 Tage davor", "bis 3 Handelstage",
                               "höchstens 3 Prozent", "von 5 Kerzen, 2 davor und 2 danach", "der 63 Handelstage",
                               "mindestens 10 Prozent vom Hoch zum Tief in höchstens 15 Handelstagen",
                               "höchstens 20 Handelstage zurückliegt", "bei 5 und 10 Prozent",
                               "höchstens 52 Wochen nach ihrer Erstnotiz", "mindestens 3 Wochen und ist 20 bis 50",
-                              "mindestens 20 Handelstage zwischen 9 und 11 Dollar"))
-      and not any(x in erkl for x in ("Double Bottom:", "höchstens 13 Wochen"))
-      and len(cm.FESTLEGUNGEN) == 30, erkl[:200])
+                              "mindestens 20 Handelstage zwischen 9 und 11 Dollar",
+                              "mindestens das 1,4-Fache des Schnitts der 50 Handelstage vor diesem Monat",
+                              "nur für Aktien über 10 Dollar", "mindestens 5 Wochen, ist höchstens 35 Prozent tief",
+                              "mindestens 20 Prozent gewonnen hat", "Follow-through Day bestätigt hat",
+                              "mindestens 63 Handelstage ohne neues Hoch"))
+      and not any(x in erkl for x in ("Double Bottom:", "höchstens 13 Wochen", "höchstens 3 enge Wochen"))
+      and len(cm.FESTLEGUNGEN) == 31 and "a_wochen_max" not in cm.FESTLEGUNGEN, erkl[:200])
 
     print(f"\n{len(fehler)} Fehler." if fehler else "\nAlles bestanden.")
     return 1 if fehler else 0

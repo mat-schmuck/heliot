@@ -396,9 +396,47 @@ def block_d(namen_aus_c=None):
            and not any(k.startswith("h_") for k in cm.FESTLEGUNGEN),
            ", ".join(s for s in cm.SPALTEN if s.startswith("cm_h")))
 
-    # O19: Three Weeks Tight, hoechstens drei enge Wochen.
-    pruefe("D", "O19: Three Weeks Tight zaehlt hoechstens drei enge Wochen",
-           cm.FESTLEGUNGEN["a_wochen_max"] == 3, str(cm.FESTLEGUNGEN["a_wochen_max"]))
+    # Three Weeks Tight: vier enge Wochen zaehlen, ab fuenf nicht mehr
+    # (Gerhard, 23.09.2026, Frage 1; ersetzt O19 mit den drei Wochen). Die
+    # Zahl ist seine und steht deshalb in QUELLE, nicht bei unseren
+    # Festlegungen.
+    pruefe("D", "Three Weeks Tight zaehlt vier enge Wochen, ab fuenf nicht mehr (Gerhard, 23.09.2026)",
+           cm.QUELLE["a_wochen_max"] == 4 and "a_wochen_max" not in cm.FESTLEGUNGEN,
+           str(cm.QUELLE.get("a_wochen_max")))
+
+    # M STUFENZAEHLUNG, K BASE-ON-BASE, Q GREEN LINE (Gerhard, 23.09.2026,
+    # Fragen 2, 3 und 5; Reihenfolge seine: zuerst M, direkt danach K)
+    pruefe("D", "M und K: Gerhards Zahlen vom 23.09.2026 stehen in QUELLE",
+           cm.QUELLE["m_wochen_min"] == 5 and cm.QUELLE["m_tiefe_max"] == 0.35
+           and cm.QUELLE["m_korrektur"] == 0.20 and cm.QUELLE["k_gewinn_min"] == 0.20
+           and cm.QUELLE["m_kurs_min"] == 10.0 and cm.QUELLE["q_tage_ohne_hoch"] == 63
+           and not any(k.startswith(("m_", "k_")) for k in cm.FESTLEGUNGEN))
+    pruefe("D", "Q: die Volumenschwelle ist unsere Festlegung und als solche gekennzeichnet",
+           cm.FESTLEGUNGEN["q_vol_faktor"] == 1.4 and cm.FESTLEGUNGEN["q_vol_tage"] == 50
+           and "q_vol_faktor" not in cm.QUELLE)
+    pruefe("D", "M, K und Q sind Spalten mit Merker, und kein Alarm-Muster",
+           all(s in cm.MERKER for s in ("cm_m", "cm_k", "cm_q"))
+           and not any(k.startswith(("cm_m", "cm_k", "cm_q"))
+                       for k in pathlib.Path("alarm_muster.py").read_text(encoding="utf-8").split('"')))
+    _gerade = cm._reihe(list(__import__("numpy").linspace(20, 60, 300)), spanne=0.005)
+    pruefe("D", "M rechnet nur mit der ganzen Historie und den Markttiefs der Nacht",
+           cm.werte(_gerade)["cm_m"] == 0 and cm.werte(_gerade, voll=_gerade)["cm_m"] == 0
+           and set(cm.werte(_gerade, voll=_gerade, markttiefs=[])) == set(cm.SPALTEN))
+    _sdq = pathlib.Path("scanner_daten.py").read_text(encoding="utf-8")
+    pruefe("D", "Die Nachttabelle gibt die ganze Historie und die Markttiefs an die Muster",
+           "zeile.update(chartmuster_werte(d, voll, markttiefs))" in _sdq
+           and 'stand["quellen"]["markttiefs"] = befund_mt' in _sdq
+           and "marktbreite.markttiefs(" in _sdq)
+    import marktbreite as _mb
+    pruefe("D", "Das Markttief kommt aus der Follow-through-Rechnung der Marktampel",
+           hasattr(_mb, "markttiefs")
+           and "tiefs" in __import__("inspect").signature(_mb.follow_through).parameters)
+    _nsq = pathlib.Path("nachschlagen.py").read_text(encoding="utf-8")
+    _stq = pathlib.Path("streamlit_app.py").read_text(encoding="utf-8")
+    pruefe("D", "Das Nachschlagen nimmt M, K und Q aus der Nachttabelle, die Ladefunktion steht davor",
+           'LANGE_MUSTER = ("cm_k", "cm_q", "cm_m")' in _nsq
+           and "chartmuster_saetze(nachschlag_df, nachtzeile=nachschlag_nacht)" in _stq
+           and _stq.index("def lade_scanner_tabelle():") < _stq.index("if nachschlag_eingabe:"))
 
     # L IPO Base samt Erstnotiz-Regel (O14).
     pruefe("D", "L: die IPO Base ist gebaut, mit Erstnotiz und Mantel-Regel (O14)",

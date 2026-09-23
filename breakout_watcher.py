@@ -646,7 +646,6 @@ HTF_MARKE = "HTF|"
 
 # Der Sektor-Radar-Befund wird je HANDELSTAG einmal gemeldet; der Tag steht
 # im Schluessel, damit er mit dem Freitags-Putz von selbst verfaellt.
-SEKTOR_MARKE = "SEKTOR|"
 
 # Insider-Funde tragen ihre eigene Kennung im Schluessel, damit ein
 # waechsender Cluster (drei Insider, spaeter vier) erneut gemeldet
@@ -2203,43 +2202,12 @@ def format_uebersprungen(t: dict) -> str:
     return "\n".join(zeilen)
 
 
-# SEIT 10.09.2026 NICHT MEHR AUFGERUFEN (Mathias' Regel: nichts vom Vortag).
-# Der Radar rechnet auf Tagesschlusskursen; wie er regelkonform melden soll,
-# ist eine Regelfrage an Gerhard. Die Funktion bleibt fuer seine Antwort.
-def melde_sektor_radar(topic: str, befund: dict, schon_gemeldet: set,
-                       state: dict) -> bool:
-    """Den Befund des Nachtlaufs EINMAL je Handelstag melden.
-
-    WARUM HIER UND NICHT IM NACHTLAUF (Mathias, 27.07.2026, im
-    Scanner-Workflow festgehalten): "Gemeldet wird ausschliesslich vom
-    Waechter, und zwar erst ab der New Yorker Eroeffnung. Die frueheren
-    Mitternachtsnachrichten waren Treffer, die zu diesem Zeitpunkt
-    ohnehin niemand handeln konnte." Gerhards Paket sendet direkt aus dem
-    Nachtlauf; das waere ein Rueckfall hinter diese Entscheidung.
-    Gerechnet wird also nachts, gemeldet am Morgen.
-
-    Die Handelszeit-Sperre braucht es hier nicht eigens: Sie sitzt in
-    sende() und gilt fuer JEDE automatische Meldung. Schlaegt sie zu,
-    kommt false zurueck und der Befund bleibt offen.
-
-    Rueckgabe: true, wenn er weg ist (oder es nichts zu melden gab)."""
-    treffer = befund.get("treffer") or []
-    tag = befund.get("handelstag")
-    if not treffer or not tag:
-        return True
-    key = SEKTOR_MARKE + str(tag)
-    if key in schon_gemeldet:
-        return True
-    absaetze = sektor_radar.absaetze(treffer)
-    # Priorität "default": Ein Branchendreher ist eine Auskunft, kein
-    # Ausbruch — er soll nicht wie ein Kaufsignal klingeln.
-    if not sende(topic, sektor_radar.titel(treffer), absaetze, "default"):
-        return False
-    schon_gemeldet.add(key)
-    state["gemeldet"][key] = date.today().isoformat()
-    save_state(state)
-    print(f"Sektor-Radar gemeldet: {len(treffer)} Dreher vom {tag}.")
-    return True
+# KEINE MORGENMELDUNG DES SEKTOR-RADARS (Gerhard, 23.09.2026, Frage 6): "Der
+# schlussnahe Radar um 15:45 New Yorker Zeit reicht. Keine zusaetzliche
+# Morgenmeldung." Die Funktion, die den Befund des Nachtlaufs am Morgen
+# gemeldet haette und seit dem 10.09.2026 fuer diese Antwort liegen blieb,
+# ist damit entfallen, samt ihrer Marke im Meldegedaechtnis. Der Radar meldet
+# nur noch schlussnah mit hochgerechnetem Volumen (sektor_radar_hochgerechnet).
 
 
 # DIE MELDUNG "WIEDER IM EINSTIEGSFENSTER" IST ENTFALLEN (Gerhard,
@@ -2644,14 +2612,13 @@ def nachtbefunde_laden() -> dict:
             live.append(b)
         else:
             zurueck.append(b)
-    radar = sektor_radar.lies() if CFG["sektor_radar"]["melden"] else {}
     insider = (insider_edgar.lies_funde()
                if CFG["insider"].get("melden", True) else [])
     return {"tag": str(daten.get("handelstag") or ""),
             "alt_format": alt_format and bool(befunde),
             "live": live, "zurueck": zurueck,
             "verlaeufe": daten.get("verlaeufe") or {},
-            "radar": radar or {}, "insider": list(insider or []),
+            "insider": list(insider or []),
             "abgeschaltet": len(abgeschaltet),
             "offen": []}
 
@@ -2675,12 +2642,6 @@ def nachtbefunde_bericht(nacht: dict):
         print(f"Nachtbefunde vom {tag}: {nacht['abgeschaltet']} "
               f"Straffungs-Befund(e) werden nicht gemeldet, die Meldung ist "
               f"abgeschaltet (Gerhard, bis auf Weiteres).")
-    treffer = nacht["radar"].get("treffer") or []
-    if treffer:
-        print(f"Sektor-Radar: {len(treffer)} Dreher vom "
-              f"{nacht['radar'].get('handelstag') or 'unbekannt'} "
-              f"zurückgehalten (auf Schlusskursen gerechnet; Regelfrage an "
-              f"Gerhard).")
     if nacht["insider"]:
         print(f"Insider-Käufe: {len(nacht['insider'])} Fund(e) liegen vor; "
               f"Marktwert und Einstufung werden mit dem heutigen Kurs "

@@ -37,16 +37,29 @@ damit die Funktion double_bottom, die Spalten cm_h, die Zahlen zu H in QUELLE
 und FESTLEGUNGEN und die Saetze in der App. Die Pivot-Erkennung bleibt, N sitzt
 darauf.
 
-NOCH NICHT GEBAUT, aber schon entschieden (Gerhards Antworten vom 22.09.2026,
-damit die Regeln beim Bau gelten):
-  K Base-on-Base und M Stufenzaehlung der Basen: nur Scanner, kein Alarm. M ist
-    das groesste Stueck seiner Liste und Voraussetzung fuer K.
-  Q Green Line Breakout: O15, "erst nach bestaetigtem Monatsschluss anzeigen,
-    keine Zwischenstufe". Ein Tagesschluss ueber der Linie wird also NICHT
-    gezeigt, auch nicht mit dem Vermerk, dass der Monatsschluss noch aussteht.
-  V Episodic Pivot: O16, eine grosse Luecke nach einer toten Phase, zu der sich
-    keine Nachricht finden laesst, wird GETRENNT vom Episodic Pivot angezeigt,
-    mit dem Vermerk "Luecke ohne erkannten Ausloeser".
+M STUFENZAEHLUNG UND K BASE-ON-BASE, seit 23.09.2026 (Gerhards Antworten auf
+die Fragen 2 und 3 vom selben Tag, Reihenfolge seine: "zuerst M
+Stufenzaehlung, direkt danach K Base-on-Base"): nur Scanner, kein Alarm, kein
+Filter. Eine Basis dauert mindestens fuenf Wochen, ist hoechstens 35 Prozent
+tief vom linken Hoch zum tiefsten Tief und ist ausgebrochen mit einem
+Tagesschluss ueber dem linken Hoch; zurueckgesetzt wird an einem Markttief,
+beim Unterschreiten des Tiefs der letzten Basis und bei 20 Prozent Rueckgang
+vom letzten Hoch. Seine bewusste Folge: Jede Basis, die tiefer als 20 Prozent
+korrigiert, ist Stufe eins. Die Markttiefs kommen aus der Marktampel
+(marktbreite.markttiefs); gezaehlt wird ueber die GANZE Kurshistorie, deshalb
+rechnet nur die Nachttabelle M, K und Q (werte mit voll).
+
+Q GREEN LINE BREAKOUT, seit 23.09.2026 (Stop nach seiner Antwort auf Frage 5):
+O15, "erst nach bestaetigtem Monatsschluss anzeigen, keine Zwischenstufe". Ein
+Tagesschluss ueber der Linie wird also NICHT gezeigt, auch nicht mit dem
+Vermerk, dass der Monatsschluss noch aussteht.
+
+NOCH NICHT GEBAUT: V Episodic Pivot. O16, eine grosse Luecke nach einer toten
+Phase, zu der sich keine Nachricht finden laesst, wird GETRENNT vom Episodic
+Pivot angezeigt, mit dem Vermerk "Luecke ohne erkannten Ausloeser". Seine
+Zahlen stehen seit dem 23.09.2026 fest: tote Phase mindestens zwei Monate,
+mindestens 15 Prozent unter dem Zweihundert-Tage-Hoch, Volumen mindestens das
+Dreifache des Fuenfzig-Tage-Schnitts ueber die F(t)-Kurve.
 
 UNSERE FESTLEGUNGEN: Gerhard: "jede Zahl, die nicht aus der Quelle stammt,
 sondern von uns gesetzt wurde ... wird im Code und in der Ausgabe als unsere
@@ -72,6 +85,7 @@ Aufruf:
 """
 
 import argparse
+import bisect
 import sys
 
 import numpy as np
@@ -82,6 +96,7 @@ import pandas as pd
 QUELLE = {
     "a_eng": 0.015,               # A: Wochenschluss hoechstens 1,5 Prozent vom Vorwochenschluss
     "a_wochen_min": 3,            # A: drei enge Wochen, vier zaehlen genauso
+    "a_wochen_max": 4,            # A: vier enge Wochen zaehlen auch, ab fuenf nicht mehr (Gerhard, 23.09.2026)
     "aufschlag": 0.10,            # A und G: Kaufpunkt Hoch plus 0,10 Dollar
     "d_fenster": 10,              # D: Abwaertstage der letzten zehn Handelstage
     "f_tage_ueber_ema": 10,       # F: seit zehn Handelstagen jedes Tief ueber dem EMA 21
@@ -93,6 +108,14 @@ QUELLE = {
     "l_tiefe_min": 0.20,          # L: Tiefe zwanzig bis fuenfzig Prozent (bei einer normalen Basis waere das zu viel)
     "l_tiefe_max": 0.50,
     "n_aufschlag": (0.05, 0.10),  # N: Einstieg Tief mal (1 + p), p zwischen 0,05 und 0,10; beide nebeneinander
+    # M und K (Papier vom 20.09.2026, Zahlen vom 23.09.2026, Fragen 2 und 3)
+    "m_kurs_min": 10.0,           # M: gezaehlt nur fuer Aktien ueber zehn Dollar
+    "m_wochen_min": 5,            # M: eine Basis dauert mindestens fuenf Wochen
+    "m_tiefe_max": 0.35,          # M: hoechstens 35 Prozent vom linken Hoch zum tiefsten Tief
+    "m_korrektur": 0.20,          # M: 20 Prozent unter dem letzten Hoch setzt die Zaehlung zurueck
+    "k_gewinn_min": 0.20,         # K: unter 20 Prozent Gewinn zwischen zwei Basen zaehlen beide als eine Stufe
+    # Q (Papier vom 20.09.2026)
+    "q_tage_ohne_hoch": 63,       # Q: seit dem Allzeithoch mindestens 63 Handelstage ohne neues Hoch
 }
 
 # UNSERE FESTLEGUNGEN (die Quelle nennt dazu keine Zahl)
@@ -102,15 +125,12 @@ FESTLEGUNGEN = {
     # bis zum Schluss der Woche davor (die 20 Prozent wie bei G).
     "a_anstieg_min": 0.20,
     "a_anstieg_wochen": 12,
-    # A: hoechstens DREI enge Wochen (Gerhard, 22.09.2026, Antwort auf O19:
-    # "hoechstens 3 Wochen, nicht 5"). Laenger eng ist keine Pause nach einem
-    # Ausbruch, sondern ein festgenagelter Kurs; gemessen am 21.09.2026 an 800
-    # Aktien: SLAB 24 Wochen eng nach einem Sprung, der typische Verlauf einer
-    # laufenden Uebernahme. ACHTUNG, Spannung zu seinem eigenen Papier vom
-    # 20.09.2026: Dort steht "Vier Wochen zaehlen genauso, wenn alle vier eng
-    # bleiben" (QUELLE["a_wochen_min"] ist drei). Die neuere Regel gilt; die
-    # vierte enge Woche zaehlt seither nicht mehr. An Mathias gemeldet.
-    "a_wochen_max": 3,
+    # A: Die Obergrenze der engen Wochen steht seit dem 23.09.2026 in QUELLE.
+    # Gerhard, Antwort auf Frage 1: "vier enge Wochen zaehlen auch, ab fuenf
+    # nicht mehr. Das ersetzt meine Antwort O19 mit den drei Wochen." Laenger
+    # eng ist keine Pause nach einem Ausbruch, sondern ein festgenagelter Kurs;
+    # gemessen am 21.09.2026 an 800 Aktien: SLAB 24 Wochen eng nach einem
+    # Sprung, der typische Verlauf einer laufenden Uebernahme.
     # A: Der Anstieg muss IN die enge Phase fuehren: Der Schluss der Woche davor
     # liegt hoechstens 10 Prozent unter dem hoechsten Wochenschluss der zwoelf
     # Wochen davor. Gemessen am 21.09.2026: AAOI kam sonst mit drei engen
@@ -193,6 +213,13 @@ FESTLEGUNGEN = {
     "n_abverkauf_min": 0.10,
     "n_abverkauf_tage": 15,
     "n_tief_tage_max": 20,
+    # Q: "Volumen deutlich ueber Schnitt": Der Schnitt je Handelstag im
+    # Ausbruchsmonat betraegt mindestens das 1,4-Fache des Schnitts der 50
+    # Handelstage vor diesem Monat. Die 50 Tage sind das Fenster des ganzen
+    # Systems (IBD), die 1,4 das untere Ende von IBDs "40 bis 50 Prozent ueber
+    # dem Durchschnitt", wie beim strengeren Ausbruchsvolumen der VCP.
+    "q_vol_tage": 50,
+    "q_vol_faktor": 1.4,
 }
 
 SPALTEN = (
@@ -208,9 +235,14 @@ SPALTEN = (
     "cm_n_stop",
     "cm_l", "cm_l_wochen", "cm_l_tiefe_pct", "cm_l_seit_wochen", "cm_l_erstnotiz", "cm_l_mantel",
     "cm_l_unsicher", "cm_l_kp", "cm_l_stop",
+    "cm_k", "cm_k_gewinn_pct", "cm_k_wochen", "cm_k_kp", "cm_k_stop",
+    "cm_q", "cm_q_monat", "cm_q_linie", "cm_q_linie_tag", "cm_q_tage_ohne_hoch", "cm_q_vol_faktor",
+    "cm_q_ausbruch_tag", "cm_q_kp", "cm_q_stop",
+    "cm_m", "cm_m_stufe", "cm_m_status", "cm_m_wochen", "cm_m_tiefe_pct", "cm_m_seit", "cm_m_hoch",
+    "cm_m_ausbruch", "cm_m_bob", "cm_m_gewinn_pct", "cm_m_neu_grund", "cm_m_neu_tag",
 )
 
-MERKER = ("cm_b", "cm_a", "cm_d", "cm_g", "cm_s", "cm_t", "cm_n", "cm_l")
+MERKER = ("cm_b", "cm_a", "cm_d", "cm_g", "cm_s", "cm_t", "cm_n", "cm_l", "cm_k", "cm_q", "cm_m")
 
 
 def leer():
@@ -292,7 +324,8 @@ def inside_day(x):
 
 def three_weeks_tight(wk):
     """Fuer w in {t-2, t-1, t}: |Close_W(w) / Close_W(w-1) - 1| <= 0,015; vier
-    und mehr enge Wochen zaehlen genauso. Vorbedingung (unsere Festlegung):
+    enge Wochen zaehlen genauso, ab fuenf nicht mehr (Gerhard, 23.09.2026).
+    Vorbedingung (unsere Festlegung):
     mindestens 20 Prozent Anstieg in den zwoelf Wochen vor der engen Phase.
     Kaufpunkt hoechstes Wochenhoch der engen Wochen plus 0,10 Dollar, Stop ihr
     tiefstes Wochentief. Der Anstieg muss in die enge Phase fuehren (unsere
@@ -308,7 +341,7 @@ def three_weeks_tight(wk):
             eng += 1
         else:
             break
-    if eng < QUELLE["a_wochen_min"] or eng > FESTLEGUNGEN["a_wochen_max"]:
+    if eng < QUELLE["a_wochen_min"] or eng > QUELLE["a_wochen_max"]:
         return {}
     bezug = n - 1 - eng                      # die Woche vor der engen Phase
     if bezug - vorlauf + 1 < 0:
@@ -669,10 +702,240 @@ def ipo_base(x, wk):
             "cm_l_kp": _r(kp), "cm_l_stop": _r(_deckel(kp, tief))}
 
 
-def werte(d):
-    """Alle Muster der Etappe 1 fuer eine Aktie am letzten Handelstag der
-    Kurse d (Spalten datetime, open, high, low, close, volume). Jedes Muster
-    rechnet fuer sich; scheitert eines, bleiben nur seine Spalten leer."""
+# ---------------------------------------------------------------------------
+# M  Stufenzaehlung der Basen, K Base-on-Base (Gerhard, 23.09.2026)
+# ---------------------------------------------------------------------------
+
+def _tagzahl(tage):
+    """Kalendertage seit dem 01.01.1970 je Eintrag, als ganze Zahlen; ein Tag
+    mit Zeitzone zaehlt nach seiner Ortszeit."""
+    idx = pd.to_datetime(pd.Index(list(tage) if isinstance(tage, (set, frozenset)) else tage))
+    if idx.tz is not None:
+        idx = idx.tz_localize(None)
+    return idx.to_numpy().astype("datetime64[D]").astype(np.int64)
+
+
+def _tag_iso(tagzahl):
+    return str(np.datetime64(int(tagzahl), "D"))
+
+
+def stufenzaehlung(x, markttiefs=None, verlauf=None):
+    """M und K ueber die ganze Kurshistorie x (vorbereitete Tageskerzen).
+
+    Gerhards Regeln (20.09.2026) mit seinen Zahlen vom 23.09.2026: Gezaehlt
+    wird nur fuer Aktien ueber zehn Dollar. Eine BASIS dauert mindestens fuenf
+    Wochen und ist hoechstens 35 Prozent tief, vom linken Hoch zum tiefsten
+    Tief; ausgebrochen ist sie mit einem Tagesschluss ueber dem linken Hoch.
+    Stufe eins ist die erste Basis nach einem Markttief oder nach einer
+    eigenen Korrektur. Jede weitere Basis zaehlt eine Stufe hoeher, wenn die
+    Aktie aus der vorigen ausgebrochen ist und dabei mindestens zwanzig
+    Prozent gewonnen hat (vom Ausbruch der vorigen Basis bis zum linken Hoch
+    der neuen); darunter ist es Base-on-Base (K), beide Basen zaehlen als eine
+    Stufe. ZURUECK AUF NULL, und damit ist die naechste Basis wieder Stufe
+    eins, geht die Zaehlung (1) an einem Markttief, (2) sobald der Kurs das
+    Tief der letzten Basis unterschreitet, (3) sobald er zwanzig Prozent unter
+    dem letzten Hoch liegt. Gerhards bewusste Folge aus (3): Jede Basis, die
+    tiefer als zwanzig Prozent korrigiert, ist Stufe eins.
+
+    DAS LINKE HOCH einer Basis ist das hoechste Hoch seit dem letzten
+    Ausbruch: Jedes neue Hoch, bevor fuenf Wochen vergangen sind, laesst die
+    Basis dort neu beginnen. Die Wochen sind Kalenderwochen von Montag bis
+    Freitag, die Woche des linken Hochs zaehlt mit (wie bei der Flat Base).
+    Faellt der Kurs mehr als 35 Prozent unter das linke Hoch, ist es keine
+    Basis mehr; dann beginnt die naechste Basis erst am hoechsten Hoch nach
+    dem tiefsten Tief dieses Rueckgangs, so dass eine blosse Erholung auf das
+    alte Niveau nie als Basis zaehlt. Ebenso am Anfang der Kurshistorie.
+
+    markttiefs: die Tage der Markttiefs (marktbreite.markttiefs, S&P 500 und
+    Nasdaq nach den Regeln der Marktampel); ein Markttief setzt an seinem Tag
+    zurueck. verlauf: eine Liste, in die jeder Ausbruch und jede
+    Ruecksetzung kommt (zum Nachpruefen an echten Kursen).
+
+    Zurueck: die Spalten cm_m und cm_k; ohne Basis seit der letzten
+    Ruecksetzung nichts. Gezeigt wird die Basis, die sich gerade bildet,
+    sobald sie fuenf Wochen alt ist; sonst die letzte, aus der die Aktie
+    ausgebrochen ist."""
+    q = QUELLE
+    # Tage mit Null oder weniger (alte Yahoo-Daten) zaehlen nicht; sie wuerden
+    # jede Tiefe unendlich machen.
+    x = x[(x["high"] > 0) & (x["low"] > 0) & (x["close"] > 0)]
+    n = len(x)
+    if n < 2:
+        return {}
+    c_roh = x["close"].to_numpy(dtype=float)
+    if not c_roh[-1] > q["m_kurs_min"]:
+        return {}
+    h = x["high"].to_numpy(dtype=float).tolist()
+    lo = x["low"].to_numpy(dtype=float).tolist()
+    c = c_roh.tolist()
+    tz = _tagzahl(x["datetime"])
+    woche = ((tz + 3) // 7).tolist()          # Kalenderwoche ab Montag
+    tzl = tz.tolist()
+    tiefs = sorted({int(z) for z in _tagzahl(markttiefs)}) if markttiefs else []
+    ti = bisect.bisect_right(tiefs, tzl[0])
+    w_min, t_max, korr, k_min = q["m_wochen_min"], q["m_tiefe_max"], q["m_korrektur"], q["k_gewinn_min"]
+    stufe, letzte = 0, None
+    neu = ("beginn", tzl[0])                  # warum und seit wann gezaehlt wird
+    a, tief = 0, lo[0]                         # linkes Hoch der laufenden Basis, ihr tiefstes Tief
+    gescheitert, boden, korr_an = True, lo[0], False
+    for t in range(1, n):
+        ht, lt, ct = h[t], lo[t], c[t]
+        while ti < len(tiefs) and tiefs[ti] <= tzl[t]:
+            if verlauf is not None and stufe:
+                verlauf.append(("markttief", _tag_iso(tiefs[ti])))
+            stufe, letzte, neu = 0, None, ("markttief", tiefs[ti])
+            ti += 1
+        if letzte is not None and lt < letzte["tief"]:
+            stufe, letzte, neu = 0, None, ("basistief", tzl[t])
+            if verlauf is not None:
+                verlauf.append(("basistief", _tag_iso(tzl[t])))
+        reif = woche[t] - woche[a] >= w_min
+        if reif and ct > h[a]:
+            ha = h[a]
+            tiefe = 1.0 - tief / ha
+            if tiefe <= t_max:
+                gewinn = None if letzte is None else ha / letzte["pivot"] - 1.0
+                bob = False
+                if letzte is None:
+                    stufe = 1
+                elif gewinn >= k_min:
+                    stufe += 1
+                else:
+                    bob = True
+                letzte = {"pivot": ha, "tief": tief, "stufe": stufe, "bob": bob, "gewinn": gewinn,
+                          "links": tzl[a], "ausbruch": tzl[t], "wochen": woche[t] - woche[a], "tiefe": tiefe}
+                if verlauf is not None:
+                    verlauf.append(("ausbruch", _tag_iso(tzl[t]), stufe, bob, round(ha, 2),
+                                    round(tiefe * 100.0, 1), woche[t] - woche[a]))
+                a, tief, gescheitert, korr_an = t, lt, False, False
+                continue
+        if ht > h[a] and not reif:
+            a, tief, korr_an = t, lt, False
+            continue
+        if gescheitert and lt < boden:
+            a, tief, boden, korr_an = t, lt, lt, False
+            continue
+        if lt < tief:
+            tief = lt
+        tiefe = 1.0 - tief / h[a]
+        if tiefe >= korr and not korr_an:
+            korr_an = True
+            if verlauf is not None and stufe:
+                verlauf.append(("korrektur", _tag_iso(tzl[t])))
+            stufe, letzte, neu = 0, None, ("korrektur", tzl[t])
+        if tiefe > t_max:
+            gescheitert, a, tief, boden, korr_an = True, t, lt, lt, False
+
+    t = n - 1
+    freitag = (tzl[t] + 3) % 7 == 4
+    basis_wochen = woche[t] - woche[a] + (1 if freitag else 0)
+    zaehlung = {"cm_m_neu_grund": neu[0], "cm_m_neu_tag": _tag_iso(neu[1])}
+    if basis_wochen >= w_min:
+        ha = h[a]
+        gewinn = None if letzte is None else ha / letzte["pivot"] - 1.0
+        if letzte is None:
+            s_b, bob = 1, False
+        elif gewinn >= k_min:
+            s_b, bob = letzte["stufe"] + 1, False
+        else:
+            s_b, bob = letzte["stufe"], True
+        raus = {"cm_m": 1, "cm_m_stufe": int(s_b), "cm_m_status": "bildung", "cm_m_wochen": int(basis_wochen),
+                "cm_m_tiefe_pct": _r((1.0 - tief / ha) * 100.0, 1), "cm_m_seit": _tag_iso(tzl[a]),
+                "cm_m_hoch": _r(ha), "cm_m_ausbruch": None, "cm_m_bob": bool(bob),
+                "cm_m_gewinn_pct": None if gewinn is None else _r(gewinn * 100.0, 1), **zaehlung}
+        if bob:
+            kp = ha + q["aufschlag"]
+            raus.update({"cm_k": 1, "cm_k_gewinn_pct": _r(gewinn * 100.0, 1), "cm_k_wochen": int(basis_wochen),
+                         "cm_k_kp": _r(kp), "cm_k_stop": _r(_deckel(kp, tief))})
+        return raus
+    if letzte is not None:
+        return {"cm_m": 1, "cm_m_stufe": int(letzte["stufe"]), "cm_m_status": "ausbruch",
+                "cm_m_wochen": int(letzte["wochen"]), "cm_m_tiefe_pct": _r(letzte["tiefe"] * 100.0, 1),
+                "cm_m_seit": _tag_iso(letzte["links"]), "cm_m_hoch": _r(letzte["pivot"]),
+                "cm_m_ausbruch": _tag_iso(letzte["ausbruch"]), "cm_m_bob": bool(letzte["bob"]),
+                "cm_m_gewinn_pct": None if letzte["gewinn"] is None else _r(letzte["gewinn"] * 100.0, 1),
+                **zaehlung}
+    return {}
+
+
+# ---------------------------------------------------------------------------
+# Q  Green Line Breakout (Gerhard, 20.09.2026, Stop seit 23.09.2026)
+# ---------------------------------------------------------------------------
+
+def green_line(x):
+    """Die gruene Linie ist das Allzeithoch; seit ihm mindestens 63
+    Handelstage ohne neues Hoch. Signal: Der Schluss eines ABGESCHLOSSENEN
+    Monats liegt ueber der Linie (O15: erst nach bestaetigtem Monatsschluss,
+    keine Zwischenstufe), bei deutlich hoeherem Volumen (unsere Festlegung,
+    siehe FESTLEGUNGEN). Gezeigt wird im Monat nach dem Ausbruchsmonat.
+    Einstieg ueber der Linie; Stop am letzten Tief der Pivot-Erkennung vor
+    dem Ausbruchstag, dem ersten Schluss ueber der Linie (Gerhard, 23.09.2026,
+    Frage 5), mit dem Zehn-Prozent-Deckel.
+
+    Ein Monat ist abgeschlossen, wenn der naechste Werktag in den naechsten
+    Monat faellt; faellt der letzte Werktag eines Monats auf einen Feiertag,
+    zaehlt der Monat ab dem ersten Kurstag des Folgemonats."""
+    q, f = QUELLE, FESTLEGUNGEN
+    n = len(x)
+    if n < q["q_tage_ohne_hoch"] + 2:
+        return {}
+    tage = pd.to_datetime(x["datetime"]).reset_index(drop=True)
+    monat = (tage.dt.year * 12 + tage.dt.month - 1).to_numpy()
+    letzter = tage.iloc[-1]
+    fertig = (letzter + pd.offsets.BDay(1)).month != letzter.month
+    m_sig = monat[-1] if fertig else monat[-1] - 1
+    idx = np.nonzero(monat == m_sig)[0]
+    if len(idx) == 0 or idx[0] == 0:
+        return {}
+    i0, i1 = int(idx[0]), int(idx[-1])
+    h, lo = x["high"].to_numpy(dtype=float), x["low"].to_numpy(dtype=float)
+    c, v = x["close"].to_numpy(dtype=float), x["volume"].to_numpy(dtype=float)
+    vor = h[:i0]
+    if not np.isfinite(vor).any():
+        return {}
+    linie = float(np.nanmax(vor))
+    j = int(i0 - 1 - int(np.nanargmax(vor[::-1])))          # der letzte Tag mit dem Allzeithoch
+    if not c[i1] > linie:
+        return {}
+    k = i0 + int(np.nonzero(h[i0:i1 + 1] > linie)[0][0])    # der erste Tag mit neuem Hoch
+    ohne = k - j - 1
+    if ohne < q["q_tage_ohne_hoch"]:
+        return {}
+    fenster = f["q_vol_tage"]
+    if i0 < fenster:
+        return {}
+    vol_monat, vol_davor = float(np.nanmean(v[i0:i1 + 1])), float(np.nanmean(v[i0 - fenster:i0]))
+    if not (vol_davor > 0 and np.isfinite(vol_monat)):
+        return {}
+    faktor = vol_monat / vol_davor
+    if faktor < f["q_vol_faktor"]:
+        return {}
+    b = i0 + int(np.nonzero(c[i0:i1 + 1] > linie)[0][0])    # Ausbruchstag: erster Schluss ueber der Linie
+    kk = f["pivot_kerzen"]
+    stop_roh = None
+    for i in range(b - kk - 1, kk - 1, -1):
+        if np.isfinite(lo[i]) and int(np.nanargmin(lo[i - kk:i + kk + 1])) == kk:
+            stop_roh = float(lo[i])
+            break
+    if stop_roh is None:
+        return {}
+    y, m = divmod(int(m_sig), 12)
+    return {"cm_q": 1, "cm_q_monat": f"{y:04d}-{m + 1:02d}", "cm_q_linie": _r(linie),
+            "cm_q_linie_tag": pd.Timestamp(tage.iloc[j]).strftime("%Y-%m-%d"), "cm_q_tage_ohne_hoch": int(ohne),
+            "cm_q_vol_faktor": _r(faktor, 2), "cm_q_ausbruch_tag": pd.Timestamp(tage.iloc[b]).strftime("%Y-%m-%d"),
+            "cm_q_kp": _r(linie), "cm_q_stop": _r(_deckel(linie, stop_roh))}
+
+
+def werte(d, voll=None, markttiefs=None):
+    """Alle Muster fuer eine Aktie am letzten Handelstag der Kurse d (Spalten
+    datetime, open, high, low, close, volume). Jedes Muster rechnet fuer sich;
+    scheitert eines, bleiben nur seine Spalten leer.
+
+    voll: die GANZE Kurshistorie derselben Aktie. Nur mit ihr rechnen Q (das
+    Allzeithoch) und M samt K (die Zaehlung ueber Jahre); das tut allein die
+    Nachttabelle. M und K brauchen dazu die Markttiefs der Nacht: Ohne sie
+    waere die Zaehlung zu hoch, deshalb bleibt sie dann leer (None heisst
+    nicht geholt, eine leere Liste heisst keine)."""
     raus = leer()
     if d is None or len(d) < 4:
         return raus
@@ -684,6 +947,20 @@ def werte(d):
         try:
             raus.update(fn(*args))
         except Exception:  # noqa: BLE001, ein Muster darf die anderen nie mitreissen
+            pass
+    if voll is None or len(voll) < 4:
+        return raus
+    try:
+        xv = vorbereiten(voll)
+    except Exception:  # noqa: BLE001
+        return raus
+    lange = [(green_line, (xv,))]
+    if markttiefs is not None:
+        lange.append((stufenzaehlung, (xv, markttiefs)))
+    for fn, args in lange:
+        try:
+            raus.update(fn(*args))
+        except Exception:  # noqa: BLE001
             pass
     return raus
 
@@ -740,11 +1017,15 @@ def selbsttest() -> int:
     x2 = vorbereiten(_reihe([28] * 60 + schluesse[60:], start="2026-06-01", spanne=0.005))
     p("A: ohne Anstieg davor kein Three Weeks Tight", three_weeks_tight(wochen(x2)) == {})
     lang = schluesse[:60] + [28.1, 28.2, 28.15, 28.25, 28.3] * 6 + schluesse[70:]
-    p("A: sechs und mehr enge Wochen sind festgenagelt, kein Three Weeks Tight (unsere Festlegung)",
+    p("A: sieben enge Wochen sind festgenagelt, kein Three Weeks Tight",
       three_weeks_tight(wochen(vorbereiten(_reihe(lang, start="2026-06-01", spanne=0.005)))) == {})
     vier = schluesse[:60] + [28.1, 28.2, 28.15, 28.25, 28.3] * 4
-    p("A: vier enge Wochen sind seit Gerhards Antwort vom 22.09.2026 kein Three Weeks Tight mehr (O19)",
-      three_weeks_tight(wochen(vorbereiten(_reihe(vier, start="2026-06-01", spanne=0.005)))) == {})
+    a4 = three_weeks_tight(wochen(vorbereiten(_reihe(vier, start="2026-06-01", spanne=0.005))))
+    p("A: vier enge Wochen zaehlen (Gerhard, 23.09.2026, ersetzt O19)",
+      a4.get("cm_a") == 1 and a4["cm_a_wochen"] == 4, str(a4))
+    fuenf = schluesse[:60] + [28.1, 28.2, 28.15, 28.25, 28.3] * 5
+    p("A: ab fuenf engen Wochen kein Three Weeks Tight mehr (Gerhard, 23.09.2026)",
+      three_weeks_tight(wochen(vorbereiten(_reihe(fuenf, start="2026-06-01", spanne=0.005)))) == {})
     unruhig = schluesse[:60] + [28.1, 29.5, 28.0, 29.6, 28.2, 29.9, 28.1, 30.0, 28.3, 30.2, 28.4, 30.3, 28.5, 30.5, 28.6]
     absturz = list(np.linspace(15, 28, 55)) + [26.0, 25.0, 24.2, 24.0, 23.8] + [23.9, 23.95, 23.9, 24.0, 23.95] * 3
     x_ab = vorbereiten(_reihe(absturz, start="2026-06-01", spanne=0.005))
@@ -931,6 +1212,121 @@ def selbsttest() -> int:
       ipo_base(kurz_x, wochen(kurz_x)).get("cm_l_unsicher") is True, str(ipo_base(kurz_x, wochen(kurz_x))))
     p("L: eine gewoehnliche Aktie ohne flachen Anfang hat keine Mantel-Vermutung",
       erstnotiz(x_l) == (0, False, False))
+
+    # M Stufenzaehlung und K Base-on-Base (Gerhard, 23.09.2026). Die Reihen
+    # beginnen an einem Montag; 60 Tage Anstieg auf 40 Dollar, dann Basen zu
+    # je sechs Wochen (30 Handelstage).
+    def m_x(*teile, start="2024-01-01", faktor=1.0):
+        s = []
+        for teil in teile:
+            s += [v * faktor for v in teil]
+        return vorbereiten(_reihe(s, start=start, spanne=0.005))
+
+    anstieg = list(np.linspace(20, 40, 60))
+    basis1 = [38, 37, 36.5, 37.5, 39] * 6
+    lauf30 = list(np.linspace(41, 53, 20))
+    basis2 = [50, 49, 48.5, 49.5, 51] * 6
+    m2 = stufenzaehlung(m_x(anstieg, basis1, lauf30, basis2), [])
+    p("M: zweite Basis nach mehr als 20 Prozent Gewinn ist Stufe 2, in Bildung",
+      m2.get("cm_m") == 1 and m2["cm_m_stufe"] == 2 and m2["cm_m_status"] == "bildung" and m2["cm_m_wochen"] == 7
+      and m2["cm_m_bob"] is False and m2["cm_m_gewinn_pct"] == 32.5 and "cm_k" not in m2
+      and m2["cm_m_neu_grund"] == "beginn", str(m2))
+    lauf3 = list(np.linspace(54, 66, 20))
+    basis3 = [63, 62, 61.5, 62.5, 64] * 6
+    m3 = stufenzaehlung(m_x(anstieg, basis1, lauf30, basis2, lauf3, basis3), [])
+    p("M: dritte Basis ist Stufe 3", m3.get("cm_m_stufe") == 3 and m3["cm_m_status"] == "bildung", str(m3))
+    m_aus = stufenzaehlung(m_x(anstieg, basis1, lauf30), [])
+    x_aus = m_x(anstieg, basis1, lauf30)
+    p("M: nach dem Ausbruch, solange keine neue Basis fuenf Wochen alt ist, steht die letzte",
+      m_aus.get("cm_m_stufe") == 1 and m_aus["cm_m_status"] == "ausbruch"
+      and m_aus["cm_m_ausbruch"] == x_aus["datetime"].iloc[90].strftime("%Y-%m-%d")
+      and m_aus["cm_m_seit"] == x_aus["datetime"].iloc[59].strftime("%Y-%m-%d") and m_aus["cm_m_wochen"] == 7
+      and m_aus["cm_m_hoch"] == round(40 * 1.005, 4), str(m_aus))
+    klein = list(np.linspace(41, 44, 20))
+    basis2k = [42, 41.5, 41, 41.8, 43] * 6
+    mk = stufenzaehlung(m_x(anstieg, basis1, klein, basis2k), [])
+    kp_k = round(44 * 1.005 + 0.10, 4)
+    p("K: nur 10 Prozent Gewinn zwischen den Basen, Base-on-Base, beide sind Stufe 1",
+      mk.get("cm_m_stufe") == 1 and mk["cm_m_bob"] is True and mk.get("cm_k") == 1 and mk["cm_k_gewinn_pct"] == 10.0
+      and mk["cm_k_kp"] == kp_k and mk["cm_k_stop"] == round(41 * 0.995, 4) and mk["cm_k_wochen"] == 7, str(mk))
+    tief2 = [48, 45, 42, 41, 43] * 6
+    mkorr = stufenzaehlung(m_x(anstieg, basis1, lauf30, tief2), [])
+    p("M: eine Basis mehr als 20 Prozent tief ist Stufe 1 (Gerhards bewusste Folge)",
+      mkorr.get("cm_m_stufe") == 1 and mkorr["cm_m_status"] == "bildung" and mkorr["cm_m_neu_grund"] == "korrektur"
+      and mkorr["cm_m_tiefe_pct"] > 20.0, str(mkorr))
+    basis1f = [39.5, 39.2, 39.0, 39.4, 39.8] * 6
+    bruch = [42, 40, 38.5, 38.4, 39.5] + [39.5, 40, 41, 40.5, 41.5] * 5
+    mbruch = stufenzaehlung(m_x(anstieg, basis1f, klein, bruch), [])
+    p("M: unter das Tief der letzten Basis gefallen, die Zaehlung beginnt neu",
+      mbruch.get("cm_m_stufe") == 1 and mbruch["cm_m_neu_grund"] == "basistief" and mbruch["cm_m_bob"] is False
+      and "cm_k" not in mbruch and mbruch["cm_m_tiefe_pct"] < 20.0, str(mbruch))
+    x_mt = m_x(anstieg, basis1, lauf30, basis2)
+    tag100 = x_mt["datetime"].iloc[100].strftime("%Y-%m-%d")
+    mmt = stufenzaehlung(x_mt, ["2023-05-02", tag100])
+    p("M: ein Markttief setzt an seinem Tag zurueck, ein Markttief vor der Kurshistorie zaehlt nicht",
+      mmt.get("cm_m_stufe") == 1 and mmt["cm_m_neu_grund"] == "markttief" and mmt["cm_m_neu_tag"] == tag100, str(mmt))
+    p("M: unter zehn Dollar wird nicht gezaehlt (Gerhard)",
+      stufenzaehlung(m_x(anstieg, basis1, lauf30, basis2, faktor=0.15), []) == {})
+    kurz = [38, 37, 36.5, 37.5, 39] * 3
+    mkurz = stufenzaehlung(m_x(anstieg, kurz, lauf30, basis2), [])
+    p("M: drei Wochen Pause sind keine Basis, die spaetere Basis ist Stufe 1",
+      mkurz.get("cm_m_stufe") == 1 and mkurz["cm_m_status"] == "bildung", str(mkurz))
+    absturz = list(np.linspace(39, 24, 30))
+    erholung = list(np.linspace(25, 32, 20))
+    basis_n = [31, 30, 29.5, 30.5, 31.5] * 6
+    mabs = stufenzaehlung(m_x(anstieg, absturz, erholung, basis_n), [])
+    p("M: mehr als 35 Prozent tief ist keine Basis, die neue Basis beginnt am Hoch der Erholung",
+      mabs.get("cm_m_stufe") == 1 and mabs["cm_m_status"] == "bildung" and mabs["cm_m_neu_grund"] == "korrektur"
+      and mabs["cm_m_hoch"] == round(32 * 1.005, 4), str(mabs))
+    v_erholung = list(np.linspace(39, 25, 20)) + list(np.linspace(25.5, 42, 40))
+    p("M: eine blosse Erholung auf das alte Niveau ist keine Basis",
+      stufenzaehlung(m_x(anstieg, v_erholung), []) == {})
+    x_null = m_x(anstieg, basis1, lauf30, basis2)
+    x_null.loc[5, ["low", "high"]] = [0.0, 0.0]
+    p("M: ein Kurstag mit Null in alten Daten bricht die Zaehlung nicht",
+      stufenzaehlung(x_null, []).get("cm_m_stufe") == 2)
+
+    # Q Green Line Breakout: Allzeithoch nach 100 Tagen, danach seitwaerts
+    # darunter, Ausbruch im August 2026, der Kurs endet am 31.08.2026
+    def q_x(seitwaerts, august, vol_august=2_000_000.0, ende="2026-08-31"):
+        s = list(np.linspace(20, 50, 100)) + seitwaerts + august
+        d = _reihe(s, spanne=0.005, volumen=1_000_000.0)
+        d["datetime"] = pd.bdate_range(end=ende, periods=len(s))
+        d.loc[len(s) - len(august):, "volume"] = vol_august
+        return vorbereiten(d)
+
+    seit_q = [44, 45, 46, 47, 48, 46, 45, 44, 45, 46] * 17 + [46, 45, 43.5, 44.8, 46.2, 46.8]
+    aug = [47.2, 48, 49, 49.5, 51, 52, 52.5, 53] + [53] * 13
+    qq = green_line(q_x(seit_q, aug))
+    linie = round(50 * 1.005, 4)
+    p("Q: Monatsschluss ueber dem Allzeithoch bei doppeltem Volumen, Stop am letzten Tief der Pivot-Erkennung, gedeckelt",
+      qq.get("cm_q") == 1 and qq["cm_q_monat"] == "2026-08" and qq["cm_q_linie"] == linie and qq["cm_q_kp"] == linie
+      and qq["cm_q_vol_faktor"] == 2.0 and qq["cm_q_tage_ohne_hoch"] >= 63
+      and 0.099 < (linie - qq["cm_q_stop"]) / linie <= 0.10, str(qq))
+    q_x_t = q_x(seit_q, aug)
+    p("Q: Ausbruchstag ist der erste Schluss ueber der Linie, die Linie traegt ihren Tag",
+      qq.get("cm_q_ausbruch_tag") == q_x_t["datetime"].iloc[100 + len(seit_q) + 4].strftime("%Y-%m-%d")
+      and qq.get("cm_q_linie_tag") == q_x_t["datetime"].iloc[100].strftime("%Y-%m-%d"), str(qq))
+    p("Q: zu wenig Volumen ist kein Green Line Breakout (unsere Festlegung)",
+      green_line(q_x(seit_q, aug, vol_august=1_200_000.0)) == {})
+    p("Q: ein Ausbruch im laufenden Monat zaehlt erst nach dem Monatsschluss (O15)",
+      green_line(q_x(seit_q, aug[:14], ende="2026-08-20")) == {})
+    p("Q: faellt der Monatsschluss unter die Linie zurueck, kein Signal",
+      green_line(q_x(seit_q, aug[:10] + [49.0] * 11)) == {})
+    frisch = seit_q[:-40] + list(np.linspace(46, 50.6, 10)) + [49, 48, 47.5, 47, 46.5] * 4
+    frisch += [46, 45, 43.5, 44.8, 46.2, 46.8]
+    p("Q: ein Hoch, das keine 63 Handelstage stand, ist keine gruene Linie",
+      green_line(q_x(frisch, aug)) == {})
+
+    # werte: die Stufenzaehlung und Q nur mit der ganzen Historie
+    ganz = _reihe(anstieg + basis1 + lauf30 + basis2, start="2024-01-01", spanne=0.005)
+    w_kurz = werte(ganz.tail(40))
+    w_voll = werte(ganz.tail(40), voll=ganz, markttiefs=[])
+    w_ohne_tiefs = werte(ganz.tail(40), voll=ganz)
+    p("M: ohne ganze Kurshistorie keine Stufenzaehlung, mit ihr Stufe 2",
+      w_kurz["cm_m"] == 0 and w_kurz["cm_q"] == 0 and w_voll["cm_m"] == 1 and w_voll["cm_m_stufe"] == 2
+      and set(w_voll) == set(SPALTEN), str({k: w_voll[k] for k in ("cm_m", "cm_m_stufe")}))
+    p("M: ohne Markttiefs der Nacht keine Stufenzaehlung (sie waere zu hoch)", w_ohne_tiefs["cm_m"] == 0)
 
     # Gesamt: werte liefert immer alle Spalten, auch bei Unsinn
     w = werte(_reihe(list(np.linspace(20, 60, 400)), spanne=0.004))

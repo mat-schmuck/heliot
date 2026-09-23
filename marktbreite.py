@@ -156,9 +156,14 @@ def _sma_reihe(werte, laenge):
     return raus
 
 
-def follow_through(daten, lows, closes, volumes, linie=None, tief_fenster=None, ab_tag=None, gewinn_pct=None):
+def follow_through(daten, lows, closes, volumes, linie=None, tief_fenster=None, ab_tag=None, gewinn_pct=None,
+                   tiefs=None):
     """Zustand der Marktphase am letzten Tag, nach den Regeln im Kopf der
-    Datei. Rueckgabe dict:
+    Datei. tiefs: eine Liste, in die jedes bestaetigte Tief der ganzen Reihe
+    kommt (Tag als Text), also das Tief jeder Korrektur, deren
+    Erholungsversuch ein Follow-through Day bestaetigt hat. Die
+    Stufenzaehlung der Chartmuster (M) zaehlt ab diesen Markttiefs neu
+    (Gerhard, 23.09.2026, Frage 3). Rueckgabe dict:
       zustand       "bestaetigt" (Follow-through Day nach dem letzten Tief),
                     "erholungsversuch", "korrektur" (Tief ohne
                     Erholungsversuch) oder "keine" (kein Tief in der Reihe)
@@ -218,6 +223,8 @@ def follow_through(daten, lows, closes, volumes, linie=None, tief_fenster=None, 
                 zyklus_ftd = t
                 ftd = (t, lows[t], round(pct, 2))
                 gescheitert = None
+                if tiefs is not None:
+                    tiefs.append(str(daten[korr[0]])[:10])
     if korr is not None:
         raus["korrektur_tag"] = str(daten[korr[0]])[:10]
         raus["versuch_grund"] = grund
@@ -234,6 +241,25 @@ def follow_through(daten, lows, closes, volumes, linie=None, tief_fenster=None, 
         raus["ftd_pct"] = ftd[2]
         raus["ftd_gescheitert"] = gescheitert is not None
         raus["ftd_gescheitert_tag"] = str(daten[gescheitert])[:10] if gescheitert is not None else None
+    return raus
+
+
+def markttiefs(df):
+    """Alle Markttiefs eines Index ueber die ganze Reihe (yfinance history
+    mit Low, Close, Volume), aelteste zuerst, als Tage 'JJJJ-MM-TT': das
+    Tief jeder Korrektur, deren Erholungsversuch ein Follow-through Day
+    bestaetigt hat. Ohne Volumen gibt es keinen Follow-through Day und
+    deshalb keine Markttiefs; Tage ohne Volumen (fruehe Indexjahre) zaehlen
+    so von selbst nicht."""
+    df = df.dropna(subset=["Close"])
+    if "Volume" not in df.columns or len(df) < 2:
+        return []
+    daten = [d.strftime("%Y-%m-%d") for d in df.index]
+    closes = [float(x) for x in df["Close"].values]
+    lows = [float(x) if x == x else c for x, c in zip(df["Low"].values, closes)] if "Low" in df.columns else closes
+    volumes = [float(x) if x == x else 0.0 for x in df["Volume"].values]
+    raus = []
+    follow_through(daten, lows, closes, volumes, tiefs=raus)
     return raus
 
 
@@ -722,6 +748,14 @@ def selbsttest() -> int:
     ph6 = follow_through(tage, lows_tiefer, closes_tiefer, vols, 50, 25, 4, 1.25)
     p("Follow-through Day: ein tieferer Schluss ohne unterschrittenes Tagestief beendet den Versuch nicht",
       ph6["zustand"] == "bestaetigt" and ph6["ftd_tag"] == tage[ftd_i], ph6)
+    gesammelt = []
+    follow_through(tage, lows_bruch, closes_neu, vols_neu, 50, 25, 4, 1.25, tiefs=gesammelt)
+    p("Markttiefs fuer die Stufenzaehlung: das Tief vor dem ersten Follow-through Day und der Tag, an dem er "
+      "scheiterte, weil ihn ein neuer Follow-through Day bestaetigt (Nachfrage N7)",
+      gesammelt == [tage[tief], tage[ftd_i + 3]], gesammelt)
+    gesammelt = []
+    follow_through(tage, lows, closes, vols_ohne, 50, 25, 4, 1.25, tiefs=gesammelt)
+    p("Markttiefs: ein Tief ohne Follow-through Day ist keines", gesammelt == [], gesammelt)
     p("Follow-through Day: ohne Tief kein Zustand",
       follow_through(tage, [x * 0.99 for x in range(100, 220)], [float(x) for x in range(100, 220)],
                      [1.0] * 120, 50, 25, 4, 1.25)["zustand"] == "keine")

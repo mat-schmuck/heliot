@@ -594,6 +594,36 @@ def lade_scanner_analysten():
         return None, f"Netzwerkfehler {type(e).__name__}"
 
 
+SCANNER_RELEASE = f"https://github.com/{REPO}/releases/download/scanner-daten/"
+
+
+@st.cache_data(ttl=600, show_spinner=False)
+def _scanner_tabelle_holen():
+    """Die Nachttabelle aus dem Release. Fehlschlaege werfen und landen
+    deshalb nicht im Zwischenspeicher."""
+    import requests
+    r = requests.get(SCANNER_RELEASE + "scanner_tabelle.parquet", timeout=60)
+    if r.status_code != 200:
+        raise LookupError(f"GitHub antwortete mit Code {r.status_code}")
+    return pd.read_parquet(io.BytesIO(r.content))
+
+
+def lade_scanner_tabelle():
+    """(Tabelle oder None, Grund); ohne Release die Datei im Ordner."""
+    try:
+        return _scanner_tabelle_holen(), ""
+    except LookupError as e:
+        grund = str(e)
+    except Exception as e:  # noqa
+        grund = f"Netzwerkfehler {type(e).__name__}"
+    if os.path.exists("scanner_tabelle.parquet"):
+        try:
+            return pd.read_parquet("scanner_tabelle.parquet"), ""
+        except Exception:  # noqa
+            pass
+    return None, grund
+
+
 @st.cache_data(ttl=600, show_spinner=False)
 def nachschlag_dateien():
     return {n: nachschlagen.lade_datei(n) for n in nachschlagen.DATEIEN}
@@ -984,6 +1014,12 @@ if nachschlag_eingabe:
                 nachschlag_df, nachschlag_res = muster_fuer(nachschlag_ticker, api_key, nachschlag_rs)
             except Exception:
                 nachschlag_df, nachschlag_res = None, None
+            # Base-on-Base, Green Line und die Stufenzaehlung brauchen die ganze
+            # Kurshistorie; sie kommen aus der Zeile der Nachttabelle.
+            try:
+                nachschlag_nacht = nachschlagen.analysten_zeile(lade_scanner_tabelle()[0], nachschlag_ticker)
+            except Exception:
+                nachschlag_nacht = None
         for ueberschrift, saetze in nachschlagen.bericht(
                 nachschlag_ticker, nachschlag_daten.get("rs_universum.json"), nachschlag_daten.get("ibd_ratings.json"),
                 nachschlag_daten.get("sektor_rangliste.json"), live=nachschlag_live_werte, kurve=nachschlag_k,
@@ -1002,7 +1038,7 @@ if nachschlag_eingabe:
         # Worte wie bei den Treffern des Scanners, gerechnet am letzten
         # abgeschlossenen Handelstag; waehrend des Handels zaehlt der Vortag.
         st.markdown("#### Weitere Chartmuster")
-        for satz in nachschlagen.chartmuster_saetze(nachschlag_df):
+        for satz in nachschlagen.chartmuster_saetze(nachschlag_df, nachtzeile=nachschlag_nacht):
             st.markdown(satz)
         st.markdown("#### Kaufpunkte")
         if nachschlag_res:
@@ -1162,34 +1198,9 @@ def rs_mappe(wert) -> str:
 # Screenreaders auf ihm (Streamlit leitet die Kennung eines Knopfs mit
 # Schluessel allein aus dem Schluessel ab, nachgelesen in 1.63).
 
-SCANNER_RELEASE = f"https://github.com/{REPO}/releases/download/scanner-daten/"
-
-
-@st.cache_data(ttl=600, show_spinner=False)
-def _scanner_tabelle_holen():
-    """Die Nachttabelle aus dem Release. Fehlschlaege werfen und landen
-    deshalb nicht im Zwischenspeicher."""
-    import requests
-    r = requests.get(SCANNER_RELEASE + "scanner_tabelle.parquet", timeout=60)
-    if r.status_code != 200:
-        raise LookupError(f"GitHub antwortete mit Code {r.status_code}")
-    return pd.read_parquet(io.BytesIO(r.content))
-
-
-def lade_scanner_tabelle():
-    """(Tabelle oder None, Grund); ohne Release die Datei im Ordner."""
-    try:
-        return _scanner_tabelle_holen(), ""
-    except LookupError as e:
-        grund = str(e)
-    except Exception as e:  # noqa
-        grund = f"Netzwerkfehler {type(e).__name__}"
-    if os.path.exists("scanner_tabelle.parquet"):
-        try:
-            return pd.read_parquet("scanner_tabelle.parquet"), ""
-        except Exception:  # noqa
-            pass
-    return None, grund
+# SCANNER_RELEASE, _scanner_tabelle_holen und lade_scanner_tabelle stehen weiter
+# oben vor dem Nachschlagen, das die Tabelle seit dem 23.09.2026 ebenfalls liest
+# (Base-on-Base, Green Line und die Stufenzaehlung der Basen).
 
 
 @st.cache_data(ttl=600, show_spinner=False)

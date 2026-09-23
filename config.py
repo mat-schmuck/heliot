@@ -251,7 +251,9 @@ CFG = {
         "ma_tage": 10,               # Umkehr gegen den eigenen 10-Tage-Schnitt
         "vol_pct_schwelle": 50.0,    # Volume % Change mindestens +50 %
         "v50_tage": 50,              # Durchschnittsbasis, IBD-Standard
-        "melden": True,              # meldet der Waechter zur Eroeffnung?
+        # Kein Schalter "melden" mehr: Eine Morgenmeldung des Nachtbefunds
+        # gibt es nicht (Gerhard, 23.09.2026, Frage 6); der Radar meldet
+        # nur schlussnah um 15:45 New Yorker Zeit.
     },
 
     # --- Gleitende Durchschnitte ---

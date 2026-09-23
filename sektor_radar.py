@@ -44,8 +44,12 @@ DREI ABWEICHUNGEN VOM REFERENZ-CODE, alle absichtlich
        Eroeffnung. Die frueheren Mitternachtsnachrichten waren Treffer,
        die zu diesem Zeitpunkt ohnehin niemand handeln konnte." Gerhards
        Paket sendet direkt aus dem Nachtlauf; das waere ein Rueckfall.
-       Deshalb: Der Nachtlauf RECHNET und legt sektor_radar.json ab, der
-       Waechter MELDET daraus einmal zur Eroeffnung.
+       Deshalb: Der Nachtlauf RECHNET und legt sektor_radar.json ab.
+       Gemeldet wird dieser Befund seit dem 23.09.2026 NICHT mehr, auch
+       nicht am Morgen. Gerhard, Antwort auf Frage 6: "Der schlussnahe
+       Radar um 15:45 New Yorker Zeit reicht. Keine zusaetzliche
+       Morgenmeldung." Der schlussnahe Radar rechnet im Waechter mit
+       hochgerechnetem Volumen (sektor_radar_hochgerechnet).
 
 EINE UNSTIMMIGKEIT IM PAKET, hier nicht stillschweigend uebergangen
     Gerhards CFG enthaelt "bestaetigung_tage": 2, sein Code liest den

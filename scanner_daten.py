@@ -57,7 +57,15 @@ WOHER DIE WERTE KOMMEN (gemessen 14.09.2026)
               RS-Universum.
   Muster      die Detektoren aus pattern_scanner, cup_handle_v2 und
               ema_crossback, einmal streng und einmal mit Toleranz (alle
-              zusammen 15 Millisekunden je Aktie).
+              zusammen 15 Millisekunden je Aktie). Dazu Gerhards
+              Chartmuster (chartmuster.py): die kurzen aus den letzten drei
+              Jahren, Base-on-Base, Green Line und die Stufenzaehlung der
+              Basen aus der ganzen Historie (gemessen 23.09.2026: 14
+              Millisekunden je Aktie).
+  Markttiefs  S&P 500 und Nasdaq von Yahoo, die ganze Historie, einmal je
+              Nacht: die Tiefs, deren Erholungsversuch ein Follow-through
+              Day bestaetigt hat, nach den Regeln der Marktampel. Sie setzen
+              die Stufenzaehlung zurueck (Gerhard, 23.09.2026, Frage 3).
   RS          rs_universum.json des Nachtscans: RS 1 bis 99, RS-Linie.
   Kennzahlen  (Gerhard, 15.09.2026, Auftrag 1: jede gebaute Kennzahl als
               Spanne im Scanner) die technischen Kennzahlen der Etappe 2 aus
@@ -376,16 +384,42 @@ def power_gap(d):
             "status": f"Lücke {gap * 100:.1f} Prozent, Volumen {v / vol50:.1f} mal der 50-Tage-Schnitt".replace(".", ",")}
 
 
-def chartmuster_werte(d):
-    """Etappe 1 aus Gerhards Dokument vom 20.09.2026 (chartmuster.py): sieben
-    Chartmuster als Zusatzangaben zu jedem Scanner-Treffer, nie als Filter und
-    ohne Einfluss auf Nachtscan und Waechter. Ein Fehler laesst nur diese
-    Spalten leer, der Bau laeuft weiter."""
+def chartmuster_werte(d, voll=None, markttiefs=None):
+    """Gerhards Chartmuster (chartmuster.py) als Zusatzangaben zu jedem
+    Scanner-Treffer, nie als Filter und ohne Einfluss auf Nachtscan und
+    Waechter. d sind die letzten drei Jahre, voll die ganze Historie fuer
+    Base-on-Base, Green Line und die Stufenzaehlung; diese braucht dazu die
+    Markttiefs der Nacht. Ein Fehler laesst nur diese Spalten leer, der Bau
+    laeuft weiter."""
     import chartmuster
     try:
-        return chartmuster.werte(d)
+        return chartmuster.werte(d, voll=voll, markttiefs=markttiefs)
     except Exception:  # noqa
         return chartmuster.leer()
+
+
+def markttiefs_laden():
+    """Die Markttiefs fuer die Stufenzaehlung (chartmuster.stufenzaehlung):
+    die Tiefs der Korrekturen von S&P 500 und Nasdaq, deren Erholungsversuch
+    ein Follow-through Day bestaetigt hat, ueber die ganze Historie und nach
+    den Regeln der Marktampel (marktbreite.markttiefs). Rueckgabe (sortierte
+    Liste der Tage oder None, Befund fuer den Stand). Scheitert ein Index,
+    gibt es keine Liste; die Stufenzaehlung bleibt dann in dieser Nacht leer,
+    statt ohne die Ruecksetzungen des Marktes zu hoch zu zaehlen."""
+    import yfinance as yf
+    import marktampel
+    import marktbreite
+    tiefs, je = set(), {}
+    for symbol, name in marktampel.INDIZES.items():
+        try:
+            gefunden = marktbreite.markttiefs(yf.Ticker(symbol).history(period="max", auto_adjust=False))
+        except Exception as e:  # noqa  ein Index darf den Bau nie aufhalten
+            return None, {"status": f"fehler bei {name}: {type(e).__name__}"}
+        if not gefunden:
+            return None, {"status": f"keine Markttiefs fuer {name}"}
+        je[name] = {"anzahl": len(gefunden), "letztes": gefunden[-1]}
+        tiefs.update(gefunden)
+    return sorted(tiefs), {"status": "ok", "anzahl": len(tiefs), "je_index": je}
 
 
 def _detektoren(di, tt_pass, toleranz, v2cfg):
@@ -1273,7 +1307,8 @@ def kennzahlen_ergaenzen(tabelle, rs_daten, ratings, handelstag=None):
 def bauen(pfad_tabelle=TABELLE, pfad_stand=STAND, archiv=ARCHIV, grenze=None, analysten="rotation",
           heute=None, universum_liste=None, kurse_download=None, rs_daten=None, ratings=None, termine_listen=None,
           screener=None, kalender=None, je_aktie=None, kennzahlen=None, leise=False, pfad_analysten=ANALYSTEN,
-          konsens_pfade=None, revisionen="an", short="an", zuordnung_pfad=None, pfad_gruppen=GRUPPEN):
+          konsens_pfade=None, revisionen="an", short="an", zuordnung_pfad=None, pfad_gruppen=GRUPPEN,
+          markttiefs=None):
     """Die ganze Nachttabelle. Alle Quellen lassen sich fuer den Selbsttest
     uebergeben; ohne Angabe wird geholt. Die Analystenwerte der Vornacht
     stehen in pfad_analysten (der Ablauf holt sie vorher aus dem privaten
@@ -1284,7 +1319,8 @@ def bauen(pfad_tabelle=TABELLE, pfad_stand=STAND, archiv=ARCHIV, grenze=None, an
     short: "an", "aus" oder im Selbsttest ein Abruf holen(tag) -> (Status,
     Text) fuer die FINRA-Tagesdateien. zuordnung_pfad: die eigene
     Zuordnungsliste der Branchen (Etappe 6), None heisst keine; pfad_gruppen:
-    wohin die Rangliste der Gruppen geht, None heisst nirgends."""
+    wohin die Rangliste der Gruppen geht, None heisst nirgends. markttiefs: die
+    Tage der Markttiefs fuer die Stufenzaehlung, None heisst holen."""
     import rs_universum
     t0 = time.time()
     heute = heute or ny_heute()
@@ -1324,6 +1360,13 @@ def bauen(pfad_tabelle=TABELLE, pfad_stand=STAND, archiv=ARCHIV, grenze=None, an
     stand["quellen"]["rs"] = {"stand": rs_daten.get("gebaut_am"), "status": rs_daten.get("status", "fehlt")}
     wochenliste = set((rs_daten.get("listen") or {}).keys())
 
+    # Die Markttiefs der Stufenzaehlung, einmal fuer alle Aktien
+    if markttiefs is None:
+        markttiefs, befund_mt = markttiefs_laden()
+    else:
+        befund_mt = {"status": "uebergeben", "anzahl": len(markttiefs)}
+    stand["quellen"]["markttiefs"] = befund_mt
+
     # --- Kurse, Kennzahlen und Muster je Block ------------------------------
     zeilen, archiv_teile, ohne_kurse = {}, [], 0
     # Etappe 6: je Aktie die juengsten Schlusskurse fuer die Gruppen-RS.
@@ -1352,7 +1395,7 @@ def bauen(pfad_tabelle=TABELLE, pfad_stand=STAND, archiv=ARCHIV, grenze=None, an
                      "rs_linie_qqq_abst_pct": e_rs.get("linie_qqq_abst_pct")}
             zeile["handelbar"] = handelbar(werte, ex)
             zeile.update(muster_werte(d, rs, werte))
-            zeile.update(chartmuster_werte(d))
+            zeile.update(chartmuster_werte(d, voll, markttiefs))
             zeilen[s] = zeile
             archiv_teile.append(pd.DataFrame({
                 "ticker": s, "datum": pd.to_datetime(voll["datetime"]),
@@ -1932,7 +1975,7 @@ def selbsttest() -> int:
                                                                     "termin_vorjahr_datum": "2025-09-04"})},
                    je_aktie=je, kennzahlen=pd.DataFrame(), leise=True,
                    pfad_analysten=pfad_a, konsens_pfade=[pfad_k], revisionen=rev, short=finra,
-                   zuordnung_pfad=pfad_z, pfad_gruppen=pfad_g)
+                   zuordnung_pfad=pfad_z, pfad_gruppen=pfad_g, markttiefs=["2024-10-01"])
         t = pd.read_parquet(os.path.join(tmp, "t.parquet"))
         a = pd.read_parquet(pfad_a)
         g1 = json.load(open(pfad_g, encoding="utf-8"))
@@ -1983,6 +2026,12 @@ def selbsttest() -> int:
           all(s in t.columns for s in chartmuster.SPALTEN)
           and set(pd.to_numeric(t["cm_b"], errors="coerce").dropna()) <= {0, 1}
           and t["cm_f"].notna().any(), str([s for s in chartmuster.SPALTEN if s not in t.columns][:5]))
+        _m = chartmuster.stufenzaehlung(chartmuster.vorbereiten(kunst["AAA"]), ["2024-10-01"])
+        p("Stufenzaehlung aus der ganzen Historie mit den uebergebenen Markttiefs, wie chartmuster sie rechnet",
+          st["quellen"]["markttiefs"] == {"status": "uebergeben", "anzahl": 1}
+          and int(aaa["cm_m"]) == int(_m.get("cm_m", 0))
+          and (not _m or (aaa["cm_m_stufe"] == _m["cm_m_stufe"] and aaa["cm_m_seit"] == _m["cm_m_seit"])),
+          f"{aaa.get('cm_m')} {aaa.get('cm_m_stufe')} {_m}")
         p("Kennzahlen: Wahrheitswerte bleiben Wahrheitswerte, Doppeltes kommt nicht",
           str(t["tk_burst"].dtype) == "boolean" and bool(aaa["tk_burst"]) and not bool(ccc["tk_burst"])
           and "tk_adr20" not in t.columns, str(t["tk_burst"].dtype))
@@ -2012,7 +2061,8 @@ def selbsttest() -> int:
                     universum_liste=[{"symbol": s, "name": s, "boerse": "Nasdaq"} for s in kunst],
                     kurse_download=lambda teil: {s: kunst[s] for s in teil if s in kunst},
                     rs_daten={}, ratings={}, termine_listen={}, screener={}, kalender={}, kennzahlen=pd.DataFrame(),
-                    leise=True, pfad_analysten=pfad_a, short=lambda tag: (404, ""), pfad_gruppen=pfad_g)
+                    leise=True, pfad_analysten=pfad_a, short=lambda tag: (404, ""), pfad_gruppen=pfad_g,
+                    markttiefs=[])
         a2 = pd.read_parquet(pfad_a)
         p("Zweite Nacht ohne Abruf behaelt die Analysten der ersten",
           a2[a2["ticker"] == "AAA"].iloc[0]["analysten_anzahl"] == 4 and st2["quellen"]["analysten"]["status"] == "aus")
