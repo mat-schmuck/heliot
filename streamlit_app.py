@@ -41,9 +41,11 @@ import pandas as pd
 import streamlit as st
 
 import ablaeufe
+import einstellungen
 import frischhalten
 import listen
 import nachschlagen
+import oberflaeche
 import pattern_scanner as ps
 import scanner_ansicht as sa
 import zugang
@@ -277,9 +279,112 @@ def aktienchart(ticker: str, df_tag):
 # Oberflaeche
 # ---------------------------------------------------------------------------
 
+# Das oeffentliche Repo mit Listen, Mappe, Ablaeufen und Einstellungen. Seit dem
+# 23.09.2026 ganz oben, weil Aussehen und Marktampel vor allem anderen gelesen
+# werden (vorher stand es beim Nachschlagen).
+REPO = "mat-schmuck/heliot"
+
+# --- Gemeinsame Einstellungen, Aussehen und Toene (Mathias und Gerhard, 23.09.2026)
+# einstellungen.json im oeffentlichen Repo (einstellungen.py) legt fest, welche
+# Alarme ueber ntfy melden, wie die App aussieht und welcher Ton nach einer
+# erfolgreichen Aktion spielt. Aussehen und Ton gelten fuer alle Besucher, auch fuer
+# Gaeste und schon auf der Anmeldeseite (vorlaeufige Festlegung, steht im
+# Fragenkatalog); aendern laesst sich alles nur im vollen Zugang, im Reiter
+# Einstellungen. Das Zukunftsdesign ist reines CSS (oberflaeche.DESIGN_ZUKUNFT): Es
+# aendert weder Aufbau noch Text, ein Screenreader liest dasselbe.
+@st.cache_data(ttl=60, show_spinner=False)
+def _einstellungen_holen() -> dict:
+    """Die Einstellungen ueber die oeffentliche Adresse, nur fuer Aussehen und Ton;
+    ohne Datei oder ohne Netz gilt die Vorgabe. Der Reiter Einstellungen liest
+    dagegen ueber die GitHub-Schnittstelle und speichert nichts, wenn das Lesen
+    scheitert (_einst_api)."""
+    import requests
+    try:
+        r = requests.get(f"https://raw.githubusercontent.com/{REPO}/main/{einstellungen.DATEI}", timeout=10)
+    except Exception:  # noqa
+        return einstellungen.lesen(None)
+    return einstellungen.lesen(r.content if r.status_code == 200 else None)
+
+
+def _einstellungen() -> dict:
+    """Die geltenden Einstellungen. Nach dem Speichern gilt in dieser Sitzung der
+    gespeicherte Stand, bis die oeffentliche Adresse ihn auch liefert (sie haelt
+    aeltere Staende bis zu fuenf Minuten)."""
+    eigen = st.session_state.get("einst_gespeichert")
+    if eigen and time.time() - eigen[0] < 330:
+        return eigen[1]
+    return _einstellungen_holen()
+
+
+def _design() -> str:
+    """Das Aussehen dieses Laufs. Hat der Reiter Einstellungen schon einmal
+    gezeichnet, gilt seine Wahl, gespeichert oder nicht (Vorschau in diesem
+    Browser); sonst das gespeicherte."""
+    modell = st.session_state.get("einst_modell")
+    if isinstance(modell, dict) and modell.get("design"):
+        return modell["design"]
+    return _einstellungen()["design"]
+
+
+_klang_komponente = st.components.v2.component("heliot_klang", js=oberflaeche.KLANG_JS)
+
+
+def klang(kennung: str | None = None, name: str | None = None):
+    """Den gewaehlten Erfolgston spielen, je Ereignis genau einmal (Mathias und
+    Gerhard, 23.09.2026: "Baue Sounds ein, die das erfolgreiche Durchfuehren einer
+    Aktion anzeigen"). Die Kennung merkt sich der Browser: Wird dieselbe Meldung
+    beim naechsten Lauf wieder gezeichnet, bleibt es still. Ohne Kennung ist es
+    ein neues Ereignis."""
+    name = name or _einstellungen()["klang"]
+    if name == "aus":
+        return
+    kennung = str(kennung or time.time_ns())
+    _klang_komponente(key=f"heliot_klang_{kennung}", data={"id": kennung, "klang": name})
+
+
+def erfolg(text: str, kennung: str | None = None):
+    """Eine Erfolgsmeldung samt Ton."""
+    st.success(text)
+    klang(kennung)
+
+
+# Die Toene-Komponenten zeichnen nichts; ihr Platz wird ausgeblendet, damit sie
+# keine Luecke in die Seite reissen.
+st.html("<style>" + oberflaeche.AMPEL_CSS + "[class*='st-key-heliot_klang']{display:none}</style>"
+        + ("<style>" + oberflaeche.DESIGN_ZUKUNFT + "</style>" if _design() == "zukunft" else ""))
+# Die Wache fuer die Toene: Sie gibt den Ton im Browser beim ersten Klick oder
+# Tastendruck frei; ohne diese Freigabe bliebe es auf dem iPhone still.
+_klang_komponente(key="heliot_klang_wache", data={"id": "", "klang": "aus"})
+
 st.title("Chart-Screening-Tool")
 st.caption("Darvas Box; Minervini Trend Template; VCP; Cup & Handle; Rectangle Top; High & Tight Flag; "
            "EMA Crossback")
+
+
+# DIE MARKTAMPEL (Mathias und Gerhard, 23.09.2026): "Die Marktampel muss auf jeder
+# Seite des gesamten Streamlit-Tools ersichtlich sein, sie muss ganz oben, auch auf
+# der Einstellungs-Seite." Der Platz steht vor der Anmeldung; gefuellt wird er erst
+# danach, denn ohne Anmeldung ist nichts zu sehen (Mathias, 13.09.2026). Die Worte
+# sind die der ersten Meldung des Waechters (oberflaeche.ampel_saetze).
+@st.cache_data(ttl=120, show_spinner=False)
+def _ampel_holen():
+    import json
+    import requests
+    try:
+        r = requests.get(f"https://raw.githubusercontent.com/{REPO}/main/marktampel.json", timeout=10)
+        if r.status_code == 200:
+            return json.loads(r.content.decode("utf-8-sig"))
+    except Exception:  # noqa
+        pass
+    return None
+
+
+def _ampel_zeigen():
+    farbe, kopf, satz = oberflaeche.ampel_saetze(_ampel_holen(), sa.ny_jetzt())
+    st.html(oberflaeche.ampel_html(farbe, kopf, satz))
+
+
+_ampel_platz = st.empty()
 
 # --- Anmeldung (Mathias, 13.09.2026) ----------------------------------------
 # Vor allem anderen: Ohne Anmeldung ist nichts zu sehen. Das feste Passwort
@@ -491,6 +596,7 @@ def anmeldung() -> str:
                 st.session_state.pop("bleiben_verworfen", None)
                 st.session_state["zugang"] = {"rolle": rolle_neu, "bis": bis,
                                               "bleiben": bool(bleiben and bleiben_geht)}
+                st.session_state["klang_anmeldung"] = str(time.time_ns())
                 st.rerun()
             anzahl = bremse.fehlversuch(jetzt)
             zaehler, pause_bis = zugang.sitzung_nach_fehlversuch(
@@ -508,6 +614,10 @@ def anmeldung() -> str:
 
 
 rolle = anmeldung()
+with _ampel_platz.container():
+    _ampel_zeigen()
+if st.session_state.get("klang_anmeldung"):
+    klang(st.session_state.pop("klang_anmeldung"))
 if rolle in ("voll", "gast"):
     stand_anzeige = st.session_state.get("zugang") or {}
     if rolle == "gast":
@@ -552,9 +662,7 @@ if not api_key and rolle != "gast":
 # Forward-KGV, erwartetes Wachstum, Revisionen der Wochenliste); deshalb
 # stehen die Lesefunktionen hier vor dem Suchfeld und nicht beim Scanner.
 DATEN_REPO = "mat-schmuck/heliot-daten"
-# Das oeffentliche Repo mit Listen, Mappe und Ablaeufen. Seit dem 21.09.2026 hier
-# oben, weil das Nachschlagen die einzeln ueberwachten Aktien (S7) liest.
-REPO = "mat-schmuck/heliot"
+# Das oeffentliche Repo REPO steht seit dem 23.09.2026 ganz oben bei der Oberflaeche.
 @st.cache_data(ttl=600, show_spinner=False)
 def _scanner_analysten_holen():
     """Die Analystenwerte liegen im PRIVATEN Datenrepo (wie der eingefrorene
@@ -898,7 +1006,7 @@ def _einzel_setzen(ticker: str, firma: str, an: bool) -> tuple:
 def _einzel_meldung(schluessel: str):
     art, satz = st.session_state.pop(schluessel, (None, None))
     if art == "ok":
-        st.success(satz)
+        erfolg(satz)
     elif art:
         st.error(satz)
 
@@ -1074,17 +1182,20 @@ if rolle != "gast":
 # S4 (Gerhard, 20.09.2026): Ein Gast sieht NUR den Scanner, ohne
 # Registerkarten; Liste pruefen, Aktueller Scan und Regelwerk gibt es fuer ihn
 # nicht, der Lauf endet hinter dem Scanner (Schranke "if tab_liste is None").
-tab_upload = tab_gast = tab_ablaeufe = None
+# DER REITER EINSTELLUNGEN (Mathias und Gerhard, 23.09.2026) steht zuletzt; Gaeste
+# bekommen ihn nicht, ohne vollen Zugang laesst er sich nur ansehen.
+tab_upload = tab_gast = tab_ablaeufe = tab_einst = None
 if rolle == "gast":
     st.markdown("### Scanner")
     tab_scanner = st.container()
     tab_liste = tab_scan = tab_info = None
 elif rolle == "voll":
-    tab_liste, tab_scan, tab_scanner, tab_upload, tab_gast, tab_ablaeufe, tab_info = st.tabs(
-        ["Liste prüfen", "Aktueller Scan", "Scanner", "Wochenliste", "Gastzugang", "Abläufe", "Regelwerk"])
+    (tab_liste, tab_scan, tab_scanner, tab_upload, tab_gast, tab_ablaeufe, tab_info,
+     tab_einst) = st.tabs(["Liste prüfen", "Aktueller Scan", "Scanner", "Wochenliste", "Gastzugang", "Abläufe",
+                           "Regelwerk", "Einstellungen"])
 else:
-    tab_liste, tab_scan, tab_scanner, tab_upload, tab_info = st.tabs(
-        ["Liste prüfen", "Aktueller Scan", "Scanner", "Wochenliste", "Regelwerk"])
+    tab_liste, tab_scan, tab_scanner, tab_upload, tab_info, tab_einst = st.tabs(
+        ["Liste prüfen", "Aktueller Scan", "Scanner", "Wochenliste", "Regelwerk", "Einstellungen"])
 
 
 def tt_text(wert) -> str:
@@ -1518,7 +1629,8 @@ def _sc_wien_uhrzeit() -> str:
 def _sc_scannen(vergleich: dict) -> dict:
     """Ein Scan: Tabelle, Kennzahlen und Analystenwerte holen, auswerten. Das
     Ergebnis bleibt bis zum naechsten Scan stehen."""
-    erg = {"vergleich": vergleich, "uhrzeit": _sc_wien_uhrzeit(), "hinweise": []}
+    erg = {"vergleich": vergleich, "uhrzeit": _sc_wien_uhrzeit(), "hinweise": [],
+           "klang": str(time.time_ns())}
     tabelle, grund = lade_scanner_tabelle()
     stand = lade_scanner_stand() or {}
     erg["stand"] = stand
@@ -1565,6 +1677,9 @@ def _sc_ergebnis_zeigen(erg: dict, geaendert: bool):
     if erg.get("fehlt"):
         st.info(erg["fehlt"])
         return
+    # Der Ton je Scan: Das Ergebnis wird bei jedem Lauf des Scanners neu
+    # gezeichnet, der Ton kommt nur einmal (Kennung aus _sc_scannen).
+    klang(erg.get("klang"))
     ausw = erg["ausw"]
     stand = erg.get("stand") or {}
     if geaendert:
@@ -1680,11 +1795,17 @@ def _sc_uebergabe(erg: dict, ausw: dict):
                              key=f"sc_ueb_ja_{nr}", disabled=not (ziel and gewaehlt))
     if st.button("Liste übergeben", key="sc_ueb_los", type="primary",
                  disabled=not (ziel and gewaehlt and bestaetigt)):
-        st.session_state["sc_ueb_meldung"] = (nr, _sc_uebergabe_ausfuehren(gewaehlt, namen, ziel))
+        # Die dritte Angabe ist die Kennung fuer den Ton: Die Meldung steht bei
+        # jedem Lauf wieder da, der Ton kommt nur einmal.
+        st.session_state["sc_ueb_meldung"] = (nr, _sc_uebergabe_ausfuehren(gewaehlt, namen, ziel),
+                                              str(time.time_ns()))
     meldung = st.session_state.get("sc_ueb_meldung")
     if meldung and meldung[0] == nr:
         art, satz = meldung[1]
-        {"ok": st.success, "teil": st.warning}.get(art, st.error)(satz)
+        if art == "ok":
+            erfolg(satz, meldung[2] if len(meldung) > 2 else None)
+        else:
+            {"teil": st.warning}.get(art, st.error)(satz)
 
 
 def _sc_uebergabe_haken(schluessel: str, t: str):
@@ -1771,6 +1892,28 @@ def _sc_uebergabe_ausfuehren(gewaehlt: list, namen: dict, ziel: str) -> tuple:
     return "ok", satz
 
 
+def _sc_erkl_umschalten(k: str, sichtbar: bool):
+    st.session_state[k] = not sichtbar
+
+
+def _sc_erklaerung(schluessel: str, titel: str, text: str, angehakt: bool = False, beschriftung: str = ""):
+    """Der Erklaerungsknopf unter einem Kriterium (Mathias und Gerhard, 23.09.2026):
+    "eine Schaltflaeche unter wirklich jedem Kriterium, die bei Anklicken eine
+    kurze Erklaerung des Kriteriums auf Deutsch liefert". Die Beschriftung bleibt
+    immer dieselbe, damit der Fokus beim Klick nicht verloren geht. Ein Klick zeigt
+    die Erklaerung direkt darunter, der naechste blendet sie aus. Bei den Merkmalen
+    steht sie wie bisher von selbst da, solange das Merkmal angehakt ist; dort
+    blendet der erste Klick sie aus."""
+    k = f"sc_erkl_{schluessel}"
+    sichtbar = st.session_state.get(k)
+    if sichtbar is None:
+        sichtbar = angehakt
+    st.button(beschriftung or f"Erklärung zu {titel}", key=f"{k}_knopf", type="tertiary",
+              on_click=_sc_erkl_umschalten, args=(k, sichtbar))
+    if sichtbar:
+        st.caption(text)
+
+
 @st.fragment
 def scanner_reiter():
     """Der Reiter als Fragment: Ein Klick im Scanner rechnet nur den Scanner
@@ -1823,7 +1966,7 @@ def scanner_reiter():
             st.markdown("Noch keine Vorlage gespeichert; speichern lässt sich unten vor dem Scan.")
         sc_meldung = st.session_state.pop("sc_vorlage_meldung_oben", None)
         if sc_meldung:
-            (st.success if sc_meldung[0] == "ok" else st.error)(sc_meldung[1])
+            (erfolg if sc_meldung[0] == "ok" else st.error)(sc_meldung[1])
 
     # Teil 1
     st.markdown("#### Teil 1: Strategie oder Chart-Signal", anchors=False)
@@ -1832,6 +1975,7 @@ def scanner_reiter():
         st.session_state["sc_strategie"] = ""
     st.selectbox("Strategie oder Chart-Signal", ids, format_func=sa.AUSWAHL_NAMEN.get, key="sc_strategie",
                  on_change=_sc_strategie_gewaehlt, placeholder="bitte wählen")
+    _sc_erklaerung("strategie", "Strategie oder Chart-Signal", oberflaeche.SCANNER_ERKLAERUNGEN["strategie"])
     k = st.session_state.get("sc_strategie") or ""
     if sa.strategie_text(k):
         st.markdown(sa.md(sa.strategie_text(k)))
@@ -1846,9 +1990,15 @@ def scanner_reiter():
                               "toleranz": f"Mit {tol} Prozent Toleranz: Schwellen dürfen um {tol} Prozent "
                                           "verfehlt werden"}.get,
                  key="sc_toleranz", on_change=_sc_toleranz_geaendert, persist_state="page")
+        _sc_erklaerung("toleranz", "", oberflaeche.SCANNER_ERKLAERUNGEN["toleranz"],
+                       beschriftung="Erklärung zur Genauigkeit des Musters")
     st.checkbox(sa.handelbar_text(), key="sc_handelbar")
+    _sc_erklaerung("handelbar", "", oberflaeche.SCANNER_ERKLAERUNGEN["handelbar"],
+                   beschriftung="Erklärung zu den handelbaren Aktien")
     if k == "darvas":
         st.checkbox(sa.langweile_text(), key="sc_langweilig", persist_state="page")
+        _sc_erklaerung("langweilig", "", oberflaeche.SCANNER_ERKLAERUNGEN["langweilig"],
+                       beschriftung="Erklärung zu den langweiligen Darvas-Boxen")
     st.button("Alle Einstellungen zurücksetzen", key="sc_zuruecksetzen", on_click=_sc_alles_zuruecksetzen)
 
     # Teil 2
@@ -1865,10 +2015,9 @@ def scanner_reiter():
             if any(f.analysten for f in felder) and not lese_token:
                 st.caption("Die Analystendaten sind nicht geladen; diese Merkmale zeigen und filtern deshalb nichts.")
             for f in felder:
-                if not st.checkbox(f.titel, key=_sc_schluessel(f.schluessel, "an"), persist_state="page"):
-                    continue
-                st.caption(f.erklaerung)
-                if f.art != "bereich":
+                an = st.checkbox(f.titel, key=_sc_schluessel(f.schluessel, "an"), persist_state="page")
+                _sc_erklaerung(f.schluessel, f.titel, f.erklaerung, angehakt=an)
+                if not an or f.art != "bereich":
                     continue
                 for teil in ("min", "max"):
                     st.text_input(f.eingabe_titel(teil), key=_sc_schluessel(f.schluessel, teil),
@@ -1876,17 +2025,27 @@ def scanner_reiter():
                 if f.schluessel == "rs":
                     st.checkbox("Junge Titel mit vorläufigem RS mitnehmen", key="sc_rs_vorlaeufig",
                                 persist_state="page")
+                    _sc_erklaerung("rs_vorlaeufig", "", oberflaeche.SCANNER_ERKLAERUNGEN["rs_vorlaeufig"],
+                                   beschriftung="Erklärung zu jungen Titeln mit vorläufigem RS")
 
     st.markdown("##### Zahlentermine", anchors=False)
-    if st.checkbox("Nach Zahlenterminen filtern", key="sc_termine_an"):
+    termine_an = st.checkbox("Nach Zahlenterminen filtern", key="sc_termine_an")
+    _sc_erklaerung("termine", "", oberflaeche.SCANNER_ERKLAERUNGEN["termine"],
+                   beschriftung="Erklärung zum Filtern nach Zahlenterminen")
+    if termine_an:
         st.caption(f"Heute ist in New York {sa.datum_lang(heute.isoformat())}; morgen heißt der nächste "
                    f"Werktag, {sa.datum_lang(sa.naechster_handelstag(heute).isoformat())}.")
         for key, text, _plus, _lage in sa.TERMIN_TEILE:
             st.checkbox(f"Zahlen {text}", key=f"sc_termine_{key}", persist_state="page")
+            _sc_erklaerung(f"termine_{key}", f"Zahlen {text}", oberflaeche.SCANNER_ERKLAERUNGEN[f"termine_{key}"])
         st.checkbox("Auch Termine während des Handels oder ohne bekannte Tageszeit",
                     key="sc_termine_ohne_zeit", persist_state="page")
+        _sc_erklaerung("termine_ohne_zeit", "", oberflaeche.SCANNER_ERKLAERUNGEN["termine_ohne_zeit"],
+                       beschriftung="Erklärung zu Terminen während des Handels oder ohne bekannte Tageszeit")
         st.radio("Welche Aktien", [u[0] for u in sa.UMFANG], format_func=dict(sa.UMFANG).get,
                  key="sc_termine_umfang", persist_state="page")
+        _sc_erklaerung("termine_umfang", "", oberflaeche.SCANNER_ERKLAERUNGEN["termine_umfang"],
+                       beschriftung="Erklärung zur Auswahl der Aktien")
 
     gewaehlt = sum(1 for s in sektoren if st.session_state.get(_sc_sektor_schluessel(s), True))
     st.markdown("##### Sektoren", anchors=False)
@@ -1895,6 +2054,8 @@ def scanner_reiter():
         st.button("Alle Sektoren abhaken", key="sc_sektoren_keine", on_click=_sc_sektoren_setzen, args=(False,))
         for s in sektoren:
             st.checkbox(sa.sektor_name(s), key=_sc_sektor_schluessel(s), persist_state="page")
+            _sc_erklaerung(_sc_sektor_schluessel(s)[3:], sa.sektor_name(s),
+                           oberflaeche.SEKTOR_ERKLAERUNGEN.get(s, "Aktien, die die Nasdaq diesem Sektor zuordnet."))
 
     # Scan: nur mit dem Knopf (Auftrag 2)
     vergleich = sa.wirksame_einstellung(_sc_einstellung(sektoren))
@@ -1925,7 +2086,7 @@ def scanner_reiter():
                   on_click=_sc_vorlage_speichern)
         sc_meldung_u = st.session_state.pop("sc_vorlage_meldung_unten", None)
         if sc_meldung_u:
-            (st.success if sc_meldung_u[0] == "ok" else st.error)(sc_meldung_u[1])
+            (erfolg if sc_meldung_u[0] == "ok" else st.error)(sc_meldung_u[1])
     st.markdown("#### Scan", anchors=False)
     st.button(beschriftung, key="sc_scan", type="primary", on_click=_sc_scan_anfordern)
     _sc_status(key="sc_scan_status", data={"text": status})
@@ -2025,7 +2186,7 @@ with tab_liste:
 
             if zeilen:
                 erg = pd.DataFrame(zeilen).sort_values("Muster", ascending=False)
-                st.success(f"{len(erg)} Treffer" + (f", {len(fehler)} ohne Daten" if fehler else ""))
+                erfolg(f"{len(erg)} Treffer" + (f", {len(fehler)} ohne Daten" if fehler else ""))
                 # ALS LISTE, nicht als Tabelle: Die Tabelle von Streamlit ist
                 # eine Zeichenflaeche, die kein Screenreader lesen kann. Sie
                 # steht zusaetzlich im Ausklapper darunter.
@@ -2273,7 +2434,7 @@ with tab_upload:
                 if fehler:
                     st.error("Hochladen: " + fehler)
                 else:
-                    st.success(f"Übernommen in {ziel_datei} auf "
+                    erfolg(f"Übernommen in {ziel_datei} auf "
                                f"{zweige}: {len(ticker)} Aktien "
                                f"(die ersten: {', '.join(ticker[:5])}). "
                                "Ab dem nächsten nächtlichen Scan aktiv.")
@@ -2301,6 +2462,7 @@ if tab_gast is not None:
         else:
             if st.button("Gastpasswort erzeugen", type="primary", key="gast_erzeugen"):
                 st.session_state["gast_erzeugt"] = zugang.erzeuge(gast_geheimnis, time.time())
+                klang()
             erzeugt = st.session_state.get("gast_erzeugt")
             if erzeugt and time.time() < erzeugt[1]:
                 gast_pw, gast_bis = erzeugt
@@ -2374,6 +2536,269 @@ if tab_ablaeufe is not None:
             if st.button(ablauf["knopf"], key=f"ablauf_{ablauf['schluessel']}", disabled=not ablauf_token_da):
                 ablauf_ok, ablauf_satz = _ablauf_anstossen(ablauf["anstoss"])
                 _ablauf_laeufe.clear()
-                (st.success if ablauf_ok else st.error)(ablauf_satz)
+                (erfolg if ablauf_ok else st.error)(ablauf_satz)
         st.button("Stand neu laden", key="ablauf_neu_laden", disabled=not ablauf_token_da,
                   on_click=_ablauf_laeufe.clear)
+
+
+# --- Einstellungen (Mathias und Gerhard, 23.09.2026) ------------------------
+# "Wir wollen die Ueberwachung aller Strategien einzeln ein- oder ausschalten
+# koennen", und zwar die Alarme ueber ntfy (Mathias, 23.09.2026: "wir meinen die
+# Alarme fuer ntfy, da moechten wir waehlen koennen, welche Chartmuster zur
+# Anwendung kommen"). Dazu das Aussehen ("per Button soll ein wirklich cooles,
+# futuristisches Design aktivierbar sein") und die Toene ("Erstelle coole Sounds
+# und mache sie waehlbar"). Die Bloecke sind gebaut wie die Gruppen im Scanner:
+# eine Ueberschrift und ein Kontrollfeld, das zu Beginn nicht angehakt ist.
+# Gespeichert wird mit einem Knopf ganz unten in einstellungen.json auf main; der
+# Waechter liest die Datei in jedem Datentakt, eine Abwahl wirkt also binnen einer
+# Minute. Schreiben nur im vollen Zugang.
+#
+# DIE WAHL STEHT IN EINEM EIGENEN EINTRAG (einst_modell), nicht im Zustand der
+# Kontrollfelder: Diese gibt es nur, solange ihre Gruppe angezeigt wird, und den
+# Wert eines nicht gezeichneten Felds raeumt Streamlit weg (Befund vom 21.09.2026
+# bei der Uebergabe). Die Kontrollfelder werden bei jedem Zeichnen aus dem Eintrag
+# gesetzt.
+def _einst_api() -> tuple:
+    """(Einstellungen, sha) frisch ueber die GitHub-Schnittstelle; sha ist None,
+    solange es die Datei noch nicht gibt. Scheitert das Lesen: LookupError, und
+    gespeichert wird nicht, sonst ueberschriebe die Vorgabe einen Stand, den
+    niemand gesehen hat."""
+    import base64
+    import requests
+    token = (_secret("GITHUB_TOKEN") or "").strip()
+    if not token:
+        raise LookupError("In den Streamlit-Secrets fehlt GITHUB_TOKEN")
+    r = requests.get(f"https://api.github.com/repos/{REPO}/contents/{einstellungen.DATEI}", params={"ref": "main"},
+                     headers={"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"},
+                     timeout=20)
+    if r.status_code == 404:
+        return einstellungen.lesen(None), None
+    if r.status_code != 200:
+        raise LookupError(f"GitHub antwortete mit Code {r.status_code}")
+    j = r.json()
+    return einstellungen.lesen(base64.b64decode(j.get("content") or "")), j.get("sha")
+
+
+def _einst_laden():
+    """Den gespeicherten Stand holen und die Wahl darauf setzen; ohne vollen
+    Zugang ueber die oeffentliche Adresse, nur zum Ansehen."""
+    try:
+        if rolle == "voll":
+            basis, sha = _einst_api()
+        else:
+            basis, sha = _einstellungen_holen(), None
+        fehler = ""
+    except Exception as e:  # noqa
+        basis, sha, fehler = _einstellungen(), None, (str(e) or type(e).__name__)
+    st.session_state["einst_basis"] = {"daten": basis, "sha": sha, "fehler": fehler}
+    st.session_state["einst_modell"] = {"aus": set(basis["alarme_aus"]), "design": basis["design"],
+                                        "klang": basis["klang"]}
+
+
+def _einst_verwerfen():
+    basis = (st.session_state.get("einst_basis") or {}).get("daten") or einstellungen.lesen(None)
+    st.session_state["einst_modell"] = {"aus": set(basis["alarme_aus"]), "design": basis["design"],
+                                        "klang": basis["klang"]}
+
+
+def _einst_neu() -> dict:
+    modell = st.session_state["einst_modell"]
+    return einstellungen.lesen({"alarme_aus": sorted(modell["aus"]), "design": modell["design"],
+                                "klang": modell["klang"]})
+
+
+def _einst_aenderungen(basis: dict, neu: dict) -> list:
+    """Was sich gegenueber dem gespeicherten Stand geaendert hat, als Saetze."""
+    saetze = []
+    alt_aus, neu_aus = set(basis["alarme_aus"]), set(neu["alarme_aus"])
+    for satz, menge in (("Abgewählt: ", neu_aus - alt_aus), ("Wieder eingeschaltet: ", alt_aus - neu_aus)):
+        namen = [a["name"] for a in einstellungen.ALARME if a["schluessel"] in menge]
+        if namen:
+            saetze.append(satz + "; ".join(namen) + ".")
+    if neu["design"] != basis["design"]:
+        saetze.append(f"Aussehen: {dict(einstellungen.DESIGNS)[neu['design']]}.")
+    if neu["klang"] != basis["klang"]:
+        saetze.append(f"Ton: {next(n for k, n, _b in einstellungen.KLAENGE if k == neu['klang'])}.")
+    return saetze
+
+
+def _einst_haken(k: str, schluessel: str):
+    modell = st.session_state.get("einst_modell")
+    if isinstance(modell, dict):
+        (modell["aus"].discard if st.session_state.get(k, True) else modell["aus"].add)(schluessel)
+
+
+def _einst_gruppe_setzen(gruppe: str, an: bool):
+    modell = st.session_state.get("einst_modell")
+    if isinstance(modell, dict):
+        for a in einstellungen.ALARME:
+            if a["gruppe"] == gruppe:
+                (modell["aus"].discard if an else modell["aus"].add)(a["schluessel"])
+
+
+def _einst_design_umschalten():
+    modell = st.session_state.get("einst_modell")
+    if isinstance(modell, dict):
+        modell["design"] = "standard" if modell["design"] == "zukunft" else "zukunft"
+
+
+def _einst_klang_gewaehlt():
+    modell = st.session_state.get("einst_modell")
+    if isinstance(modell, dict) and st.session_state.get("einst_klang"):
+        modell["klang"] = st.session_state["einst_klang"]
+
+
+def _einst_speichern():
+    """Die Wahl als einstellungen.json auf main speichern (nur voller Zugang).
+    Gespeichert wird mit dem sha des gelesenen Stands: Hat jemand anderer
+    inzwischen gespeichert, lehnt GitHub ab, statt dessen Stand still zu
+    ueberschreiben."""
+    import base64
+    import requests
+    from zoneinfo import ZoneInfo
+    basis = st.session_state.get("einst_basis") or {}
+    kennung = str(time.time_ns())
+    if rolle != "voll" or basis.get("fehler") or not isinstance(st.session_state.get("einst_modell"), dict):
+        st.session_state["einst_meldung"] = ("fehler", "Nicht gespeichert: Der gespeicherte Stand ist nicht "
+                                                       "gelesen.", kennung)
+        return
+    token = (_secret("GITHUB_TOKEN") or "").strip()
+    if not token:
+        st.session_state["einst_meldung"] = ("fehler", "Nicht gespeichert: In den Streamlit-Secrets fehlt "
+                                                       "GITHUB_TOKEN.", kennung)
+        return
+    neu = _einst_neu()
+    saetze = _einst_aenderungen(basis["daten"], neu)
+    wann = datetime.now(ZoneInfo("Europe/Vienna")).strftime("%Y-%m-%d %H:%M")
+    n_aus = len(neu["alarme_aus"])
+    daten = {"message": (f"{einstellungen.DATEI}: {n_aus} {'Alarm' if n_aus == 1 else 'Alarme'} abgewählt, "
+                         f"Aussehen {neu['design']}, Ton {neu['klang']} (über Heliot)"),
+             "content": base64.b64encode(einstellungen.schreiben(neu, geaendert=wann)).decode(), "branch": "main"}
+    if basis.get("sha"):
+        daten["sha"] = basis["sha"]
+    try:
+        r = requests.put(f"https://api.github.com/repos/{REPO}/contents/{einstellungen.DATEI}",
+                         headers={"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"},
+                         json=daten, timeout=30)
+    except Exception as e:  # noqa
+        st.session_state["einst_meldung"] = ("fehler", f"Nicht gespeichert: GitHub war nicht erreichbar "
+                                                       f"({type(e).__name__}).", kennung)
+        return
+    if r.status_code in (409, 422):
+        st.session_state["einst_meldung"] = ("fehler", "Nicht gespeichert: Die Einstellungen wurden inzwischen "
+                                             "woanders gespeichert. Der Knopf Gespeicherten Stand neu laden holt "
+                                             "den neuen Stand; die eigene Wahl ist danach neu zu treffen.", kennung)
+        return
+    if r.status_code not in (200, 201):
+        st.session_state["einst_meldung"] = ("fehler", f"Nicht gespeichert: GitHub antwortete mit Code "
+                                                       f"{r.status_code}.", kennung)
+        return
+    neu["geaendert"] = wann
+    st.session_state["einst_basis"] = {"daten": neu, "sha": (r.json().get("content") or {}).get("sha"), "fehler": ""}
+    st.session_state["einst_gespeichert"] = (time.time(), neu)
+    _einstellungen_holen.clear()
+    st.session_state["einst_meldung"] = ("ok", "Gespeichert. " + " ".join(saetze) + " Der Wächter übernimmt die "
+                                         "Alarme binnen einer Minute; Aussehen und Ton gelten ab sofort für alle.",
+                                         kennung)
+
+
+def _einst_wann(wann) -> str:
+    wann = str(wann or "")
+    if len(wann) >= 16:
+        return f"{nachschlagen.datum_text(wann[:10])} um {wann[11:16]} Uhr Wiener Zeit"
+    return ""
+
+
+if tab_einst is not None:
+    with tab_einst:
+        if not isinstance(st.session_state.get("einst_modell"), dict) or "einst_basis" not in st.session_state:
+            _einst_laden()
+        einst_basis = st.session_state["einst_basis"]
+        einst_modell = st.session_state["einst_modell"]
+        einst_darf = rolle == "voll" and not einst_basis["fehler"]
+        st.markdown("Hier wird festgelegt, welche Chartmuster und Strategien einen Alarm über ntfy auslösen, wie "
+                    "die App aussieht und welcher Ton nach einer erfolgreich abgeschlossenen Aktion spielt. Alles "
+                    "gilt für alle, die die App benutzen, und wirkt erst nach dem Knopf Einstellungen speichern "
+                    "ganz unten.")
+        if rolle != "voll":
+            st.info("Ändern lässt sich das nur mit vollem Zugang; hier ist es nur zu sehen.")
+        elif einst_basis["fehler"]:
+            st.error(f"Der gespeicherte Stand lässt sich gerade nicht lesen: {einst_basis['fehler']}. Deshalb lässt "
+                     "sich nichts speichern; der Knopf Gespeicherten Stand neu laden ganz unten versucht es noch "
+                     "einmal.")
+
+        st.markdown("#### Alarme über ntfy", anchors=False)
+        st.markdown("Angehakt heißt: Das Muster oder die Strategie meldet über ntfy, und ein Kaufsignal geht auch an "
+                    "den Handels-Bot. Abgewählt heißt: kein Alarm und kein Signal an den Bot; der Nachtscan rechnet "
+                    "weiter, und die Kaufpunkte stehen weiter in der Mappe. " + einstellungen.NIE_ABWAEHLBAR)
+        einst_aus_namen = einstellungen.abgewaehlte_namen(einst_basis["daten"])
+        st.markdown(("Gespeichert abgewählt: " + "; ".join(einst_aus_namen) + ".") if einst_aus_namen
+                    else "Gespeichert sind alle Alarme eingeschaltet.")
+        for einst_g, einst_gname in einstellungen.GRUPPEN:
+            einst_eintraege = [a for a in einstellungen.ALARME if a["gruppe"] == einst_g]
+            einst_n = sum(1 for a in einst_eintraege if a["schluessel"] not in einst_modell["aus"])
+            st.markdown(f"##### {einst_gname}", anchors=False)
+            if not st.checkbox(f"Gruppe {einst_gname} anzeigen, {einst_n} von {len(einst_eintraege)} eingeschaltet",
+                               key=f"einst_gruppe_{einst_g}"):
+                continue
+            if len(einst_eintraege) > 1:
+                st.button("Alle dieser Gruppe einschalten", key=f"einst_alle_an_{einst_g}",
+                          on_click=_einst_gruppe_setzen, args=(einst_g, True), disabled=rolle != "voll")
+                st.button("Alle dieser Gruppe ausschalten", key=f"einst_alle_aus_{einst_g}",
+                          on_click=_einst_gruppe_setzen, args=(einst_g, False), disabled=rolle != "voll")
+            for a in einst_eintraege:
+                einst_k = f"einst_alarm_{a['schluessel']}"
+                st.session_state[einst_k] = a["schluessel"] not in einst_modell["aus"]
+                st.checkbox(a["name"], key=einst_k, on_change=_einst_haken, args=(einst_k, a["schluessel"]),
+                            disabled=rolle != "voll")
+                _sc_erklaerung(f"alarm_{a['schluessel']}", a["name"], a["erklaerung"])
+
+        st.markdown("#### Aussehen", anchors=False)
+        if st.checkbox("Gruppe Aussehen anzeigen", key="einst_gruppe_aussehen"):
+            einst_design_namen = dict(einstellungen.DESIGNS)
+            einst_satz = f"Gewählt ist das Aussehen {einst_design_namen[einst_modell['design']]}."
+            if einst_modell["design"] != einst_basis["daten"]["design"]:
+                einst_satz += (" In diesem Browser gilt es schon als Vorschau; für alle gilt es nach Einstellungen "
+                               "speichern.")
+            st.markdown(einst_satz)
+            st.button("Zukunftsdesign ein- oder ausschalten", key="einst_design_knopf",
+                      on_click=_einst_design_umschalten)
+            st.caption("Das Zukunftsdesign ist für sehende Menschen gemacht: ein dunkler Sternenhimmel, "
+                       "Leuchteffekte und Bewegung. Aufbau und Text der App bleiben gleich, ein Screenreader liest "
+                       "dasselbe. Verlangt das Gerät weniger Bewegung, steht alles still.")
+
+        st.markdown("#### Töne", anchors=False)
+        if st.checkbox("Gruppe Töne anzeigen", key="einst_gruppe_toene"):
+            einst_klaenge = {k: (n, b) for k, n, b in einstellungen.KLAENGE}
+            st.session_state["einst_klang"] = einst_modell["klang"]
+            st.radio("Ton nach einer erfolgreich abgeschlossenen Aktion", list(einst_klaenge), key="einst_klang",
+                     format_func=lambda k: f"{einst_klaenge[k][0]}; {einst_klaenge[k][1][0].lower()}"
+                                           f"{einst_klaenge[k][1][1:].rstrip('.')}",
+                     on_change=_einst_klang_gewaehlt)
+            if st.button("Gewählten Ton anhören", key="einst_klang_hoeren"):
+                if einst_modell["klang"] == "aus":
+                    st.info("Gewählt ist Kein Ton; zu hören ist deshalb nichts.")
+                else:
+                    klang(name=einst_modell["klang"])
+            st.caption("Der Ton spielt nach dem Anmelden, nach einem Scan und nach jedem Speichern, Hochladen, "
+                       "Übergeben, Eintragen, Erzeugen und Anstoßen, das geklappt hat. Der Browser gibt ihn erst "
+                       "nach dem ersten Klick oder Tastendruck auf der Seite frei.")
+
+        st.markdown("#### Speichern", anchors=False)
+        einst_saetze = _einst_aenderungen(einst_basis["daten"], _einst_neu())
+        if einst_saetze:
+            st.markdown("Noch nicht gespeichert. " + " ".join(einst_saetze))
+        else:
+            einst_wann = _einst_wann(einst_basis["daten"].get("geaendert"))
+            st.markdown("Alles ist gespeichert" + (f", zuletzt geändert am {einst_wann}" if einst_wann else "") + ".")
+        st.button("Einstellungen speichern", key="einst_speichern", type="primary", on_click=_einst_speichern,
+                  disabled=not (einst_darf and einst_saetze))
+        st.button("Änderungen verwerfen", key="einst_verwerfen", on_click=_einst_verwerfen,
+                  disabled=not einst_saetze)
+        st.button("Gespeicherten Stand neu laden", key="einst_neu_laden", on_click=_einst_laden)
+        einst_meldung = st.session_state.pop("einst_meldung", None)
+        if einst_meldung:
+            if einst_meldung[0] == "ok":
+                erfolg(einst_meldung[1], einst_meldung[2])
+            else:
+                st.error(einst_meldung[1])
