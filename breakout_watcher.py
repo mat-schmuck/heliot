@@ -64,6 +64,7 @@ import positionen      # Kapitel 11/12: Bestand samt Beobachtungen
 import beobachtungen   # Kapitel 12: Trigger werden Beobachtungen
 import handelskalender  # Fragt den Datenanbieter, ob heute ueberhaupt gehandelt wird
 import alarm_muster    # Gerhards sechs Alarm-Muster (22.09.2026, O1 bis O10)
+import einstellungen   # Alarme je Muster abwaehlbar (Mathias und Gerhard, 23.09.2026)
 import listen          # Wochenlisten und die einzeln eingetragenen Aktien (O11 bis O13)
 import bot_kanal       # Die Signale als JSON für den degirobot (Vertrag KANAL.md)
 import gewinnzonen_lauf  # Kapitel 12: Nachtbefunde zum Handelsstart mit heutigen Kursen nachrechnen
@@ -1166,7 +1167,7 @@ def _deckel_nachziehen(items: list[dict]) -> list[dict]:
     return items
 
 
-def _lege_gleiche_preise_zusammen(items: list[dict]) -> list[dict]:
+def _lege_gleiche_preise_zusammen(items: list[dict], leise: bool = False) -> list[dict]:
     """Erfuellt eine Aktie zwei Muster auf DEMSELBEN Kurs, ist das EIN
     Kursereignis und darf nur EINE Meldung ergeben.
 
@@ -1188,9 +1189,15 @@ def _lege_gleiche_preise_zusammen(items: list[dict]) -> list[dict]:
         vorhanden = nach_schluessel.get(schluessel)
         if vorhanden is None:
             it = dict(it)
+            # DIE EINZELNEN MUSTER bleiben erhalten (23.09.2026): Wird eines
+            # davon in den Einstellungen abgewaehlt, legt wirksame_items die
+            # uebrigen neu zusammen, mit deren eigener Volumenhuerde und deren
+            # eigenem Stop.
+            it["_roh"] = [dict(it)]
             it["strategien"] = [it["strategie"]]
             nach_schluessel[schluessel] = it
             continue
+        vorhanden["_roh"].append(dict(it))
         if it["strategie"] not in vorhanden["strategien"]:
             vorhanden["strategien"].append(it["strategie"])
         # Strengere Volumenhuerde und die engere Absicherung gewinnen
@@ -1203,7 +1210,7 @@ def _lege_gleiche_preise_zusammen(items: list[dict]) -> list[dict]:
 
     zusammen = list(nach_schluessel.values())
     doppelte = len(items) - len(zusammen)
-    if doppelte:
+    if doppelte and not leise:
         print(f"  {doppelte} Kaufpunkt(e) auf gleichem Preis zusammengelegt — "
               f"ein Kursereignis ergibt eine Meldung.")
     return zusammen
@@ -1255,6 +1262,77 @@ def einzel_frisch():
     except Exception:
         pass
     return None
+
+
+# ALARME JE MUSTER (Mathias und Gerhard, 23.09.2026): Im Reiter Einstellungen
+# der App wird gewaehlt, welche Chartmuster und Strategien ueber ntfy melden
+# (einstellungen.py). Der Stand kommt wie die Einzelaktien frisch aus
+# origin/main; ist er nicht lesbar, bleibt der zuletzt bekannte. Abgewaehlt
+# heisst: keine Meldung und kein Signal an den Bot. Ausstiege, Stops,
+# Gewinnzonen, schlussnahe Befunde und Beobachtungen sind nie abwaehlbar.
+_EINST = {"daten": einstellungen.lesen(None), "aus": None}
+
+
+def einstellungen_frisch():
+    """Die Einstellungen, FRISCH aus origin/main (einzel_frisch hat im selben
+    Datentakt schon geholt). Gibt es die Datei dort nicht, gilt die im
+    Arbeitsverzeichnis, und ohne Datei ist alles an. None heisst: nicht
+    feststellbar, dann bleibt der letzte Stand."""
+    import subprocess
+    try:
+        r = subprocess.run(["git", "show", f"origin/main:{einstellungen.DATEI}"],
+                           capture_output=True, timeout=30)
+        if r.returncode == 0:
+            return einstellungen.lesen(r.stdout)
+    except Exception as e:  # noqa: BLE001, ein Netzfehler darf die Wache nie stoppen
+        print(f"  (Einstellungen nicht aus dem Repo lesbar: {type(e).__name__}: {e})")
+        return None
+    try:
+        pfad = Path(einstellungen.DATEI)
+        return einstellungen.lesen(pfad.read_bytes() if pfad.exists() else None)
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def einstellungen_nachziehen():
+    """Den Stand der Einstellungen uebernehmen und jede Aenderung der
+    abgewaehlten Alarme einmal ins Protokoll schreiben."""
+    neu = einstellungen_frisch()
+    if neu is None:
+        return
+    aus = tuple(neu.get("alarme_aus") or [])
+    if aus != _EINST["aus"]:
+        namen = einstellungen.abgewaehlte_namen(neu)
+        print("Alarme: alle Muster und Strategien eingeschaltet." if not namen
+              else "Alarme abgewählt: " + ", ".join(namen) + ".")
+    _EINST["daten"], _EINST["aus"] = neu, aus
+
+
+def alarm_an(schluessel: str) -> bool:
+    """Meldet der Alarm mit diesem Schluessel aus einstellungen.ALARME?"""
+    return einstellungen.alarm_an(_EINST["daten"], schluessel)
+
+
+def wirksame_items(items: list[dict]) -> list[dict]:
+    """Die Kaufpunkte ohne die abgewaehlten Muster. Liegt ein abgewaehltes
+    Muster mit anderen auf demselben Preis, werden die uebrigen neu
+    zusammengelegt (mit ihrer eigenen Volumenhuerde und ihrem eigenen Stop);
+    ein Kaufpunkt aus lauter abgewaehlten Mustern faellt heraus. Gerechnet
+    wird in jeder Runde neu, damit eine Abwahl binnen einer Minute greift."""
+    einst = _EINST["daten"]
+    if not einst.get("alarme_aus"):
+        return items
+    raus = []
+    for it in items:
+        roh = it.get("_roh") or [it]
+        behalten = [r for r in roh if einstellungen.muster_an(einst, r.get("strategie"))]
+        if not behalten:
+            continue
+        if len(behalten) == len(roh):
+            raus.append(it)
+        else:
+            raus.extend(_lege_gleiche_preise_zusammen(behalten, leise=True))
+    return raus
 
 
 def einzel_kaufpunkte(ticker: str, firma: str = "", nur_muster: bool = True) -> list[dict]:
@@ -2866,6 +2944,10 @@ def nachtbefunde_schritt(topic, nacht, basis, ws, schon_gemeldet, state,
             (leise if b.get("buendeln") else laut).append(
                 (eintrag, b, ergebnis))
         else:
+            if not alarm_an("insider"):
+                # Abgewaehlt (23.09.2026): kein Alarm. Der Fund bleibt offen,
+                # damit er nach dem Wiedereinschalten noch am selben Tag kommt.
+                continue
             ergebnis = _insider_heute(obj, sym, kurs, heute)
             if ergebnis == "warten":
                 continue
@@ -4731,6 +4813,8 @@ def main():
     # Aktien bekommen ihn ueber ws.dazu.
     einzel_nachziehen(items, firmen, gewuenscht, abruf_ticker,
                       ws if ws_laeuft else None, nur_muster=not args.alle)
+    # ALARME JE MUSTER (23.09.2026): beim Start und in jedem Datentakt.
+    einstellungen_nachziehen()
     quotes = {}              # vor dem ersten Datenabruf leer — die
                              # Tagesgeschäft-Wache prüft sonst ins Leere
 
@@ -4792,6 +4876,7 @@ def main():
             # ist sie im naechsten Datentakt in der Wache.
             einzel_nachziehen(items, firmen, gewuenscht, abruf_ticker,
                               ws if ws_laeuft else None, nur_muster=not args.alle)
+            einstellungen_nachziehen()
 
         # Hauptquelle Yahoo (ein Abruf, kein Limit), Twelve Data als Rueckfall.
         if laut:
@@ -4914,7 +4999,8 @@ def main():
             # einer eigenen Meldung hinaus (Gerhard, 22.09.2026, O5 und O10).
             alarm_neben = []
             fenster = state.setdefault("fenster", {})
-            for item in items:
+            # ALARME JE MUSTER (23.09.2026): nur die eingeschalteten Muster.
+            for item in wirksame_items(items):
                 q = quotes.get(item["ticker"].upper())
                 if not q:
                     continue
@@ -5267,7 +5353,7 @@ def main():
             # Nur wenn der Nasdaq stark genug nach unten gegapt hat und die
             # Aktie auf der nachts gebauten Fokusliste steht.
             r2g_neu = []
-            if _r2g_fokus and r2g_regime_pruefen():
+            if _r2g_fokus and alarm_an("r2g") and r2g_regime_pruefen():
                 for rt, eintrag in _r2g_fokus.items():
                     q = quotes.get(rt)
                     if not q:
@@ -5335,7 +5421,7 @@ def main():
             # Eigener Meldeschluessel, damit beide Kapitel am selben Tag
             # unabhaengig voneinander feuern koennen.
             r2gx_neu = []
-            if _r2g_fokus:
+            if _r2g_fokus and alarm_an("r2gx"):
                 for rt, eintrag in _r2g_fokus.items():
                     q = quotes.get(rt)
                     if not q:
@@ -5397,6 +5483,8 @@ def main():
             if gap_ein_neu:
                 save_state(state)
             gap_ein = [g for g in gap_ein if g["key"] not in schon_gemeldet]
+            if not alarm_an("gapgo"):
+                gap_ein = []          # abgewaehlt (23.09.2026): kein Einstieg, keine Auskunft
             gap_ueber = [g for g in gap_ein if g.get("uebersprungen")]
             gap_ein = [g for g in gap_ein if not g.get("uebersprungen")]
             # W2 (Gerhard, 12.09.2026): ueber der 3-Prozent-Grenze ist es kein
@@ -5502,7 +5590,7 @@ def main():
             # Handelsende (Schluss im oberen Fuenftel + 5x Volumen roh).
             gap_neu = []
             gap_geaendert = False
-            for gt in gap_universum:
+            for gt in (gap_universum if alarm_an("gapgo") else []):
                 q = quotes.get(gt)
                 if not q:
                     continue
@@ -5570,7 +5658,7 @@ def main():
                         sperre_bis = jetzt_s + TAKT
 
             # --- R15 (Gerhard, 12.09.2026): morgens die Sektor-Aufsteiger ----
-            if offen and laut and basis and jetzt_s >= sperre_bis:
+            if offen and laut and basis and jetzt_s >= sperre_bis and alarm_an("sektor_morgen"):
                 if sektor_morgen(topic, state, schon_gemeldet, args.dry_run) is False:
                     sperre_bis = jetzt_s + TAKT
 
