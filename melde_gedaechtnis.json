@@ -76,7 +76,7 @@
     "HP|Fallback: MA50-Pullback": "drin",
     "IMOS|Fallback: 20-Tage-Hoch (Pivot)": "draussen",
     "IMOS|Fallback: MA50-Pullback": "draussen",
-    "INSW|Fallback: MA50-Pullback": "draussen",
+    "INSW|Fallback: MA50-Pullback": "drin",
     "MDB|Fallback: MA50-Pullback": "draussen",
     "MSTR|Fallback: 20-Tage-Hoch (Pivot)": "draussen",
     "MSTR|Fallback: MA50-Pullback": "draussen",
@@ -185,7 +185,7 @@
     "FET|Fallback: MA50-Pullback": "draussen",
     "AMRX|Fallback: 52W-Hoch-Breakout": "draussen",
     "NTSK|Fallback: 20-Tage-Hoch (Pivot)": "drin",
-    "TWLO|Fallback: 20-Tage-Hoch (Pivot)": "draussen",
+    "TWLO|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "FTNT|Rectangle Top": "drin",
     "ADPT|Fallback: 52W-Hoch-Breakout": "drin",
     "ADPT|Fallback: 20-Tage-Hoch (Pivot)": "drin",
@@ -207,7 +207,7 @@
     "ZIM|Cup & Handle (Wochenbasis) + Darvas Box": "drin",
     "SDGR|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "SDGR|Fallback: 52W-Hoch-Breakout": "drin",
-    "TWLO|Fallback: 52W-Hoch-Breakout": "draussen",
+    "TWLO|Fallback: 52W-Hoch-Breakout": "drin",
     "FTK|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "BAND|Fallback: MA50-R\u00fcckeroberung": "drin",
     "TEVA|Cup & Handle (Wochenbasis)": "drin",
@@ -301,7 +301,8 @@
     "MU|Pocket Pivot": "drin",
     "BLLN|Fallback: MA50-Pullback": "draussen",
     "CDNA|Pocket Pivot": "drin",
-    "AMRX|Inside Day": "drin"
+    "AMRX|Inside Day": "drin",
+    "RNG|Cup & Handle (Wochenbasis)": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -416,7 +417,6 @@
     "BEST|TWLO|Fallback: 52W-Hoch-Breakout": "2026-09-21",
     "MRNA|Darvas Box": "2026-09-21",
     "BEST|MRNA|Darvas Box": "2026-09-21",
-    "UEBER|TWLO|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
     "UEBER|RNG|HTF Innen-Einstieg": "2026-09-21",
     "UEBER|ASX|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
     "CMBT|Cup & Handle (Wochenbasis)": "2026-09-21",
@@ -529,7 +529,6 @@
     "PVLA|Rectangle Top": "2026-09-22",
     "BEST|PVLA|Rectangle Top": "2026-09-22",
     "UEBER|TWLO|Cup & Handle (Wochenbasis)": "2026-09-22",
-    "UEBER|TWLO|Fallback: 52W-Hoch-Breakout": "2026-09-22",
     "MRNA|Fallback: 52W-Hoch-Breakout": "2026-09-22",
     "BEST|MRNA|Fallback: 52W-Hoch-Breakout": "2026-09-22",
     "BLLN|Fallback: MA50-R\u00fcckeroberung": "2026-09-22",
@@ -609,7 +608,9 @@
     "GAPGO|OMER|2026-09-23": "2026-09-23",
     "SEKTORAUF|2026-09-23": "2026-09-23",
     "AMRX|Inside Day": "2026-09-23",
-    "BEST|AMRX|Inside Day": "2026-09-23"
+    "BEST|AMRX|Inside Day": "2026-09-23",
+    "RNG|Cup & Handle (Wochenbasis)": "2026-09-23",
+    "BEST|RNG|Cup & Handle (Wochenbasis)": "2026-09-23"
   },
   "gapgo_warten": {
     "VICR": {
