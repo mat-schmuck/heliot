@@ -250,7 +250,7 @@
     "OUST|Fallback: 20-Tage-Hoch (Pivot)": "draussen",
     "OUST|Fallback: MA50-R\u00fcckeroberung": "draussen",
     "IMOS|VCP": "drin",
-    "BAND|EMA Crossback": "draussen",
+    "BAND|EMA Crossback": "drin",
     "GNRC|Fallback: MA50-Pullback": "drin",
     "RNG|Darvas Box + High & Tight Flag": "drin",
     "MGTX|Fallback: MA50-R\u00fcckeroberung": "drin",
@@ -304,7 +304,8 @@
     "AMRX|Inside Day": "drin",
     "RNG|Cup & Handle (Wochenbasis)": "drin",
     "CAI|Cup & Handle (Wochenbasis)": "drin",
-    "RNG|Fallback: 52W-Hoch-Breakout": "drin"
+    "RNG|Fallback: 52W-Hoch-Breakout": "drin",
+    "VSAT|Fallback: MA50-R\u00fcckeroberung": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -564,7 +565,6 @@
     "UEBER|NTRA|Cup & Handle (Wochenbasis)": "2026-09-22",
     "MEDP|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-22",
     "BEST|MEDP|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-22",
-    "UEBER|BAND|EMA Crossback": "2026-09-22",
     "UEBER|DOCN|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
     "UEBER|ALNT|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-21",
     "INSIDER|GRAB|pfad_a|0": "2026-09-22",
