@@ -639,6 +639,12 @@ CFG = {
         # wirklich in die Kaufzone zurueckkommen und nicht bloss an ihrem
         # Rand kratzen.
         "wiedereintritt_totzone": 0.02,
+        # NEUE MELDUNG DESSELBEN MUSTERS erst ab diesem Abstand ueber dem
+        # schon gemeldeten Kaufpunkt (Gerhard, 23.09.2026, Regel 3):
+        # "Alles darunter gilt als Neuberechnung und bleibt still."
+        # Der Nachtscan rechnet jeden Kaufpunkt neu; von 50,00 auf 50,40
+        # ist kein neues Muster, ab 51,00 schon.
+        "melde_neu_ab": 0.02,
         # Weckuhr und Sammelfenster gab es nur am 30.07.2026 für ein paar
         # Stunden; mit dem festen Zwei-Sekunden-Takt sind sie wieder
         # heraus. Ebenso die Obergrenze von fünf Aktien je Push: Sie

@@ -1414,13 +1414,21 @@ def block_e():
     pruefe("E", "G7: Stop liegt 4 Prozent unter dem Konsolidierungstief",
            "kons[\"tief\"] * (1 - C[\"porosity\"])" in
            open("earnings_pullback.py", encoding="utf-8").read())
-    pruefe("E", "Innen-Einstieg bekommt die taegliche HTF-Frist",
-           bw.ausbruch_schluessel(
+    # Gerhard, 23.09.2026, Regel 1: KEINE taegliche Frist mehr, auch nicht
+    # fuer die High and Tight Flag. Kein Schluessel traegt noch ein
+    # Vorzeichen, und alte Schluessel werden beim Laden umgeschrieben.
+    pruefe("E", "Regel 1: kein Muster hat mehr eine taegliche Frist",
+           not bw.ausbruch_schluessel(
                {"strategien": ["HTF Innen-Einstieg"], "ticker": "T",
                 "nr": 2}).startswith(bw.HTF_MARKE)
-           and not bw.ausbruch_schluessel(
-               {"strategien": ["Rectangle Top"], "ticker": "T",
-                "nr": 1}).startswith(bw.HTF_MARKE))
+           and bw.ausbruch_schluessel(
+               {"strategien": ["High & Tight Flag"], "ticker": "T",
+                "nr": 1}) == "T|High & Tight Flag"
+           and not hasattr(bw, "htf_grenze"))
+    pruefe("E", "Regel 1: ein alter Schluessel mit Vorzeichen bleibt gesperrt",
+           bw._htf_ohne_vorzeichen(
+               {bw.HTF_MARKE + "CAI|Cup & Handle (Wochenbasis)": "2026-09-22"})
+           == {"CAI|Cup & Handle (Wochenbasis)": "2026-09-22"})
     _gesendet = []
     _alt_sende = bw.sende
     # klick kam mit der Handels-App dazu (07.09.2026); ohne diesen
@@ -1619,8 +1627,10 @@ def block_e():
     pruefe("E", "Übersprungen prüft ZUSÄTZLICH das Wochengedächtnis",
            'wechsel == "verlassen"' in quelle_loop
            and "for k in uebersprungen_schluessel_alle(res)" in quelle_loop)
-    pruefe("E", "Ein Wiedereintritt löst den Wochenriegel wieder",
-           "schon_gemeldet.discard(k)" in quelle_loop)
+    # Bis zum 23.09.2026 loeste ein Wiedereintritt den Wochenriegel der
+    # Uebersprungen-Meldung wieder. Gerhards Regel 1 streicht das.
+    pruefe("E", "Regel 1: ein Wiedereintritt loest den Wochenriegel NICHT mehr",
+           "schon_gemeldet.discard(k)" not in quelle_loop)
 
     # DAS UEBERGABEFESTE MELDE-GEDAECHTNIS (18.08.2026, Fall RSG/CRNX):
     # Die Schlussstunde stellte an jedem Handelstag den Cache vom VORTAG
@@ -2058,16 +2068,25 @@ def block_e():
              "strategien": ["High & Tight Flag", "Darvas Box"]}
     pruefe("E", "Zwei Muster auf einem Preis: je Muster ein Schluessel",
            bw.ausbruch_schluessel_alle(_paar)
-           == [bw.HTF_MARKE + "CRDX|Darvas Box",
-               bw.HTF_MARKE + "CRDX|High & Tight Flag"])
+           == ["CRDX|Darvas Box", "CRDX|High & Tight Flag"])
     _rk = {"key": "X", "key_best": "Y", "vol_ok": True,
            "strategie": "Darvas Box",
            "keys": ["LITE|Cup & Handle", "LITE|Rectangle Top"],
            "keys_best": ["BEST|LITE|Cup & Handle", "BEST|LITE|Rectangle Top"]}
-    pruefe("E", "Ein gemeldetes Muster genuegt, der Ausbruch gilt als gemeldet",
-           bw.melde_stufe(_rk, {"LITE|Rectangle Top"}) == "nachtrag"
-           and bw.melde_stufe(_rk, {"LITE|Rectangle Top",
-                                    "BEST|LITE|Cup & Handle"}) is None)
+    # SEIT GERHARDS REGEL 2 (23.09.2026) anders als bis dahin: Liegen zwei
+    # Muster auf demselben Preis, hat jedes seine eigene Sperre. Das noch
+    # nicht gemeldete meldet also, auch wenn das andere schon gemeldet hat
+    # ("Ein ANDERES Muster bei derselben Aktie meldet immer, egal auf
+    # welchem Kursniveau"). Vorher galt der Ausbruch mit einem gemeldeten
+    # Muster als abgehakt.
+    pruefe("E", "Regel 2: das noch nicht gemeldete Muster meldet auch bei gleichem Preis",
+           bw.melde_stufe(_rk, {"LITE|Rectangle Top"}) == "neu")
+    pruefe("E", "Sind beide Muster gemeldet, kommt nur noch der Nachtrag",
+           bw.melde_stufe(_rk, {"LITE|Rectangle Top", "LITE|Cup & Handle"})
+           == "nachtrag"
+           and bw.melde_stufe(_rk, {"LITE|Rectangle Top", "LITE|Cup & Handle",
+                                    "BEST|LITE|Cup & Handle",
+                                    "BEST|LITE|Rectangle Top"}) is None)
     pruefe("E", "Uebersprungen- und Fenster-Schluessel ebenfalls nach Muster",
            bw.uebersprungen_schluessel(_lite)
            == bw.UEBERSPRUNGEN_MARKE + "LITE|Rectangle Top"
@@ -2137,19 +2156,69 @@ def block_e():
         (bw.fetch_quotes_yahoo, bw._r2g_regime, bw._r2g_naechster_versuch,
          bw._r2g_fehlversuche, bw.heute_ny) = _alt_r
 
-    # Die Meldung sagt, dass es ein Wiedereintritt ist und KEIN Ausbruch.
-    probe_w = {"ticker": "AAA", "firma": "Alpha AG", "strategie": "Darvas Box",
-               "kaufpunkt": 10.0, "kurs": 10.3, "ueber_pct": 3.0, "stop": 9.0,
-               "ziel": 12.0, "vol_ok": True, "vol_pct": 60.0, "vol_noetig": 1.0}
-    erste = bw.format_wiedereintritt(probe_w).splitlines()[0]
-    pruefe("E", "Wiedereintritt ist als solcher beschriftet",
-           "wieder im Einstiegsfenster" in erste, erste[:70])
-    pruefe("E", "Die gewöhnliche Meldung trägt den Zusatz NICHT",
-           "wieder im Einstiegsfenster"
-           not in bw.format_treffer(probe_w).splitlines()[0])
-    pruefe("E", "Der Wiedereintritt nennt Kurs, Stop und Risiko",
-           "Kaufpunkt" in bw.format_wiedereintritt(probe_w)
-           and "Stop" in bw.format_wiedereintritt(probe_w))
+    # DIE WIEDEREINTRITTS-MELDUNG IST WEG (Gerhard, 23.09.2026, Regel 1):
+    # "Die bisherige Ausnahme zweites Mal nach Wiedereintritt fällt komplett
+    # weg." Der ZUSTAND bleibt, er traegt die Totzone und entscheidet, ob
+    # ein Kaufpunkt als uebersprungen gemeldet wird.
+    _bwq = (WURZEL / "breakout_watcher.py").read_text(encoding="utf-8")
+    pruefe("E", "Regel 1: es gibt keine Meldung 'wieder im Einstiegsfenster'",
+           not hasattr(bw, "push_wiedereintritt")
+           and not hasattr(bw, "format_wiedereintritt")
+           and 'kopfzusatz="wieder im Einstiegsfenster"' not in _bwq
+           and "wiedereintritt" not in bw.ALARM_ANLASS)
+    pruefe("E", "Regel 1: der Wiedereintritt hebt die Uebersprungen-Sperre nicht auf",
+           "schon_gemeldet.discard" not in _bwq)
+    pruefe("E", "Der Fensterzustand samt Totzone bleibt",
+           bw.fenster_wechsel(bw.DRIN, bw.DRAUSSEN) == "wiedereintritt"
+           and bw.fenster_zustand(0.04, bw.DRAUSSEN) is None)
+
+    # -----------------------------------------------------------------
+    # GERHARDS MELDELOGIK VOM 23.09.2026 (Regel 1 bis 4)
+    # Anlass war CAI: Cup & Handle meldete am 22.09. bei 31,37 und am
+    # 23.09. wieder, weil die Flagge auf demselben Preis lag und ihre
+    # Tagesfrist auch fuer das Cup & Handle galt.
+    # -----------------------------------------------------------------
+    def _res(kp, muster="Cup & Handle (Wochenbasis)", vol=True):
+        keys = [f"CAI|{muster}"]
+        return {"ticker": "CAI", "kaufpunkt": kp, "vol_ok": vol,
+                "strategie": muster, "strategien": [muster],
+                "keys": keys, "key": keys[0],
+                "keys_best": [bw.NACHTRAG_MARKE + k for k in keys],
+                "key_best": bw.NACHTRAG_MARKE + keys[0]}
+
+    _gem = {"CAI|Cup & Handle (Wochenbasis)",
+            bw.NACHTRAG_MARKE + "CAI|Cup & Handle (Wochenbasis)"}
+    _kp = {"CAI|Cup & Handle (Wochenbasis)": 50.0,
+           bw.NACHTRAG_MARKE + "CAI|Cup & Handle (Wochenbasis)": 50.0}
+    pruefe("E", "Regel 1: dasselbe Muster auf demselben Niveau meldet nicht wieder",
+           bw.melde_stufe(_res(50.0), _gem, _kp) is None
+           and bw.melde_stufe(_res(50.0), _gem) is None)
+    pruefe("E", "Regel 2: ein anderes Muster derselben Aktie meldet",
+           bw.melde_stufe(_res(50.0, "Pocket Pivot"), _gem, _kp) == "neu")
+    pruefe("E", "Regel 3: ein um 0,8 Prozent hoeherer Kaufpunkt bleibt still",
+           bw.melde_stufe(_res(50.4), _gem, _kp) is None)
+    pruefe("E", "Regel 3: zwei Prozent hoeher meldet wieder",
+           bw.melde_stufe(_res(51.0), _gem, _kp) == "neu")
+    pruefe("E", "Regel 3: die Schwelle steht in den Einstellungen",
+           bw.MELDE_NEU_AB
+           == __import__("config").CFG["betrieb"]["melde_neu_ab"] == 0.02,
+           str(bw.MELDE_NEU_AB))
+    pruefe("E", "Regel 3: ohne gemerkten Preis bleibt es bei der Sperre",
+           bw.melde_stufe(_res(99.0), _gem) is None)
+    _st = {}
+    bw.kp_merken(_st, "CAI|Cup & Handle (Wochenbasis)", 50.004)
+    bw.kp_merken(_st, "CAI|Pocket Pivot", None)
+    pruefe("E", "Der gemeldete Kaufpunkt wird gemerkt, ohne Preis nichts",
+           _st["gemeldet_kp"] == {"CAI|Cup & Handle (Wochenbasis)": 50.004}
+           and "CAI|Pocket Pivot" not in _st["gemeldet_kp"], str(_st))
+    pruefe("E", "Regel 4: die Sperre faellt mit dem Freitagsputz",
+           "CAI|Cup & Handle (Wochenbasis)" not in bw._gemeldet_filtern(
+               {"CAI|Cup & Handle (Wochenbasis)": bw.letzter_putz()}, "2026-09-23")
+           and "CAI|Cup & Handle (Wochenbasis)" in bw._gemeldet_filtern(
+               {"CAI|Cup & Handle (Wochenbasis)": "2099-01-01"}, "2026-09-23"))
+    pruefe("E", "Der Nachtrag der Volumenbestaetigung bleibt moeglich",
+           bw.melde_stufe(_res(50.0), {"CAI|Cup & Handle (Wochenbasis)"},
+                          {"CAI|Cup & Handle (Wochenbasis)": 50.0}) == "nachtrag")
 
     # ZWEI LISTEN (Gerhard, 14.08.2026): Darvas ausschliesslich auf der
     # Darvas-Liste, alle anderen Muster auf beiden. An echten Kursdaten

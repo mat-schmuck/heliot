@@ -373,6 +373,10 @@ NACHLAUF_GRENZE = CFG["betrieb"].get("nachlauf_grenze", 0.05)
 # Wie weit UNTER die Grenze der Kurs zurueck muss, damit der Kaufpunkt
 # wieder als "im Einstiegsfenster" gilt. Siehe fenster_zustand().
 WIEDEREINTRITT_TOTZONE = CFG["betrieb"].get("wiedereintritt_totzone", 0.01)
+# Regel 3 (Gerhard, 23.09.2026): So weit muss ein neu gerechneter Kaufpunkt
+# ueber dem schon gemeldeten liegen, damit dasselbe Muster in derselben
+# Woche noch einmal melden darf.
+MELDE_NEU_AB = CFG["betrieb"].get("melde_neu_ab", 0.02)
 MELDE_UEBERSPRUNGENE = CFG["betrieb"].get("melde_uebersprungene", True)
 # Nur Ausbrueche melden, die HEUTE gerissen wurden (Frage M4 an Gerhard,
 # 11.09.2026). Die Begruendung steht bei riss_schon_gestern().
@@ -633,6 +637,11 @@ def letzter_putz() -> str:
     return freitag.isoformat()
 
 
+# NUR NOCH FUER ALTE ZUSTAENDE (bis 23.09.2026 trug die High and Tight
+# Flag dieses Vorzeichen, weil sie eine TAEGLICHE Frist hatte). Gerhards
+# Regel vom 23.09.2026 gilt fuer ALLE Muster gleich: eine Meldung je
+# Aktie und Muster in der Woche. Das Vorzeichen wird beim Laden
+# abgeschnitten, siehe _htf_ohne_vorzeichen.
 HTF_MARKE = "HTF|"
 
 # Der Sektor-Radar-Befund wird je HANDELSTAG einmal gemeldet; der Tag steht
@@ -661,24 +670,25 @@ GAPGO_UEBER_MARKE = "GAPGOUEBER|"   # W2: Einstieg ueber der 3-Prozent-Grenze
 GAPGO_WARTE_TAGE = 4
 
 
-def htf_grenze() -> str:
-    """Grenze fuer das TAEGLICHE Gedaechtnis der High and Tight Flag.
+def _htf_ohne_vorzeichen(gemeldet: dict) -> dict:
+    """Alte Meldeschluessel auf die heutige Form bringen.
 
-    Gerhard, praezisiert am 29.07.2026: Die Flagge wird JEDEN TAG
-    zurueckgesetzt, alles andere bleibt beim Wochentakt des
-    Freitags-Putzes. (Der erste Anlauf hatte das als Kalenderwoche ab
-    Montag verstanden — ein Missverstaendnis, hier korrigiert.)
+    Bis zum 23.09.2026 trug die High and Tight Flag das Vorzeichen HTF| im
+    Schluessel, weil Gerhard ihr am 29.07.2026 eine TAEGLICHE Frist gegeben
+    hatte. Seine Regel vom 23.09.2026 gilt fuer ALLE Muster gleich, also
+    faellt das Vorzeichen weg.
 
-    Zurueckgegeben wird der GESTRIGE Tag, damit der bestehende Vergleich
-    'Datum groesser als Grenze' unveraendert passt: Nur was HEUTE
-    gemeldet wurde, bleibt im Gedaechtnis; ab morgen darf dieselbe Flagge
-    wieder melden.
-
-    Bewusst dieselbe Zeitbasis wie beim Speichern (date.today()) und
-    NICHT New Yorker Zeit: Sonst laegen Grenze und gespeichertes Datum an
-    den Tagesraendern um einen Tag auseinander, und die Flagge verstummte
-    einen Tag zu lang oder meldete einen Tag zu frueh."""
-    return (date.today() - timedelta(days=1)).isoformat()
+    WARUM UMSCHREIBEN UND NICHT EINFACH VERGESSEN: Ein alter Schluessel
+    "HTF|CAI|Cup & Handle (Wochenbasis)" waere unter dem neuen Namen
+    "CAI|Cup & Handle (Wochenbasis)" nicht gesperrt, und genau die
+    Doppelmeldung, um die es Gerhard geht, kaeme beim naechsten Lauf noch
+    einmal. Bei einer Kollision gewinnt das juengere Datum."""
+    raus = {}
+    for k, d in (gemeldet or {}).items():
+        k_s = str(k).replace(HTF_MARKE, "", 1)
+        if str(d) > str(raus.get(k_s, "")):
+            raus[k_s] = d
+    return raus
 
 
 def _staat_aus(pfad) -> dict:
@@ -692,8 +702,7 @@ def _staat_aus(pfad) -> dict:
 def _gemeldet_filtern(gemeldet: dict, heute: str) -> dict:
     """Die Fristen des Melde-Gedaechtnisses, an EINER Stelle.
 
-    Drei Fristen, je nach Vorzeichen im Schluessel:
-      HTF|      taeglich (Gerhard, 29.07.2026)
+    Zwei Fristen, je nach Vorzeichen im Schluessel:
       INSIDER|  30 Tage — AUSDRUECKLICH NICHT der Freitags-Putz (Mathias,
                 18.08.2026: "bereits erfolgte Meldungen sollen nicht
                 wieder angezeigt werden"). Ein Insider-Fund bleibt bis zu
@@ -701,18 +710,20 @@ def _gemeldet_filtern(gemeldet: dict, heute: str) -> dict:
                 derselbe Grosskauf am Montag der Folgewoche wieder
                 gemeldet worden. 30 Tage ueberdauern jedes Fenster.
       sonst     Wochenfrist bis zum letzten Freitags-Putz.
+
+    DIE TAEGLICHE FRIST DER HIGH AND TIGHT FLAG IST ENTFALLEN (Gerhard,
+    23.09.2026, Regel 1 und 4): "Pro Aktie und pro Muster hoechstens EINE
+    Meldung pro Woche ... Die Sperre endet mit dem Wochenwechsel beim
+    Freitagsputz." Das galt ausdruecklich fuer ALLE Muster und hebt seine
+    Praezisierung vom 29.07.2026 auf.
     """
     grenze = letzter_putz()
-    grenze_htf = htf_grenze()
     grenze_insider = (date.today() - timedelta(days=30)).isoformat()
     raus = {}
     for k, d in gemeldet.items():
         k_s, d_s = str(k), str(d)
         if INSIDER_MARKE in k_s:
             if d_s > grenze_insider:
-                raus[k_s] = d_s
-        elif HTF_MARKE in k_s:
-            if d_s > grenze_htf:
                 raus[k_s] = d_s
         elif d_s > grenze:
             raus[k_s] = d_s
@@ -825,7 +836,7 @@ def load_state() -> dict:
     # Ausbrueche kamen doppelt. Der Checkout dagegen ist beim Start
     # frisch und enthaelt alles, was der Vorgaenger IM Lauf committet
     # hat. Union statt Vorrang: Verlieren ist teurer als Behalten.
-    gemeldet, fenster, ampel_tag = {}, {}, ""
+    gemeldet, gemeldet_kp, fenster, ampel_tag = {}, {}, {}, ""
     for quelle in (REPO_STATE, STATE_FILE):
         data = _staat_aus(quelle)
         # Der juengere Ampel-Tag gewinnt: Hat die Tagwache die Zeile schon
@@ -835,6 +846,8 @@ def load_state() -> dict:
         if isinstance(g, list):        # Altes Tagesformat einmalig
             g = {k: data.get("tag", heute) for k in g}
         gemeldet.update(g)
+        # Die gemeldeten Kaufpunkte fuer Regel 3 (Gerhard, 23.09.2026).
+        gemeldet_kp.update(data.get("gemeldet_kp") or {})
         # DAS FENSTER-GEDAECHTNIS gilt nur fuer DIESEN Handelstag
         # (Mathias, 13.08.2026) — gestrige Zustaende sagen nichts mehr.
         # M4, MOEGLICHKEIT 2 (Gerhard, 12.09.2026): Der Fensterzustand
@@ -850,8 +863,14 @@ def load_state() -> dict:
     # denselben zwei Quellen und wird hier ausdruecklich mitgeladen: Dieses
     # Dict wird frisch gebaut, ein nicht genannter Schluessel waere beim
     # naechsten Speichern weg.
+    frisch = _gemeldet_filtern(_htf_ohne_vorzeichen(gemeldet), heute)
     return {"fenster_tag": heute, "fenster": fenster,
-            "gemeldet": _gemeldet_filtern(gemeldet, heute),
+            "gemeldet": frisch,
+            # Nur die Preise, deren Schluessel noch gesperrt ist; was mit
+            # dem Freitagsputz faellt, braucht keinen Preis mehr.
+            "gemeldet_kp": {str(k): v for k, v in
+                            _htf_ohne_vorzeichen(gemeldet_kp).items()
+                            if str(k) in frisch},
             GAPGO_WARTEN: _warten_laden(),
             AMPEL_TAG: ampel_tag or None}
 
@@ -2223,29 +2242,18 @@ def melde_sektor_radar(topic: str, befund: dict, schon_gemeldet: set,
     return True
 
 
-def format_wiedereintritt(t: dict) -> str:
-    """Der Kurs ist ins Einstiegsfenster ZURUECKGEKEHRT.
-
-    Mathias am 13.08.2026, als er zwischen zwei Wegen zu waehlen hatte:
-    "Ich waere fuer den 2ten Weg mit einer Meldung, die den Wiedereintritt
-    zeigt." Also darf ein Kaufpunkt zurueckkommen, und der Wechsel wird
-    gemeldet — aber EHRLICH als Wiedereintritt und nicht als frischer
-    Ausbruch. Sonst stuende zweimal dasselbe da und man haelt es fuer
-    zwei Gelegenheiten.
-
-    Sonst wie ein Ausbruch: Kurs, Volumenlage, Stop, Risiko und Ziel
-    stehen dabei, denn der Einstieg ist wieder moeglich."""
-    return format_treffer(t, kopfzusatz="wieder im Einstiegsfenster")
-
-
-def push_wiedereintritt(topic: str, treffer: list[dict]) -> bool:
-    if not treffer:
-        return False
-    absaetze = [f"{i}. {format_wiedereintritt(t)}"
-                for i, t in enumerate(treffer, 1)]
-    titel = (", ".join(t["ticker"] for t in treffer)
-             + ": wieder im Einstiegsfenster" + tagesanteil_titel(treffer))
-    return sende(topic, titel, absaetze, "high")
+# DIE MELDUNG "WIEDER IM EINSTIEGSFENSTER" IST ENTFALLEN (Gerhard,
+# 23.09.2026, Regel 1): "Berührt der Kurs den Kaufpunkt danach wieder, fällt
+# drunter und steigt wieder drüber: keine neue Meldung. Die bisherige
+# Ausnahme 'zweites Mal nach Wiedereintritt' fällt komplett weg." Weg sind
+# damit die zwei Funktionen, die diese Meldung gebaut und gesendet haben, und
+# mit ihnen das Zuruecksetzen der Uebersprungen-Sperre. Mathias' Entscheid vom 13.08.2026
+# ("Meldung, die den Wiedereintritt zeigt") ist damit ueberholt; die
+# neuere Regel gilt.
+#
+# GEBLIEBEN ist der Fensterzustand samt Totzone: Er entscheidet, ob ein
+# Kaufpunkt als uebersprungen gemeldet wird, und haelt das Zappeln an der
+# Fuenf-Prozent-Grenze fern.
 
 
 def beobachtungen_eintragen(eintraege, einmal_je_muster=False):
@@ -3391,11 +3399,11 @@ def vol_satz(t: dict) -> str:
 
 # Der Anlass einer Alarm-Meldung, im Wortlaut. KEINES dieser Woerter darf
 # in alarm_muster.KAUF_WOERTER stehen, sonst baute die Handels-App daraus eine
-# Order: "wieder im Meldefenster" statt "wieder im Einstiegsfenster",
+# Order (der Wortlaut der Alarm-Anlaesse; der Wiedereintritt selbst ist am
+# 23.09.2026 mit Gerhards Regel 1 entfallen):
 # "Volumen hat nachgezogen" statt "Vol jetzt bestätigt".
 ALARM_ANLASS = {
     "uebersprungen": "übersprungen, der Einstieg ist vorbei",
-    "wiedereintritt": "wieder im Meldefenster",
     "nachtrag": "Volumen hat nachgezogen",
 }
 
@@ -3904,17 +3912,15 @@ def ausbruch_schluessel_alle(t: dict) -> list[str]:
     werden beide gesetzt; getrennt sich die Preise spaeter, ist keiner
     von beiden neu.
 
-    High and Tight Flag traegt ein Vorzeichen, damit load_state() ihr die
-    taegliche statt der woechentlichen Frist geben kann."""
-    namen = kp_namen(t)
-    # Der Innen-Einstieg gehoert zur selben Flagge und bekommt dieselbe
-    # TAEGLICHE Frist (Soreide-Ausbau, 31.08.2026) — sonst waere die
-    # engere Marke eine Woche lang stumm, waehrend die Flagge selbst
-    # jeden Tag neu melden darf.
-    marke = (HTF_MARKE if any(n in ("High & Tight Flag",
-                                    "HTF Innen-Einstieg")
-                              for n in namen) else "")
-    return [f"{marke}{t['ticker']}|{n}" for n in namen]
+    KEIN VORZEICHEN MEHR fuer die High and Tight Flag (Gerhard, 23.09.2026,
+    Regel 1): Sie trug bis dahin HTF| im Schluessel und bekam damit eine
+    taegliche statt der woechentlichen Frist. Genau daran lag Gerhards
+    Doppelmeldung bei CAI am 22. und 23.09.2026: Cup & Handle und die
+    Flagge lagen auf demselben Preis 31,37, wurden deshalb zu EINEM
+    Kaufpunkt zusammengelegt, und das Vorzeichen der Flagge gab AUCH dem
+    Cup & Handle die Tagesfrist. Alte Schluessel schreibt
+    _htf_ohne_vorzeichen um."""
+    return [f"{t['ticker']}|{n}" for n in kp_namen(t)]
 
 
 def ausbruch_schluessel(t: dict) -> str:
@@ -4143,7 +4149,41 @@ def fenster_wechsel(neu: str | None, vorher: str | None) -> str | None:
     return "wiedereintritt" if vorher == DRAUSSEN else None
 
 
-def melde_stufe(res: dict, schon_gemeldet: set) -> str | None:
+def schluessel_offen(k: str, kaufpunkt, schon_gemeldet: set,
+                     gemeldet_kp: dict | None = None) -> bool:
+    """Darf unter diesem Schluessel gemeldet werden?
+
+    Regel 1 (Gerhard, 23.09.2026): je Aktie und Muster hoechstens EINE
+    Meldung in der Woche. Genau das traegt der Schluessel, und Regel 2
+    ergibt sich daraus von selbst: Ein anderes Muster hat einen anderen
+    Schluessel und meldet immer, auf welchem Kursniveau auch immer.
+
+    Regel 3: Dasselbe Muster darf in derselben Woche noch einmal melden,
+    wenn der neu gerechnete Kaufpunkt mindestens MELDE_NEU_AB ueber dem
+    schon gemeldeten liegt; alles darunter ist eine Neuberechnung und
+    bleibt still. Ist kein Preis gespeichert, etwa weil die Meldung aus
+    einem Lauf vor dem 23.09.2026 stammt, bleibt es bei der Sperre: Eine
+    Meldung zu unterdruecken ist harmlos, eine doppelte nicht."""
+    if k not in schon_gemeldet:
+        return True
+    alt = _zahl((gemeldet_kp or {}).get(k))
+    neu = _zahl(kaufpunkt)
+    return bool(alt and neu and neu >= alt * (1.0 + MELDE_NEU_AB))
+
+
+def kp_merken(state: dict, schluessel: str, kaufpunkt) -> None:
+    """Den gemeldeten Kaufpunkt zum Schluessel merken (Regel 3).
+
+    Der Schluessel selbst traegt bewusst KEINEN Preis (sonst waere
+    derselbe Ausbruch morgen ein neuer, siehe ausbruch_schluessel_alle);
+    der Preis steht deshalb daneben."""
+    wert = _zahl(kaufpunkt)
+    if wert:
+        state.setdefault("gemeldet_kp", {})[str(schluessel)] = round(wert, 4)
+
+
+def melde_stufe(res: dict, schon_gemeldet: set,
+                gemeldet_kp: dict | None = None) -> str | None:
     """Welche Meldung ist faellig — und vor allem: welche NICHT?
 
     Mathias' Sorge vom 29.07.2026, woertlich: "So lange sie da ist, löst
@@ -4164,7 +4204,8 @@ def melde_stufe(res: dict, schon_gemeldet: set) -> str | None:
     # Je Muster ein Schluessel (seit 10.09.2026); einer genuegt.
     keys = res.get("keys") or [res["key"]]
     keys_best = res.get("keys_best") or [res["key_best"]]
-    if not any(k in schon_gemeldet for k in keys):
+    kp = res.get("kaufpunkt")
+    if any(schluessel_offen(k, kp, schon_gemeldet, gemeldet_kp) for k in keys):
         # ZWISCHENLOESUNG M4 (Mathias, 11.09.2026): Ein Ausbruch, der
         # schon gestern gerissen wurde, ist heute keine neue Meldung.
         # Steht ausdruecklich VOR der Volumenpruefung: Sonst kaeme
@@ -4197,7 +4238,8 @@ def melde_stufe(res: dict, schon_gemeldet: set) -> str | None:
             return None
         return "neu"
     if (res["vol_ok"] is True
-            and not any(k in schon_gemeldet for k in keys_best)):
+            and any(schluessel_offen(k, kp, schon_gemeldet, gemeldet_kp)
+                    for k in keys_best)):
         return "nachtrag"
     return None
 
@@ -4907,7 +4949,6 @@ def main():
                 print("  Für diese Werte wird kein Ausbruch erkannt.")
 
             treffer, neu, nachtrag, uebersprungen = [], [], [], []
-            wiedereintritt = []
             # Die Alarm-Muster gehen ueber dieselben Melderegeln, aber in
             # einer eigenen Meldung hinaus (Gerhard, 22.09.2026, O5 und O10).
             alarm_neben = []
@@ -4935,10 +4976,8 @@ def main():
                     fenster[fkey] = zustand
                 if fallback_ohne_riss(res):
                     # Ausweich-Marke, ueber der der Kurs schon gestern
-                    # stand: kein Riss, keine Meldung - auf KEINEM der
-                    # drei Wege (auch kein "wieder im Einstiegsfenster"
-                    # fuer eine Marke, die nie angesagt war). Der
-                    # Fensterzustand ist oben trotzdem gepflegt.
+                    # stand: kein Riss, keine Meldung - auf KEINEM Weg.
+                    # Der Fensterzustand ist oben trotzdem gepflegt.
                     continue
                 if res.get("uebersprungen"):
                     res["keys"] = uebersprungen_schluessel_alle(res)
@@ -4962,12 +5001,10 @@ def main():
                               f"— keine Meldung.")
                     continue
                 if wechsel == "wiedereintritt":
-                    res["key"] = ausbruch_schluessel(res)
-                    if res.get("alarm"):
-                        res["anlass"] = "wiedereintritt"
-                        alarm_neben.append(res)
-                    else:
-                        wiedereintritt.append(res)
+                    # KEINE MELDUNG (Gerhard, 23.09.2026, Regel 1). Der
+                    # Zustand ist oben schon gepflegt; verlaesst der Kurs
+                    # das Fenster spaeter wieder, greift die
+                    # Uebersprungen-Sperre des Wochengedaechtnisses.
                     continue
                 if (zustand or vorher) == DRAUSSEN:
                     # Noch in der Totzone auf dem Rueckweg: nichts melden.
@@ -5009,7 +5046,8 @@ def main():
                 res["keys_best"] = [NACHTRAG_MARKE + k for k in res["keys"]]
                 res["key_best"] = res["keys_best"][0]
                 treffer.append(res)
-                stufe = melde_stufe(res, schon_gemeldet)
+                stufe = melde_stufe(res, schon_gemeldet,
+                                    state.get("gemeldet_kp"))
                 if stufe == "neu":
                     neu.append(res)
                 elif stufe == "nachtrag":
@@ -5112,6 +5150,7 @@ def main():
                         for k in t.get("keys") or [t["key"]]:
                             schon_gemeldet.add(k)
                             state["gemeldet"][k] = heute_s
+                            kp_merken(state, k, t.get("kaufpunkt"))
                         # War der Ausbruch schon bei der ersten Meldung
                         # bestaetigt, ist der Nachtrag gegenstandslos —
                         # sein Schluessel wird gleich mitgesetzt.
@@ -5119,6 +5158,7 @@ def main():
                             for k in t.get("keys_best") or [t["key_best"]]:
                                 schon_gemeldet.add(k)
                                 state["gemeldet"][k] = heute_s
+                                kp_merken(state, k, t.get("kaufpunkt"))
                     save_state(state)
                     # Kapitel 12: Jede gemeldete Kaufpunkt-Meldung wird
                     # ab jetzt als Beobachtung im Chart ueberwacht.
@@ -5163,8 +5203,6 @@ def main():
                         anlass = str(t.get("anlass") or "")
                         if anlass == "nachtrag":
                             kk = t.get("keys_best") or [t["key_best"]]
-                        elif anlass == "wiedereintritt":
-                            kk = [t["key"]]
                         else:
                             kk = list(t.get("keys") or [t["key"]])
                             if not anlass and t["vol_ok"] is True:
@@ -5173,6 +5211,7 @@ def main():
                             schon_gemeldet.add(k)
                             if heute_s:
                                 state["gemeldet"][k] = heute_s
+                                kp_merken(state, k, t.get("kaufpunkt"))
 
                 if args.dry_run:
                     print("(Dry-Run — keine Alarm-Meldung gesendet)")
@@ -5218,6 +5257,7 @@ def main():
                         for k in t.get("keys_best") or [t["key_best"]]:
                             schon_gemeldet.add(k)
                             state["gemeldet"][k] = heute_s
+                            kp_merken(state, k, t.get("kaufpunkt"))
                     save_state(state)
                 else:
                     sperre_bis = jetzt_s + TAKT
@@ -5262,48 +5302,6 @@ def main():
             # beschriftet - sonst haelt man es fuer eine zweite Chance auf
             # dasselbe und zaehlt die Meldungen doppelt.
             #
-            # Das Gedaechtnis ist der ZUSTAND (state["fenster"]), nicht der
-            # Meldeschluessel: Ein Kaufpunkt darf an einem Tag mehrmals
-            # hinaus und wieder herein, jeder Wechsel zaehlt. Die Totzone
-            # in fenster_zustand() haelt das Zappeln an der Grenze fern.
-            if wiedereintritt and jetzt_s >= sperre_bis:
-                print("")
-                print(f"{len(wiedereintritt)} Kaufpunkt(e) wieder im "
-                      f"Einstiegsfenster:")
-                for t in wiedereintritt:
-                    for zeile in format_wiedereintritt(t).split("\n"):
-                        print("  " + zeile)
-                    print("")
-                trigger_logbuch.protokolliere_viele(
-                    [{"ticker": t.get("ticker"), "firma": t.get("firma", ""),
-                      "strategie": t.get("strategie"),
-                      "kaufpunkt": t.get("kaufpunkt"), "kurs": t.get("kurs"),
-                      "stop": t.get("stop"), "ueber_pct": t.get("ueber_pct"),
-                      "vol_bestaetigt": t.get("vol_ok") is True,
-                      "wiedereintritt": True,
-                      "trockenlauf": bool(args.dry_run)}
-                     for t in wiedereintritt], quelle="waechter/wiedereintritt")
-                if args.dry_run:
-                    print("(Dry-Run — nichts gesendet)")
-                elif push_wiedereintritt(topic, wiedereintritt):
-                    # Der Kaufpunkt ist zurueck im Fenster, also gilt er
-                    # nicht mehr als angesagt-draussen. Verlaesst er das
-                    # Fenster spaeter wirklich noch einmal, ist das ein
-                    # neuer Vorgang und wird wieder gemeldet.
-                    for t in wiedereintritt:
-                        for k in uebersprungen_schluessel_alle(t):
-                            schon_gemeldet.discard(k)
-                            state["gemeldet"].pop(k, None)
-                    save_state(state)
-                else:
-                    # Nicht angekommen: Der Zustand wird zurueckgedreht,
-                    # damit der Wechsel beim naechsten Durchlauf erneut
-                    # auffaellt. Sonst gaelte er als erledigt, ohne dass
-                    # jemand davon erfahren haette.
-                    for t in wiedereintritt:
-                        fenster[fenster_schluessel(t)] = DRAUSSEN
-                    sperre_bis = jetzt_s + TAKT
-
             # --- Red-to-Green (Regelwerk Kapitel 9) ------------------------
             # Nur wenn der Nasdaq stark genug nach unten gegapt hat und die
             # Aktie auf der nachts gebauten Fokusliste steht.
