@@ -696,7 +696,10 @@
     "GEWINN|zonenwechsel|SWKS|1|mittel": "2026-09-24",
     "GEWINN|zonenwechsel|VICR|Cup & Handle (Wochenbasis)|mittel": "2026-09-24",
     "GEWINN|zonenwechsel|VICR|Fallback: 20-Tage-Hoch (Pivot)|mittel": "2026-09-24",
-    "GEWINN|zonenwechsel|VICR|Fallback: MA50-R\u00fcckeroberung|stark": "2026-09-24"
+    "GEWINN|zonenwechsel|VICR|Fallback: MA50-R\u00fcckeroberung|stark": "2026-09-24",
+    "R2GX|QMCO|2026-09-24": "2026-09-24",
+    "ARGX|Fallback: MA50-Pullback": "2026-09-24",
+    "BEST|ARGX|Fallback: MA50-Pullback": "2026-09-24"
   },
   "gemeldet_kp": {
     "LB|Cup & Handle (Wochenbasis)": 81.01,
@@ -712,7 +715,9 @@
     "XMTR|Pocket Pivot": 105.46,
     "BEST|XMTR|Pocket Pivot": 105.46,
     "RDVT|Cup & Handle (Wochenbasis)": 77.37,
-    "BEST|RDVT|Cup & Handle (Wochenbasis)": 77.37
+    "BEST|RDVT|Cup & Handle (Wochenbasis)": 77.37,
+    "ARGX|Fallback: MA50-Pullback": 947.34,
+    "BEST|ARGX|Fallback: MA50-Pullback": 947.34
   },
   "gapgo_warten": {
     "OMER": {
