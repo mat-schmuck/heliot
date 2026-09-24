@@ -1,11 +1,11 @@
 {
- "stand": "2026-09-23",
+ "stand": "2026-09-24",
  "funde": [
   {
    "ticker": "FTK",
    "status": "pfad_a",
-   "marktkap": 1102187648.0,
-   "stichtag": "2026-09-23",
+   "marktkap": 1087337216.0,
+   "stichtag": "2026-09-24",
    "zeilen": [
     "FTK; Großkauf; Marktwert 1,1 Mrd $",
     "Größter Einzelkauf 34,3 Mio $ am 11.09.; Wilks Matthew, Direktor"
@@ -15,10 +15,10 @@
   {
    "ticker": "GME",
    "status": "pfad_a",
-   "marktkap": 12208924672.0,
-   "stichtag": "2026-09-23",
+   "marktkap": 12554507264.0,
+   "stichtag": "2026-09-24",
    "zeilen": [
-    "GME; Großkauf; Marktwert 12,2 Mrd $",
+    "GME; Großkauf; Marktwert 12,6 Mrd $",
     "Größter Einzelkauf 26,4 Mio $ am 21.09.; Cohen Ryan, President, CEO and Chairman"
    ],
    "kennung": "GME|pfad_a|0"
@@ -26,10 +26,10 @@
   {
    "ticker": "GRAB",
    "status": "pfad_a",
-   "marktkap": 13092166656.0,
-   "stichtag": "2026-09-23",
+   "marktkap": 12785317888.0,
+   "stichtag": "2026-09-24",
    "zeilen": [
-    "GRAB; Großkauf; Marktwert 13,1 Mrd $",
+    "GRAB; Großkauf; Marktwert 12,8 Mrd $",
     "Größter Einzelkauf 29,9 Mio $ am 21.09.; Tan Anthony Ping Yeow, Chief Executive Officer"
    ],
    "kennung": "GRAB|pfad_a|0"
@@ -37,8 +37,8 @@
   {
    "ticker": "GSAT",
    "status": "pfad_a",
-   "marktkap": 10688979968.0,
-   "stichtag": "2026-09-23",
+   "marktkap": 10718779392.0,
+   "stichtag": "2026-09-24",
    "zeilen": [
     "GSAT; Großkauf; Marktwert 10,7 Mrd $",
     "Größter Einzelkauf 29,8 Mio $ am 18.09.; Monroe James III, Direktor"
@@ -48,10 +48,10 @@
   {
    "ticker": "LEN, LEN.B",
    "status": "pfad_a",
-   "marktkap": 19637770240.0,
-   "stichtag": "2026-09-23",
+   "marktkap": 19493234688.0,
+   "stichtag": "2026-09-24",
    "zeilen": [
-    "LEN, LEN.B; Großkauf; Marktwert 19,6 Mrd $",
+    "LEN, LEN.B; Großkauf; Marktwert 19,5 Mrd $",
     "Größter Einzelkauf 93,1 Mio $ am 18.09.; BERKSHIRE HATHAWAY INC, Insider"
    ],
    "kennung": "LEN, LEN.B|pfad_a|0"
@@ -59,11 +59,11 @@
   {
    "ticker": "RSG",
    "status": "pfad_a",
-   "marktkap": 65253990400.0,
-   "stichtag": "2026-09-23",
+   "marktkap": 65243271168.0,
+   "stichtag": "2026-09-24",
    "zeilen": [
-    "RSG; Großkauf; Marktwert 65,3 Mrd $",
-    "Größter Einzelkauf 47,2 Mio $ am 09.09.; CASCADE INVESTMENT, L.L.C., Insider"
+    "RSG; Großkauf; Marktwert 65,2 Mrd $",
+    "Größter Einzelkauf 39,4 Mio $ am 11.09.; CASCADE INVESTMENT, L.L.C., Insider"
    ],
    "kennung": "RSG|pfad_a|0"
   }
