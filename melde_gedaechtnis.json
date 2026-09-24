@@ -753,7 +753,13 @@
     "TEIL|BLLN|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-24",
     "CVLT|Rectangle Top": "2026-09-24",
     "BEST|CVLT|Rectangle Top": "2026-09-24",
-    "GEWINN|klimax_zeichen|TWLO|1|4_ma200_abstand": "2026-09-24"
+    "GEWINN|klimax_zeichen|TWLO|1|4_ma200_abstand": "2026-09-24",
+    "GEWINN|zonenwechsel|AVT|EMA Crossback|mittel": "2026-09-24",
+    "GEWINN|zonenwechsel|DIOD|SPRING-2026-09-21|stark": "2026-09-24",
+    "GEWINN|zonenwechsel|TWLO|1|stark": "2026-09-24",
+    "GEWINN|zonenwechsel|TWLO|Cup & Handle (Wochenbasis)|stark": "2026-09-24",
+    "GEWINN|zonenwechsel|TWLO|Fallback: 20-Tage-Hoch (Pivot)|stark": "2026-09-24",
+    "GEWINN|zonenwechsel|TWLO|Fallback: 52W-Hoch-Breakout|stark": "2026-09-24"
   },
   "gemeldet_kp": {
     "LB|Cup & Handle (Wochenbasis)": 81.01,
