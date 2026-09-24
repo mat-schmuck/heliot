@@ -49,7 +49,7 @@
     "CRWD|Fallback: MA50-Pullback": "draussen",
     "DELL|Fallback: MA50-Pullback": "draussen",
     "DINO|Fallback: MA50-Pullback": "draussen",
-    "DK|Fallback: MA50-Pullback": "draussen",
+    "DK|Fallback: MA50-Pullback": "drin",
     "PSNL|Fallback: MA50-Pullback": "draussen",
     "PSX|Fallback: MA50-Pullback": "draussen",
     "SMTC|Fallback: 52W-Hoch-Breakout": "drin",
@@ -61,7 +61,7 @@
     "TXG|Fallback: MA50-Pullback": "draussen",
     "UMC|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "UMC|Fallback: MA50-Pullback": "draussen",
-    "XNCR|Fallback: MA50-Pullback": "draussen",
+    "XNCR|Fallback: MA50-Pullback": "drin",
     "AXTI|Fallback: MA50-Pullback": "draussen",
     "CLS|Fallback: MA50-Pullback": "draussen",
     "COIN|Fallback: 20-Tage-Hoch (Pivot)": "drin",
@@ -84,7 +84,7 @@
     "NTRA|Fallback: MA50-Pullback": "draussen",
     "NTSK|Fallback: MA50-Pullback": "draussen",
     "PENG|Fallback: 20-Tage-Hoch (Pivot)": "drin",
-    "PRE|Fallback: MA50-Pullback": "draussen",
+    "PRE|Fallback: MA50-Pullback": "drin",
     "QLYS|Fallback: MA50-Pullback": "draussen",
     "SBLK|Fallback: MA50-Pullback": "drin",
     "SDGR|Fallback: MA50-Pullback": "draussen",
@@ -299,7 +299,7 @@
     "RIOT|Fallback: MA50-Pullback": "draussen",
     "TENB|Fallback: MA50-Pullback": "drin",
     "MU|Pocket Pivot": "drin",
-    "BLLN|Fallback: MA50-Pullback": "drin",
+    "BLLN|Fallback: MA50-Pullback": "draussen",
     "CDNA|Pocket Pivot": "drin",
     "AMRX|Inside Day": "drin",
     "RNG|Cup & Handle (Wochenbasis)": "drin",
@@ -328,12 +328,14 @@
     "LB|Rectangle Top": "drin",
     "SCSC|Fallback: MA50-Pullback": "drin",
     "FTRE|Rectangle Top": "drin",
-    "ARW|Fallback: MA50-Pullback": "drin",
+    "ARW|Fallback: MA50-Pullback": "draussen",
     "PNTG|Fallback: MA50-Pullback": "drin",
     "XMTR|Fallback: 52W-Hoch-Breakout": "drin",
     "XMTR|Pocket Pivot": "drin",
     "RDVT|Cup & Handle (Wochenbasis)": "drin",
-    "QLYS|Rectangle Top": "drin"
+    "QLYS|Rectangle Top": "drin",
+    "FTNT|Fallback: 52W-Hoch-Breakout": "drin",
+    "TEM|HTF Innen-Einstieg": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -703,7 +705,9 @@
     "BEST|ARGX|Fallback: MA50-Pullback": "2026-09-24",
     "QLYS|Rectangle Top": "2026-09-24",
     "BEST|QLYS|Rectangle Top": "2026-09-24",
-    "SEKTORAUF|2026-09-24": "2026-09-24"
+    "SEKTORAUF|2026-09-24": "2026-09-24",
+    "TEM|HTF Innen-Einstieg": "2026-09-24",
+    "BEST|TEM|HTF Innen-Einstieg": "2026-09-24"
   },
   "gemeldet_kp": {
     "LB|Cup & Handle (Wochenbasis)": 81.01,
@@ -723,7 +727,9 @@
     "ARGX|Fallback: MA50-Pullback": 947.34,
     "BEST|ARGX|Fallback: MA50-Pullback": 947.34,
     "QLYS|Rectangle Top": 187.01,
-    "BEST|QLYS|Rectangle Top": 187.01
+    "BEST|QLYS|Rectangle Top": 187.01,
+    "TEM|HTF Innen-Einstieg": 78.98,
+    "BEST|TEM|HTF Innen-Einstieg": 78.98
   },
   "gapgo_warten": {
     "OMER": {
