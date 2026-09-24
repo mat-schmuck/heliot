@@ -55,9 +55,9 @@
     "SMTC|Fallback: 52W-Hoch-Breakout": "drin",
     "SMTC|Fallback: MA50-Pullback": "draussen",
     "SMTC|Fallback: 20-Tage-Hoch (Pivot)": "drin",
-    "TWST|Fallback: 52W-Hoch-Breakout": "draussen",
+    "TWST|Fallback: 52W-Hoch-Breakout": "drin",
     "TWST|Fallback: MA50-Pullback": "draussen",
-    "TWST|Fallback: 20-Tage-Hoch (Pivot)": "draussen",
+    "TWST|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "TXG|Fallback: MA50-Pullback": "draussen",
     "UMC|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "UMC|Fallback: MA50-Pullback": "draussen",
@@ -147,7 +147,7 @@
     "COHU|Fallback: MA50-Pullback": "draussen",
     "DUOL|Fallback: MA50-Pullback": "draussen",
     "ELMT|Fallback: MA50-Pullback": "draussen",
-    "FROG|Fallback: MA50-Pullback": "drin",
+    "FROG|Fallback: MA50-Pullback": "draussen",
     "FTRE|Fallback: MA50-Pullback": "draussen",
     "LBRX|Fallback: MA50-R\u00fcckeroberung": "drin",
     "MEDP|Fallback: MA50-Pullback": "draussen",
@@ -718,7 +718,9 @@
     "ADPT|Cup & Handle (Wochenbasis)": "2026-09-24",
     "BEST|ADPT|Cup & Handle (Wochenbasis)": "2026-09-24",
     "ADPT|Fallback: 52W-Hoch-Breakout": "2026-09-24",
-    "BEST|ADPT|Fallback: 52W-Hoch-Breakout": "2026-09-24"
+    "BEST|ADPT|Fallback: 52W-Hoch-Breakout": "2026-09-24",
+    "PNTG|Fallback: MA50-Pullback": "2026-09-24",
+    "BEST|PNTG|Fallback: MA50-Pullback": "2026-09-24"
   },
   "gemeldet_kp": {
     "LB|Cup & Handle (Wochenbasis)": 81.01,
@@ -744,7 +746,9 @@
     "ADPT|Cup & Handle (Wochenbasis)": 28.79,
     "BEST|ADPT|Cup & Handle (Wochenbasis)": 28.79,
     "ADPT|Fallback: 52W-Hoch-Breakout": 28.81,
-    "BEST|ADPT|Fallback: 52W-Hoch-Breakout": 28.81
+    "BEST|ADPT|Fallback: 52W-Hoch-Breakout": 28.81,
+    "PNTG|Fallback: MA50-Pullback": 39.72,
+    "BEST|PNTG|Fallback: MA50-Pullback": 39.72
   },
   "gapgo_warten": {
     "OMER": {
