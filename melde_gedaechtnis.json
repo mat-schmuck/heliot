@@ -254,7 +254,7 @@
     "GNRC|Fallback: MA50-Pullback": "drin",
     "RNG|Darvas Box + High & Tight Flag": "drin",
     "MGTX|Fallback: MA50-R\u00fcckeroberung": "drin",
-    "NTRA|Cup & Handle (Wochenbasis)": "draussen",
+    "NTRA|Cup & Handle (Wochenbasis)": "drin",
     "BAND|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "ANRO|Fallback: MA50-R\u00fcckeroberung": "drin",
     "SDGR|Cup & Handle (Wochenbasis)": "drin",
@@ -332,7 +332,8 @@
     "PNTG|Fallback: MA50-Pullback": "drin",
     "XMTR|Fallback: 52W-Hoch-Breakout": "drin",
     "XMTR|Pocket Pivot": "drin",
-    "RDVT|Cup & Handle (Wochenbasis)": "drin"
+    "RDVT|Cup & Handle (Wochenbasis)": "drin",
+    "QLYS|Rectangle Top": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -699,7 +700,9 @@
     "GEWINN|zonenwechsel|VICR|Fallback: MA50-R\u00fcckeroberung|stark": "2026-09-24",
     "R2GX|QMCO|2026-09-24": "2026-09-24",
     "ARGX|Fallback: MA50-Pullback": "2026-09-24",
-    "BEST|ARGX|Fallback: MA50-Pullback": "2026-09-24"
+    "BEST|ARGX|Fallback: MA50-Pullback": "2026-09-24",
+    "QLYS|Rectangle Top": "2026-09-24",
+    "BEST|QLYS|Rectangle Top": "2026-09-24"
   },
   "gemeldet_kp": {
     "LB|Cup & Handle (Wochenbasis)": 81.01,
@@ -717,7 +720,9 @@
     "RDVT|Cup & Handle (Wochenbasis)": 77.37,
     "BEST|RDVT|Cup & Handle (Wochenbasis)": 77.37,
     "ARGX|Fallback: MA50-Pullback": 947.34,
-    "BEST|ARGX|Fallback: MA50-Pullback": 947.34
+    "BEST|ARGX|Fallback: MA50-Pullback": 947.34,
+    "QLYS|Rectangle Top": 187.01,
+    "BEST|QLYS|Rectangle Top": 187.01
   },
   "gapgo_warten": {
     "OMER": {
