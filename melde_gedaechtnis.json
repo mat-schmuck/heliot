@@ -84,7 +84,7 @@
     "NTRA|Fallback: MA50-Pullback": "draussen",
     "NTSK|Fallback: MA50-Pullback": "draussen",
     "PENG|Fallback: 20-Tage-Hoch (Pivot)": "drin",
-    "PRE|Fallback: MA50-Pullback": "drin",
+    "PRE|Fallback: MA50-Pullback": "draussen",
     "QLYS|Fallback: MA50-Pullback": "draussen",
     "SBLK|Fallback: MA50-Pullback": "drin",
     "SDGR|Fallback: MA50-Pullback": "draussen",
@@ -266,7 +266,7 @@
     "PNTG|Fallback: MA50-R\u00fcckeroberung": "drin",
     "PVLA|Rectangle Top": "drin",
     "BLLN|Fallback: MA50-R\u00fcckeroberung": "draussen",
-    "CDNA|Cup & Handle (Wochenbasis)": "drin",
+    "CDNA|Cup & Handle (Wochenbasis)": "draussen",
     "CDNA|Fallback: 52W-Hoch-Breakout": "drin",
     "SIMO|Rectangle Top": "drin",
     "KEYS|Fallback: 20-Tage-Hoch (Pivot)": "drin",
@@ -335,7 +335,9 @@
     "RDVT|Cup & Handle (Wochenbasis)": "drin",
     "QLYS|Rectangle Top": "drin",
     "FTNT|Fallback: 52W-Hoch-Breakout": "drin",
-    "TEM|HTF Innen-Einstieg": "drin"
+    "TEM|HTF Innen-Einstieg": "drin",
+    "ADPT|Cup & Handle (Wochenbasis)": "drin",
+    "KEYS|Pocket Pivot": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -707,7 +709,8 @@
     "BEST|QLYS|Rectangle Top": "2026-09-24",
     "SEKTORAUF|2026-09-24": "2026-09-24",
     "TEM|HTF Innen-Einstieg": "2026-09-24",
-    "BEST|TEM|HTF Innen-Einstieg": "2026-09-24"
+    "BEST|TEM|HTF Innen-Einstieg": "2026-09-24",
+    "UEBER|CDNA|Cup & Handle (Wochenbasis)": "2026-09-24"
   },
   "gemeldet_kp": {
     "LB|Cup & Handle (Wochenbasis)": 81.01,
