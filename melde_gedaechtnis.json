@@ -24,7 +24,7 @@
     "TVTX|Fallback: MA50-Pullback": "drin",
     "APA|Fallback: MA50-Pullback": "draussen",
     "APPN|Fallback: MA50-Pullback": "draussen",
-    "ARIS|Fallback: MA50-Pullback": "draussen",
+    "ARIS|Fallback: MA50-Pullback": "drin",
     "ARW|Rectangle Top": "drin",
     "CGAU|EMA Crossback": "drin",
     "CGAU|Fallback: MA50-Pullback": "draussen",
@@ -55,9 +55,9 @@
     "SMTC|Fallback: 52W-Hoch-Breakout": "drin",
     "SMTC|Fallback: MA50-Pullback": "draussen",
     "SMTC|Fallback: 20-Tage-Hoch (Pivot)": "drin",
-    "TWST|Fallback: 52W-Hoch-Breakout": "drin",
+    "TWST|Fallback: 52W-Hoch-Breakout": "draussen",
     "TWST|Fallback: MA50-Pullback": "draussen",
-    "TWST|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "TWST|Fallback: 20-Tage-Hoch (Pivot)": "draussen",
     "TXG|Fallback: MA50-Pullback": "draussen",
     "UMC|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "UMC|Fallback: MA50-Pullback": "draussen",
@@ -710,7 +710,9 @@
     "SEKTORAUF|2026-09-24": "2026-09-24",
     "TEM|HTF Innen-Einstieg": "2026-09-24",
     "BEST|TEM|HTF Innen-Einstieg": "2026-09-24",
-    "UEBER|CDNA|Cup & Handle (Wochenbasis)": "2026-09-24"
+    "UEBER|CDNA|Cup & Handle (Wochenbasis)": "2026-09-24",
+    "UEBER|TWST|Fallback: 52W-Hoch-Breakout": "2026-09-24",
+    "UEBER|TWST|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-24"
   },
   "gemeldet_kp": {
     "LB|Cup & Handle (Wochenbasis)": 81.01,
