@@ -1535,7 +1535,9 @@ def lauf_voll(daten, token, stufen=None, hoechstens=0, zeitgrenze_min=300, reser
             if eintrag["status"] == "ok":
                 eintrag["war_leer"] = True
                 bilanz["war_leer"] += 1
-                log(f"  Leer-Pruefung: {k} liefert jetzt Daten")
+                # Nur die Zahl: das Actions-Protokoll des Repos heliot ist oeffentlich.
+                log(f"  Leer-Pruefung: in Stufe {s} liefert ein frueher leerer Abruf jetzt Daten "
+                    f"(bisher {bilanz['war_leer']})")
         stand[k] = eintrag
         geaendert.add(register_datei(s))
         js = bilanz["je_stufe"].setdefault(s, {})
