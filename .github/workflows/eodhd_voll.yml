@@ -34,7 +34,7 @@ on:
           - tarif
         default: voll
       stufen:
-        description: "voll: Stufen mit Beistrich (delisted_stock,stock_boerse,stock_otc,etf,fund,sonstige,delisted_rest,index,makro); leer = alle in Vorrangfolge"
+        description: "voll: Stufen mit Beistrich (delisted_stock,stock_boerse,delisted_rest,stock_otc,sonstige,etf,fund,index,makro, seit 24.09.2026 dazu kal_earnings,kal_ipos,kal_splits,kal_events,idmap,listen,ust,kal_dividenden,boersenwert,news,schluss,ausland); leer = alle in Vorrangfolge"
         required: false
         default: ""
       hoechstens:
