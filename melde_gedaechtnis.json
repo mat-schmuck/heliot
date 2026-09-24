@@ -1,7 +1,7 @@
 {
   "fenster_tag": "2026-09-24",
   "fenster": {
-    "PBF|Fallback: MA50-Pullback": "drin",
+    "PBF|Fallback: MA50-Pullback": "draussen",
     "CVE|Fallback: MA50-Pullback": "drin",
     "HNGE|Cup & Handle (Wochenbasis)": "drin",
     "HNGE|Rectangle Top": "drin",
@@ -202,7 +202,7 @@
     "TXG|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "CGON|Rectangle Top": "drin",
     "AXGN|Fallback: MA50-R\u00fcckeroberung": "drin",
-    "QMCO|Fallback: 20-Tage-Hoch (Pivot)": "draussen",
+    "QMCO|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "BBNX|EMA Crossback": "drin",
     "ZIM|Cup & Handle (Wochenbasis) + Darvas Box": "drin",
     "SDGR|Fallback: 20-Tage-Hoch (Pivot)": "drin",
@@ -289,8 +289,8 @@
     "BAP|Fallback: MA50-Pullback": "drin",
     "FORM|Fallback: MA50-Pullback": "draussen",
     "PRE|Rectangle Top": "drin",
-    "ILMN|Fallback: 52W-Hoch-Breakout": "drin",
-    "ILMN|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "ILMN|Fallback: 52W-Hoch-Breakout": "draussen",
+    "ILMN|Fallback: 20-Tage-Hoch (Pivot)": "draussen",
     "LITE|Fallback: MA50-Pullback": "draussen",
     "MU|Fallback: MA50-Pullback": "draussen",
     "HP|Fallback: MA50-R\u00fcckeroberung": "drin",
@@ -318,7 +318,7 @@
     "AVT|Fallback: 52W-Hoch-Breakout": "drin",
     "CLS|Rectangle Top": "drin",
     "FIX|EMA Crossback": "drin",
-    "QMCO|Fallback: 52W-Hoch-Breakout": "draussen",
+    "QMCO|Fallback: 52W-Hoch-Breakout": "drin",
     "NTRA|Pocket Pivot": "drin",
     "ACMR|Fallback: MA50-R\u00fcckeroberung": "drin",
     "S|Cup & Handle (Wochenbasis)": "drin",
@@ -344,7 +344,7 @@
     "SCCO|EMA Crossback": "drin",
     "ETON|Wick Play": "drin",
     "CVLT|Cup & Handle (Wochenbasis)": "drin",
-    "QMCO|Wick Play": "draussen"
+    "QMCO|Wick Play": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -734,7 +734,8 @@
     "TEIL|TWLO|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-24",
     "UEBER|QMCO|Fallback: 52W-Hoch-Breakout": "2026-09-24",
     "UEBER|QMCO|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-24",
-    "UEBER|QMCO|Wick Play": "2026-09-24"
+    "UEBER|QMCO|Wick Play": "2026-09-24",
+    "UEBER|ILMN|Fallback: 52W-Hoch-Breakout": "2026-09-24"
   },
   "gemeldet_kp": {
     "LB|Cup & Handle (Wochenbasis)": 81.01,
