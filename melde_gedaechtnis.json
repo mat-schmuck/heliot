@@ -202,7 +202,7 @@
     "TXG|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "CGON|Rectangle Top": "drin",
     "AXGN|Fallback: MA50-R\u00fcckeroberung": "drin",
-    "QMCO|Fallback: 20-Tage-Hoch (Pivot)": "draussen",
+    "QMCO|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "BBNX|EMA Crossback": "drin",
     "ZIM|Cup & Handle (Wochenbasis) + Darvas Box": "drin",
     "SDGR|Fallback: 20-Tage-Hoch (Pivot)": "drin",
@@ -318,7 +318,7 @@
     "AVT|Fallback: 52W-Hoch-Breakout": "drin",
     "CLS|Rectangle Top": "drin",
     "FIX|EMA Crossback": "drin",
-    "QMCO|Fallback: 52W-Hoch-Breakout": "draussen",
+    "QMCO|Fallback: 52W-Hoch-Breakout": "drin",
     "NTRA|Pocket Pivot": "drin",
     "ACMR|Fallback: MA50-R\u00fcckeroberung": "drin",
     "S|Cup & Handle (Wochenbasis)": "drin",
@@ -344,7 +344,7 @@
     "SCCO|EMA Crossback": "drin",
     "ETON|Wick Play": "drin",
     "CVLT|Cup & Handle (Wochenbasis)": "drin",
-    "QMCO|Wick Play": "draussen",
+    "QMCO|Wick Play": "drin",
     "RVMD|Fallback: MA50-R\u00fcckeroberung": "drin",
     "RVTY|Fallback: 52W-Hoch-Breakout": "drin",
     "CVLT|Rectangle Top": "drin",
@@ -780,7 +780,8 @@
     "TEM|High & Tight Flag": "2026-09-24",
     "BEST|TEM|High & Tight Flag": "2026-09-24",
     "ETON|Wick Play": "2026-09-24",
-    "BEST|ETON|Wick Play": "2026-09-24"
+    "BEST|ETON|Wick Play": "2026-09-24",
+    "TEIL|NTRA|Cup & Handle (Wochenbasis) + Darvas Box": "2026-09-24"
   },
   "gemeldet_kp": {
     "LB|Cup & Handle (Wochenbasis)": 81.01,
