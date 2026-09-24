@@ -344,7 +344,7 @@
     "SCCO|EMA Crossback": "drin",
     "ETON|Wick Play": "drin",
     "CVLT|Cup & Handle (Wochenbasis)": "drin",
-    "QMCO|Wick Play": "drin"
+    "QMCO|Wick Play": "draussen"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -733,7 +733,8 @@
     "BEST|QMCO|Wick Play": "2026-09-24",
     "TEIL|TWLO|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-24",
     "UEBER|QMCO|Fallback: 52W-Hoch-Breakout": "2026-09-24",
-    "UEBER|QMCO|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-24"
+    "UEBER|QMCO|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-24",
+    "UEBER|QMCO|Wick Play": "2026-09-24"
   },
   "gemeldet_kp": {
     "LB|Cup & Handle (Wochenbasis)": 81.01,
@@ -763,7 +764,8 @@
     "PNTG|Fallback: MA50-Pullback": 39.72,
     "BEST|PNTG|Fallback: MA50-Pullback": 39.72,
     "QMCO|Wick Play": 29.25,
-    "BEST|QMCO|Wick Play": 29.25
+    "BEST|QMCO|Wick Play": 29.25,
+    "UEBER|QMCO|Wick Play": 29.25
   },
   "gapgo_warten": {
     "OMER": {
