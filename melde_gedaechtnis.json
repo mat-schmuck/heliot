@@ -1,5 +1,5 @@
 {
-  "fenster_tag": "2026-09-23",
+  "fenster_tag": "2026-09-24",
   "fenster": {
     "PBF|Fallback: MA50-Pullback": "drin",
     "CVE|Fallback: MA50-Pullback": "drin",
@@ -34,7 +34,7 @@
     "GHRS|Fallback: MA50-R\u00fcckeroberung": "drin",
     "HAE|Fallback: MA50-Pullback": "draussen",
     "MT|Fallback: MA50-Pullback": "drin",
-    "ONC|Fallback: MA50-Pullback": "draussen",
+    "ONC|Fallback: MA50-Pullback": "drin",
     "PVLA|Fallback: MA50-Pullback": "drin",
     "RBRK|Fallback: MA50-Pullback": "draussen",
     "RDVT|Fallback: MA50-Pullback": "draussen",
@@ -42,7 +42,7 @@
     "RIOT|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "ROIV|Fallback: MA50-Pullback": "drin",
     "S|Fallback: MA50-Pullback": "draussen",
-    "SCCO|Fallback: MA50-Pullback": "draussen",
+    "SCCO|Fallback: MA50-Pullback": "drin",
     "STNG|Fallback: MA50-Pullback": "drin",
     "TEVA|Fallback: MA50-Pullback": "draussen",
     "ZS|Fallback: MA50-Pullback": "draussen",
@@ -223,7 +223,7 @@
     "TENB|EMA Crossback": "drin",
     "VICR|Cup & Handle (Wochenbasis)": "draussen",
     "XMTR|Rectangle Top": "draussen",
-    "SKE|Fallback: MA50-Pullback": "draussen",
+    "SKE|Fallback: MA50-Pullback": "drin",
     "TSEM|Fallback: MA50-Pullback": "drin",
     "UMAC|Fallback: MA50-Pullback": "drin",
     "NTSK|Cup & Handle (Wochenbasis)": "drin",
@@ -299,7 +299,7 @@
     "RIOT|Fallback: MA50-Pullback": "draussen",
     "TENB|Fallback: MA50-Pullback": "drin",
     "MU|Pocket Pivot": "drin",
-    "BLLN|Fallback: MA50-Pullback": "draussen",
+    "BLLN|Fallback: MA50-Pullback": "drin",
     "CDNA|Pocket Pivot": "drin",
     "AMRX|Inside Day": "drin",
     "RNG|Cup & Handle (Wochenbasis)": "drin",
@@ -324,7 +324,9 @@
     "S|Cup & Handle (Wochenbasis)": "drin",
     "S|Fallback: 52W-Hoch-Breakout": "drin",
     "SCSC|Rectangle Top": "drin",
-    "UCTT|Fallback: 20-Tage-Hoch (Pivot)": "drin"
+    "UCTT|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "LB|Rectangle Top": "drin",
+    "SCSC|Fallback: MA50-Pullback": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -662,7 +664,17 @@
     "SANM|Rectangle Top": "2026-09-23",
     "BEST|SANM|Rectangle Top": "2026-09-23",
     "SANM|Pocket Pivot": "2026-09-23",
-    "BEST|SANM|Pocket Pivot": "2026-09-23"
+    "BEST|SANM|Pocket Pivot": "2026-09-23",
+    "LB|Cup & Handle (Wochenbasis)": "2026-09-24",
+    "BEST|LB|Cup & Handle (Wochenbasis)": "2026-09-24",
+    "LB|Rectangle Top": "2026-09-24",
+    "BEST|LB|Rectangle Top": "2026-09-24"
+  },
+  "gemeldet_kp": {
+    "LB|Cup & Handle (Wochenbasis)": 81.01,
+    "BEST|LB|Cup & Handle (Wochenbasis)": 81.01,
+    "LB|Rectangle Top": 81.54,
+    "BEST|LB|Rectangle Top": 81.54
   },
   "gapgo_warten": {
     "VICR": {
@@ -680,5 +692,5 @@
       "bestaetigt": false
     }
   },
-  "ampel_tag": "2026-09-23"
+  "ampel_tag": "2026-09-24"
 }
