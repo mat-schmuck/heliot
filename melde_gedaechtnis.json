@@ -247,7 +247,7 @@
     "MTRN|Fallback: MA50-Pullback": "drin",
     "AMD|Cup & Handle (Wochenbasis)": "drin",
     "GCT|Fallback: 20-Tage-Hoch (Pivot)": "drin",
-    "OUST|Fallback: 20-Tage-Hoch (Pivot)": "draussen",
+    "OUST|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "OUST|Fallback: MA50-R\u00fcckeroberung": "draussen",
     "IMOS|VCP": "drin",
     "BAND|EMA Crossback": "drin",
@@ -273,7 +273,7 @@
     "SANM|EMA Crossback": "drin",
     "BBNX|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "OKTA|Fallback: 52W-Hoch-Breakout": "drin",
-    "BLLN|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "BLLN|Fallback: 20-Tage-Hoch (Pivot)": "draussen",
     "MEDP|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "DIOD|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "ZIM|Cup & Handle (Wochenbasis)": "drin",
@@ -341,7 +341,10 @@
     "CHRD|Fallback: MA50-R\u00fcckeroberung": "drin",
     "AAMI|EMA Crossback": "drin",
     "CLS|Cup & Handle (Wochenbasis) + Rectangle Top": "drin",
-    "SCCO|EMA Crossback": "drin"
+    "SCCO|EMA Crossback": "drin",
+    "ETON|Wick Play": "drin",
+    "CVLT|Cup & Handle (Wochenbasis)": "drin",
+    "QMCO|Wick Play": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -725,7 +728,9 @@
     "BEST|ADPT|Fallback: 52W-Hoch-Breakout": "2026-09-24",
     "PNTG|Fallback: MA50-Pullback": "2026-09-24",
     "BEST|PNTG|Fallback: MA50-Pullback": "2026-09-24",
-    "UEBER|CDNA|Fallback: 52W-Hoch-Breakout": "2026-09-24"
+    "UEBER|CDNA|Fallback: 52W-Hoch-Breakout": "2026-09-24",
+    "QMCO|Wick Play": "2026-09-24",
+    "BEST|QMCO|Wick Play": "2026-09-24"
   },
   "gemeldet_kp": {
     "LB|Cup & Handle (Wochenbasis)": 81.01,
@@ -753,7 +758,9 @@
     "ADPT|Fallback: 52W-Hoch-Breakout": 28.81,
     "BEST|ADPT|Fallback: 52W-Hoch-Breakout": 28.81,
     "PNTG|Fallback: MA50-Pullback": 39.72,
-    "BEST|PNTG|Fallback: MA50-Pullback": 39.72
+    "BEST|PNTG|Fallback: MA50-Pullback": 39.72,
+    "QMCO|Wick Play": 29.25,
+    "BEST|QMCO|Wick Play": 29.25
   },
   "gapgo_warten": {
     "OMER": {
