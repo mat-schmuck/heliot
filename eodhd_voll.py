@@ -63,6 +63,16 @@ DATENREPO = "mat-schmuck/heliot-daten"
 ABSTAND_S = 0.2                    # 5 Anfragen je Sekunde, weit unter 1.000 je Minute
 RESERVE_CALLS = 3000               # bleibt frei fuer Konsens-Laeufe und Proben
 CALLS_FUNDAMENTALS = 10
+# EINZELNE SPERREN (Befund 24.09.2026): EODHD sperrt einzelne Symbole, etwa den
+# Index DJINR.INDX ("Forbidden. Please contact support"), waehrend 254 andere
+# Indizes am Vortag anstandslos kamen. Ein 403 bei einem Symbol wird deshalb als
+# "gesperrt" vermerkt und der Lauf geht weiter. Damit ein echtes Kontoproblem
+# nicht alles faelschlich schliesst, prueft der Lauf beim ersten 403 nach einem
+# Erfolg und nach je GEGENPROBE_ALLE weiteren 403 in Folge ein Symbol, das im
+# Tarif sicher liegt; scheitert auch die Gegenprobe, werden die seither
+# vermerkten Sperren zurueckgenommen und der Lauf bricht ab wie bisher.
+GEGENPROBE_SYMBOL = "AAPL.US"
+GEGENPROBE_ALLE = 20
 CALLS_MAKRO = 10
 ARCHIV_TEILE_BYTES = 1_900_000_000  # Release-Anhaenge duerfen 2 GB nicht ueberschreiten
 KONTO_FELDER = ("subscriptionType", "dailyRateLimit", "apiRequests", "apiRequestsDate", "extraLimit")
@@ -125,7 +135,12 @@ RESERVIERT = {"CON", "PRN", "AUX", "NUL"} | {f"COM{i}" for i in range(1, 10)} | 
 
 class EodhdGesperrt(Exception):
     """Schluessel ungueltig, Tarif reicht nicht oder Konto gesperrt: der Lauf
-    bricht ab, statt tausendmal denselben Fehler zu sammeln."""
+    bricht ab, statt tausendmal denselben Fehler zu sammeln. status traegt den
+    HTTP-Code; ein 403 bei einem einzelnen Symbol behandelt lauf_voll eigens."""
+
+    def __init__(self, text, status=None):
+        super().__init__(text)
+        self.status = status
 
 
 # ---------------------------------------------------------------------------
@@ -224,7 +239,7 @@ def abruf(pfad, token, params=None, fetcher=None, warte=time.sleep, versuche=4):
             except Exception as e:  # noqa
                 status, text, kopf = 0, f"{type(e).__name__}: {str(e)[:200]}", {}
         if status in (401, 402, 403):
-            raise EodhdGesperrt(f"HTTP {status} bei {kennung[:80]}: {str(text)[:160]}")
+            raise EodhdGesperrt(f"HTTP {status} bei {kennung[:80]}: {str(text)[:160]}", status)
         if status == 429 or status >= 500 or status == 0:
             warte(20 if status == 429 else 10 * (versuch + 1))
             continue
@@ -633,6 +648,9 @@ def _juengste_liste(wurzel, praefix):
         return json.load(f)
 
 
+ERLEDIGT = ("ok", "unbekannt", "leer", "gesperrt")
+
+
 def warteschlange(daten, token, stufen_gewuenscht, stand, fetcher=None, warte=time.sleep, log=print):
     """Je Stufe die noch offenen Symbole (nicht ok, nicht unbekannt). Die
     Symbollisten kommen aus der juengsten Inventur-Ablage; fehlt sie, werden
@@ -657,7 +675,7 @@ def warteschlange(daten, token, stufen_gewuenscht, stand, fetcher=None, warte=ti
     for s in STUFEN_NAMEN:
         if s not in stufen_gewuenscht:
             continue
-        offen = [e for e in stufen[s] if (stand.get(schluessel(s, e["Code"])) or {}).get("status") not in ("ok", "unbekannt", "leer")]
+        offen = [e for e in stufen[s] if (stand.get(schluessel(s, e["Code"])) or {}).get("status") not in ERLEDIGT]
         log(f"  Stufe {s}: {len(stufen[s])} Symbole, davon offen {len(offen)}")
         schlange.extend((s, e) for e in offen)
     return schlange
@@ -687,8 +705,12 @@ def lauf_voll(daten, token, stufen=None, hoechstens=0, zeitgrenze_min=300, reser
     stand = _json_lesen(stand_pfad, {})
     stufen = [s for s in (stufen or STUFEN_NAMEN) if s in STUFEN_NAMEN]
     bilanz = {"zeit": jetzt().isoformat(), "modus": "voll", "lauf": lauf, "stufen": stufen, "ok": 0,
-              "unbekannt": 0, "leer": 0, "fehler": 0, "calls_geschaetzt": 0, "bytes_gz": 0,
-              "hochgeladen": [], "abbruch": None, "release": f"eodhd-voll-{lauf}"}
+              "unbekannt": 0, "leer": 0, "fehler": 0, "gesperrt": 0, "gegenproben": 0, "calls_geschaetzt": 0,
+              "bytes_gz": 0, "hochgeladen": [], "abbruch": None, "release": f"eodhd-voll-{lauf}"}
+    # Die seit dem letzten Beweis des Zugangs als gesperrt vermerkten Symbole,
+    # je (Schluessel, voriger Eintrag); ein Beweis ist jede Antwort mit 200 oder
+    # 404 und jede gelungene Gegenprobe.
+    sperr_folge = []
 
     status, tarif = konto(token, fetcher)
     if status == 401:
@@ -770,8 +792,40 @@ def lauf_voll(daten, token, stufen=None, hoechstens=0, zeitgrenze_min=300, reser
         try:
             st, d, kopf, groesse = _hole_eins(s, e, token, fetcher, warte)
         except EodhdGesperrt as ex:
-            bilanz["abbruch"] = str(ex)
-            break
+            if ex.status != 403:
+                bilanz["abbruch"] = str(ex)
+                break
+            if len(sperr_folge) % GEGENPROBE_ALLE == 0:
+                bilanz["gegenproben"] += 1
+                bilanz["calls_geschaetzt"] += CALLS_FUNDAMENTALS
+                budget -= CALLS_FUNDAMENTALS
+                try:
+                    st_p, d_p, _, _ = abruf_json(f"fundamentals/{GEGENPROBE_SYMBOL}", token, {}, fetcher, warte)
+                    probe = f"HTTP {st_p}" if not (st_p == 200 and d_p) else ""
+                except EodhdGesperrt as ex_p:
+                    probe = str(ex_p)
+                if probe:
+                    for k_alt, alt in reversed(sperr_folge):
+                        if alt is None:
+                            stand.pop(k_alt, None)
+                        else:
+                            stand[k_alt] = alt
+                    bilanz["gesperrt"] -= len(sperr_folge)
+                    bilanz["abbruch"] = f"{ex}; auch die Gegenprobe {GEGENPROBE_SYMBOL} scheiterte: {probe[:120]}"
+                    break
+                sperr_folge = []
+            k = schluessel(s, e["Code"])
+            sperr_folge.append((k, stand.get(k)))
+            stand[k] = {"stufe": s, "datum": jetzt().date().isoformat(), "name": e.get("Name"), "typ": e.get("Type"),
+                        "boerse": e.get("Exchange"), "delisted": bool(e.get("delisted")), "status": "gesperrt",
+                        "http": 403}
+            bilanz["gesperrt"] += 1
+            bilanz["calls_geschaetzt"] += calls
+            budget -= calls
+            warte(ABSTAND_S)
+            continue
+        if st in (200, 404):
+            sperr_folge = []
         bilanz["calls_geschaetzt"] += calls
         budget -= calls
         k = schluessel(s, e["Code"])
@@ -811,8 +865,8 @@ def lauf_voll(daten, token, stufen=None, hoechstens=0, zeitgrenze_min=300, reser
                 pass
         if i % 250 == 0:
             log(f"  ... {i} von {len(schlange)} ({s}), ok {bilanz['ok']}, unbekannt {bilanz['unbekannt']}, "
-                f"leer {bilanz['leer']}, fehler {bilanz['fehler']}, {bilanz['bytes_gz'] / 1e6:.0f} MB, "
-                f"Budget {budget}")
+                f"leer {bilanz['leer']}, fehler {bilanz['fehler']}, gesperrt {bilanz['gesperrt']}, "
+                f"{bilanz['bytes_gz'] / 1e6:.0f} MB, Budget {budget}")
             _json_schreiben(stand_pfad, stand)
         if i % 500 == 0:
             st2, tarif2 = konto(token, fetcher)
@@ -824,11 +878,12 @@ def lauf_voll(daten, token, stufen=None, hoechstens=0, zeitgrenze_min=300, reser
 
     _json_schreiben(stand_pfad, stand)
     bilanz["dauer_min"] = round((time.monotonic() - start) / 60, 1)
-    bilanz["offen_danach"] = sum(1 for _, e in schlange if (stand.get(schluessel(_, e["Code"])) or {}).get("status") not in ("ok", "unbekannt", "leer"))
+    bilanz["offen_danach"] = sum(1 for _, e in schlange if (stand.get(schluessel(_, e["Code"])) or {}).get("status") not in ERLEDIGT)
     with io.open(os.path.join(wurzel, "laeufe.jsonl"), "a", encoding="utf-8") as f:
         f.write(json.dumps(bilanz, ensure_ascii=False) + "\n")
     text = (f"EODHD-Vollabzug {lauf}: ok {bilanz['ok']}, unbekannt {bilanz['unbekannt']}, leer {bilanz['leer']}, "
-            f"fehler {bilanz['fehler']}, rund {bilanz['calls_geschaetzt']} Calls, {bilanz['bytes_gz'] / 1e6:.0f} MB gepackt, "
+            f"fehler {bilanz['fehler']}, gesperrt {bilanz['gesperrt']}, Gegenproben {bilanz['gegenproben']}, "
+            f"rund {bilanz['calls_geschaetzt']} Calls, {bilanz['bytes_gz'] / 1e6:.0f} MB gepackt, "
             f"{bilanz['dauer_min']} Minuten, Archive {len(bilanz['hochgeladen'])}"
             + (f"; Abbruch: {bilanz['abbruch']}" if bilanz["abbruch"] else "")
             + f"; danach noch offen in den gewaehlten Stufen: {bilanz['offen_danach']}")
@@ -1204,7 +1259,84 @@ def selbsttest() -> int:
             return 403, "Forbidden", {}
         b6, _ = lauf_voll(daten, "x", stufen=["sonstige"], fetcher=gesperrt, warte=schlaf.append, log=lambda *_: None,
                           runner=runner, lauf="20260913-0004", arbeit=os.path.join(tmp, "arbeit6"))
-        p("403 bricht den Lauf ab", "403" in (b6["abbruch"] or "") and b6["ok"] == 0)
+        stand = _json_lesen(os.path.join(daten, ORDNER, "stand.json"), {})
+        p("403 ueberall: auch die Gegenprobe scheitert, der Lauf bricht ab und vermerkt nichts als gesperrt",
+          "403" in (b6["abbruch"] or "") and "Gegenprobe" in (b6["abbruch"] or "") and b6["ok"] == 0
+          and b6["gesperrt"] == 0 and b6["gegenproben"] == 1
+          and not any(v.get("status") == "gesperrt" for v in stand.values()), b6["abbruch"])
+
+        # Einzelne Sperre (Befund 24.09.2026): ein Index gesperrt, die uebrigen kommen.
+        daten7 = os.path.join(tmp, "daten7")
+        os.makedirs(os.path.join(daten7, ORDNER, "listen"), exist_ok=True)
+        _gz_json(os.path.join(daten7, ORDNER, "listen", "us_aktiv_2026-09-12.json.gz"), aktiv)
+        _gz_json(os.path.join(daten7, ORDNER, "listen", "us_delisted_2026-09-12.json.gz"), delisted)
+        _gz_json(os.path.join(daten7, ORDNER, "listen", "indx_2026-09-12.json.gz"),
+                 [{"Code": "DJINR", "Name": "gesperrt"}, {"Code": "GSPC", "Name": "S&P 500"}, {"Code": "NDX", "Name": "Nasdaq 100"}])
+        aufrufe7 = []
+
+        def einzeln(kennung):
+            aufrufe7.append(kennung)
+            if kennung.startswith("fundamentals/DJINR.INDX"):
+                return 403, "Forbidden. Please contact support", {}
+            return fetcher(kennung)
+        b7, _ = lauf_voll(daten7, "x", stufen=["index"], fetcher=einzeln, warte=schlaf.append, log=lambda *_: None,
+                          runner=runner, lauf="20260924-0001", arbeit=os.path.join(tmp, "arbeit7"))
+        stand7 = _json_lesen(os.path.join(daten7, ORDNER, "stand.json"), {})
+        p("Ein einzelnes gesperrtes Symbol: vermerkt, Gegenprobe einmal, die uebrigen kommen, kein Abbruch",
+          b7["abbruch"] is None and b7["ok"] == 2 and b7["gesperrt"] == 1 and b7["gegenproben"] == 1
+          and stand7[schluessel("index", "DJINR")]["status"] == "gesperrt"
+          and stand7[schluessel("index", "NDX")]["status"] == "ok"
+          and sum(1 for a in aufrufe7 if a.startswith(f"fundamentals/{GEGENPROBE_SYMBOL}")) == 1, b7)
+        aufrufe7.clear()
+        b8, _ = lauf_voll(daten7, "x", stufen=["index"], fetcher=einzeln, warte=schlaf.append, log=lambda *_: None,
+                          runner=runner, lauf="20260925-0001", arbeit=os.path.join(tmp, "arbeit8"))
+        p("Ein gesperrtes Symbol wird im naechsten Lauf nicht wieder angefragt",
+          b8["ok"] == 0 and b8["gesperrt"] == 0 and not any("DJINR" in a for a in aufrufe7) and b8["offen_danach"] == 0, b8)
+
+        # Viele Sperren in Folge: Gegenprobe beim ersten und nach je 20 weiteren.
+        daten9 = os.path.join(tmp, "daten9")
+        os.makedirs(os.path.join(daten9, ORDNER, "listen"), exist_ok=True)
+        _gz_json(os.path.join(daten9, ORDNER, "listen", "us_aktiv_2026-09-12.json.gz"), aktiv)
+        _gz_json(os.path.join(daten9, ORDNER, "listen", "us_delisted_2026-09-12.json.gz"), delisted)
+        _gz_json(os.path.join(daten9, ORDNER, "listen", "indx_2026-09-12.json.gz"),
+                 [{"Code": f"DJ{i:02d}"} for i in range(45)] + [{"Code": "GSPC"}])
+        aufrufe9 = []
+
+        def viele(kennung):
+            aufrufe9.append(kennung)
+            if kennung.startswith("fundamentals/DJ"):
+                return 403, "Forbidden", {}
+            return fetcher(kennung)
+        b9, _ = lauf_voll(daten9, "x", stufen=["index"], fetcher=viele, warte=schlaf.append, log=lambda *_: None,
+                          runner=runner, lauf="20260924-0002", arbeit=os.path.join(tmp, "arbeit9"))
+        p("45 Sperren in Folge: drei Gegenproben, alle 45 vermerkt, der Rest kommt",
+          b9["abbruch"] is None and b9["gesperrt"] == 45 and b9["gegenproben"] == 3 and b9["ok"] == 1
+          and sum(1 for a in aufrufe9 if a.startswith(f"fundamentals/{GEGENPROBE_SYMBOL}")) == 3, b9)
+
+        # Zugang bricht mitten im Lauf weg: die Sperren seit dem letzten Beweis werden zurueckgenommen.
+        daten10 = os.path.join(tmp, "daten10")
+        os.makedirs(os.path.join(daten10, ORDNER, "listen"), exist_ok=True)
+        _gz_json(os.path.join(daten10, ORDNER, "listen", "us_aktiv_2026-09-12.json.gz"), aktiv)
+        _gz_json(os.path.join(daten10, ORDNER, "listen", "us_delisted_2026-09-12.json.gz"), delisted)
+        _gz_json(os.path.join(daten10, ORDNER, "listen", "indx_2026-09-12.json.gz"),
+                 [{"Code": "GSPC"}] + [{"Code": f"DJ{i:02d}"} for i in range(25)])
+        zaehler = {"probe": 0}
+
+        def wegbrechen(kennung):
+            if kennung.startswith(f"fundamentals/{GEGENPROBE_SYMBOL}"):
+                zaehler["probe"] += 1
+                if zaehler["probe"] >= 2:
+                    return 403, "Forbidden", {}
+            if kennung.startswith("fundamentals/DJ"):
+                return 403, "Forbidden", {}
+            return fetcher(kennung)
+        b10, _ = lauf_voll(daten10, "x", stufen=["index"], fetcher=wegbrechen, warte=schlaf.append, log=lambda *_: None,
+                           runner=runner, lauf="20260924-0003", arbeit=os.path.join(tmp, "arbeit10"))
+        stand10 = _json_lesen(os.path.join(daten10, ORDNER, "stand.json"), {})
+        gesp10 = [k for k, v in stand10.items() if v.get("status") == "gesperrt"]
+        p("Scheitert eine spaetere Gegenprobe, werden die Sperren seit der letzten gelungenen zurueckgenommen",
+          "Gegenprobe" in (b10["abbruch"] or "") and b10["ok"] == 1 and b10["gegenproben"] == 2
+          and b10["gesperrt"] == 0 and not gesp10 and b10["offen_danach"] == 25, (b10, gesp10))
 
         archive = archive_bauen(os.path.join(tmp, "arbeit"), "stock_boerse", "x", os.path.join(tmp, "za"), teile_bytes=1)
         p("Archive werden bei der Groessengrenze geteilt", len(archive) == 2 and archive[0][0].endswith("_teil1.tar"))
