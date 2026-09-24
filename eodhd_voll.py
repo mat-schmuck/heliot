@@ -890,6 +890,14 @@ def ausland_eintraege(wurzel, bekannt=None):
     groesse = {b: sum(len(v) for v in arten.values()) for b, arten in listen.items()}
     reihenfolge = [b for b in AUSLAND_VORRANG if b in listen]
     reihenfolge += sorted((b for b in listen if b not in AUSLAND_VORRANG), key=lambda b: (-groesse[b], b))
+    # Das Land je Boerse nennt die Boersenliste des Anbieters (CountryISO2);
+    # HEIMAT gilt, wo sie fehlt.
+    heimat = dict(HEIMAT)
+    for bx in _juengste_liste(wurzel, "exchanges_") or []:
+        if isinstance(bx, dict):
+            land = str(bx.get("CountryISO2") or "").strip().upper()
+            if len(land) == 2 and bx.get("Code"):
+                heimat[str(bx["Code"]).strip().upper()] = land
     wahl = {}
     for b in reihenfolge:
         for art in ("AKTIV", "DELISTET"):
@@ -897,7 +905,7 @@ def ausland_eintraege(wurzel, bekannt=None):
                 isin = _isin(x)
                 if not isin or isin in bekannt:
                     continue
-                if isin not in wahl or (HEIMAT.get(b) == isin[:2] and HEIMAT.get(wahl[isin]) != isin[:2]):
+                if isin not in wahl or (heimat.get(b) == isin[:2] and heimat.get(wahl[isin]) != isin[:2]):
                     wahl[isin] = b
     raus, gesehen, isins = [], set(), set()
     for b in reihenfolge:
@@ -2383,6 +2391,11 @@ def selbsttest() -> int:
         au = ausland_eintraege(w, bekannt={"US0378331005"})
         p("Ausland: Doppelte ueber die ISIN weg, Heimatboerse bevorzugt, schon aus den US-Stufen Bekanntes ausgelassen",
           [x["Code"] for x in au] == ["SAP.XETRA", "SHEL.LSE", "VOD.LSE", "KYC.F", "XYZ.F"], [x["Code"] for x in au])
+        _gz_json(os.path.join(w, "listen", "exchanges_2026-09-12.json.gz"),
+                 [{"Code": "BE", "CountryISO2": "KY"}, {"Code": "LSE", "CountryISO2": "GB"}, {"Code": "EUFUND"}])
+        au = ausland_eintraege(w, bekannt={"US0378331005"})
+        p("Ausland: das Land je Boerse kommt aus der Boersenliste des Anbieters",
+          [x["Code"] for x in au] == ["SAP.XETRA", "SHEL.LSE", "VOD.LSE", "XYZ.F", "KYC.BE"], [x["Code"] for x in au])
 
     print("\n" + ("Alles bestanden." if fehler == 0 else f"{fehler} Fehler."))
     return fehler
