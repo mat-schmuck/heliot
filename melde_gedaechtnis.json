@@ -348,7 +348,8 @@
     "RVMD|Fallback: MA50-R\u00fcckeroberung": "drin",
     "RVTY|Fallback: 52W-Hoch-Breakout": "drin",
     "CVLT|Rectangle Top": "drin",
-    "BRKR|Fallback: 20-Tage-Hoch (Pivot)": "drin"
+    "BRKR|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "TEM|High & Tight Flag": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -775,7 +776,11 @@
     "GEWINN|klimax_zeichen|TWST|EMA Crossback|5_kanaluebershooting": "2026-09-24",
     "GEWINN|klimax_zeichen|TWST|Fallback: 20-Tage-Hoch (Pivot)|5_kanaluebershooting": "2026-09-24",
     "GEWINN|klimax_zeichen|TXG|Fallback: 20-Tage-Hoch (Pivot)|5_kanaluebershooting": "2026-09-24",
-    "SCHLUSSNAH|2026-09-24": "2026-09-24"
+    "SCHLUSSNAH|2026-09-24": "2026-09-24",
+    "TEM|High & Tight Flag": "2026-09-24",
+    "BEST|TEM|High & Tight Flag": "2026-09-24",
+    "ETON|Wick Play": "2026-09-24",
+    "BEST|ETON|Wick Play": "2026-09-24"
   },
   "gemeldet_kp": {
     "LB|Cup & Handle (Wochenbasis)": 81.01,
@@ -818,7 +823,11 @@
     "BEST|CLS|Cup & Handle (Wochenbasis)": 367.91,
     "BEST|CLS|Rectangle Top": 367.91,
     "CVLT|Rectangle Top": 150.82,
-    "BEST|CVLT|Rectangle Top": 150.82
+    "BEST|CVLT|Rectangle Top": 150.82,
+    "TEM|High & Tight Flag": 81.84,
+    "BEST|TEM|High & Tight Flag": 81.84,
+    "ETON|Wick Play": 56.85,
+    "BEST|ETON|Wick Play": 56.85
   },
   "gapgo_warten": {
     "OMER": {
