@@ -346,7 +346,8 @@
     "CVLT|Cup & Handle (Wochenbasis)": "drin",
     "QMCO|Wick Play": "draussen",
     "RVMD|Fallback: MA50-R\u00fcckeroberung": "drin",
-    "RVTY|Fallback: 52W-Hoch-Breakout": "drin"
+    "RVTY|Fallback: 52W-Hoch-Breakout": "drin",
+    "CVLT|Rectangle Top": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -748,7 +749,9 @@
     "TEIL|MRNA|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-24",
     "CLS|Rectangle Top": "2026-09-24",
     "BEST|CLS|Rectangle Top": "2026-09-24",
-    "TEIL|BLLN|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-24"
+    "TEIL|BLLN|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-24",
+    "CVLT|Rectangle Top": "2026-09-24",
+    "BEST|CVLT|Rectangle Top": "2026-09-24"
   },
   "gemeldet_kp": {
     "LB|Cup & Handle (Wochenbasis)": 81.01,
@@ -789,7 +792,9 @@
     "CLS|Cup & Handle (Wochenbasis)": 367.91,
     "CLS|Rectangle Top": 367.91,
     "BEST|CLS|Cup & Handle (Wochenbasis)": 367.91,
-    "BEST|CLS|Rectangle Top": 367.91
+    "BEST|CLS|Rectangle Top": 367.91,
+    "CVLT|Rectangle Top": 150.82,
+    "BEST|CVLT|Rectangle Top": 150.82
   },
   "gapgo_warten": {
     "OMER": {
