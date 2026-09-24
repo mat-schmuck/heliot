@@ -610,5 +610,30 @@
    "zeichen": null,
    "text": "INFORMATION: ZIM; Fallback: 52W-Hoch-Breakout; Kurs 29.43 unter der 8-Tage-EMA 29.77; reiner Hinweis, kein Ausstiegssignal; Kurs 29,43, seit Trigger -3,6 % gleich -0,5 R"
   }
+ ],
+ "geprueft": "2026-09-24",
+ "zurueckgenommen": [
+  "BAND|EMA Crossback",
+  "BAND|Fallback: 20-Tage-Hoch (Pivot)",
+  "CGON|Fallback: MA50-Pullback",
+  "CGON|Rectangle Top",
+  "CLMT|Fallback: 20-Tage-Hoch (Pivot)",
+  "CMBT|1",
+  "DK|Cup & Handle (Wochenbasis)",
+  "DUOL|Rectangle Top",
+  "ILMN|Fallback: 20-Tage-Hoch (Pivot)",
+  "ILMN|Fallback: 20-Tage-Hoch (Pivot)",
+  "ILMN|Fallback: 52W-Hoch-Breakout",
+  "ILMN|Fallback: 52W-Hoch-Breakout",
+  "MRNA|Fallback: 20-Tage-Hoch (Pivot)",
+  "MRNA|Fallback: 52W-Hoch-Breakout",
+  "NRIX|Fallback: MA50-Pullback",
+  "NTRA|Cup & Handle (Wochenbasis) + Darvas Box",
+  "NTRA|Fallback: 20-Tage-Hoch (Pivot)",
+  "NTRA|Fallback: 52W-Hoch-Breakout",
+  "TWST|Cup & Handle (Wochenbasis)",
+  "TWST|EMA Crossback",
+  "TWST|Fallback: 20-Tage-Hoch (Pivot)",
+  "TXG|Fallback: 20-Tage-Hoch (Pivot)"
  ]
 }
