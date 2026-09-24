@@ -1733,7 +1733,8 @@
   "zone": "stark",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
-   "2_groesster_tagesgewinn"
+   "2_groesster_tagesgewinn",
+   "4_ma200_abstand"
   ],
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
@@ -3024,7 +3025,8 @@
   "zone": "stark",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
-   "2_groesster_tagesgewinn"
+   "2_groesster_tagesgewinn",
+   "4_ma200_abstand"
   ],
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
@@ -5317,7 +5319,8 @@
   "zone_gemeldet": null,
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
-   "2_groesster_tagesgewinn"
+   "2_groesster_tagesgewinn",
+   "4_ma200_abstand"
   ],
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
@@ -5346,7 +5349,8 @@
   "zone_gemeldet": "leicht",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
-   "2_groesster_tagesgewinn"
+   "2_groesster_tagesgewinn",
+   "4_ma200_abstand"
   ],
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
@@ -5911,7 +5915,9 @@
   "zone": "stark",
   "zone_gemeldet": "leicht",
   "ziel_gemeldet": false,
-  "klimax_gemeldet": [],
+  "klimax_gemeldet": [
+   "4_ma200_abstand"
+  ],
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
