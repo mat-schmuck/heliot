@@ -1,7 +1,7 @@
 {
   "fenster_tag": "2026-09-24",
   "fenster": {
-    "PBF|Fallback: MA50-Pullback": "draussen",
+    "PBF|Fallback: MA50-Pullback": "drin",
     "CVE|Fallback: MA50-Pullback": "drin",
     "HNGE|Cup & Handle (Wochenbasis)": "drin",
     "HNGE|Rectangle Top": "drin",
@@ -345,7 +345,8 @@
     "ETON|Wick Play": "drin",
     "CVLT|Cup & Handle (Wochenbasis)": "drin",
     "QMCO|Wick Play": "draussen",
-    "RVMD|Fallback: MA50-R\u00fcckeroberung": "drin"
+    "RVMD|Fallback: MA50-R\u00fcckeroberung": "drin",
+    "RVTY|Fallback: 52W-Hoch-Breakout": "drin"
   },
   "gemeldet": {
     "INSIDER|SCTH|pfad_a|1": "2026-08-26",
@@ -741,7 +742,9 @@
     "CVLT|Cup & Handle (Wochenbasis)": "2026-09-24",
     "BEST|CVLT|Cup & Handle (Wochenbasis)": "2026-09-24",
     "RVMD|Fallback: MA50-R\u00fcckeroberung": "2026-09-24",
-    "BEST|RVMD|Fallback: MA50-R\u00fcckeroberung": "2026-09-24"
+    "BEST|RVMD|Fallback: MA50-R\u00fcckeroberung": "2026-09-24",
+    "RVTY|Fallback: 52W-Hoch-Breakout": "2026-09-24",
+    "BEST|RVTY|Fallback: 52W-Hoch-Breakout": "2026-09-24"
   },
   "gemeldet_kp": {
     "LB|Cup & Handle (Wochenbasis)": 81.01,
@@ -776,7 +779,9 @@
     "CVLT|Cup & Handle (Wochenbasis)": 149.82,
     "BEST|CVLT|Cup & Handle (Wochenbasis)": 149.82,
     "RVMD|Fallback: MA50-R\u00fcckeroberung": 200.35,
-    "BEST|RVMD|Fallback: MA50-R\u00fcckeroberung": 200.35
+    "BEST|RVMD|Fallback: MA50-R\u00fcckeroberung": 200.35,
+    "RVTY|Fallback: 52W-Hoch-Breakout": 149.67,
+    "BEST|RVTY|Fallback: 52W-Hoch-Breakout": 149.67
   },
   "gapgo_warten": {
     "OMER": {
