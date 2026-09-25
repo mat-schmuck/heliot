@@ -326,7 +326,7 @@
     "SCSC|Rectangle Top": "drin",
     "UCTT|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "LB|Rectangle Top": "drin",
-    "SCSC|Fallback: MA50-Pullback": "drin",
+    "SCSC|Fallback: MA50-Pullback": "draussen",
     "FTRE|Rectangle Top": "draussen",
     "ARW|Fallback: MA50-Pullback": "draussen",
     "PNTG|Fallback: MA50-Pullback": "drin",
@@ -367,7 +367,13 @@
     "ALMR|EMA Crossback": "drin",
     "ALNT|Inside Day": "drin",
     "AAMI|Rectangle Top": "drin",
-    "RVMD|Fallback: MA50-Pullback": "drin"
+    "RVMD|Fallback: MA50-Pullback": "drin",
+    "FET|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "ESTC|Inside Day": "drin",
+    "ARW|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "RGLD|EMA Crossback": "drin",
+    "BHE|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "BHE|Inside Day": "drin"
   },
   "gemeldet": {
     "INSIDER|MAIR|pfad_a|0": "2026-08-28",
@@ -848,7 +854,9 @@
     "TEIL|ALNT|Fallback: MA50-Pullback": "2026-09-25",
     "SEKTORAUF|2026-09-25": "2026-09-25",
     "RVMD|Fallback: MA50-Pullback": "2026-09-25",
-    "BEST|RVMD|Fallback: MA50-Pullback": "2026-09-25"
+    "BEST|RVMD|Fallback: MA50-Pullback": "2026-09-25",
+    "BHE|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-25",
+    "BEST|BHE|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-25"
   },
   "gemeldet_kp": {
     "LB|Cup & Handle (Wochenbasis)": 81.01,
@@ -929,7 +937,9 @@
     "AAMI|Rectangle Top": 93.83,
     "BEST|AAMI|Rectangle Top": 93.83,
     "RVMD|Fallback: MA50-Pullback": 200.65,
-    "BEST|RVMD|Fallback: MA50-Pullback": 200.65
+    "BEST|RVMD|Fallback: MA50-Pullback": 200.65,
+    "BHE|Fallback: 20-Tage-Hoch (Pivot)": 83.3,
+    "BEST|BHE|Fallback: 20-Tage-Hoch (Pivot)": 83.3
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-09-25"
