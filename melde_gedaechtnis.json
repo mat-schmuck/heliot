@@ -366,7 +366,8 @@
     "IMOS|Cup & Handle (Wochenbasis) + VCP": "drin",
     "ALMR|EMA Crossback": "drin",
     "ALNT|Inside Day": "drin",
-    "AAMI|Rectangle Top": "drin"
+    "AAMI|Rectangle Top": "drin",
+    "RVMD|Fallback: MA50-Pullback": "drin"
   },
   "gemeldet": {
     "INSIDER|MAIR|pfad_a|0": "2026-08-28",
@@ -844,7 +845,8 @@
     "GEWINN|zonenwechsel|TWST|Fallback: 20-Tage-Hoch (Pivot)|stark": "2026-09-25",
     "AAMI|Rectangle Top": "2026-09-25",
     "BEST|AAMI|Rectangle Top": "2026-09-25",
-    "TEIL|ALNT|Fallback: MA50-Pullback": "2026-09-25"
+    "TEIL|ALNT|Fallback: MA50-Pullback": "2026-09-25",
+    "SEKTORAUF|2026-09-25": "2026-09-25"
   },
   "gemeldet_kp": {
     "LB|Cup & Handle (Wochenbasis)": 81.01,
