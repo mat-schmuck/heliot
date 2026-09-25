@@ -137,7 +137,8 @@ NEUE_STUFEN = [
     ("listen", "Kuerzellisten aller Boersen, aktiv und delistet"),
     ("ust", "US-Zinsen je Jahr: Bill Rates, Zinskurve, Langfrist- und Realzinsen"),
     ("kal_dividenden", "Dividendentermine je Monat ab 2000, Tag fuer Tag"),
-    ("boersenwert", "Boersenwert je Woche seit 2020 fuer US-Aktien samt der seit 2020 delisteten"),
+    ("boersenwert", "Boersenwert je Woche seit 2020 fuer US-Aktien samt der ab 2022 delisteten; "
+                    "von den 2020 und 2021 delisteten nur, was schon geholt ist"),
     ("news", "Nachrichten und Stimmungswerte seit Maerz 2021 fuer die Boersenaktien"),
     ("schluss", "Schlussstand der Fundamentals aller Boersenaktien, ab 2. Oktober"),
     ("ausland", "Fundamentals auslaendischer Aktien nach Boersen-Vorrang"),
@@ -164,6 +165,13 @@ SCHLUSS_AB = dt.date(2026, 10, 2)
 LEER_PRUEFUNG_BIS = "2026-09-24"      # nur Leer-Antworten des eigentlichen Vollabzugs
 NEWS_AB = "2021-03-01"                # Doku: Nachrichten ab Maerz 2021
 BOERSENWERT_AB = "2020-01-01"         # Doku: Boersenwert ab 2020
+# OHNE DIE BIS ENDE 2021 DELISTETEN (Mathias, 25.09.2026, "ja lasse sie aus"):
+# Von den 2020 und 2021 delisteten Aktien lieferten 98 bis 99 Prozent keinen
+# Boersenwert (17 Treffer unter 1.577). Fuer die rund 3.300 noch offenen haette
+# das rund 33.000 Calls fuer rund 36 Treffer gekostet; der Rest des Budgets geht
+# an den Freiverkehr und das Ausland. Ab 2022 bleiben alle dabei, ebenso die
+# delisteten ohne Datum; schon Geholtes bleibt, wie es ist.
+BOERSENWERT_DELISTED_AB = "2022-01-01"
 NEWS_MAX_SEITEN = 10
 DIVIDENDEN_MAX_SEITEN = 30
 UST_ARTEN = ["bill-rates", "yield-rates", "long-term-rates", "real-yield-rates"]
@@ -929,10 +937,14 @@ def delisted_seit_2020(wurzel, stand, runner=None, arbeit=None, log=print):
     """Welche delisteten US-Aktien sind ab 2020 verschwunden? EODHD fuehrt den
     Boersenwert erst ab 2020; das Datum steht in General.DelistedDate der
     geholten Fundamentals. Einmal ermittelt, liegt die Auswahl unter
-    listen/delisted_seit_2020.json. Rueckgabe None, wenn ein Archiv fehlt."""
+    listen/delisted_seit_2020.json, seit 25.09.2026 samt dem Datum je Aktie
+    unter "datum"; eine Merkdatei ohne Datum wird einmal neu ermittelt, damit
+    boersenwert_eintraege die bis Ende 2021 delisteten auslassen kann.
+    Rueckgabe None, wenn ein Archiv fehlt."""
     pfad = os.path.join(wurzel, "listen", "delisted_seit_2020.json")
     fertig = _json_lesen(pfad, None)
-    if isinstance(fertig, dict) and isinstance(fertig.get("ab_2020"), list):
+    if (isinstance(fertig, dict) and isinstance(fertig.get("ab_2020"), list)
+            and isinstance(fertig.get("datum"), dict)):
         return fertig
     runner = runner or (lambda args: subprocess.run(args, capture_output=True, text=True, timeout=3600))
     datei_zu_code, archive = {}, set()
@@ -942,8 +954,8 @@ def delisted_seit_2020(wurzel, stand, runner=None, arbeit=None, log=print):
             archive.add((v["release"], v["archiv"]))
     ziel = os.path.join(arbeit or os.path.join(wurzel, "..", "eodhd_abzug"), "_scan")
     os.makedirs(ziel, exist_ok=True)
-    muster = re.compile(r'"DelistedDate":\s*(?:"(\d{4})-\d{2}-\d{2}[^"]*"|null)')
-    ab, ohne, alt = [], [], 0
+    muster = re.compile(r'"DelistedDate":\s*(?:"(\d{4}-\d{2}-\d{2})[^"]*"|null)')
+    ab, ohne, alt, datum_je = [], [], 0, {}
     for rel, arch in sorted(archive):
         r = runner(["gh", "release", "download", rel, "--repo", DATENREPO, "-p", arch, "-D", ziel, "--clobber"])
         tarpfad = os.path.join(ziel, arch)
@@ -957,27 +969,36 @@ def delisted_seit_2020(wurzel, stand, runner=None, arbeit=None, log=print):
                     continue
                 text = gzip.decompress(t.extractfile(m).read()).decode("utf-8", "replace")
                 treffer = muster.search(text)
-                jahr = treffer.group(1) if treffer else None
-                if jahr is None:
+                datum = treffer.group(1) if treffer else None
+                if datum is None:
                     ohne.append(code)
-                elif jahr >= "2020":
+                elif datum[:4] >= "2020":
                     ab.append(code)
+                    datum_je[code] = datum
                 else:
                     alt += 1
         os.remove(tarpfad)
-    ergebnis = {"stand": _utc_jetzt().date().isoformat(), "ab_2020": sorted(ab), "ohne_datum": sorted(ohne), "vor_2020": alt}
+    ergebnis = {"stand": _utc_jetzt().date().isoformat(), "ab_2020": sorted(ab),
+                "datum": {c: datum_je[c] for c in sorted(datum_je)}, "ohne_datum": sorted(ohne), "vor_2020": alt}
     _json_schreiben(pfad, ergebnis)
     log(f"  Boersenwert: delistet ab 2020 {len(ab)}, ohne Datum {len(ohne)}, vor 2020 {alt}")
     return ergebnis
 
 
 def boersenwert_eintraege(stufen, wurzel, stand, runner=None, arbeit=None, log=print):
-    """Boersenaktien, dann die ab 2020 delisteten, dann der Freiverkehr, zuletzt
-    delistete ohne Datum."""
-    auswahl = delisted_seit_2020(wurzel, stand, runner, arbeit, log)
+    """Boersenaktien, dann die ab 2022 delisteten, dann der Freiverkehr, zuletzt
+    delistete ohne Datum. Die 2020 und 2021 delisteten bleiben seit 25.09.2026
+    draussen (BOERSENWERT_DELISTED_AB); gezaehlt wird nur ihre Zahl."""
+    auswahl = delisted_seit_2020(wurzel, stand, runner, arbeit, log) or {}
+    datum_je = auswahl.get("datum") or {}
+    ab_2020 = auswahl.get("ab_2020", [])
+    behalten = [c for c in ab_2020 if str(datum_je.get(c) or "") >= BOERSENWERT_DELISTED_AB]
+    if len(behalten) < len(ab_2020):
+        log(f"  Boersenwert: {len(ab_2020) - len(behalten)} bis Ende 2021 delistete Aktien ausgelassen, "
+            f"{len(behalten)} ab 2022 bleiben")
     dl = {e["Code"].upper(): e for e in stufen.get("delisted_stock", [])}
-    teile = [stufen.get("stock_boerse", []), [dl[c] for c in (auswahl or {}).get("ab_2020", []) if c in dl],
-             stufen.get("stock_otc", []), [dl[c] for c in (auswahl or {}).get("ohne_datum", []) if c in dl]]
+    teile = [stufen.get("stock_boerse", []), [dl[c] for c in behalten if c in dl],
+             stufen.get("stock_otc", []), [dl[c] for c in auswahl.get("ohne_datum", []) if c in dl]]
     raus, gesehen = [], set()
     for teil in teile:
         for e in teil:
@@ -2366,13 +2387,14 @@ def selbsttest() -> int:
         w = os.path.join(tmp, "daten", ORDNER)
         os.makedirs(os.path.join(w, "listen"), exist_ok=True)
         stand_s = {f"delisted_stock:{c}": {"stufe": "delisted_stock", "status": "ok", "release": "r1", "archiv": "a1.tar",
-                                           "datei": f"{c}.json.gz"} for c in ("AAA", "BBB", "CCC")}
+                                           "datei": f"{c}.json.gz"} for c in ("AAA", "BBB", "CCC", "DDD")}
 
         def runner_scan(args):
             ziel, arch = args[args.index("-D") + 1], args[args.index("-p") + 1]
             os.makedirs(ziel, exist_ok=True)
             with tarfile.open(os.path.join(ziel, arch), "w") as t:
-                for code, datum in (("AAA", '"2021-05-01"'), ("BBB", '"2015-02-01"'), ("CCC", "null")):
+                for code, datum in (("AAA", '"2021-05-01"'), ("BBB", '"2015-02-01"'), ("CCC", "null"),
+                                    ("DDD", '"2022-03-15"')):
                     roh = gzip.compress(('{"Financials": {}, "General": {"Code": "%s", "DelistedDate": %s}}' % (code, datum)).encode())
                     info = tarfile.TarInfo(f"delisted_stock/{code}.json.gz")
                     info.size = len(roh)
@@ -2382,15 +2404,31 @@ def selbsttest() -> int:
                 returncode = 0
                 stderr = ""
             return R()
+        # Eine Merkdatei aus der Zeit vor dem 25.09.2026 kennt kein Datum und
+        # wird einmal neu ermittelt; scheitert das Archiv, gibt es None.
+        _json_schreiben(os.path.join(w, "listen", "delisted_seit_2020.json"),
+                        {"stand": "2026-09-24", "ab_2020": ["AAA"], "ohne_datum": ["CCC"], "vor_2020": 1})
+
+        class RKaputt:
+            returncode = 1
+            stderr = "kaputt"
+        erg0 = delisted_seit_2020(w, stand_s, lambda a: RKaputt(), os.path.join(tmp, "arbeit"), log=lambda *_: None)
         erg = delisted_seit_2020(w, stand_s, runner_scan, os.path.join(tmp, "arbeit"), log=lambda *_: None)
         erg2 = delisted_seit_2020(w, stand_s, lambda a: None, None, log=lambda *_: None)
-        p("Boersenwert: delistete ab 2020 aus dem Archiv gelesen, ohne Datum getrennt, Auswahl gemerkt",
-          erg["ab_2020"] == ["AAA"] and erg["ohne_datum"] == ["CCC"] and erg["vor_2020"] == 1 and erg2 == erg, erg)
+        p("Boersenwert: delistete ab 2020 samt Datum aus dem Archiv gelesen, ohne Datum getrennt, Auswahl gemerkt; "
+          "eine alte Merkdatei ohne Datum wird neu ermittelt",
+          erg0 is None and erg["ab_2020"] == ["AAA", "DDD"]
+          and erg["datum"] == {"AAA": "2021-05-01", "DDD": "2022-03-15"}
+          and erg["ohne_datum"] == ["CCC"] and erg["vor_2020"] == 1 and erg2 == erg, erg)
         stufen_bw = {"stock_boerse": [{"Code": "AAPL"}], "stock_otc": [{"Code": "TCEHY"}],
-                     "delisted_stock": [{"Code": "AAA"}, {"Code": "BBB"}, {"Code": "CCC"}]}
-        bw = boersenwert_eintraege(stufen_bw, w, stand_s, lambda a: None, None, log=lambda *_: None)
-        p("Boersenwert: Boersenaktien, dann delistete ab 2020, dann Freiverkehr, zuletzt ohne Datum",
-          [e["Code"] for e in bw] == ["AAPL", "AAA", "TCEHY", "CCC"], [e["Code"] for e in bw])
+                     "delisted_stock": [{"Code": "AAA"}, {"Code": "BBB"}, {"Code": "CCC"}, {"Code": "DDD"}]}
+        protokoll = []
+        bw = boersenwert_eintraege(stufen_bw, w, stand_s, lambda a: None, None, log=protokoll.append)
+        p("Boersenwert: Boersenaktien, dann delistete ab 2022, dann Freiverkehr, zuletzt ohne Datum; "
+          "die bis Ende 2021 delisteten bleiben draussen, das Protokoll nennt nur Zahlen",
+          [e["Code"] for e in bw] == ["AAPL", "DDD", "TCEHY", "CCC"]
+          and any("1 bis Ende 2021 delistete Aktien ausgelassen, 1 ab 2022 bleiben" in z for z in protokoll)
+          and not any("AAA" in z for z in protokoll), ([e["Code"] for e in bw], protokoll))
 
     with tempfile.TemporaryDirectory() as tmp:
         w = os.path.join(tmp, ORDNER)
