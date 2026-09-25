@@ -99,7 +99,7 @@
     "XMTR|Fallback: MA50-Pullback": "draussen",
     "PBF|Rectangle Top": "drin",
     "BHE|EMA Crossback": "drin",
-    "DAVE|Cup & Handle (Wochenbasis)": "draussen",
+    "DAVE|Cup & Handle (Wochenbasis)": "drin",
     "ZIM|Fallback: MA50-Pullback": "draussen",
     "AMD|Fallback: 52W-Hoch-Breakout": "drin",
     "CDNA|Fallback: MA50-Pullback": "draussen",
@@ -222,7 +222,7 @@
     "ESTC|EMA Crossback": "drin",
     "TENB|EMA Crossback": "drin",
     "VICR|Cup & Handle (Wochenbasis)": "draussen",
-    "XMTR|Rectangle Top": "draussen",
+    "XMTR|Rectangle Top": "drin",
     "SKE|Fallback: MA50-Pullback": "drin",
     "TSEM|Fallback: MA50-Pullback": "drin",
     "UMAC|Fallback: MA50-Pullback": "drin",
@@ -247,7 +247,7 @@
     "MTRN|Fallback: MA50-Pullback": "drin",
     "AMD|Cup & Handle (Wochenbasis)": "drin",
     "GCT|Fallback: 20-Tage-Hoch (Pivot)": "drin",
-    "OUST|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "OUST|Fallback: 20-Tage-Hoch (Pivot)": "draussen",
     "OUST|Fallback: MA50-R\u00fcckeroberung": "draussen",
     "IMOS|VCP": "drin",
     "BAND|EMA Crossback": "drin",
@@ -261,7 +261,7 @@
     "CLS|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "MRNA|Fallback: 52W-Hoch-Breakout": "drin",
     "KLIC|Fallback: 20-Tage-Hoch (Pivot)": "drin",
-    "COHU|Cup & Handle (Wochenbasis)": "draussen",
+    "COHU|Cup & Handle (Wochenbasis)": "drin",
     "TWST|Cup & Handle (Wochenbasis)": "drin",
     "PNTG|Fallback: MA50-R\u00fcckeroberung": "drin",
     "PVLA|Rectangle Top": "drin",
@@ -390,7 +390,8 @@
     "MTRN|Rectangle Top": "drin",
     "LITE|EMA Crossback": "drin",
     "DIOD|Rectangle Top": "drin",
-    "PBF|Wick Play": "drin"
+    "PBF|Wick Play": "drin",
+    "PNTG|Rectangle Top": "drin"
   },
   "gemeldet": {
     "INSIDER|MAIR|pfad_a|0": "2026-08-28",
@@ -902,7 +903,8 @@
     "GEWINN|zonenwechsel|NTRA|Cup & Handle (Wochenbasis) + Darvas Box|stark": "2026-09-25",
     "GEWINN|zonenwechsel|NTRA|Fallback: 20-Tage-Hoch (Pivot)|stark": "2026-09-25",
     "GEWINN|zonenwechsel|NTRA|Fallback: 52W-Hoch-Breakout|stark": "2026-09-25",
-    "GEWINN|zonenwechsel|QMCO|Fallback: 20-Tage-Hoch (Pivot)|mittel": "2026-09-25"
+    "GEWINN|zonenwechsel|QMCO|Fallback: 20-Tage-Hoch (Pivot)|mittel": "2026-09-25",
+    "SCHLUSSNAH|2026-09-25": "2026-09-25"
   },
   "gemeldet_kp": {
     "LB|Cup & Handle (Wochenbasis)": 81.01,
