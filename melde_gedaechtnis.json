@@ -311,7 +311,7 @@
     "FTNT|EMA Crossback": "drin",
     "UMAC|EMA Crossback": "drin",
     "SANM|Pocket Pivot": "drin",
-    "SANM|Rectangle Top": "draussen",
+    "SANM|Rectangle Top": "drin",
     "KLIC|EMA Crossback": "drin",
     "AVT|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "KLIC|Fallback: MA50-R\u00fcckeroberung": "drin",
@@ -383,7 +383,8 @@
     "UCTT|Inside Day": "drin",
     "RDVT|Fallback: 52W-Hoch-Breakout": "drin",
     "KALU|Inside Day": "drin",
-    "MXL|Cup & Handle (Wochenbasis)": "drin"
+    "MXL|Cup & Handle (Wochenbasis)": "drin",
+    "BHE|Rectangle Top": "drin"
   },
   "gemeldet": {
     "INSIDER|MAIR|pfad_a|0": "2026-08-28",
@@ -880,7 +881,9 @@
     "KLIC|Inside Day": "2026-09-25",
     "BEST|KLIC|Inside Day": "2026-09-25",
     "ESTC|Inside Day": "2026-09-25",
-    "BEST|ESTC|Inside Day": "2026-09-25"
+    "BEST|ESTC|Inside Day": "2026-09-25",
+    "MXL|Cup & Handle (Wochenbasis)": "2026-09-25",
+    "BEST|MXL|Cup & Handle (Wochenbasis)": "2026-09-25"
   },
   "gemeldet_kp": {
     "LB|Cup & Handle (Wochenbasis)": 81.01,
@@ -977,7 +980,9 @@
     "KLIC|Inside Day": 90.25,
     "BEST|KLIC|Inside Day": 90.25,
     "ESTC|Inside Day": 91.46,
-    "BEST|ESTC|Inside Day": 91.46
+    "BEST|ESTC|Inside Day": 91.46,
+    "MXL|Cup & Handle (Wochenbasis)": 88.99,
+    "BEST|MXL|Cup & Handle (Wochenbasis)": 88.99
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-09-25"
