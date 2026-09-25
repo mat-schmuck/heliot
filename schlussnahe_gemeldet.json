@@ -415,5 +415,13 @@
    "zeichen": null,
    "text": "INFORMATION: ZS; Cup & Handle (Wochenbasis); Kurs 194.40 unter der 8-Tage-EMA 199.45; reiner Hinweis, kein Ausstiegssignal; Kurs 194,40, seit Trigger -2,7 % gleich -0,3 R"
   }
+ ],
+ "geprueft": "2026-09-25",
+ "zurueckgenommen": [
+  "APPN|EMA Crossback",
+  "PVLA|Rectangle Top",
+  "SHIP|1",
+  "TENB|EMA Crossback",
+  "ZS|Cup & Handle (Wochenbasis)"
  ]
 }

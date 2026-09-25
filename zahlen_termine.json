@@ -1,5 +1,5 @@
 {
- "gebaut_am": "2026-09-25 00:11 Wien",
+ "gebaut_am": "2026-09-26 00:11 Wien",
  "ohne_termin": [
   "ASND",
   "FRNM",
@@ -966,7 +966,8 @@
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "NTRA": {
