@@ -1992,7 +1992,7 @@ def block_e():
                                         "sende", "save_state",
                                         "beobachtungen_eintragen")}
     _alt_ie = {n: getattr(_ie2, n) for n in ("lies_speicher", "lies_rollen")}
-    _ins, _nach, _befund = False, False, ""
+    _ins, _nach, _alarm_lb, _befund = False, False, False, ""
     try:
         os.chdir(_probe)
         from datetime import date as _dz
@@ -2040,8 +2040,34 @@ def block_e():
                  and _zn[0].get("vol_bestaetigt") is True
                  and _zn[0].get("kurs") == 10.4
                  and not _tl2.zaehlt_mit(_zn[0]))
+        # FRAGE 9 (25.09.2026): Uebersprungene Einstiege und Nachtraege der
+        # Alarm-Muster stehen im Logbuch, je einmal, mit alarm_muster true.
+        _al = [{"ticker": "ALM", "strategie": "Inside Day", "alarm": True,
+                "anlass": "uebersprungen", "kaufpunkt": 20.0, "kurs": 21.5,
+                "ueber_pct": 7.5, "key": "ALM|Inside Day|u"},
+               {"ticker": "ALN", "strategie": "Pocket Pivot", "alarm": True,
+                "anlass": "nachtrag", "kaufpunkt": 30.0, "kurs": 30.6,
+                "vol_ok": True, "key": "ALN|Pocket Pivot",
+                "key_best": "ALN|Pocket Pivot|b"},
+               {"ticker": "ALO", "strategie": "Wick Play", "alarm": True,
+                "kaufpunkt": 40.0, "kurs": 40.2, "key": "ALO|Wick Play"}]
+        _a1 = bw.alarm_ins_logbuch(_al, _im, trocken=False)
+        _a2 = bw.alarm_ins_logbuch(_al, _im, trocken=False)
+        _za = [z for z in _tl2.lies("trigger_logbuch.jsonl")
+               if z.get("ticker") in ("ALM", "ALN", "ALO")]
+        _zu = [z for z in _za if z.get("uebersprungen")]
+        _zb = [z for z in _za if z.get("nachtrag")]
+        _alarm_lb = (_a1 == 2 and _a2 == 0 and len(_za) == 2
+                     and len(_zu) == 1 and _zu[0].get("ticker") == "ALM"
+                     and _zu[0].get("alarm_muster") is True
+                     and _zu[0].get("quelle") == "waechter/uebersprungen"
+                     and len(_zb) == 1 and _zb[0].get("ticker") == "ALN"
+                     and _zb[0].get("alarm_muster") is True
+                     and _zb[0].get("gemeldet") is True
+                     and not _tl2.zaehlt_mit(_zb[0]))
         _befund = (f"Insider {_ins} (Rueckgabe {_erg}, {len(_z)} Zeile(n)), "
-                   f"Nachtrag {_nach} ({_n1} und {_n2})")
+                   f"Nachtrag {_nach} ({_n1} und {_n2}), "
+                   f"Alarm-Muster {_alarm_lb} ({_a1} und {_a2}, {len(_za)} Zeile(n))")
     except Exception as _e:
         _befund = f"{type(_e).__name__}: {_e}"
     finally:
@@ -2055,6 +2081,24 @@ def block_e():
            "Signalzahlen im Logbuch (Luecke zwei)", _ins, _befund)
     pruefe("E", "Ein Nachtrag steht genau einmal im Logbuch und zaehlt "
            "nicht als eigenes Signal (Luecke drei)", _nach, _befund)
+    pruefe("E", "Uebersprungene Einstiege und Nachtraege der Alarm-Muster "
+           "stehen je einmal im Logbuch (Frage 9)",
+           _alarm_lb, _befund)
+
+    # O10 UND FRAGE 9 (25.09.2026): Die Volumenbestaetigung eines
+    # Alarm-Musters wird VOR dem Zusammenstellen der Alarm-Meldung
+    # herausgezogen. Bis dahin stand der Schritt hinter dem Sendeblock, und
+    # die Bestaetigung ging weder hinaus noch ins Logbuch.
+    _bwq_alarm = (WURZEL / "breakout_watcher.py").read_text(encoding="utf-8")
+    _i_zieh = _bwq_alarm.find('t["anlass"] = "nachtrag"')
+    _i_alle = _bwq_alarm.find("alarm_alle = alarm_melden + alarm_neben")
+    _i_log = _bwq_alarm.find("alarm_ins_logbuch(alarm_alle,")
+    pruefe("E", "Die Volumenbestaetigung eines Alarm-Musters geht in der "
+           "Alarm-Meldung hinaus (O10)",
+           (_bwq_alarm.count('t["anlass"] = "nachtrag"') == 1
+            and 0 <= _i_zieh < _i_alle < _i_log),
+           f"Herausziehen an {_i_zieh}, Zusammenstellen an {_i_alle}, "
+           f"Logbuch an {_i_log}")
 
     # DIE EINTRITTSKARTE: kam der Kaufpunkt von UNTEN? (Mathias,
     # 14.08.2026). Ohne sie meldet der Waechter Ruecksetzer-Marken, unter

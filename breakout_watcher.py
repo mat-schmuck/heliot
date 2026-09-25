@@ -4492,6 +4492,7 @@ def nachtrag_ins_logbuch(nachtrag: list[dict], im_logbuch: set,
                  "vol_anteil": t.get("vol_anteil"),
                  "ueber_pct": t.get("ueber_pct"),
                  "nachtrag": True,
+                 "alarm_muster": bool(t.get("alarm")),
                  "gemeldet": bool(gemeldet),
                  "abgewaehlt": bool(t.get("stumm")),
                  "zahlen_karenz": bool(karenz),
@@ -4503,6 +4504,44 @@ def nachtrag_ins_logbuch(nachtrag: list[dict], im_logbuch: set,
         except Exception as e:
             print(f"  Nachtrag {t.get('ticker')}: Logbuch-Eintrag "
                   f"übersprungen ({type(e).__name__}: {e}).")
+    return n
+
+
+def alarm_ins_logbuch(meldungen: list[dict], im_logbuch: set,
+                      trocken: bool) -> int:
+    """FRAGE 9 (Gerhard, 24.09.2026): Alle Strategien kommen ins Logbuch,
+    ausnahmslos. Die Ausbrueche der Alarm-Muster schreibt schon der
+    gemeinsame Weg; ihre uebersprungenen Einstiege und nachgereichten
+    Volumenbestaetigungen standen bis 25.09.2026 nur dann im Logbuch, wenn
+    das Muster abgewaehlt war. Jetzt dieselben Zeilen wie bei den
+    gewoehnlichen Kaufpunkten, mit alarm_muster true. Je Ereignis ein
+    Schluessel in im_logbuch, damit ein Sendefehler keine zweite Zeile
+    erzeugt. Fehler brechen die Meldekette nie. Rueckgabe: die Zahl der
+    geschriebenen Zeilen."""
+    n = nachtrag_ins_logbuch(
+        [t for t in meldungen if t.get("anlass") == "nachtrag"],
+        im_logbuch, trocken)
+    for t in meldungen:
+        if t.get("anlass") != "uebersprungen":
+            continue
+        schluessel = "UEBERSPRUNGEN|" + str(t.get("key"))
+        if schluessel in im_logbuch:
+            continue
+        im_logbuch.add(schluessel)
+        try:
+            trigger_logbuch.protokolliere(
+                {"ticker": t.get("ticker"), "firma": t.get("firma", ""),
+                 "strategie": t.get("strategie"),
+                 "kaufpunkt": t.get("kaufpunkt"), "kurs": t.get("kurs"),
+                 "stop": t.get("stop"), "ueber_pct": t.get("ueber_pct"),
+                 "uebersprungen": True,
+                 "alarm_muster": True,
+                 "trockenlauf": bool(trocken)},
+                quelle="waechter/uebersprungen")
+            n += 1
+        except Exception as e:
+            print(f"  Übersprungen {t.get('ticker')}: Logbuch-Eintrag "
+                  f"ausgelassen ({type(e).__name__}: {e}).")
     return n
 
 
@@ -5218,9 +5257,9 @@ def main():
             zu_melden = neu
             if args.nur_bestaetigt:
                 zu_melden = [t for t in neu if t["vol_ok"] is True]
-                uebersprungen = len(neu) - len(zu_melden)
-                if uebersprungen:
-                    print(f"{uebersprungen} Treffer ohne Volumenbestätigung — bleiben "
+                ohne_bestaetigung = len(neu) - len(zu_melden)
+                if ohne_bestaetigung:
+                    print(f"{ohne_bestaetigung} Treffer ohne Volumenbestätigung — bleiben "
                           "offen und werden weiter beobachtet.")
 
             # DIE ALARM-MUSTER GEHEN GETRENNT HINAUS (Gerhard, 22.09.2026,
@@ -5348,10 +5387,9 @@ def main():
             #
             # Frage 9: Ein abgewaehltes Muster, dessen Kaufpunkt uebersprungen
             # wurde, steht im Logbuch wie jeder uebersprungene, nur ungemeldet.
-            ueber_liste = uebersprungen if isinstance(uebersprungen, list) else []
-            stumm_ueber = [t for t in ueber_liste + alarm_neben if t.get("stumm")]
+            stumm_ueber = [t for t in uebersprungen + alarm_neben if t.get("stumm")]
             if stumm_ueber:
-                uebersprungen = [t for t in ueber_liste if not t.get("stumm")]
+                uebersprungen = [t for t in uebersprungen if not t.get("stumm")]
                 alarm_neben = [t for t in alarm_neben if not t.get("stumm")]
                 trigger_logbuch.protokolliere_viele(
                     [{"ticker": t.get("ticker"), "firma": t.get("firma", ""),
@@ -5363,11 +5401,33 @@ def main():
                       "trockenlauf": bool(args.dry_run)}
                      for t in stumm_ueber], quelle="waechter/uebersprungen")
                 stumm_vermerken(stumm_ueber, schon_gemeldet, state, bool(args.dry_run))
+            # DIE VOLUMENBESTAETIGUNG EINES ALARM-MUSTERS geht in der
+            # Alarm-Meldung hinaus (O10) und muss deshalb VOR dem
+            # Zusammenstellen herausgezogen werden. Bis 25.09.2026 stand
+            # dieser Schritt erst hinter dem Sendeblock: Die Bestaetigung
+            # ging weder hinaus noch ins Logbuch.
+            #
+            # Frage 9: Die Bestaetigung eines abgewaehlten Musters steht im
+            # Logbuch wie jede andere, nur ungemeldet.
+            stumm_nachtrag = [x for x in nachtrag if x.get("stumm")]
+            if stumm_nachtrag:
+                nachtrag = [x for x in nachtrag if not x.get("stumm")]
+                nachtrag_ins_logbuch(stumm_nachtrag, _im_logbuch, bool(args.dry_run), gemeldet=False)
+                stumm_vermerken(stumm_nachtrag, schon_gemeldet, state, bool(args.dry_run),
+                                felder=("keys_best",))
+            for t in [x for x in nachtrag if x.get("alarm")]:
+                t["anlass"] = "nachtrag"
+                alarm_neben.append(t)
+            nachtrag = [x for x in nachtrag if not x.get("alarm")]
             alarm_alle = alarm_melden + alarm_neben
             if alarm_alle and jetzt_s >= sperre_bis:
                 print(f"\n{len(alarm_alle)} Meldung(en) der Alarm-Muster:")
                 for t in alarm_alle:
                     print("  " + format_alarm(t).replace("\n", "\n  ") + "\n")
+                # Frage 9: Die Ausbrueche stehen schon oben im Logbuch; hier
+                # kommen die uebersprungenen Einstiege und die Nachtraege
+                # dazu, je einmal im Lauf, auch wenn der Push gleich scheitert.
+                alarm_ins_logbuch(alarm_alle, _im_logbuch, bool(args.dry_run))
 
                 def alarm_vormerken(heute_s=None):
                     """Was gemeldet ist, ist gemeldet: je Anlass die
@@ -5403,21 +5463,10 @@ def main():
             # ja einen Sinn"): Diese Aktien wurden bereits unbestaetigt
             # gemeldet, und "Vol jetzt bestätigt" sagt, dass dies die
             # Bestaetigung von vorhin ist und kein zweiter Ausbruch.
-            # Auch die Volumen-Bestaetigung eines Alarm-Musters ist eine
-            # Auskunft und geht in der Alarm-Meldung hinaus (O10).
-            #
-            # Frage 9: Die Bestaetigung eines abgewaehlten Musters steht im
-            # Logbuch wie jede andere, nur ungemeldet.
-            stumm_nachtrag = [x for x in nachtrag if x.get("stumm")]
-            if stumm_nachtrag:
-                nachtrag = [x for x in nachtrag if not x.get("stumm")]
-                nachtrag_ins_logbuch(stumm_nachtrag, _im_logbuch, bool(args.dry_run), gemeldet=False)
-                stumm_vermerken(stumm_nachtrag, schon_gemeldet, state, bool(args.dry_run),
-                                felder=("keys_best",))
-            for t in [x for x in nachtrag if x.get("alarm")]:
-                t["anlass"] = "nachtrag"
-                alarm_neben.append(t)
-            nachtrag = [x for x in nachtrag if not x.get("alarm")]
+            # Die Volumen-Bestaetigung eines Alarm-Musters ist eine Auskunft
+            # und geht in der Alarm-Meldung hinaus (O10); sie und die
+            # Bestaetigungen abgewaehlter Muster sind schon vor dem
+            # Sendeblock der Alarm-Muster herausgezogen.
             if nachtrag and jetzt_s >= sperre_bis:
                 print(f"\n{len(nachtrag)} Ausbruch/Ausbrüche haben die "
                       f"Volumenbestätigung nachgereicht:")
