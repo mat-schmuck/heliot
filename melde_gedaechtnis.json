@@ -846,7 +846,9 @@
     "AAMI|Rectangle Top": "2026-09-25",
     "BEST|AAMI|Rectangle Top": "2026-09-25",
     "TEIL|ALNT|Fallback: MA50-Pullback": "2026-09-25",
-    "SEKTORAUF|2026-09-25": "2026-09-25"
+    "SEKTORAUF|2026-09-25": "2026-09-25",
+    "RVMD|Fallback: MA50-Pullback": "2026-09-25",
+    "BEST|RVMD|Fallback: MA50-Pullback": "2026-09-25"
   },
   "gemeldet_kp": {
     "LB|Cup & Handle (Wochenbasis)": 81.01,
@@ -925,7 +927,9 @@
     "ALMR|EMA Crossback": 33.72,
     "BEST|ALMR|EMA Crossback": 33.72,
     "AAMI|Rectangle Top": 93.83,
-    "BEST|AAMI|Rectangle Top": 93.83
+    "BEST|AAMI|Rectangle Top": 93.83,
+    "RVMD|Fallback: MA50-Pullback": 200.65,
+    "BEST|RVMD|Fallback: MA50-Pullback": 200.65
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-09-25"
