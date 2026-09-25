@@ -876,7 +876,11 @@
     "TSEM|Fallback: MA50-R\u00fcckeroberung": "2026-09-25",
     "BEST|TSEM|Fallback: MA50-R\u00fcckeroberung": "2026-09-25",
     "KLIC|Fallback: MA50-R\u00fcckeroberung": "2026-09-25",
-    "BEST|KLIC|Fallback: MA50-R\u00fcckeroberung": "2026-09-25"
+    "BEST|KLIC|Fallback: MA50-R\u00fcckeroberung": "2026-09-25",
+    "KLIC|Inside Day": "2026-09-25",
+    "BEST|KLIC|Inside Day": "2026-09-25",
+    "ESTC|Inside Day": "2026-09-25",
+    "BEST|ESTC|Inside Day": "2026-09-25"
   },
   "gemeldet_kp": {
     "LB|Cup & Handle (Wochenbasis)": 81.01,
@@ -969,7 +973,11 @@
     "TSEM|Fallback: MA50-R\u00fcckeroberung": 226.96,
     "BEST|TSEM|Fallback: MA50-R\u00fcckeroberung": 226.96,
     "KLIC|Fallback: MA50-R\u00fcckeroberung": 89.88,
-    "BEST|KLIC|Fallback: MA50-R\u00fcckeroberung": 89.88
+    "BEST|KLIC|Fallback: MA50-R\u00fcckeroberung": 89.88,
+    "KLIC|Inside Day": 90.25,
+    "BEST|KLIC|Inside Day": 90.25,
+    "ESTC|Inside Day": 91.46,
+    "BEST|ESTC|Inside Day": 91.46
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-09-25"
