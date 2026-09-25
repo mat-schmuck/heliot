@@ -1259,7 +1259,7 @@ def warteschlange(daten, token, stufen_gewuenscht, stand, fetcher=None, warte=ti
     Die Stufen der Erweiterung werden nur aufgezaehlt, wenn sie gewuenscht
     sind; ab SCHLUSS_AB steht der Schlussstand vorne. Mit leer_pruefung
     kommt rund jede zehnte Leer-Antwort des Vollabzugs noch einmal dran, und
-    alle, sobald eine davon inzwischen Daten liefert."""
+    alle einer Stufe, sobald dort eine davon inzwischen Daten liefert."""
     heute = heute or _utc_jetzt().date()
     gewuenscht = set(stufen_gewuenscht)
     wurzel = os.path.join(daten, ORDNER)
@@ -1304,7 +1304,11 @@ def warteschlange(daten, token, stufen_gewuenscht, stand, fetcher=None, warte=ti
     if heute >= SCHLUSS_AB:
         reihenfolge.remove("schluss")
         reihenfolge.insert(0, "schluss")
-    eskalation = leer_pruefung and any(v.get("war_leer") for v in stand.values())
+    # Nachgeprueft wird ganz nur in der Stufe, in der eine fruehere Leer-Antwort
+    # inzwischen Daten liefert (Befund 25.09.2026: 1 Treffer unter 286, bei den
+    # aktiven ETFs; alle Stufen ganz nachzupruefen haette rund 26.000 Calls
+    # gekostet, obwohl die Stichproben der anderen Stufen nichts brachten).
+    eskalation = {_stufe_aus_schluessel(k) for k, v in stand.items() if v.get("war_leer")} if leer_pruefung else set()
     schlange = []
     for s in reihenfolge:
         if s not in gewuenscht:
@@ -1317,7 +1321,7 @@ def warteschlange(daten, token, stufen_gewuenscht, stand, fetcher=None, warte=ti
             if status not in ERLEDIGT:
                 offen.append(e)
             elif (leer_pruefung and status == "leer" and s in ALTE_STUFEN_NAMEN and not alt.get("leer_geprueft")
-                  and str(alt.get("datum") or "") <= LEER_PRUEFUNG_BIS and (eskalation or _leer_stichprobe(k))):
+                  and str(alt.get("datum") or "") <= LEER_PRUEFUNG_BIS and (s in eskalation or _leer_stichprobe(k))):
                 offen.append(dict(e, _leer_pruefung=True))
                 pruefen += 1
         log(f"  Stufe {s}: {len(stufen.get(s, []))} Abrufe, davon offen {len(offen)}"
@@ -2317,12 +2321,15 @@ def selbsttest() -> int:
         w = os.path.join(daten, ORDNER)
         os.makedirs(os.path.join(w, "listen"), exist_ok=True)
         fonds = [{"Code": f"F{i:02d}", "Name": "Fonds", "Exchange": "NMFQS", "Type": "FUND"} for i in range(60)]
-        _gz_json(os.path.join(w, "listen", "us_aktiv_2026-09-12.json.gz"), fonds)
+        etfs = [{"Code": f"E{i:02d}", "Name": "ETF", "Exchange": "NYSE ARCA", "Type": "ETF"} for i in range(40)]
+        _gz_json(os.path.join(w, "listen", "us_aktiv_2026-09-12.json.gz"), fonds + etfs)
         _gz_json(os.path.join(w, "listen", "us_delisted_2026-09-12.json.gz"), [])
         _gz_json(os.path.join(w, "listen", "indx_2026-09-12.json.gz"), [])
         leer_stand = {schluessel("fund", f["Code"]): {"stufe": "fund", "datum": "2026-09-20", "status": "leer"} for f in fonds}
-        _json_schreiben(os.path.join(w, "stand.json"), leer_stand)
+        leer_etf = {schluessel("etf", f["Code"]): {"stufe": "etf", "datum": "2026-09-20", "status": "leer"} for f in etfs}
+        _json_schreiben(os.path.join(w, "stand.json"), dict(leer_stand, **leer_etf))
         stichprobe = sorted(k for k in leer_stand if _leer_stichprobe(k))
+        stichprobe_etf = sorted(k for k in leer_etf if _leer_stichprobe(k))
         erster = stichprobe[0] if stichprobe else ""
 
         def f_leer(kennung):
@@ -2333,21 +2340,26 @@ def selbsttest() -> int:
             if erster and pfad == f"fundamentals/{erster.split(':')[1]}.US":
                 return 200, json.dumps({"General": {"Code": "F"}}), {}
             return 200, "", {}
-        b, _ = lauf_voll(daten, "x", stufen=["fund"], fetcher=f_leer, warte=still, log=lambda *_: None, runner=runner_ok,
-                         lauf="20260924-2100", arbeit=os.path.join(tmp, "a1"), leer_pruefung=True)
+        b, _ = lauf_voll(daten, "x", stufen=["fund", "etf"], fetcher=f_leer, warte=still, log=lambda *_: None,
+                         runner=runner_ok, lauf="20260924-2100", arbeit=os.path.join(tmp, "a1"), leer_pruefung=True)
         st_l = register_lesen(w)
         p("Leer-Pruefung: nur die Stichprobe kommt dran, ein Treffer wird ok und als war_leer vermerkt",
-          1 <= len(stichprobe) < 60 and sorted(k for k, v in st_l.items() if v.get("leer_geprueft")) == stichprobe
+          1 <= len(stichprobe) < 60 and 1 <= len(stichprobe_etf) < 40
+          and sorted(k for k, v in st_l.items() if v.get("leer_geprueft")) == sorted(stichprobe + stichprobe_etf)
           and st_l[erster]["status"] == "ok" and st_l[erster].get("war_leer") is True
-          and b["leer_geprueft"] == len(stichprobe) and b["war_leer"] == 1, (len(stichprobe), b["leer_geprueft"], b["war_leer"]))
-        b2, _ = lauf_voll(daten, "x", stufen=["fund"], fetcher=f_leer, warte=still, log=lambda *_: None, runner=runner_ok,
-                          lauf="20260925-2100", arbeit=os.path.join(tmp, "a2"), leer_pruefung=True)
-        b3, _ = lauf_voll(daten, "x", stufen=["fund"], fetcher=f_leer, warte=still, log=lambda *_: None, runner=runner_ok,
-                          lauf="20260926-2100", arbeit=os.path.join(tmp, "a3"), leer_pruefung=True)
-        b4, _ = lauf_voll(daten, "x", stufen=["fund"], fetcher=f_leer, warte=still, log=lambda *_: None, runner=runner_ok,
-                          lauf="20260927-2100", arbeit=os.path.join(tmp, "a4"))
-        p("Nach einem Treffer kommen alle uebrigen Leer-Antworten dran, jede nur einmal, ohne Schalter keine",
-          b2["leer_geprueft"] == 60 - len(stichprobe) and b3["leer_geprueft"] == 0 and b4["calls_geschaetzt"] == 0,
+          and b["leer_geprueft"] == len(stichprobe) + len(stichprobe_etf) and b["war_leer"] == 1,
+          (len(stichprobe), len(stichprobe_etf), b["leer_geprueft"], b["war_leer"]))
+        b2, _ = lauf_voll(daten, "x", stufen=["fund", "etf"], fetcher=f_leer, warte=still, log=lambda *_: None,
+                          runner=runner_ok, lauf="20260925-2100", arbeit=os.path.join(tmp, "a2"), leer_pruefung=True)
+        b3, _ = lauf_voll(daten, "x", stufen=["fund", "etf"], fetcher=f_leer, warte=still, log=lambda *_: None,
+                          runner=runner_ok, lauf="20260926-2100", arbeit=os.path.join(tmp, "a3"), leer_pruefung=True)
+        b4, _ = lauf_voll(daten, "x", stufen=["fund", "etf"], fetcher=f_leer, warte=still, log=lambda *_: None,
+                          runner=runner_ok, lauf="20260927-2100", arbeit=os.path.join(tmp, "a4"))
+        st_l = register_lesen(w)
+        p("Nach einem Treffer kommen die uebrigen Leer-Antworten DIESER Stufe dran, jede nur einmal, ohne Schalter keine",
+          b2["leer_geprueft"] == 60 - len(stichprobe) and b3["leer_geprueft"] == 0 and b4["calls_geschaetzt"] == 0
+          and b2.get("je_stufe", {}).get("etf") is None
+          and sum(1 for k, v in st_l.items() if k.startswith("etf:") and v.get("leer_geprueft")) == len(stichprobe_etf),
           (b2["leer_geprueft"], b3["leer_geprueft"], b4["calls_geschaetzt"]))
 
     with tempfile.TemporaryDirectory() as tmp:
