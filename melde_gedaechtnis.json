@@ -365,7 +365,8 @@
     "ONC|EMA Crossback": "drin",
     "IMOS|Cup & Handle (Wochenbasis) + VCP": "drin",
     "ALMR|EMA Crossback": "drin",
-    "ALNT|Inside Day": "drin"
+    "ALNT|Inside Day": "drin",
+    "AAMI|Rectangle Top": "drin"
   },
   "gemeldet": {
     "INSIDER|MAIR|pfad_a|0": "2026-08-28",
@@ -840,7 +841,10 @@
     "GEWINN|zonenwechsel|NTRA|Cup & Handle (Wochenbasis) + Darvas Box|mittel": "2026-09-25",
     "GEWINN|zonenwechsel|NTRA|Fallback: 52W-Hoch-Breakout|mittel": "2026-09-25",
     "GEWINN|zonenwechsel|TWST|Cup & Handle (Wochenbasis)|stark": "2026-09-25",
-    "GEWINN|zonenwechsel|TWST|Fallback: 20-Tage-Hoch (Pivot)|stark": "2026-09-25"
+    "GEWINN|zonenwechsel|TWST|Fallback: 20-Tage-Hoch (Pivot)|stark": "2026-09-25",
+    "AAMI|Rectangle Top": "2026-09-25",
+    "BEST|AAMI|Rectangle Top": "2026-09-25",
+    "TEIL|ALNT|Fallback: MA50-Pullback": "2026-09-25"
   },
   "gemeldet_kp": {
     "LB|Cup & Handle (Wochenbasis)": 81.01,
@@ -917,7 +921,9 @@
     "IMOS|Cup & Handle (Wochenbasis)": 71.01,
     "BEST|IMOS|Cup & Handle (Wochenbasis)": 71.01,
     "ALMR|EMA Crossback": 33.72,
-    "BEST|ALMR|EMA Crossback": 33.72
+    "BEST|ALMR|EMA Crossback": 33.72,
+    "AAMI|Rectangle Top": 93.83,
+    "BEST|AAMI|Rectangle Top": 93.83
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-09-25"
