@@ -3463,9 +3463,15 @@ def r2g_bot_eintrag(t: dict) -> dict:
     Beobachtung, die der Waechter gleich danach eroeffnet (exit_regeln),
     damit Bot und Mitschrift nie verschiedene Stops fuehren.
 
-    Mathias am 23.09.2026: "ja, red-to-green bitte senden" - der alte
-    Klickbot hat diese Meldungen am Wort im Text erkannt und gekauft; ohne
-    diesen Weg waere der Handel mit dem Bot weggefallen."""
+    Mathias am 23.09.2026: "ja, red-to-green bitte senden". Die fruehere
+    Begruendung, der alte Klickbot habe diese Meldungen am Wort im Text
+    erkannt und gekauft, stimmt nicht (Befund der Heliot-Sitzung vom
+    25.09.2026, an app/logik.js nachgelesen): Die Meldung nennt nur
+    Kreuzung und Vortagesschluss, keinen Kaufpunkt, Kurs oder Stop in der
+    Form, die Heliot liest, und Heliot laesst einen Block ohne diese Zahlen
+    ganz fallen. Red to Green wurde also seit Heliots Einbau am 05.09.2026
+    nie ueber die Handels-App gehandelt; gehandelt wird es erst ueber
+    diesen Weg zum degirobot."""
     kurs = t.get("kurs")
     stop = None
     if kurs:
