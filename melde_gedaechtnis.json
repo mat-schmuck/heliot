@@ -384,7 +384,8 @@
     "RDVT|Fallback: 52W-Hoch-Breakout": "drin",
     "KALU|Inside Day": "drin",
     "MXL|Cup & Handle (Wochenbasis)": "draussen",
-    "BHE|Rectangle Top": "drin"
+    "BHE|Rectangle Top": "drin",
+    "RVMD|Shakeout plus drei": "drin"
   },
   "gemeldet": {
     "INSIDER|MAIR|pfad_a|0": "2026-08-28",
@@ -885,7 +886,9 @@
     "MXL|Cup & Handle (Wochenbasis)": "2026-09-25",
     "BEST|MXL|Cup & Handle (Wochenbasis)": "2026-09-25",
     "TEIL|MXL|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-25",
-    "UEBER|MXL|Cup & Handle (Wochenbasis)": "2026-09-25"
+    "UEBER|MXL|Cup & Handle (Wochenbasis)": "2026-09-25",
+    "RVMD|Shakeout plus drei": "2026-09-25",
+    "BEST|RVMD|Shakeout plus drei": "2026-09-25"
   },
   "gemeldet_kp": {
     "LB|Cup & Handle (Wochenbasis)": 81.01,
@@ -984,7 +987,9 @@
     "ESTC|Inside Day": 91.46,
     "BEST|ESTC|Inside Day": 91.46,
     "MXL|Cup & Handle (Wochenbasis)": 88.99,
-    "BEST|MXL|Cup & Handle (Wochenbasis)": 88.99
+    "BEST|MXL|Cup & Handle (Wochenbasis)": 88.99,
+    "RVMD|Shakeout plus drei": 206.998,
+    "BEST|RVMD|Shakeout plus drei": 206.998
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-09-25"
