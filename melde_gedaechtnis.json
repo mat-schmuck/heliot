@@ -367,7 +367,7 @@
     "ALMR|EMA Crossback": "drin",
     "ALNT|Inside Day": "drin",
     "AAMI|Rectangle Top": "drin",
-    "RVMD|Fallback: MA50-Pullback": "drin",
+    "RVMD|Fallback: MA50-Pullback": "draussen",
     "FET|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "ESTC|Inside Day": "drin",
     "ARW|Fallback: 20-Tage-Hoch (Pivot)": "drin",
@@ -888,7 +888,8 @@
     "TEIL|MXL|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-25",
     "UEBER|MXL|Cup & Handle (Wochenbasis)": "2026-09-25",
     "RVMD|Shakeout plus drei": "2026-09-25",
-    "BEST|RVMD|Shakeout plus drei": "2026-09-25"
+    "BEST|RVMD|Shakeout plus drei": "2026-09-25",
+    "UEBER|RVMD|Fallback: MA50-Pullback": "2026-09-25"
   },
   "gemeldet_kp": {
     "LB|Cup & Handle (Wochenbasis)": 81.01,
