@@ -42,7 +42,7 @@
     "RIOT|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "ROIV|Fallback: MA50-Pullback": "drin",
     "S|Fallback: MA50-Pullback": "draussen",
-    "SCCO|Fallback: MA50-Pullback": "drin",
+    "SCCO|Fallback: MA50-Pullback": "draussen",
     "STNG|Fallback: MA50-Pullback": "drin",
     "TEVA|Fallback: MA50-Pullback": "draussen",
     "ZS|Fallback: MA50-Pullback": "draussen",
@@ -222,7 +222,7 @@
     "ESTC|EMA Crossback": "drin",
     "TENB|EMA Crossback": "drin",
     "VICR|Cup & Handle (Wochenbasis)": "draussen",
-    "XMTR|Rectangle Top": "drin",
+    "XMTR|Rectangle Top": "draussen",
     "SKE|Fallback: MA50-Pullback": "drin",
     "TSEM|Fallback: MA50-Pullback": "drin",
     "UMAC|Fallback: MA50-Pullback": "drin",
@@ -267,7 +267,7 @@
     "PVLA|Rectangle Top": "drin",
     "BLLN|Fallback: MA50-R\u00fcckeroberung": "draussen",
     "CDNA|Cup & Handle (Wochenbasis)": "draussen",
-    "CDNA|Fallback: 52W-Hoch-Breakout": "draussen",
+    "CDNA|Fallback: 52W-Hoch-Breakout": "drin",
     "SIMO|Rectangle Top": "drin",
     "KEYS|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "SANM|EMA Crossback": "drin",
@@ -385,7 +385,11 @@
     "KALU|Inside Day": "drin",
     "MXL|Cup & Handle (Wochenbasis)": "draussen",
     "BHE|Rectangle Top": "drin",
-    "RVMD|Shakeout plus drei": "drin"
+    "RVMD|Shakeout plus drei": "drin",
+    "AXTI|EMA Crossback": "drin",
+    "MTRN|Rectangle Top": "drin",
+    "LITE|EMA Crossback": "drin",
+    "DIOD|Rectangle Top": "drin"
   },
   "gemeldet": {
     "INSIDER|MAIR|pfad_a|0": "2026-08-28",
@@ -889,7 +893,8 @@
     "UEBER|MXL|Cup & Handle (Wochenbasis)": "2026-09-25",
     "RVMD|Shakeout plus drei": "2026-09-25",
     "BEST|RVMD|Shakeout plus drei": "2026-09-25",
-    "UEBER|RVMD|Fallback: MA50-Pullback": "2026-09-25"
+    "UEBER|RVMD|Fallback: MA50-Pullback": "2026-09-25",
+    "UEBER|XMTR|Rectangle Top": "2026-09-25"
   },
   "gemeldet_kp": {
     "LB|Cup & Handle (Wochenbasis)": 81.01,
