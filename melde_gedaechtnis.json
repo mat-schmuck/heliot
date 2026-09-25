@@ -379,7 +379,8 @@
     "PENG|EMA Crossback": "drin",
     "PENG|Wick Play": "drin",
     "PLXS|Rectangle Top": "drin",
-    "VICR|Inside Day": "drin"
+    "VICR|Inside Day": "drin",
+    "UCTT|Inside Day": "drin"
   },
   "gemeldet": {
     "INSIDER|MAIR|pfad_a|0": "2026-08-28",
@@ -868,7 +869,9 @@
     "FET|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-25",
     "BEST|FET|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-25",
     "ARW|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-25",
-    "BEST|ARW|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-25"
+    "BEST|ARW|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-25",
+    "TSEM|Fallback: MA50-R\u00fcckeroberung": "2026-09-25",
+    "BEST|TSEM|Fallback: MA50-R\u00fcckeroberung": "2026-09-25"
   },
   "gemeldet_kp": {
     "LB|Cup & Handle (Wochenbasis)": 81.01,
@@ -957,7 +960,9 @@
     "FET|Fallback: 20-Tage-Hoch (Pivot)": 84.21,
     "BEST|FET|Fallback: 20-Tage-Hoch (Pivot)": 84.21,
     "ARW|Fallback: 20-Tage-Hoch (Pivot)": 230.45,
-    "BEST|ARW|Fallback: 20-Tage-Hoch (Pivot)": 230.45
+    "BEST|ARW|Fallback: 20-Tage-Hoch (Pivot)": 230.45,
+    "TSEM|Fallback: MA50-R\u00fcckeroberung": 226.96,
+    "BEST|TSEM|Fallback: MA50-R\u00fcckeroberung": 226.96
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-09-25"
