@@ -1,6 +1,6 @@
 {
- "gebaut_am": "2026-09-24T22:12:42+00:00",
- "handelstag": "2026-09-24",
+ "gebaut_am": "2026-09-25T22:12:28+00:00",
+ "handelstag": "2026-09-25",
  "status": "ok",
  "toleranz": 0.05,
  "quellen": {
@@ -8,12 +8,12 @@
    "status": "ok",
    "stand": "2026-09-21",
    "eintraege": 13436,
-   "geprueft": 5370,
+   "geprueft": 5371,
    "raus": 22,
-   "ohne_eintrag": 36
+   "ohne_eintrag": 37
   },
   "rs": {
-   "stand": "2026-09-24T22:09:05",
+   "stand": "2026-09-25T22:08:36",
    "status": "ok"
   },
   "markttiefs": {
@@ -32,59 +32,64 @@
   },
   "termine_vergangen": {
    "status": "ok",
-   "tage": 15,
-   "ticker": 198
+   "tage": 20,
+   "ticker": 281
+  },
+  "crash_regime": {
+   "status": "ok",
+   "scharf": false,
+   "rueckgang_pct": -0.8
   },
   "eroeffnung": {
    "status": "ok",
-   "kandidaten": 110,
-   "mit_eroeffnung": 110
+   "kandidaten": 109,
+   "mit_eroeffnung": 109
   },
   "kurse": {
    "status": "ok",
    "mit_kursen": 5346,
-   "ohne_kurse": 2,
-   "aktuell": 5290,
-   "abdeckung": 0.9892,
-   "archiv_zeilen": 3706912
+   "ohne_kurse": 3,
+   "aktuell": 5274,
+   "abdeckung": 0.986,
+   "archiv_zeilen": 3713531
   },
   "screener": {
    "status": "ok",
-   "anzahl": 7028
+   "anzahl": 7017
   },
   "kalender": {
    "status": "ok",
    "tage": 7,
-   "eintraege": 93,
-   "mit_eps_konsens": 39
+   "eintraege": 94,
+   "mit_eps_konsens": 38
   },
   "fundament": {
    "status": "ok",
-   "firmen": 4910,
-   "zuordnung": 5035
+   "firmen": 4911,
+   "zuordnung": 5036
   },
   "konsens": {
    "dateien": [
-    "2026-09-22_0900Z.jsonl.gz",
-    "2026-09-22_1931Z.jsonl.gz",
     "2026-09-23_0900Z.jsonl.gz",
     "2026-09-23_1931Z.jsonl.gz",
     "2026-09-24_0900Z.jsonl.gz",
-    "2026-09-24_1930Z.jsonl.gz"
+    "2026-09-24_1930Z.jsonl.gz",
+    "2026-09-25_0900Z.jsonl.gz",
+    "2026-09-25_1930Z.jsonl.gz"
    ],
    "unlesbar": [],
-   "firmen": 5667,
-   "neuester": "2026-09-24T19:30:42Z",
-   "aeltester": "2026-09-22T09:00:40Z",
+   "firmen": 5664,
+   "neuester": "2026-09-25T19:30:37Z",
+   "aeltester": "2026-09-23T09:00:45Z",
    "status": "ok",
-   "mit_konsens": 4213
+   "mit_konsens": 4212
   },
   "analysten": {
    "status": "ok",
-   "abgerufen": 758,
+   "abgerufen": 787,
    "fehler": 0,
    "abgebrochen": false,
-   "mit_analysten": 3216,
+   "mit_analysten": 3215,
    "mit_stand": 4607
   },
   "revisionen": {
@@ -100,12 +105,12 @@
    "fenster": 20,
    "mindest_abdeckung": 0.95,
    "tage": 20,
-   "erster_tag": "2026-08-26",
-   "letzter_tag": "2026-09-24",
-   "abdeckung_letzter_tag": 0.9942,
+   "erster_tag": "2026-08-28",
+   "letzter_tag": "2026-09-25",
+   "abdeckung_letzter_tag": 0.9951,
    "hinweis": null,
-   "mit_anteil": 5317,
-   "median_pct": 52.7,
+   "mit_anteil": 5323,
+   "median_pct": 51.4,
    "fehlend": {}
   },
   "gruppen_rs": {
@@ -118,27 +123,27 @@
    "unbekannt": 128,
    "gruppen_heute": 165,
    "stichtage": {
-    "heute": "2026-09-24",
-    "vor_3_wochen": "2026-09-01",
-    "vor_6_wochen": "2026-08-11"
+    "heute": "2026-09-25",
+    "vor_3_wochen": "2026-09-03",
+    "vor_6_wochen": "2026-08-13"
    },
    "abdeckung": {
     "0": {
-     "tag": "2026-09-24",
-     "basis": 5058,
-     "mit_rohwert": 5017,
-     "anteil": 0.9919
+     "tag": "2026-09-25",
+     "basis": 5059,
+     "mit_rohwert": 5008,
+     "anteil": 0.9899
     },
     "15": {
-     "tag": "2026-09-01",
-     "basis": 5039,
-     "mit_rohwert": 5039,
-     "anteil": 1.0
+     "tag": "2026-09-03",
+     "basis": 5041,
+     "mit_rohwert": 5040,
+     "anteil": 0.9998
     },
     "30": {
-     "tag": "2026-08-11",
-     "basis": 5022,
-     "mit_rohwert": 5022,
+     "tag": "2026-08-13",
+     "basis": 5025,
+     "mit_rohwert": 5025,
      "anteil": 1.0
     }
    },
@@ -146,94 +151,122 @@
   },
   "kennzahlen": {
    "status": "ok",
-   "technik_handelstag": "2026-09-24",
-   "fundament_stand": "2026-09-24T22:09:09",
-   "mit_technik": 5284,
-   "mit_fundament": 4927
+   "technik_handelstag": "2026-09-25",
+   "fundament_stand": "2026-09-25T22:08:40",
+   "mit_technik": 5291,
+   "mit_fundament": 4928
   }
  },
  "hinweise": [],
- "universum": 5348,
+ "universum": 5349,
  "strategien": {
   "darvas": {
    "name": "Darvas Box",
    "toleranz_moeglich": true,
-   "streng": 127,
-   "nur_toleranz": 7,
-   "handelbar": 59,
-   "handelbar_langweilig": 39
+   "streng": 152,
+   "nur_toleranz": 1,
+   "handelbar": 79,
+   "handelbar_langweilig": 42
   },
   "trend_template": {
    "name": "Minervini Trend Template",
    "toleranz_moeglich": true,
-   "streng": 553,
-   "nur_toleranz": 34,
-   "handelbar": 339
+   "streng": 545,
+   "nur_toleranz": 40,
+   "handelbar": 337
   },
   "vcp": {
    "name": "VCP",
    "toleranz_moeglich": true,
    "streng": 23,
    "nur_toleranz": 0,
-   "handelbar": 13
+   "handelbar": 12
   },
   "cup_handle": {
    "name": "Cup & Handle",
    "toleranz_moeglich": true,
-   "streng": 541,
-   "nur_toleranz": 119,
-   "handelbar": 394
+   "streng": 522,
+   "nur_toleranz": 126,
+   "handelbar": 390
+  },
+  "cup_woche": {
+   "name": "Cup & Handle, Wochenbasis",
+   "toleranz_moeglich": true,
+   "streng": 522,
+   "nur_toleranz": 124,
+   "handelbar": 388
   },
   "rectangle": {
    "name": "Rectangle Top",
    "toleranz_moeglich": true,
-   "streng": 2315,
-   "nur_toleranz": 86,
-   "handelbar": 1229
+   "streng": 2351,
+   "nur_toleranz": 69,
+   "handelbar": 1243
   },
   "htf": {
    "name": "High & Tight Flag",
    "toleranz_moeglich": true,
-   "streng": 15,
-   "nur_toleranz": 5,
-   "handelbar": 9
+   "streng": 18,
+   "nur_toleranz": 3,
+   "handelbar": 13
   },
   "htf_innen": {
    "name": "HTF Innen-Einstieg",
    "toleranz_moeglich": true,
-   "streng": 11,
-   "nur_toleranz": 4,
-   "handelbar": 8
+   "streng": 17,
+   "nur_toleranz": 3,
+   "handelbar": 12
   },
   "ema_crossback": {
    "name": "EMA Crossback",
    "toleranz_moeglich": false,
-   "streng": 268,
+   "streng": 230,
    "nur_toleranz": 0,
-   "handelbar": 118
+   "handelbar": 103
+  },
+  "earnings_pullback": {
+   "name": "Earnings-Pullback",
+   "toleranz_moeglich": false,
+   "streng": 1,
+   "nur_toleranz": 0,
+   "handelbar": 1
   },
   "power_gap": {
-   "name": "Power-Gap (Lücken-Bestätigungstag)",
+   "name": "Power-Gap",
    "toleranz_moeglich": false,
-   "streng": 3,
+   "streng": 1,
+   "nur_toleranz": 0,
+   "handelbar": 0
+  },
+  "shakeout_spring": {
+   "name": "Shakeout-Spring",
+   "toleranz_moeglich": false,
+   "streng": 7,
+   "nur_toleranz": 0,
+   "handelbar": 3
+  },
+  "crash_support": {
+   "name": "Crash-Support",
+   "toleranz_moeglich": false,
+   "streng": 0,
    "nur_toleranz": 0,
    "handelbar": 0
   },
   "hoch_52w": {
    "name": "Neues 52-Wochen-Hoch",
    "toleranz_moeglich": false,
-   "streng": 67,
+   "streng": 56,
    "nur_toleranz": 0,
-   "handelbar": 38
+   "handelbar": 21
   },
   "hoch_allzeit": {
    "name": "Neues Allzeithoch",
    "toleranz_moeglich": false,
-   "streng": 21,
+   "streng": 15,
    "nur_toleranz": 0,
-   "handelbar": 14
+   "handelbar": 9
   }
  },
  "zeilen": 5346,
- "dauer_s": 1434.6
+ "dauer_s": 1331.0
 }
