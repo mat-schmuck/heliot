@@ -273,8 +273,11 @@ def eintraege(aktien):
 # Die Handels-App liest den Text einer Meldung und haelt sie fuer ein
 # Kaufsignal, sobald darin eines dieser Woerter steht. Die Alarm-Meldungen
 # vermeiden sie deshalb alle und tragen die Vorsilbe INFORMATION; gesendet
-# werden sie ohne die Klick-Adresse, aus der die App eine Order baut.
-KAUF_WOERTER = ("Kaufpunkt", "Einstiegsfenster", "Vol jetzt bestätigt", "Lücke", "Red-to-Green")
+# werden sie ohne die Klick-Adresse, aus der die App eine Order baut. Seit
+# dem 24.09.2026 heisst Red-to-Green in den Meldungen Red to Green (Frage 94);
+# beide Schreibweisen gelten deshalb als Kaufwort.
+KAUF_WOERTER = ("Kaufpunkt", "Einstiegsfenster", "Vol jetzt bestätigt", "Lücke", "Red-to-Green",
+                "Red to Green")
 VORSILBE = "INFORMATION"
 TITEL = "Alarm-Muster"
 

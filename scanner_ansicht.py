@@ -265,6 +265,9 @@ def strategie_text(kennung):
     kommen aus den Einstellungen des Scanners."""
     import pattern_scanner as ps
     c = ps.CFG
+    v2 = ZENTRAL["cup_handle_v2"]
+    ep = ZENTRAL["earnings_pullback"]
+    cs = ZENTRAL["crash_support"]
     p = lambda x: zahl_eingabe(x * 100)  # noqa: E731
     # Ohne Strategie steht kein Text da (Gerhard, 15.09.2026: "Den Erklaertext
     # zum Scanner bitte entfernen, den brauche ich nicht").
@@ -282,7 +285,12 @@ def strategie_text(kennung):
         "vcp": ("VCP: Trend Template erfüllt, dazu mindestens zwei immer engere Rücksetzer mit austrocknendem "
                 "Volumen; Kauf über dem Pivot."),
         "cup_handle": (f"Cup & Handle: eine runde Tasse, {p(c['cup_min_depth'])} bis {p(c['cup_max_depth'])} "
-                       "Prozent tief, mit einem Henkel im oberen Drittel; Kauf über dem Henkelhoch."),
+                       "Prozent tief, mit einem Henkel im oberen Drittel; Kauf über dem Henkelhoch. Gesucht wird "
+                       "auf Tages- und auf Wochenkursen, der bessere Fund zählt."),
+        "cup_woche": (f"Cup & Handle, Wochenbasis: dieselbe Tasse über eine längere Formation, "
+                      f"{v2['cup_min_len_wochen']} bis {v2['cup_max_len_wochen']} Wochen lang und "
+                      f"{p(v2['cup_min_depth'])} bis {p(v2['cup_max_depth'])} Prozent tief, gerechnet auf "
+                      "Wochenkursen; Kauf über dem Henkelhoch."),
         "rectangle": ("Rectangle Top: mindestens zwei Berührungen oben und unten, der Kurs über dem "
                       "21-Tage-Durchschnitt; Kauf einen Cent über der Oberkante."),
         "htf": (f"High & Tight Flag: ein Anstieg um mindestens {p(c['htf_min_rise'])} Prozent in höchstens "
@@ -291,38 +299,77 @@ def strategie_text(kennung):
         "htf_innen": "HTF Innen-Einstieg: der Einstieg innerhalb der Flagge einer High & Tight Flag.",
         "ema_crossback": ("EMA Crossback nach Oliver Kell: der erste Rücksetzer an die 10- und 20-Tage-Linie nach "
                           "ihrer Rückeroberung; Kauf über dem Hoch des Umkehrtags."),
+        "earnings_pullback": (f"Earnings-Pullback: ein Kurssprung nach Quartalszahlen, Eröffnung mindestens "
+                              f"{p(ep['min_gap_open'])} Prozent oder Schluss mindestens {p(ep['min_gap_close'])} "
+                              f"Prozent über dem Vortag bei mindestens dem {_fache(ep['vol_faktor'])} des "
+                              f"Volumens, in den letzten {ep['suchfenster_tage']} Handelstagen; danach "
+                              f"{ep['min_konsolidierung']} bis {ep['max_konsolidierung']} ruhige Tage über dem Tief "
+                              "des Sprungtags. Kauf über dem Hoch dieser Tage, Stop "
+                              f"{p(ep['porosity'])} Prozent unter ihrem Tief. Den Termin belegt der "
+                              "Nasdaq-Kalender."),
         "power_gap": (f"Power-Gap: Eröffnung mindestens {p(ZENTRAL['gap_and_go']['gap_min'])} Prozent über dem "
                       "Vortagesschluss, das Tief bleibt darüber, Schluss im oberen Fünftel der Tagesspanne und "
-                      f"Volumen mindestens das {zahl_eingabe(ZENTRAL['volumen']['gap_and_go_faktor'])}fache des "
+                      f"Volumen mindestens das {_fache(ZENTRAL['volumen']['gap_and_go_faktor'])} des "
                       "50-Tage-Schnitts; Kauf über dem Tageshoch."),
-        "hoch_52w": "Neues 52-Wochen-Hoch: Das Tageshoch des letzten Handelstags liegt über allen Hochs der 52 Wochen davor.",
-        "hoch_allzeit": "Neues Allzeithoch: Am letzten Handelstag wurde das Hoch der ganzen Kurshistorie erreicht.",
-        "rs_linie": "RS-Linie gegen SPY auf 52-Wochen-Hoch: Kurs geteilt durch den S&P-500-ETF SPY steht so hoch wie seit einem Jahr nicht.",
-        "red_to_green": "Red to Green: am letzten Handelstag unter dem Vortagesschluss eröffnet und darüber geschlossen.",
+        "shakeout_spring": ("Shakeout-Spring: eine Aktie im Aufwärtstrend fällt kurz unter eine starke "
+                            "Unterstützungszone und schließt am selben Tag wieder darüber; ein späterer Rücksetzer in "
+                            "die Zone mit weniger Volumen bestätigt den Spring. Treffer ist die Aktie an dem Tag, an "
+                            "dem diese Bestätigung kommt; Kauf über der Oberkante der Zone, Stop am tieferen der "
+                            "beiden Tiefs."),
+        "crash_support": (f"Crash-Support: nur wenn der S&P-500-ETF SPY mindestens "
+                          f"{p(-cs['regime_index_drawdown'])} Prozent unter seinem 52-Wochen-Hoch steht. Dann "
+                          f"Großunternehmen ab {zahl_eingabe(cs['min_marktkap_mrd'])} Milliarden Dollar mit "
+                          f"mindestens {p(cs['min_umsatzwachstum'])} Prozent Umsatzwachstum und höchstens "
+                          f"{zahl_eingabe(cs['max_debt_to_equity'])} Schulden je Dollar Eigenkapital, deren "
+                          "Schluss in einer starken Unterstützungszone liegt; Stop an ihrer Unterkante. Die "
+                          "Wochenlisten melden das nicht, sie vermerken es nur im Logbuch."),
+        "hoch_52w": ("Neues 52-Wochen-Hoch: Das Tageshoch des letzten Handelstags liegt über allen Hochs der 52 Wochen "
+                     "davor. Das ist dasselbe wie das Merkmal Neues 52-Wochen-Hoch im Block Abstand von Hoch und "
+                     "Tief in Teil 2."),
+        "hoch_allzeit": ("Neues Allzeithoch: Am letzten Handelstag wurde das Hoch der ganzen Kurshistorie erreicht. "
+                         "Das ist dasselbe wie das Merkmal Neues Allzeithoch im Block Abstand von Hoch und Tief in "
+                         "Teil 2."),
+        "rs_linie": ("RS-Linie gegen SPY auf 52-Wochen-Hoch: Kurs geteilt durch den S&P-500-ETF SPY steht so hoch wie "
+                     "seit einem Jahr nicht. Das ist dasselbe wie das gleichnamige Merkmal im Block Relative Stärke "
+                     "in Teil 2."),
+        "red_to_green": ("Red to Green: am letzten Handelstag unter dem Vortagesschluss eröffnet und darüber "
+                         "geschlossen. Das ist dasselbe wie das Merkmal Red to Green im Block Letzter Handelstag in "
+                         "Teil 2."),
     }
     return texte.get(kennung, "")
+
+
+_FACHE = {2: "Zweifache", 3: "Dreifache", 4: "Vierfache", 5: "Fünffache", 6: "Sechsfache", 7: "Siebenfache",
+          8: "Achtfache", 9: "Neunfache", 10: "Zehnfache"}
+
+
+def _fache(x):
+    """2 wird 'Zweifache', 2,5 wird '2,5-Fache' (Berichtigung 9 vom 24.09.2026)."""
+    v = float(x)
+    return _FACHE.get(int(v), f"{zahl_eingabe(v)}-Fache") if v.is_integer() else f"{zahl_eingabe(v)}-Fache"
 
 
 def handelbar_text():
     hb = SC["handelbar"]
     return (f"Nur handelbare Aktien: Kurs ab {zahl_eingabe(hb['kurs_min'])} Dollar, Tagesumsatz im Schnitt ab "
             f"{zahl_eingabe(hb['dollarvolumen_min'] / 1e6)} Millionen Dollar, mindestens "
-            f"{hb['historie_min_tage']} Handelstage Kurshistorie")
+            f"{hb['historie_min_tage']} Handelstage Kurshistorie. Der Tagesumsatz ist derselbe wie das Merkmal "
+            "Durchschnittlicher Tagesumsatz, 50 Tage im Block Volumen")
 
 
 def langweile_text():
     lw = SC["langeweile"]
-    return (f"Langweilige Darvas-Boxen aussortieren: Jahreshoch mindestens das {zahl_eingabe(lw['jahresspanne_min'])}fache "
-            f"des Jahrestiefs, mittlere Tagesspanne ab {zahl_eingabe(lw['adr_min_pct'])} Prozent, Box mindestens "
+    return (f"Langweilige Darvas-Boxen aussortieren: 52-Wochen-Hoch mindestens das {_fache(lw['jahresspanne_min'])} "
+            f"des 52-Wochen-Tiefs, mittlere Tagesspanne ab {zahl_eingabe(lw['adr_min_pct'])} Prozent, Box mindestens "
             f"{zahl_eingabe(lw['box_adr_min'])} Tagesspannen und höchstens {zahl_eingabe(lw['box_hoehe_max_pct'])} Prozent hoch")
 
 
 def treffer_satz(stand, kennung):
-    """Wie viele Treffer die Nachttabelle fuer eine Strategie traegt."""
+    """Wie viele Treffer die Scanner-Tabelle fuer eine Strategie traegt."""
     t = ((stand or {}).get("strategien") or {}).get(kennung)
     if not t:
         return ""
-    s = f"In der Nachttabelle: {t.get('streng', 0)} streng erfüllt"
+    s = f"In der Scanner-Tabelle: {t.get('streng', 0)} streng erfüllt"
     if t.get("toleranz_moeglich"):
         s += f", {t.get('nur_toleranz', 0)} nur mit {toleranz_prozent()} Prozent Toleranz"
     s += f"; davon handelbar {t.get('handelbar', 0)}"
@@ -373,7 +420,7 @@ HOCH_TIEF = (("1t", "den letzten Handelstag", "Tageshoch", "Tagestief"),
              ("1m", "die letzten 21 Handelstage", "Monatshoch", "Monatstief"),
              ("3m", "die letzten 63 Handelstage", "Quartalshoch", "Quartalstief"),
              ("6m", "die letzten 126 Handelstage", "Halbjahreshoch", "Halbjahrestief"),
-             ("1j", "52 Wochen", "Jahreshoch", "Jahrestief"),
+             ("1j", "52 Wochen", "52-Wochen-Hoch", "52-Wochen-Tief"),
              ("3j", "drei Jahre", "Dreijahreshoch", "Dreijahrestief"),
              ("allzeit", "die ganze Kurshistorie", "Allzeithoch", "Allzeittief"))
 
@@ -425,6 +472,12 @@ class Feld:
         self.quellen = tuple(quellen)
         self.bezug = bezug
         self.linie = linie
+
+    def nicht_geladen(self):
+        """Was ohne die Daten des privaten Datenrepos in der Zeile steht:
+        Leerverkaeufe und Branchengruppe sind keine Analystendaten
+        (Berichtigung 12 vom 24.09.2026)."""
+        return "Daten nicht geladen" if self.gruppe in ("short", "gruppe") else "Analystendaten nicht geladen"
 
     # --- Werte ---------------------------------------------------------------
     def werte(self, df, fe=None):
@@ -506,7 +559,7 @@ class Feld:
         v ist der schon gerechnete Wert, sonst wird er aus der Zeile gerechnet."""
         fe = fe or {}
         if self.analysten and not analysten_da:
-            return f"{self.titel}: Analystendaten nicht geladen"
+            return f"{self.titel}: {self.nicht_geladen()}"
         s = self.schluessel
         if self.art == "ja":
             ja = _ja(r.get(self.spalte))
@@ -605,7 +658,7 @@ class Feld:
         fe = fe or {}
         s = self.schluessel
         if self.analysten and not analysten_da:
-            return [(self.titel, pd.Series("Analystendaten nicht geladen", index=df.index))]
+            return [(self.titel, pd.Series(self.nicht_geladen(), index=df.index))]
         if self.art == "ja":
             raus = [(self.titel, _wahr(_sp(df, self.spalte)).map({True: "ja", False: "nein"}))]
             if s == "rs_linie":
@@ -750,7 +803,9 @@ def _felder():
           stellen=0, erklaerung="Gehandelte Aktien je Tag im Schnitt der letzten 50 Handelstage."),
         F("umsatz_dollar", "volumen", "Durchschnittlicher Tagesumsatz, 50 Tage", spalte="dollarvolumen_50",
           einheit="Millionen Dollar", faktor=1e-6, stellen=1,
-          erklaerung="Kurs mal Volumen im Schnitt der letzten 50 Handelstage."),
+          erklaerung="Kurs mal Volumen im Schnitt der letzten 50 Handelstage. Dieselbe Rechnung wie das "
+                     "Dollarvolumen über 20 Tage, nur über den längeren Zeitraum; an diesem Wert misst auch der "
+                     "Haken Nur handelbare Aktien in Teil 1 den Tagesumsatz."),
         F("tag_volumen", "volumen", "Volumen am letzten Handelstag", spalte="volumen", einheit="Stück", stellen=0,
           erklaerung="Gehandelte Aktien am letzten Handelstag."),
         F("vol_faktor", "volumen", "Volumenfaktor zum 50-Tage-Schnitt", spalte="tk_vol_faktor", einheit="", stellen=2,
@@ -759,7 +814,9 @@ def _felder():
         F("vol63", "volumen", "Durchschnittsvolumen über drei Monate", spalte="tk_vol63", einheit="Stück", stellen=0,
           erklaerung="Gehandelte Aktien je Tag im Schnitt der letzten 63 Handelstage."),
         F("dv20", "volumen", "Dollarvolumen über 20 Tage", spalte="tk_dv20", einheit="Millionen Dollar", faktor=1e-6,
-          erklaerung="Kurs mal Volumen im Schnitt der letzten 20 Handelstage."),
+          erklaerung="Kurs mal Volumen im Schnitt der letzten 20 Handelstage. Dieselbe Rechnung wie der "
+                     "durchschnittliche Tagesumsatz über 50 Tage, nur über den kürzeren Zeitraum; es zeigt früher, "
+                     "wenn der Handel zu- oder abnimmt."),
         F("vdu", "volumen", "Austrocknen des Volumens", spalte="vdu", einheit="", stellen=2,
           erklaerung="Volumen der letzten 10 Handelstage im Schnitt geteilt durch den Schnitt der 50 Handelstage "
                      "davor; unter 1 trocknet das Volumen aus."),
@@ -783,7 +840,8 @@ def _felder():
         F("rtg", "tag", "Red to Green", art="ja", spalte="red_to_green",
           erklaerung="Am letzten Handelstag unter dem Vortagesschluss eröffnet und darüber geschlossen."),
         F("spanne", "tag", "Tagesspanne", spalte="tagesspanne_pct", stellen=2,
-          erklaerung="Spanne zwischen Tageshoch und Tagestief des letzten Handelstags in Prozent des Tagestiefs."),
+          erklaerung="Spanne zwischen Tageshoch und Tagestief des letzten Handelstags in Prozent des Tagestiefs. "
+                     "Nur dieser eine Tag; die ADR ist dieselbe Spanne im Mittel über 20 Tage."),
         F("luecke", "tag", "Eröffnungslücke", spalte="tk_luecke", signed=True,
           erklaerung="Eröffnungskurs des letzten Handelstags gegen den Schlusskurs davor."),
         F("pivot", "tag", "Episodic Pivot", art="ja", spalte="tk_pivot",
@@ -801,17 +859,21 @@ def _felder():
         # Volatilitaet und Schwankung
         F("adr", "volatilitaet", "ADR nach Qullamaggie, 20 Tage", spalte="volatilitaet_20_pct", stellen=2,
           erklaerung="Mittlere Tagesspanne der letzten 20 Handelstage: je Tag Hoch geteilt durch Tief, davon das "
-                     "Mittel, minus 1, in Prozent."),
+                     "Mittel, minus 1, in Prozent. Volatilität Woche und Monat rechnen genauso über 5 und 21 Tage; "
+                     "die ATR zählt dazu Lücken zum Vortagesschluss mit, die Tagesspanne gilt nur für den letzten "
+                     "Handelstag."),
         F("vola5", "volatilitaet", "Volatilität Woche wie bei Finviz, 5 Tage", spalte="volatilitaet_5_pct", stellen=2,
-          erklaerung="Dieselbe Rechnung wie die ADR über die letzten 5 Handelstage."),
+          erklaerung="Dieselbe Rechnung wie die ADR, nur über die letzten 5 Handelstage; sie zeigt, wie unruhig die "
+                     "letzte Woche war."),
         F("vola21", "volatilitaet", "Volatilität Monat wie bei Finviz, 21 Tage", spalte="tk_vola21", stellen=2,
-          erklaerung="Dieselbe Rechnung wie die ADR über die letzten 21 Handelstage."),
+          erklaerung="Dieselbe Rechnung wie die ADR, nur über die letzten 21 Handelstage, also einen Monat."),
         F("atr", "volatilitaet", "ATR 14 in Dollar", spalte="tk_atr14", einheit="Dollar", stellen=2,
-          erklaerung="Mittlere wahre Tagesspanne über 14 Tage nach Wilder, in Dollar."),
+          erklaerung="Mittlere wahre Tagesspanne über 14 Tage nach Wilder, in Dollar. Anders als die ADR zählt sie "
+                     "eine Lücke zum Vortagesschluss mit."),
         F("atr_pct", "volatilitaet", "ATR 14 in Prozent des Kurses", stellen=2, quellen=("tk_atr14", "kurs"),
           rechnung=lambda df: _zahlen(df, "tk_atr14") / _zahlen(df, "kurs").where(_zahlen(df, "kurs") > 0) * 100.0,
-          erklaerung="Die ATR 14 geteilt durch den Schlusskurs."),
-        F("atr_verh", "volatilitaet", "ATR der letzten 5 Tage zur ATR der letzten 50", spalte="atr_verhaeltnis",
+          erklaerung="Die ATR 14 geteilt durch den Schlusskurs; so lässt sie sich mit der ADR vergleichen."),
+        F("atr_verh", "volatilitaet", "ATR über 5 Tage im Verhältnis zur ATR über 50 Tage", spalte="atr_verhaeltnis",
           einheit="", stellen=2,
           erklaerung="Mittlere wahre Tagesspanne der letzten 5 Handelstage geteilt durch die der letzten 50; unter 1 "
                      "wird die Aktie ruhiger."),
@@ -821,8 +883,8 @@ def _felder():
                      f"{int(tech['beta_tage'])} Handelstage; 1 heißt so beweglich wie der Markt. Finviz rechnet "
                      f"sein Beta über 60 Monate, die Zahlen weichen deshalb voneinander ab."),
         F("jahresspanne", "volatilitaet", "Jahresspanne", spalte="jahresspanne", einheit="", stellen=2,
-          erklaerung="Jahreshoch geteilt durch das Jahrestief der letzten 252 Handelstage; 2 heißt, das Hoch liegt "
-                     "doppelt so hoch wie das Tief."),
+          erklaerung="52-Wochen-Hoch geteilt durch das 52-Wochen-Tief, also über die letzten 252 Handelstage; 2 "
+                     "heißt, das Hoch liegt doppelt so hoch wie das Tief."),
         # Gleitende Durchschnitte und Trend
         F("ema21", "durchschnitte", "Abstand zur EMA 21", spalte="abst_ema21_pct", signed=True, stellen=2,
           linie="EMA 21", erklaerung="Schlusskurs gegen den exponentiellen Durchschnitt der letzten 21 Tage; "
@@ -1061,7 +1123,7 @@ def _felder():
                                 erklaerung=f"Wie viele Analysten ihre Schätzung des Gewinns je Aktie für das {name} "
                                            f"laut Yahoo in den letzten {tage} Tagen "
                                            f"{'angehoben' if richtung == 'hoch' else 'gesenkt'} haben; nur für die "
-                                           "Aktien der Wochenliste."))
+                                           "Aktien der Wochenlisten."))
         for tage in (30, 90):
             felder.append(F(f"rev_aend_{tage}t_{k}", "revisionen",
                             f"Veränderung des Gewinnkonsens in {tage} Tagen, {name}", signed=True, analysten=True,
@@ -1069,7 +1131,7 @@ def _felder():
                             quellen=(f"rev_eps_jetzt_{k}", f"rev_eps_{tage}t_{k}"),
                             erklaerung=f"Erwarteter Gewinn je Aktie für das {name} heute gegen den Wert vor {tage} "
                                        "Tagen, laut Yahoo; nur bei positivem Vergleichswert und nur für die Aktien "
-                                       "der Wochenliste."))
+                                       "der Wochenlisten."))
     for tage in sd.kk.STUFEN_FENSTER:
         for art, titel, verb in (("hoch", "Heraufstufungen", "heraufgestuft haben"),
                                  ("runter", "Herabstufungen", "herabgestuft haben"),
@@ -1079,7 +1141,7 @@ def _felder():
             felder.append(F(f"stufen_{art}_{tage}t", "revisionen", f"{titel} in {tage} Tagen",
                             spalte=f"stufen_{art}_{tage}t", einheit="", stellen=0, analysten=True,
                             erklaerung=f"Wie viele Analysten die Aktie laut Yahoo in den letzten {tage} Tagen {verb}; "
-                                       "nur für die Aktien der Wochenliste."))
+                                       "nur für die Aktien der Wochenlisten."))
     felder += [
         # Leerverkaeufe
         F("short_anteil", "short", "Leerverkaufsanteil am letzten Handelstag", spalte="short_anteil_pct",
@@ -1124,7 +1186,8 @@ TERMIN_TEILE = (("heute_vor", "heute vorbörslich", 0, "vorboerslich"),
                 ("morgen_nach", "morgen nachbörslich", 1, "nachboerslich"))
 LAGE_TEXT = {"vorboerslich": "vorbörslich", "nachboerslich": "nachbörslich", "im_handel": "während des Handels",
              "unbekannt": "Tageszeit unbekannt"}
-UMFANG = (("markt", "ganzer Markt"), ("listen", "nur die Aktien der Wochenlisten"))
+UMFANG = (("markt", "Ganzer Markt"), ("listen", "Nur die Aktien der Wochenlisten"))
+OHNE_SEKTOR = "Ohne Sektorangabe"
 
 SEKTOREN = {"Basic Materials": "Grundstoffe", "Consumer Discretionary": "Zyklischer Konsum",
             "Consumer Staples": "Basiskonsum", "Energy": "Energie", "Finance": "Finanzen",
@@ -1135,8 +1198,18 @@ SEKTOREN = {"Basic Materials": "Grundstoffe", "Consumer Discretionary": "Zyklisc
 
 def sektor_name(kennung):
     if not kennung:
-        return "ohne Sektorangabe"
+        return OHNE_SEKTOR
     return SEKTOREN.get(kennung, kennung)
+
+
+def klein_anfang(text):
+    """Eine Beschriftung mitten im Satz: 'Ganzer Markt' wird 'ganzer Markt'."""
+    return text[:1].lower() + text[1:] if text else text
+
+
+def sektor_im_satz(kennung):
+    """Der Sektor als Satzteil: 'Sektor Technologie' oder 'ohne Sektorangabe'."""
+    return klein_anfang(OHNE_SEKTOR) if not kennung else f"Sektor {sektor_name(kennung)}"
 
 
 def sektoren_in(tabelle):
@@ -1201,10 +1274,22 @@ def voreinstellung(kennung, toleranz=False):
         an("rs")
         an("hoch_1j")
         an("adr")
-    elif kennung == "cup_handle":
+    elif kennung in ("cup_handle", "cup_woche"):
         an("rs")
         an("hoch_1j")
         an("volumen")
+    elif kennung == "earnings_pullback":
+        an("rs")
+        an("eps_q")
+        an("umsatz_q")
+    elif kennung == "shakeout_spring":
+        an("rs")
+        an("sma200")
+        an("tief_1j")
+    elif kennung == "crash_support":
+        an("marktkap")
+        an("umsatz_q")
+        an("schulden_ek")
     elif kennung == "rectangle":
         an("rs")
         an("hoch_3m")
@@ -1297,7 +1382,7 @@ def auswerten(tabelle, e, heute=None, analysten_da=True):
             df = df[pd.to_numeric(df[spalte], errors="coerce").fillna(0) >= stufe_min]
         else:
             df = df.iloc[0:0]
-            hinweise.append(f"Die Nachttabelle kennt {strategie_name(k)} noch nicht.")
+            hinweise.append(f"Die Scanner-Tabelle kennt {strategie_name(k)} noch nicht.")
         if k == "darvas" and e.get("langweilig_raus") and "darvas_langweilig" in df.columns:
             df = df[~_wahr(df["darvas_langweilig"])]
     elif k == "rs_linie":
@@ -1308,10 +1393,10 @@ def auswerten(tabelle, e, heute=None, analysten_da=True):
         df = df[_wahr(df["handelbar"])]
     basis = df
     felder = aktive_felder(e)
-    ohne_analysten, ohne_werte = [], []
+    ohne_analysten, ohne_daten, ohne_werte = [], [], []
     for feld, fe in felder:
         if feld.analysten and not analysten_da:
-            ohne_analysten.append(feld.titel)
+            (ohne_daten if feld.gruppe in ("short", "gruppe") else ohne_analysten).append(feld.titel)
             continue
         m, f = feld.maske(df, fe)
         fehler += f
@@ -1328,6 +1413,8 @@ def auswerten(tabelle, e, heute=None, analysten_da=True):
     if ohne_analysten:
         hinweise.append("Die Analystendaten sind nicht geladen; " + ", ".join(ohne_analysten)
                         + " filtern deshalb nicht.")
+    if ohne_daten:
+        hinweise.append("Diese Daten sind nicht geladen; " + ", ".join(ohne_daten) + " filtern deshalb nicht.")
     if ohne_werte:
         hinweise.append("Für " + ", ".join(ohne_werte) + " stehen in der Tabelle noch keine Werte; mit einer Grenze "
                         "oder Bedingung bleibt deshalb keine Aktie übrig.")
@@ -1355,6 +1442,9 @@ def auswerten(tabelle, e, heute=None, analysten_da=True):
     return ausw
 
 
+RANG_FELDER = ("gruppe_rang", "gruppe_rang_3w", "gruppe_rang_6w")
+
+
 def sortier_wahl(e):
     """[(Kennung, Text)] der Sortierungen, die zur Einstellung passen."""
     e = e or {}
@@ -1365,7 +1455,13 @@ def sortier_wahl(e):
     raus += [("rs", "RS, höchstes zuerst"), ("marktkap", "Marktkapitalisierung, größte zuerst"),
              ("ticker", "Kürzel von A bis Z")]
     for feld, _fe in aktive_felder(e):
-        if feld.art == "bereich":
+        if feld.art != "bereich":
+            continue
+        if feld.schluessel in RANG_FELDER:
+            # Rang 1 ist die staerkste Gruppe (Antwort 64 vom 24.09.2026)
+            raus.append((f"{feld.schluessel}:auf", f"{feld.titel}, stärkste Gruppe zuerst"))
+            raus.append((f"{feld.schluessel}:ab", f"{feld.titel}, schwächste Gruppe zuerst"))
+        else:
             raus.append((f"{feld.schluessel}:ab", f"{feld.titel}, größter Wert zuerst"))
             raus.append((f"{feld.schluessel}:auf", f"{feld.titel}, kleinster Wert zuerst"))
     return raus
@@ -1457,13 +1553,23 @@ def strategie_teile(ausw, r):
     return teile
 
 
+# Die Quelle eines Zahlentermins in Worten; die Tabelle fuehrt "Wochenliste" als
+# Kennung fuer die Terminliste des Nachtscans (grosse Liste und Darvas-Liste,
+# zusammen Wochenlisten, Antwort 86 vom 24.09.2026).
+TERMIN_QUELLEN = {"Wochenliste": "Terminliste der Wochenlisten"}
+
+
+def termin_quelle_text(quelle):
+    return TERMIN_QUELLEN.get(quelle, quelle) if isinstance(quelle, str) and quelle else ""
+
+
 def termin_teil(r):
     d = r.get("termin_datum")
     if not isinstance(d, str) or not d:
         return "kein Zahlentermin in den nächsten zehn Tagen bekannt"
     lage = LAGE_TEXT.get(r.get("termin_lage") or "unbekannt", "Tageszeit unbekannt")
-    quelle = r.get("termin_quelle")
-    return f"Zahlen am {datum_lang(d)}, {lage}" + (f", laut {quelle}" if isinstance(quelle, str) and quelle else "")
+    quelle = termin_quelle_text(r.get("termin_quelle"))
+    return f"Zahlen am {datum_lang(d)}, {lage}" + (f", laut {quelle}" if quelle else "")
 
 
 # ---------------------------------------------------------------------------
@@ -1497,6 +1603,12 @@ def _cm_aufzaehlung(teile):
     if not teile:
         return ""
     return teile[0] if len(teile) == 1 else ", ".join(teile[:-1]) + " und " + teile[-1]
+
+
+def _cm_am(stelle):
+    """Eine markante Stelle des Wick Play mit ihrer Praeposition: 'am Basisrand',
+    'am EMA 10', 'am alten Hoch' (Berichtigung 10 vom 24.09.2026)."""
+    return "am alten Hoch" if stelle == "altes Hoch" else f"am {stelle}"
 
 
 def _cm_tag(iso):
@@ -1544,8 +1656,9 @@ def muster_saetze(r):
             s += " nach drei steigenden Tagen"
         if _cm_wahr(r.get("cm_b_vol_schrumpft")):
             s += ", Volumen kleiner als am Vortag"
-        s += (f", eng über {_cm_dollar(r.get('cm_b_eng_kp'))} mit Stop {_cm_dollar(r.get('cm_b_eng_stop'))}"
-              f", konservativ über {_cm_dollar(r.get('cm_b_kons_kp'))} mit Stop {_cm_dollar(r.get('cm_b_kons_stop'))}")
+        s += (f", über dem Hoch des Inside Days {_cm_dollar(r.get('cm_b_eng_kp'))} mit Stop "
+              f"{_cm_dollar(r.get('cm_b_eng_stop'))}; über dem Hoch des Vortags {_cm_dollar(r.get('cm_b_kons_kp'))} "
+              f"mit Stop {_cm_dollar(r.get('cm_b_kons_stop'))}")
         t.append(s)
     if _cm_ja(r, "cm_a"):
         w = _num(r.get("cm_a_wochen"))
@@ -1575,14 +1688,14 @@ def muster_saetze(r):
                  + (f" nach {zahl(ab, 1)} Prozent Abverkauf" if ab is not None else "")
                  + (f" in {int(tage)} Handelstagen" if tage else "")
                  + f", Tief am {_cm_tag(r.get('cm_n_tief_tag'))}"
-                 + f", Einstieg plus 5 Prozent über {_cm_dollar(r.get('cm_n_kp5'))}"
-                 + (" schon erreicht" if _cm_wahr(r.get("cm_n_kp5_erreicht")) else "")
-                 + f", plus 10 Prozent über {_cm_dollar(r.get('cm_n_kp10'))}, Stop {_cm_dollar(r.get('cm_n_stop'))}"
+                 + f", Einstieg bei plus 5 Prozent, {_cm_dollar(r.get('cm_n_kp5'))}"
+                 + (", schon erreicht" if _cm_wahr(r.get("cm_n_kp5_erreicht")) else "")
+                 + f", bei plus 10 Prozent, {_cm_dollar(r.get('cm_n_kp10'))}, Stop {_cm_dollar(r.get('cm_n_stop'))}"
                  + ", Hoch und Abverkauf nach eigener Festlegung")
     if _cm_ja(r, "cm_s"):
         stellen = [x.strip() for x in str(r.get("cm_s_stelle") or "").split(",") if x.strip()]
         t.append(f"Wick Play am {_cm_tag(r.get('cm_s_tag'))}, Docht {r.get('cm_s_seite') or 'unbekannt'}"
-                 + (f" an {_cm_aufzaehlung(stellen)}" if stellen else "")
+                 + (f" {_cm_aufzaehlung([_cm_am(x) for x in stellen])}" if stellen else "")
                  + f", Einstieg über {_cm_dollar(r.get('cm_s_kp'))}, Stop {_cm_dollar(r.get('cm_s_stop'))}"
                  + ", Schwellen eigene Festlegung")
     if _cm_ja(r, "cm_t"):
@@ -1653,9 +1766,11 @@ def muster_saetze(r):
 
 
 def chartmuster_erklaerung():
-    """Die neun gebauten Muster und alle unsere Festlegungen als Saetze, fuer
-    den Erklaerteil des Scanners (Gerhard: "im Code und in der Ausgabe als
-    unsere eigene Festlegung gekennzeichnet")."""
+    """Die gebauten Muster und alle eigenen Festlegungen als Saetze, fuer den
+    Erklaerteil des Scanners (Gerhard: "im Code und in der Ausgabe als
+    unsere eigene Festlegung gekennzeichnet"; seit Antwort 91 vom 24.09.2026
+    heisst es ueberall "eigene Festlegung"). Herkunft und Daten der
+    Entscheide stehen nur im Quelltext (Antwort 100)."""
     import chartmuster as cm
     q, f = cm.QUELLE, cm.FESTLEGUNGEN
 
@@ -1664,39 +1779,37 @@ def chartmuster_erklaerung():
 
     k = f["pivot_kerzen"]
     return [
-        "Seit dem 21.09.2026 stehen bei jedem Treffer die Chartmuster aus Gerhards Dokument vom 20.09.2026: "
-        "Inside Day, Three Weeks Tight, Pocket Pivot, Power Trend, Flat Base, Shakeout plus drei, Wick Play, "
-        "Shakeout am EMA 10, seit dem 22.09.2026 die IPO Base und seit dem 23.09.2026 Base-on-Base, der Green "
-        "Line Breakout, die Stufenzählung der Basen und der Episodic Pivot. Sie sind Entscheidungshilfen und "
-        "filtern nichts. "
-        "Gerechnet wird am letzten Handelstag der Nachttabelle; Three Weeks Tight, Flat Base und IPO Base zählen "
-        "nur abgeschlossene Wochen, Base-on-Base, Green Line und die Stufenzählung brauchen die ganze "
-        "Kurshistorie. Das W, also das Double Bottom, ist am 22.09.2026 auf Gerhards Entscheid ganz entfallen.",
+        "Bei jedem Treffer stehen die Chartmuster Inside Day, Three Weeks Tight, Pocket Pivot, Power Trend, Flat "
+        "Base, Shakeout plus drei, Wick Play, Shakeout am EMA 10, IPO Base, Base-on-Base, Green Line Breakout, die "
+        "Stufenzählung der Basen und der Episodic Pivot. Sie sind Entscheidungshilfen und filtern nichts. "
+        "Gerechnet wird am letzten Handelstag der Scanner-Tabelle; Three Weeks Tight, Flat Base und IPO Base "
+        "zählen nur abgeschlossene Wochen, Base-on-Base, Green Line und die Stufenzählung brauchen die ganze "
+        "Kurshistorie.",
         f"Bei Three Weeks Tight zählen {q['a_wochen_min']} oder {q['a_wochen_max']} enge Wochen, ab "
-        f"{q['a_wochen_max'] + 1} nicht mehr, auf Gerhards Entscheid vom 23.09.2026; länger eng ist ein "
-        "festgenagelter Kurs, etwa bei einer Übernahme. Unsere Festlegungen dazu: davor mindestens "
+        f"{q['a_wochen_max'] + 1} nicht mehr; länger eng ist ein festgenagelter Kurs, etwa bei einer Übernahme. "
+        "Eigene Festlegungen dazu: davor mindestens "
         f"{pz(f['a_anstieg_min'])} Prozent Anstieg in den {f['a_anstieg_wochen']} Wochen vor der engen Phase, "
         f"und die Woche davor liegt höchstens {pz(f['a_nahe_hoch'])} Prozent unter dem höchsten Wochenschluss "
         "dieser Zeit.",
-        f"Unsere Festlegung beim Pocket Pivot: in oder knapp über einer Basis heißt, die {f['d_basis_tage']} "
+        f"Eigene Festlegung beim Pocket Pivot: in oder knapp über einer Basis heißt, die {f['d_basis_tage']} "
         f"Handelstage davor schwanken höchstens {pz(f['d_basis_tiefe_max'])} Prozent vom Hoch zum Tief, und der "
         f"Pivot-Tag schließt höchstens {pz(f['d_basis_ueber_max'])} Prozent über ihrem Hoch.",
-        f"Unsere Festlegung beim Power Trend: nach dem letzten Tief heißt nach dem tiefsten Tief der "
+        f"Eigene Festlegung beim Power Trend: nach dem letzten Tief heißt nach dem tiefsten Tief der "
         f"{f['f_tief_fenster']} Tage, deren Tiefs über dem EMA 21 liegen.",
-        f"Unsere Festlegung bei der Flat Base: der Anstieg davor zählt vom tiefsten Wochentief der "
+        f"Eigene Festlegung bei der Flat Base: der Anstieg davor zählt vom tiefsten Wochentief der "
         f"{f['g_anstieg_wochen']} Wochen vor der Basis bis zu ihrem Hoch, und die Basis beginnt an ihrem Hoch.",
-        f"Unsere Festlegungen beim Wick Play: Docht mindestens {zahl(f['s_docht_zu_koerper'], 0)}-mal so lang wie "
+        f"Eigene Festlegungen beim Wick Play: Docht mindestens {zahl(f['s_docht_zu_koerper'], 0)}-mal so lang wie "
         f"der Körper, Körper höchstens {pz(f['s_koerper_max'])} Prozent der Tagesspanne, die Tagesspanne mindestens "
         f"so groß wie die durchschnittliche der {f['s_atr_tage']} Tage davor. Die markante Stelle liegt im Docht: "
         "EMA 10, EMA 21, SMA 50, SMA 200, Hoch oder Tief der 20 Tage davor oder das alte Hoch des Jahres davor. "
         f"Gesucht wird bis {f['s_tage_zurueck']} Handelstage zurück, solange seither kein Schluss über dem Hoch "
         f"der Kerze lag; Einstieg über dem Hoch plus {zahl(q['aufschlag'], 2)} Dollar.",
-        f"Unsere Festlegung beim Shakeout am EMA 10: die Unterschreitung beträgt höchstens "
+        f"Eigene Festlegung beim Shakeout am EMA 10: die Unterschreitung beträgt höchstens "
         f"{pz(f['t_unterschreitung_max'])} Prozent.",
-        f"Unsere Festlegung bei der Erkennung von Hochs und Tiefs, auf der Shakeout plus drei sitzt: "
+        f"Eigene Festlegung bei der Erkennung von Hochs und Tiefs, auf der Shakeout plus drei sitzt: "
         f"Ein Hoch oder Tief ist das höchste oder tiefste von {2 * k + 1} Kerzen, {k} davor und {k} danach; "
         f"ein Tief gilt also erst, wenn {k} Kerzen danach höher lagen.",
-        f"Unsere Festlegungen beim Shakeout plus drei: aus einem Hoch heißt aus dem höchsten Hoch der "
+        f"Eigene Festlegungen beim Shakeout plus drei: aus einem Hoch heißt aus dem höchsten Hoch der "
         f"{f['n_hoch_tage']} Handelstage bis dahin, scharf heißt mindestens {pz(f['n_abverkauf_min'])} Prozent "
         f"vom Hoch zum Tief in höchstens {f['n_abverkauf_tage']} Handelstagen. Es zählt nur der erste scharfe "
         f"Abverkauf nach dem Hoch: Stieg der Kurs schon nach einem früheren scharfen Tief um "
@@ -1704,7 +1817,7 @@ def chartmuster_erklaerung():
         f"höchstens {f['n_tief_tage_max']} Handelstage zurückliegt, seither nicht unterschritten wurde und der Kurs "
         f"den Einstieg bei {pz(q['n_aufschlag'][1])} Prozent noch nicht erreicht hat. Die Einstiege bei "
         f"{pz(q['n_aufschlag'][0])} und {pz(q['n_aufschlag'][1])} Prozent über dem Tief stehen nebeneinander.",
-        f"Unsere Festlegungen bei der IPO Base: Eine Aktie gilt höchstens {f['l_erstnotiz_wochen_max']} Wochen "
+        f"Eigene Festlegungen bei der IPO Base: Eine Aktie gilt höchstens {f['l_erstnotiz_wochen_max']} Wochen "
         "nach ihrer Erstnotiz als frisch notiert. Die Basis beginnt an ihrem Hoch wie die Flat Base, dauert "
         f"mindestens {q['l_wochen_min']} Wochen und ist {pz(q['l_tiefe_min'])} bis {pz(q['l_tiefe_max'])} Prozent "
         f"tief; Kaufpunkt am linken Hoch plus {zahl(q['aufschlag'], 2)} Dollar. Kam die Firma über einen "
@@ -1713,7 +1826,7 @@ def chartmuster_erklaerung():
         f"{zahl(f['l_mantel_bis'], 0)} Dollar mit höchstens {pz(f['l_mantel_enge'])} Prozent Spanne, danach ein "
         f"Sprung von mindestens {pz(f['l_mantel_sprung'])} Prozent. Sieht der Anfang nur nach Mantel aus, bleibt "
         "der erste Kurstag die Erstnotiz und der Fund sagt, dass sie unsicher ist.",
-        f"Stufenzählung der Basen nach Gerhards Regeln vom 23.09.2026, nur für Aktien über "
+        f"Stufenzählung der Basen, nur für Aktien über "
         f"{zahl(q['m_kurs_min'], 0)} Dollar: Eine Basis dauert mindestens {q['m_wochen_min']} Wochen, ist höchstens "
         f"{pz(q['m_tiefe_max'])} Prozent tief vom linken Hoch zum tiefsten Tief und ist ausgebrochen mit einem "
         "Tagesschluss über dem linken Hoch. Stufe 1 ist die erste Basis nach einem Markttief oder einer eigenen "
@@ -1724,7 +1837,7 @@ def chartmuster_erklaerung():
         f"sobald der Kurs das Tief der letzten Basis unterschreitet und sobald er {pz(q['m_korrektur'])} Prozent "
         f"unter dem letzten Hoch liegt; jede Basis, die tiefer als {pz(q['m_korrektur'])} Prozent korrigiert, ist "
         "damit Stufe 1, so gewollt. Ab Stufe 3 heißt die Basis spät, ab Stufe 4 sehr spät.",
-        "Unsere Festlegungen bei der Stufenzählung: Ein Markttief ist das Tief einer Korrektur des S&P 500 oder "
+        "Eigene Festlegungen bei der Stufenzählung: Ein Markttief ist das Tief einer Korrektur des S&P 500 oder "
         "des Nasdaq, deren Erholungsversuch ein Follow-through Day bestätigt hat, nach denselben Regeln wie in der "
         "Marktampel. Das linke Hoch einer Basis ist das höchste Hoch seit dem letzten Ausbruch; ein neues Hoch, "
         "bevor die Basis fünf Wochen alt ist, lässt sie dort neu beginnen. Gezählt wird in Kalenderwochen, die "
@@ -1734,39 +1847,40 @@ def chartmuster_erklaerung():
         f"{zahl(q['m_kurs_min'], 0)} Dollar gelten für den letzten Schluss, gezählt wird die ganze Kurshistorie. "
         "Gezeigt wird die Basis, die sich bildet, sobald sie fünf Wochen alt ist, sonst die letzte, aus der die "
         "Aktie ausgebrochen ist.",
-        f"Green Line Breakout nach Gerhards Regeln: Die grüne Linie ist das Allzeithoch, das mindestens "
+        f"Green Line Breakout: Die grüne Linie ist das Allzeithoch, das mindestens "
         f"{q['q_tage_ohne_hoch']} Handelstage ohne neues Hoch stand. Das Signal ist ein Monatsschluss darüber; "
         "gezeigt wird es erst nach dem bestätigten Monatsschluss und dann im ganzen Folgemonat. Einstieg über der "
         "Linie, Stop am letzten Tief der Erkennung von Hochs und Tiefs vor dem ersten Schluss über der Linie, mit "
-        "dem Zehn-Prozent-Deckel. Unsere Festlegung dazu: Volumen deutlich über dem Schnitt heißt, der Schnitt "
+        "dem Zehn-Prozent-Deckel. Eigene Festlegung dazu: Volumen deutlich über dem Schnitt heißt, der Schnitt "
         f"je Handelstag im Ausbruchsmonat beträgt mindestens das {zahl(f['q_vol_faktor'], 1)}-Fache des Schnitts "
         f"der {f['q_vol_tage']} Handelstage vor diesem Monat. Ein Monat gilt als abgeschlossen, wenn sein letzter "
         "Werktag vorbei ist.",
-        f"Episodic Pivot nach Gerhards Regeln vom 23.09.2026: eine Eröffnungslücke von mehr als "
+        f"Episodic Pivot: eine Eröffnungslücke von mehr als "
         f"{pz(q['v_luecke'])} Prozent über dem Schluss des Vortags mit mindestens dem "
         f"{zahl(q['v_vol_faktor'], 0)}-Fachen des Schnittvolumens der {q['v_vol_tage']} Tage davor, nachdem die "
         f"Aktie mindestens zwei Monate tot war und mindestens {pz(q['v_abstand_200'])} Prozent unter ihrem "
         f"{q['v_hoch_tage']}-Tage-Hoch lag. Der Auslöser sind Zahlen am Lückentag oder am Handelstag davor laut "
         "Nasdaq-Kalender; eine Lücke ohne erkannten Auslöser steht getrennt da. Zulassung, Auftrag und "
-        "Übernahme erkennt der Scanner nicht, dafür fehlt eine Nachrichtenquelle; solche Lücken stehen ebenfalls "
+        "Übernahme erkennt die App nicht, dafür fehlt eine Nachrichtenquelle; solche Lücken stehen ebenfalls "
         "als Lücke ohne erkannten Auslöser da. Einstieg über dem Eröffnungsbereich des Lückentags. Stop am "
         "Tagestief; liegt es mehr als zehn Prozent unter dem Einstieg, an der Lückenunterkante, dem Schluss des "
         "Vortags, wenn diese den Zehn-Prozent-Deckel einhält, sonst greift der Deckel.",
-        f"Unsere Festlegungen beim Episodic Pivot: Tot heißt, der Schluss vor der Lücke liegt höchstens "
+        f"Eigene Festlegungen beim Episodic Pivot: Tot heißt, der Schluss vor der Lücke liegt höchstens "
         f"{pz(f['v_tot_anstieg_max'])} Prozent über dem Schluss zwei Monate davor, also {q['v_tote_tage']} "
         f"Handelstage, gerechnet wie die drei Monate beim Green Line Breakout. Gezeigt wird die jüngste Lücke "
         f"der letzten {f['v_tage_max']} Handelstage. Der Eröffnungsbereich ist das Hoch der ersten "
         f"{f['v_eroeffnung_minuten']} Minuten.",
-        "Sechs dieser Muster melden seit dem 22.09.2026 auch im Handel, auf Gerhards Entscheid: Three Weeks "
-        "Tight, Inside Day, Pocket Pivot, IPO Base, Shakeout plus drei und Wick Play. Der Nachtscan rechnet "
+        "Sechs dieser Muster melden auch im Handel: Three Weeks Tight, Inside Day, Pocket Pivot, IPO Base, "
+        "Shakeout plus drei und Wick Play. Der Nachtscan rechnet "
         "ihre Einstiege, der Wächter meldet, sobald der Kurs sie überschreitet, und zwar nur für die Aktien "
         "der beiden Wochenlisten und die einzeln überwachten. Es gelten dieselben Melderegeln wie bei den "
         "bestehenden Strategien; beim Inside Day meldet nur die Fassung mit drei steigenden Tagen davor, beim "
         "Shakeout plus drei der Einstieg bei 10 Prozent. Die Meldungen kommen vorerst als Auskunft und nicht "
         "als Alarm in der Handels-App, bis das Logbuch zeigt, wie die Muster laufen. Bestehende Kaufpunkte "
-        "verdrängen sie nie.",
-        "Alle Stops tragen den Zehn-Prozent-Deckel des Systems. Volumen vergleicht der Scanner nach Handelsschluss "
-        "als ganze Tagesvolumina; dort ist die F(t)-Kurve bei eins.",
+        "verdrängen sie nie. Jedes der sechs lässt sich im Reiter Einstellungen abwählen; ein abgewähltes Muster "
+        "wird weiter geprüft und im Logbuch vermerkt, nur nicht gemeldet.",
+        "Alle Stops tragen den Zehn-Prozent-Deckel des Systems. Nach Handelsschluss vergleicht die App ganze "
+        "Tagesvolumina.",
     ]
 
 
@@ -1781,7 +1895,7 @@ def satz_teile(ausw, r, werte=None):
     if ausw.get("termine"):
         teile.append(termin_teil(r))
     if ausw.get("sektor_aktiv"):
-        teile.append(f"Sektor {sektor_name(r.get('sektor') if isinstance(r.get('sektor'), str) else '')}")
+        teile.append(sektor_im_satz(r.get('sektor') if isinstance(r.get('sektor'), str) else ''))
     teile += muster_saetze(r)
     return teile
 
@@ -1836,13 +1950,14 @@ def einstellungs_teile(e, tabelle=None):
         s = "Zahlentermine " + (", ".join(zeiten) if zeiten else "angezeigt")
         if te.get("ohne_zeit"):
             s += ", auch ohne bekannte Tageszeit"
-        s += ", " + dict(UMFANG).get(te.get("umfang") or "markt", "ganzer Markt")
+        s += ", " + klein_anfang(dict(UMFANG).get(te.get("umfang") or "markt", "Ganzer Markt"))
         t.append(s)
     if e.get("sektoren") is not None and tabelle is not None:
         alle = sektoren_in(tabelle)
         gewaehlt = [s for s in alle if s in set(e["sektoren"])]
         if len(gewaehlt) != len(alle):
-            t.append("Sektoren " + (", ".join(sektor_name(s) for s in gewaehlt) if gewaehlt else "keiner"))
+            t.append("Sektoren " + (", ".join(sektor_name(s) if s else klein_anfang(OHNE_SEKTOR) for s in gewaehlt)
+                                    if gewaehlt else "keiner"))
     return t
 
 
@@ -1876,7 +1991,7 @@ def ergebnis_tabelle(ausw, basis_url, stand=None):
     if ausw.get("termine"):
         raus["Zahlentermin"] = _sp(df, "termin_datum").map(lambda d: nachschlagen.datum_text(d) if isinstance(d, str) and d else "")
         raus["Tageszeit"] = _sp(df, "termin_lage").map(lambda x: LAGE_TEXT.get(x, "") if isinstance(x, str) else "")
-        raus["Quelle des Termins"] = _sp(df, "termin_quelle")
+        raus["Quelle des Termins"] = _sp(df, "termin_quelle").map(termin_quelle_text)
     if ausw.get("sektor_aktiv"):
         raus["Sektor"] = _sp(df, "sektor").map(lambda s: sektor_name(s if isinstance(s, str) else ""))
     if "cm_f" in df.columns:
@@ -1897,8 +2012,13 @@ FORMATE = (("csv_de", "CSV mit Strichpunkt und Dezimalbeistrich, für Excel auf 
            ("md", "Markdown", "md", "text/markdown"))
 
 
+# Das Ganze heisst die App, Scanner nur der Reiter (Antwort 90); der Name der
+# App bleibt Chart-Screening-Tool (Antwort 21).
+DATEI_TITEL = "Chart-Screening-Tool, Ergebnis des Scanners"
+
+
 def kopf_saetze(ausw, stand=None, tabelle=None):
-    s = ["Heliot-Scanner"]
+    s = [DATEI_TITEL]
     if (stand or {}).get("handelstag"):
         s.append(f"Schlusskurse vom {datum_lang(stand['handelstag'])}")
     teile = einstellungs_teile(ausw.get("einstellung"), tabelle)
@@ -1935,6 +2055,73 @@ def _zelle_html(x, stellen=2):
     if x is None or x is pd.NA or (isinstance(x, float) and not math.isfinite(x)):
         return ""
     return html_text.escape(nachschlagen.lesbar(str(x)))
+
+
+def _zelle_text(x, stellen=2):
+    """Eine Zelle als Text fuer Text und Markdown: deutsche Zahlen, Leeres leer."""
+    if isinstance(x, (int, float, np.integer, np.floating)) and not isinstance(x, bool):
+        v = _num(x)
+        if v is None:
+            return ""
+        return nachschlagen.zahl(v, 0 if float(v).is_integer() else stellen)
+    if x is None or x is pd.NA or (isinstance(x, float) and not math.isfinite(x)):
+        return ""
+    t = nachschlagen.lesbar(str(x))
+    return "" if t.lower() in ("nan", "none", "nat") else t
+
+
+def tabelle_datei(tab, fmt, titel, angaben=(), zeilen_text=None, blatt="Tabelle"):
+    """Eine beliebige Tabelle als Datei im gewaehlten Format, fuer Liste pruefen
+    und den Aktuellen Scan (Antwort 54 vom 24.09.2026: ueberall Download mit
+    Formatwahl wie im Scanner). Rueckgabe (Inhalt als bytes, MIME-Typ, Endung).
+    zeilen_text: je Zeile ein Satz fuer Text, Markdown und HTML-Ueberschrift;
+    ohne ihn stehen je Zeile Spalte und Wert, mit Strichpunkt getrennt."""
+    mime = next((x[3] for x in FORMATE if x[0] == fmt), "text/plain")
+    endung = next((x[2] for x in FORMATE if x[0] == fmt), "txt")
+    angaben = [str(a) for a in angaben if str(a or "").strip()]
+    if fmt == "csv_de":
+        return tab.to_csv(sep=";", decimal=",", index=False).encode("utf-8-sig"), mime, endung
+    if fmt == "csv_en":
+        return tab.to_csv(index=False).encode("utf-8"), mime, endung
+    if fmt in ("xlsx", "ods"):
+        puffer = io.BytesIO()
+        with pd.ExcelWriter(puffer, engine="openpyxl" if fmt == "xlsx" else "odf") as w:
+            tab.to_excel(w, sheet_name=str(blatt)[:31] or "Tabelle", index=False)
+            pd.DataFrame({"Angaben": [titel] + angaben}).to_excel(w, sheet_name="Angaben", index=False)
+        return puffer.getvalue(), mime, endung
+    if fmt == "json":
+        inhalt = {"titel": titel, "angaben": angaben,
+                  "zeilen": [{str(k2): _json_wert(v) for k2, v in z.items()} for z in tab.to_dict("records")]}
+        return json.dumps(inhalt, ensure_ascii=False, indent=1).encode("utf-8"), mime, endung
+    if zeilen_text is None:
+        zeilen_text = []
+        for z in tab.to_dict("records"):
+            teile = [f"{k2} {_zelle_text(v)}" for k2, v in z.items() if _zelle_text(v)]
+            zeilen_text.append("; ".join(teile) + ".")
+    if fmt == "html":
+        spalten = list(tab.columns)
+        kopfzeile = "".join(f'<th scope="col">{html_text.escape(str(c))}</th>' for c in spalten)
+        koerper = []
+        for z in tab.to_dict("records"):
+            zellen = []
+            for i, c in enumerate(spalten):
+                if i == 0:
+                    zellen.append(f'<th scope="row">{html_text.escape(_zelle_text(z[c]))}</th>')
+                else:
+                    zellen.append(f"<td>{_zelle_html(z[c])}</td>")
+            koerper.append("<tr>" + "".join(zellen) + "</tr>")
+        seite = ("<!DOCTYPE html>\n<html lang=\"de\">\n<head>\n<meta charset=\"utf-8\">\n"
+                 f"<title>{html_text.escape(titel)}</title>\n</head>\n<body>\n<h1>{html_text.escape(titel)}</h1>\n"
+                 + "".join(f"<p>{html_text.escape(x)}</p>\n" for x in angaben)
+                 + f"<table>\n<caption>{html_text.escape(titel)}</caption>\n<thead><tr>{kopfzeile}</tr></thead>\n"
+                 + "<tbody>\n" + "\n".join(koerper) + "\n</tbody>\n</table>\n</body>\n</html>\n")
+        return seite.encode("utf-8"), mime, endung
+    if fmt == "md":
+        kopf = [f"# {titel}", ""] + ([md(x) + "  " for x in angaben] + [""] if angaben else [])
+        text = "\n".join(kopf + [f"{i}. {md(z)}" for i, z in enumerate(zeilen_text, 1)]) + "\n"
+        return text.encode("utf-8"), mime, endung
+    text = "\n".join([titel] + angaben + [""] + [f"{i}. {z}" for i, z in enumerate(zeilen_text, 1)]) + "\n"
+    return text.encode("utf-8"), "text/plain", endung
 
 
 def datei(ausw, basis_url, fmt, stand=None, tabelle=None):
@@ -2017,7 +2204,8 @@ def stand_saetze(stand, jetzt=None, analysten_da=True, nur_voll=False):
         s.append(f"{nachschlagen.zahl(kurse.get('aktuell', 0))} von {nachschlagen.zahl(stand.get('universum', 0))} "
                  "Aktien des US-Markts haben Kurse vom letzten Handelstag.")
     if stand.get("status") and stand.get("status") != "ok":
-        s.append("Achtung, die Tabelle ist unvollständig: " + "; ".join(stand.get("hinweise") or ["ohne Angabe"]) + ".")
+        gruende = [hinweis_satz(h) for h in (stand.get("hinweise") or [])]
+        s.append("Achtung, die Tabelle ist unvollständig." + "".join(" " + g for g in gruende))
     try:
         if ht and date.fromisoformat(str(ht)[:10]) < letzter_handelstag_ny(jetzt):
             s.append("Ist seither ein Handelstag zu Ende gegangen, entsteht die neue Tabelle nach dem Nachtscan.")
@@ -2025,20 +2213,59 @@ def stand_saetze(stand, jetzt=None, analysten_da=True, nur_voll=False):
         pass
     fund = q.get("fundament") or {}
     if fund and str(fund.get("status", "")).startswith("nicht"):
-        s.append("Fundamentzahlen fehlen in dieser Tabelle: " + str(fund.get("status")) + ".")
+        s.append("Die Fundamentzahlen fehlen in dieser Tabelle.")
     kz = q.get("kennzahlen") or {}
     if kz and kz.get("status") != "ok":
-        s.append(f"Die technischen Kennzahlen fehlen in dieser Tabelle: Der Nachtscan gehört zum "
-                 f"{datum_lang(kz.get('technik_handelstag'))}.")
+        s.append(f"Die technischen Kennzahlen fehlen in dieser Tabelle, weil der Nachtscan zum "
+                 f"{datum_lang(kz.get('technik_handelstag'))} gehört.")
     an = q.get("analysten") or {}
     if nur_voll:
         s.append("Analystendaten gibt es nur im vollen Zugang.")
     elif not analysten_da:
-        s.append("Analystendaten sind nicht geladen: Sie liegen im privaten Datenrepo, und in den Streamlit-Secrets "
-                 "fehlt der Token DATEN_TOKEN.")
+        s.append("Die Analystendaten sind nicht geladen.")
     elif an and stand.get("zeilen") and (an.get("mit_stand") or 0) < stand.get("zeilen"):
         s.append(f"Analystendaten bisher für {nachschlagen.zahl(an.get('mit_stand') or 0)} von "
                  f"{nachschlagen.zahl(stand.get('zeilen'))} Aktien; jede Nacht kommt ein Siebtel dazu.")
+    return s
+
+
+_UMLAUTE = (("verfuegbar", "verfügbar"), ("fuer", "für"), ("gehoert", "gehört"), ("uebergeben", "übergeben"),
+            ("Pruefung", "Prüfung"), ("ueber", "über"), ("koennen", "können"), ("Uebergabe", "Übergabe"))
+
+
+def status_deutsch(text):
+    """Ein Status aus dem Stand der Tabelle mit Umlauten (Berichtigung 4)."""
+    t = str(text or "")
+    for alt, neu in _UMLAUTE:
+        t = t.replace(alt, neu)
+    return t
+
+
+def hinweis_satz(h):
+    """Ein Hinweis aus dem Stand der Tabelle als ganzer Satz mit Umlauten."""
+    t = str(h or "").strip()
+    m = re.fullmatch(r"Kurse nur fuer (\d+) Prozent des Universums aktuell", t)
+    if m:
+        return f"Nur {m.group(1)} Prozent der Aktien des Universums haben Kurse vom letzten Handelstag."
+    m = re.fullmatch(r"Technische Kennzahlen fehlen, der Nachtscan gehoert zum (\S+)", t)
+    if m:
+        return f"Die technischen Kennzahlen fehlen, weil der Nachtscan zum {datum_lang(m.group(1))} gehört."
+    t = status_deutsch(t)
+    return (t[:1].upper() + t[1:] + ("" if t.endswith(".") else ".")) if t else ""
+
+
+def stand_technik(stand, analysten_da=True, nur_voll=False):
+    """Die technischen Gruende zu stand_saetze, klein darunter zu zeigen
+    (Antwort 102 vom 24.09.2026): was fehlt und woran es liegt."""
+    stand = stand or {}
+    q = stand.get("quellen") or {}
+    s = []
+    fund = q.get("fundament") or {}
+    if fund and str(fund.get("status", "")).startswith("nicht"):
+        s.append("Fundament: " + status_deutsch(fund.get("status")) + ".")
+    if not nur_voll and not analysten_da:
+        s.append("Die Analystendaten liegen im privaten Datenrepo, und in den Streamlit-Secrets fehlt der Token "
+                 "DATEN_TOKEN.")
     return s
 
 
@@ -2048,8 +2275,7 @@ def grenzen_saetze():
         "Change from Open und Red to Green beschreiben den letzten abgeschlossenen Handelstag. Live während des "
         "Handels rechnet der Scanner nicht: Die Tabelle entsteht nachts aus Tageskerzen für den ganzen Markt. "
         "Live-Signale bleiben beim Breakout-Wächter.",
-        "Die Fundamentzahlen kommen aus dem SEC-Fundament, das seit dem 21.09.2026 an jedem Abend Montag bis "
-        "Freitag neu entsteht; ein neuer Quartalsbericht steht in der Regel in der zweiten Nacht nach seiner "
+        "Die Fundamentzahlen kommen aus dem SEC-Fundament, das an jedem Abend Montag bis Freitag neu entsteht; ein neuer Quartalsbericht steht in der Regel in der zweiten Nacht nach seiner "
         "Einreichung darin, weil die SEC ihren Gesamtbestand einmal je Nacht neu zusammenstellt.",
         "Analystenempfehlungen und Gewinnüberraschungen holt der Scanner je Nacht für ein Siebtel des Markts und "
         "für alle, die gerade Zahlen gemeldet haben; nach sieben Nächten ist jede Aktie einmal dran. Nasdaq nennt "
@@ -2061,8 +2287,7 @@ def grenzen_saetze():
         "haben keine Toleranzstufe.",
         "Power-Gap prüft die Tageskerze. Die Frühregel der ersten halben Stunde lässt sich nur live prüfen und "
         "fehlt hier.",
-        "Das alte Excel-Format XLS lässt sich nicht mehr schreiben: Pandas hat den Schreiber mit Version 2.0 "
-        "entfernt, und die dafür nötige Bibliothek wird nicht mehr gepflegt. XLSX öffnet jedes Excel seit 2007.",
+        "Das alte Excel-Format XLS gibt es nicht zum Herunterladen; XLSX öffnet jedes Excel seit 2007.",
     ]
 
 
@@ -2106,7 +2331,7 @@ def vorlage_name_pruefen(name):
     keine Steuerzeichen; Leerraum am Rand faellt weg."""
     name = re.sub(r"\s+", " ", str(name or "")).strip()
     if not name:
-        return False, "Bitte einen Namen für die Vorlage eingeben."
+        return False, "Gib bitte einen Namen für die Vorlage ein."
     if len(name) > VORLAGE_NAME_LAENGE:
         return False, f"Der Name ist länger als {VORLAGE_NAME_LAENGE} Zeichen."
     if any(ord(z) < 32 for z in name):
@@ -2190,7 +2415,7 @@ def vorlage_beschriftung(v):
 UEBERGABE_GRENZE = 1500          # dieselbe Grenze wie pruefe_wochenliste in der App
 FINVIZ_SPALTEN = ("No.", "Ticker", "Company", "Sector", "Industry", "Country", "Market Cap", "P/E", "Price",
                   "Change", "Volume")
-UEBERGABE_ZIELE = {"finviz_3.csv": "Wochenliste finviz_3.csv", "darvas.csv": "Darvas-Liste darvas.csv"}
+UEBERGABE_ZIELE = {"finviz_3.csv": "Große Liste finviz_3.csv", "darvas.csv": "Darvas-Liste darvas.csv"}
 
 
 def uebergabe_zeile(ticker, name):
@@ -2510,7 +2735,7 @@ def selbsttest() -> int:
     p("Liste: nummeriert, Kuerzel als Verweis auf die vollstaendigen Daten",
       z and z[0].startswith("1. [AAA](https://heliot.streamlit.app/?aktie=AAA), Alpha Inc.;"), z[0] if z else "")
     p("Liste: angehakte Merkmale stehen drin, andere nicht",
-      "RS 95" in z[0] and "3,0 Prozent unter dem Jahreshoch" in z[0] and "Marktkapitalisierung 0,30 Milliarden Dollar" in z[0]
+      "RS 95" in z[0] and "3,0 Prozent unter dem 52-Wochen-Hoch" in z[0] and "Marktkapitalisierung 0,30 Milliarden Dollar" in z[0]
       and "Umsatzwachstum" not in z[0] and "EMA 50" not in z[0] and "Zahlen am Montag, 14.09.2026, nachbörslich" in z[0], z[0])
     p("Liste: Abstand zur Linie, Betrag in Millionen mit Vorzeichen, Kurs auf der Linie",
       "Kurs 2,00 Prozent über der EMA 21" in z[0] and "Free Cashflow plus 250,0 Millionen Dollar" in z[0]
@@ -2543,7 +2768,7 @@ def selbsttest() -> int:
     stand = {"handelstag": "2026-09-11", "gebaut_am": "2026-09-14T04:35:00+00:00"}
     tabelle_e = ergebnis_tabelle(a, "https://heliot.streamlit.app", stand)
     p("Datei: nur angehakte Spalten, Verweis und Stand",
-      "RS" in tabelle_e.columns and "Prozent unter dem Jahreshoch" in tabelle_e.columns
+      "RS" in tabelle_e.columns and "Prozent unter dem 52-Wochen-Hoch" in tabelle_e.columns
       and "Marktkapitalisierung in Milliarden Dollar" in tabelle_e.columns and "Umsatzwachstum q/q in Prozent" not in tabelle_e.columns
       and "Free Cashflow in Millionen Dollar" in tabelle_e.columns and "Abstand zur EMA 21 in Prozent" in tabelle_e.columns
       and tabelle_e.loc[0, "Vollständige Daten"] == "https://heliot.streamlit.app/?aktie=AAA"
@@ -2569,14 +2794,39 @@ def selbsttest() -> int:
         p("OpenDocument lesbar", o.loc[0, "Kürzel"] == "AAA")
     j = json.loads(inhalte["json"][0].decode("utf-8"))
     p("JSON mit Angaben und Aktien, fehlende Werte als null",
-      j["titel"] == "Heliot-Scanner" and j["aktien"][0]["Kürzel"] == "AAA" and "NaN" not in inhalte["json"][0].decode("utf-8"))
+      j["titel"] == DATEI_TITEL and j["aktien"][0]["Kürzel"] == "AAA" and "NaN" not in inhalte["json"][0].decode("utf-8"))
     h = inhalte["html"][0].decode("utf-8")
     p("HTML: Tabelle mit Beschriftung, Spaltenkoepfen und Verweis, deutsche Zahlen",
       '<html lang="de">' in h and "<caption>" in h and '<th scope="col">Kürzel</th>' in h
       and 'href="https://heliot.streamlit.app/?aktie=AAA"' in h and "0,3" in h)
-    p("Text und Markdown", inhalte["txt"][0].decode("utf-8").startswith("Heliot-Scanner")
-      and inhalte["md"][0].decode("utf-8").startswith("# Heliot-Scanner"))
+    p("Text und Markdown", inhalte["txt"][0].decode("utf-8").startswith(DATEI_TITEL)
+      and inhalte["md"][0].decode("utf-8").startswith("# " + DATEI_TITEL))
     p("Dateiname nennt Strategie und Handelstag", inhalte["xlsx"][2] == "scanner_darvas_2026-09-11.xlsx")
+    tab_b = pd.DataFrame({"Ticker": ["AAA", "BBB"], "Kurs": [12.5, float("nan")], "RS": [91, None],
+                          "Muster": ["Darvas Box", None]})
+    beliebig = {}
+    for fmt, _t, _e, _m in FORMATE:
+        try:
+            beliebig[fmt] = tabelle_datei(tab_b, fmt, "Prüftitel", ["Stand: 11.09.2026"], blatt="Kaufpunkte")
+        except ImportError as ex:
+            beliebig[fmt] = ex
+    p("Jede Tabelle in jedem Format mit der richtigen Endung (Antwort 54)",
+      all(isinstance(v, ImportError) or v[2] == next(x[2] for x in FORMATE if x[0] == k) for k, v in beliebig.items()))
+    xb = pd.read_excel(io.BytesIO(beliebig["xlsx"][0]), sheet_name=None)
+    p("Jede Tabelle als Excel: Blatt mit der Tabelle und Blatt mit den Angaben",
+      set(xb) == {"Kaufpunkte", "Angaben"} and xb["Kaufpunkte"].loc[1, "Ticker"] == "BBB"
+      and list(xb["Angaben"]["Angaben"]) == ["Prüftitel", "Stand: 11.09.2026"])
+    txt_b = beliebig["txt"][0].decode("utf-8")
+    p("Jede Tabelle als Text: Titel, Angaben, je Zeile Spalte und Wert, Leeres ausgelassen, deutsche Zahlen",
+      txt_b.startswith("Prüftitel\nStand: 11.09.2026\n") and "1. Ticker AAA; Kurs 12,50; RS 91; Muster Darvas Box." in txt_b
+      and "2. Ticker BBB." in txt_b and "nan" not in txt_b, txt_b)
+    h_b = beliebig["html"][0].decode("utf-8")
+    p("Jede Tabelle als HTML: erste Spalte als Zeilenkopf", '<th scope="row">AAA</th>' in h_b and "<td>12,50</td>" in h_b)
+    j_b = json.loads(beliebig["json"][0].decode("utf-8"))
+    p("Jede Tabelle als JSON: fehlende Werte als null", j_b["zeilen"][1]["Kurs"] is None and j_b["titel"] == "Prüftitel")
+    p("Eigene Zeilen fuer Text und Markdown",
+      tabelle_datei(tab_b, "md", "T", zeilen_text=["erste Zeile", "zweite Zeile"])[0].decode("utf-8")
+      == "# T\n\n1. erste Zeile\n2. zweite Zeile\n")
 
     # Stand
     s = stand_saetze({**stand, "universum": 6612, "zeilen": 6500,
@@ -2589,8 +2839,22 @@ def selbsttest() -> int:
     p("Stand: aeltere Tabelle nach Handelsschluss wird benannt", any("nach dem Nachtscan" in x for x in s2), " | ".join(s2))
     s3 = stand_saetze({"handelstag": "2026-09-11"}, jetzt=datetime(2026, 9, 14, 12, 0, tzinfo=timezone.utc),
                       analysten_da=False)
-    p("Stand: vor Handelsschluss ist der Freitag aktuell, fehlende Analystendaten benannt",
-      not any("nach dem Nachtscan" in x for x in s3) and any("DATEN_TOKEN" in x for x in s3), " | ".join(s3))
+    t3 = stand_technik({"handelstag": "2026-09-11"}, analysten_da=False)
+    p("Stand: vor Handelsschluss ist der Freitag aktuell, fehlende Analystendaten benannt, der Grund klein darunter",
+      not any("nach dem Nachtscan" in x for x in s3) and "Die Analystendaten sind nicht geladen." in s3
+      and not any("DATEN_TOKEN" in x for x in s3) and any("DATEN_TOKEN" in x for x in t3), " | ".join(s3 + t3))
+    s5 = stand_saetze({"handelstag": "2026-09-11", "status": "unvollstaendig",
+                       "hinweise": ["Kurse nur fuer 71 Prozent des Universums aktuell",
+                                    "Technische Kennzahlen fehlen, der Nachtscan gehoert zum 2026-09-10"],
+                       "quellen": {"fundament": {"status": "nicht verfuegbar: kein Fundament-Release erreichbar"}}},
+                      jetzt=datetime(2026, 9, 14, 12, 0, tzinfo=timezone.utc))
+    t5 = stand_technik({"quellen": {"fundament": {"status": "nicht verfuegbar: kein Fundament-Release erreichbar"}}})
+    p("Stand: unvollständige Tabelle in ganzen Sätzen mit Umlauten (Berichtigung 4)",
+      "Achtung, die Tabelle ist unvollständig. Nur 71 Prozent der Aktien des Universums haben Kurse vom letzten "
+      "Handelstag. Die technischen Kennzahlen fehlen, weil der Nachtscan zum Donnerstag, 10.09.2026 gehört." in s5
+      and "Die Fundamentzahlen fehlen in dieser Tabelle." in s5
+      and t5 == ["Fundament: nicht verfügbar: kein Fundament-Release erreichbar."]
+      and not any(w in " ".join(s5 + t5) for w in ("fuer", "gehoert", "verfuegbar")), " | ".join(s5 + t5))
     s4 = stand_saetze({"handelstag": "2026-09-11", "quellen": {"analysten": {"mit_stand": 950}}, "zeilen": 6500},
                       jetzt=datetime(2026, 9, 14, 12, 0, tzinfo=timezone.utc), analysten_da=False, nur_voll=True)
     p("Stand fuer Gaeste (S4): nur der Hinweis auf den vollen Zugang, kein Secret, kein Repo",
@@ -2609,7 +2873,7 @@ def selbsttest() -> int:
     bild = [t for t in texte if nachschlagen.bildzeichen_in(t)]
     p("Keine Bildzeichen in Beschriftungen und Erklaerungen", not bild, "; ".join(bild[:3]))
     p("Beschriftung der Grenzfelder: von und bis mit der Einheit, Platzhalter nennen das offene Ende",
-      FELD["hoch_1j"].eingabe_titel("max") == "Abstand zum Jahreshoch bis, in Prozent unter dem Hoch"
+      FELD["hoch_1j"].eingabe_titel("max") == "Abstand zum 52-Wochen-Hoch bis, in Prozent unter dem Hoch"
       and FELD["tief_3m"].eingabe_titel("min") == "Abstand zum Quartalstief von, in Prozent über dem Tief"
       and FELD["marktkap"].eingabe_titel("min") == "Marktkapitalisierung von, in Milliarden Dollar"
       and FELD["rs"].eingabe_titel("min") == "RS gegen den ganzen US-Markt von"
@@ -2715,10 +2979,10 @@ def selbsttest() -> int:
          "cm_t_unterschreitung_pct": 1.43}
     ms = muster_saetze(r)
     p("Chartmuster: Reihenfolge B, F, S, T, Preise in Dollar, Festlegung bei S und T genannt",
-      ms == ["Inside Day nach drei steigenden Tagen, eng über 12,34 Dollar mit Stop 11,90 Dollar, konservativ über "
-             "12,80 Dollar mit Stop 11,50 Dollar",
+      ms == ["Inside Day nach drei steigenden Tagen, über dem Hoch des Inside Days 12,34 Dollar mit Stop 11,90 "
+             "Dollar; über dem Hoch des Vortags 12,80 Dollar mit Stop 11,50 Dollar",
              "Power Trend an seit 14 Handelstagen",
-             "Wick Play am 18.09.2026, Docht unten an EMA 10 und SMA 50, Einstieg über 45,60 Dollar, Stop 41,04 "
+             "Wick Play am 18.09.2026, Docht unten am EMA 10 und am SMA 50, Einstieg über 45,60 Dollar, Stop 41,04 "
              "Dollar, Schwellen eigene Festlegung",
              "Shakeout am EMA 10, 1,4 Prozent darunter und am Folgetag wieder darüber, Schwelle eigene Festlegung"],
       " | ".join(ms))
@@ -2739,8 +3003,8 @@ def selbsttest() -> int:
                         "cm_n_stop": 29.87, "cm_t": 0})
     p("Chartmuster: Shakeout plus drei mit beiden Einstiegen, in der Reihenfolge der Tabelle",
       ms == ["Shakeout plus drei nach 20,3 Prozent Abverkauf in 15 Handelstagen, Tief am 16.09.2026, Einstieg "
-             "plus 5 Prozent über 31,36 Dollar schon erreicht, plus 10 Prozent über 32,86 Dollar, Stop 29,87 Dollar, "
-             "Hoch und Abverkauf nach eigener Festlegung"],
+             "bei plus 5 Prozent, 31,36 Dollar, schon erreicht, bei plus 10 Prozent, 32,86 Dollar, Stop 29,87 "
+             "Dollar, Hoch und Abverkauf nach eigener Festlegung"],
       " | ".join(ms))
     p("Chartmuster: das W ist gestrichen, alte Spalten ergeben keinen Satz mehr (Gerhard, 22.09.2026)",
       muster_saetze({"cm_h": 1.0, "cm_h_wochen": 13.0, "cm_h_kp": 25.27, "cm_h_stop": 22.75}) == [])
@@ -2760,8 +3024,31 @@ def selbsttest() -> int:
                         "cm_n_kp5": 174.57, "cm_n_kp10": 182.89, "cm_n_kp5_erreicht": False, "cm_n_stop": 166.26})
     p("Chartmuster: Shakeout plus drei, fuenf Prozent noch nicht erreicht",
       ms == ["Shakeout plus drei nach 16,3 Prozent Abverkauf in 6 Handelstagen, Tief am 16.09.2026, Einstieg "
-             "plus 5 Prozent über 174,57 Dollar, plus 10 Prozent über 182,89 Dollar, Stop 166,26 Dollar, "
+             "bei plus 5 Prozent, 174,57 Dollar, bei plus 10 Prozent, 182,89 Dollar, Stop 166,26 Dollar, "
              "Hoch und Abverkauf nach eigener Festlegung"], " | ".join(ms))
+    p("Wick Play am Basisrand und am alten Hoch (Berichtigung 10)",
+      "Docht oben am Basisrand und am alten Hoch" in muster_saetze(
+          {"cm_s": 1, "cm_s_tag": "2026-09-18", "cm_s_seite": "oben", "cm_s_stelle": "Basisrand, altes Hoch",
+           "cm_s_kp": 10.0, "cm_s_stop": 9.0})[0])
+    p("Das Zweifache statt 2fache, auch beim Power-Gap (Berichtigung 9)",
+      "mindestens das Zweifache des 52-Wochen-Tiefs" in langweile_text()
+      and "das Dreifache des 50-Tage-Schnitts" in strategie_text("power_gap")
+      and _fache(2) == "Zweifache" and _fache(2.5) == "2,5-Fache")
+    p("Die vier Strategien aus Antwort 55 stehen in Teil 1 samt Erklärung",
+      all(k in AUSWAHL_NAMEN and strategie_text(k) for k in ("cup_woche", "earnings_pullback", "shakeout_spring",
+                                                            "crash_support"))
+      and AUSWAHL_NAMEN["cup_woche"] == "Cup & Handle, Wochenbasis" and AUSWAHL_NAMEN["power_gap"] == "Power-Gap")
+    p("Chart-Signale sagen, dass sie dasselbe sind wie das Merkmal in Teil 2 (Antwort 56)",
+      all("dasselbe wie" in strategie_text(k) and "Teil 2" in strategie_text(k)
+          for k in ("hoch_52w", "hoch_allzeit", "rs_linie", "red_to_green")))
+    p("Rang der Branchengruppe: stärkste und schwächste Gruppe zuerst (Antwort 64)",
+      ("gruppe_rang:auf", "Rang der Branchengruppe, stärkste Gruppe zuerst") in sortier_wahl(
+          {"felder": {"gruppe_rang": {"an": True}}})
+      and ("gruppe_rang:ab", "Rang der Branchengruppe, schwächste Gruppe zuerst") in sortier_wahl(
+          {"felder": {"gruppe_rang": {"an": True}}}))
+    p("Keine Herkunft und kein unsere Festlegung im Erklärteil (Antworten 91 und 100)",
+      not any(re.search(r"Gerhard|\d{2}\.\d{2}\.20\d{2}|[Uu]nsere Festlegung|F\(t\)", x)
+              for x in chartmuster_erklaerung() + grenzen_saetze()))
     ms = muster_saetze({"cm_k": 1, "cm_k_gewinn_pct": 3.1, "cm_k_wochen": 7.0, "cm_k_kp": 287.3,
                         "cm_k_stop": 258.57, "cm_q": 1, "cm_q_monat": "2026-08", "cm_q_linie": 50.25,
                         "cm_q_linie_tag": "2025-11-28", "cm_q_tage_ohne_hoch": 179.0, "cm_q_vol_faktor": 2.0,

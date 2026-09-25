@@ -424,13 +424,17 @@ def _portionen(absaetze, grenze=NTFY_GRENZE):
 def senden(topic, titel, absaetze, prio="low", poster=None):
     """Eigener Sendeweg ohne Handelszeitsperre: Der Bericht kommt nach dem
     Schluss (R7). Kennungen wandern in den ntfy-Verlauf, damit der
-    Freitags-Putz auch diese Meldungen raeumt."""
+    Wochenputz auch diese Meldungen raeumt. Die Namen Power-Gap und Red to
+    Green setzt einstellungen.meldungs_text ein (Gerhard, 24.09.2026, Fragen
+    93 und 94)."""
     import requests
+    import einstellungen
     portionen = _portionen(absaetze)
     ok = True
     for nr, teil in enumerate(portionen, 1):
         kopf = titel if len(portionen) == 1 else f"{titel} ({nr} von {len(portionen)})"
-        body = "\n\n".join(teil)
+        kopf = einstellungen.meldungs_text(kopf)
+        body = einstellungen.meldungs_text("\n\n".join(teil))
         try:
             if poster is not None:
                 r = poster(topic, kopf, body, prio)

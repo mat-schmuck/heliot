@@ -43,19 +43,21 @@ ABLAEUFE = (
     {"schluessel": "waechter", "titel": "Breakout-Wächter",
      "anstoss": "waechterhueter.yml", "zustand": "watcher.yml", "echt_ab_s": 0,
      "knopf": "Wächter prüfen und bei Bedarf starten",
-     "erklaerung": ("Der Wächter wacht während des Handels in New York, 15:30 bis 22:00 Uhr Wiener Zeit. Der "
-                    "Hüter prüft alle sechs Minuten von selbst und startet ihn neu, wenn er fehlt; der Knopf stößt "
-                    "den Hüter sofort an. Läuft schon eine Wache oder wird nicht gehandelt, startet er nichts.")},
+     "erklaerung": ("Der Wächter wacht während des Handels in New York, 9:30 bis 16:00 Uhr New Yorker Zeit, "
+                    "also 15:30 bis 22:00 Uhr Wiener Zeit. Über ihn wacht der Hüter, ein zweiter Ablauf, der alle "
+                    "sechs Minuten nachsieht, ob der Wächter läuft, und ihn neu startet, wenn er fehlt; der Knopf "
+                    "stößt den Hüter sofort an. Läuft schon eine Wache oder wird nicht gehandelt, startet er "
+                    "nichts.")},
     {"schluessel": "nachtscan", "titel": "Nachtscan",
      "anstoss": "scanner.yml", "zustand": "scanner.yml", "echt_ab_s": 120,
      "knopf": "Nachtscan prüfen und bei Bedarf nachholen",
-     "erklaerung": ("Der Nachtscan rechnet um 18:00 Uhr New York, also gegen Mitternacht Wiener Zeit, die "
-                    "Kaufpunkte der Wochenliste. Der Knopf scannt nur, wenn der fällige Scan fehlt; ein "
-                    "geglückter Scan bleibt, wie er ist.")},
+     "erklaerung": ("Der Nachtscan rechnet um 18:00 Uhr New Yorker Zeit, also gegen Mitternacht Wiener Zeit, "
+                    "die Kaufpunkte der beiden Wochenlisten und der einzeln überwachten Aktien. Der Knopf scannt "
+                    "nur, wenn der fällige Scan fehlt; ein geglückter Scan bleibt, wie er ist.")},
     {"schluessel": "tabelle", "titel": "Scanner-Tabelle",
      "anstoss": "scanner_daten.yml", "zustand": "scanner_daten.yml", "echt_ab_s": 120,
      "knopf": "Scanner-Tabelle prüfen und bei Bedarf bauen",
-     "erklaerung": ("Die Tabelle des Scanners entsteht nach dem Nachtscan. Der Knopf baut nur, wenn sie nicht "
+     "erklaerung": ("Die Scanner-Tabelle entsteht nach dem Nachtscan. Der Knopf baut nur, wenn sie nicht "
                     "schon mit dem neuesten Nachtscan rechnet.")},
 )
 
@@ -87,13 +89,12 @@ def wien(dt):
     return dt
 
 
-def zeitpunkt_text(dt, jetzt=None):
-    """'heute um 15:31 Uhr' oder 'am 18.09.2026 um 18:26 Uhr', Wiener Zeit."""
+def zeitpunkt_text(dt, jetzt=None, seit=False):
+    """'am 18.09.2026 um 18:26 Uhr Wiener Zeit', mit seit 'seit dem 18.09.2026
+    um ...': immer Tag, Monat und Jahr (Antwort 99 vom 24.09.2026). jetzt
+    bleibt fuer die Aufrufer stehen."""
     w = wien(dt)
-    heute = wien(jetzt or datetime.now(timezone.utc))
-    if w.date() == heute.date():
-        return f"heute um {w:%H:%M} Uhr"
-    return f"am {w:%d.%m.%Y} um {w:%H:%M} Uhr"
+    return f"{'seit dem' if seit else 'am'} {w:%d.%m.%Y} um {w:%H:%M} Uhr Wiener Zeit"
 
 
 def dauer_s(lauf):
@@ -130,18 +131,17 @@ def zustand_saetze(laeufe, ablauf, jetzt=None):
     wartend = [l for l in laeufe if l.get("status") in WARTEND]
     if aktiv:
         a = aktiv[0]
-        s.append(f"Läuft gerade, seit {zeitpunkt_text(_zeit(a.get('run_started_at') or a.get('created_at')), jetzt)} "
-                 "Wiener Zeit.")
+        s.append(f"Läuft gerade, {zeitpunkt_text(_zeit(a.get('run_started_at') or a.get('created_at')), jetzt, seit=True)}.")
     if wartend:
         w = wartend[0]
-        s.append(f"Ein weiterer Lauf wartet seit {zeitpunkt_text(_zeit(w.get('created_at')), jetzt)} auf einen "
+        s.append(f"Ein weiterer Lauf wartet {zeitpunkt_text(_zeit(w.get('created_at')), jetzt, seit=True)} auf einen "
                  "Rechner.")
     fertig = [l for l in laeufe if l.get("status") == "completed"]
     if fertig:
         f = fertig[0]
         erg = ERGEBNIS.get(f.get("conclusion"), f.get("conclusion") or "ohne Ergebnis")
         s.append(f"Letzter abgeschlossener Lauf {zeitpunkt_text(_zeit(f.get('run_started_at') or f.get('created_at')), jetzt)}"
-                 f" Wiener Zeit, {dauer_text(dauer_s(f))}: {erg}.")
+                 f", {dauer_text(dauer_s(f))}: {erg}.")
         grenze = ablauf.get("echt_ab_s") or 0
         if grenze:
             echt = [l for l in fertig if (dauer_s(l) or 0) >= grenze]
@@ -149,7 +149,7 @@ def zustand_saetze(laeufe, ablauf, jetzt=None):
                 e = echt[0]
                 erg_e = ERGEBNIS.get(e.get("conclusion"), e.get("conclusion") or "ohne Ergebnis")
                 s.append(f"Zuletzt wirklich gerechnet {zeitpunkt_text(_zeit(e.get('run_started_at') or e.get('created_at')), jetzt)}"
-                         f" Wiener Zeit, {dauer_text(dauer_s(e))}: {erg_e}. Die kurzen Läufe dazwischen haben "
+                         f", {dauer_text(dauer_s(e))}: {erg_e}. Die kurzen Läufe dazwischen haben "
                          "festgestellt, dass nichts zu tun war.")
             elif not echt:
                 s.append("Unter den letzten Läufen hat keiner länger gerechnet; sie haben festgestellt, dass nichts "
@@ -157,21 +157,27 @@ def zustand_saetze(laeufe, ablauf, jetzt=None):
     return s
 
 
+NICHT_ANGESTOSSEN = "Der Ablauf ließ sich nicht anstoßen; der Stand oben bleibt, wie er ist."
+
+
 def anstoss_satz(status_code, jetzt=None):
-    """Satz zur Antwort auf POST .../dispatches: 204 (frueher) oder 200 (seit
-    der Rueckgabe der Laufnummer) heissen angenommen."""
+    """(angenommen, einfacher Satz, technischer Grund oder None) zur Antwort
+    auf POST .../dispatches: 204 (frueher) oder 200 (seit der Rueckgabe der
+    Laufnummer) heissen angenommen. Den technischen Grund zeigt die App klein
+    unter dem Satz (Antwort 102 vom 24.09.2026)."""
     jetzt = jetzt or datetime.now(timezone.utc)
     if status_code in (200, 204):
-        return True, (f"Angestoßen {zeitpunkt_text(jetzt, jetzt)} Wiener Zeit. Der Ablauf prüft selbst, ob etwas zu "
-                      "tun ist; der Stand oben zeigt es nach etwa einer Minute, dazu Stand neu laden drücken.")
+        return True, (f"Angestoßen {zeitpunkt_text(jetzt, jetzt)}. Der Ablauf prüft selbst, ob etwas zu tun ist; "
+                      "der Stand oben zeigt es nach etwa einer Minute; drück dazu Stand neu laden."), None
     if status_code in (401, 403):
-        return False, (f"GitHub hat den Anstoß abgelehnt (Code {status_code}): Dem Token ABLAUF_TOKEN fehlt die "
-                       "Berechtigung für Abläufe, oder er gilt nicht mehr.")
+        return False, NICHT_ANGESTOSSEN, (f"GitHub hat den Anstoß mit Code {status_code} abgelehnt: Dem Token "
+                                          "ABLAUF_TOKEN fehlt die Berechtigung für Abläufe, oder er gilt nicht mehr.")
     if status_code == 404:
-        return False, "GitHub kennt diesen Ablauf nicht (Code 404)."
+        return False, NICHT_ANGESTOSSEN, "GitHub kennt diesen Ablauf nicht, Code 404."
     if status_code == 422:
-        return False, "GitHub hat den Anstoß abgelehnt (Code 422): Der Ablauf nimmt keinen Anstoß von Hand an."
-    return False, f"GitHub hat den Anstoß nicht angenommen (Code {status_code})."
+        return False, NICHT_ANGESTOSSEN, ("GitHub hat den Anstoß mit Code 422 abgelehnt: Der Ablauf nimmt keinen "
+                                          "Anstoß von Hand an.")
+    return False, NICHT_ANGESTOSSEN, f"GitHub hat den Anstoß mit Code {status_code} nicht angenommen."
 
 
 # ---------------------------------------------------------------------------
@@ -197,7 +203,7 @@ def selbsttest():
     ]
     s = zustand_saetze(laeufe_w, waechter, jetzt)
     p("Waechter: laufende Wache mit Wiener Zeit, letzter abgeschlossener Lauf mit Datum, Dauer und Ergebnis",
-      s == ["Läuft gerade, seit heute um 15:30 Uhr Wiener Zeit.",
+      s == ["Läuft gerade, seit dem 21.09.2026 um 15:30 Uhr Wiener Zeit.",
             "Letzter abgeschlossener Lauf am 18.09.2026 um 15:28 Uhr Wiener Zeit, 2 Stunden 58 Minuten: abgebrochen."],
       " | ".join(s))
     laeufe_s = [
@@ -210,25 +216,31 @@ def selbsttest():
     ]
     s2 = zustand_saetze(laeufe_s, scan, jetzt)
     p("Nachtscan: kurzer letzter Lauf, dazu der letzte, der wirklich gerechnet hat",
-      s2 == ["Letzter abgeschlossener Lauf heute um 12:20 Uhr Wiener Zeit, weniger als eine Minute: erfolgreich.",
-             "Zuletzt wirklich gerechnet heute um 00:00 Uhr Wiener Zeit, 31 Minuten: erfolgreich. Die kurzen Läufe "
+      s2 == ["Letzter abgeschlossener Lauf am 21.09.2026 um 12:20 Uhr Wiener Zeit, weniger als eine Minute: "
+             "erfolgreich.",
+             "Zuletzt wirklich gerechnet am 21.09.2026 um 00:00 Uhr Wiener Zeit, 31 Minuten: erfolgreich. Die kurzen Läufe "
              "dazwischen haben festgestellt, dass nichts zu tun war."], " | ".join(s2))
     s3 = zustand_saetze([laeufe_s[0]], scan, jetzt)
     p("Nachtscan: nur kurze Laeufe, ehrlich benannt",
       s3[-1].startswith("Unter den letzten Läufen hat keiner länger gerechnet"), " | ".join(s3))
     s4 = zustand_saetze([{"status": "queued", "conclusion": None, "created_at": "2026-09-21T13:58:00Z",
                           "updated_at": "2026-09-21T13:58:00Z"}], waechter, jetzt)
-    p("Wartender Lauf wird benannt", s4 == ["Ein weiterer Lauf wartet seit heute um 15:58 Uhr auf einen Rechner."],
+    p("Wartender Lauf wird benannt",
+      s4 == ["Ein weiterer Lauf wartet seit dem 21.09.2026 um 15:58 Uhr Wiener Zeit auf einen Rechner."],
       " | ".join(s4))
     p("Keine Laeufe", zustand_saetze([], waechter, jetzt) == ["Bisher kein Lauf gefunden."])
     p("Unlesbare Zeiten fallen weg", zustand_saetze([{"status": "completed", "created_at": "kaputt"}], waechter, jetzt)
       == ["Bisher kein Lauf gefunden."])
-    ok200, satz200 = anstoss_satz(200, jetzt)
-    ok204, _ = anstoss_satz(204, jetzt)
-    ok403, satz403 = anstoss_satz(403, jetzt)
-    p("Anstoss: 200 und 204 angenommen, 403 mit Grund",
-      ok200 and ok204 and not ok403 and "ABLAUF_TOKEN" in satz403 and "heute um 16:00 Uhr" in satz200,
-      satz200 + " | " + satz403)
+    ok200, satz200, tech200 = anstoss_satz(200, jetzt)
+    ok204, _s, _t = anstoss_satz(204, jetzt)
+    ok403, satz403, tech403 = anstoss_satz(403, jetzt)
+    p("Anstoss: 200 und 204 angenommen, 403 mit einfachem Satz und dem Grund klein darunter (Antwort 102)",
+      ok200 and ok204 and not ok403 and tech200 is None and "ABLAUF_TOKEN" not in satz403
+      and "ABLAUF_TOKEN" in tech403 and "am 21.09.2026 um 16:00 Uhr Wiener Zeit" in satz200,
+      satz200 + " | " + satz403 + " | " + str(tech403))
+    p("Hüter erklärt, Nachtscan nennt beide Wochenlisten und die einzeln überwachten (Antwort 75, Berichtigung 17)",
+      "ein zweiter Ablauf, der alle sechs Minuten nachsieht, ob der Wächter läuft" in waechter["erklaerung"]
+      and "der beiden Wochenlisten und der einzeln überwachten Aktien" in scan["erklaerung"])
     p("Dauer in Worten", dauer_text(59) == "weniger als eine Minute" and dauer_text(60) == "eine Minute"
       and dauer_text(3600) == "eine Stunde" and dauer_text(3720) == "eine Stunde 2 Minuten"
       and dauer_text(None) == "unbekannt lange")
@@ -236,7 +248,7 @@ def selbsttest():
       all(a["anstoss"].endswith(".yml") and a["zustand"].endswith(".yml") and a["knopf"] and a["erklaerung"]
           for a in ABLAEUFE))
     texte = [a["knopf"] + a["erklaerung"] + a["titel"] for a in ABLAEUFE] + list(ERGEBNIS.values()) \
-        + s + s2 + s3 + s4 + [satz200, satz403]
+        + s + s2 + s3 + s4 + [satz200, satz403, tech403]
     p("Keine Gedankenstriche und keine Bildzeichen in den Texten",
       not any(z in t for t in texte for z in ("–", "—")) and
       not any(ord(z) >= 0x2600 for t in texte for z in t))

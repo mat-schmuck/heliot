@@ -103,11 +103,49 @@ def zahl(x, stellen=0):
 
 
 def prozent(x, stellen=0):
-    """'plus 12,3 Prozent' oder 'minus 4 Prozent'; None wird 'nicht berechenbar'."""
+    """'plus 12,3 Prozent' oder 'minus 4 Prozent'; None wird 'nicht berechenbar'.
+    Was gerundet null ergibt, steht ohne Vorzeichen da, nie als 'minus 0,0'."""
     if x is None:
         return "nicht berechenbar"
     v = float(x)
+    if round(abs(v), stellen) == 0:
+        return zahl(0.0, stellen) + " Prozent"
     return ("plus " if v >= 0 else "minus ") + zahl(abs(v), stellen) + " Prozent"
+
+
+def veraenderung(x, bezug, stellen=1):
+    """'plus 1,2 Prozent gegenüber dem Vortag' oder 'unverändert gegenüber
+    dem Vortag', wenn es gerundet null ergibt (Berichtigung 5 vom 24.09.2026)."""
+    if x is not None and round(abs(float(x)), stellen) == 0:
+        return f"unverändert gegenüber dem {bezug}"
+    return f"{prozent(x, stellen)} gegenüber dem {bezug}"
+
+
+# Woher der Livekurs kommt, in allen Saetzen gleich (Antwort 33 vom 24.09.2026).
+LIVE_QUELLE = "von Yahoo, bis zu 15 Minuten alt"
+# Saetze, die nur den technischen Grund nennen, zeigt die App klein unter dem
+# einfachen Satz (Antwort 102 vom 24.09.2026).
+TECHNIK = "Technischer Grund: "
+
+
+def live_faktor(e, live):
+    """Livekurs geteilt durch den Schlusskurs der Nacht, oder None. Damit
+    rechnet das Nachschlagen alles um, was am Kurs haengt (Antworten 31 und
+    32 vom 24.09.2026): Abstaende zu Hochs, Tiefs und Durchschnitten,
+    Wertentwicklung, Bewertung und Kursziel."""
+    try:
+        k, n = float((live or {}).get("kurs")), float((e or {}).get("kurs"))
+    except (TypeError, ValueError):
+        return None
+    return k / n if n > 0 and k > 0 else None
+
+
+def abstand_live(abst_pct, faktor):
+    """Ein Abstand in Prozent zu einem festen Bezug, mit dem Livekurs neu
+    gerechnet: der Bezug liegt bei Schluss durch (1 plus Abstand)."""
+    if abst_pct is None or not faktor:
+        return abst_pct
+    return ((1.0 + float(abst_pct) / 100.0) * float(faktor) - 1.0) * 100.0
 
 
 def datum_text(iso):
@@ -302,16 +340,24 @@ def kopf_saetze(t, e, live):
     name = firmenname(e.get("name") or e.get("firma")) or t
     s = [f"{t}, {name}" + (f", {e['boerse']}" if e.get("boerse") else "") + "."]
     if live and live.get("kurs") is not None:
-        s.append(f"Kurs {zahl(live['kurs'], 2)} Dollar, {prozent(live.get('pct'), 1)} gegenüber dem Vortag, "
+        s.append(f"Kurs {zahl(live['kurs'], 2)} Dollar {LIVE_QUELLE}, {veraenderung(live.get('pct'), 'Vortag')}, "
                  f"Stand {live.get('stand')}.")
     elif e.get("kurs") is not None:
         s.append(f"Schlusskurs am {datum_text(e.get('letzter_tag'))}: {zahl(e['kurs'], 2)} Dollar, "
-                 f"{prozent(e.get('pct'), 1)} gegenüber dem Vortag.")
+                 f"{veraenderung(e.get('pct'), 'Vortag')}.")
     else:
         s.append("Kein Kurs bekannt.")
+    f = live_faktor(e, live)
     if e.get("abst_52w_hoch_pct") is not None:
-        s.append(f"Abstand zum 52-Wochen-Hoch {prozent(e['abst_52w_hoch_pct'], 1)}"
-                 + (", die Aktie steht auf dem 52-Wochen-Hoch" if e.get("kurs_52w_hoch") else "") + ".")
+        abst = abstand_live(e["abst_52w_hoch_pct"], f)
+        if f and abst is not None and abst > 0:
+            s.append(f"Der Kurs {LIVE_QUELLE}, liegt {zahl(abst, 1)} Prozent über dem bisherigen 52-Wochen-Hoch.")
+        elif f:
+            s.append(f"Abstand zum 52-Wochen-Hoch mit dem Kurs {LIVE_QUELLE}: {prozent(abst, 1)}"
+                     + (", die Aktie steht auf dem 52-Wochen-Hoch" if round(abst, 1) == 0 else "") + ".")
+        else:
+            s.append(f"Abstand zum 52-Wochen-Hoch {prozent(e['abst_52w_hoch_pct'], 1)}"
+                     + (", die Aktie steht auf dem 52-Wochen-Hoch" if e.get("kurs_52w_hoch") else "") + ".")
     if e.get("_gruppe") == "ausserhalb" and e.get("grund"):
         s.append(f"Nicht im Universum: {e['grund']}; der RS-Wert gilt trotzdem, gerechnet gegen den ganzen Bezug.")
     return s
@@ -435,7 +481,7 @@ def _dollar_menge(x):
     return f"{zahl(v)} Dollar"
 
 
-def technik_saetze(e):
+def technik_saetze(e, live=None):
     """ETAPPE 2 (Gerhard, 13.09.2026, Entscheidungen 4 und 5): die 16
     technischen Kennzahlen, je Kennzahl ein Satz, REINE ANZEIGE. Die Werte
     stehen in rs_universum.json unter technik; gerechnet werden sie in
@@ -451,21 +497,31 @@ def technik_saetze(e):
                 "das Dollarvolumen bleibt aber ähnlich. Vermutlich ein Split oder Reverse-Split, den die Kursquelle "
                 "noch nicht in die älteren Kurse eingerechnet hat; die Werte wären falsch."]
     s = []
-    teile = [f"{wort} {prozent(tk[name], 1)}" for name, wort in (
+    f = live_faktor(e, live)
+    nacht = datum_text(e.get("letzter_tag"))
+    if f:
+        s.append(f"Mit dem Kurs {LIVE_QUELLE}, umgerechnet: Wertentwicklung, Abstände zu Hochs, Tiefs und "
+                 f"Durchschnitten und die ATR in Prozent. Alles Übrige gilt für den Schluss vom {nacht}.")
+    teile = [f"{wort} {prozent(abstand_live(tk[name], f), 1)}" for name, wort in (
         ("perf_1w", "eine Woche"), ("perf_1m", "ein Monat"), ("perf_3m", "drei Monate"), ("perf_6m", "sechs Monate"),
         ("perf_12m", "zwölf Monate"), ("perf_ytd", "seit Jahresbeginn")) if tk.get(name) is not None]
     s.append("Wertentwicklung: " + ("; ".join(teile) if teile else "nicht berechenbar") + ".")
     datum = str(tk.get("ath_datum") or "")
+    ath_abst = abstand_live(tk.get("ath_abst"), f)
     if tk.get("ath") is None:
         s.append("Allzeithoch nicht verfügbar.")
-    elif len(datum) == 10 and datum == e.get("letzter_tag"):
+    elif f and ath_abst is not None and ath_abst > 0:
+        s.append(f"Der Kurs liegt {zahl(ath_abst, 1)} Prozent über dem bisherigen Allzeithoch von "
+                 f"{zahl(tk['ath'], 2)} Dollar.")
+    elif not f and len(datum) == 10 and datum == e.get("letzter_tag"):
         s.append(f"Die Aktie steht auf ihrem Allzeithoch von {zahl(tk['ath'], 2)} Dollar.")
     else:
         wann = f" vom {datum_text(datum)}" if len(datum) == 10 else (f" im {monat_text(datum)}" if len(datum) == 7 else "")
-        s.append(f"Allzeithoch {zahl(tk['ath'], 2)} Dollar{wann}; Abstand {prozent(tk.get('ath_abst'), 1)}.")
-    teile = [f"SMA {n} {prozent(tk.get(f'sma{n}_abst'), 1)}" for n in (20, 50, 200) if tk.get(f"sma{n}_abst") is not None]
+        s.append(f"Allzeithoch {zahl(tk['ath'], 2)} Dollar{wann}; Abstand {prozent(ath_abst, 1)}.")
+    teile = [f"SMA {n} {prozent(abstand_live(tk.get(f'sma{n}_abst'), f), 1)}" for n in (20, 50, 200)
+             if tk.get(f"sma{n}_abst") is not None]
     s.append("Abstand zu den gleitenden Durchschnitten: " + ("; ".join(teile) if teile else "nicht berechenbar") + ".")
-    teile = [f"{wort} {prozent(tk.get(name), 1)}" for name, wort in (
+    teile = [f"{wort} {prozent(abstand_live(tk.get(name), f), 1)}" for name, wort in (
         ("hoch50_abst", "zum 50-Tage-Hoch"), ("tief50_abst", "zum 50-Tage-Tief"), ("tief52_abst", "zum 52-Wochen-Tief"))
         if tk.get(name) is not None]
     s.append("Abstand " + ("; ".join(teile) if teile else "zu Hoch und Tief nicht berechenbar") + ".")
@@ -473,10 +529,10 @@ def technik_saetze(e):
              if tk.get("adr20") is not None else "ADR nicht berechenbar.")
     teile = [f"{wort} {zahl(tk[name], 2)} Prozent" for name, wort in (("vola5", "Woche"), ("vola21", "Monat"))
              if tk.get(name) is not None]
-    s.append(("Volatilität wie bei Finviz, dieselbe Spanne über 5 und 21 Tage: " + "; ".join(teile) + ".")
+    s.append(("Volatilität wie bei Finviz, die mittlere Tagesspanne über 5 und über 21 Tage: " + "; ".join(teile) + ".")
              if teile else "Volatilität nicht berechenbar.")
     if tk.get("atr14") is not None:
-        kurs = e.get("kurs")
+        kurs = (live or {}).get("kurs") if f else e.get("kurs")
         s.append(f"ATR 14 nach Wilder: {zahl(tk['atr14'], 2 if tk['atr14'] >= 10 else 4 if tk['atr14'] < 1 else 2)} Dollar"
                  + (f", das sind {zahl(tk['atr14'] / kurs * 100, 1)} Prozent des Kurses" if kurs else "") + ".")
     else:
@@ -494,12 +550,12 @@ def technik_saetze(e):
         s.append("Mansfield RS nicht berechenbar, dafür braucht es 52 Wochen gemeinsam mit dem Index.")
     s.append(weinstein_satz(tk))
     if tk.get("burst"):
-        s.append(f"Momentum Burst nach Stockbee am letzten Handelstag: {prozent(e.get('pct'), 1)} bei höherem Volumen als am Vortag"
+        s.append(f"Momentum Burst nach Stockbee am {nacht}: {prozent(e.get('pct'), 1)} bei höherem Volumen als am Vortag"
                  + (f"; Schluss bei {int(tk['schlusslage'])} Prozent der Tagesspanne" if tk.get("schlusslage") is not None else "")
                  + (f"; Vortag {prozent(tk['vortag_pct'], 1)} bei {zahl(tk.get('vortag_spanne'), 1)} Prozent Spanne"
                     if tk.get("vortag_pct") is not None else "") + ".")
     elif tk.get("burst") is False:
-        s.append("Kein Momentum Burst nach Stockbee am letzten Handelstag.")
+        s.append(f"Kein Momentum Burst nach Stockbee am {nacht}.")
     else:
         s.append("Momentum Burst nicht berechenbar.")
     teile = []
@@ -509,7 +565,7 @@ def technik_saetze(e):
         teile.append(f"seit Eröffnung {prozent(tk['seit_eroeffnung'], 1)}")
     if tk.get("vol_faktor") is not None:
         teile.append(f"Volumen {zahl(tk['vol_faktor'], 1)} mal so hoch wie der 50-Tage-Schnitt")
-    s.append(("Am letzten Handelstag: " + "; ".join(teile) + ".") if teile else "Eröffnungslücke nicht bekannt.")
+    s.append((f"Am {nacht}: " + "; ".join(teile) + ".") if teile else "Eröffnungslücke nicht bekannt.")
     if tk.get("pivot"):
         s.append("Episodic Pivot: Die Eröffnungslücke liegt bei 10 Prozent oder mehr.")
     s.append(f"Beta gegen SPY über 252 Handelstage: {zahl(tk['beta'], 2)}." if tk.get("beta") is not None
@@ -579,10 +635,10 @@ def wachstum_saetze(r):
     s = []
     if r.get("umsatz_juengst") is not None:
         was = _begriff(r)
-        s.append(_wachstum_satz(f"{was} Wachstum", f"{zahl(r['umsatz_juengst'])} Dollar",
+        s.append(_wachstum_satz(f"{was.rstrip(',')}, Wachstum", f"{zahl(r['umsatz_juengst'])} Dollar",
                                 f"{zahl(r.get('umsatz_vorjahr'))} Dollar" if r.get("umsatz_vorjahr") is not None else None,
                                 r.get("umsatz_wachstum_vj_pct"), "Vorjahresquartal"))
-        s.append(_wachstum_satz(f"{was} Wachstum", f"{zahl(r['umsatz_juengst'])} Dollar",
+        s.append(_wachstum_satz(f"{was.rstrip(',')}, Wachstum", f"{zahl(r['umsatz_juengst'])} Dollar",
                                 f"{zahl(r.get('umsatz_vorquartal'))} Dollar" if r.get("umsatz_vorquartal") is not None else None,
                                 r.get("umsatz_wachstum_vq_pct"), "Vorquartal"))
         s.append(f"Jüngstes Quartal bis {datum_text(r.get('umsatz_ende'))}.")
@@ -735,7 +791,7 @@ def fundament_wachstum_saetze(r):
     return s
 
 
-def bilanz_saetze(r):
+def bilanz_saetze(r, faktor=None):
     """Etappe 4, Punkte 2, 3, 4, 7, 8, 9 und 12: Renditen, Verschuldung,
     Cashflow, F-Score, Altman Z, Rule of 40, Banken und Immobilien."""
     f = (r or {}).get("fundament")
@@ -821,11 +877,12 @@ def bilanz_saetze(r):
     if f.get("ffo") is not None:
         s.append(f"FFO nach NAREIT über zwölf Monate {_betrag(f['ffo'], wort)}"
                  + (f"; je Aktie {zahl(f['ffo_je_aktie'], 2)} {wort}" if f.get("ffo_je_aktie") is not None else "")
-                 + (f"; Kurs zu FFO {_q(f['p_ffo'], 1)}" if f.get("p_ffo") is not None else "") + ".")
+                 + (f"; Kurs zu FFO {_q(f['p_ffo'] * (faktor or 1.0), 1)}"
+                    + (f" mit dem Kurs {LIVE_QUELLE}" if faktor else "") if f.get("p_ffo") is not None else "") + ".")
     return s or ["Aus dem SEC-Fundament lassen sich für diese Aktie keine Bilanz- und Cashflow-Kennzahlen rechnen."]
 
 
-def bewertung_saetze(r, streubesitz_kurs=None):
+def bewertung_saetze(r, streubesitz_kurs=None, faktor=None):
     """Etappe 4, Punkte 10 und 11: Bewertung mit dem Schlusskurs der Nacht
     und der Aktienzahl vom Deckblatt, dazu der Streubesitz. Mit dem Kurs am
     Stichtag des Streubesitzes (live von Yahoo) auch die Zahl der Aktien."""
@@ -838,36 +895,43 @@ def bewertung_saetze(r, streubesitz_kurs=None):
     if f.get("bewertung_grund"):
         s.append(f"Bewertung mit dem Kurs nicht gerechnet: {f['bewertung_grund']}.")
     elif f.get("mk") is not None:
-        s.append(f"Marktkapitalisierung {_betrag(f['mk'])} aus {zahl(f.get('aktien_ausstehend'))} Aktien vom Deckblatt, "
-                 f"Stand {datum_text(f.get('aktien_stand'))}, mal dem Schlusskurs der Nacht.")
+        k = float(faktor or 1.0)
+        mk = f["mk"] * k
+        # Alles, was am Kurs haengt, mit dem Livekurs (Antwort 32): KGV, KUV,
+        # KBV und PEG wachsen mit dem Kurs, der Enterprise Value um die
+        # Veraenderung der Marktkapitalisierung, die Renditen fallen.
+        ev = (f["ev"] + mk - f["mk"]) if f.get("ev") is not None else None
+        s.append(f"Marktkapitalisierung {_betrag(mk)} aus {zahl(f.get('aktien_ausstehend'))} Aktien vom Deckblatt, "
+                 f"Stand {datum_text(f.get('aktien_stand'))}, mal dem "
+                 + (f"Kurs {LIVE_QUELLE}." if faktor else "Schlusskurs der Nacht."))
         teile = []
-        teile.append(f"KGV {_q(f['kgv'], 1)}" if f.get("kgv") is not None
+        teile.append(f"KGV {_q(f['kgv'] * k, 1)}" if f.get("kgv") is not None
                      else "KGV nicht sinnvoll, der Nettogewinn der letzten zwölf Monate ist null oder negativ")
         if f.get("kuv") is not None:
-            teile.append(f"KUV {_q(f['kuv'])}")
+            teile.append(f"KUV {_q(f['kuv'] * k)}")
         if f.get("kbv") is not None:
-            teile.append(f"KBV {_q(f['kbv'])}")
+            teile.append(f"KBV {_q(f['kbv'] * k)}")
         s.append("; ".join(teile) + ".")
         teile = []
-        if f.get("ev") is not None:
-            teile.append(f"Enterprise Value {_betrag(f['ev'])}")
+        if ev is not None:
+            teile.append(f"Enterprise Value {_betrag(ev)}")
         if f.get("ev_ebitda") is not None:
-            teile.append(f"EV zu EBITDA {_q(f['ev_ebitda'], 1)}")
+            teile.append(f"EV zu EBITDA {_q(f['ev_ebitda'] * ev / f['ev'] if f.get('ev') else f['ev_ebitda'], 1)}")
         if f.get("ev_umsatz") is not None:
-            teile.append(f"EV zu Umsatz {_q(f['ev_umsatz'])}")
+            teile.append(f"EV zu Umsatz {_q(f['ev_umsatz'] * ev / f['ev'] if f.get('ev') else f['ev_umsatz'])}")
         if teile:
             s.append("; ".join(teile) + ".")
         if f.get("peg") is not None:
-            s.append(f"PEG {_q(f['peg'])} mit einem Wachstum des Gewinns je Aktie im letzten Geschäftsjahr von "
+            s.append(f"PEG {_q(f['peg'] * k)} mit einem Wachstum des Gewinns je Aktie im letzten Geschäftsjahr von "
                      f"{prozent(f.get('peg_wachstum'), 1)}.")
         teile = [f"{name} {zahl(f[k], 2)} Dollar" for k, name in (
             ("cash_je_aktie", "Cash"), ("nettokasse_je_aktie", "Nettokasse"), ("buchwert_je_aktie", "Buchwert"),
             ("fcf_je_aktie", "Free Cashflow")) if f.get(k) is not None]
         if teile:
             s.append("Je Aktie: " + "; ".join(teile) + ".")
-        teile = [f"{name} {_pz(f[k])}" for k, name in (
+        teile = [f"{name} {_pz(f[kz] / k)}" for kz, name in (
             ("div_rendite", "Dividendenrendite"), ("fcf_rendite", "FCF-Rendite"),
-            ("rueckkauf_mk", "Aktienrückkäufe in Prozent der Marktkapitalisierung")) if f.get(k) is not None]
+            ("rueckkauf_mk", "Aktienrückkäufe in Prozent der Marktkapitalisierung")) if f.get(kz) is not None]
         if teile:
             s.append("; ".join(teile) + ".")
     if f.get("streubesitz_wert") is not None:
@@ -1056,14 +1120,16 @@ def _konsens_perioden_saetze(a):
     return s
 
 
-def _kgv_satz(a):
+def _kgv_satz(a, faktor=None):
     wae = a.get("konsens_waehrung")
+    k = float(faktor or 1.0)
     if a.get("konsens_fwd_kgv") is not None:
-        satz = (f"Forward-KGV {zahl(a['konsens_fwd_kgv'], 1)} mit dem Schlusskurs der Nacht und dem erwarteten Gewinn "
-                f"je Aktie des nächsten Geschäftsjahres"
+        satz = (f"Forward-KGV {zahl(a['konsens_fwd_kgv'] * k, 1)} mit dem "
+                + (f"Kurs {LIVE_QUELLE}," if faktor else "Schlusskurs der Nacht")
+                + " und dem erwarteten Gewinn je Aktie des nächsten Geschäftsjahres"
                 + (f" bis {datum_text(a['konsens_ende_1y'])}" if a.get("konsens_ende_1y") else ""))
         if a.get("konsens_kgv_0y") is not None:
-            satz += (f"; KGV {zahl(a['konsens_kgv_0y'], 1)} auf das Geschäftsjahr davor"
+            satz += (f"; KGV {zahl(a['konsens_kgv_0y'] * k, 1)} auf das Geschäftsjahr davor"
                      + (f" bis {datum_text(a['konsens_ende_0y'])}" if a.get("konsens_ende_0y") else ""))
         return satz + "."
     eps = a.get("konsens_eps_1y")
@@ -1075,7 +1141,7 @@ def _kgv_satz(a):
         return "Kein Forward-KGV: Für das nächste Geschäftsjahr gibt es keinen Gewinnkonsens."
     if eps <= 0:
         return "Kein Forward-KGV: Der erwartete Gewinn je Aktie des nächsten Geschäftsjahres ist null oder negativ."
-    return "Kein Forward-KGV: In der Nachttabelle fehlt der Schlusskurs."
+    return "Kein Forward-KGV: In der Scanner-Tabelle fehlt der Schlusskurs."
 
 
 def _stufe_satz(e):
@@ -1152,7 +1218,7 @@ def _revisionen_saetze(a):
 NUR_VOLLER_ZUGANG = "nur im vollen Zugang"
 
 
-def konsens_saetze(a, in_wochenliste=False, grund=None):
+def konsens_saetze(a, in_wochenliste=False, grund=None, kurs_live=None, faktor=None):
     """Kapitel 'Analysten und Konsens'. a: die Zeile der Aktie aus
     scanner_analysten.parquet (analysten_zeile); grund: warum die
     Analystendaten fehlen, None heisst nicht uebergeben."""
@@ -1160,19 +1226,20 @@ def konsens_saetze(a, in_wochenliste=False, grund=None):
         if grund == NUR_VOLLER_ZUGANG:
             return ["Analysten und Konsens stehen nur im vollen Zugang."]
         if grund is None:
-            return ["Analysten und Konsens liegen im privaten Datenrepo; sie stehen nur in der App mit dem "
-                    "Token DATEN_TOKEN."]
+            return ["Analysten und Konsens sind nicht geladen.",
+                    TECHNIK + "Sie liegen im privaten Datenrepo; die App braucht dafür den Token DATEN_TOKEN."]
         if grund:
-            return [f"Analystendaten nicht geladen: {grund}. Sie liegen im privaten Datenrepo; die App braucht dafür "
-                    "den Token DATEN_TOKEN in den Streamlit-Secrets."]
-        return ["Für diese Aktie stehen in der Nachttabelle des Scanners keine Analystendaten."]
+            return ["Die Analystendaten sind nicht geladen.",
+                    TECHNIK + f"{grund}. Sie liegen im privaten Datenrepo; die App braucht dafür den Token "
+                              "DATEN_TOKEN in den Streamlit-Secrets."]
+        return ["Für diese Aktie stehen in der Scanner-Tabelle keine Analystendaten."]
     s = []
     # Eingefrorener Yahoo-Konsens
     if a.get("konsens_stand"):
         wae = a.get("konsens_waehrung")
         s.append(f"Eingefrorener Konsens von Yahoo, Stand {_wien_zeit(a['konsens_stand'])}"
                  + (f", Beträge in {wae}" if wae and wae != "USD" else "") + ".")
-        s.append(_kgv_satz(a))
+        s.append(_kgv_satz(a, faktor))
         s.extend(_konsens_perioden_saetze(a))
         if a.get("konsens_termin"):
             s.append(f"Nächster Termin laut Yahoo {datum_text(a['konsens_termin'])}.")
@@ -1207,7 +1274,10 @@ def konsens_saetze(a, in_wochenliste=False, grund=None):
             satz = f"Kursziel im Mittel {zahl(a['kursziel'], 2)} Dollar"
             if a.get("kursziel_tief") is not None and a.get("kursziel_hoch") is not None:
                 satz += f", Spanne {zahl(a['kursziel_tief'], 2)} bis {zahl(a['kursziel_hoch'], 2)} Dollar"
-            if a.get("kursziel_abst_pct") is not None:
+            if kurs_live and a.get("kursziel"):
+                satz += (f"; {prozent((float(a['kursziel']) / float(kurs_live) - 1) * 100, 1)} gegenüber dem Kurs "
+                         f"{LIVE_QUELLE}")
+            elif a.get("kursziel_abst_pct") is not None:
                 satz += f"; {prozent(a['kursziel_abst_pct'], 1)} gegenüber dem Schlusskurs der Nacht"
             s.append(satz + ".")
     else:
@@ -1221,12 +1291,12 @@ def konsens_saetze(a, in_wochenliste=False, grund=None):
             if a.get("letzter_bericht"):
                 satz += f" bei der Meldung vom {datum_text(a['letzter_bericht'])}"
         s.append(satz + ".")
-    # Revisionen und Einstufungen, nur Wochenliste
+    # Revisionen und Einstufungen, nur Wochenlisten
     if not in_wochenliste:
-        s.append("Revisionen und Einstufungen gibt es nur für Aktien der Wochenliste.")
+        s.append("Revisionen und Einstufungen gibt es nur für Aktien der Wochenlisten.")
     elif not a.get("rev_stand"):
-        s.append("Revisionen und Einstufungen für diese Aktie der Wochenliste sind noch nicht abgefragt; der nächste "
-                 "Bau der Nachttabelle holt sie.")
+        s.append("Revisionen und Einstufungen für diese Aktie der Wochenlisten sind noch nicht abgefragt; der nächste "
+                 "Bau der Scanner-Tabelle holt sie.")
     else:
         s.extend(_revisionen_saetze(a))
     s.append("Entscheidungshilfen, keine Filter.")
@@ -1244,11 +1314,11 @@ def short_saetze(a, grund=None):
         if grund == NUR_VOLLER_ZUGANG:
             return ["Die Short-Daten stehen nur im vollen Zugang."]
         if grund is None:
-            return ["Die Short-Daten liegen im privaten Datenrepo; sie stehen nur in der App mit dem Token "
-                    "DATEN_TOKEN."]
+            return ["Diese Daten sind nicht geladen.",
+                    TECHNIK + "Die Short-Daten liegen im privaten Datenrepo; die App braucht dafür den Token DATEN_TOKEN."]
         if grund:
-            return [f"Short-Daten nicht geladen: {grund}."]
-        return ["Für diese Aktie stehen in der Nachttabelle des Scanners keine Short-Daten."]
+            return ["Diese Daten sind nicht geladen.", TECHNIK + f"{grund}."]
+        return ["Für diese Aktie stehen in der Scanner-Tabelle keine Short-Daten."]
     if not a.get("short_stand"):
         hinweis = a.get("short_hinweis") or "ohne Angabe"
         return [f"Leerverkaufsvolumen laut FINRA nicht verfügbar: {hinweis}."]
@@ -1286,11 +1356,12 @@ def gruppe_saetze(a, grund=None):
         if grund == NUR_VOLLER_ZUGANG:
             return ["Die Branchengruppe steht nur im vollen Zugang."]
         if grund is None:
-            return ["Die Branchengruppe liegt im privaten Datenrepo; sie steht nur in der App mit dem Token "
-                    "DATEN_TOKEN."]
+            return ["Diese Daten sind nicht geladen.",
+                    TECHNIK + "Die Branchengruppe liegt im privaten Datenrepo; die App braucht dafür den Token "
+                              "DATEN_TOKEN."]
         if grund:
-            return [f"Branchengruppe nicht geladen: {grund}."]
-        return ["Für diese Aktie steht in der Nachttabelle des Scanners keine Branchengruppe."]
+            return ["Diese Daten sind nicht geladen.", TECHNIK + f"{grund}."]
+        return ["Für diese Aktie steht in der Scanner-Tabelle keine Branchengruppe."]
     g = a.get("gruppe")
     hinweis = a.get("gruppe_hinweis")
     if not g:
@@ -1333,7 +1404,7 @@ def gruppe_saetze(a, grund=None):
 
 def sektor_saetze(sektor_name, sektoren, quelle=""):
     if not sektor_name:
-        return ["Sektor unbekannt: die Aktie steht in keiner Wochenliste, und Yahoo nennt keinen Sektor."]
+        return ["Sektor unbekannt: die Aktie steht in keiner der beiden Wochenlisten, und Yahoo nennt keinen Sektor."]
     try:
         import beobachtungen
         etf = beobachtungen.sektor_etf_fuer(sektor_name)
@@ -1361,15 +1432,17 @@ def sektor_saetze(sektor_name, sektoren, quelle=""):
             except Exception:  # noqa
                 s.append("Aufsteiger laut Sektor-Rangliste.")
     if quelle == "Yahoo":
-        s.append("Sektor laut Yahoo, die Aktie steht in keiner Wochenliste.")
+        s.append("Sektor laut Yahoo, die Aktie steht in keiner der beiden Wochenlisten.")
     return s
 
 
 def stand_saetze(rs, ratings, sektoren):
     s = []
     if rs:
-        s.append(f"Nachtwerte vom Handelstag {datum_text(rs.get('handelstag'))}, gebaut {str(rs.get('gebaut_am') or '')[:16].replace('T', ' um ')}"
-                 + (f"; Bezug {rs.get('universum', {}).get('bezug_anzahl') or rs.get('universum', {}).get('im_universum')} Stammaktien des US-Markts" if rs.get("universum") else "") + ".")
+        bezug = (rs.get("universum") or {}).get("bezug_anzahl") or (rs.get("universum") or {}).get("im_universum")
+        s.append(f"Nachtwerte vom Handelstag {datum_text(rs.get('handelstag'))}"
+                 + (f", gebaut am {_wien_zeit(rs['gebaut_am'])}" if rs.get("gebaut_am") else "")
+                 + (f"; Bezug {zahl(bezug)} Stammaktien des US-Markts" if bezug is not None else "") + ".")
         if rs.get("status") and rs.get("status") != "ok":
             s.append(f"RS-Status: {rs.get('status')}, {rs.get('grund')}.")
         ath = rs.get("allzeithoch") or {}
@@ -1379,10 +1452,10 @@ def stand_saetze(rs, ratings, sektoren):
     else:
         s.append("Keine Nachtwerte vorhanden; der nächste Nachtscan legt sie an.")
     if ratings and ratings.get("gebaut_am"):
-        s.append(f"Ratings gebaut {str(ratings['gebaut_am'])[:16].replace('T', ' um ')}.")
+        s.append(f"Ratings gebaut am {_wien_zeit(ratings['gebaut_am'])}.")
     if sektoren and sektoren.get("handelstag"):
         s.append(f"Sektor-Rangliste vom Handelstag {datum_text(sektoren['handelstag'])}.")
-    s.append("Kurs und Volumen live von Yahoo; RS gegen den ganzen US-Markt mit Kappung der Einzelrenditen bei plus 50 Prozent; "
+    s.append(f"Kurs und Volumen {LIVE_QUELLE}; RS gegen den ganzen US-Markt mit Kappung der Einzelrenditen bei plus 50 Prozent; "
              "Ratings als Näherung aus amtlichen SEC-Zahlen. Entscheidungshilfen, keine Filter.")
     return s
 
@@ -1398,18 +1471,150 @@ def bericht(ticker, rs, ratings, sektoren, live=None, kurve=None, kurve_quelle="
     e = eintraege(rs).get(t, {})
     r = ((ratings or {}).get("aktien") or {}).get(t, {})
     in_wochenliste = t in ((rs or {}).get("listen") or {})
+    f = live_faktor(e, live)
     return [("Aktie", kopf_saetze(t, e, live)),
             ("Unsere Ratings", ratings_saetze(e, r, ratings)),
             ("Volumen", volumen_saetze(live, kurve, kurve_quelle)),
-            ("Technische Kennzahlen", technik_saetze(e)),
+            ("Technische Kennzahlen", technik_saetze(e, live)),
             ("Umsatz und Gewinn", wachstum_saetze(r)),
-            ("Bilanz und Cashflow", bilanz_saetze(r)),
-            ("Bewertung", bewertung_saetze(r, streubesitz_kurs)),
-            ("Analysten und Konsens", konsens_saetze(analysten, in_wochenliste, analysten_grund)),
+            ("Bilanz und Cashflow", bilanz_saetze(r, f)),
+            ("Bewertung", bewertung_saetze(r, streubesitz_kurs, f)),
+            ("Analysten und Konsens", konsens_saetze(analysten, in_wochenliste, analysten_grund,
+                                                     kurs_live=(live or {}).get("kurs") if f else None, faktor=f)),
             ("Leerverkäufe", short_saetze(analysten, analysten_grund)),
             ("Branchengruppe", gruppe_saetze(analysten, analysten_grund)),
             ("Sektor", sektor_saetze(sektor_name, sektoren, sektor_quelle)),
             ("Stand", stand_saetze(rs, ratings, sektoren))]
+
+
+# ---------------------------------------------------------------------------
+# Erklaerungen je Abschnitt (Antwort 13 vom 24.09.2026)
+# ---------------------------------------------------------------------------
+# "Im Nachschlagen je Abschnitt ein Erklaerungsknopf." Wo dieselbe Kennzahl im
+# Scanner steht, gilt ihr Text von dort (scanner_ansicht.FELD), damit eine
+# Sache ueberall gleich erklaert ist; die uebrigen stehen hier.
+
+_ERKLAERUNG_FELDER = {
+    "Unsere Ratings": (("RS", "rs"), ("RS-Linie gegen SPY", "rs_linie"), ("RS-Linie gegen QQQ", "rs_linie_qqq"),
+                       ("EPS-Rating", "eps_rating"), ("SMR-Note und Rang", "smr"), ("A/D-Note und Rang", "ad"),
+                       ("Composite", "composite")),
+    "Technische Kennzahlen": (("Wertentwicklung eine Woche", "perf_1w"), ("Wertentwicklung ein Monat", "perf_1m"),
+                              ("Wertentwicklung seit Jahresbeginn", "perf_ytd"), ("Abstand zur SMA 20", "sma20"),
+                              ("Abstand zum 50-Tage-Hoch", "hoch50"), ("Abstand zum 50-Tage-Tief", "tief50"),
+                              ("Abstand zum 52-Wochen-Tief", "tief_1j"), ("ADR nach Qullamaggie", "adr"),
+                              ("Volatilität Woche", "vola5"), ("Volatilität Monat", "vola21"), ("ATR 14", "atr"),
+                              ("Up/Down-Volumen über 50 Tage", "ud50"), ("Mansfield RS", "mrs"),
+                              ("Weinstein-Stufe", "weinstein"), ("Momentum Burst nach Stockbee", "burst"),
+                              ("Eröffnungslücke", "luecke"), ("Veränderung seit der Eröffnung", "seit_open"),
+                              ("Volumenfaktor", "vol_faktor"), ("Episodic Pivot", "pivot"), ("Beta", "beta"),
+                              ("RSI 14", "rsi14"), ("RSI 2", "rsi2"), ("Durchschnittsvolumen über drei Monate", "vol63"),
+                              ("Dollarvolumen über 20 Tage", "dv20")),
+    "Umsatz und Gewinn": (("Umsatz, Wachstum gegenüber dem Vorjahresquartal", "umsatz_q"),
+                          ("Umsatz, Wachstum gegenüber dem Vorquartal", "umsatz_s"),
+                          ("Gewinn je Aktie, Wachstum gegenüber dem Vorjahresquartal", "eps_q"),
+                          ("Operative Marge", "marge_op_q"), ("Vorsteuermarge", "marge_vst_q"),
+                          ("Nettomarge", "marge_netto_q"), ("Jährliches Wachstum im Schnitt", "umsatz_cagr3"),
+                          ("EPS-Stabilität", "eps_stabilitaet"), ("Verwässerte Aktienzahl", "aktien_1j"),
+                          ("Aktienbasierte Vergütung", "sbc")),
+    "Bilanz und Cashflow": (("Eigenkapitalrendite", "roe"), ("Rendite auf das Vermögen", "roa"),
+                            ("Rendite auf das eingesetzte Kapital", "roic"), ("Steuersatz", "steuersatz"),
+                            ("Langfristige Schulden zum Eigenkapital", "lt_schulden_ek"),
+                            ("Alle Schulden zum Eigenkapital", "schulden_ek"), ("Nettoschulden", "nettoschulden"),
+                            ("Current Ratio", "current_ratio"), ("Quick Ratio", "quick_ratio"),
+                            ("Zinsdeckung", "zinsdeckung"), ("Umsatz der letzten zwölf Monate", "umsatz_12m"),
+                            ("Free Cashflow", "fcf"), ("FCF-Marge", "fcf_marge"), ("Cash Conversion", "cash_conversion"),
+                            ("Ausschüttungsquote", "ausschuettung"), ("Piotroski F-Score", "fscore"),
+                            ("Altman Z", "altman_z"), ("Rule of 40", "rule40"), ("Kernkapitalquote", "kernkapital"),
+                            ("Risikovorsorge", "risikovorsorge"), ("Einlagen", "einlagen"), ("FFO nach NAREIT", "ffo"),
+                            ("Kurs zu FFO", "p_ffo")),
+    "Bewertung": (("Marktkapitalisierung", "marktkap"), ("KGV", "kgv"), ("KUV", "kuv"), ("KBV", "kbv"),
+                  ("Enterprise Value", "ev"), ("EV zu EBITDA", "ev_ebitda"), ("EV zu Umsatz", "ev_umsatz"),
+                  ("PEG", "peg"), ("Cash je Aktie", "cash_je_aktie"), ("Nettokasse je Aktie", "nettokasse_je_aktie"),
+                  ("Buchwert je Aktie", "buchwert_je_aktie"), ("Free Cashflow je Aktie", "fcf_je_aktie"),
+                  ("Dividendenrendite", "div_rendite"), ("FCF-Rendite", "fcf_rendite"), ("Aktienrückkäufe", "rueckkauf"),
+                  ("Streubesitz", "streubesitz")),
+    "Analysten und Konsens": (("Forward-KGV", "fwd_kgv"), ("KGV auf das laufende Geschäftsjahr", "kgv_0y"),
+                              ("Analystenkonsens", "konsens"), ("Kursziel", "kursziel"),
+                              ("Gewinnüberraschungen", "beat"), ("Letzte Gewinnüberraschung", "ueberraschung")),
+    "Leerverkäufe": (("Leerverkaufsanteil am letzten Handelstag", "short_anteil"),
+                     ("Leerverkaufsanteil über mehrere Handelstage", "short_anteil_fenster"),
+                     ("Handelstage mit außerbörslichem Umsatz", "short_tage")),
+    "Branchengruppe": (("Rang der Branchengruppe", "gruppe_rang"), ("Rang vor drei und vor sechs Wochen", "gruppe_rang_3w"),
+                       ("Aktien der Branchengruppe in der Rechnung", "gruppe_titel")),
+}
+
+_ERKLAERUNG_EIGENE = {
+    "Aktie": (("Kurs", f"Der Kurs kommt {LIVE_QUELLE}. Damit rechnet das Nachschlagen alles um, was am Kurs hängt: "
+                       "Abstände zu Hochs, Tiefs und Durchschnitten, Wertentwicklung, Bewertung und Kursziel."),
+              ("Abstand zum 52-Wochen-Hoch", "Wie weit der Kurs unter dem höchsten Kurs der letzten 52 Wochen liegt; "
+                                             "0 heißt am Hoch.")),
+    "Unsere Ratings": (("Gerechnet aus den amtlichen SEC-Berichten", "Die Zeile unter den Ratings nennt, woraus sie "
+                        "stammen: aus den amtlichen Berichten an die SEC über die genannte Zahl von Quartalen."),),
+    "Volumen": (("Bisher gehandelt", "Die Stückzahl, die heute seit Handelsbeginn in New York gehandelt wurde."),
+                ("Volumenformel", "Das bisherige Volumen wird mit der eigenen Volumenkurve der Aktie auf den ganzen "
+                                  "Tag hochgerechnet und mit dem 50-Tage-Schnitt verglichen; ohne eigene Kurve ist das "
+                                  "Volumen nicht verifizierbar, geschätzt wird nichts."),
+                ("50-Tage-Schnitt", "Gehandelte Aktien je Tag im Schnitt der 50 Handelstage davor.")),
+    "Technische Kennzahlen": (("Allzeithoch", "Der höchste Kurs der ganzen Kurshistorie und wie weit der Kurs "
+                                              "darunter liegt."),),
+    "Umsatz und Gewinn": (("CAN-SLIM-Häkchen", "Drei Prüfungen nach William O'Neil mit ihrer Schwelle: der Gewinn je "
+                           "Aktie des Quartals gegenüber dem Vorjahr, das jährliche Wachstum des Gewinns je Aktie über "
+                           "drei Jahre und die Eigenkapitalrendite. Sie filtern nichts."),),
+    "Analysten und Konsens": (("Eingefrorener Konsens", "Die Schätzungen der Analysten laut Yahoo, festgehalten zum "
+                               "genannten Zeitpunkt."),
+                              ("Revisionen", "Wie viele Analysten ihre Gewinnschätzung in den letzten 7 und 30 Tagen "
+                                             "angehoben oder gesenkt haben und wie sich der Konsens verändert hat, laut "
+                                             "Yahoo; nur für Aktien der Wochenlisten."),
+                              ("Einstufungen", "Herauf- und Herabstufungen, Erstbewertungen und Kursziele der "
+                                               "Analysten laut Yahoo; nur für Aktien der Wochenlisten.")),
+    "Sektor": (("Rang des Sektors", "Der Rang des Sektor-ETF unter 36 ETFs nach dem Faber-Mittel, daneben der Rang "
+                                    "vor drei und vor sechs Wochen."),
+               ("Faber-Mittel", "Das Mittel der Renditen des ETF über 1, 3, 6, 9 und 12 Monate."),
+               ("Aufsteiger", "Ein Sektor, der in der Rangliste deutlich nach oben gerückt ist.")),
+    "Stand": (("Nachtwerte", "RS, Ratings und technische Kennzahlen entstehen jede Nacht aus den Schlusskursen; der "
+                             "Satz nennt den Handelstag und wann sie gebaut wurden."),),
+}
+
+
+# Die drei Abschnitte, die die App unter den Bericht setzt (streamlit_app.py):
+# Chartmuster und Trend Template, Weitere Chartmuster und Kaufpunkte.
+APP_ABSCHNITTE = ("Chartmuster und Trend Template", "Weitere Chartmuster", "Kaufpunkte")
+
+_ERKLAERUNG_KAUFPUNKTE = (
+    ("Kaufpunkt", "Der Kurs, über dem ein Muster als ausgebrochen gilt. Daneben steht, wie weit er über dem Kurs liegt "
+                  "oder wie weit der Kurs schon darüber steht."),
+    ("Stop und Risiko", "Der Kurs, bei dem die Position laut Regel verkauft wird, und wie weit er unter dem Kaufpunkt "
+                        "liegt, in Prozent."),
+    ("Ziel und Chance", "Das Kursziel eines Musters, wo es eines gibt, und wie weit es über dem Kaufpunkt liegt; "
+                        "dazu Chance zu Risiko."),
+    ("Stand und Notiz", "Wie weit das Muster ist, etwa ob der Ausbruch schon stattgefunden hat, und was es sonst zu "
+                        "beachten gibt."),
+)
+
+
+def abschnitt_erklaerungen():
+    """{Abschnitt: [(Name, Erklaerung)]} fuer die Erklaerungsknoepfe, fuer die
+    zwoelf Abschnitte des Berichts und die drei der App (APP_ABSCHNITTE). Ein
+    Name kann leer sein; dann ist die Erklaerung ein ganzer Satz."""
+    import einstellungen
+    import scanner_ansicht
+    raus = {}
+    for titel in ("Aktie", "Unsere Ratings", "Volumen", "Technische Kennzahlen", "Umsatz und Gewinn",
+                  "Bilanz und Cashflow", "Bewertung", "Analysten und Konsens", "Leerverkäufe", "Branchengruppe",
+                  "Sektor", "Stand"):
+        eintraege_a = list(_ERKLAERUNG_EIGENE.get(titel, ()))
+        for name, schluessel in _ERKLAERUNG_FELDER.get(titel, ()):
+            feld = scanner_ansicht.FELD.get(schluessel)
+            if feld is not None and feld.erklaerung:
+                eintraege_a.append((name, feld.erklaerung))
+        raus[titel] = eintraege_a
+    raus["Chartmuster und Trend Template"] = (
+        [("Trend Template nach Minervini", einstellungen.TREND_TEMPLATE_REGEL)]
+        + [(a["name"], a.get("regel") or a["erklaerung"]) for a in einstellungen.ALARME if a["gruppe"] == "kauf"])
+    raus["Weitere Chartmuster"] = [("", satz) for satz in scanner_ansicht.chartmuster_erklaerung()]
+    raus["Kaufpunkte"] = (list(_ERKLAERUNG_KAUFPUNKTE)
+                          + [("Fallback", einstellungen.GRUPPEN_REGEL["ausweich"])])
+    return raus
 
 
 def bericht_text(teile):
@@ -1581,7 +1786,7 @@ def muster_saetze(res, rs_satz=None, cfg=None):
     echte = [p for p in res.get("points") or [] if not str(p.get("strategie", "")).startswith("Fallback")]
     anzahl = int(res.get("pattern_count") or len(echte))
     if echte:
-        namen = ", ".join(anzeige_text(p["strategie"]) for p in echte)
+        namen = ", ".join(strategie_anzeige(p["strategie"]) for p in echte)
         if anzahl == 1:
             s.append(f"Ein aktives Chartmuster: {namen}.")
         elif anzahl > len(echte):
@@ -1589,8 +1794,8 @@ def muster_saetze(res, rs_satz=None, cfg=None):
         else:
             s.append(f"{anzahl} aktive Chartmuster: {namen}.")
     else:
-        s.append("Kein aktives Chartmuster. Die Kaufpunkte weiter unten sind allgemeine Orientierungsmarken, "
-                 "keine Signale des Regelwerks.")
+        s.append("Kein aktives Chartmuster. Die Kaufpunkte weiter unten sind Fallbacks, keine Signale des "
+                 "Regelwerks.")
     n = int(res.get("tt_count") or 0)
     if res.get("tt_pass"):
         s.append("Trend Template nach Minervini erfüllt, 8 von 8 Bedingungen.")
@@ -1652,23 +1857,26 @@ def chartmuster_saetze(df, jetzt=None, nachtzeile=None):
                 werte[spalte] = nachtzeile[spalte]
     teile = scanner_ansicht.muster_saetze(werte)
     tag = datum_text(str(d["datetime"].iloc[-1])[:10])
+    if teile and all(x.startswith("Power Trend") for x in teile):
+        # Antwort 37 vom 24.09.2026: nicht nur "Power Trend aus"
+        teile = ["Keines der weiteren Chartmuster ist aktiv"] + teile
     s = [f"Mit dem Schluss vom {tag}: " + ("; ".join(teile) if teile else "keines der Muster trifft zu") + "."]
     if nachtzeile and nachtzeile.get("datum"):
         s.append(f"Base-on-Base, Green Line, die Stufenzählung der Basen und der Episodic Pivot stammen aus der "
-                 f"Nachttabelle mit dem Schluss vom {datum_text(str(nachtzeile['datum'])[:10])}, weil sie die "
+                 f"Scanner-Tabelle mit dem Schluss vom {datum_text(str(nachtzeile['datum'])[:10])}, weil sie die "
                  "ganze Kurshistorie oder die Zahlentermine brauchen.")
     else:
         s.append("Base-on-Base, Green Line, die Stufenzählung der Basen und der Episodic Pivot brauchen die ganze "
-                 "Kurshistorie oder die Zahlentermine und stehen deshalb nur mit einer Zeile der Nachttabelle; für "
+                 "Kurshistorie oder die Zahlentermine und stehen deshalb nur mit einer Zeile der Scanner-Tabelle; für "
                  "diese Aktie liegt keine vor.")
-    s.append("Die Muster sind Entscheidungshilfen und filtern nichts. Unsere eigenen Schwellen, wo Gerhards "
-             "Quellen keine Zahl nennen, stehen im Reiter Regelwerk.")
+    s.append("Die Muster sind Entscheidungshilfen und filtern nichts. Wo die Quellen keine Zahl nennen, gilt eine "
+             "eigene Festlegung; alle stehen im Reiter Regelwerk.")
     return s
 
 
 # Kuerzel der Detektoren in Worten, damit ein Screenreader nicht "52 W" oder
 # "M A 50" vorliest. Nur fuer die Anzeige; die Mappe behaelt ihre Namen.
-_ANZEIGE_WOERTER = (("Fallback: ", "allgemeine Marke, "), ("52W-Hoch", "52-Wochen-Hoch"),
+_ANZEIGE_WOERTER = (("Fallback: ", "Fallback "), ("52W-Hoch", "52-Wochen-Hoch"),
                     ("52W-Tief", "52-Wochen-Tief"), ("MA200", "200-Tage-Durchschnitt"),
                     ("MA150", "150-Tage-Durchschnitt"), ("MA50", "50-Tage-Durchschnitt"),
                     ("SMA21", "21-Tage-Durchschnitt"), ("SMA 21", "21-Tage-Durchschnitt"))
@@ -1682,6 +1890,14 @@ def anzeige_text(text):
         t = t.replace(alt_wort, neues_wort)
     t = t.replace(" > ", " über ").replace(" < ", " unter ")
     return re.sub(r"(?<![\d.])(\d+)\.(\d{1,2})(?![\d.])", r"\1,\2", t)
+
+
+def strategie_anzeige(name):
+    """Der Name einer Strategie aus Mappe oder Meldung in der Anzeige: dieselbe
+    Form wie im Reiter Einstellungen, Beistrich statt Klammern (Antworten 82
+    und 95 vom 24.09.2026)."""
+    import einstellungen
+    return anzeige_text(einstellungen.anzeige_name(str(name or "")))
 
 
 def _satz(text):
@@ -1699,7 +1915,7 @@ def kaufpunkt_saetze(res):
     s = []
     for i, p in enumerate(res["points"], 1):
         kp = p.get("kaufpunkt")
-        teile = [f"Kaufpunkt {i}, {_satz(p.get('strategie'))}: {zahl(kp, 2)} Dollar"]
+        teile = [f"Kaufpunkt {i}, {strategie_anzeige(p.get('strategie')).rstrip('.')}: {zahl(kp, 2)} Dollar"]
         if kp and kurs:
             abst = (float(kp) / float(kurs) - 1) * 100
             teile[0] += (f", {zahl(abst, 1)} Prozent über dem Kurs" if abst >= 0
@@ -1717,7 +1933,9 @@ def kaufpunkt_saetze(res):
             teile.append(ziel)
         for feld in ("status", "notiz"):
             if p.get(feld) and _satz(p[feld]):
-                teile.append(_satz(p[feld]))
+                satz = _satz(p[feld])
+                # mitten im Satz klein: "kein Muster; allgemeine Ausbruchsmarke"
+                teile.append(satz[:1].lower() + satz[1:] if satz.startswith("Kein Muster") else satz)
         s.append("; ".join(teile) + ".")
     s.append("Kaufpunkt heißt nicht Kaufsignal: Jeder Ausbruch braucht laut Regelwerk zusätzlich die "
              "Volumenbestätigung am Ausbruchstag.")
@@ -1771,7 +1989,7 @@ def kerzen_saetze(k, art, anzahl=12, heute=None):
         satz = (f"{_kerzen_name(z['datetime'], art, heute)}: Eröffnung {zahl(z['open'], 2)}, Hoch {zahl(z['high'], 2)}, "
                 f"Tief {zahl(z['low'], 2)}, Schluss {zahl(z['close'], 2)} Dollar")
         if i > 0 and k.iloc[i - 1]["close"]:
-            satz += f"; {prozent((z['close'] / k.iloc[i - 1]['close'] - 1) * 100, 1)} gegenüber dem {bezug}"
+            satz += f"; {veraenderung((z['close'] / k.iloc[i - 1]['close'] - 1) * 100, bezug)}"
         if z.get("volume") is not None and z["volume"] == z["volume"]:
             satz += f"; {zahl(z['volume'])} Stück"
         s.append(satz + ".")
@@ -1912,14 +2130,24 @@ def selbsttest() -> int:
       [u for u, _ in teile] == ["Aktie", "Unsere Ratings", "Volumen", "Technische Kennzahlen", "Umsatz und Gewinn",
                                 "Bilanz und Cashflow", "Bewertung", "Analysten und Konsens", "Leerverkäufe",
                                 "Branchengruppe", "Sektor", "Stand"])
+    erkl = abschnitt_erklaerungen()
+    erkl_text = " ".join(f"{n} {x}" for liste in erkl.values() for n, x in liste)
+    p("Jeder Abschnitt hat einen Erklärungsknopf mit seinen Kennzahlen (Antwort 13)",
+      all(erkl.get(u) for u, _ in teile) and all(erkl.get(u) for u in APP_ABSCHNITTE)
+      and "Trend Template nach Minervini" in dict(erkl["Chartmuster und Trend Template"])
+      and "Fallback" in dict(erkl["Kaufpunkte"])
+      and all(w in erkl_text for w in ("ADR", "A/D", "SMR", "Composite", "Mansfield", "Weinstein", "Beta", "Piotroski",
+                                       "Altman", "Rule of 40")), [u for u, _ in teile if not erkl.get(u)])
     p("Kopf: Kuerzel, Name, Boerse, Kurs live, Abstand zum Hoch",
-      "AAOI, Applied Optoelectronics, Inc., Nasdaq." in text and "Kurs 160,00 Dollar" in text and "Abstand zum 52-Wochen-Hoch minus 54,9 Prozent" in text)
+      "AAOI, Applied Optoelectronics, Inc., Nasdaq." in text
+      and "Kurs 160,00 Dollar von Yahoo, bis zu 15 Minuten alt" in text
+      and "Abstand zum 52-Wochen-Hoch mit dem Kurs von Yahoo, bis zu 15 Minuten alt: minus 31,5 Prozent." in text, text)
     p("Ratings: RS mit Vorwoche, EPS, SMR, A/D, Composite je ein Satz",
       "RS 58; vor einer Woche 56, Änderung plus 2; vor vier Wochen 51, Änderung plus 7." in text and "EPS-Rating 87." in text
       and "SMR-Note B, Rang 65." in text
       and "A/D-Note C, Rang 48, Näherung aus der Schlusslage in der Tagesspanne und dem Volumen." in text and "Composite 91." in text and "Basis amtlich, 8 Quartale." in text, text)
     p("Wachstum: Prozent zuerst, dann vorher und jetzt in ganzen Zahlen, Quartalsende; EPS-Vorjahr im Minus ohne Prozentwert",
-      "Umsatz Wachstum gegenüber dem Vorjahresquartal: plus 25,0 Prozent; vorher 987.654.321 Dollar, jetzt 1.234.567.890 Dollar." in text
+      "Umsatz, Wachstum gegenüber dem Vorjahresquartal: plus 25,0 Prozent; vorher 987.654.321 Dollar, jetzt 1.234.567.890 Dollar." in text
       and "gegenüber dem Vorquartal: plus 3,7 Prozent; vorher 1.190.000.000 Dollar" in text
       and "Jüngstes Quartal bis 30.06.2026." in text
       and "Gewinn je Aktie, Wachstum gegenüber dem Vorjahresquartal: kein Prozentwert" in text
@@ -1927,10 +2155,11 @@ def selbsttest() -> int:
     p("Sektor: deutscher Name, ETF, Rang von 36, vor drei Wochen, Aufsteiger",
       "Sektor Technologie, ETF XLK: Rang 3 von 36, vor drei Wochen Rang 7." in text and "Aufsteiger: Technology (XLK) neu unter den ersten fünf" in text, text)
     p("Stand: Handelstag, Bezug, Allzeithoch-Abruf, Ratings-Stand, Sektor-Stand",
-      "Nachtwerte vom Handelstag 11.09.2026" in text and "Bezug 5339" in text
-      and "zuletzt vollständig abgerufen am 07.09.2026" in text
-      and "Ratings gebaut 2026-09-13 um 00:10" in text and "Sektor-Rangliste vom Handelstag 11.09.2026" in text)
-    ts = dict(teile)["Technische Kennzahlen"]
+      "Nachtwerte vom Handelstag 11.09.2026, gebaut am 13.09.2026 um 02:04 Uhr Wiener Zeit" in text
+      and "Bezug 5.339" in text and "zuletzt vollständig abgerufen am 07.09.2026" in text
+      and "Ratings gebaut am 13.09.2026 um 02:10 Uhr Wiener Zeit" in text
+      and "Sektor-Rangliste vom Handelstag 11.09.2026" in text, text)
+    ts = technik_saetze(eintraege(rs)["AAOI"])
     erwartet_ts = [
         "Wertentwicklung: eine Woche plus 2,1 Prozent; ein Monat minus 3,4 Prozent; drei Monate plus 12,0 Prozent; "
         "zwölf Monate plus 150,2 Prozent; seit Jahresbeginn plus 44,4 Prozent.",
@@ -1938,15 +2167,15 @@ def selbsttest() -> int:
         "Abstand zu den gleitenden Durchschnitten: SMA 20 plus 1,2 Prozent; SMA 50 minus 3,4 Prozent; SMA 200 plus 12,0 Prozent.",
         "Abstand zum 50-Tage-Hoch minus 4,0 Prozent; zum 50-Tage-Tief plus 12,3 Prozent; zum 52-Wochen-Tief plus 80,1 Prozent.",
         "ADR nach Qullamaggie, die mittlere Tagesspanne über 20 Tage: 4,31 Prozent.",
-        "Volatilität wie bei Finviz, dieselbe Spanne über 5 und 21 Tage: Woche 5,12 Prozent; Monat 4,50 Prozent.",
+        "Volatilität wie bei Finviz, die mittlere Tagesspanne über 5 und über 21 Tage: Woche 5,12 Prozent; Monat 4,50 Prozent.",
         "ATR 14 nach Wilder: 4,21 Dollar, das sind 4,0 Prozent des Kurses.",
         "Up/Down-Volumen über 50 Tage: 1,34; über 1 überwiegt das Volumen an Plus-Tagen.",
         "Mansfield RS gegen SPY: plus 12,3, vor vier Wochen plus 8,1, also steigend.",
         "Weinstein-Stufe 2: Kurs 5,2 Prozent über der 30-Wochen-Linie, die Linie steigt in vier Wochen um 2,1 Prozent, "
         "die letzten zwei Wochenschlüsse liegen über der Linie.",
-        "Momentum Burst nach Stockbee am letzten Handelstag: plus 5,2 Prozent bei höherem Volumen als am Vortag; "
+        "Momentum Burst nach Stockbee am 11.09.2026: plus 5,2 Prozent bei höherem Volumen als am Vortag; "
         "Schluss bei 85 Prozent der Tagesspanne; Vortag minus 0,8 Prozent bei 2,1 Prozent Spanne.",
-        "Am letzten Handelstag: Eröffnungslücke plus 11,0 Prozent; seit Eröffnung minus 0,5 Prozent; "
+        "Am 11.09.2026: Eröffnungslücke plus 11,0 Prozent; seit Eröffnung minus 0,5 Prozent; "
         "Volumen 4,2 mal so hoch wie der 50-Tage-Schnitt.",
         "Episodic Pivot: Die Eröffnungslücke liegt bei 10 Prozent oder mehr.",
         "Beta gegen SPY über 252 Handelstage: 1,35.",
@@ -1955,13 +2184,23 @@ def selbsttest() -> int:
         "Reine Anzeige: Keine dieser Kennzahlen filtert."]
     p("Technische Kennzahlen (Etappe 2): je Kennzahl ein Satz, deutsche Zahlen, fehlende Werte ausgelassen",
       ts == erwartet_ts, [x for x in ts if x not in erwartet_ts] or ts)
+    ts_live = dict(teile)["Technische Kennzahlen"]
+    p("Technische Kennzahlen mit dem Livekurs umgerechnet (Antwort 32)",
+      ts_live[0].startswith("Mit dem Kurs von Yahoo, bis zu 15 Minuten alt, umgerechnet:")
+      and "Allzeithoch 233,63 Dollar im März 2021; Abstand minus 31,5 Prozent." in ts_live
+      and "ATR 14 nach Wilder: 4,21 Dollar, das sind 2,6 Prozent des Kurses." in ts_live
+      and any(x.startswith("Wertentwicklung: eine Woche plus 55,0 Prozent") for x in ts_live)
+      and "Mansfield RS gegen SPY: plus 12,3, vor vier Wochen plus 8,1, also steigend." in ts_live, ts_live)
+    p("Prozent ohne minus null und unverändert gegenüber dem Vortag (Berichtigung 5)",
+      prozent(-0.04, 1) == "0,0 Prozent" and veraenderung(-0.04, "Vortag") == "unverändert gegenüber dem Vortag"
+      and veraenderung(1.25, "Vortag") == "plus 1,2 Prozent gegenüber dem Vortag")
     tk_ohne = {"stufe": 0, "linie_abst": -3.4, "linie_steig": 2.1, "burst": False, "ath": 50.0, "ath_datum": "2026-09-11",
                "mrs": -1.0, "mrs_vorher": None}
     ts2 = technik_saetze({"technik": tk_ohne, "letzter_tag": "2026-09-11", "kurs": 50.0})
     p("Technische Kennzahlen: Allzeithoch heute, Stufe nicht eindeutig, kein Burst, fehlende Werte ehrlich",
       "Die Aktie steht auf ihrem Allzeithoch von 50,00 Dollar." in ts2
       and "Weinstein-Stufe nicht eindeutig: Kurs 3,4 Prozent unter der 30-Wochen-Linie, die Linie steigt in vier Wochen um 2,1 Prozent." in ts2
-      and "Kein Momentum Burst nach Stockbee am letzten Handelstag." in ts2 and "Mansfield RS gegen SPY: minus 1,0." in ts2
+      and "Kein Momentum Burst nach Stockbee am 11.09.2026." in ts2 and "Mansfield RS gegen SPY: minus 1,0." in ts2
       and "Beta nicht berechenbar, dafür braucht es 252 Tagesrenditen gemeinsam mit dem Index." in ts2
       and "Wertentwicklung: nicht berechenbar." in ts2 and not any("Episodic Pivot" in x for x in ts2), ts2)
     p("Technische Kennzahlen bei Split-Verdacht: nur der Hinweis, keine Kennzahl",
@@ -2013,8 +2252,8 @@ def selbsttest() -> int:
         "Umsatz der letzten zwölf Monate 4,6 Milliarden Dollar.",
         "Cashflow über die vier Quartale bis 30.06.2026: Free Cashflow 150,0 Millionen Dollar; FCF-Marge 3,3 Prozent; "
         "Cash Conversion 1,42, also operativer Cashflow durch Nettogewinn; Ausschüttungsquote 0,0 Prozent.",
-        "Piotroski F-Score 6 von 8 bewertbaren Signalen; erfüllt: Rendite auf das Vermoegen positiv, operativer Cashflow positiv, "
-        "operativer Cashflow ueber dem Nettogewinn.",
+        "Piotroski F-Score 6 von 8 bewertbaren Signalen; erfüllt: Rendite auf das Vermögen positiv, operativer Cashflow positiv, "
+        "operativer Cashflow über dem Nettogewinn.",
         "Altman Z 2,50, Grauzone von 1,81 bis 2,99.",
         "Rule of 40, gedacht für Software: Umsatzwachstum der vier Quartale plus 25,0 Prozent plus FCF-Marge 3,3 Prozent "
         "ergibt 28,3; ab 40 erfüllt."]
@@ -2127,13 +2366,16 @@ def selbsttest() -> int:
       "Beträge in EUR" in "\n".join(konsens_saetze(eur_k, True, ""))
       and "Kein Forward-KGV: Der Konsens steht in EUR, der Kurs in Dollar." in konsens_saetze(eur_k, True, ""))
     p("Nicht in der Wochenliste: keine Revisionen, ehrlich gesagt",
-      "Revisionen und Einstufungen gibt es nur für Aktien der Wochenliste." in konsens_saetze(zeile_k, False, "")
+      "Revisionen und Einstufungen gibt es nur für Aktien der Wochenlisten." in konsens_saetze(zeile_k, False, "")
       and not any("Needham" in x for x in konsens_saetze(zeile_k, False, "")))
     p("Ohne Analystendaten: Grund, fehlende Zeile, nicht uebergeben",
-      konsens_saetze(None, True, "kein Token für das Datenrepo")[0].startswith(
-          "Analystendaten nicht geladen: kein Token für das Datenrepo.")
-      and konsens_saetze(None, True, "") == ["Für diese Aktie stehen in der Nachttabelle des Scanners keine Analystendaten."]
-      and "DATEN_TOKEN" in konsens_saetze(None)[0] and "DATEN_TOKEN" in konsens_saetze(None, True, "x")[0])
+      konsens_saetze(None, True, "kein Token für das Datenrepo") == [
+          "Die Analystendaten sind nicht geladen.",
+          TECHNIK + "kein Token für das Datenrepo. Sie liegen im privaten Datenrepo; die App braucht dafür den Token "
+                    "DATEN_TOKEN in den Streamlit-Secrets."]
+      and konsens_saetze(None, True, "") == ["Für diese Aktie stehen in der Scanner-Tabelle keine Analystendaten."]
+      and "DATEN_TOKEN" not in konsens_saetze(None)[0] and konsens_saetze(None)[1].startswith(TECHNIK)
+      and "DATEN_TOKEN" in konsens_saetze(None)[1] and "DATEN_TOKEN" in konsens_saetze(None, True, "x")[1])
     p("Gast (S4): Kapitel ohne Secrets und Repos, nur der Hinweis auf den vollen Zugang",
       konsens_saetze(None, True, NUR_VOLLER_ZUGANG) == ["Analysten und Konsens stehen nur im vollen Zugang."]
       and short_saetze(None, NUR_VOLLER_ZUGANG) == ["Die Short-Daten stehen nur im vollen Zugang."]
@@ -2171,8 +2413,10 @@ def selbsttest() -> int:
     ohne_h = short_saetze(dict(zeile_s, short_anteil_pct=None, short_volumen=0.0, short_gesamtvolumen=0.0), "")
     p("Leerverkaeufe: kein ausserboerslicher Umsatz am Tag",
       ohne_h[0] == "Am 14.09.2026 meldete FINRA für diese Aktie keine außerbörslichen Umsätze.", str(ohne_h))
-    p("Leerverkaeufe: ohne Daten wie beim Konsens", short_saetze(None, "kein Token für das Datenrepo")[0].startswith(
-        "Short-Daten nicht geladen") and "DATEN_TOKEN" in short_saetze(None)[0])
+    p("Leerverkaeufe: ohne Daten ein einfacher Satz, der Grund klein darunter (Berichtigung 12, Antwort 102)",
+      short_saetze(None, "kein Token für das Datenrepo") == ["Diese Daten sind nicht geladen.",
+                                                            TECHNIK + "kein Token für das Datenrepo."]
+      and "DATEN_TOKEN" in short_saetze(None)[1])
     # Etappe 6: Branchengruppe
     zeile_g = {"gruppe": "Semiconductors", "gruppe_ebene": "GICS-Unterbranche", "gruppe_rang": 12.0,
                "gruppe_rang_3w": 20.0, "gruppe_rang_6w": None, "gruppen_zahl": 158.0, "gruppe_titel": 42.0,
@@ -2206,8 +2450,10 @@ def selbsttest() -> int:
     p("Branchengruppe: ohne Zuordnungsliste nicht verfuegbar", gn == ["Branchengruppe nicht verfügbar: die eigene "
                                                                     "Zuordnungsliste der Branchen liegt noch nicht vor."],
       str(gn))
-    p("Branchengruppe: ohne Daten wie beim Konsens", gruppe_saetze(None, "kein Token für das Datenrepo")[0].startswith(
-        "Branchengruppe nicht geladen") and "DATEN_TOKEN" in gruppe_saetze(None)[0])
+    p("Branchengruppe: ohne Daten ein einfacher Satz, der Grund klein darunter (Berichtigung 12, Antwort 102)",
+      gruppe_saetze(None, "kein Token für das Datenrepo") == ["Diese Daten sind nicht geladen.",
+                                                             TECHNIK + "kein Token für das Datenrepo."]
+      and "DATEN_TOKEN" in gruppe_saetze(None)[1])
     rs_w = dict(rs, listen={"AAOI": {}})
     teile_k = bericht("AAOI", rs_w, ratings, sektoren, live=live_auf, analysten=zeile_k, analysten_grund="")
     p("Bericht: Kapitel Analysten und Konsens nach der Bewertung, Wochenliste aus der Nachtdatei",
@@ -2278,12 +2524,13 @@ def selbsttest() -> int:
       ks[0] == ("Kaufpunkt 1, VCP: 105,00 Dollar, 5,0 Prozent über dem Kurs; Stop 96,60 Dollar, Risiko 8,0 Prozent; "
                 "Ziel 126,00 Dollar, Chance 20,0 Prozent, Chance zu Risiko 2,5 zu 1; Pivot noch nicht überschritten; "
                 "beobachten; 3 Kontraktionen.")
-      and ks[1].startswith("Kaufpunkt 2, allgemeine Marke, 20-Tage-Hoch (Pivot): 98,00 Dollar, der Kurs liegt 2,0 Prozent darüber")
+      and ks[1] == ("Kaufpunkt 2, Fallback 20-Tage-Hoch, Pivot: 98,00 Dollar, der Kurs liegt 2,0 Prozent darüber; "
+                    "Stop 90,00 Dollar, Risiko 8,2 Prozent; kein Muster; Konsolidierungs-Pivot.")
       and ks[-1].startswith("Kaufpunkt heißt nicht Kaufsignal"), ks)
     p("Kaufpunkte ohne Ergebnis: ehrlicher Satz", kaufpunkt_saetze(None) == ["Keine Kaufpunkte berechnet."])
     p("Anzeige: Kuerzel in Worten, Dezimalpunkt als Beistrich, Datum bleibt",
       anzeige_text("Fallback: 52W-Hoch-Breakout; MA50 aktuell 114.74; am 11.09.2026; 3.5 Prozent")
-      == "allgemeine Marke, 52-Wochen-Hoch-Breakout; 50-Tage-Durchschnitt aktuell 114,74; am 11.09.2026; 3,5 Prozent",
+      == "Fallback 52-Wochen-Hoch-Breakout; 50-Tage-Durchschnitt aktuell 114,74; am 11.09.2026; 3,5 Prozent",
       anzeige_text("Fallback: 52W-Hoch-Breakout; MA50 aktuell 114.74; am 11.09.2026; 3.5 Prozent"))
     p("Anzeige: Vergleichszeichen zwischen Woertern in Worten",
       anzeige_text("Setup komplett (Kurs > SMA21)") == "Setup komplett (Kurs über 21-Tage-Durchschnitt)"
@@ -2339,7 +2586,7 @@ def selbsttest() -> int:
       cm_mittag[0].startswith("Mit dem Schluss vom 17.09.2026:") and "Inside Day" not in cm_mittag[0], cm_mittag)
     p("Chartmuster: nach dem Schluss zaehlt der Tag selbst, mit beiden Einstiegen",
       cm_abend[0].startswith("Mit dem Schluss vom 18.09.2026:") and "Inside Day" in cm_abend[0]
-      and "eng über" in cm_abend[0] and "konservativ über" in cm_abend[0], cm_abend)
+      and "über dem Hoch des Inside Days" in cm_abend[0] and "über dem Hoch des Vortags" in cm_abend[0], cm_abend)
     p("Chartmuster: ein abgeschlossener Vortag bleibt am naechsten Handelstag stehen",
       cm_montag[0] == cm_abend[0], cm_montag)
     p("Chartmuster: ohne Kurse ein ehrlicher Satz",
@@ -2349,12 +2596,12 @@ def selbsttest() -> int:
           "cm_q": 0.0, "cm_b": 1, "cm_b_eng_kp": 999.0}
     cm_nacht = chartmuster_saetze(cm_df, jetzt=datetime(2026, 9, 18, 16, 30, tzinfo=ny), nachtzeile=nz)
     p("Chartmuster: die Stufe kommt aus der Nachttabelle samt ihrem Tag, die kurzen Muster bleiben gerechnet",
-      "Basis Stufe 3, spät, in Bildung seit 6 Wochen" in cm_nacht[0] and "eng über 999" not in cm_nacht[0]
+      "Basis Stufe 3, spät, in Bildung seit 6 Wochen" in cm_nacht[0] and "999" not in cm_nacht[0]
       and "Inside Day" in cm_nacht[0]
       and cm_nacht[1].startswith("Base-on-Base, Green Line, die Stufenzählung der Basen und der Episodic Pivot "
-                                 "stammen aus der Nachttabelle mit dem Schluss vom 18.09.2026"), cm_nacht)
+                                 "stammen aus der Scanner-Tabelle mit dem Schluss vom 18.09.2026"), cm_nacht)
     p("Chartmuster: ohne Zeile der Nachttabelle sagt ein Satz, warum die langen Muster fehlen",
-      "stehen deshalb nur mit einer Zeile der Nachttabelle; für diese Aktie liegt keine vor." in cm_abend[1]
+      "stehen deshalb nur mit einer Zeile der Scanner-Tabelle; für diese Aktie liegt keine vor." in cm_abend[1]
       and "Episodic Pivot" in cm_abend[1]
       and "Basis Stufe" not in cm_abend[0], cm_abend)
     alle_saetze = ms + ohne + ks + kt + km + kjs + cm_mittag + cm_abend + cm_nacht

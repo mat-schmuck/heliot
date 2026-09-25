@@ -78,6 +78,20 @@ def pruefe(block, name, bedingung, zusatz=""):
     return bool(bedingung)
 
 
+# WARNUNGEN (Gerhards Antworten 112, 115, 118 und 119 vom 24.09.2026, "als
+# Warnung"): Ein Verstoss wird gemeldet, laesst die Gesamtpruefung aber nicht
+# scheitern. Sie stehen in der Zusammenfassung unter HINWEISE.
+WARNUNGEN = []           # (block, name, zusatz)
+
+
+def warne(block, name, bedingung, zusatz=""):
+    if not bedingung:
+        WARNUNGEN.append((block, name, str(zusatz)))
+    zeichen = "ok  " if bedingung else "WARN"
+    print(f"  {zeichen} {name}" + (f" — {zusatz}" if zusatz else ""))
+    return bool(bedingung)
+
+
 def nennen(treffer, hoechstens=6):
     """Nennt die Betroffenen beim Namen statt bloss ihre Anzahl.
 
@@ -2977,10 +2991,12 @@ def block_h():
     # NUTZUNG OHNE SCREENREADER (Mathias, 22.09.2026): So heisst die Tabelle
     # im Reiter Aktueller Scan, und RS Nasdaq steht dort als Zahl; den Umbau
     # prueft der Selbsttest von nachschlagen.rs_spalte_als_zahl.
+    # Seit dem 24.09.2026 hinter einem Kontrollfeld statt einem Ausklapper
+    # (Antworten 103 und 104).
     pruefe("H", "Aktueller Scan: Tabelle heisst Nutzung ohne Screenreader, RS Nasdaq als Zahl",
-           'st.expander("Nutzung ohne Screenreader")' in _app_code
+           'st.checkbox("Nutzung ohne Screenreader", key="scan_tabelle")' in _app_code
            and "st.dataframe(nachschlagen.rs_spalte_als_zahl(df_scan)" in _app_code
-           and "st.dataframe(df_scan" not in _app_code)
+           and "st.dataframe(df_scan" not in _app_code and "st.expander(" not in _app_code)
 
     # DER SCANNER (Mathias, 14.09.2026): ein Reiter fuer alle, auch fuer
     # Gaeste, "in jeder Hinsicht und absolut mit Screenreader bedienbar",
@@ -3520,9 +3536,179 @@ def scanner_bedienung_pruefen(pfad) -> tuple:
 # Schreibregeln (kein Gedankenstrich, kein senkrechter Strich, keine Emojis).
 # Die spaeter vorgelegten Kriterien kommen in KOHAERENZ_KRITERIEN dazu, je eines
 # als Name und Pruefung, die (bestanden, Befund) liefert.
-KOHAERENZ_KRITERIEN = []
-
 _EMOJI = None
+
+
+def app_texte(quelle) -> list:
+    """Die festen Texte, die streamlit_app.py zeigt: jede Zeichenkette in den
+    Argumenten der Anzeigeaufrufe (samt den festen Teilen von f-Strings)."""
+    import ast as _ast
+    anzeige = {"markdown", "caption", "write", "info", "warning", "error", "success", "button", "checkbox", "radio",
+               "selectbox", "text_input", "title", "header", "subheader", "download_button", "file_uploader", "toggle",
+               "multiselect", "number_input", "text_area", "tabs", "progress", "form_submit_button", "expander"}
+    eigene = ("erfolg", "fehler", "_sc_erklaerung", "abschnitt_erklaerung")
+    texte = []
+    for n in _ast.walk(_ast.parse(quelle)):
+        if not isinstance(n, _ast.Call):
+            continue
+        f = n.func
+        if not ((isinstance(f, _ast.Attribute) and isinstance(f.value, _ast.Name) and f.value.id == "st"
+                 and f.attr in anzeige) or (isinstance(f, _ast.Name) and f.id in eigene)):
+            continue
+        for a in list(n.args) + [k.value for k in n.keywords if k.arg in ("label", "help", "placeholder",
+                                                                          "beschriftung", "frage", "technik")]:
+            texte += [k.value for k in _ast.walk(a) if isinstance(k, _ast.Constant) and isinstance(k.value, str)]
+    return texte
+
+
+def oberflaechen_texte(quelle=None) -> list:
+    """(Herkunft, Text) fuer alles, was die Oberflaeche zeigt: die festen Texte
+    der App und die Texte aus den Registern und Bausteinen, die sie anzeigt."""
+    import ablaeufe
+    import einstellungen
+    import marktampel
+    import nachschlagen
+    import oberflaeche
+    import scanner_ansicht as sa
+    if quelle is None:
+        quelle = (WURZEL / "streamlit_app.py").read_text(encoding="utf-8")
+    raus = [("App", x) for x in app_texte(quelle)]
+    for a in einstellungen.ALARME:
+        raus += [("Einstellungen", a[k]) for k in ("name", "erklaerung", "regel", "warnung") if a.get(k)]
+    raus += [("Einstellungen", n) for _g, n in einstellungen.GRUPPEN]
+    raus += [("Einstellungen", x) for x in einstellungen.GRUPPEN_REGEL.values()]
+    raus += [("Einstellungen", einstellungen.TREND_TEMPLATE_REGEL)]
+    raus += [("Einstellungen", n) for _k, n in einstellungen.DESIGNS]
+    raus += [("Einstellungen", x) for _k, n, b in einstellungen.KLAENGE for x in (n, b)]
+    raus += [("Oberflaeche", x) for x in list(oberflaeche.SCANNER_ERKLAERUNGEN.values())
+             + list(oberflaeche.SEKTOR_ERKLAERUNGEN.values())]
+    raus += [("Scanner", x) for f in sa.FELDER for x in (f.titel, f.erklaerung)]
+    raus += [("Scanner", n) for _k, n in sa.AUSWAHL] + [("Scanner", n) for _k, n in sa.GRUPPEN]
+    raus += [("Scanner", sa.strategie_text(k)) for k, _n in sa.AUSWAHL if sa.strategie_text(k)]
+    raus += [("Scanner", x) for x in sa.grenzen_saetze() + sa.chartmuster_erklaerung()]
+    raus += [("Scanner", sa.handelbar_text()), ("Scanner", sa.langweile_text())]
+    raus += [("Scanner", n) for _k, n in sa.UMFANG]
+    raus += [("Nachschlagen", f"{n}: {x}" if n else x) for liste in nachschlagen.abschnitt_erklaerungen().values()
+             for n, x in liste]
+    raus += [("Marktampel", x) for x in marktampel.REGELWERK + [marktampel.REGEL_SATZ]]
+    for a in ablaeufe.ABLAEUFE:
+        raus += [("Ablaeufe", a[k]) for k in ("titel", "erklaerung", "knopf") if a.get(k)]
+    return [(q, str(x)) for q, x in raus if str(x or "").strip()]
+
+
+def _klammern_pruefen():
+    """Antwort 112 vom 24.09.2026, als Warnung: keine Klammern in sichtbaren Texten."""
+    funde = [f"{q}: {x[:50]}" for q, x in oberflaechen_texte() if "(" in x or ")" in x]
+    return not funde, nennen(funde) if funde else f"{len(oberflaechen_texte())} Texte ohne Klammern"
+
+
+# Die Chartmuster der Scanner-Tabelle, die der Scanner bei den Treffern nennt.
+CHARTMUSTER_NAMEN = ("Inside Day", "Three Weeks Tight", "Pocket Pivot", "Power Trend", "Flat Base",
+                     "Shakeout plus drei", "Wick Play", "Shakeout am EMA 10", "IPO Base", "Stufenzählung",
+                     "Base-on-Base", "Green Line", "Episodic Pivot")
+
+
+def _regelwerk_pruefen():
+    """Antwort 115, als Warnung: Jede Strategie und jedes Chartmuster, das
+    entstehen kann, hat einen Absatz im Regelwerk. Die Strategien stehen dort aus
+    dem Register (einstellungen.regelwerk_gruppen), die Chartmuster im Abschnitt
+    Chartmuster bei den Treffern (scanner_ansicht.chartmuster_erklaerung)."""
+    import einstellungen
+    import scanner_ansicht as sa
+    im_regelwerk = {n for _g, _e, abs_ in einstellungen.regelwerk_gruppen() for n, _t in abs_}
+    fehlend = []
+    for n in sorted(erzeugbare_strategien()):
+        e = einstellungen.eintrag(einstellungen.schluessel_fuer(n) or "")
+        if not e or e["name"] not in im_regelwerk:
+            fehlend.append(n)
+    cm_text = " ".join(sa.chartmuster_erklaerung())
+    fehlend += [n for n in CHARTMUSTER_NAMEN if n not in cm_text]
+    return not fehlend, nennen(fehlend) if fehlend else f"{len(im_regelwerk)} Strategien und " \
+                                                          f"{len(CHARTMUSTER_NAMEN)} Chartmuster im Regelwerk"
+
+
+# Strategien der Wochenlisten, die Teil 1 des Scanners ausdruecklich nicht
+# anbietet, je mit Grund (Antwort 116). Zurzeit keine.
+SCANNER_AUSGENOMMEN = {}
+
+
+def _scanner_teil1_pruefen():
+    """Antwort 116 vom 24.09.2026, als Pflicht: Jede Strategie der Wochenlisten
+    steht in Teil 1 des Scanners oder ist ausdruecklich ausgenommen."""
+    import einstellungen
+    import pattern_scanner as ps
+    import scanner_ansicht as sa
+    namen_zu_schluessel = {a["name"]: a["schluessel"] for a in einstellungen.ALARME}
+    im_scanner = {einstellungen.schluessel_fuer(n) or namen_zu_schluessel.get(n) for _k, n in sa.AUSWAHL}
+    wochenlisten = list(ps.PRIORITY) + ["Shakeout-Spring", "Crash-Support"]
+    fehlend = [n for n in wochenlisten
+               if einstellungen.schluessel_fuer(n) not in im_scanner and n not in SCANNER_AUSGENOMMEN]
+    return not fehlend, nennen(fehlend) if fehlend else f"{len(wochenlisten)} Strategien in Teil 1"
+
+
+def _herkunft_pruefen():
+    """Antwort 117 vom 24.09.2026, als Pflicht: Kein Text der Oberflaeche nennt,
+    wer etwas wann entschieden hat (Antwort 100: die Herkunft bleibt im
+    Quelltext). Gesucht werden die Namen und feste Daten in den Texten."""
+    import re as _re
+    muster = _re.compile(r"\bGerhard|\bMathias|\b\d{1,2}\.\d{1,2}\.20\d\d\b")
+    funde = [f"{q}: {x[:60]}" for q, x in oberflaechen_texte() if muster.search(x)]
+    return not funde, nennen(funde) if funde else "keine Namen und keine festen Daten"
+
+
+def _nachschlagen_erklaerungen_pruefen():
+    """Antwort 118, als Warnung: Jeder Abschnitt des Nachschlagens hat seinen
+    Erklaerungsknopf mit den Erklaerungen seiner Kennzahlen, und die App zeigt ihn."""
+    import nachschlagen
+    erkl = nachschlagen.abschnitt_erklaerungen()
+    titel = [u for u, _s in nachschlagen.bericht("AAA", {}, {}, {})] + list(nachschlagen.APP_ABSCHNITTE)
+    leer = [u for u in titel if not erkl.get(u)]
+    app = (WURZEL / "streamlit_app.py").read_text(encoding="utf-8")
+    ohne_knopf = [u for u in nachschlagen.APP_ABSCHNITTE if f'abschnitt_erklaerung("{u}"' not in app]
+    if "abschnitt_erklaerung(ueberschrift, nachschlag_erkl)" not in app:
+        ohne_knopf.append("die Abschnitte des Berichts")
+    return not (leer or ohne_knopf), nennen(leer + ohne_knopf) if (leer or ohne_knopf) else \
+        f"{len(titel)} Abschnitte mit Erklaerungen"
+
+
+# Die gewaehlten Namen aus Teil 11 und die Namen, die daneben nicht mehr
+# vorkommen sollen (Antwort 119, als Warnung).
+ABWEICHENDE_NAMEN = {
+    "Nachttabelle": "Scanner-Tabelle", "Tabelle des Scanners": "Scanner-Tabelle",
+    "Jahreshoch": "52-Wochen-Hoch", "Jahrestief": "52-Wochen-Tief", "Freitagsputz": "Wochenputz",
+    "unsere Festlegung": "eigene Festlegung", "Unsere Festlegung": "eigene Festlegung",
+    "Ausweichmarke": "Fallback", "allgemeine Marke": "Fallback", "Red-to-Green": "Red to Green",
+    "Gap and Go": "Power-Gap", "Lücken-Bestätigungstag": "Power-Gap", "für das Auge": "Nutzung ohne Screenreader",
+    "dieses Tool": "die App", "das Tool": "die App",
+}
+
+
+def _namen_pruefen():
+    """Antwort 119 vom 24.09.2026, als Warnung: ein Name je Sache. Gesucht werden
+    die abweichenden Namen in allem, was die Oberflaeche zeigt; die Namen in
+    Mappe, Meldungen und Logbuch sind Daten und bleiben (Antwort 95)."""
+    import re as _re
+    funde = []
+    for q, x in oberflaechen_texte():
+        for alt, neu in ABWEICHENDE_NAMEN.items():
+            if alt in x:
+                funde.append(f"{alt} statt {neu} in {q}: {x[:40]}")
+        if _re.search(r"\bWochenliste\b", x):
+            funde.append(f"Wochenliste statt große Liste oder Wochenlisten in {q}: {x[:40]}")
+    return not funde, nennen(funde) if funde else "ein Name je Sache"
+
+
+# (Name, Pruefung, "Pflicht" oder "Warnung"); die Pruefung liefert (bestanden, Befund).
+KOHAERENZ_KRITERIEN = [
+    ("Keine Klammern in sichtbaren Texten (Antwort 112)", _klammern_pruefen, "Warnung"),
+    ("Jede Strategie und jedes Chartmuster im Regelwerk (Antwort 115)", _regelwerk_pruefen, "Warnung"),
+    ("Jede Strategie der Wochenlisten in Teil 1 des Scanners oder ausdruecklich ausgenommen (Antwort 116)",
+     _scanner_teil1_pruefen, "Pflicht"),
+    ("Keine Personennamen und keine Daten als Herkunft in der Oberflaeche (Antwort 117)", _herkunft_pruefen,
+     "Pflicht"),
+    ("Jede Kennzahl im Nachschlagen mit Erklaerung (Antwort 118)", _nachschlagen_erklaerungen_pruefen, "Warnung"),
+    ("Ein Name je Sache (Antwort 119)", _namen_pruefen, "Warnung"),
+]
 
 
 def _schreibregel_verstoesse(texte) -> list:
@@ -3681,7 +3867,6 @@ def einstellungen_reiter_pruefen(pfad) -> tuple:
 
 def block_i():
     ueberschrift("I — OBERFLAECHE UND KOHAERENZ: der Pruefstand")
-    import ast as _ast
     import re as _re
     import einstellungen
     import oberflaeche
@@ -3696,6 +3881,13 @@ def block_i():
     bekannt = {a["schluessel"] for a in einstellungen.ALARME}
     pruefe("I", "Jeder Schalter, den der Waechter fragt, steht im Register",
            direkt <= bekannt, nennen(sorted(direkt - bekannt)))
+    # Die Meldungen zu offenen Positionen und der Sektor-Radar (Antworten 7 und
+    # 8 vom 24.09.2026) fragt der Waechter nach der Art des Befunds.
+    arten = set(_re.findall(r'befund_an\("([a-z0-9_]+)"\)', waechter))
+    pruefe("I", "Jede Art, nach der der Waechter fragt, hat ihren Schalter",
+           arten <= set(einstellungen.BEFUND_ARTEN), nennen(sorted(arten - set(einstellungen.BEFUND_ARTEN))))
+    if "befund_an(" in waechter:
+        direkt |= set(einstellungen.BEFUND_ARTEN.values())
     tot = [a["name"] for a in einstellungen.ALARME
            if not (a.get("namen") or a.get("anfaenge")) and a["schluessel"] not in direkt]
     pruefe("I", "Jeder Eintrag im Register wirkt im Waechter", not tot, nennen(tot))
@@ -3705,8 +3897,10 @@ def block_i():
     doppelt = len(bekannt) != len(einstellungen.ALARME)
     pruefe("I", "Jeder Eintrag hat Gruppe, Namen und Erklaerung, jeder Schluessel einmal",
            not leer and not doppelt, nennen(leer) + (" doppelte Schluessel" if doppelt else ""))
-    pruefe("I", "Der Waechter prueft nur eingeschaltete Muster und liest die Einstellungen in jedem Datentakt",
-           "for item in wirksame_items(items):" in waechter and waechter.count("einstellungen_nachziehen()") >= 3)
+    pruefe("I", "Der Waechter prueft jedes Muster, meldet nur Eingeschaltetes und liest die Einstellungen in "
+                "jedem Datentakt (Antwort 9)",
+           "for item in items_nach_einstellung(items):" in waechter and "stumm_vermerken(" in waechter
+           and waechter.count("einstellungen_nachziehen()") >= 3)
 
     ok, zusatz = erklaerungsknoepfe_pruefen(app)
     pruefe("I", "Unter jedem Kriterium im Scanner steht ein Erklaerungsknopf", ok, zusatz)
@@ -3732,37 +3926,18 @@ def block_i():
            and "prefers-reduced-motion" in oberflaeche.DESIGN_ZUKUNFT)
 
     # Die Schreibregeln fuer alles, was die Oberflaeche zeigt.
-    texte = [a["name"] for a in einstellungen.ALARME] + [a["erklaerung"] for a in einstellungen.ALARME]
-    texte += [einstellungen.NIE_ABWAEHLBAR] + [n for _k, n in einstellungen.DESIGNS]
-    texte += [x for _k, n, b in einstellungen.KLAENGE for x in (n, b)]
-    texte += list(oberflaeche.SCANNER_ERKLAERUNGEN.values()) + list(oberflaeche.SEKTOR_ERKLAERUNGEN.values())
-    texte += [x for f in sa.FELDER for x in (f.titel, f.erklaerung)]
-    anzeige = {"markdown", "caption", "write", "info", "warning", "error", "success", "button", "checkbox", "radio",
-               "selectbox", "text_input", "title", "header", "subheader", "download_button", "file_uploader", "toggle",
-               "multiselect", "number_input", "text_area", "tabs", "progress", "form_submit_button", "expander"}
-    for n in _ast.walk(_ast.parse(quelle)):
-        if not isinstance(n, _ast.Call):
-            continue
-        f = n.func
-        if not ((isinstance(f, _ast.Attribute) and isinstance(f.value, _ast.Name) and f.value.id == "st"
-                 and f.attr in anzeige) or (isinstance(f, _ast.Name) and f.id in ("erfolg", "_sc_erklaerung"))):
-            continue
-        for a in list(n.args) + [k.value for k in n.keywords if k.arg in ("label", "help", "placeholder",
-                                                                          "beschriftung")]:
-            texte += [k.value for k in _ast.walk(a) if isinstance(k, _ast.Constant) and isinstance(k.value, str)]
+    texte = [x for _q, x in oberflaechen_texte(quelle)]
     verstoesse = _schreibregel_verstoesse(texte)
     pruefe("I", "Texte der Oberflaeche ohne Gedankenstrich, senkrechten Strich und Emoji",
            not verstoesse, nennen(verstoesse))
 
     # Die spaeter vorgelegten Design- und Kohaerenzkriterien
-    if not KOHAERENZ_KRITERIEN:
-        print("  (Die spaeter vorgelegten Design- und Kohaerenzkriterien kommen in KOHAERENZ_KRITERIEN.)")
-    for name, pruefung in KOHAERENZ_KRITERIEN:
+    for name, pruefung, art in KOHAERENZ_KRITERIEN:
         try:
             ok, zusatz = pruefung()
         except Exception as e:  # noqa
             ok, zusatz = False, f"{type(e).__name__}: {e}"
-        pruefe("I", name, ok, zusatz)
+        (warne if art == "Warnung" else pruefe)("I", name, ok, zusatz)
 
 
 def main() -> int:
@@ -3794,10 +3969,14 @@ def main() -> int:
         ok, ges = je_block[b]
         print(f"  Block {b}: {ok} von {ges} bestanden"
               + ("" if ok == ges else "   <-- FEHLER"))
-    print(f"\n{len(ERGEBNISSE)} Pruefungen, {len(fehler)} Fehler.")
+    print(f"\n{len(ERGEBNISSE)} Pruefungen, {len(fehler)} Fehler, {len(WARNUNGEN)} Warnungen.")
     if fehler:
         print("\nWAS NICHT STIMMT:")
         for b, n, z in fehler:
+            print(f"  [{b}] {n}" + (f" — {z}" if z else ""))
+    if WARNUNGEN:
+        print("\nHINWEISE, keine Fehler:")
+        for b, n, z in WARNUNGEN:
             print(f"  [{b}] {n}" + (f" — {z}" if z else ""))
     return 1 if fehler else 0
 

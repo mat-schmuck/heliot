@@ -526,6 +526,42 @@ def warte_auf_sekundaertest_und_alarmiere(df, warteliste, symbol, df_wochen=None
     return warteliste, None
 
 
+def rueckblick(df, tage=None, symbol="_"):
+    """DIESELBE RECHNUNG OHNE WARTELISTE, fuer den Scanner (Gerhard,
+    Antwort 55 vom 24.09.2026: Shakeout-Spring steht auch in Teil 1).
+
+    Die Scanner-Tabelle rechnet jede Nacht den ganzen Markt neu und fuehrt
+    keine Warteliste. Deshalb wird warte_auf_sekundaertest_und_alarmiere
+    Tag fuer Tag ueber die letzten Handelstage nachgespielt, mit leerer
+    Liste am Anfang. Ein Eintrag lebt hoechstens sekundaertest_max_wartetage
+    plus einen Tag; wer doppelt so weit zurueck beginnt, steht am letzten
+    Tag im selben Zustand wie die echte Warteliste der Wochenlisten.
+
+    Die Zonen sind teuer, deshalb eine Abkuerzung, die am Ergebnis nichts
+    aendert: Ein Spring verlangt einen Schluss im oberen Teil der
+    Tagesspanne, ganz gleich welche Zone. Ohne ihn kann der Tag keinen
+    Eintrag anlegen, und die Liste bleibt, wie sie ist.
+
+    Rueckgabe: (Signal am letzten Tag oder None, wartender Eintrag oder None).
+    """
+    w = int(CFG["sekundaertest_max_wartetage"])
+    tage = int(tage or 2 * (w + 2))
+    n = len(df)
+    start = max(int(CFG["ma_lang"]) + 1, n - tage)
+    hoch, tief, schluss = df["High"].values, df["Low"].values, df["Close"].values
+    warteliste, signal = {}, None
+    for i in range(start, n):
+        if symbol not in warteliste:
+            spanne = float(hoch[i]) - float(tief[i])
+            lage = (float(schluss[i]) - float(tief[i])) / spanne if spanne > 0 else 0.0
+            if not mind_erreicht(lage, CFG["schluss_oberste_pct"]):
+                continue
+        warteliste, s = warte_auf_sekundaertest_und_alarmiere(df.iloc[:i + 1], warteliste, symbol)
+        if i == n - 1:
+            signal = s
+    return signal, warteliste.get(symbol)
+
+
 # ---------------------------------------------------------------------------
 # Selbsttest
 # ---------------------------------------------------------------------------
@@ -630,6 +666,36 @@ def selbsttest() -> int:
                    "tage_gewartet": CFG["sekundaertest_max_wartetage"]}}
     alt, sig = warte_auf_sekundaertest_und_alarmiere(df, alt, "ALT")
     pruefe("Abgelaufene Wartezeit räumt den Eintrag weg", "ALT" not in alt)
+
+    # Rueckblick fuer den Scanner: ein Aufwaertstrend, danach eine
+    # Seitwaertsphase mit einer Zone bei 54,73; sechs Tage vor dem Ende ein
+    # Spring darunter, am letzten Tag der Sekundaertest mit weniger Volumen.
+    trend = list(10.0 * 6 ** (np.arange(400) / 400))
+    seit = [55.0 + 2.5 * (1 - np.cos(2 * np.pi * i / 12)) for i in range(60)]
+    k = np.array(trend + seit)
+    rb = pd.DataFrame({"Open": k, "High": k * 1.005, "Low": k * 0.995, "Close": k,
+                       "Volume": np.full(len(k), 1_000_000.0)},
+                      index=pd.date_range("2024-01-01", periods=len(k), freq="B"))
+
+    def setze(i, o, h, lo, c, v):
+        for spalte, wert in (("Open", o), ("High", h), ("Low", lo), ("Close", c), ("Volume", v)):
+            rb.iloc[i, rb.columns.get_loc(spalte)] = wert
+
+    n = len(rb)
+    setze(n - 6, 55.0, 55.6, 53.8, 55.4, 3_000_000.0)
+    for i in range(n - 5, n - 1):
+        setze(i, 56.0, 56.5, 55.5, 56.0, 1_000_000.0)
+    setze(n - 1, 55.8, 56.0, 54.5, 55.5, 800_000.0)
+    sig_r, wart_r = rueckblick(rb)
+    liste, sig_n = {}, None
+    for i in range(n - 60, n):
+        liste, sig_n = warte_auf_sekundaertest_und_alarmiere(rb.iloc[:i + 1], liste, "_")
+    pruefe("Rückblick findet den bestätigten Spring am letzten Tag",
+           sig_r is not None and sig_r["kaufpunkt"] == 54.73 and sig_r["stop"] == 53.8, str(sig_r))
+    pruefe("Rückblick und Nachtlauf mit Warteliste melden dasselbe", sig_r == sig_n)
+    sig_v, wart_v = rueckblick(rb.iloc[:-1])
+    pruefe("Einen Tag früher wartet der Spring noch auf den Test",
+           sig_v is None and wart_v is not None and wart_v["tage_gewartet"] == 4, str(wart_v))
 
     print(f"\n{len(fehler)} Fehler." if fehler else "\nAlles bestanden.")
     return 1 if fehler else 0

@@ -43,6 +43,14 @@ C = CFG["ema_crossback"]
 NAME = "EMA Crossback"
 
 
+def _tage_text(n, dativ=False):
+    """1 wird 'einen Tag' (Berichtigung 2 vom 24.09.2026), im Dativ 'einem
+    Tag'; sonst 'n Tage' bzw. 'n Tagen'."""
+    if int(n) == 1:
+        return "einem Tag" if dativ else "einen Tag"
+    return f"{int(n)} Tagen" if dativ else f"{int(n)} Tage"
+
+
 def detect_ema_crossback(df):
     """Die Kaufmarke im Format der uebrigen Detektoren, oder None.
 
@@ -127,8 +135,8 @@ def detect_ema_crossback(df):
         "stop": round(stop_tief - 0.01, 2),
         "ziel": None,
         "status": (f"Rücksetzer an die 10er/20er-Linie, "
-                   f"{n - 1 - pop_i} Tage nach der Rückeroberung"),
-        "notiz": (f"Rückeroberung vor {n - 1 - pop_i} Tag(en), "
+                   f"{_tage_text(n - 1 - pop_i)} nach der Rückeroberung"),
+        "notiz": (f"Rückeroberung vor {_tage_text(n - 1 - pop_i, dativ=True)}, "
                   f"Kontakt-Tief {stop_tief:.2f}, Umkehrtag-Hoch "
                   f"{h:.2f}"),
     }

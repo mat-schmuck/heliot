@@ -140,6 +140,42 @@ def lese(pfad=DATEI):
 
 FARBWORT = {"gruen": "grün", "gelb": "gelb", "rot": "rot"}
 
+# DER EINFACHE SATZ ZUR FARBE (Mathias, 24.09.2026, Frage 29): oben steht,
+# was die Farbe heute bedeutet, die Einzelheiten darunter.
+BEDEUTUNG = {
+    "gruen": "S&P 500 und Nasdaq stehen beide im Aufwärtstrend",
+    "gelb": "Der Markt ist uneinheitlich; beide Indizes halten ihre 50-Tage-Linie, stehen aber nicht beide im vollen "
+            "Aufwärtstrend",
+    "rot": "Mindestens ein Index schließt unter seiner 50-Tage-Linie",
+}
+
+# Frage 30 (Gerhard, 24.09.2026): So gewollt; die Farbe folgt den Ampelregeln,
+# die Zaehlung nach IBD ist eine eigene Auskunft, und der Satz sagt das.
+REGEL_SATZ = ("Die Farbe folgt allein den Regeln der Ampel; die Zählung nach IBD mit Distribution Days, "
+              "Erholungsversuch und Follow-through Day ist eine eigene Auskunft und ändert die Farbe nicht.")
+
+# Der Abschnitt Marktampel im Regelwerk der App (Frage 78), je Eintrag ein Satz.
+REGELWERK = [
+    "Die Marktampel zeigt den Zustand des Gesamtmarkts, gemessen an S&P 500 und Nasdaq: je Index der Schluss "
+    "gegen die 21-Tage-Exponentiallinie, kurz EMA 21, und die 50-Tage-Durchschnittslinie, kurz SMA 50.",
+    "Grün: Beide Indizes schließen über beiden Linien, die EMA 21 liegt über der SMA 50, und die SMA 50 steigt, "
+    "verglichen mit zehn Handelstagen davor.",
+    "Rot: Mindestens ein Index schließt unter seiner SMA 50.",
+    "Gelb: alles dazwischen.",
+    "Gerechnet wird jede Nacht mit dem Schluss des letzten Handelstags. Oben auf jeder Seite steht die Farbe, "
+    "solange sie dem letzten Handelstag gilt, den der Nachtscan gerechnet hat; an einem Feiertag gilt deshalb "
+    "weiter der Schluss davor.",
+    "Dazu kommen je Index die Distribution Days samt Stalling Days und der Stand von Erholungsversuch und "
+    "Follow-through Day nach der Zählung von IBD. Diese Zählung ist eine eigene Auskunft und ändert die Farbe "
+    "nicht.",
+    "Die Ampel informiert nur; sie filtert keine Aktie und hält keine Meldung zurück.",
+]
+
+
+def einfacher_satz(daten) -> str:
+    """Was die Farbe bedeutet, in einem Satz ohne Punkt; leer ohne Farbe."""
+    return BEDEUTUNG.get((daten or {}).get("farbe"), "")
+
 
 def _datum_de(iso):
     teile = str(iso or "")[:10].split("-")

@@ -162,7 +162,7 @@ from datetime import date, datetime, timedelta, timezone
 import numpy as np
 import pandas as pd
 
-from config import CFG as ZENTRAL, mind_erreicht
+from config import CFG as ZENTRAL, hoechstens, mind_erreicht
 import kennzahlen_gruppen as kg
 import kennzahlen_konsens as kk
 import kennzahlen_short as ks
@@ -180,16 +180,26 @@ KURSZIEL_URL = "https://api.nasdaq.com/api/analyst/{}/targetprice"
 UEBERRASCHUNG_URL = "https://api.nasdaq.com/api/company/{}/earnings-surprise"
 
 # Die Strategien des Scanners: Kennung, Anzeige, Toleranz moeglich.
+# Gerhard, Antwort 55 vom 24.09.2026: Cup & Handle auf Wochenbasis,
+# Earnings-Pullback, Shakeout-Spring und Crash-Support stehen wie in den
+# Wochenlisten auch hier. Cup & Handle bleibt, wie es ist (Tages- und
+# Wochenfassung, die bessere zaehlt); die Wochenbasis steht zusaetzlich fuer
+# sich. Angezeigt wird ohne Klammern (Antwort 95), der Name des Musters in
+# den Meldungen bleibt.
 STRATEGIEN = (
     ("darvas", "Darvas Box", True),
     ("trend_template", "Minervini Trend Template", True),
     ("vcp", "VCP", True),
     ("cup_handle", "Cup & Handle", True),
+    ("cup_woche", "Cup & Handle, Wochenbasis", True),
     ("rectangle", "Rectangle Top", True),
     ("htf", "High & Tight Flag", True),
     ("htf_innen", "HTF Innen-Einstieg", True),
     ("ema_crossback", "EMA Crossback", False),
-    ("power_gap", "Power-Gap (Lücken-Bestätigungstag)", False),
+    ("earnings_pullback", "Earnings-Pullback", False),
+    ("power_gap", "Power-Gap", False),
+    ("shakeout_spring", "Shakeout-Spring", False),
+    ("crash_support", "Crash-Support", False),
     ("hoch_52w", "Neues 52-Wochen-Hoch", False),
     ("hoch_allzeit", "Neues Allzeithoch", False),
 )
@@ -413,10 +423,15 @@ def vergangene_termine(heute, holen=None, tage=None):
     geholt, dass das auch ueber Feiertage reicht. Fuer vergangene Tage nennt
     der Kalender keine Uhrzeit. holen(url) liefert (Status, JSON) wie
     _json_holen. Kam kein einziger Tag, ist die Menge None: Ohne Kalender
-    wuerde sonst jede Luecke als Luecke ohne Ausloeser dastehen."""
+    wuerde sonst jede Luecke als Luecke ohne Ausloeser dastehen. Dieselben
+    Tage belegen den Zahlen-Gap des Earnings-Pullback, dessen Gap bis
+    suchfenster_tage Handelstage zurueckliegen darf; geholt wird fuer das
+    laengere der beiden Fenster."""
     import chartmuster
     holen = holen or _json_holen
-    tage = int(tage or (chartmuster.FESTLEGUNGEN["v_tage_max"] + 1) * 7 // 5 + 5)
+    handelstage = max(int(chartmuster.FESTLEGUNGEN["v_tage_max"]),
+                      int(ZENTRAL["earnings_pullback"]["suchfenster_tage"]))
+    tage = int(tage or (handelstage + 1) * 7 // 5 + 5)
     raus, geholt = {}, 0
     for i in range(0, tage + 1):
         tag = heute - timedelta(days=i)
@@ -512,10 +527,14 @@ def markttiefs_laden():
     return sorted(tiefs), {"status": "ok", "anzahl": len(tiefs), "je_index": je}
 
 
-def _detektoren(di, tt_pass, toleranz, v2cfg):
-    """Alle Muster einer Aktie in einer Tolerenzstufe: {kennung: Treffer}."""
+def _detektoren(di, tt_pass, toleranz, v2cfg, ticker="", termine=None):
+    """Alle Muster einer Aktie in einer Tolerenzstufe: {kennung: Treffer}.
+    termine: die Tage mit Zahlen laut Nasdaq-Kalender fuer den
+    Earnings-Pullback, None heisst unbekannt (dann gibt es keinen, denn ohne
+    belegten Termin ist ein Gap kein Zahlen-Gap)."""
     import pattern_scanner as ps
     import cup_handle_v2
+    import earnings_pullback
     import ema_crossback
     raus = {}
     liste = [("htf", ps.detect_htf), ("htf_innen", ps.detect_htf_innen),
@@ -529,17 +548,27 @@ def _detektoren(di, tt_pass, toleranz, v2cfg):
         if r:
             raus[kennung] = r
     cups = []
-    for fn in (ps.detect_cup_handle, lambda x: cup_handle_v2.detect_cup_handle_v2(x, v2cfg)):
+    for kennung, fn in (("cup_handle", ps.detect_cup_handle),
+                        ("cup_woche", lambda x: cup_handle_v2.detect_cup_handle_v2(x, v2cfg))):
         try:
             r = fn(di)
         except Exception:  # noqa
             r = None
         if r:
             cups.append(r)
+            if kennung == "cup_woche":
+                raus["cup_woche"] = r
     if cups:
         raus["cup_handle"] = max(cups, key=lambda h: h.get("score", 0) or 0)
     if not toleranz:
-        for kennung, fn in (("ema_crossback", ema_crossback.detect_ema_crossback), ("power_gap", power_gap)):
+        kalender = None if termine is None else [(date.fromisoformat(str(x)[:10]), None) for x in termine]
+        for kennung, fn in (("ema_crossback", ema_crossback.detect_ema_crossback), ("power_gap", power_gap),
+                            ("earnings_pullback",
+                             (lambda x: earnings_pullback.detect_earnings_pullback(x, ticker, termine={},
+                                                                                   kalender=kalender))
+                             if kalender is not None else None)):
+            if fn is None:
+                continue
             try:
                 r = fn(di)
             except Exception:  # noqa
@@ -727,7 +756,7 @@ def grund_bausteine(werte, rs):
 
 def _muster_qualitaet(kennung, treffer):
     status = str((treffer or {}).get("status") or "")
-    if kennung == "cup_handle":
+    if kennung in ("cup_handle", "cup_woche"):
         return _rampe((treffer or {}).get("score"), *SC["rating"]["rampen"]["cup_score"])
     if kennung in ("htf", "htf_innen"):
         note = (treffer or {}).get("htf_note") or next((n for n in ("A", "B", "C") if f"Note {n}" in status), None)
@@ -779,13 +808,100 @@ def rating_aus(kennung, bausteine, streng):
     return int(max(0, min(100, round(wert)))), (text or None)
 
 
-def muster_werte(d, rs, werte, toleranz=None):
+# So viele Handelstage holt der Nachtscan je Aktie (Yahoo, period 2y).
+ZWEI_JAHRE = 504
+
+
+def shakeout_treffer(kurse):
+    """Shakeout-Spring wie in den Wochenlisten: ein Spring unter eine starke
+    Zone, am letzten Handelstag vom Sekundaertest bestaetigt. Die Warteliste
+    der Wochenlisten wird dafuer nachgespielt (shakeout.rueckblick).
+    kurse im Format von shakeout.aus_scanner_df. Rueckgabe Treffer oder None."""
+    import shakeout
+    sig, _wartet = shakeout.rueckblick(kurse)
+    if not sig:
+        return None
+    try:
+        spring = date.fromisoformat(str(sig.get("spring_datum"))[:10]).strftime("%d.%m.%Y")
+    except ValueError:
+        spring = str(sig.get("spring_datum"))
+    typ = str(sig.get("volumen_typ") or "").split(",")[0].strip()
+    return {"kaufpunkt": sig["kaufpunkt"], "stop": sig["stop"],
+            "status": f"Sekundärtest am letzten Handelstag bestätigt, Spring am {spring}"
+                      + (f"; Volumen {typ}" if typ else "")}
+
+
+def crash_regime_laden(holen=None):
+    """Ist Crash-Support gerade scharf? Einmal fuer alle Aktien, wie im
+    Nachtscan: der SPY gegen sein 52-Wochen-Hoch auf Schlusskursbasis.
+    holen(symbol) liefert Kurse im Format von shakeout.aus_scanner_df.
+    Rueckgabe (scharf oder None, Befund)."""
+    import crash_support
+    try:
+        if holen is None:
+            import yfinance as yf
+            kurse = yf.Ticker(crash_support.INDEX).history(period="2y", auto_adjust=False)
+        else:
+            kurse = holen(crash_support.INDEX)
+    except Exception as e:  # noqa  der Index darf den Bau nie aufhalten
+        return None, {"status": f"fehler: {type(e).__name__}"}
+    if kurse is None or len(kurse) < 2:
+        return None, {"status": "keine Kurse"}
+    scharf, rueck = crash_support.regime_scharf(kurse)
+    if rueck is None:
+        return None, {"status": "keine Kurse"}
+    return bool(scharf), {"status": "ok", "scharf": bool(scharf), "rueckgang_pct": round(rueck * 100, 1)}
+
+
+def crash_treffer(kurse):
+    """Der Kursteil von Crash-Support wie in den Wochenlisten: eine starke
+    Unterstuetzungszone unter oder am Kurs, der Schluss liegt in ihr. Die
+    vier Firmenfilter prueft crash_fundament, sobald die Tabelle sie hat."""
+    import crash_support
+    import exit_regeln
+    import shakeout
+    if kurse is None or len(kurse) < int(ZENTRAL["shakeout"]["ma_lang"]):
+        return None
+    zone = crash_support.starke_zone(kurse, shakeout.wochenkurse_aus_tageskursen(kurse))
+    if zone is None:
+        return None
+    ja, _beschreibung = crash_support.ausloeser(kurse, zone)
+    if not ja:
+        return None
+    einstieg = float(kurse["Close"].iloc[-1])
+    stop, _herkunft = exit_regeln.berechne_initialen_stop(einstieg, zone["min"])
+    return {"kaufpunkt": round(einstieg, 2), "stop": stop, "ziel": crash_support.kursziel(zone),
+            "status": f"Schluss in der Unterstützungszone {_zahl_deutsch(zone['min'], 2)} bis "
+                      f"{_zahl_deutsch(zone['max'], 2)} Dollar, Zonenwert {_zahl_deutsch(zone['score'], 0)}"}
+
+
+def crash_fundament(zeile):
+    """Die vier Firmenfilter von Crash-Support aus den Werten der Tabelle:
+    Marktkapitalisierung, Umsatzwachstum gegen das Vorjahresquartal und
+    Schulden zu Eigenkapital. Wie in crash_support.pruefe_fundamentals
+    schliesst ein fehlender Wert nicht aus. Rueckgabe True oder False."""
+    import crash_support
+    c = crash_support.cfg()
+    kap, ums, ver = _f(zeile.get("marktkap_mrd")), _f(zeile.get("umsatz_q_vj_pct")), _f(zeile.get("schulden_zu_ek"))
+    if kap is not None and not mind_erreicht(kap, c["min_marktkap_mrd"]):
+        return False
+    if ums is not None and not mind_erreicht(ums / 100.0, c["min_umsatzwachstum"]):
+        return False
+    if ver is not None and not hoechstens(ver, c["max_debt_to_equity"]):
+        return False
+    return True
+
+
+def muster_werte(d, rs, werte, toleranz=None, ticker="", termine=None, crash=None):
     """Mustertreffer einer Aktie in zwei Stufen: streng und mit Toleranz.
     Rueckgabe dict mit m_<kennung> (0 kein Treffer, 1 nur mit Toleranz,
     2 streng), kp_, stop_, status_, rating_ und grund_ je Strategie, dazu
-    tt_count und die Langeweile-Sperre der Darvas Box."""
+    tt_count und die Langeweile-Sperre der Darvas Box. termine: die Tage mit
+    Zahlen fuer den Earnings-Pullback (None heisst unbekannt); crash: ob
+    Crash-Support gerade scharf ist."""
     import exit_regeln
     import pattern_scanner as ps
+    import shakeout
     toleranz = SC["toleranz"] if toleranz is None else toleranz
     raus = {}
     for kennung, _n, _t in STRATEGIEN:
@@ -801,7 +917,25 @@ def muster_werte(d, rs, werte, toleranz=None):
     tt_s, tt_n = trend_template(di, rs, 0.0)
     raus["tt_count"] = tt_n
     with cfg_toleranz(0.0) as v2_streng:
-        streng = _detektoren(di, tt_s, 0.0, v2_streng)
+        streng = _detektoren(di, tt_s, 0.0, v2_streng, ticker=ticker, termine=termine)
+    kurse = None
+    try:
+        # Zwei Jahre wie der Nachtscan (Yahoo, period 2y): Alter und
+        # Volumenprofil der Zonen rechnen ueber die ganze Reihe, mit drei
+        # Jahren kaemen andere Zonen heraus als in den Wochenlisten.
+        kurse = shakeout.aus_scanner_df(d.tail(ZWEI_JAHRE))
+        treffer_so = shakeout_treffer(kurse)
+    except Exception:  # noqa  ein Fehler laesst nur diese Spalten leer
+        treffer_so = None
+    if treffer_so:
+        streng["shakeout_spring"] = treffer_so
+    if crash and kurse is not None:
+        try:
+            treffer_cs = crash_treffer(kurse)
+        except Exception:  # noqa
+            treffer_cs = None
+        if treffer_cs:
+            streng["crash_support"] = treffer_cs
     locker, tt_t = {}, tt_s
     if toleranz:
         tt_t, _tt_nt = trend_template(di, rs, toleranz)
@@ -1398,7 +1532,7 @@ def bauen(pfad_tabelle=TABELLE, pfad_stand=STAND, archiv=ARCHIV, grenze=None, an
           heute=None, universum_liste=None, kurse_download=None, rs_daten=None, ratings=None, termine_listen=None,
           screener=None, kalender=None, je_aktie=None, kennzahlen=None, leise=False, pfad_analysten=ANALYSTEN,
           konsens_pfade=None, revisionen="an", short="an", zuordnung_pfad=None, pfad_gruppen=GRUPPEN,
-          markttiefs=None, termine_vergangen=None, fuenf_minuten=None):
+          markttiefs=None, termine_vergangen=None, fuenf_minuten=None, crash_scharf="holen"):
     """Die ganze Nachttabelle. Alle Quellen lassen sich fuer den Selbsttest
     uebergeben; ohne Angabe wird geholt. Die Analystenwerte der Vornacht
     stehen in pfad_analysten (der Ablauf holt sie vorher aus dem privaten
@@ -1412,8 +1546,10 @@ def bauen(pfad_tabelle=TABELLE, pfad_stand=STAND, archiv=ARCHIV, grenze=None, an
     wohin die Rangliste der Gruppen geht, None heisst nirgends. markttiefs: die
     Tage der Markttiefs fuer die Stufenzaehlung, None heisst holen.
     termine_vergangen: {Ticker: Menge der Tage mit Zahlen} fuer den Ausloeser
-    des Episodic Pivot, None heisst holen; fuenf_minuten: ein Abruf
-    holen(liste) fuer den Eroeffnungsbereich, None heisst Yahoo."""
+    des Episodic Pivot und den Earnings-Pullback, None heisst holen;
+    fuenf_minuten: ein Abruf holen(liste) fuer den Eroeffnungsbereich, None
+    heisst Yahoo. crash_scharf: ob Crash-Support gerade scharf ist, "holen"
+    heisst am SPY nachsehen."""
     import rs_universum
     t0 = time.time()
     heute = heute or ny_heute()
@@ -1465,6 +1601,12 @@ def bauen(pfad_tabelle=TABELLE, pfad_stand=STAND, archiv=ARCHIV, grenze=None, an
     else:
         befund_tv = {"status": "uebergeben", "ticker": len(termine_vergangen)}
     stand["quellen"]["termine_vergangen"] = befund_tv
+    # Crash-Support rechnet nur im Rueckgang des Marktes, einmal fuer alle
+    if crash_scharf == "holen":
+        crash_scharf, befund_cr = crash_regime_laden()
+    else:
+        befund_cr = {"status": "uebergeben", "scharf": bool(crash_scharf)}
+    stand["quellen"]["crash_regime"] = befund_cr
 
     # --- Kurse, Kennzahlen und Muster je Block ------------------------------
     zeilen, archiv_teile, ohne_kurse = {}, [], 0
@@ -1493,9 +1635,9 @@ def bauen(pfad_tabelle=TABELLE, pfad_stand=STAND, archiv=ARCHIV, grenze=None, an
                      "rs_linie_qqq_hoch": e_rs.get("linie_qqq_hoch"),
                      "rs_linie_qqq_abst_pct": e_rs.get("linie_qqq_abst_pct")}
             zeile["handelbar"] = handelbar(werte, ex)
-            zeile.update(muster_werte(d, rs, werte))
-            zeile.update(chartmuster_werte(d, voll, markttiefs,
-                                           None if termine_vergangen is None else termine_vergangen.get(s, set())))
+            termine_s = None if termine_vergangen is None else termine_vergangen.get(s, set())
+            zeile.update(muster_werte(d, rs, werte, ticker=s, termine=termine_s, crash=bool(crash_scharf)))
+            zeile.update(chartmuster_werte(d, voll, markttiefs, termine_s))
             zeilen[s] = zeile
             archiv_teile.append(pd.DataFrame({
                 "ticker": s, "datum": pd.to_datetime(voll["datetime"]),
@@ -1598,6 +1740,13 @@ def bauen(pfad_tabelle=TABELLE, pfad_stand=STAND, archiv=ARCHIV, grenze=None, an
     leer_f = fundament_werte({}, heute)
     for s, z in zeilen.items():
         z.update(werte_f.get(ciks.get(s), leer_f) if ciks.get(s) else leer_f)
+    # Crash-Support: die Firmenfilter, sobald Marktkapitalisierung, Umsatz und
+    # Schulden in der Zeile stehen; wer sie nicht besteht, ist kein Treffer.
+    for z in zeilen.values():
+        if z.get("m_crash_support") and not crash_fundament(z):
+            z["m_crash_support"] = 0
+            for feld in ("kp", "stop", "status", "rating", "grund"):
+                z[f"{feld}_crash_support"] = None
 
     # --- Eingefrorener Yahoo-Konsens (Etappe 5) ----------------------------------------
     alt = _alte_tabelle(pfad_analysten)
@@ -1887,6 +2036,62 @@ def selbsttest() -> int:
     g.loc[g.index[-1], "low"] = prev * 0.99
     p("Power-Gap ohne verteidigte Luecke abgelehnt", power_gap(g) is None)
 
+    # Die vier Strategien aus Antwort 55: Earnings-Pullback mit dem Termin
+    # aus dem Nasdaq-Kalender, 90 ruhige Tage, ein Zahlen-Gap, vier enge Tage
+    kurse_e = [100.0] * 90 + [115.0] + [113.0, 113.5, 113.0, 113.5]
+    e = pd.DataFrame({"datetime": pd.bdate_range("2026-04-01", periods=len(kurse_e)),
+                      "open": [k * 0.995 for k in kurse_e], "high": [k * 1.01 for k in kurse_e],
+                      "low": [k * 0.99 for k in kurse_e], "close": kurse_e,
+                      "volume": [1_000_000.0] * 90 + [5_000_000.0] + [1_500_000.0] * 4})
+    e.loc[90, "low"] = 109.0
+    gap_tag = e["datetime"].iloc[90].date().isoformat()
+    werte_e = kurs_werte(e, extrema(e))
+    m_e = muster_werte(e, 80.0, werte_e, ticker="TST", termine={gap_tag})
+    p("Earnings-Pullback mit belegtem Termin erkannt, Kauf über dem Konsolidierungshoch",
+      m_e["m_earnings_pullback"] == 2 and m_e["kp_earnings_pullback"] == round(113.5 * 1.01 + 0.01, 2),
+      f"{m_e['m_earnings_pullback']} {m_e['kp_earnings_pullback']}")
+    p("Earnings-Pullback ohne Termin am Gap-Tag kein Treffer",
+      muster_werte(e, 80.0, werte_e, ticker="TST", termine=set())["m_earnings_pullback"] == 0)
+    p("Earnings-Pullback ohne Kalender kein Treffer",
+      muster_werte(e, 80.0, werte_e, ticker="TST", termine=None)["m_earnings_pullback"] == 0)
+    # Shakeout-Spring: derselbe Fall wie im Selbsttest von shakeout.py
+    k_s = np.array(list(10.0 * 6 ** (np.arange(400) / 400))
+                   + [55.0 + 2.5 * (1 - np.cos(2 * np.pi * i / 12)) for i in range(60)])
+    so = pd.DataFrame({"datetime": pd.bdate_range("2024-01-01", periods=len(k_s)), "open": k_s,
+                       "high": k_s * 1.005, "low": k_s * 0.995, "close": k_s, "volume": np.full(len(k_s), 1e6)})
+    n_s = len(so)
+    so.loc[n_s - 6, ["open", "high", "low", "close", "volume"]] = [55.0, 55.6, 53.8, 55.4, 3e6]
+    for i in range(n_s - 5, n_s - 1):
+        so.loc[i, ["open", "high", "low", "close", "volume"]] = [56.0, 56.5, 55.5, 56.0, 1e6]
+    so.loc[n_s - 1, ["open", "high", "low", "close", "volume"]] = [55.8, 56.0, 54.5, 55.5, 8e5]
+    import shakeout
+    ts = shakeout_treffer(shakeout.aus_scanner_df(so))
+    p("Shakeout-Spring: bestätigter Sekundärtest am letzten Handelstag",
+      ts is not None and ts["kaufpunkt"] == 54.73 and ts["stop"] == 53.8 and "bestätigt" in ts["status"], str(ts))
+    p("Shakeout-Spring: einen Tag früher noch kein Treffer",
+      shakeout_treffer(shakeout.aus_scanner_df(so.iloc[:-1])) is None)
+    m_s = muster_werte(so, 80.0, kurs_werte(so, extrema(so)))
+    p("Shakeout-Spring steht als Treffer in der Tabelle", m_s["m_shakeout_spring"] == 2 and m_s["kp_shakeout_spring"] == 54.73)
+    # Crash-Support: das Regime am SPY und die vier Firmenfilter
+    spy = pd.DataFrame({"Close": [100.0] * 200 + [88.0]})
+    scharf, befund_cr = crash_regime_laden(holen=lambda sym: spy)
+    p("Crash-Support scharf, wenn der SPY mindestens 10 Prozent unter dem Hoch steht",
+      scharf is True and befund_cr["rueckgang_pct"] == -12.0, str(befund_cr))
+    scharf2, _b2 = crash_regime_laden(holen=lambda sym: pd.DataFrame({"Close": [100.0] * 200 + [95.0]}))
+    p("Crash-Support ruht bei 5 Prozent unter dem Hoch", scharf2 is False)
+    p("Crash-Support: Firmenfilter bestanden",
+      crash_fundament({"marktkap_mrd": 25.0, "umsatz_q_vj_pct": 20.0, "schulden_zu_ek": 0.3}))
+    p("Crash-Support: zu klein, zu langsam oder zu verschuldet fällt heraus",
+      not crash_fundament({"marktkap_mrd": 5.0, "umsatz_q_vj_pct": 20.0, "schulden_zu_ek": 0.3})
+      and not crash_fundament({"marktkap_mrd": 25.0, "umsatz_q_vj_pct": 10.0, "schulden_zu_ek": 0.3})
+      and not crash_fundament({"marktkap_mrd": 25.0, "umsatz_q_vj_pct": 20.0, "schulden_zu_ek": 0.8}))
+    p("Crash-Support: ein fehlender Wert schließt nicht aus", crash_fundament({}))
+    p("Crash-Support rechnet nur im scharfen Regime",
+      muster_werte(so, 80.0, kurs_werte(so, extrema(so)), crash=False)["m_crash_support"] == 0)
+    p("Die Wochenbasis steht als eigene Strategie in der Tabelle",
+      "m_cup_woche" in m_s and STRATEGIE_NAMEN["cup_woche"] == "Cup & Handle, Wochenbasis"
+      and STRATEGIE_NAMEN["power_gap"] == "Power-Gap")
+
     # Muster und Rating einer Aktie
     werte_m = kurs_werte(_kunstreihe(seed=2), extrema(_kunstreihe(seed=2)))
     m = muster_werte(_kunstreihe(seed=2), 80.0, werte_m)
@@ -2089,7 +2294,7 @@ def selbsttest() -> int:
                    je_aktie=je, kennzahlen=pd.DataFrame(), leise=True,
                    pfad_analysten=pfad_a, konsens_pfade=[pfad_k], revisionen=rev, short=finra,
                    zuordnung_pfad=pfad_z, pfad_gruppen=pfad_g, markttiefs=["2024-10-01"],
-                   termine_vergangen={}, fuenf_minuten=lambda liste: {})
+                   termine_vergangen={}, fuenf_minuten=lambda liste: {}, crash_scharf=False)
         t = pd.read_parquet(os.path.join(tmp, "t.parquet"))
         a = pd.read_parquet(pfad_a)
         g1 = json.load(open(pfad_g, encoding="utf-8"))
@@ -2203,7 +2408,7 @@ def selbsttest() -> int:
                     kurse_download=lambda teil: {s: kunst[s] for s in teil if s in kunst},
                     rs_daten={}, ratings={}, termine_listen={}, screener={}, kalender={}, kennzahlen=pd.DataFrame(),
                     leise=True, pfad_analysten=pfad_a, short=lambda tag: (404, ""), pfad_gruppen=pfad_g,
-                    markttiefs=[], termine_vergangen={}, fuenf_minuten=lambda liste: {})
+                    markttiefs=[], termine_vergangen={}, fuenf_minuten=lambda liste: {}, crash_scharf=False)
         a2 = pd.read_parquet(pfad_a)
         p("Zweite Nacht ohne Abruf behaelt die Analysten der ersten",
           a2[a2["ticker"] == "AAA"].iloc[0]["analysten_anzahl"] == 4 and st2["quellen"]["analysten"]["status"] == "aus")

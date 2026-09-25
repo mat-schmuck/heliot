@@ -923,8 +923,8 @@ def fallback_points(df: pd.DataFrame) -> list[dict]:
         "kaufpunkt": round(hi52 * 1.001, 2),
         "stop": round(hi52 * 0.93, 2),
         "ziel": None,
-        "status": "Kein Muster — generischer Breakout-Level",
-        "notiz": f"52W-Hoch {hi52:.2f}",
+        "status": "Kein Muster; allgemeine Ausbruchsmarke",
+        "notiz": f"52-Wochen-Hoch {hi52:.2f} Dollar",
     })
     kons_high = float(df["high"].iloc[-20:].max())
     out.append({
@@ -932,7 +932,7 @@ def fallback_points(df: pd.DataFrame) -> list[dict]:
         "kaufpunkt": round(kons_high + 0.01, 2),
         "stop": round(float(df["low"].iloc[-20:].min()) - 0.01, 2),
         "ziel": None,
-        "status": "Kein Muster — Konsolidierungs-Pivot",
+        "status": "Kein Muster; Konsolidierungs-Pivot",
         "notiz": "Hoch der letzten 20 Handelstage",
     })
     if not pd.isna(last["ma50"]):
@@ -943,8 +943,8 @@ def fallback_points(df: pd.DataFrame) -> list[dict]:
                 "kaufpunkt": round(ma50 * 1.005, 2),
                 "stop": round(ma50 * 0.95, 2),
                 "ziel": None,
-                "status": "Kein Muster — Rücksetzer-Kauf am MA50",
-                "notiz": f"MA50 aktuell {ma50:.2f} (nur bei intaktem Trend nutzen)",
+                "status": "Kein Muster; Rücksetzer-Kauf am 50-Tage-Durchschnitt",
+                "notiz": f"50-Tage-Durchschnitt aktuell {ma50:.2f} Dollar, nur bei intaktem Trend nutzen",
             })
         else:
             out.append({
@@ -952,8 +952,8 @@ def fallback_points(df: pd.DataFrame) -> list[dict]:
                 "kaufpunkt": round(ma50 * 1.005, 2),
                 "stop": round(ma50 * 0.94, 2),
                 "ziel": None,
-                "status": "Kurs UNTER MA50 — erst bei Reclaim interessant",
-                "notiz": f"MA50 aktuell {ma50:.2f}; Kauf erst wenn Schlusskurs drüber",
+                "status": "Kurs unter dem 50-Tage-Durchschnitt; erst nach der Rückeroberung",
+                "notiz": f"50-Tage-Durchschnitt aktuell {ma50:.2f} Dollar; Kauf erst, wenn der Schlusskurs darüber liegt",
             })
     hi63 = float(df["high"].iloc[-63:].max())
     out.append({
@@ -961,7 +961,7 @@ def fallback_points(df: pd.DataFrame) -> list[dict]:
         "kaufpunkt": round(hi63 + 0.01, 2),
         "stop": round(hi63 * 0.92, 2),
         "ziel": None,
-        "status": "Kein Muster — mittelfristiger Widerstand",
+        "status": "Kein Muster; mittelfristiger Widerstand",
         "notiz": "Hoch der letzten 63 Handelstage",
     })
     return out

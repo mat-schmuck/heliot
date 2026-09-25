@@ -59,21 +59,82 @@ def ampel_tage(jetzt_ny: datetime) -> tuple:
     return frueh, spaet
 
 
-def ampel_saetze(daten, jetzt_ny: datetime) -> tuple:
-    """(Farbe oder None, Kopfsatz, Satz mit den Indizes oder ""). Die Worte
-    sind die der ersten Meldung des Waechters (marktampel.zeile), damit App
-    und Handy dasselbe sagen. Eine Farbe steht nur da, wenn die Ampel dem
-    erwarteten Schluss gilt; eine Farbe vom falschen Tag waere schlimmer als
-    keine (Gerhard, Etappe 0)."""
+def ampel_saetze(daten, jetzt_ny: datetime, nachtscan_tag=None) -> tuple:
+    """(Farbe oder None, Kopfsatz, Satz mit den Einzelheiten oder "").
+
+    OBEN EIN EINFACHER SATZ (Antwort 29 vom 24.09.2026): Farbe, Schluss
+    und was die Farbe heute bedeutet; darunter die Einzelheiten je Index in
+    den Worten der ersten Meldung des Waechters (marktampel.zeile) und der
+    Satz aus Antwort 30, dass die Farbe den Ampelregeln folgt und die Zaehlung
+    nach IBD nur Auskunft ist.
+
+    DER MASSSTAB (Antwort 10 vom 24.09.2026): der letzte Handelstag, den
+    der Nachtscan tatsaechlich gerechnet hat (nachtscan_tag, aus der
+    Sektor-Rangliste desselben Laufs). So steht die Ampel auch an einem
+    US-Feiertag, und eine Ampel, die der Nachtscan nicht erneuert hat, faellt
+    trotzdem auf. Ohne nachtscan_tag gilt die Rechnung nach Wochentagen
+    (ampel_tage). Eine Farbe steht nur da, wenn die Ampel diesem Schluss gilt;
+    eine Farbe vom falschen Tag waere schlimmer als keine (Gerhard, Etappe 0)."""
     import marktampel
     if not isinstance(daten, dict) or daten.get("farbe") not in marktampel.FARBWORT:
         return None, "Marktampel nicht verfügbar; es liegt keine Berechnung vor.", ""
     tag = str(daten.get("handelstag") or "")[:10]
-    if tag not in {d.isoformat() for d in ampel_tage(jetzt_ny)}:
-        return (None, "Marktampel nicht verfügbar; die letzte Berechnung gilt dem Schluss vom "
-                      f"{marktampel._datum_de(tag)}.", "")
+    soll = str(nachtscan_tag or "")[:10]
+    if soll:
+        gilt = tag >= soll
+    else:
+        gilt = tag in {d.isoformat() for d in ampel_tage(jetzt_ny)}
+    if not gilt:
+        kopf = ("Marktampel nicht verfügbar; die letzte Berechnung gilt dem Schluss vom "
+                f"{marktampel._datum_de(tag)}")
+        if soll:
+            kopf += f", der Nachtscan hat schon den Schluss vom {marktampel._datum_de(soll)} gerechnet"
+        return None, kopf + ".", ""
     teile = marktampel.zeile(daten, vortag=tag).split("; ")
-    return daten["farbe"], teile[0] + ".", ("; ".join(teile[1:]) + ".") if len(teile) > 1 else ""
+    kopf = f"{teile[0]}: {marktampel.einfacher_satz(daten)}."
+    einzeln = ("Einzelheiten: " + "; ".join(teile[1:]) + ". ") if len(teile) > 1 else ""
+    return daten["farbe"], kopf, einzeln + marktampel.REGEL_SATZ
+
+
+# DAS AUGENSYMBOL IM PASSWORTFELD (Antwort 28 vom 24.09.2026): Neben dem
+# Passwortfeld liegt Streamlits Knopf zum Anzeigen des Passworts; ein
+# Screenreader las ihn als "visibility" vor, das Wort des Symbols. Das Skript
+# gibt dem Knopf einen Namen, der zum Zustand passt, und blendet das Symbolwort
+# fuer Screenreader aus. Es laeuft in der Seite der App (st.html mit
+# unsafe_allow_javascript) und beobachtet die Seite, weil das Feld erst nach dem
+# Skript entstehen kann und der Knopf beim Umschalten neu gezeichnet wird. Kein
+# Kleiner-Zeichen, damit es sicher in einem script-Element steht.
+PASSWORT_AUGE_JS = """(function () {
+  if (window.__heliotPwWache) { window.__heliotPwWache.beschriften(); return; }
+  function beschriften() {
+    var felder = document.querySelectorAll('input[type="password"], input[data-heliot-pw]');
+    felder.forEach(function (feld) {
+      feld.setAttribute("data-heliot-pw", "1");
+      var wurzel = feld.closest('[data-testid="stTextInputRootElement"]') || feld.closest('[data-baseweb="input"]');
+      if (!wurzel) { return; }
+      var name = feld.type === "password" ? "Passwort zeigen" : "Passwort verbergen";
+      wurzel.querySelectorAll("button").forEach(function (knopf) {
+        if (knopf.getAttribute("aria-label") !== name) {
+          knopf.setAttribute("aria-label", name);
+          knopf.setAttribute("title", name);
+        }
+        knopf.querySelectorAll("span, i, svg").forEach(function (zeichen) {
+          zeichen.setAttribute("aria-hidden", "true");
+        });
+      });
+    });
+  }
+  var geplant = false;
+  var wache = new MutationObserver(function () {
+    if (geplant) { return; }
+    geplant = true;
+    window.requestAnimationFrame(function () { geplant = false; beschriften(); });
+  });
+  wache.observe(document.body, {subtree: true, childList: true, attributes: true, attributeFilter: ["type"]});
+  window.__heliotPwWache = {beschriften: beschriften, wache: wache};
+  beschriften();
+})();
+"""
 
 
 def ampel_html(farbe, kopf: str, satz: str) -> str:
@@ -211,11 +272,20 @@ KLANG_JS = r"""export default function (component) {
         g.connect(z);
         q.start();
         ton(ctx, z, { f: 1200, f2: 2400, gleiten: 0.2, start: 0.45, dauer: 0.45, laut: 0.18 });
+      },
+      // Der feste, tiefe Fehlerton (Frage 5): zwei absteigende, dunkle Toene.
+      // Nicht waehlbar; er spielt bei jeder Fehlermeldung.
+      fehler: function (ctx, z) {
+        ton(ctx, z, { typ: "triangle", f: 311.13, f2: 293.66, gleiten: 0.2, dauer: 0.26, a: 0.01, laut: 0.3 });
+        ton(ctx, z, { typ: "triangle", f: 233.08, f2: 220, gleiten: 0.3, start: 0.24, dauer: 0.42, a: 0.01, laut: 0.3 });
       }
     };
     // Gleich laut: Faktoren aus der stummen Vorberechnung vom 23.09.2026,
-    // Ziel ein Effektivwert von 0,06 ueber die hoerbare Dauer jedes Tons.
-    const PEGEL = { kristall: 0.68, nova: 2.66, sonar: 0.93, pixel: 2.13, aurora: 1.74, tropfen: 1.09, warp: 1.93 };
+    // Ziel ein Effektivwert von 0,06 ueber die hoerbare Dauer jedes Tons. Der
+    // Fehlerton ist am 25.09.2026 genauso vorberechnet (1,18, mit dem Abgleich
+    // an Tropfen 1,11 statt 1,09 auf 1,16 gesetzt).
+    const PEGEL = { kristall: 0.68, nova: 2.66, sonar: 0.93, pixel: 2.13, aurora: 1.74, tropfen: 1.09, warp: 1.93,
+                    fehler: 1.16 };
     K.spiele = function (name) {
       const f = KLAENGE[name];
       if (!f) { return; }
@@ -288,7 +358,7 @@ html,body,.stApp{background:#04050d !important}
 [data-testid="stMainBlockContainer"] h4,[data-testid="stMainBlockContainer"] h5,
 [data-testid="stMainBlockContainer"] h6{font-family:'Space Grotesk',sans-serif;color:#c9ecff !important;
   letter-spacing:.02em;text-shadow:0 0 16px rgba(0,229,255,.28)}
-[data-testid="stMainBlockContainer"] h4::after,[data-testid="stMainBlockContainer"] h5::after{content:"";display:block;
+[data-testid="stMainBlockContainer"] h3::after,[data-testid="stMainBlockContainer"] h4::after{content:"";display:block;
   height:2px;margin-top:.35rem;width:3.2rem;border-radius:2px;
   background:linear-gradient(90deg,var(--hz-cyan),var(--hz-magenta));box-shadow:0 0 10px rgba(0,229,255,.6);
   animation:hz-linie 4s ease-in-out infinite}
@@ -374,8 +444,8 @@ input::placeholder,textarea::placeholder{color:rgba(159,183,217,.7) !important}
 ::-webkit-scrollbar-thumb{background:linear-gradient(180deg,var(--hz-cyan),var(--hz-violett));border-radius:10px}
 @media (prefers-reduced-motion: reduce){
   .stApp::before,.stApp::after,[data-testid="stMainBlockContainer"]::before,.heliot-ampel,.heliot-ampel::after,.heliot-orb,
-  [data-testid="stMainBlockContainer"] h1,[data-testid="stMainBlockContainer"] h4::after,
-  [data-testid="stMainBlockContainer"] h5::after,button,[data-testid="stAlertContainer"]{animation:none !important;
+  [data-testid="stMainBlockContainer"] h1,[data-testid="stMainBlockContainer"] h3::after,
+  [data-testid="stMainBlockContainer"] h4::after,button,[data-testid="stAlertContainer"]{animation:none !important;
   transition:none !important}}
 """
 
@@ -384,13 +454,14 @@ input::placeholder,textarea::placeholder{color:rgba(159,183,217,.7) !important}
 # ---------------------------------------------------------------------------
 
 SCANNER_ERKLAERUNGEN = {
-    "strategie": "Wählt ein Muster oder ein Chart-Signal, das jede Aktie erfüllen muss. Ohne Wahl filtern nur die "
-                 "Einstellungen in Teil 2. Was die gewählte Strategie verlangt, steht darunter.",
+    "strategie": "Wählt ein Muster oder ein Chart-Signal, das jede Aktie erfüllen muss; ohne Wahl filtern nur die "
+                 "Einstellungen in Teil 2. Ein Chart-Signal filtert genauso wie das gleichnamige Merkmal in Teil 2.",
     "toleranz": "Streng heißt, jede Regel des Musters ist erfüllt. Mit Toleranz dürfen Schwellen in Prozent, "
                 "Verhältnisse und Dauern knapp verfehlt werden; ein solcher Treffer bekommt weniger Punkte beim "
                 "Rating.",
-    "handelbar": "Lässt Aktien weg, die zu billig sind, zu wenig gehandelt werden oder zu kurz an der Börse sind, "
-                 "damit ein Kauf überhaupt sinnvoll ausführbar ist.",
+    "handelbar": "Lässt Aktien weg, die zu billig sind, zu wenig gehandelt werden oder zu kurz an der Börse sind. "
+                 "Gemessen wird der durchschnittliche Tagesumsatz über 50 Tage, derselbe Wert wie das Merkmal in "
+                 "Teil 2.",
     "langweilig": "Nur bei der Darvas Box: lässt Boxen von Aktien weg, die sich kaum bewegen. Übrig bleiben Boxen "
                   "mit genug Schwung für einen Ausbruch.",
     "rs_vorlaeufig": "Aktien mit weniger als einem Jahr Kurshistorie haben nur ein vorläufiges RS aus den "
@@ -449,10 +520,22 @@ def selbsttest() -> int:
                                      "sma50_steigt": True},
                          "Nasdaq": {"ueber_ema21": False, "ueber_sma50": True, "ema21_ueber_sma50": True,
                                     "sma50_steigt": False}}}
+    import marktampel
     f, k, s = ampel_saetze(daten, ny("2026-09-23T10:00"))
-    p("Ampel vom richtigen Tag: Farbe und Datum", f == "gruen" and k == "Marktampel grün, Schluss vom 22.09.2026.", k)
-    p("Ampel: Satz mit beiden Indizes wie im Wächter",
-      s == "S&P 500 über EMA 21 und SMA 50, SMA 50 steigt; Nasdaq unter EMA 21, über SMA 50, SMA 50 steigt nicht.", s)
+    p("Ampel vom richtigen Tag: Farbe, Datum und oben ein einfacher Satz (Antwort 29)",
+      f == "gruen" and k == "Marktampel grün, Schluss vom 22.09.2026: S&P 500 und Nasdaq stehen beide im "
+                             "Aufwärtstrend.", k)
+    p("Ampel: darunter die Einzelheiten beider Indizes und der Satz zur IBD-Zählung (Antwort 30)",
+      s == "Einzelheiten: S&P 500 über EMA 21 und SMA 50, SMA 50 steigt; Nasdaq unter EMA 21, über SMA 50, SMA 50 "
+           "steigt nicht. " + marktampel.REGEL_SATZ, s)
+    f, k, s = ampel_saetze(daten, ny("2026-09-23T20:00"), nachtscan_tag="2026-09-22")
+    p("Maßstab ist der Tag, den der Nachtscan gerechnet hat (Antwort 10)", f == "gruen", k)
+    f, k, s = ampel_saetze(daten, ny("2026-09-23T10:00"), nachtscan_tag="2026-09-23")
+    p("Hat der Nachtscan schon weitergerechnet, steht keine Farbe da",
+      f is None and "der Nachtscan hat schon den Schluss vom 23.09.2026 gerechnet" in k, k)
+    feiertag = {**daten, "handelstag": "2026-09-04"}
+    f, k, s = ampel_saetze(feiertag, ny("2026-09-08T10:00"), nachtscan_tag="2026-09-04")
+    p("Nach einem US-Feiertag bleibt die Ampel stehen", f == "gruen", k)
     f, k, s = ampel_saetze(daten, ny("2026-09-23T17:00"))
     p("Nach Handelsschluss gilt der Vortag noch", f == "gruen")
     f, k, s = ampel_saetze(daten, ny("2026-09-23T20:00"))
@@ -477,6 +560,12 @@ def selbsttest() -> int:
     import einstellungen as es
     p("Jeder Ton hat einen Klang im Browser", all(k == "aus" or f"      {k}: function" in KLANG_JS
                                                     for k, _n, _b in es.KLAENGE))
+    p("Das Augensymbol heißt Passwort zeigen oder Passwort verbergen und steht sicher im Skript (Antwort 28)",
+      "Passwort zeigen" in PASSWORT_AUGE_JS and "Passwort verbergen" in PASSWORT_AUGE_JS
+      and "<" not in PASSWORT_AUGE_JS and 'aria-hidden", "true"' in PASSWORT_AUGE_JS
+      and "window.__heliotPwWache" in PASSWORT_AUGE_JS)
+    p("Der feste Fehlerton ist im Browser gebaut (Antwort 5)", "      fehler: function" in KLANG_JS
+      and "fehler:" in KLANG_JS.split("PEGEL")[1])
     p("Das Design bewegt sich nicht, wenn weniger Bewegung verlangt ist", "prefers-reduced-motion" in DESIGN_ZUKUNFT)
     p("Kein Kleiner-Zeichen im CSS, sonst verwirft Streamlit den ganzen Stilblock",
       "<" not in DESIGN_ZUKUNFT and "<" not in AMPEL_CSS)

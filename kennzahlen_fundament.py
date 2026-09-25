@@ -938,10 +938,10 @@ def verwaesserung(reihen):
 
 
 # Kurzzeichen der neun Signale, wie sie in der Ablage stehen, und ihr Text
-F_SIGNALE = {"roa": "Rendite auf das Vermoegen positiv", "cfo": "operativer Cashflow positiv",
-             "roa_plus": "Rendite auf das Vermoegen gestiegen", "cfo_ng": "operativer Cashflow ueber dem Nettogewinn",
+F_SIGNALE = {"roa": "Rendite auf das Vermögen positiv", "cfo": "operativer Cashflow positiv",
+             "roa_plus": "Rendite auf das Vermögen gestiegen", "cfo_ng": "operativer Cashflow über dem Nettogewinn",
              "hebel": "langfristige Verschuldung nicht gestiegen", "cr": "Current Ratio gestiegen",
-             "aktien": "keine zusaetzlichen Aktien", "brutto": "Bruttomarge gestiegen",
+             "aktien": "keine zusätzlichen Aktien", "brutto": "Bruttomarge gestiegen",
              "umschlag": "Kapitalumschlag gestiegen"}
 
 

@@ -1265,11 +1265,17 @@ def einzel_frisch():
 
 
 # ALARME JE MUSTER (Mathias und Gerhard, 23.09.2026): Im Reiter Einstellungen
-# der App wird gewaehlt, welche Chartmuster und Strategien ueber ntfy melden
-# (einstellungen.py). Der Stand kommt wie die Einzelaktien frisch aus
-# origin/main; ist er nicht lesbar, bleibt der zuletzt bekannte. Abgewaehlt
-# heisst: keine Meldung und kein Signal an den Bot. Ausstiege, Stops,
-# Gewinnzonen, schlussnahe Befunde und Beobachtungen sind nie abwaehlbar.
+# der App wird gewaehlt, welche Chartmuster, Strategien und Meldungen ueber ntfy
+# hinausgehen (einstellungen.py). Der Stand kommt wie die Einzelaktien frisch aus
+# origin/main; ist er nicht lesbar, bleibt der zuletzt bekannte.
+#
+# ABGEWAEHLT HEISST NUR: KEINE MELDUNG (Gerhard, 24.09.2026, Frage 9). Keine
+# Meldung und kein Signal an den Bot; gerechnet und ins Trigger-Logbuch
+# geschrieben wird aber weiter, "gemeldet": false und "abgewaehlt": true.
+# Grundsaetzlich kommen alle Strategien ins Logbuch, ausnahmslos. Seit Frage 7
+# (Vorschlag 3) sind auch Ausstiege und Stops, Gewinnzonen, die schlussnahen
+# Befunde und die Beobachtungen abwaehlbar; welche Art zu welchem Schalter
+# gehoert, sagt einstellungen.BEFUND_ARTEN (befund_an).
 _EINST = {"daten": einstellungen.lesen(None), "aus": None}
 
 
@@ -1313,26 +1319,66 @@ def alarm_an(schluessel: str) -> bool:
     return einstellungen.alarm_an(_EINST["daten"], schluessel)
 
 
-def wirksame_items(items: list[dict]) -> list[dict]:
-    """Die Kaufpunkte ohne die abgewaehlten Muster. Liegt ein abgewaehltes
-    Muster mit anderen auf demselben Preis, werden die uebrigen neu
-    zusammengelegt (mit ihrer eigenen Volumenhuerde und ihrem eigenen Stop);
-    ein Kaufpunkt aus lauter abgewaehlten Mustern faellt heraus. Gerechnet
-    wird in jeder Runde neu, damit eine Abwahl binnen einer Minute greift."""
+def befund_an(art: str) -> bool:
+    """Wird ein Befund zu einer offenen Position dieser Art gemeldet
+    (einstellungen.BEFUND_ARTEN)? Unbekannte Art: ja."""
+    return einstellungen.befund_an(_EINST["daten"], art)
+
+
+def items_nach_einstellung(items: list[dict]) -> list[dict]:
+    """Alle Kaufpunkte, die eingeschalteten und die abgewaehlten.
+
+    Frage 9 (Gerhard, 24.09.2026): Abgewaehlte Muster werden weiter geprueft
+    und ins Logbuch geschrieben, nur nicht gemeldet. Liegt ein abgewaehltes
+    Muster mit anderen auf demselben Preis, werden beide Teile getrennt neu
+    zusammengelegt, jeder mit seiner eigenen Volumenhuerde und seinem eigenen
+    Stop: die eingeschalteten zuerst, danach die abgewaehlten mit stumm=True.
+    Ein stummer Kaufpunkt laeuft durch dieselbe Pruefung wie jeder andere;
+    erst vor dem Senden faellt er heraus. Gerechnet wird in jeder Runde neu,
+    damit eine Abwahl binnen einer Minute greift."""
     einst = _EINST["daten"]
     if not einst.get("alarme_aus"):
         return items
-    raus = []
+    raus, stumm = [], []
     for it in items:
         roh = it.get("_roh") or [it]
-        behalten = [r for r in roh if einstellungen.muster_an(einst, r.get("strategie"))]
-        if not behalten:
-            continue
-        if len(behalten) == len(roh):
+        an = [r for r in roh if einstellungen.muster_an(einst, r.get("strategie"))]
+        aus = [r for r in roh if not einstellungen.muster_an(einst, r.get("strategie"))]
+        if not aus:
             raus.append(it)
-        else:
-            raus.extend(_lege_gleiche_preise_zusammen(behalten, leise=True))
-    return raus
+            continue
+        if an:
+            raus.extend(_lege_gleiche_preise_zusammen(an, leise=True))
+        for s in _lege_gleiche_preise_zusammen(aus, leise=True):
+            stumm.append({**s, "stumm": True})
+    return raus + stumm
+
+
+def stumm_vermerken(stumm: list[dict], schon_gemeldet: set, state: dict, trocken: bool,
+                    felder: tuple = ("keys",)) -> None:
+    """Ein abgewaehlter Ausbruch ist nach dem Logbuch-Eintrag erledigt wie ein
+    gemeldeter (Frage 9): Seine Schluessel kommen ins Wochengedaechtnis, damit
+    er nicht bei jeder Runde neu im Logbuch landet. Wird das Muster in derselben
+    Woche wieder eingeschaltet, meldet es diesen Ausbruch deshalb nicht mehr
+    nach; der naechste neue Kaufpunkt meldet wieder."""
+    if not stumm:
+        return
+    heute_s = date.today().isoformat()
+    for t in stumm:
+        kk = []
+        for feld in felder:
+            kk += list(t.get(feld) or [])
+        if "keys" in felder and not t.get("keys") and t.get("key"):
+            kk.append(t["key"])
+        if "keys" in felder and t.get("vol_ok") is True:
+            kk += list(t.get("keys_best") or ([t["key_best"]] if t.get("key_best") else []))
+        for k in kk:
+            schon_gemeldet.add(k)
+            if not trocken:
+                state["gemeldet"][k] = heute_s
+                kp_merken(state, k, t.get("kaufpunkt"))
+    if not trocken:
+        save_state(state)
 
 
 def einzel_kaufpunkte(ticker: str, firma: str = "", nur_muster: bool = True) -> list[dict]:
@@ -1993,7 +2039,12 @@ GITHUB_GRENZE_MIN = 360
 # FOLGETAG ueber dem Hoch des Luecken-Tages. "Follow Through Day" waere
 # ebenfalls falsch — der Begriff ist bei IBD fuer ein MARKTWEITES Signal
 # vergeben und haette die naechste Verwechslung gebaut.
-GAP_NAME = "Lücken-Bestätigungstag"
+#
+# SEIT 24.09.2026 UEBERALL POWER-GAP (Gerhard, Frage 93), auch in den
+# Meldungen. In Logbuch, Beobachtungen und Exit-Regeln bleibt der Datenname
+# "Gap and Go" beziehungsweise "Lücken-Bestätigungstag"; umgeschrieben wird
+# nur, was angezeigt oder gesendet wird (einstellungen.meldungs_text).
+GAP_NAME = "Power-Gap"
 
 R2G_INDEX = "^IXIC"                  # Nasdaq Composite, der Regime-Schalter
 _r2g_fokus: dict = {}                # {Ticker: {firma, vortagesschluss, v50}}
@@ -2360,8 +2411,12 @@ def tagesgeschaeft_wache(topic, quotes, dry_run, state=None):
     Faellt der Kurs zurueck unter die Exit-Linie (bei Red-to-Green der
     Vortagesschluss, bei Gap and Go der Muster-Stop), kommt SOFORT die
     laute Exit-Meldung — nicht erst am Abend. Die Beobachtung wird
-    geschlossen und traegt ihr Ergebnis (die Mitschrift)."""
-    if dry_run or not quotes:
+    geschlossen und traegt ihr Ergebnis (die Mitschrift).
+
+    Sind Ausstiege und Stops abgewaehlt (Frage 7), geht keine Meldung und
+    kein Verkaufssignal hinaus; die Beobachtung endet dann mit dem Schluss
+    im Nachtlauf wie jedes Tagesgeschaeft."""
+    if dry_run or not quotes or not befund_an("tagesgeschaeft_exit"):
         return
     try:
         bestand = positionen.laden()
@@ -2431,8 +2486,9 @@ def teilverkauf_wache(topic, quotes, dry_run, state, schon_gemeldet):
     Kurs die Schwelle erreicht, nicht erst mit dem Schluss. Die Halteregel
     fuer Schnellstarter gilt weiter (solange sie laeuft, kein Teilverkauf).
     Eine REGEL-Meldung, laut; danach traegt die Beobachtung teilverkauft,
-    genau wie nach dem Nachtlauf, und zwar einmal je Beobachtung."""
-    if dry_run or not quotes:
+    genau wie nach dem Nachtlauf, und zwar einmal je Beobachtung. Abgewaehlt
+    (Ausstiege und Stops, Frage 7): keine Meldung und kein Verkaufssignal."""
+    if dry_run or not quotes or not befund_an("teilverkauf"):
         return
     try:
         ex = CFG["exit"]
@@ -2831,7 +2887,7 @@ def _insider_heute(f: dict, sym: str, kurs: float, heute):
     return isc.meldungszeilen(sym, signal, rollen=insider_edgar.lies_rollen())
 
 
-def _insider_ins_logbuch(gesendet, trocken: bool) -> int:
+def _insider_ins_logbuch(gesendet, trocken: bool, gemeldet: bool = True) -> int:
     """LUECKE ZWEI (Gerhard, 20.09.2026, C10): Insider-Kaeufe landeten nie
     im Trigger-Logbuch, anders als jeder Ausbruch.
 
@@ -2845,7 +2901,9 @@ def _insider_ins_logbuch(gesendet, trocken: bool) -> int:
     brechen die Meldekette nie.
 
     gesendet: die Tupel aus nachtbefunde_schritt, (eintrag, fund, zeilen,
-    kuerzel, kurs). Rueckgabe: die Zahl der geschriebenen Zeilen."""
+    kuerzel, kurs). gemeldet=False heisst: Insider-Kaeufe sind abgewaehlt
+    (Frage 9), der Fund steht trotzdem im Logbuch. Rueckgabe: die Zahl der
+    geschriebenen Zeilen."""
     n = 0
     for _, f, _, sym, kurs in gesendet:
         try:
@@ -2873,7 +2931,8 @@ def _insider_ins_logbuch(gesendet, trocken: bool) -> int:
                  "pfad_b_schwelle": b.get("schwelle_dollar"),
                  "stichtag": str(stichtag)[:10] if stichtag else None,
                  "kennung": f.get("kennung"),
-                 "gemeldet": True,
+                 "gemeldet": bool(gemeldet),
+                 "abgewaehlt": not gemeldet,
                  **zusatz_logbuch(sym),
                  "trockenlauf": bool(trocken)},
                 quelle="waechter/insider")
@@ -2916,6 +2975,10 @@ def nachtbefunde_schritt(topic, nacht, basis, ws, schon_gemeldet, state,
         kurs = float(kurs)
         if art == "gewinn":
             b = obj
+            if not befund_an(b.get("typ")):
+                # Abgewaehlt (Frage 7): keine Meldung. Der Befund bleibt offen,
+                # damit er nach dem Wiedereinschalten noch am selben Tag kommt.
+                continue
             verlauf = nacht["verlaeufe"].get(b.get("key")) or {}
             daten = verlauf.get("daten") or []
             letzter = str(daten[-1][0])[:10] if daten else None
@@ -2944,16 +3007,25 @@ def nachtbefunde_schritt(topic, nacht, basis, ws, schon_gemeldet, state,
             (leise if b.get("buendeln") else laut).append(
                 (eintrag, b, ergebnis))
         else:
-            if not alarm_an("insider"):
-                # Abgewaehlt (23.09.2026): kein Alarm. Der Fund bleibt offen,
-                # damit er nach dem Wiedereinschalten noch am selben Tag kommt.
-                continue
             ergebnis = _insider_heute(obj, sym, kurs, heute)
             if ergebnis == "warten":
                 continue
             if ergebnis is None:
                 print(f"  Insider-Fund {sym}: mit dem Marktwert von heute "
                       f"kein Signal, nicht gemeldet.")
+                offen.remove(eintrag)
+                continue
+            if not alarm_an("insider"):
+                # Abgewaehlt (Frage 9): nur keine Meldung. Der Fund steht mit
+                # seinem heutigen Signal im Logbuch und ist damit erledigt.
+                stumm_fund = [(eintrag, obj, ergebnis, sym, kurs)]
+                _insider_ins_logbuch(stumm_fund, trocken=dry_run, gemeldet=False)
+                k = INSIDER_MARKE + obj.get("kennung", obj.get("ticker", "?"))
+                schon_gemeldet.add(k)
+                if not dry_run:
+                    state["gemeldet"][k] = date.today().isoformat()
+                    save_state(state)
+                print(f"  Insider-Fund {sym}: abgewählt, nur ins Logbuch.")
                 offen.remove(eintrag)
                 continue
             insider.append((eintrag, obj, ergebnis, sym, kurs))
@@ -3157,9 +3229,17 @@ def schlussnahe_befunde(topic, nacht, basis, ws, state, schon_gemeldet,
     Ende der Tagesgeschaefte und der Sektor-Radar mit hochgerechnetem
     Volumen. Der Nachtlauf prueft mit dem echten Schluss nach; faellt die
     Bestaetigung, meldet der Abendbericht die RUECKNAHME (M6). Einmal je
-    Handelstag; die gemeldeten Befunde stehen in SCHLUSSNAH_DATEI."""
+    Handelstag; die gemeldeten Befunde stehen in SCHLUSSNAH_DATEI.
+
+    ABWAEHLBAR (Frage 7): Sind die schlussnahen Befunde abgewaehlt, entfaellt
+    die ganze Meldung; sonst fallen die Arten heraus, deren Schalter aus ist
+    (Ausstiege, Gewinnzonen, Beobachtungen, Sektor-Radar, befund_an). In
+    SCHLUSSNAH_DATEI steht nur, was gemeldet wurde, damit der Abendbericht
+    nichts zuruecknimmt, was nie hinausging."""
     minuten = ny_minuten()
     if minuten is None or minuten < SCHLUSSNAHE_MINUTE or not basis:
+        return None
+    if not alarm_an("schlussnah"):
         return None
     heute = heute_ny() or date.today()
     heute_s = heute.isoformat()
@@ -3303,6 +3383,12 @@ def schlussnahe_befunde(topic, nacht, basis, ws, state, schon_gemeldet,
                                       f"dem 50-Tage-Schnitt; Kurs {tr['kurs']:.2f}"})
     except Exception as ex:
         print(f"  Schlussnah, Sektor-Radar: {type(ex).__name__}: {ex}")
+
+    # Frage 7 und 8: Arten, deren Schalter aus ist, fallen heraus.
+    weg = [x for x in eintraege if not befund_an(x["typ"])]
+    if weg:
+        eintraege = [x for x in eintraege if befund_an(x["typ"])]
+        print(f"  Schlussnah: {len(weg)} Befund(e) abgewählter Arten nicht gemeldet.")
 
     ny = f"{minuten // 60}:{minuten % 60:02d}"          # ny_minuten() zaehlt Tagesminuten
     ablage = {"handelstag": heute_s, "gemeldet_um_ny": ny,
@@ -3769,6 +3855,11 @@ def _sende_eine(topic: str, titel: str, body: str, prio: str,
             print(f"NICHT gesendet — Börse geschlossen ({grund}), "
                   f"nach dem Warten des Push-Sammlers.")
             return False
+    # DIE NAMEN IN DEN MELDUNGEN (Gerhard, 24.09.2026, Fragen 93 und 94):
+    # Power-Gap und Red to Green. Hier, an der einen Stelle, durch die jede
+    # Meldung des Waechters geht; die Datennamen bleiben unberuehrt.
+    titel = einstellungen.meldungs_text(titel)
+    body = einstellungen.meldungs_text(body)
     kopf = {"Title": titel.encode("utf-8"), "Priority": prio}
     # Antippen der Meldung oeffnet die Handels-App mit genau diesen
     # Alarmen - aber nur, wenn HANDEL_URL gesetzt ist.
@@ -4360,7 +4451,7 @@ def format_aktie(gruppe: list[dict], nummer: int | None = None) -> str:
 
 
 def nachtrag_ins_logbuch(nachtrag: list[dict], im_logbuch: set,
-                         trocken: bool) -> int:
+                         trocken: bool, gemeldet: bool = True) -> int:
     """LUECKE DREI (Gerhard, 20.09.2026, C10): Zog das Volumen nach einer
     unbestaetigten Meldung nach, stand davon nichts im Trigger-Logbuch. Der
     Ausbruch galt dort fuer immer als unbestaetigt, obwohl "Vol jetzt
@@ -4376,7 +4467,8 @@ def nachtrag_ins_logbuch(nachtrag: list[dict], im_logbuch: set,
     derselbe Ausbruch zweimal darin. Ein eigener Schluessel je Ausbruch in
     im_logbuch haelt es auch bei einem Sendefehler bei einer Zeile. Fehler
     brechen die Meldekette nie. Rueckgabe: die Zahl der geschriebenen
-    Zeilen."""
+    Zeilen. gemeldet=False heisst: ein abgewaehltes Muster (Frage 9), das im
+    Logbuch steht, aber nicht gemeldet wird."""
     n = 0
     for t in nachtrag:
         schluessel = "NACHTRAG|" + str(t.get("key_best") or t.get("key"))
@@ -4400,7 +4492,8 @@ def nachtrag_ins_logbuch(nachtrag: list[dict], im_logbuch: set,
                  "vol_anteil": t.get("vol_anteil"),
                  "ueber_pct": t.get("ueber_pct"),
                  "nachtrag": True,
-                 "gemeldet": True,
+                 "gemeldet": bool(gemeldet),
+                 "abgewaehlt": bool(t.get("stumm")),
                  "zahlen_karenz": bool(karenz),
                  "folgetag": bool(t.get("folgetag")),
                  **zusatz_logbuch(t.get("ticker")),
@@ -4999,8 +5092,10 @@ def main():
             # einer eigenen Meldung hinaus (Gerhard, 22.09.2026, O5 und O10).
             alarm_neben = []
             fenster = state.setdefault("fenster", {})
-            # ALARME JE MUSTER (23.09.2026): nur die eingeschalteten Muster.
-            for item in wirksame_items(items):
+            # ALARME JE MUSTER (23.09.2026): Geprueft werden alle Muster; die
+            # abgewaehlten tragen stumm=True und fallen erst vor dem Senden
+            # heraus (Frage 9, siehe items_nach_einstellung).
+            for item in items_nach_einstellung(items):
                 q = quotes.get(item["ticker"].upper())
                 if not q:
                     continue
@@ -5147,6 +5242,14 @@ def main():
                 if im_zahlen_karenzfenster(t.get("ticker")):
                     t["zahlen_karenz"] = True
 
+            # ABGEWAEHLT HEISST NUR: KEINE MELDUNG (Gerhard, 24.09.2026,
+            # Frage 9). Die abgewaehlten Muster haben alles durchlaufen wie
+            # die anderen; hier fallen sie aus den Meldungen heraus, stehen
+            # aber gleich unten im Logbuch, mit gemeldet false.
+            stumm_neu = [t for t in zu_melden + alarm_melden if t.get("stumm")]
+            zu_melden = [t for t in zu_melden if not t.get("stumm")]
+            alarm_melden = [t for t in alarm_melden if not t.get("stumm")]
+
             # INS LOGBUCH kommt JEDER erkannte Ausbruch — auch der ohne
             # Volumenbestaetigung, auch der im Trockenlauf, auch der,
             # dessen Push scheitert. Das Logbuch fragt nicht, ob gemeldet
@@ -5178,9 +5281,14 @@ def main():
                      # nach einigen Wochen zeigt, wie sie laufen").
                      "alarm_muster": bool(t.get("alarm")),
                      "einzelaktie": bool(t.get("einzel")),
+                     "abgewaehlt": bool(t.get("stumm")),
                      **zusatz_logbuch(t.get("ticker")),
                      "trockenlauf": bool(args.dry_run)},
                     quelle="waechter")
+            if stumm_neu:
+                print(f"{len(stumm_neu)} Ausbruch/Ausbrüche abgewählter Muster: im Logbuch, "
+                      f"nicht gemeldet ({', '.join(str(t.get('ticker')) for t in stumm_neu)}).")
+                stumm_vermerken(stumm_neu, schon_gemeldet, state, bool(args.dry_run))
 
             # SENDESPERRE NACH FEHLSCHLAG. Frueher lag zwischen zwei
             # Versuchen die volle Runde; jetzt sind es zwei Sekunden. Ohne
@@ -5237,6 +5345,24 @@ def main():
             # nicht mitnimmt; KEINE Beobachtung im Chart (Kapitel 12), das ist
             # den Kaufmeldungen vorbehalten. Gemessen wird ueber das
             # Trigger-Logbuch, wo jede Zeile alarm_muster traegt.
+            #
+            # Frage 9: Ein abgewaehltes Muster, dessen Kaufpunkt uebersprungen
+            # wurde, steht im Logbuch wie jeder uebersprungene, nur ungemeldet.
+            ueber_liste = uebersprungen if isinstance(uebersprungen, list) else []
+            stumm_ueber = [t for t in ueber_liste + alarm_neben if t.get("stumm")]
+            if stumm_ueber:
+                uebersprungen = [t for t in ueber_liste if not t.get("stumm")]
+                alarm_neben = [t for t in alarm_neben if not t.get("stumm")]
+                trigger_logbuch.protokolliere_viele(
+                    [{"ticker": t.get("ticker"), "firma": t.get("firma", ""),
+                      "strategie": t.get("strategie"),
+                      "kaufpunkt": t.get("kaufpunkt"), "kurs": t.get("kurs"),
+                      "stop": t.get("stop"), "ueber_pct": t.get("ueber_pct"),
+                      "uebersprungen": True, "gemeldet": False, "abgewaehlt": True,
+                      "alarm_muster": bool(t.get("alarm")),
+                      "trockenlauf": bool(args.dry_run)}
+                     for t in stumm_ueber], quelle="waechter/uebersprungen")
+                stumm_vermerken(stumm_ueber, schon_gemeldet, state, bool(args.dry_run))
             alarm_alle = alarm_melden + alarm_neben
             if alarm_alle and jetzt_s >= sperre_bis:
                 print(f"\n{len(alarm_alle)} Meldung(en) der Alarm-Muster:")
@@ -5279,6 +5405,15 @@ def main():
             # Bestaetigung von vorhin ist und kein zweiter Ausbruch.
             # Auch die Volumen-Bestaetigung eines Alarm-Musters ist eine
             # Auskunft und geht in der Alarm-Meldung hinaus (O10).
+            #
+            # Frage 9: Die Bestaetigung eines abgewaehlten Musters steht im
+            # Logbuch wie jede andere, nur ungemeldet.
+            stumm_nachtrag = [x for x in nachtrag if x.get("stumm")]
+            if stumm_nachtrag:
+                nachtrag = [x for x in nachtrag if not x.get("stumm")]
+                nachtrag_ins_logbuch(stumm_nachtrag, _im_logbuch, bool(args.dry_run), gemeldet=False)
+                stumm_vermerken(stumm_nachtrag, schon_gemeldet, state, bool(args.dry_run),
+                                felder=("keys_best",))
             for t in [x for x in nachtrag if x.get("alarm")]:
                 t["anlass"] = "nachtrag"
                 alarm_neben.append(t)
@@ -5353,7 +5488,11 @@ def main():
             # Nur wenn der Nasdaq stark genug nach unten gegapt hat und die
             # Aktie auf der nachts gebauten Fokusliste steht.
             r2g_neu = []
-            if _r2g_fokus and alarm_an("r2g") and r2g_regime_pruefen():
+            # Frage 9: Abgewaehlt wird weiter gerechnet, unter einem eigenen
+            # Schluessel; sonst schwiege die explosive Fassung, die ihre Aktie
+            # am Schluessel "R2G|" als schon gemeldet erkennt.
+            r2g_an = alarm_an("r2g")
+            if _r2g_fokus and r2g_regime_pruefen():
                 for rt, eintrag in _r2g_fokus.items():
                     q = quotes.get(rt)
                     if not q:
@@ -5363,9 +5502,24 @@ def main():
                         continue
                     treffer["ticker"] = rt
                     treffer["firma"] = eintrag.get("firma") or firmen.get(rt, "")
-                    treffer["key"] = f"R2G|{rt}|{date.today().isoformat()}"
+                    treffer["key"] = (f"{'R2G' if r2g_an else 'R2GAUS'}|{rt}|"
+                                      f"{date.today().isoformat()}")
                     if treffer["key"] not in schon_gemeldet:
                         r2g_neu.append(treffer)
+            if r2g_neu and not r2g_an:
+                # Frage 9: abgewaehlt heisst nur keine Meldung; die Zeile im
+                # Logbuch steht, und der Tag ist fuer die Aktie erledigt.
+                print(f"\nRed-to-Green abgewählt: {len(r2g_neu)} Signal(e) nur ins Logbuch.")
+                trigger_logbuch.protokolliere_viele(
+                    [{"ticker": t["ticker"], "firma": t.get("firma", ""),
+                      "strategie": "Red-to-Green", "kurs": t.get("kurs"),
+                      "kaufpunkt": t.get("kurs"), "vortagesschluss": t.get("vortagesschluss"),
+                      "minute": t.get("minute"), **zusatz_logbuch(t.get("ticker")),
+                      "gemeldet": False, "abgewaehlt": True,
+                      "trockenlauf": bool(args.dry_run)} for t in r2g_neu],
+                    quelle="waechter/kapitel9")
+                stumm_vermerken(r2g_neu, schon_gemeldet, state, bool(args.dry_run))
+                r2g_neu = []
             if r2g_neu:
                 print(f"\nRed-to-Green: {len(r2g_neu)} Meldung(en)")
                 for t in r2g_neu:
@@ -5421,7 +5575,8 @@ def main():
             # Eigener Meldeschluessel, damit beide Kapitel am selben Tag
             # unabhaengig voneinander feuern koennen.
             r2gx_neu = []
-            if _r2g_fokus and alarm_an("r2gx"):
+            r2gx_an = alarm_an("r2gx")
+            if _r2g_fokus:
                 for rt, eintrag in _r2g_fokus.items():
                     q = quotes.get(rt)
                     if not q:
@@ -5432,7 +5587,8 @@ def main():
                     treffer["ticker"] = rt
                     treffer["firma"] = eintrag.get("firma") or firmen.get(rt, "")
                     treffer["strategie"] = red_to_green_explosive.NAME
-                    treffer["key"] = f"R2GX|{rt}|{date.today().isoformat()}"
+                    treffer["key"] = (f"{'R2GX' if r2gx_an else 'R2GXAUS'}|{rt}|"
+                                      f"{date.today().isoformat()}")
                     # Hat Kapitel 9 dieselbe Aktie heute schon gemeldet,
                     # ist das hier kein zweites Ereignis, sondern dasselbe
                     # mit lockererer Schwelle. Dann schweigen.
@@ -5442,7 +5598,8 @@ def main():
                         r2gx_neu.append(treffer)
             if r2gx_neu:
                 print("")
-                print(f"Red-to-Green Explosive: {len(r2gx_neu)} Meldung(en)")
+                print(f"Red-to-Green Explosive: {len(r2gx_neu)} "
+                      + ("Meldung(en)" if r2gx_an else "Signal(e), abgewählt, nur ins Logbuch"))
                 for t in r2gx_neu:
                     for zeile in format_r2g(t).split("\n"):
                         print("  " + zeile)
@@ -5451,8 +5608,14 @@ def main():
                     [{"ticker": t.get("ticker"), "firma": t.get("firma", ""),
                       "strategie": red_to_green_explosive.NAME,
                       "kurs": t.get("kurs"),
+                      **({} if r2gx_an else {"gemeldet": False, "abgewaehlt": True}),
                       "trockenlauf": bool(args.dry_run)} for t in r2gx_neu],
                     quelle="waechter/kapitel11")
+                if not r2gx_an:
+                    # Frage 9: abgewaehlt heisst nur keine Meldung.
+                    stumm_vermerken(r2gx_neu, schon_gemeldet, state, bool(args.dry_run))
+                    r2gx_neu = []
+            if r2gx_neu:
                 if args.dry_run:
                     print("(Dry-Run — kein Push)")
                     for t in r2gx_neu:
@@ -5483,8 +5646,29 @@ def main():
             if gap_ein_neu:
                 save_state(state)
             gap_ein = [g for g in gap_ein if g["key"] not in schon_gemeldet]
-            if not alarm_an("gapgo"):
-                gap_ein = []          # abgewaehlt (23.09.2026): kein Einstieg, keine Auskunft
+            gapgo_an = alarm_an("gapgo")
+            if gap_ein and not gapgo_an:
+                # Frage 9: abgewaehlt heisst nur keine Meldung. Einstieg und
+                # uebersprungener Einstieg stehen im Logbuch, die Warteliste
+                # gibt die Aktie frei wie nach einer Meldung.
+                print(f"\n{GAP_NAME} abgewählt: {len(gap_ein)} Einstieg(e) am Folgetag nur ins Logbuch.")
+                trigger_logbuch.protokolliere_viele(
+                    [{"ticker": g["ticker"], "firma": g.get("firma", ""),
+                      "strategie": "Gap and Go",
+                      "stufe": ("Einstieg am Folgetag übersprungen" if g.get("uebersprungen")
+                                else "Einstieg am Folgetag"),
+                      "kurs": g.get("kurs"), "kaufpunkt": g.get("einstieg"),
+                      "einstieg": g.get("einstieg"), "stop": g.get("stop"),
+                      **zusatz_logbuch(g["ticker"]),
+                      "gemeldet": False, "abgewaehlt": True,
+                      "trockenlauf": bool(args.dry_run)} for g in gap_ein],
+                    quelle="waechter/kapitel7")
+                if not args.dry_run:
+                    warten = state.get(GAPGO_WARTEN) or {}
+                    for g in gap_ein:
+                        warten.pop(g["ticker"], None)
+                stumm_vermerken(gap_ein, schon_gemeldet, state, bool(args.dry_run))
+                gap_ein = []
             gap_ueber = [g for g in gap_ein if g.get("uebersprungen")]
             gap_ein = [g for g in gap_ein if not g.get("uebersprungen")]
             # W2 (Gerhard, 12.09.2026): ueber der 3-Prozent-Grenze ist es kein
@@ -5590,7 +5774,7 @@ def main():
             # Handelsende (Schluss im oberen Fuenftel + 5x Volumen roh).
             gap_neu = []
             gap_geaendert = False
-            for gt in (gap_universum if alarm_an("gapgo") else []):
+            for gt in gap_universum:
                 q = quotes.get(gt)
                 if not q:
                     continue
@@ -5609,6 +5793,25 @@ def main():
                     gap_neu.append(g)
             if gap_geaendert:
                 save_state(state)
+            if gap_neu and not gapgo_an:
+                # Frage 9: abgewaehlt heisst nur keine Meldung. Der Lueckentag
+                # steht im Logbuch und kommt auf die Warteliste, damit auch
+                # der Einstieg am Folgetag im Logbuch landet.
+                print(f"\n{GAP_NAME} abgewählt: {len(gap_neu)} Lückentag(e) nur ins Logbuch.")
+                trigger_logbuch.protokolliere_viele(
+                    [{"ticker": g["ticker"], "firma": g.get("firma", ""),
+                      "strategie": "Gap and Go",
+                      "stufe": ("bestätigt" if g.get("bestaetigt") else "im Aufbau"),
+                      "kurs": g.get("kurs"), "kaufpunkt": g.get("kp"), "stop": g.get("stop"),
+                      **zusatz_logbuch(g["ticker"]),
+                      "gemeldet": False, "abgewaehlt": True,
+                      "trockenlauf": bool(args.dry_run)} for g in gap_neu],
+                    quelle="waechter/kapitel7")
+                if not args.dry_run:
+                    for g in gap_neu:
+                        gapgo_vormerken(state, g)
+                stumm_vermerken(gap_neu, schon_gemeldet, state, bool(args.dry_run))
+                gap_neu = []
             if gap_neu:
                 print(f"\nGap and Go: {len(gap_neu)} Meldung(en)")
                 for g in gap_neu:
