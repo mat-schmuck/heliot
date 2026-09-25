@@ -896,7 +896,13 @@
     "BEST|RVMD|Shakeout plus drei": "2026-09-25",
     "UEBER|RVMD|Fallback: MA50-Pullback": "2026-09-25",
     "UEBER|XMTR|Rectangle Top": "2026-09-25",
-    "GEWINN|klimax_zeichen|TEM|HTF Innen-Einstieg|5_kanaluebershooting": "2026-09-25"
+    "GEWINN|klimax_zeichen|TEM|HTF Innen-Einstieg|5_kanaluebershooting": "2026-09-25",
+    "GEWINN|zonenwechsel|MRNA|Fallback: 20-Tage-Hoch (Pivot)|stark": "2026-09-25",
+    "GEWINN|zonenwechsel|MRNA|Fallback: 52W-Hoch-Breakout|stark": "2026-09-25",
+    "GEWINN|zonenwechsel|NTRA|Cup & Handle (Wochenbasis) + Darvas Box|stark": "2026-09-25",
+    "GEWINN|zonenwechsel|NTRA|Fallback: 20-Tage-Hoch (Pivot)|stark": "2026-09-25",
+    "GEWINN|zonenwechsel|NTRA|Fallback: 52W-Hoch-Breakout|stark": "2026-09-25",
+    "GEWINN|zonenwechsel|QMCO|Fallback: 20-Tage-Hoch (Pivot)|mittel": "2026-09-25"
   },
   "gemeldet_kp": {
     "LB|Cup & Handle (Wochenbasis)": 81.01,
