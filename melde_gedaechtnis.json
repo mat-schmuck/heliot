@@ -360,7 +360,9 @@
     "ADPT|Pocket Pivot": "drin",
     "BAND|Inside Day": "drin",
     "FORM|Inside Day": "drin",
-    "SCSC|Wick Play": "drin"
+    "SCSC|Wick Play": "drin",
+    "BRKR|EMA Crossback": "drin",
+    "ONC|EMA Crossback": "drin"
   },
   "gemeldet": {
     "INSIDER|MAIR|pfad_a|0": "2026-08-28",
@@ -739,8 +741,8 @@
     "UEBER|ILMN|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-24",
     "ADPT|Cup & Handle (Wochenbasis)": "2026-09-25",
     "BEST|ADPT|Cup & Handle (Wochenbasis)": "2026-09-25",
-    "ADPT|Fallback: 52W-Hoch-Breakout": "2026-09-24",
-    "BEST|ADPT|Fallback: 52W-Hoch-Breakout": "2026-09-24",
+    "ADPT|Fallback: 52W-Hoch-Breakout": "2026-09-25",
+    "BEST|ADPT|Fallback: 52W-Hoch-Breakout": "2026-09-25",
     "PNTG|Fallback: MA50-Pullback": "2026-09-24",
     "BEST|PNTG|Fallback: MA50-Pullback": "2026-09-24",
     "UEBER|CDNA|Fallback: 52W-Hoch-Breakout": "2026-09-24",
@@ -805,7 +807,21 @@
     "SITM|EMA Crossback": "2026-09-25",
     "BEST|SITM|EMA Crossback": "2026-09-25",
     "TEM|Cup & Handle (Wochenbasis)": "2026-09-25",
-    "BEST|TEM|Cup & Handle (Wochenbasis)": "2026-09-25"
+    "BEST|TEM|Cup & Handle (Wochenbasis)": "2026-09-25",
+    "ADPT|Pocket Pivot": "2026-09-25",
+    "BEST|ADPT|Pocket Pivot": "2026-09-25",
+    "BAND|Inside Day": "2026-09-25",
+    "BEST|BAND|Inside Day": "2026-09-25",
+    "FORM|Inside Day": "2026-09-25",
+    "BEST|FORM|Inside Day": "2026-09-25",
+    "SCSC|Wick Play": "2026-09-25",
+    "BEST|SCSC|Wick Play": "2026-09-25",
+    "BRKR|EMA Crossback": "2026-09-25",
+    "BEST|BRKR|EMA Crossback": "2026-09-25",
+    "R2GX|CDNA|2026-09-25": "2026-09-25",
+    "ONC|EMA Crossback": "2026-09-25",
+    "BEST|ONC|EMA Crossback": "2026-09-25",
+    "TEIL|AMD|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-25"
   },
   "gemeldet_kp": {
     "LB|Cup & Handle (Wochenbasis)": 81.01,
@@ -830,8 +846,8 @@
     "BEST|TEM|HTF Innen-Einstieg": 78.98,
     "ADPT|Cup & Handle (Wochenbasis)": 29.59,
     "BEST|ADPT|Cup & Handle (Wochenbasis)": 29.59,
-    "ADPT|Fallback: 52W-Hoch-Breakout": 28.81,
-    "BEST|ADPT|Fallback: 52W-Hoch-Breakout": 28.81,
+    "ADPT|Fallback: 52W-Hoch-Breakout": 29.61,
+    "BEST|ADPT|Fallback: 52W-Hoch-Breakout": 29.61,
     "PNTG|Fallback: MA50-Pullback": 39.72,
     "BEST|PNTG|Fallback: MA50-Pullback": 39.72,
     "QMCO|Wick Play": 29.25,
@@ -866,25 +882,20 @@
     "SITM|EMA Crossback": 645.25,
     "BEST|SITM|EMA Crossback": 645.25,
     "TEM|Cup & Handle (Wochenbasis)": 82.47,
-    "BEST|TEM|Cup & Handle (Wochenbasis)": 82.47
+    "BEST|TEM|Cup & Handle (Wochenbasis)": 82.47,
+    "ADPT|Pocket Pivot": 29.58,
+    "BEST|ADPT|Pocket Pivot": 29.58,
+    "BAND|Inside Day": 62.265,
+    "BEST|BAND|Inside Day": 62.265,
+    "FORM|Inside Day": 129.86,
+    "BEST|FORM|Inside Day": 129.86,
+    "SCSC|Wick Play": 58.445,
+    "BEST|SCSC|Wick Play": 58.445,
+    "BRKR|EMA Crossback": 65.01,
+    "BEST|BRKR|EMA Crossback": 65.01,
+    "ONC|EMA Crossback": 361.07,
+    "BEST|ONC|EMA Crossback": 361.07
   },
-  "gapgo_warten": {
-    "OMER": {
-      "signal": "2026-09-23",
-      "kp": 21.06,
-      "stop": 20.62,
-      "firma": "Omeros Corp",
-      "bestaetigt": false,
-      "pruef": "2026-09-24"
-    },
-    "VICR": {
-      "signal": "2026-09-23",
-      "kp": 268.35,
-      "stop": 261.93,
-      "firma": "Vicor Corp",
-      "bestaetigt": false,
-      "pruef": "2026-09-24"
-    }
-  },
+  "gapgo_warten": {},
   "ampel_tag": "2026-09-25"
 }
