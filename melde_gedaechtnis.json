@@ -383,7 +383,7 @@
     "UCTT|Inside Day": "drin",
     "RDVT|Fallback: 52W-Hoch-Breakout": "drin",
     "KALU|Inside Day": "drin",
-    "MXL|Cup & Handle (Wochenbasis)": "drin",
+    "MXL|Cup & Handle (Wochenbasis)": "draussen",
     "BHE|Rectangle Top": "drin"
   },
   "gemeldet": {
@@ -884,7 +884,8 @@
     "BEST|ESTC|Inside Day": "2026-09-25",
     "MXL|Cup & Handle (Wochenbasis)": "2026-09-25",
     "BEST|MXL|Cup & Handle (Wochenbasis)": "2026-09-25",
-    "TEIL|MXL|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-25"
+    "TEIL|MXL|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-25",
+    "UEBER|MXL|Cup & Handle (Wochenbasis)": "2026-09-25"
   },
   "gemeldet_kp": {
     "LB|Cup & Handle (Wochenbasis)": 81.01,
