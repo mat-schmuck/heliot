@@ -44,6 +44,13 @@ import sys
 
 HAUPT_DATEI = "finviz_3.csv"
 DARVAS_DATEI = "darvas.csv"
+# DIE DRITTE UND VIERTE LISTE (Gerhard, 27.09.2026): in allem wie die grosse
+# Liste, alle Strategien ausser Darvas; eine Liste darf leer bleiben. Auf
+# diesem Arbeitszweig zaehlen sie fuer alle_ticker und sektor_von mit, die
+# ganze Regel steht in listen.py auf main.
+DRITTE_DATEI = "dritte_liste.csv"
+VIERTE_DATEI = "vierte_liste.csv"
+WEITERE_DATEIEN = (DRITTE_DATEI, VIERTE_DATEI)
 
 # Das Muster, das ausschliesslich auf der Darvas-Liste laufen darf. Der
 # Name ist der, den der Scanner erzeugt (pattern_scanner.detect_darvas).
@@ -84,15 +91,25 @@ def haupt_liste(pfad=None):
     return _lies(pfad or HAUPT_DATEI)
 
 
-def alle_ticker(haupt=None, darvas=None):
-    """ALLE Aktien aus BEIDEN Listen, ohne Doppelte.
+def weitere_listen(pfade=None):
+    """Die dritte und vierte Liste zusammen, in dieser Reihenfolge; pfade=()
+    heisst keine. Wie die grosse Liste: alles ausser Darvas."""
+    raus = []
+    for pfad in (WEITERE_DATEIEN if pfade is None else pfade):
+        raus += _lies(pfad)
+    return raus
+
+
+def alle_ticker(haupt=None, darvas=None, weitere=None):
+    """ALLE Aktien aus allen Listen, ohne Doppelte; seit 27.09.2026 samt der
+    dritten und vierten (weitere=() heisst ohne).
 
     Das ist der Umfang, den jedes Werkzeug ueberwachen soll (Gerhard:
     "dass alle tools weiterhin alle Listen ueberwachen, die ich
     hochlade"). Die Darvas-Liste kommt zuerst, damit ihre Firmennamen
     gewinnen, falls sie sich unterscheiden."""
     raus, gesehen = [], set()
-    for t, firma in darvas_liste(darvas) + haupt_liste(haupt):
+    for t, firma in darvas_liste(darvas) + haupt_liste(haupt) + weitere_listen(weitere):
         if t in gesehen:
             continue
         gesehen.add(t)
@@ -115,7 +132,9 @@ def sektor_von(ticker, haupt=None, darvas=None):
     tabelle = _SEKTOR_CACHE.get(schluessel)
     if tabelle is None:
         tabelle = {}
-        for pfad in (schluessel[1], schluessel[0]):
+        # Die grosse Liste gewinnt, danach die Darvas-Liste, zuletzt die
+        # dritte und vierte (27.09.2026).
+        for pfad in tuple(reversed(WEITERE_DATEIEN)) + (schluessel[1], schluessel[0]):
             try:
                 df = pd.read_csv(pfad)
             except Exception:
@@ -198,8 +217,16 @@ def selbsttest() -> int:
         g, d = str(o / "gross.csv"), str(o / "darv.csv")
 
         p("Beide Listen zusammen, ohne Doppelte",
-          [t for t, _ in alle_ticker(g, d)] == ["BBB", "CCC", "AAA"],
-          [t for t, _ in alle_ticker(g, d)])
+          [t for t, _ in alle_ticker(g, d, weitere=())] == ["BBB", "CCC", "AAA"],
+          [t for t, _ in alle_ticker(g, d, weitere=())])
+        (o / "dritte.csv").write_text("Ticker,Company" + chr(10) + "DDD,Delta" + chr(10) + "AAA,Alpha" + chr(10),
+                                      encoding="utf-8")
+        (o / "leer.csv").write_text("Ticker,Company" + chr(10), encoding="utf-8")
+        w = (str(o / "dritte.csv"), str(o / "leer.csv"))
+        p("Die dritte Liste zaehlt mit, eine leere vierte stoert nicht",
+          [t for t, _ in alle_ticker(g, d, weitere=w)] == ["BBB", "CCC", "AAA", "DDD"],
+          [t for t, _ in alle_ticker(g, d, weitere=w)])
+        p("Auf der dritten Liste laeuft Darvas NICHT", not darf_darvas("DDD", d))
         # DIE REGEL, in beide Richtungen geprueft.
         p("Eine Aktie NUR in der Darvas-Liste darf Darvas",
           darf_darvas("CCC", d))
@@ -233,7 +260,7 @@ def selbsttest() -> int:
           "KEINE Aktienliste" in (fehlende_liste(
               str(o / "x.csv"), str(o / "y.csv")) or ""))
         p("Ohne jede Liste stürzt nichts ab",
-          alle_ticker(str(o / "x.csv"), str(o / "y.csv")) == [])
+          alle_ticker(str(o / "x.csv"), str(o / "y.csv"), weitere=()) == [])
         # Eine CSV ohne Ticker-Spalte ist keine Liste.
         (o / "falsch.csv").write_text("Name,Wert\nx,1\n", encoding="utf-8")
         p("Eine CSV ohne Ticker-Spalte ergibt eine leere Liste",
