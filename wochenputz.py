@@ -61,7 +61,7 @@ weiter (Exit-Pruefung, Logbuch, Volumenkurven, Abendbericht gehoeren zur
 Nacht), veroeffentlicht aber eine leere Mappe, solange keine neue Liste da
 ist.
 
-WOHER DAS LISTEN-DATUM KOMMT: aus dem juengsten Commit der beiden
+WOHER DAS LISTEN-DATUM KOMMT: aus dem juengsten Commit der vier
 Wochenlisten laut GitHub (dieselbe Abfrage wie in der App). Ist es nicht
 feststellbar, bleibt alles, wie es ist, und der naechste Anstoss versucht es
 erneut. Fuer Pruefungen laesst es sich mit --listen-datum vorgeben.
@@ -93,7 +93,9 @@ FOKUSLISTE = "fokusliste.json"
 # Datei neben der Mappe, also auch ein eigener Putz.
 ALARM = "alarm_kaufpunkte.json"
 GEDAECHTNIS = "melde_gedaechtnis.json"
-LISTEN = ("finviz_3.csv", "darvas.csv")
+# Alle vier Wochenlisten (die dritte und vierte seit 27.09.2026, Gerhard: sie
+# funktionieren in allem wie die grosse Liste, auch beim Wochenputz).
+LISTEN = ("finviz_3.csv", "darvas.csv", "dritte_liste.csv", "vierte_liste.csv")
 INSIDER_MARKE = "INSIDER|"
 INSIDER_TAGE = 30
 # Die Warteliste der Luecken-Bestaetigungstage (breakout_watcher.GAPGO_WARTEN):
@@ -101,7 +103,7 @@ INSIDER_TAGE = 30
 GAPGO_WARTEN = "gapgo_warten"
 NIE_ANFASSEN = ("positionen.json", "exit_befunde.json", "shakeout_warteliste.json",
                 "trigger_logbuch.jsonl", "sektor_radar.json", "ntfy_ids.json",
-                "finviz_3.csv", "darvas.csv")
+                "finviz_3.csv", "darvas.csv", "dritte_liste.csv", "vierte_liste.csv")
 
 
 def zone():

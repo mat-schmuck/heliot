@@ -2624,6 +2624,71 @@ def block_g():
 # H — Betrieb
 # ---------------------------------------------------------------------------
 
+def vier_listen_pruefen(pfad) -> tuple:
+    """Die vier Wochenlisten (Gerhard, 27.09.2026): die grosse Liste, die
+    Darvas-Liste, die dritte und die vierte. Dieselben vier Dateien stehen in
+    listen.py, im Wochenputz, bei der Uebergabe aus dem Scanner, im Reiter
+    Wochenlisten und beim Lesen der Listen fuer die Uebergabe; jede liegt im
+    Repo, auch leer. Darvas laeuft nur auf der Darvas-Liste. Liefert (ok, Befund)."""
+    import ast as _ast
+    import listen
+    import scanner_ansicht as sa
+    import wochenputz
+    soll = set(listen.WOCHENLISTEN)
+    maengel = []
+    if len(listen.WOCHENLISTEN) != 4 or listen.DARVAS_DATEI not in soll:
+        maengel.append("listen.WOCHENLISTEN sind nicht die vier Listen samt Darvas-Liste")
+    if set(wochenputz.LISTEN) != soll:
+        maengel.append("der Wochenputz kennt andere Listen")
+    if not soll <= set(wochenputz.NIE_ANFASSEN):
+        maengel.append("der Wochenputz nimmt nicht jede Liste von der Aufraeumung aus")
+    if set(sa.UEBERGABE_ZIELE) != soll:
+        maengel.append("die Uebergabe aus dem Scanner kennt andere Listen")
+    baum = _ast.parse(open(pfad, encoding="utf-8").read())
+    konstanten = {}
+    for k in baum.body:
+        if (isinstance(k, _ast.Assign) and len(k.targets) == 1 and isinstance(k.targets[0], _ast.Name)
+                and isinstance(k.value, _ast.Constant) and isinstance(k.value.value, str)):
+            konstanten[k.targets[0].id] = k.value.value
+    namen = next((k.value for k in baum.body if isinstance(k, _ast.Assign) and len(k.targets) == 1
+                  and getattr(k.targets[0], "id", "") == "LISTEN_NAMEN"), None)
+    im_reiter = ({konstanten.get(getattr(s, "id", "")) for s in namen.keys}
+                 if isinstance(namen, _ast.Dict) else set())
+    if im_reiter != soll:
+        maengel.append("der Reiter Wochenlisten bietet andere Listen an")
+    funktionen = {k.name: k for k in baum.body if isinstance(k, _ast.FunctionDef)}
+    roh = funktionen.get("_sc_listen_roh")
+    gelesen = set()
+    if roh is not None:
+        for n in _ast.walk(roh):
+            if isinstance(n, _ast.For) and isinstance(n.iter, _ast.Tuple):
+                gelesen = {konstanten.get(getattr(e, "id", "")) for e in n.iter.elts}
+    if gelesen != soll:
+        maengel.append("die Uebergabe liest nicht alle vier Listen fuer die Finviz-Zeilen")
+    fehlend = [x for x in sorted(soll) if not (WURZEL / x).exists()]
+    if fehlend:
+        maengel.append("im Repo fehlt " + ", ".join(fehlend))
+    # Probe mit eigenen Dateien: Eine Aktie nur auf der dritten Liste wird
+    # gescannt, Darvas bleibt ihr verwehrt; eine leere Liste stoert nicht.
+    import tempfile as _tf
+    with _tf.TemporaryDirectory() as _tmp:
+        _dritte, _leer, _fehlt = (os.path.join(_tmp, n) for n in ("dritte.csv", "leer.csv", "fehlt.csv"))
+        with open(_dritte, "w", encoding="utf-8") as _f:
+            _f.writelines(["Ticker,Company", chr(10), "PROBE,Probe Inc", chr(10)])
+        with open(_leer, "w", encoding="utf-8") as _f:
+            _f.writelines(["Ticker,Company", chr(10)])
+        drin = "PROBE" in {t for t, _ in listen.alle_ticker(haupt=_fehlt, darvas=_leer, einzel=_fehlt,
+                                                             weitere=(_dritte, _leer))}
+        ohne_darvas = not listen.darf_darvas("PROBE", darvas=_leer, einzel=_fehlt)
+    if not drin:
+        maengel.append("eine Aktie nur auf der dritten Liste wird nicht gescannt")
+    if not ohne_darvas:
+        maengel.append("Darvas ist ausserhalb der Darvas-Liste erlaubt")
+    if maengel:
+        return False, "; ".join(maengel)
+    return True, "; ".join(sorted(soll))
+
+
 def block_h():
     ueberschrift("H — BETRIEB: Ablaeufe, Einstellungen, Datenlage")
     import yaml
@@ -2738,8 +2803,9 @@ def block_h():
               if _ausgenommen else ""))
     _mit_liste = set()
     # einzelaktien.csv seit 21.09.2026 (S7): dieselbe Pflicht wie die beiden
-    # Wochenlisten, der Upload-Weg schreibt sie auf jeden Zweig.
-    for _datei in ("finviz_3.csv", "darvas.csv", "einzelaktien.csv"):
+    # Wochenlisten, der Upload-Weg schreibt sie auf jeden Zweig. Die dritte und
+    # vierte Liste seit 27.09.2026 (Gerhard) ebenso.
+    for _datei in ("finviz_3.csv", "darvas.csv", "dritte_liste.csv", "vierte_liste.csv", "einzelaktien.csv"):
         _stand = {}
         for _z in _listen_zweige:
             _r = sp.run(["git", "show", f"origin/{_z}:{_datei}"],
@@ -2779,6 +2845,8 @@ def block_h():
         pruefe("H", f"{_datei}: alle Zweige fuehren dieselbe Liste",
                not _abw,
                _zahlen + ((" | " + " | ".join(_abw)) if _abw else ""))
+    ok, zusatz = vier_listen_pruefen(WURZEL / "streamlit_app.py")
+    pruefe("H", "Alle Stellen kennen dieselben vier Wochenlisten, jede Liste liegt im Repo", ok, zusatz)
     _fehlt_upload = sorted(_mit_liste - set(_upload))
     pruefe("H", "Jeder Zweig mit Wochenliste steht in LISTEN_ZWEIGE "
            "(sonst traefe ihn der Upload nicht)",
@@ -3627,6 +3695,9 @@ def oberflaechen_texte(quelle=None) -> list:
     raus += [("Oberflaeche", x) for x in list(oberflaeche.SCANNER_ERKLAERUNGEN.values())
              + list(oberflaeche.SEKTOR_ERKLAERUNGEN.values())]
     raus += [("Scanner", x) for f in sa.FELDER for x in (f.titel, f.erklaerung)]
+    raus += [("Scanner", n) for _s, n in sa.SCHNELLBOX]
+    raus += [("Scanner", sa.schnellbox_grenze_titel(sa.FELD[s], t)) for s, _n in sa.SCHNELLBOX
+             if s in sa.FELD and sa.FELD[s].art == "bereich" for t in ("min", "max")]
     raus += [("Scanner", n) for _k, n in sa.AUSWAHL] + [("Scanner", n) for _k, n in sa.GRUPPEN]
     raus += [("Scanner", sa.strategie_text(k)) for k, _n in sa.AUSWAHL if sa.strategie_text(k)]
     raus += [("Scanner", x) for x in sa.grenzen_saetze() + sa.chartmuster_erklaerung()]
@@ -3641,8 +3712,11 @@ def oberflaechen_texte(quelle=None) -> list:
 
 
 def _klammern_pruefen():
-    """Antwort 112 vom 24.09.2026, als Warnung: keine Klammern in sichtbaren Texten."""
-    funde = [f"{q}: {x[:50]}" for q, x in oberflaechen_texte() if "(" in x or ")" in x]
+    """Antwort 112 vom 24.09.2026, als Warnung: keine Klammern in sichtbaren Texten.
+    F(t) ist keine Klammer, sondern die Formel der Volumenkurve; so heisst das
+    Merkmal in Gerhards Wortlaut vom 27.09.2026."""
+    funde = [f"{q}: {x[:50]}" for q, x in oberflaechen_texte()
+             if "(" in x.replace("F(t)", "") or ")" in x.replace("F(t)", "")]
     return not funde, nennen(funde) if funde else f"{len(oberflaechen_texte())} Texte ohne Klammern"
 
 
@@ -3784,13 +3858,80 @@ def erzeugbare_strategien() -> set:
     return namen
 
 
+# Die Schnellbox in Gerhards Wortlaut und Reihenfolge (27.09.2026).
+SCHNELLBOX_SOLL = ("Kurs", "Marktkapitalisierung", "Anzahl ausstehender Aktien", "RS",
+                   "RS-Linie auf 52-Wochen-Hoch", "Handelstage seit dem letzten 52-Wochen-Hoch",
+                   "Abstand zum 52-Wochen-Hoch", "Abstand zum 52-Wochen-Tief",
+                   "EMA 8 über EMA 21 und Kurs über beiden",
+                   "Relatives Volumen heute, hochgerechnet über die F(t)-Kurve", "Umsatzwachstum q/q")
+
+
+def schnellbox_pruefen(pfad) -> tuple:
+    """Die Schnellbox (Gerhard, 27.09.2026): ganz oben im Scanner genau die elf
+    Merkmale in seiner Reihenfolge; je Merkmal zuerst der Haken, darunter Von und
+    Bis nur bei Bereichen und nur, wenn angehakt; ohne Erklaerungsknopf, ohne
+    Erklaertext und ohne Platzhalter. Jede Eingabe gilt fuer dasselbe Merkmal in
+    Teil 2 und umgekehrt; Zuruecksetzen und Vorlagen setzen nur Teil 2 und gelten
+    damit fuer beide. Liefert (ok, Befund)."""
+    import ast as _ast
+    import scanner_ansicht as sa
+    maengel = []
+    namen = tuple(n for _s, n in sa.SCHNELLBOX)
+    if namen != SCHNELLBOX_SOLL:
+        maengel.append("die Merkmale oder ihre Reihenfolge weichen ab")
+    if any(s not in sa.FELD for s, _n in sa.SCHNELLBOX):
+        maengel.append("ein Merkmal fehlt in Teil 2")
+    ja = [s for s, _n in sa.SCHNELLBOX if s in sa.FELD and sa.FELD[s].art == "ja"]
+    if ja != ["rs_linie", "ema8_21"]:
+        maengel.append("nur RS-Linie und EMA 8 sind Ja-Nein-Merkmale")
+    baum = _ast.parse(open(pfad, encoding="utf-8").read())
+    funktionen = {k.name: k for k in baum.body if isinstance(k, _ast.FunctionDef)}
+    box = funktionen.get("_sc_schnellbox")
+    reiter = funktionen.get("scanner_reiter")
+    if box is None or reiter is None:
+        return False, "_sc_schnellbox oder scanner_reiter fehlt"
+    q = _ast.unparse(box)
+    if not _ast.unparse(box.body[1] if isinstance(box.body[0], _ast.Expr)
+                        and isinstance(box.body[0].value, _ast.Constant) else box.body[0]).startswith(
+            "_sc_schnellbox_nachziehen()"):
+        maengel.append("die Schnellbox zieht die Werte aus Teil 2 nicht zuerst nach")
+    for verboten in ("_sc_erklaerung", "st.caption", "st.write", "st.info", "placeholder", "help=", "st.expander"):
+        if verboten in q:
+            maengel.append(f"in der Schnellbox steht {verboten}")
+    if q.count("st.markdown(") != 1:
+        maengel.append("in der Schnellbox steht mehr als die Ueberschrift")
+    widgets = [n for n in _ast.walk(box) if isinstance(n, _ast.Call) and isinstance(n.func, _ast.Attribute)
+               and getattr(n.func.value, "id", "") == "st" and n.func.attr in ("checkbox", "text_input")]
+    if not widgets or any(not any(k.arg == "on_change" and getattr(k.value, "id", "") == "_sc_schnellbox_uebernehmen"
+                                  for k in w.keywords) for w in widgets):
+        maengel.append("nicht jedes Feld der Schnellbox schreibt nach Teil 2")
+    for i, s in enumerate(reiter.body):
+        if _ast.unparse(s) == "_sc_schnellbox()":
+            davor = " ".join(_ast.unparse(x) for x in reiter.body[:i])
+            if any(f"st.{w}(" in davor for w in ("markdown", "caption", "write", "checkbox", "selectbox", "button",
+                                                 "text_input", "radio")):
+                maengel.append("vor der Schnellbox zeigt der Scanner schon etwas")
+            break
+    else:
+        maengel.append("scanner_reiter ruft die Schnellbox nicht auf")
+    vorlage = _ast.unparse(funktionen.get("_sc_vorlage_schluessel") or box)
+    if "sb_" in vorlage or "_sb_schluessel" in vorlage:
+        maengel.append("die Vorlagen speichern die Schnellbox getrennt von Teil 2")
+    if maengel:
+        return False, "; ".join(maengel)
+    return True, f"{len(namen)} Merkmale ganz oben, mit Teil 2 verknuepft, ohne Erklaerungen"
+
+
 def erklaerungsknoepfe_pruefen(pfad) -> tuple:
     """Im Scanner steht unter JEDEM Kriterium ein Erklaerungsknopf (Mathias und
     Gerhard, 23.09.2026). Geprueft am Quelltext von scanner_reiter, von Teil 1
     bis zum Scan: Auf jedes Kontrollfeld, jede Auswahl und jede Auswahlliste folgt
     unmittelbar ein Aufruf von _sc_erklaerung. Ausgenommen sind nur die
     Kontrollfelder, die eine Gruppe aufklappen (Beschriftung beginnt mit
-    "Gruppe "). Liefert (ok, Befund)."""
+    "Gruppe "). AUSDRUECKLICH AUSGENOMMEN ist die Schnellbox ganz oben (Gerhard,
+    27.09.2026: nur Kontrollkaestchen und Felder mit kurzer Beschriftung); sie
+    steht vor Teil 1 und liegt damit ausserhalb des geprueften Bereichs, ihre
+    eigene Pruefung ist schnellbox_pruefen. Liefert (ok, Befund)."""
     import ast as _ast
     baum = _ast.parse(open(pfad, encoding="utf-8").read())
     reiter = next((k for k in baum.body if isinstance(k, _ast.FunctionDef) and k.name == "scanner_reiter"), None)
@@ -3947,7 +4088,10 @@ def block_i():
            and waechter.count("einstellungen_nachziehen()") >= 3)
 
     ok, zusatz = erklaerungsknoepfe_pruefen(app)
-    pruefe("I", "Unter jedem Kriterium im Scanner steht ein Erklaerungsknopf", ok, zusatz)
+    pruefe("I", "Unter jedem Kriterium im Scanner steht ein Erklaerungsknopf, die Schnellbox ausgenommen", ok,
+           zusatz)
+    ok, zusatz = schnellbox_pruefen(app)
+    pruefe("I", "Die Schnellbox steht ganz oben, schlank und mit Teil 2 verknuepft", ok, zusatz)
     ohne = [f.schluessel for f in sa.FELDER if not str(f.erklaerung or "").strip()]
     pruefe("I", "Jedes Merkmal des Scanners hat eine Erklaerung", not ohne, nennen(ohne))
     ohne = [s for s in list(sa.SEKTOREN) + [""] if s not in oberflaeche.SEKTOR_ERKLAERUNGEN]

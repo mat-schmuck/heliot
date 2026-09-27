@@ -909,6 +909,15 @@ def nachschlag_stichtagkurs(ticker: str, stichtag: str):
 
 LISTEN_DATEI = "finviz_3.csv"     # REPO steht oben bei DATEN_REPO
 DARVAS_DATEI = "darvas.csv"
+# Die dritte und vierte Wochenliste (Gerhard, 27.09.2026): in allem wie die
+# grosse Liste, alle Strategien ausser Darvas; die Regel steht in listen.py.
+DRITTE_DATEI = "dritte_liste.csv"
+VIERTE_DATEI = "vierte_liste.csv"
+# Die Wochenlisten, wie sie der Reiter Wochenlisten und die Uebergabe nennen.
+LISTEN_NAMEN = {LISTEN_DATEI: f"Große Liste für alle Strategien außer Darvas, {LISTEN_DATEI}",
+                DARVAS_DATEI: f"Darvas-Liste, dort laufen ALLE Strategien, {DARVAS_DATEI}",
+                DRITTE_DATEI: f"Dritte Liste für alle Strategien außer Darvas, {DRITTE_DATEI}",
+                VIERTE_DATEI: f"Vierte Liste für alle Strategien außer Darvas, {VIERTE_DATEI}"}
 
 # JEDER ZWEIG, DER EINE WOCHENLISTE FUEHRT (Mathias, 08.09.2026).
 # main ist der Standardzweig, von dem Nachtscan und Waechter laufen;
@@ -956,8 +965,14 @@ def liste_aus_dateiname(name: str) -> str:
     Fehlgriff, gegen den diese Seite die Wahl sichtbar anzeigt.
     Erkannt wird deshalb "dar" plus v ODER w."""
     import re
-    return (DARVAS_DATEI if re.search(r"dar[vw]", (name or "").lower())
-            else LISTEN_DATEI)
+    klein = (name or "").lower()
+    if re.search(r"dar[vw]", klein):
+        return DARVAS_DATEI
+    if "dritt" in klein:
+        return DRITTE_DATEI
+    if "viert" in klein:
+        return VIERTE_DATEI
+    return LISTEN_DATEI
 
 
 def pruefe_wochenliste(rohdaten: bytes) -> tuple[str, list[str]]:
@@ -1058,9 +1073,20 @@ def aktuelle_listengroesse(datei: str = None) -> int | None:
         if r.status_code != 200:
             return None
         fehler, ticker = pruefe_wochenliste(r.content)
+        if fehler == "Die Ticker-Spalte ist leer.":
+            return 0      # die Liste steht da, traegt aber keine Aktie
         return len(ticker) if not fehler else None
     except Exception:
         return None
+
+
+def listen_anzahl_text(anzahl) -> str:
+    """Wie viele Aktien eine Liste traegt, in Worten fuer den Reiter Wochenlisten."""
+    if anzahl is None:
+        return "fehlt"
+    if anzahl == 0:
+        return "leer"
+    return f"{nachschlagen.zahl(anzahl)} Aktie" + ("" if anzahl == 1 else "n")
 
 
 # --- Einzeln ueberwachte Aktien (S7, Gerhard, 20.09.2026) -------------------
@@ -1609,6 +1635,47 @@ def _sc_einstellung(sektoren) -> dict:
             "sortierung": st.session_state.get("sc_sortierung") or ""}
 
 
+# DIE SCHNELLBOX (Gerhard, 27.09.2026): ganz oben im Scanner elf Merkmale zum
+# schnellen Einstellen, nur Haken und Felder mit kurzer Beschriftung, ohne
+# Erklaerungsknoepfe und Erklaertexte, damit sie sich mit dem Screenreader in
+# einem Zug durchgehen lassen. Es sind DIESELBEN Einstellungen wie in Teil 2:
+# Vor dem Zeichnen uebernimmt die Schnellbox die Werte von dort, eine Eingabe in
+# der Schnellbox schreibt sie zurueck. Zuruecksetzen, Vorlagen und die Wahl
+# einer Strategie setzen nur Teil 2 und gelten damit fuer beide.
+def _sb_schluessel(feld: str, teil: str) -> str:
+    return f"sb_{feld}_{teil}"
+
+
+def _sc_schnellbox_nachziehen():
+    """Die Schnellbox zeigt, was in Teil 2 eingestellt ist."""
+    for s, _name in sa.SCHNELLBOX:
+        for teil, leer in (("an", False), ("min", ""), ("max", "")):
+            st.session_state[_sb_schluessel(s, teil)] = st.session_state.get(_sc_schluessel(s, teil), leer)
+
+
+def _sc_schnellbox_uebernehmen(s: str):
+    """Eine Eingabe in der Schnellbox gilt fuer dasselbe Merkmal in Teil 2."""
+    for teil in ("an", "min", "max"):
+        k = _sb_schluessel(s, teil)
+        if k in st.session_state:
+            st.session_state[_sc_schluessel(s, teil)] = st.session_state[k]
+
+
+def _sc_schnellbox():
+    """Die Schnellbox, ganz oben im Scanner. Ja-Nein-Merkmale haben nur den
+    Haken, die anderen darunter Von und Bis, sobald sie angehakt sind."""
+    _sc_schnellbox_nachziehen()
+    st.markdown("### Schnellbox", anchors=False)
+    for s, name in sa.SCHNELLBOX:
+        f = sa.FELD[s]
+        an = st.checkbox(name, key=_sb_schluessel(s, "an"), on_change=_sc_schnellbox_uebernehmen, args=(s,))
+        if not an or f.art != "bereich":
+            continue
+        for teil in ("min", "max"):
+            st.text_input(sa.schnellbox_grenze_titel(f, teil), key=_sb_schluessel(s, teil),
+                          on_change=_sc_schnellbox_uebernehmen, args=(s,))
+
+
 # VORLAGEN DES SCANNERS (Gerhard, 20.09.2026, S1; Mathias, 21.09.2026: "3
 # Datenrepo"). Eine Vorlage ist der Stand aller Bedienfelder des Scanners; die
 # Datei scanner_vorlagen.json liegt im PRIVATEN Datenrepo und wird mit
@@ -1839,10 +1906,50 @@ def _sc_scannen(vergleich: dict) -> dict:
         erg["technik"].append(analysten_grund)
     sektoren = sa.sektoren_in(tabelle)
     heute = sa.ny_jetzt().date()
-    ausw = sa.auswerten(tabelle, _sc_einstellung(sektoren), heute, analysten_da)
+    einstellung = _sc_einstellung(sektoren)
+    # RELATIVES VOLUMEN HEUTE (Gerhard, 27.09.2026): gerechnet beim Scan und
+    # nur, wenn es angehakt ist; waehrend des Handels mit dem Volumen von heute.
+    if (einstellung["felder"].get("rvol_heute") or {}).get("an"):
+        tabelle, rvol_hinweis = _sc_rvol_ergaenzen(tabelle)
+        if rvol_hinweis:
+            erg["hinweise"].append(rvol_hinweis)
+    ausw = sa.auswerten(tabelle, einstellung, heute, analysten_da)
     erg.update({"ausw": ausw, "treffer": len(ausw["df"]), "sektor_tabelle": tabelle[["sektor"]].copy()
                 if "sektor" in tabelle.columns else None})
     return erg
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def _sc_volumenkurven() -> dict:
+    """Die F(t)-Kurven je Aktie aus volumenkurven.json, hoechstens eine Stunde
+    alt: Der Nachtscan baut die Datei jede Nacht neu, und volumen.lade_kurven
+    behielte sonst den ersten Stand fuer den ganzen Prozess der App."""
+    import volumen
+    volumen._kurven = None
+    return volumen.lade_kurven(leise=True)
+
+
+def _sc_rvol_ergaenzen(tabelle):
+    """Die Spalte rvol_heute fuer den Scan (sa.rvol_spalte). Waehrend des
+    Handels holt sie das Volumen von heute fuer die Aktien mit eigener
+    F(t)-Kurve; ausserhalb gilt der letzte Handelstag der Tabelle."""
+    import volumen
+    minute = volumen.minute_seit_eroeffnung()
+    jetzt = sa.ny_jetzt()
+    werktag = jetzt.weekday() < 5
+    kurven, live, hinweis = {}, {}, None
+    if minute is not None and werktag:
+        kurven = _sc_volumenkurven()
+        mit_kurve = [t for t in tabelle["ticker"].astype(str).str.upper() if t in kurven]
+        if mit_kurve:
+            live = sa.rvol_live_holen(mit_kurve)
+        else:
+            hinweis = ("Während des Handels braucht das relative Volumen heute die eigene F(t)-Kurve einer Aktie; "
+                       "derzeit hat keine Aktie der Tabelle eine.")
+    werte, h = sa.rvol_spalte(tabelle, minute, live, kurven, jetzt.date(), werktag)
+    tabelle = tabelle.copy()
+    tabelle["rvol_heute"] = werte
+    return tabelle, hinweis or h
 
 
 def _sc_neu_zeichnen():
@@ -1962,8 +2069,8 @@ def _sc_uebergabe(erg: dict, ausw: dict):
     abgewaehlt = modell["ticker"]
     namen = dict(zip(alle, ausw["df"]["name"].tolist())) if "name" in ausw["df"].columns else {}
     st.markdown(f"Übergeben werden alle {nachschlagen.zahl(len(alle))} Treffer, nicht nur die angezeigten; im "
-                "Bearbeitungsmodus lassen sich einzelne abwählen. Die gewählte Liste wird ersetzt, die andere "
-                "bleibt, wie sie ist.")
+                "Bearbeitungsmodus lassen sich einzelne abwählen. Die gewählte Liste wird ersetzt, die anderen "
+                "bleiben, wie sie sind.")
     if st.checkbox("Bearbeitungsmodus: Aktien einzeln abwählen", key="sc_ueb_bearbeiten", persist_state="page"):
         st.button("Alle anhaken", key="sc_ueb_alle", on_click=_sc_uebergabe_setzen, args=(alle, True))
         st.button("Alle abhaken", key="sc_ueb_keine", on_click=_sc_uebergabe_setzen, args=(alle, False))
@@ -1973,9 +2080,12 @@ def _sc_uebergabe(erg: dict, ausw: dict):
             st.checkbox(sa.uebergabe_zeile(t, namen.get(t)), key=schluessel, on_change=_sc_uebergabe_haken,
                         args=(schluessel, t))
     gewaehlt = [t for t in alle if t not in abgewaehlt]
-    # Grosse Liste und Darvas-Liste, zusammen Wochenlisten (Antwort 86 vom 24.09.2026)
+    # Grosse Liste und Darvas-Liste, zusammen Wochenlisten (Antwort 86 vom 24.09.2026);
+    # dazu seit 27.09.2026 die dritte und vierte Liste (Gerhard)
     ziele = {LISTEN_DATEI: f"Große Liste {LISTEN_DATEI}: alle Strategien außer Darvas",
-             DARVAS_DATEI: f"Darvas-Liste {DARVAS_DATEI}: dort laufen alle Strategien"}
+             DARVAS_DATEI: f"Darvas-Liste {DARVAS_DATEI}: dort laufen alle Strategien",
+             DRITTE_DATEI: f"Dritte Liste {DRITTE_DATEI}: alle Strategien außer Darvas",
+             VIERTE_DATEI: f"Vierte Liste {VIERTE_DATEI}: alle Strategien außer Darvas"}
     if st.session_state.get("sc_ueb_ziel") not in ziele:
         st.session_state["sc_ueb_ziel"] = None
     st.selectbox("Welche Liste ersetzt wird", list(ziele), key="sc_ueb_ziel", format_func=ziele.get,
@@ -2022,12 +2132,12 @@ def _sc_uebergabe_setzen(alle, an: bool):
 
 
 def _sc_listen_roh() -> tuple:
-    """Die beiden Wochenlisten, wie sie auf main stehen (oeffentlich lesbar),
-    erst die Darvas-Liste, dann die grosse, wie listen.alle_ticker; Rueckfall
-    ist die Datei im Arbeitsverzeichnis der App."""
+    """Die Wochenlisten, wie sie auf main stehen (oeffentlich lesbar), erst die
+    Darvas-Liste, dann die grosse, die dritte und die vierte, wie
+    listen.alle_ticker; Rueckfall ist die Datei im Arbeitsverzeichnis der App."""
     import requests
     raus = []
-    for datei in (DARVAS_DATEI, LISTEN_DATEI):
+    for datei in (DARVAS_DATEI, LISTEN_DATEI, DRITTE_DATEI, VIERTE_DATEI):
         inhalt = None
         try:
             r = requests.get(f"https://raw.githubusercontent.com/{REPO}/main/{datei}", timeout=15)
@@ -2112,11 +2222,6 @@ def scanner_reiter():
     neu, nicht die ganze Seite. Die Tabelle holt erst der Knopf Scan starten."""
     stand = lade_scanner_stand() or {}
     lese_token = bool(_daten_token())
-    for satz in sa.stand_saetze(stand, analysten_da=lese_token, nur_voll=rolle != "voll"):
-        st.markdown(sa.md(satz))
-    for satz in sa.stand_technik(stand, analysten_da=lese_token, nur_voll=rolle != "voll"):
-        st.caption(sa.md(technik_zeile(satz)))
-
     sektoren = sa.sektoren_in(None)
     st.session_state["sc_sektorliste"] = sektoren
     if not st.session_state.get("sc_bereit"):
@@ -2127,6 +2232,15 @@ def scanner_reiter():
     for s in sektoren:
         if _sc_sektor_schluessel(s) not in st.session_state:
             st.session_state[_sc_sektor_schluessel(s)] = True
+
+    # Die Schnellbox steht ganz oben (Gerhard, 27.09.2026), vor dem Stand der
+    # Tabelle; zwischen ihren Feldern steht nichts anderes.
+    _sc_schnellbox()
+
+    for satz in sa.stand_saetze(stand, analysten_da=lese_token, nur_voll=rolle != "voll"):
+        st.markdown(sa.md(satz))
+    for satz in sa.stand_technik(stand, analysten_da=lese_token, nur_voll=rolle != "voll"):
+        st.caption(sa.md(technik_zeile(satz)))
     heute = sa.ny_jetzt().date()
 
     # VORLAGEN (Gerhard, 20.09.2026, S1): Die Datei liegt im privaten Datenrepo,
@@ -2685,8 +2799,10 @@ with tab_upload:
     st.markdown("## Wochenlisten", anchors=False)
     # Ohne Personennamen (Antwort 71 vom 24.09.2026)
     st.write("Hier werden die wöchentlichen Aktienlisten hochgeladen, als CSV-Datei mit der Spalte Ticker. Es sind "
-             "ZWEI: die große Liste für alle Strategien und die Darvas-Liste. Auf der großen läuft alles außer "
-             "Darvas, auf der Darvas-Liste läuft alles. Die neuen Listen gelten ab dem nächsten nächtlichen Scan.")
+             "VIER: die große Liste, die Darvas-Liste, die dritte und die vierte Liste. Auf der großen, der dritten "
+             "und der vierten läuft alles außer Darvas, auf der Darvas-Liste läuft alles. Eine Liste darf leer "
+             "bleiben, dann läuft für sie nichts. Steht eine Aktie auf mehreren Listen, wird sie nur einmal "
+             "überwacht und nur einmal gemeldet. Die neuen Listen gelten ab dem nächsten nächtlichen Scan.")
 
     try:
         github_token = st.secrets.get("GITHUB_TOKEN", "")
@@ -2695,10 +2811,13 @@ with tab_upload:
 
     anzahl_aktuell = aktuelle_listengroesse(LISTEN_DATEI)
     anzahl_darvas = aktuelle_listengroesse(DARVAS_DATEI)
+    anzahl_dritte = aktuelle_listengroesse(DRITTE_DATEI)
+    anzahl_vierte = aktuelle_listengroesse(VIERTE_DATEI)
     st.caption(
-        f"Im System: große Liste "
-        f"{anzahl_aktuell if anzahl_aktuell else 'fehlt'} Aktien, "
-        f"Darvas-Liste {anzahl_darvas if anzahl_darvas else 'fehlt'} Aktien.")
+        f"Im System: große Liste {listen_anzahl_text(anzahl_aktuell)}, "
+        f"Darvas-Liste {listen_anzahl_text(anzahl_darvas)}, "
+        f"dritte Liste {listen_anzahl_text(anzahl_dritte)}, "
+        f"vierte Liste {listen_anzahl_text(anzahl_vierte)}.")
     if not anzahl_darvas:
         st.warning("Die Darvas-Liste fehlt. Solange sie fehlt, entstehen "
                    "KEINE Darvas-Kaufpunkte; alle anderen Muster laufen "
@@ -2714,12 +2833,12 @@ with tab_upload:
         # sichtbar. Ein stiller Griff in die falsche Liste waere der
         # teuerste Fehler dieser Seite.
         vorschlag = liste_aus_dateiname(datei.name if datei else "")
-        wahl = st.radio(
-            "In welche Liste?",
-            [f"Große Liste für alle Strategien außer Darvas, {LISTEN_DATEI}",
-             f"Darvas-Liste, dort laufen ALLE Strategien, {DARVAS_DATEI}"],
-            index=1 if vorschlag == DARVAS_DATEI else 0, key="upload_wahl")
-        ziel_datei = DARVAS_DATEI if wahl.startswith("Darvas") else LISTEN_DATEI
+        # Vier Listen seit 27.09.2026 (Gerhard); gewaehlt wird die Datei
+        if st.session_state.get("upload_wahl") not in LISTEN_NAMEN:
+            st.session_state.pop("upload_wahl", None)
+        ziel_datei = st.radio(
+            "In welche Liste?", list(LISTEN_NAMEN), format_func=LISTEN_NAMEN.get,
+            index=list(LISTEN_NAMEN).index(vorschlag), key="upload_wahl")
         if datei is not None:
             st.caption(f"Aus dem Dateinamen {datei.name} geschlossen: "
                        f"{vorschlag}. Prüfe bitte oben die Wahl.")

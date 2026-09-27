@@ -14,7 +14,18 @@ DARAUS GENAU DREI SAETZE, und sie stehen NUR hier:
 
     DARVAS-LISTE   -> ALLE Strategien, auch Darvas
     GROSSE LISTE   -> alle Strategien AUSSER Darvas
+    DRITTE LISTE   -> alle Strategien AUSSER Darvas (Gerhard, 27.09.2026)
+    VIERTE LISTE   -> alle Strategien AUSSER Darvas (Gerhard, 27.09.2026)
     EINZELAKTIEN   -> ALLE Strategien, auch Darvas (Gerhard, 22.09.2026, O11)
+
+DRITTE UND VIERTE WOCHENLISTE (Gerhard, 27.09.2026, woertlich: "Auf allen
+Wochenlisten ausser der Darvas-Liste laufen alle Strategien ausser Darvas,
+genau wie jetzt auf der grossen Liste. Darvas bleibt ausschliesslich auf der
+Darvas-Liste." und "Eine Liste darf auch leer bleiben, dann laeuft fuer sie
+einfach nichts. Steht dieselbe Aktie auf mehreren Listen, wird sie nur einmal
+ueberwacht und nur einmal gemeldet."). Sie gehen deshalb durch dieselbe
+Vereinigung wie die grosse Liste (alle_ticker): Jede Aktie steht darin genau
+einmal, und die Meldesperre haengt wie bisher an Aktie und Muster.
 
 Steht eine Aktie in beiden Wochenlisten, gilt die grosszuegigere Seite: Sie
 ist in der Darvas-Liste, also darf Darvas. Alles andere darf ohnehin ueberall.
@@ -31,6 +42,8 @@ DATEIEN
     finviz_3.csv      die grosse Woechentliche (Name unveraendert, damit die
                       bestehenden Ablaeufe und der Upload weiterlaufen)
     darvas.csv        die Darvas-Liste
+    dritte_liste.csv  die dritte Wochenliste, wie die grosse
+    vierte_liste.csv  die vierte Wochenliste, wie die grosse
     einzelaktien.csv  die einzeln eingetragenen Aktien (S7); der Freitagsputz
                       leert sie, siehe wochenputz.py
 
@@ -50,6 +63,13 @@ import sys
 
 HAUPT_DATEI = "finviz_3.csv"
 DARVAS_DATEI = "darvas.csv"
+# Die dritte und vierte Wochenliste (Gerhard, 27.09.2026): Auf ihnen laufen
+# alle Strategien ausser Darvas, wie auf der grossen Liste.
+DRITTE_DATEI = "dritte_liste.csv"
+VIERTE_DATEI = "vierte_liste.csv"
+WEITERE_DATEIEN = (DRITTE_DATEI, VIERTE_DATEI)
+# Alle Wochenlisten, in der Reihenfolge der Oberflaeche.
+WOCHENLISTEN = (HAUPT_DATEI, DARVAS_DATEI, DRITTE_DATEI, VIERTE_DATEI)
 
 # S7 (Gerhard, 20.09.2026): einzeln eingetragene Aktien. Eine EIGENE Datei,
 # damit ein einzelner Eintrag nicht als neue Wochenliste zaehlt: Der
@@ -98,7 +118,18 @@ def haupt_liste(pfad=None):
     return _lies(pfad or HAUPT_DATEI)
 
 
-def alle_ticker(haupt=None, darvas=None, einzel=None, mit_einzel=True):
+def weitere_listen(pfade=None):
+    """Die dritte und vierte Wochenliste zusammen, in dieser Reihenfolge; auf
+    ihnen laeuft alles ausser Darvas, wie auf der grossen Liste. pfade=()
+    heisst: keine (fuer Pruefungen mit eigenen Dateien). Eine fehlende oder
+    leere Liste traegt nichts bei."""
+    raus = []
+    for pfad in (WEITERE_DATEIEN if pfade is None else pfade):
+        raus += _lies(pfad)
+    return raus
+
+
+def alle_ticker(haupt=None, darvas=None, einzel=None, mit_einzel=True, weitere=None):
     """ALLE Aktien aus BEIDEN Listen und den einzeln eingetragenen, ohne
     Doppelte.
 
@@ -107,9 +138,11 @@ def alle_ticker(haupt=None, darvas=None, einzel=None, mit_einzel=True):
     hochlade"). Die Darvas-Liste kommt zuerst, damit ihre Firmennamen
     gewinnen, falls sie sich unterscheiden. Die einzeln eingetragenen Aktien
     (S7) gehoeren seit dem 22.09.2026 dazu (Gerhard, O11); mit_einzel=False
-    liefert den alten Umfang, fuer Vergleiche."""
+    liefert den alten Umfang, fuer Vergleiche. Die dritte und vierte
+    Wochenliste stehen seit dem 27.09.2026 hinter der grossen (weitere, siehe
+    weitere_listen); eine Aktie auf mehreren Listen steht nur einmal darin."""
     raus, gesehen = [], set()
-    quellen = darvas_liste(darvas) + haupt_liste(haupt)
+    quellen = darvas_liste(darvas) + haupt_liste(haupt) + weitere_listen(weitere)
     if mit_einzel:
         quellen += einzel_liste(einzel)
     for t, firma in quellen:
@@ -123,7 +156,7 @@ def alle_ticker(haupt=None, darvas=None, einzel=None, mit_einzel=True):
 _SEKTOR_CACHE = {}
 
 
-def sektor_von(ticker, haupt=None, darvas=None):
+def sektor_von(ticker, haupt=None, darvas=None, weitere=None):
     """Der Finviz-Sektor einer Aktie, aus den Wochenlisten.
 
     Fuer die Sektor-Radar-Kopplung von Kapitel 12 (28.08.2026): Die
@@ -131,11 +164,14 @@ def sektor_von(ticker, haupt=None, darvas=None):
     nie gelesen. Gecacht je Dateipfad-Paar, denn der Nachtscan fragt
     das je offener Beobachtung."""
     import pandas as pd
-    schluessel = (haupt or HAUPT_DATEI, darvas or DARVAS_DATEI)
+    schluessel = (haupt or HAUPT_DATEI, darvas or DARVAS_DATEI) + tuple(
+        WEITERE_DATEIEN if weitere is None else weitere)
     tabelle = _SEKTOR_CACHE.get(schluessel)
     if tabelle is None:
         tabelle = {}
-        for pfad in (schluessel[1], schluessel[0]):
+        # Die spaetere Datei gewinnt, wie bisher: erst die weiteren Listen,
+        # dann die Darvas-Liste, zuletzt die grosse.
+        for pfad in tuple(reversed(schluessel[2:])) + (schluessel[1], schluessel[0]):
             try:
                 df = pd.read_csv(pfad)
             except Exception:
@@ -244,31 +280,38 @@ def einzel_aendern(roh, ticker, firma, an, zeit):
     return einzel_csv(zeilen), True, len(zeilen)
 
 
-def fehlende_liste(haupt=None, darvas=None):
-    """Fehlt eine der beiden Listen? Rueckgabe: Klartext oder None.
+def fehlende_liste(haupt=None, darvas=None, weitere=None):
+    """Fehlt eine der Listen? Rueckgabe: Klartext oder None.
 
     Wird beim Scan ausgegeben UND in die Mappe geschrieben, damit ein
     stiller Ausfall auffaellt. Mathias am 14.08.2026: "Das Protokoll
-    liest ausser dir niemand.\""""
-    d, h = darvas_liste(darvas), haupt_liste(haupt)
-    if not d and not h:
+    liest ausser dir niemand.\" Eine leere dritte oder vierte Liste ist
+    kein Befund: Sie darf leer bleiben (Gerhard, 27.09.2026). Fehlt die
+    grosse Liste, waehrend eine der weiteren Aktien traegt, laufen die
+    anderen Muster dort; dann gibt es auch nichts zu sagen."""
+    d, h, w = darvas_liste(darvas), haupt_liste(haupt), weitere_listen(weitere)
+    if not d and not h and not w:
         return "KEINE Aktienliste gefunden — der Scan hat nichts zu tun."
     if not d:
         return ("Die Darvas-Liste fehlt. Darvas-Kaufpunkte entstehen "
                 "deshalb KEINE; alle anderen Muster laufen normal.")
-    if not h:
+    if not h and not w:
         return ("Die große Liste fehlt. Es wird nur die Darvas-Liste "
                 "gescannt, dort aber mit allen Mustern.")
     return None
 
 
-def uebersicht(haupt=None, darvas=None):
+def uebersicht(haupt=None, darvas=None, weitere=None):
     """Eine Zeile je Liste, fuer Meldungen und Protokoll."""
     d, h = darvas_liste(darvas), haupt_liste(haupt)
-    zusammen = alle_ticker(haupt, darvas)
+    pfade = WEITERE_DATEIEN if weitere is None else tuple(weitere)
+    zusatz = ""
+    for name, pfad in zip(("dritten", "vierten"), pfade):
+        zusatz += f", {len(_lies(pfad))} in der {name}"
+    zusammen = alle_ticker(haupt, darvas, weitere=pfade)
     beide = {t for t, _ in d} & {t for t, _ in h}
-    return (f"{len(d)} Aktien in der Darvas-Liste, {len(h)} in der großen, "
-            f"{len(zusammen)} zusammen ({len(beide)} in beiden)")
+    return (f"{len(d)} Aktien in der Darvas-Liste, {len(h)} in der großen{zusatz}, "
+            f"{len(zusammen)} zusammen ({len(beide)} in Darvas- und großer Liste)")
 
 
 # ---------------------------------------------------------------------------
@@ -295,8 +338,8 @@ def selbsttest() -> int:
         g, d = str(o / "gross.csv"), str(o / "darv.csv")
 
         p("Beide Listen zusammen, ohne Doppelte",
-          [t for t, _ in alle_ticker(g, d)] == ["BBB", "CCC", "AAA"],
-          [t for t, _ in alle_ticker(g, d)])
+          [t for t, _ in alle_ticker(g, d, weitere=())] == ["BBB", "CCC", "AAA"],
+          [t for t, _ in alle_ticker(g, d, weitere=())])
         # DIE REGEL, in beide Richtungen geprueft.
         p("Eine Aktie NUR in der Darvas-Liste darf Darvas",
           darf_darvas("CCC", d))
@@ -321,15 +364,43 @@ def selbsttest() -> int:
                                       encoding="utf-8")
         e = str(o / "einzel.csv")
         p("O11: die einzeln eingetragene Aktie steht im Umfang",
-          [x for x, _ in alle_ticker(g, d, e)] == ["BBB", "CCC", "AAA", "DDD"],
-          [x for x, _ in alle_ticker(g, d, e)])
+          [x for x, _ in alle_ticker(g, d, e, weitere=())] == ["BBB", "CCC", "AAA", "DDD"],
+          [x for x, _ in alle_ticker(g, d, e, weitere=())])
         p("O11: auf ihr laeuft auch Darvas", darf_darvas("DDD", d, e)
           and erlaubte_muster("DDD", MUSTER, d, e) == MUSTER)
         p("Ohne die Einzelliste bleibt alles wie vorher",
-          not darf_darvas("DDD", d) and [x for x, _ in alle_ticker(g, d, mit_einzel=False)] == ["BBB", "CCC", "AAA"])
+          not darf_darvas("DDD", d)
+          and [x for x, _ in alle_ticker(g, d, mit_einzel=False, weitere=())] == ["BBB", "CCC", "AAA"])
         p("Eine Aktie, die schon in einer Wochenliste steht, kommt nicht doppelt",
-          [x for x, _ in alle_ticker(g, d, str(o / "einzel2.csv"))] == ["BBB", "CCC", "AAA"]
+          [x for x, _ in alle_ticker(g, d, str(o / "einzel2.csv"), weitere=())] == ["BBB", "CCC", "AAA"]
           if not (o / "einzel2.csv").exists() else True)
+
+        # DRITTE UND VIERTE WOCHENLISTE (Gerhard, 27.09.2026): wie die grosse
+        # Liste, jede Aktie nur einmal, Darvas nur auf der Darvas-Liste.
+        (o / "dritte.csv").write_text("Ticker,Company\nEEE,Epsilon\nAAA,Alpha\n", encoding="utf-8")
+        (o / "vierte.csv").write_text("Ticker,Company\nFFF,Phi\nCCC,Gamma\nEEE,Epsilon\n", encoding="utf-8")
+        (o / "vierte_leer.csv").write_text("Ticker,Company\n", encoding="utf-8")
+        w = (str(o / "dritte.csv"), str(o / "vierte.csv"))
+        p("Dritte und vierte Liste im Umfang, jede Aktie nur einmal",
+          [x for x, _ in alle_ticker(g, d, weitere=w, mit_einzel=False)] == ["BBB", "CCC", "AAA", "EEE", "FFF"],
+          [x for x, _ in alle_ticker(g, d, weitere=w, mit_einzel=False)])
+        p("Auf der dritten und vierten Liste laeuft alles ausser Darvas",
+          erlaubte_muster("EEE", MUSTER, d) == [m for m in MUSTER if m != "Darvas Box"]
+          and erlaubte_muster("FFF", MUSTER, d) == [m for m in MUSTER if m != "Darvas Box"])
+        p("Steht eine Aktie zusaetzlich auf der Darvas-Liste, darf dort Darvas",
+          erlaubte_muster("CCC", MUSTER, d) == MUSTER)
+        p("Eine leere oder fehlende weitere Liste traegt nichts bei und ist kein Befund",
+          [x for x, _ in alle_ticker(g, d, weitere=(str(o / "vierte_leer.csv"), str(o / "gibtsnicht.csv")),
+                                     mit_einzel=False)] == ["BBB", "CCC", "AAA"]
+          and fehlende_liste(g, d, weitere=(str(o / "vierte_leer.csv"),)) is None)
+        p("Nur die weiteren Listen tragen Aktien: die grosse fehlt, aber es gibt nichts zu melden",
+          fehlende_liste(str(o / "gibtsnicht.csv"), d, weitere=w) is None
+          and "große Liste fehlt" in (fehlende_liste(str(o / "gibtsnicht.csv"), d, weitere=()) or ""))
+        p("Die Uebersicht nennt die dritte und vierte Liste",
+          "2 in der dritten, 3 in der vierten" in uebersicht(g, d, weitere=w), uebersicht(g, d, weitere=w))
+        (o / "dritte_sektor.csv").write_text("Ticker,Company,Sector\nEEE,Epsilon,Energy\n", encoding="utf-8")
+        p("Der Sektor kommt auch aus der dritten Liste",
+          sektor_von("EEE", g, d, weitere=(str(o / "dritte_sektor.csv"),)) == "Energy")
         p("einzel_ticker liefert nur die Kuerzel", einzel_ticker(e) == ["DDD"], einzel_ticker(e))
 
         # Fehlende Dateien duerfen nichts umwerfen.
@@ -340,20 +411,20 @@ def selbsttest() -> int:
               g, str(o / "gibtsnicht.csv")) or ""))
         p("Fehlt die große Liste, wird auch das gesagt",
           "große Liste fehlt" in (fehlende_liste(
-              str(o / "gibtsnicht.csv"), d) or ""))
+              str(o / "gibtsnicht.csv"), d, weitere=()) or ""))
         p("Sind beide da, gibt es nichts zu melden",
-          fehlende_liste(g, d) is None)
+          fehlende_liste(g, d, weitere=()) is None)
         p("Fehlen beide, sagt es das deutlich",
           "KEINE Aktienliste" in (fehlende_liste(
-              str(o / "x.csv"), str(o / "y.csv")) or ""))
+              str(o / "x.csv"), str(o / "y.csv"), weitere=()) or ""))
         p("Ohne jede Liste stürzt nichts ab",
-          alle_ticker(str(o / "x.csv"), str(o / "y.csv")) == [])
+          alle_ticker(str(o / "x.csv"), str(o / "y.csv"), weitere=(), mit_einzel=False) == [])
         # Eine CSV ohne Ticker-Spalte ist keine Liste.
         (o / "falsch.csv").write_text("Name,Wert\nx,1\n", encoding="utf-8")
         p("Eine CSV ohne Ticker-Spalte ergibt eine leere Liste",
           _lies(str(o / "falsch.csv")) == [])
         p("Die Übersicht nennt beide Listen und die Schnittmenge",
-          "1 in beiden" in uebersicht(g, d), uebersicht(g, d))
+          "1 in Darvas- und großer Liste" in uebersicht(g, d, weitere=()), uebersicht(g, d, weitere=()))
 
         # S7: einzeln eingetragene Aktien
         leer_roh = einzel_csv([])

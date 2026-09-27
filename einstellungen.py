@@ -69,7 +69,7 @@ STRATEGIE_GRUPPEN = ("kauf", "ausweich", "auskunft", "weitere")
 
 # Ein Satz je Gruppe fuer das Regelwerk, vor den Absaetzen der Strategien.
 GRUPPEN_REGEL = {
-    "kauf": "Diese Muster entstehen jede Nacht aus den Tageskerzen der beiden Wochenlisten und der einzeln "
+    "kauf": "Diese Muster entstehen jede Nacht aus den Tageskerzen der vier Wochenlisten und der einzeln "
             "überwachten Aktien. Je Aktie gelten die drei wichtigsten Kaufpunkte; der Breakout-Wächter meldet, "
             "wenn der Kurs einen davon reißt.",
     "ausweich": "Hat eine Aktie weniger als drei Muster, füllen Fallbacks die freien Plätze: Kaufpunkte ohne "

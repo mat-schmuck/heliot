@@ -582,6 +582,19 @@ def _detektoren(di, tt_pass, toleranz, v2cfg, ticker="", termine=None):
 # Kennzahlen je Aktie aus den Kursen
 # ---------------------------------------------------------------------------
 
+def tage_seit_extrem(werte, hoch=True):
+    """Handelstage seit dem juengsten Tag mit dem hoechsten (hoch) oder dem
+    tiefsten Wert der Reihe; 0 heisst der letzte Tag der Reihe. Bei gleichen
+    Werten zaehlt der juengste Tag, denn gefragt ist das LETZTE Hoch oder Tief.
+    Ohne eine einzige Zahl None."""
+    a = np.asarray(werte, dtype=float)
+    if not len(a) or not np.isfinite(a).any():
+        return None
+    ziel = np.nanmax(a) if hoch else np.nanmin(a)
+    treffer = np.flatnonzero(a >= ziel) if hoch else np.flatnonzero(a <= ziel)
+    return int(len(a) - 1 - treffer[-1])
+
+
 def extrema(voll):
     """Allzeithoch, Allzeittief und groesstes Volumen aus der ganzen Historie."""
     raus = {"historie_ab": None, "allzeithoch": None, "allzeithoch_datum": None, "allzeittief": None,
@@ -628,7 +641,9 @@ def kurs_werte(d, ex):
     raus["tagesspanne_pct"] = _f(round(spanne.iloc[-1], 2)) if n else None
     raus["volatilitaet_5_pct"] = _f(round(spanne.iloc[-5:].mean(), 2)) if n >= 5 else None
     raus["volatilitaet_20_pct"] = _f(round(spanne.iloc[-20:].mean(), 2)) if n >= 20 else None
-    for tage in (21, 50, 200):
+    # EMA 8 seit 27.09.2026 (Gerhard): fuer das Kontrollfeld "EMA 8 ueber
+    # EMA 21 und Kurs ueber beiden".
+    for tage in (8, 21, 50, 200):
         if n >= tage:
             ema = float(c.ewm(span=tage, adjust=False).mean().iloc[-1])
             raus[f"ema{tage}"] = round(ema, 4)
@@ -636,12 +651,22 @@ def kurs_werte(d, ex):
         else:
             raus[f"ema{tage}"] = None
             raus[f"abst_ema{tage}_pct"] = None
+    e8, e21 = raus.get("ema8"), raus.get("ema21")
+    raus["ema8_21_darueber"] = (bool(e8 > e21 and kurs > e8 and kurs > e21)
+                                if e8 is not None and e21 is not None else None)
     for name, tage in HORIZONTE:
         fenster = min(n, tage)
         hoch = float(h.iloc[-fenster:].max())
         tief = float(lo.iloc[-fenster:].min())
         raus[f"abst_hoch_{name}_pct"] = _pct(kurs, hoch)
         raus[f"abst_tief_{name}_pct"] = _pct(kurs, tief) if tief > 0 else None
+    # HANDELSTAGE SEIT DEM LETZTEN 52-WOCHEN-HOCH UND -TIEF (Gerhard,
+    # 27.09.2026): ueber dasselbe Fenster wie der Abstand zum 52-Wochen-Hoch
+    # und -Tief, also Tageshochs und Tagestiefs der letzten 252 Handelstage
+    # samt dem letzten; 0 heisst am letzten Handelstag.
+    fenster = min(n, dict(HORIZONTE)["1j"])
+    raus["tage_seit_hoch_1j"] = tage_seit_extrem(h.iloc[-fenster:], hoch=True) if fenster else None
+    raus["tage_seit_tief_1j"] = tage_seit_extrem(lo.iloc[-fenster:], hoch=False) if fenster else None
     raus["abst_hoch_allzeit_pct"] = _pct(kurs, ex.get("allzeithoch"))
     raus["abst_tief_allzeit_pct"] = _pct(kurs, ex.get("allzeittief"))
     raus["volumen"] = _f(v.iloc[-1])
@@ -1994,6 +2019,25 @@ def selbsttest() -> int:
       ex["volumen_max"] == 99999.0 and w["volumen_max_tage_her"] == 149, str(w["volumen_max_tage_her"]))
     p("Neues 52-Wochen-Hoch erkannt", w["hoch_52w"] is True)
     p("Mittleres Volumen 50 Tage", w["volumen_50"] == 1000.0)
+    # Gerhard, 27.09.2026: Handelstage seit dem letzten 52-Wochen-Hoch und -Tief,
+    # EMA 8 ueber EMA 21 und Kurs ueber beiden
+    p("Handelstage seit dem 52-Wochen-Hoch: heute ist 0, das Tief liegt am Anfang des Fensters",
+      w["tage_seit_hoch_1j"] == 0 and w["tage_seit_tief_1j"] == 251,
+      f"{w['tage_seit_hoch_1j']}, {w['tage_seit_tief_1j']}")
+    p("Bei gleichen Hochs zaehlt der juengste Tag, genau vor drei Tagen ist 3",
+      tage_seit_extrem([1.0, 5.0, 5.0, 4.0, 3.0, 2.0], hoch=True) == 3
+      and tage_seit_extrem([3.0, 1.0, 2.0, 1.0, 4.0], hoch=False) == 1
+      and tage_seit_extrem([float("nan"), 2.0, float("nan")], hoch=True) == 1
+      and tage_seit_extrem([float("nan")], hoch=True) is None and tage_seit_extrem([], hoch=False) is None)
+    ema8 = float(d["close"].ewm(span=8, adjust=False).mean().iloc[-1])
+    p("EMA 8 und das Kontrollfeld EMA 8 ueber EMA 21 und Kurs ueber beiden",
+      abs(w["ema8"] - round(ema8, 4)) < 1e-9 and w["ema8_21_darueber"] is (ema8 > ema21 and 41.0 > ema8 and 41.0 > ema21)
+      and w["ema8_21_darueber"] is True, f"{w['ema8']}, {w['ema21']}")
+    d_fall = d.copy()
+    d_fall.loc[299, ["open", "close", "high", "low"]] = [30.0, 30.0, 30.5, 29.5]
+    w_fall = kurs_werte(d_fall, extrema(d_fall))
+    p("Faellt der Kurs unter die EMA 8, ist das Kontrollfeld nicht erfuellt",
+      w_fall["ema8_21_darueber"] is False and w_fall["tage_seit_hoch_1j"] == 1, str(w_fall["tage_seit_hoch_1j"]))
 
     # Trend Template: ohne Toleranz Wert fuer Wert wie pattern_scanner
     gleich = 0

@@ -1404,7 +1404,7 @@ def gruppe_saetze(a, grund=None):
 
 def sektor_saetze(sektor_name, sektoren, quelle=""):
     if not sektor_name:
-        return ["Sektor unbekannt: die Aktie steht in keiner der beiden Wochenlisten, und Yahoo nennt keinen Sektor."]
+        return ["Sektor unbekannt: die Aktie steht in keiner der vier Wochenlisten, und Yahoo nennt keinen Sektor."]
     try:
         import beobachtungen
         etf = beobachtungen.sektor_etf_fuer(sektor_name)
@@ -1432,7 +1432,7 @@ def sektor_saetze(sektor_name, sektoren, quelle=""):
             except Exception:  # noqa
                 s.append("Aufsteiger laut Sektor-Rangliste.")
     if quelle == "Yahoo":
-        s.append("Sektor laut Yahoo, die Aktie steht in keiner der beiden Wochenlisten.")
+        s.append("Sektor laut Yahoo, die Aktie steht in keiner der vier Wochenlisten.")
     return s
 
 

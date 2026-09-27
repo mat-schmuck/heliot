@@ -585,6 +585,17 @@ class Feld:
             if not q:
                 return "keine Gewinnschätzungen der letzten Quartale bekannt"
             return f"Schätzung in {int(g or 0)} von {int(q)} Quartalen geschlagen"
+        if s in ("tage_hoch_1j", "tage_tief_1j"):
+            tage = _num(r.get(self.spalte))
+            was = "52-Wochen-Hoch" if s == "tage_hoch_1j" else "52-Wochen-Tief"
+            if tage is None:
+                return f"{was} unbekannt"
+            n = int(tage)
+            return f"{was} " + ("heute" if n == 0 else ("vor einem Handelstag" if n == 1 else f"vor {n} Handelstagen"))
+        if s == "rvol_heute":
+            v = self.wert(r, fe) if v is _FEHLT else _num(v)
+            return ("Relatives Volumen heute nicht verifizierbar" if v is None
+                    else f"Relatives Volumen heute {zahl(v, self.stellen)}")
         if s == "volmax":
             tage = _num(r.get("volumen_max_tage_her"))
             menge = zahl(r.get("volumen_max"), 0)
@@ -673,6 +684,8 @@ class Feld:
         if s == "beat":
             return [("Quartale über der Schätzung", _zahlen(df, "schaetzung_geschlagen")),
                     ("Quartale mit Schätzung", _zahlen(df, "quartale_mit_schaetzung"))]
+        if s in ("tage_hoch_1j", "tage_tief_1j"):
+            return [(self.titel, self.werte(df, fe))]
         if s == "volmax":
             return [("Größtes Volumen jemals, Stück", _zahlen(df, "volumen_max")),
                     ("Größtes Volumen jemals, Datum", _sp(df, "volumen_max_datum")),
@@ -811,6 +824,15 @@ def _felder():
         F("vol_faktor", "volumen", "Volumenfaktor zum 50-Tage-Schnitt", spalte="tk_vol_faktor", einheit="", stellen=2,
           erklaerung=f"Volumen des letzten Handelstags geteilt durch den Schnitt der {tech['volumen_schnitt_tage']} "
                      "Handelstage davor; 2 heißt doppelt so hoch."),
+        F("rvol_heute", "volumen", "Relatives Volumen heute, hochgerechnet über die F(t)-Kurve", spalte="rvol_heute",
+          einheit="", stellen=2,
+          erklaerung="Das Volumen des Tages geteilt durch den Schnitt der 50 Handelstage davor; 1 heißt üblich, 2 "
+                     "doppelt so hoch. Während des Handels holt der Scan das bisherige Volumen von heute und rechnet "
+                     "es über die F(t)-Kurve der Aktie auf den ganzen Tag hoch, also über den Anteil des "
+                     "Tagesvolumens, der zu dieser Uhrzeit üblicherweise schon gehandelt ist. Eine eigene Kurve "
+                     "haben die Aktien der Wochenlisten und die einzeln überwachten; für alle anderen ist der Wert "
+                     "während des Handels nicht verifizierbar, sie fallen beim Filtern heraus. Außerhalb des "
+                     "Handels gilt der letzte vollständige Handelstag, dann ist nichts hochzurechnen."),
         F("vol63", "volumen", "Durchschnittsvolumen über drei Monate", spalte="tk_vol63", einheit="Stück", stellen=0,
           erklaerung="Gehandelte Aktien je Tag im Schnitt der letzten 63 Handelstage."),
         F("dv20", "volumen", "Dollarvolumen über 20 Tage", spalte="tk_dv20", einheit="Millionen Dollar", faktor=1e-6,
@@ -886,6 +908,10 @@ def _felder():
           erklaerung="52-Wochen-Hoch geteilt durch das 52-Wochen-Tief, also über die letzten 252 Handelstage; 2 "
                      "heißt, das Hoch liegt doppelt so hoch wie das Tief."),
         # Gleitende Durchschnitte und Trend
+        F("ema8_21", "durchschnitte", "EMA 8 über EMA 21 und Kurs über beiden", art="ja",
+          spalte="ema8_21_darueber",
+          erklaerung="Der exponentielle Durchschnitt der letzten 8 Tage liegt über dem der letzten 21 Tage, und der "
+                     "Schlusskurs liegt über beiden."),
         F("ema21", "durchschnitte", "Abstand zur EMA 21", spalte="abst_ema21_pct", signed=True, stellen=2,
           linie="EMA 21", erklaerung="Schlusskurs gegen den exponentiellen Durchschnitt der letzten 21 Tage; "
                                     "negativ heißt darunter; von 0 an liegt der Kurs darüber."),
@@ -934,6 +960,17 @@ def _felder():
     felder += [
         F("tief50", "hochtief", "Abstand zum 50-Tage-Tief", spalte="tk_tief50_abst", einheit="Prozent über dem Tief",
           bezug="50-Tage-Tief", erklaerung="Wie weit der Schlusskurs über dem Tief der letzten 50 Handelstage liegt."),
+        F("tage_hoch_1j", "hochtief", "Handelstage seit dem letzten 52-Wochen-Hoch", spalte="tage_seit_hoch_1j",
+          einheit="Handelstage", stellen=0,
+          erklaerung="Wie viele Handelstage seit dem Tag vergangen sind, an dem das 52-Wochen-Hoch erreicht wurde, "
+                     "der höchste Kurs der letzten 252 Handelstage; 0 heißt heute. Von 0 bis 30 heißt: das Hoch "
+                     "wurde zwischen heute und vor 30 Handelstagen gemacht; von 3 bis 3 heißt: genau vor drei "
+                     "Handelstagen."),
+        F("tage_tief_1j", "hochtief", "Handelstage seit dem letzten 52-Wochen-Tief", spalte="tage_seit_tief_1j",
+          einheit="Handelstage", stellen=0,
+          erklaerung="Wie viele Handelstage seit dem Tag vergangen sind, an dem das 52-Wochen-Tief erreicht wurde, "
+                     "der tiefste Kurs der letzten 252 Handelstage; 0 heißt heute. Von 0 bis 30 heißt: das Tief "
+                     "wurde zwischen heute und vor 30 Handelstagen gemacht."),
         F("neu_52w", "hochtief", "Neues 52-Wochen-Hoch", art="ja", spalte="hoch_52w",
           erklaerung="Das Tageshoch des letzten Handelstags liegt über allen Hochs der 52 Wochen davor."),
         F("neu_ath", "hochtief", "Neues Allzeithoch", art="ja", spalte="hoch_allzeit",
@@ -1174,6 +1211,108 @@ def _felder():
 
 FELDER = _felder()
 FELD = {f.schluessel: f for f in FELDER}
+
+
+# DIE SCHNELLBOX (Gerhard, 27.09.2026): ganz oben im Scanner genau diese elf
+# Merkmale in dieser Reihenfolge, mit kurzer Beschriftung und ohne
+# Erklaerungsknoepfe; sie sind mit denselben Merkmalen in Teil 2 verknuepft,
+# es sind dieselben Einstellungen. Die Namen sind Gerhards Wortlaut.
+SCHNELLBOX = (("kurs", "Kurs"),
+              ("marktkap", "Marktkapitalisierung"),
+              ("aktien", "Anzahl ausstehender Aktien"),
+              ("rs", "RS"),
+              ("rs_linie", "RS-Linie auf 52-Wochen-Hoch"),
+              ("tage_hoch_1j", "Handelstage seit dem letzten 52-Wochen-Hoch"),
+              ("hoch_1j", "Abstand zum 52-Wochen-Hoch"),
+              ("tief_1j", "Abstand zum 52-Wochen-Tief"),
+              ("ema8_21", "EMA 8 über EMA 21 und Kurs über beiden"),
+              ("rvol_heute", "Relatives Volumen heute, hochgerechnet über die F(t)-Kurve"),
+              ("umsatz_q", "Umsatzwachstum q/q"))
+
+
+def schnellbox_grenze_titel(feld, teil):
+    """Die kurze Beschriftung eines Grenzfelds in der Schnellbox: von oder bis,
+    mit der Einheit, ohne den Namen des Merkmals, der steht am Haken davor."""
+    wort = "von" if teil == "min" else "bis"
+    return f"{wort}, in {feld.einheit}" if feld.einheit else wort
+
+
+def rvol_spalte(tabelle, minute=None, live=None, kurven=None, heute=None, werktag=True):
+    """Die Spalte rvol_heute fuer einen Scan: Relatives Volumen heute,
+    hochgerechnet ueber die F(t)-Kurve (Gerhard, 27.09.2026). Rueckgabe
+    (Werte, Hinweis oder None).
+
+    minute: Minuten seit 09:30 New York, None ausserhalb der Handelszeit
+    (volumen.minute_seit_eroeffnung); live: {Ticker: (Datum, bisheriges
+    Tagesvolumen)} aus der juengsten Tageskerze; kurven: {Ticker: F(t)-Kurve}.
+
+    AUSSERHALB DES HANDELS ist der Tag komplett, F(t) ist 1 (volumen.tagesanteil,
+    "der reine EOD-Fall laeuft ohne" Kurve): Es gilt der Volumenfaktor des
+    letzten Handelstags der Tabelle, also sein Volumen geteilt durch den Schnitt
+    der 50 Handelstage davor. Tragen die geholten Kerzen alle ein frueheres
+    Datum, wird heute nicht gehandelt (Feiertag), und es gilt dasselbe.
+
+    WAEHREND DES HANDELS wird das Volumen von heute ueber die EIGENE Kurve der
+    Aktie hochgerechnet und durch den Schnitt der 50 Handelstage bis gestern
+    geteilt (volumen.verhaeltnis). Ohne eigene Kurve oder ohne Volumen von heute
+    ist der Wert nicht verifizierbar (Gerhard, 06.08.2026: keine Ersatzkurve)."""
+    import volumen
+    live, kurven = live or {}, kurven or {}
+    heute_iso = heute.isoformat() if heute else None
+    if minute is None or not werktag:
+        return _zahlen(tabelle, "tk_vol_faktor"), None
+    von_heute = {t: v for t, (tag, v) in live.items() if tag == heute_iso}
+    if live and not von_heute:
+        return _zahlen(tabelle, "tk_vol_faktor"), None
+    if not live:
+        return (pd.Series(np.nan, index=tabelle.index, dtype="float64"),
+                "Das Volumen von heute ließ sich nicht abrufen; das relative Volumen heute ist deshalb für keine "
+                "Aktie verifizierbar.")
+    werte = []
+    for t, v50 in zip(tabelle["ticker"].astype(str).str.upper(), _zahlen(tabelle, "volumen_50")):
+        kurve = kurven.get(t)
+        v = von_heute.get(t)
+        r = (volumen.verhaeltnis(v, None if pd.isna(v50) else float(v50), minute, kurve)
+             if kurve and v is not None else None)
+        werte.append(np.nan if r is None else round(float(r), 2))
+    s = pd.Series(werte, index=tabelle.index, dtype="float64")
+    n = int(s.notna().sum())
+    return s, (f"Relatives Volumen heute: während des Handels hochgerechnet über die F(t)-Kurve der Aktie, für "
+               f"{nachschlagen.zahl(n)} Aktien mit eigener Kurve; alle anderen sind nicht verifizierbar und fallen "
+               "beim Filtern heraus.")
+
+
+def rvol_live_holen(tickers):
+    """{Ticker: (Datum der juengsten Tageskerze, Volumen)} von Yahoo, fuer das
+    relative Volumen waehrend des Handels. Ein Fehler ergibt ein leeres
+    Ergebnis; dann ist der Wert nicht verifizierbar, geschaetzt wird nichts."""
+    tickers = sorted({str(t).strip().upper() for t in tickers if str(t).strip()})
+    if not tickers:
+        return {}
+    # Yahoo schreibt die Klasse einer Aktie mit Bindestrich (BRK-B statt BRK.B)
+    yahoo = {t: t.replace(".", "-") for t in tickers}
+    try:
+        import yfinance as yf
+        df = yf.download(sorted(set(yahoo.values())), period="5d", interval="1d", group_by="ticker",
+                         progress=False, threads=True, auto_adjust=False)
+    except Exception:  # noqa
+        return {}
+    raus = {}
+    for t in tickers:
+        try:
+            if isinstance(df.columns, pd.MultiIndex):
+                if yahoo[t] not in df.columns.get_level_values(0):
+                    continue
+                teil = df[yahoo[t]]
+            else:
+                teil = df
+            teil = teil.dropna(subset=["Volume"])
+            if teil.empty:
+                continue
+            raus[t] = (pd.Timestamp(teil.index[-1]).date().isoformat(), float(teil["Volume"].iloc[-1]))
+        except Exception:  # noqa
+            continue
+    return raus
 
 
 # ---------------------------------------------------------------------------
@@ -1873,7 +2012,7 @@ def chartmuster_erklaerung():
         "Sechs dieser Muster melden auch im Handel: Three Weeks Tight, Inside Day, Pocket Pivot, IPO Base, "
         "Shakeout plus drei und Wick Play. Der Nachtscan rechnet "
         "ihre Einstiege, der Wächter meldet, sobald der Kurs sie überschreitet, und zwar nur für die Aktien "
-        "der beiden Wochenlisten und die einzeln überwachten. Es gelten dieselben Melderegeln wie bei den "
+        "der vier Wochenlisten und die einzeln überwachten. Es gelten dieselben Melderegeln wie bei den "
         "bestehenden Strategien; beim Inside Day meldet nur die Fassung mit drei steigenden Tagen davor, beim "
         "Shakeout plus drei der Einstieg bei 10 Prozent. Die Meldungen kommen vorerst als Auskunft und nicht "
         "als Alarm in der Handels-App, bis das Logbuch zeigt, wie die Muster laufen. Bestehende Kaufpunkte "
@@ -2415,7 +2554,9 @@ def vorlage_beschriftung(v):
 UEBERGABE_GRENZE = 1500          # dieselbe Grenze wie pruefe_wochenliste in der App
 FINVIZ_SPALTEN = ("No.", "Ticker", "Company", "Sector", "Industry", "Country", "Market Cap", "P/E", "Price",
                   "Change", "Volume")
-UEBERGABE_ZIELE = {"finviz_3.csv": "Große Liste finviz_3.csv", "darvas.csv": "Darvas-Liste darvas.csv"}
+UEBERGABE_ZIELE = {"finviz_3.csv": "Große Liste finviz_3.csv", "darvas.csv": "Darvas-Liste darvas.csv",
+                   "dritte_liste.csv": "Dritte Liste dritte_liste.csv",
+                   "vierte_liste.csv": "Vierte Liste vierte_liste.csv"}
 
 
 def uebergabe_zeile(ticker, name):
@@ -2591,6 +2732,65 @@ def selbsttest() -> int:
     p("Nach unten offen: bis 15 Dollar, die Grenze eingeschlossen", set(a["df"]["ticker"]) == {"BBB", "CCC"})
     a = auswerten(tab, felder(umsatz_q={"an": True, "min": "5", "max": "100"}), heute)
     p("Umsatzwachstum von 5 bis 100 Prozent", list(a["df"]["ticker"]) == ["AAA"])
+
+    # Gerhard, 27.09.2026: Handelstage seit dem letzten 52-Wochen-Hoch und -Tief,
+    # EMA 8 ueber EMA 21 und Kurs ueber beiden, relatives Volumen heute, Schnellbox
+    tab_n = tab.copy()
+    tab_n["tage_seit_hoch_1j"] = [0, 3, 40, None]
+    tab_n["tage_seit_tief_1j"] = [200, 5, 0, None]
+    tab_n["ema8_21_darueber"] = [True, False, None, True]
+    a = auswerten(tab_n, felder(tage_hoch_1j={"an": True, "min": "3", "max": "3"}), heute)
+    p("Handelstage seit dem 52-Wochen-Hoch von 3 bis 3: genau vor drei Tagen", list(a["df"]["ticker"]) == ["BBB"])
+    a = auswerten(tab_n, felder(tage_hoch_1j={"an": True, "min": "0", "max": "30"}), heute)
+    p("Von 0 bis 30: zwischen heute und vor 30 Handelstagen, ohne Wert fällt heraus",
+      set(a["df"]["ticker"]) == {"AAA", "BBB"}, str(list(a["df"]["ticker"])))
+    a = auswerten(tab_n, felder(tage_tief_1j={"an": True, "max": "5"}), heute)
+    p("Handelstage seit dem 52-Wochen-Tief bis 5, nach unten offen", set(a["df"]["ticker"]) == {"BBB", "CCC"})
+    a = auswerten(tab_n, felder(ema8_21={"an": True}), heute)
+    # DDD hat keine aktuellen Kurse und faellt bei jedem Scan heraus
+    p("EMA 8 über EMA 21 und Kurs über beiden: nur der Haken, ohne Von und Bis; nein und unbekannt fallen heraus",
+      list(a["df"]["ticker"]) == ["AAA"], str(list(a["df"]["ticker"])))
+    p("Satz der Handelstage: heute, vor einem Handelstag, vor N Handelstagen",
+      FELD["tage_hoch_1j"].satz({"tage_seit_hoch_1j": 0}) == "52-Wochen-Hoch heute"
+      and FELD["tage_hoch_1j"].satz({"tage_seit_hoch_1j": 1}) == "52-Wochen-Hoch vor einem Handelstag"
+      and FELD["tage_tief_1j"].satz({"tage_seit_tief_1j": 3}) == "52-Wochen-Tief vor 3 Handelstagen"
+      and FELD["tage_hoch_1j"].satz({}) == "52-Wochen-Hoch unbekannt")
+    namen = [n for _s, n in SCHNELLBOX]
+    p("Schnellbox: genau Gerhards elf Merkmale in seiner Reihenfolge, alle aus Teil 2",
+      namen == ["Kurs", "Marktkapitalisierung", "Anzahl ausstehender Aktien", "RS", "RS-Linie auf 52-Wochen-Hoch",
+                "Handelstage seit dem letzten 52-Wochen-Hoch", "Abstand zum 52-Wochen-Hoch",
+                "Abstand zum 52-Wochen-Tief", "EMA 8 über EMA 21 und Kurs über beiden",
+                "Relatives Volumen heute, hochgerechnet über die F(t)-Kurve", "Umsatzwachstum q/q"]
+      and all(s in FELD for s, _n in SCHNELLBOX)
+      and [s for s, _n in SCHNELLBOX if FELD[s].art == "ja"] == ["rs_linie", "ema8_21"], str(namen))
+    p("Schnellbox: kurze Beschriftung der Grenzfelder",
+      schnellbox_grenze_titel(FELD["kurs"], "min") == "von, in Dollar"
+      and schnellbox_grenze_titel(FELD["rs"], "max") == "bis"
+      and schnellbox_grenze_titel(FELD["tage_hoch_1j"], "min") == "von, in Handelstage")
+    # Relatives Volumen heute
+    tab_v = pd.DataFrame({"ticker": ["AAA", "BBB", "CCC"], "volumen_50": [1000.0, 2000.0, 500.0],
+                          "tk_vol_faktor": [1.5, 0.8, None]})
+    kurve = {0: 0.05, 30: 0.25, 390: 1.0}
+    s_zu, h_zu = rvol_spalte(tab_v, None, {}, {"AAA": kurve}, date(2026, 9, 28))
+    p("Relatives Volumen außerhalb des Handels: der Volumenfaktor des letzten Handelstags, ohne Hinweis",
+      list(s_zu.round(2).fillna(-1)) == [1.5, 0.8, -1] and h_zu is None)
+    s_on, h_on = rvol_spalte(tab_v, 30, {"AAA": ("2026-09-28", 500.0), "BBB": ("2026-09-28", 100.0)},
+                             {"AAA": kurve}, date(2026, 9, 28))
+    p("Während des Handels hochgerechnet über die eigene Kurve, ohne Kurve nicht verifizierbar",
+      s_on.iloc[0] == 2.0 and pd.isna(s_on.iloc[1]) and pd.isna(s_on.iloc[2]) and "für 1 Aktien" in (h_on or ""),
+      f"{list(s_on)}; {h_on}")
+    s_fei, h_fei = rvol_spalte(tab_v, 30, {"AAA": ("2026-09-25", 900.0)}, {"AAA": kurve}, date(2026, 9, 28))
+    p("Tragen alle Kerzen ein früheres Datum, wird heute nicht gehandelt: letzter Handelstag",
+      list(s_fei.round(2).fillna(-1)) == [1.5, 0.8, -1] and h_fei is None)
+    s_leer, h_leer = rvol_spalte(tab_v, 30, {}, {"AAA": kurve}, date(2026, 9, 28))
+    p("Kommt während des Handels kein Volumen von heute, ist nichts verifizierbar, mit Hinweis",
+      s_leer.isna().all() and "nicht abrufen" in (h_leer or ""))
+    s_we, _h = rvol_spalte(tab_v, 30, {"AAA": ("2026-09-27", 500.0)}, {"AAA": kurve}, date(2026, 9, 27),
+                           werktag=False)
+    p("Am Wochenende gilt der letzte Handelstag", list(s_we.round(2).fillna(-1)) == [1.5, 0.8, -1])
+    p("Satz des relativen Volumens",
+      FELD["rvol_heute"].satz({"rvol_heute": 2.0}) == "Relatives Volumen heute 2,00"
+      and FELD["rvol_heute"].satz({}) == "Relatives Volumen heute nicht verifizierbar")
     a = auswerten(tab, felder(kurs={"an": True, "min": "100", "max": "10"}), heute)
     p("Von ueber Bis wirkt nicht und wird gemeldet",
       len(a["df"]) == 3 and any("liegt über Bis" in f for f in a["fehler"]), "; ".join(a["fehler"]))

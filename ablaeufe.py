@@ -52,7 +52,7 @@ ABLAEUFE = (
      "anstoss": "scanner.yml", "zustand": "scanner.yml", "echt_ab_s": 120,
      "knopf": "Nachtscan prüfen und bei Bedarf nachholen",
      "erklaerung": ("Der Nachtscan rechnet um 18:00 Uhr New Yorker Zeit, also gegen Mitternacht Wiener Zeit, "
-                    "die Kaufpunkte der beiden Wochenlisten und der einzeln überwachten Aktien. Der Knopf scannt "
+                    "die Kaufpunkte der vier Wochenlisten und der einzeln überwachten Aktien. Der Knopf scannt "
                     "nur, wenn der fällige Scan fehlt; ein geglückter Scan bleibt, wie er ist.")},
     {"schluessel": "tabelle", "titel": "Scanner-Tabelle",
      "anstoss": "scanner_daten.yml", "zustand": "scanner_daten.yml", "echt_ab_s": 120,
@@ -238,9 +238,9 @@ def selbsttest():
       ok200 and ok204 and not ok403 and tech200 is None and "ABLAUF_TOKEN" not in satz403
       and "ABLAUF_TOKEN" in tech403 and "am 21.09.2026 um 16:00 Uhr Wiener Zeit" in satz200,
       satz200 + " | " + satz403 + " | " + str(tech403))
-    p("Hüter erklärt, Nachtscan nennt beide Wochenlisten und die einzeln überwachten (Antwort 75, Berichtigung 17)",
+    p("Hüter erklärt, Nachtscan nennt die vier Wochenlisten und die einzeln überwachten (Antwort 75, Berichtigung 17)",
       "ein zweiter Ablauf, der alle sechs Minuten nachsieht, ob der Wächter läuft" in waechter["erklaerung"]
-      and "der beiden Wochenlisten und der einzeln überwachten Aktien" in scan["erklaerung"])
+      and "der vier Wochenlisten und der einzeln überwachten Aktien" in scan["erklaerung"])
     p("Dauer in Worten", dauer_text(59) == "weniger als eine Minute" and dauer_text(60) == "eine Minute"
       and dauer_text(3600) == "eine Stunde" and dauer_text(3720) == "eine Stunde 2 Minuten"
       and dauer_text(None) == "unbekannt lange")
