@@ -2343,8 +2343,10 @@ def block_e():
         (_op / "d.csv").write_text("\n".join(["Ticker", "BBB", "CCC", ""]),
                                    encoding="utf-8")
         _g, _d = str(_op / "g.csv"), str(_op / "d.csv")
+        # Ohne die echten weiteren Listen und die Einzelueberwachung: seit dem
+        # 27.09.2026 liest alle_ticker die dritte und vierte Liste von selbst mit.
         pruefe("E", "Beide Listen werden zusammen überwacht",
-               {t for t, _ in _li.alle_ticker(_g, _d)} == {"AAA", "BBB", "CCC"})
+               {t for t, _ in _li.alle_ticker(_g, _d, mit_einzel=False, weitere=())} == {"AAA", "BBB", "CCC"})
         pruefe("E", "Darvas NUR auf der Darvas-Liste",
                _li.darf_darvas("CCC", _d) and not _li.darf_darvas("AAA", _d))
         pruefe("E", "Eine Aktie in beiden Listen darf Darvas",
