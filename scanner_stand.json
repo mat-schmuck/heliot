@@ -1,5 +1,5 @@
 {
- "gebaut_am": "2026-09-27T12:52:42+00:00",
+ "gebaut_am": "2026-09-27T22:10:41+00:00",
  "handelstag": "2026-09-25",
  "status": "ok",
  "toleranz": 0.05,
@@ -13,7 +13,7 @@
    "ohne_eintrag": 37
   },
   "rs": {
-   "stand": "2026-09-25T22:08:36",
+   "stand": "2026-09-27T22:07:30",
    "status": "ok"
   },
   "markttiefs": {
@@ -42,8 +42,8 @@
   },
   "eroeffnung": {
    "status": "ok",
-   "kandidaten": 108,
-   "mit_eroeffnung": 108
+   "kandidaten": 107,
+   "mit_eroeffnung": 107
   },
   "kurse": {
    "status": "ok",
@@ -51,7 +51,7 @@
    "ohne_kurse": 1,
    "aktuell": 5345,
    "abdeckung": 0.9993,
-   "archiv_zeilen": 3714079
+   "archiv_zeilen": 3713020
   },
   "markt": {
    "status": "ok",
@@ -60,7 +60,7 @@
   },
   "eroeffnungsvolumen": {
    "status": "ok",
-   "aktien": 4955,
+   "aktien": 4954,
    "bloecke": 54,
    "fehler": 0
   },
@@ -81,8 +81,8 @@
   },
   "fundament": {
    "status": "ok",
-   "firmen": 4911,
-   "zuordnung": 5036
+   "firmen": 4908,
+   "zuordnung": 5033
   },
   "konsens": {
    "dateien": [
@@ -110,11 +110,11 @@
   },
   "revisionen": {
    "status": "ok",
-   "wochenliste": 205,
-   "abgerufen": 205,
+   "wochenliste": 147,
+   "abgerufen": 147,
    "fehler": 0,
    "abgebrochen": false,
-   "mit_stand": 205
+   "mit_stand": 147
   },
   "short_volumen": {
    "status": "ok",
@@ -146,20 +146,20 @@
    "abdeckung": {
     "0": {
      "tag": "2026-09-25",
-     "basis": 5060,
-     "mit_rohwert": 5058,
+     "basis": 5058,
+     "mit_rohwert": 5056,
      "anteil": 0.9996
     },
     "15": {
      "tag": "2026-09-03",
-     "basis": 5042,
-     "mit_rohwert": 5040,
+     "basis": 5040,
+     "mit_rohwert": 5038,
      "anteil": 0.9996
     },
     "30": {
      "tag": "2026-08-13",
-     "basis": 5026,
-     "mit_rohwert": 5026,
+     "basis": 5024,
+     "mit_rohwert": 5024,
      "anteil": 1.0
     }
    },
@@ -168,9 +168,9 @@
   "kennzahlen": {
    "status": "ok",
    "technik_handelstag": "2026-09-25",
-   "fundament_stand": "2026-09-25T22:08:40",
-   "mit_technik": 5291,
-   "mit_fundament": 4928
+   "fundament_stand": "2026-09-27T22:07:33",
+   "mit_technik": 5292,
+   "mit_fundament": 4925
   }
  },
  "hinweise": [],
@@ -1314,5 +1314,5 @@
   }
  },
  "zeilen": 5348,
- "dauer_s": 1455.8
+ "dauer_s": 1684.2
 }
