@@ -208,6 +208,31 @@ STRATEGIE_NAMEN = {k: n for k, n, _ in STRATEGIEN}
 # Zeithorizonte fuer Hoch und Tief in Handelstagen; "allzeit" aus der ganzen Historie.
 HORIZONTE = (("1t", 1), ("1w", 5), ("1m", 21), ("3m", 63), ("6m", 126), ("1j", 252), ("3j", 756))
 
+# KENNZAHLEN FUER DIE TEMPLATES BEKANNTER TRADER (Gerhard, 27.09.2026, Teil 1).
+# Ausschliesslich Scanner-Einstellungen: keine Strategie, kein Muster, kein
+# Alarm, nichts im Waechter und nichts im Nachtscan. Jede Kennzahl steht dazu
+# einzeln in Teil 2 des Scanners.
+# Performance-Rang 1, 3 und 6 Monate: die Rendite ueber 21, 63 und 126
+# Handelstage als Perzentil ueber die ganze Tabelle; drei und sechs Monate
+# rechnet kurs_werte seit jeher (rendite_3m_pct, rendite_6m_pct).
+PERF_RANG_SPALTEN = {"1m": "rendite_1m_pct", "3m": "rendite_3m_pct", "6m": "rendite_6m_pct"}
+PERF_TAGE = (40, 60)                              # 21 und 126 gibt es als Wertentwicklung ein und sechs Monate
+RMV_TAGE = (5, 10, 15, 20)                        # Enge nach RMV-Art, Standard 15
+RMV_ATR = (3, 5, 8)                               # Mittel dieser ATR in Prozent vom Kurs
+# Die letzten Quartalszahlen: so viele Kalendertage des Nasdaq-Kalenders
+# zurueck, gut ein Quartal; die Kurse dazu reichen ZAHLEN_AUSZUG Handelstage.
+ZAHLEN_RUECKBLICK_TAGE = 100
+ZAHLEN_AUSZUG = 130
+# Eigene Festlegung: Kamen die Zahlen am letzten Handelstag ohne bekannte
+# Tageszeit, gilt er als Tag der Reaktion, wenn sein Volumen mindestens so
+# viel mal dem Schnitt der 50 Tage davor ist.
+ZAHLEN_VOLUMEN_FAKTOR = 1.5
+# Volumen der ersten Handelsminuten aus Yahoos Fuenf-Minuten-Kerzen.
+EROEFFNUNG_MINUTEN = (15, 20)
+EROEFFNUNG_BLOCK = 100
+EROEFFNUNG_ZEITGRENZE_S = 900
+MARKT_ETF = {"SPY": "spy_veraenderung_pct", "QQQ": "qqq_veraenderung_pct"}
+
 # Welche Musterschwellen die Toleranz lockert: mindestens-Schwellen werden
 # kleiner, hoechstens-Schwellen groesser. Zaehlgroessen (Beruehrungen,
 # Kontraktionen) bleiben, wie sie sind.
@@ -427,11 +452,8 @@ def vergangene_termine(heute, holen=None, tage=None):
     Tage belegen den Zahlen-Gap des Earnings-Pullback, dessen Gap bis
     suchfenster_tage Handelstage zurueckliegen darf; geholt wird fuer das
     laengere der beiden Fenster."""
-    import chartmuster
     holen = holen or _json_holen
-    handelstage = max(int(chartmuster.FESTLEGUNGEN["v_tage_max"]),
-                      int(ZENTRAL["earnings_pullback"]["suchfenster_tage"]))
-    tage = int(tage or (handelstage + 1) * 7 // 5 + 5)
+    tage = int(tage or termine_tage_kurz())
     raus, geholt = {}, 0
     for i in range(0, tage + 1):
         tag = heute - timedelta(days=i)
@@ -448,6 +470,25 @@ def vergangene_termine(heute, holen=None, tage=None):
     if not geholt:
         return None, {"status": "nicht verfuegbar", "tage": 0}
     return raus, {"status": "ok", "tage": geholt, "ticker": len(raus)}
+
+
+def termine_tage_kurz():
+    """Wie viele Kalendertage der Ausloeser des Episodic Pivot und der
+    Earnings-Pullback zurueckschauen (siehe vergangene_termine)."""
+    import chartmuster
+    handelstage = max(int(chartmuster.FESTLEGUNGEN["v_tage_max"]),
+                      int(ZENTRAL["earnings_pullback"]["suchfenster_tage"]))
+    return int((handelstage + 1) * 7 // 5 + 5)
+
+
+def termine_kuerzen(termine, heute):
+    """Die Tage mit Zahlen auf das kurze Fenster von termine_tage_kurz: Der
+    lange Rueckblick fuer die letzten Quartalszahlen (27.09.2026) darf den
+    Episodic Pivot und den Earnings-Pullback nicht veraendern. None bleibt None."""
+    if termine is None:
+        return None
+    grenze = (heute - timedelta(days=termine_tage_kurz())).isoformat()
+    return {tk: {x for x in tage if str(x)[:10] >= grenze} for tk, tage in termine.items()}
 
 
 def _fuenf_minuten(liste):
@@ -595,6 +636,286 @@ def tage_seit_extrem(werte, hoch=True):
     return int(len(a) - 1 - treffer[-1])
 
 
+def _atr_reihe(h, lo, c, tage):
+    """Wilders mittlere wahre Tagesschwankung als Reihe, wie atr14."""
+    tr = pd.concat([h - lo, (h - c.shift()).abs(), (lo - c.shift()).abs()], axis=1).max(axis=1)
+    return tr.ewm(alpha=1.0 / tage, adjust=False).mean()
+
+
+def rmv_werte(h, lo, c):
+    """Enge nach RMV-Art (Gerhard, 27.09.2026). Deepvue legt die Formel nicht
+    offen; diese Rechnung folgt einem offenen Nachbau und ist eine eigene
+    Festlegung: Enge je Tag = Mittel aus ATR 3, ATR 5 und ATR 8 in Prozent vom
+    Schluss; RMV(N) = 100 mal (Enge heute minus Minimum der Enge ueber N Tage)
+    geteilt durch (Maximum minus Minimum), die N Tage samt heute. 0 heisst so
+    eng wie seit N Tagen nicht, 100 so weit wie seit N Tagen nicht. Ohne
+    Spanne, Maximum gleich Minimum, gibt es keinen Wert."""
+    raus = {f"rmv_{n}": None for n in RMV_TAGE}
+    if len(c) < max(RMV_ATR) + max(RMV_TAGE):
+        return raus
+    enge = sum(_atr_reihe(h, lo, c, t) for t in RMV_ATR) / len(RMV_ATR) / c.where(c > 0) * 100.0
+    heute = float(enge.iloc[-1])
+    if not math.isfinite(heute):
+        return raus
+    for n in RMV_TAGE:
+        fenster = enge.iloc[-n:]
+        tief, hoch = float(fenster.min()), float(fenster.max())
+        if math.isfinite(tief) and math.isfinite(hoch) and hoch > tief:
+            raus[f"rmv_{n}"] = round(100.0 * (heute - tief) / (hoch - tief), 1)
+    return raus
+
+
+def template_kurswerte(d, werte):
+    """Die Kurs-Kennzahlen der Templates bekannter Trader (Gerhard,
+    27.09.2026, Teil 1) aus den letzten drei Jahren (d, chronologisch); werte
+    sind die schon gerechneten Kurswerte des Tages. Alles gilt fuer den letzten
+    Handelstag der Tabelle."""
+    n = len(d)
+    c = d["close"].astype(float)
+    h = d["high"].astype(float)
+    lo = d["low"].astype(float)
+    o = d["open"].astype(float)
+    v = d["volume"].astype(float)
+    kurs = float(c.iloc[-1])
+    raus = {}
+    # Die Rendite ueber 21 Handelstage fuer den Performance-Rang ein Monat; das
+    # Perzentil ueber die ganze Tabelle rechnet perf_raenge, sobald alle Aktien
+    # da sind.
+    raus["rendite_1m_pct"] = _pct(kurs, c.iloc[-22]) if n >= 22 else None
+    for tage in PERF_TAGE:
+        raus[f"perf_{tage}t_pct"] = _pct(kurs, c.iloc[-tage - 1]) if n > tage else None
+    raus.update(rmv_werte(h, lo, c))
+    # Trend Intensity nach Stockbee, TI65: Schnitt der letzten 7 Schlusskurse
+    # geteilt durch den Schnitt der letzten 65.
+    lang = float(c.iloc[-65:].mean()) if n >= 65 else 0.0
+    raus["trend_intensity"] = round(float(c.iloc[-7:].mean()) / lang, 4) if lang > 0 else None
+    raus["abst_sma10_pct"] = _pct(kurs, c.iloc[-10:].mean()) if n >= 10 else None
+    raus["abst_ema10_pct"] = _pct(kurs, c.ewm(span=10, adjust=False).mean().iloc[-1]) if n >= 10 else None
+    raus["abst_sma126_pct"] = _pct(kurs, c.iloc[-126:].mean()) if n >= 126 else None
+    raus["sma50_ueber_200"] = bool(float(c.iloc[-50:].mean()) > float(c.iloc[-200:].mean())) if n >= 200 else None
+    # Veraenderung ueber 10 Handelstage: heute gegen den Wert vor 10 Tagen
+    ma200 = c.rolling(200).mean()
+    raus["sma200_10t_pct"] = _pct(ma200.iloc[-1], ma200.iloc[-11]) if n >= 210 else None
+    atr = _atr_reihe(h, lo, c, 14)
+    raus["atr14_10t_pct"] = _pct(atr.iloc[-1], atr.iloc[-11]) if n >= 25 else None
+    vm50 = v.rolling(50).mean()
+    raus["vol50_10t_pct"] = _pct(vm50.iloc[-1], vm50.iloc[-11]) if n >= 60 else None
+    # Volumen
+    v20 = float(v.iloc[-20:].mean()) if n >= 20 else 0.0
+    raus["vol5_20"] = round(float(v.iloc[-5:].mean()) / v20, 3) if v20 > 0 else None
+    raus["vol_min_3"] = _f(v.iloc[-3:].min()) if n >= 3 else None
+    heute_v = _f(v.iloc[-1])
+    gestern_v = _f(v.iloc[-2]) if n >= 2 else None
+    raus["vol_hoeher_gestern"] = bool(heute_v > gestern_v) if heute_v is not None and gestern_v is not None else None
+    # Hoechstes Tagesvolumen der letzten 12 Monate ohne den letzten Tag: die
+    # 251 Handelstage davor.
+    raus["vol_max_12m"] = _f(v.iloc[-252:-1].max()) if n >= 2 else None
+    raus["rekord_1j"] = (bool(heute_v > raus["vol_max_12m"])
+                         if heute_v is not None and raus["vol_max_12m"] is not None else None)
+    # Seit dem Boersengang heisst: das groesste der ganzen Historie seit der
+    # Erstnotiz, also zugleich jemals.
+    vmt = werte.get("volumen_max_tage_her")
+    raus["rekord_ipo"] = bool(vmt == 0) if vmt is not None else None
+    # Kurs in der Vortagesspanne: 0 am Vortagestief, 100 am Vortageshoch
+    vs_h = _f(h.iloc[-2]) if n >= 2 else None
+    vs_l = _f(lo.iloc[-2]) if n >= 2 else None
+    raus["vortagesspanne_lage"] = (round((kurs - vs_l) / (vs_h - vs_l) * 100.0, 1)
+                                   if vs_h is not None and vs_l is not None and vs_h > vs_l else None)
+    eroeffnung = _f(o.iloc[-1])
+    raus["eroeffnung_unter_vortagestief"] = (bool(eroeffnung < vs_l)
+                                             if eroeffnung is not None and vs_l is not None else None)
+    raus["dollarvolumen_heute_mio"] = round(kurs * heute_v / 1e6, 3) if heute_v is not None else None
+    # Bezug fuer das Volumen der ersten Minuten: die 20 Tage vor dem letzten
+    raus["volumen_20_vorher"] = _f(round(v.iloc[-21:-1].mean(), 0)) if n >= 21 else None
+    return raus
+
+
+def zahlen_werte(daten, volumen, tage, lage_letzter=None):
+    """Handelstage seit den letzten Quartalszahlen und Rekordvolumen seit
+    diesen Zahlen (Gerhard, 27.09.2026). daten: die Handelstage (ISO,
+    chronologisch), volumen: die Tagesvolumen dazu, tage: die Tage mit Zahlen
+    laut Nasdaq-Kalender, lage_letzter: die Tageszeit, wenn Zahlen am letzten
+    Handelstag kamen.
+    0 heisst: Der letzte Handelstag hat auf die Zahlen reagiert, also Zahlen an
+    diesem Tag vor oder waehrend des Handels oder am Tag davor nachboerslich.
+    Fuer vergangene Tage nennt der Kalender keine Tageszeit; als Tag der
+    Reaktion gilt deshalb der mit dem hoeheren Volumen, der Tag der Zahlen oder
+    der Handelstag danach (eigene Festlegung). Kamen die Zahlen an einem Tag
+    ohne Handel, reagiert der naechste Handelstag. Kamen sie am letzten
+    Handelstag nachboerslich, steht die Reaktion noch aus, und es zaehlen die
+    Zahlen davor; ohne bekannte Tageszeit gilt der letzte Tag als Tag der
+    Reaktion, wenn sein Volumen mindestens ZAHLEN_VOLUMEN_FAKTOR mal dem
+    Schnitt der 50 Tage davor ist.
+    Rekordvolumen seit den Zahlen: Das Volumen des letzten Tags ist groesser
+    als jedes seit dem Tag der Reaktion, diesen eingeschlossen."""
+    import bisect
+    raus = {"tage_seit_zahlen": None, "rekord_zahlen": None}
+    daten = [str(x)[:10] for x in (daten or [])]
+    if not tage or not daten:
+        return raus
+    n = len(daten)
+    v = np.asarray(volumen, dtype=float)
+    reaktion = None
+    for tag in sorted({str(x)[:10] for x in tage}, reverse=True):
+        if tag > daten[-1]:
+            continue
+        i = bisect.bisect_left(daten, tag)
+        if i >= n:
+            continue
+        if daten[i] != tag:
+            reaktion = i
+        elif i == n - 1:
+            if lage_letzter == "nachboerslich":
+                continue
+            if lage_letzter not in ("vorboerslich", "im_handel"):
+                davor = v[max(0, i - 50):i]
+                schnitt = float(np.nanmean(davor)) if len(davor) and np.isfinite(davor).any() else 0.0
+                if not (np.isfinite(v[i]) and schnitt > 0 and v[i] >= ZAHLEN_VOLUMEN_FAKTOR * schnitt):
+                    continue
+            reaktion = i
+        else:
+            reaktion = i + 1 if np.isfinite(v[i]) and np.isfinite(v[i + 1]) and v[i + 1] > v[i] else i
+        break
+    if reaktion is None:
+        return raus
+    raus["tage_seit_zahlen"] = int(n - 1 - reaktion)
+    seither = v[reaktion:n - 1]
+    raus["rekord_zahlen"] = bool(reaktion < n - 1 and np.isfinite(v[-1]) and np.isfinite(seither).any()
+                                 and v[-1] > np.nanmax(seither))
+    return raus
+
+
+def branche_gruppen(branchen):
+    """{Branche laut Nasdaq: Gruppe}. Teilen sich mehrere Branchen den Teil vor
+    dem Doppelpunkt, bilden sie eine Gruppe; so fasst Biotechnology sechs
+    Branchen zusammen und laesst sich mit einem Haken abwaehlen (Gerhard,
+    27.09.2026: einzelne Branchen abwaehlen, etwa Biotechnologie). Jede andere
+    Branche ist ihre eigene Gruppe."""
+    namen = sorted({str(b).strip() for b in branchen if b is not None and str(b).strip()})
+    koepfe = {}
+    for b in namen:
+        if ":" in b:
+            koepfe.setdefault(b.split(":")[0].strip(), []).append(b)
+    raus = {}
+    for b in namen:
+        kopf = b.split(":")[0].strip() if ":" in b else None
+        raus[b] = kopf if kopf and len(koepfe.get(kopf, [])) >= 2 else b
+    return raus
+
+
+def perf_raenge(zeilen):
+    """Performance-Rang 1, 3 und 6 Monate (Gerhard, 27.09.2026): die Rendite
+    ueber 21, 63 und 126 Handelstage als Perzentil 1 bis 99 gegen alle Aktien
+    der Tabelle mit Kursen vom Handelstag, dieselbe Festlegung wie beim RS
+    (rs_universum._perzentile). Das RS bleibt davon unberuehrt."""
+    import rs_universum
+    for name, spalte in PERF_RANG_SPALTEN.items():
+        werte = [z[spalte] for z in zeilen.values() if z.get("kurse_aktuell") and z.get(spalte) is not None]
+        tabelle_r = rs_universum._perzentile(werte)
+        for z in zeilen.values():
+            w = z.get(spalte)
+            z[f"perf_rang_{name}"] = tabelle_r.get(w) if z.get("kurse_aktuell") and w is not None else None
+
+
+def markt_veraenderung(handelstag, holen=None):
+    """Die Veraenderung von SPY und QQQ am Handelstag in Prozent, fuer alle
+    Aktien derselbe Wert (Gerhard, 27.09.2026). holen() liefert
+    {Symbol: DataFrame mit Datum als Index und Spalte Close}; ohne Angabe Yahoo.
+    Rueckgabe ({Spalte: Wert}, Befund)."""
+    raus = {sp: None for sp in MARKT_ETF.values()}
+    try:
+        if holen is None:
+            import yfinance as yf
+            roh = yf.download(" ".join(MARKT_ETF), period="1mo", interval="1d", auto_adjust=False,
+                              group_by="ticker", progress=False, threads=True)
+            daten = {sym: (roh[sym] if isinstance(roh.columns, pd.MultiIndex) else roh) for sym in MARKT_ETF}
+        else:
+            daten = holen() or {}
+    except Exception as e:  # noqa  der Markt darf den Bau nie aufhalten
+        return raus, {"status": f"fehler: {type(e).__name__}"}
+    tag = str(handelstag or "")[:10]
+    for sym, spalte in MARKT_ETF.items():
+        df = daten.get(sym)
+        if df is None or not len(df) or "Close" not in df:
+            continue
+        df = df.dropna(subset=["Close"])
+        tage = list(pd.DatetimeIndex(pd.to_datetime(df.index)).strftime("%Y-%m-%d"))
+        if tag in tage and tage.index(tag) >= 1:
+            i = tage.index(tag)
+            raus[spalte] = _pct(df["Close"].iloc[i], df["Close"].iloc[i - 1])
+    status = "ok" if all(w is not None for w in raus.values()) else "unvollstaendig"
+    return raus, {"status": status, **raus}
+
+
+def _fuenf_minuten_tage(liste):
+    """Fuenf-Minuten-Kerzen der letzten fuenf Tage von Yahoo: {Ticker:
+    DataFrame mit Zeitindex und Spalte Volume}."""
+    import yfinance as yf
+    import rs_universum
+    ys = {rs_universum.yahoo_symbol(s): s for s in liste}
+    roh = yf.download(" ".join(ys), period="5d", interval="5m", auto_adjust=False, group_by="ticker",
+                      progress=False, threads=True)
+    raus = {}
+    if roh is None or len(roh) == 0:
+        return raus
+    for y, s in ys.items():
+        try:
+            df = roh[y] if isinstance(roh.columns, pd.MultiIndex) else roh
+        except KeyError:
+            continue
+        df = df.dropna(subset=["Volume"])
+        if len(df):
+            raus[s] = df
+    return raus
+
+
+def erste_minuten(df, handelstag):
+    """{Minuten: Volumen} der ersten 15 und 20 Handelsminuten ab 09:30 New
+    York am Handelstag, aus Fuenf-Minuten-Kerzen; None ohne Kerze an dem Tag."""
+    if df is None or not len(df) or "Volume" not in df:
+        return None
+    zeit = pd.DatetimeIndex(pd.to_datetime(df.index))
+    if zeit.tz is not None:
+        zeit = zeit.tz_convert("America/New_York").tz_localize(None)
+    tag = str(handelstag or "")[:10]
+    am_tag = zeit.strftime("%Y-%m-%d") == tag
+    if not am_tag.any():
+        return None
+    beginn = pd.Timestamp(tag + " 09:30")
+    vol = pd.to_numeric(pd.Series(df["Volume"].to_numpy()), errors="coerce").to_numpy()
+    raus = {}
+    for m in EROEFFNUNG_MINUTEN:
+        fenster = am_tag & (zeit >= beginn) & (zeit < beginn + pd.Timedelta(minutes=m))
+        if fenster.any():
+            raus[m] = float(np.nansum(vol[fenster]))
+    return raus or None
+
+
+def eroeffnungsvolumen(symbole, handelstag, holen=None, block=EROEFFNUNG_BLOCK, zeitgrenze=EROEFFNUNG_ZEITGRENZE_S):
+    """{Ticker: {Minuten: Volumen}} der ersten Handelsminuten am Handelstag fuer
+    die ganze Tabelle, in Bloecken; holen(liste) liefert {Ticker: DataFrame},
+    ohne Angabe Yahoo. Eine Zeitgrenze schuetzt den Bau. Rueckgabe (Werte,
+    Befund)."""
+    holen = holen or _fuenf_minuten_tage
+    liste = list(symbole)
+    raus, t0, bloecke, fehler = {}, time.time(), 0, 0
+    for i in range(0, len(liste), block):
+        if time.time() - t0 > zeitgrenze:
+            return raus, {"status": "zeitgrenze", "aktien": len(raus), "bloecke": bloecke, "fehler": fehler}
+        try:
+            daten = holen(liste[i:i + block]) or {}
+        except Exception:  # noqa  ein Block darf den Bau nie aufhalten
+            fehler += 1
+            continue
+        bloecke += 1
+        for s, df in daten.items():
+            w = erste_minuten(df, handelstag)
+            if w:
+                raus[s] = w
+    return raus, {"status": "ok" if raus else "nicht verfuegbar", "aktien": len(raus), "bloecke": bloecke,
+                  "fehler": fehler}
+
+
 def extrema(voll):
     """Allzeithoch, Allzeittief und groesstes Volumen aus der ganzen Historie."""
     raus = {"historie_ab": None, "allzeithoch": None, "allzeithoch_datum": None, "allzeittief": None,
@@ -705,6 +1026,7 @@ def kurs_werte(d, ex):
             else:
                 break
         raus["ma200_steigt_tage"] = int(tage_steigend)
+    raus.update(template_kurswerte(d, raus))
     return raus
 
 
@@ -1050,6 +1372,15 @@ def _vorquartal(reihe, ende):
     return w if 60 <= t <= 120 else None
 
 
+def _vorquartal_eintrag(reihe, ende):
+    """(Ende, Wert) des Quartals vor `ende`, wie _vorquartal, oder None."""
+    kandidaten = [(e, w) for e, w in reihe if (_tage(e, ende) or -1) > 0]
+    if not kandidaten:
+        return None
+    e, w = kandidaten[-1]
+    return (e, w) if 60 <= _tage(e, ende) <= 120 else None
+
+
 def _ttm(reihe, ende):
     """Summe der vier Quartale bis `ende`, nur wenn sie lueckenlos folgen."""
     enden = [e for e, _ in reihe]
@@ -1097,8 +1428,15 @@ def fundament_werte(reihen, heute=None):
             raus[f"{name}_seq_pct"] = _pct(wert, _vorquartal(reihe, ende))
             raus[f"{name}_ttm_pct"] = _pct(_ttm(reihe, ende), _ttm_vorjahr(reihe, ende))
             raus[f"{name}_quartal_ende"] = ende
+            # Die zwei Quartale davor, je gegen ihr Vorjahresquartal (Gerhard,
+            # 27.09.2026: einzeln fuer jedes der letzten drei Quartale).
+            e_i = ende
+            for k in (1, 2):
+                vq = _vorquartal_eintrag(reihe, e_i) if e_i else None
+                raus[f"{name}_q{k}_vj_pct"] = _pct(vq[1], _vorjahr(reihe, vq[0])) if vq else None
+                e_i = vq[0] if vq else None
         else:
-            for teil in ("q_vj_pct", "seq_pct", "ttm_pct", "quartal_ende"):
+            for teil in ("q_vj_pct", "seq_pct", "ttm_pct", "quartal_ende", "q1_vj_pct", "q2_vj_pct"):
                 raus[f"{name}_{teil}"] = None
 
     # Bruttomarge nur aus dem gewoehnlichen Umsatz; Banken, Versicherer und
@@ -1557,7 +1895,8 @@ def bauen(pfad_tabelle=TABELLE, pfad_stand=STAND, archiv=ARCHIV, grenze=None, an
           heute=None, universum_liste=None, kurse_download=None, rs_daten=None, ratings=None, termine_listen=None,
           screener=None, kalender=None, je_aktie=None, kennzahlen=None, leise=False, pfad_analysten=ANALYSTEN,
           konsens_pfade=None, revisionen="an", short="an", zuordnung_pfad=None, pfad_gruppen=GRUPPEN,
-          markttiefs=None, termine_vergangen=None, fuenf_minuten=None, crash_scharf="holen"):
+          markttiefs=None, termine_vergangen=None, fuenf_minuten=None, crash_scharf="holen",
+          markt_holen=None, eroeffnung_holen=None):
     """Die ganze Nachttabelle. Alle Quellen lassen sich fuer den Selbsttest
     uebergeben; ohne Angabe wird geholt. Die Analystenwerte der Vornacht
     stehen in pfad_analysten (der Ablauf holt sie vorher aus dem privaten
@@ -1574,7 +1913,9 @@ def bauen(pfad_tabelle=TABELLE, pfad_stand=STAND, archiv=ARCHIV, grenze=None, an
     des Episodic Pivot und den Earnings-Pullback, None heisst holen;
     fuenf_minuten: ein Abruf holen(liste) fuer den Eroeffnungsbereich, None
     heisst Yahoo. crash_scharf: ob Crash-Support gerade scharf ist, "holen"
-    heisst am SPY nachsehen."""
+    heisst am SPY nachsehen. markt_holen: ein Abruf holen() fuer SPY und QQQ,
+    eroeffnung_holen: ein Abruf holen(liste) fuer die Fuenf-Minuten-Kerzen der
+    ganzen Tabelle, "aus" heisst keine; None heisst bei beiden Yahoo."""
     import rs_universum
     t0 = time.time()
     heute = heute or ny_heute()
@@ -1621,9 +1962,14 @@ def bauen(pfad_tabelle=TABELLE, pfad_stand=STAND, archiv=ARCHIV, grenze=None, an
         befund_mt = {"status": "uebergeben", "anzahl": len(markttiefs)}
     stand["quellen"]["markttiefs"] = befund_mt
     # Wer zuletzt Zahlen gebracht hat, fuer den Ausloeser des Episodic Pivot
+    # Seit 27.09.2026 ueber gut ein Quartal, fuer die Tage seit den letzten
+    # Quartalszahlen; Episodic Pivot und Earnings-Pullback bekommen wie bisher
+    # nur ihr kurzes Fenster (termine_kuerzen).
     if termine_vergangen is None:
-        termine_vergangen, befund_tv = vergangene_termine(heute)
+        termine_lang, befund_tv = vergangene_termine(heute, tage=ZAHLEN_RUECKBLICK_TAGE)
+        termine_vergangen = termine_kuerzen(termine_lang, heute)
     else:
+        termine_lang = termine_vergangen
         befund_tv = {"status": "uebergeben", "ticker": len(termine_vergangen)}
     stand["quellen"]["termine_vergangen"] = befund_tv
     # Crash-Support rechnet nur im Rueckgang des Marktes, einmal fuer alle
@@ -1637,6 +1983,9 @@ def bauen(pfad_tabelle=TABELLE, pfad_stand=STAND, archiv=ARCHIV, grenze=None, an
     zeilen, archiv_teile, ohne_kurse = {}, [], 0
     # Etappe 6: je Aktie die juengsten Schlusskurse fuer die Gruppen-RS.
     auszuege = {}
+    # 27.09.2026: je Aktie die juengsten Handelstage samt Volumen fuer die
+    # Tage seit den letzten Quartalszahlen.
+    vol_auszug = {}
     # Welche Tage Handelstage sind, zaehlt die Kurshistorie selbst (Etappe 7).
     from collections import Counter
     tage_zaehler = Counter()
@@ -1651,6 +2000,8 @@ def bauen(pfad_tabelle=TABELLE, pfad_stand=STAND, archiv=ARCHIV, grenze=None, an
             ex = extrema(voll)
             d = voll.tail(int(SC["historie_tage"])).reset_index(drop=True)
             werte = kurs_werte(d, ex)
+            vol_auszug[s] = (list(pd.to_datetime(d["datetime"].tail(ZAHLEN_AUSZUG)).dt.strftime("%Y-%m-%d")),
+                             d["volume"].astype(float).tail(ZAHLEN_AUSZUG).to_numpy())
             e_rs = rs_universum.eintrag(s, rs_daten) or {}
             rs = e_rs.get("rs")
             zeile = {"ticker": s, "name": namen.get(s, {}).get("name"), "boerse": namen.get(s, {}).get("boerse"),
@@ -1698,6 +2049,26 @@ def bauen(pfad_tabelle=TABELLE, pfad_stand=STAND, archiv=ARCHIV, grenze=None, an
         stand["status"] = "unvollstaendig"
         stand["hinweise"].append(f"Kurse nur fuer {abdeckung * 100:.0f} Prozent des Universums aktuell")
 
+    # --- Kennzahlen der Templates, die die ganze Tabelle brauchen (27.09.2026) ----
+    perf_raenge(zeilen)
+    if handelstag:
+        markt, befund_m = markt_veraenderung(handelstag, holen=markt_holen)
+    else:
+        markt, befund_m = {sp: None for sp in MARKT_ETF.values()}, {"status": "kein Handelstag"}
+    for z in zeilen.values():
+        z.update(markt)
+    stand["quellen"]["markt"] = befund_m
+    if eroeffnung_holen == "aus" or not handelstag:
+        erste, befund_ev = {}, {"status": "aus" if eroeffnung_holen == "aus" else "kein Handelstag"}
+    else:
+        erste, befund_ev = eroeffnungsvolumen(sorted(s for s, z in zeilen.items() if z.get("kurse_aktuell")),
+                                              handelstag, holen=eroeffnung_holen)
+    for s, z in zeilen.items():
+        w, basis = erste.get(s) or {}, z.get("volumen_20_vorher")
+        for m in EROEFFNUNG_MINUTEN:
+            z[f"vol_erste{m}_pct"] = round(w[m] / basis * 100.0, 1) if m in w and basis else None
+    stand["quellen"]["eroeffnungsvolumen"] = befund_ev
+
     # --- Sektor und Marktkapitalisierung ----------------------------------------
     if screener is None:
         code, antwort = _json_holen(SCREENER_URL, timeout=60)
@@ -1714,6 +2085,17 @@ def bauen(pfad_tabelle=TABELLE, pfad_stand=STAND, archiv=ARCHIV, grenze=None, an
         z["branche"] = sc.get("branche")
         z["land"] = sc.get("land")
         z["marktkap_mrd"] = round(sc["marktkap"] / 1e9, 4) if sc.get("marktkap") else None
+    # Branchen zum Abwaehlen (Gerhard, 27.09.2026): die Gruppe je Aktie und die
+    # Liste fuer den Scanner, der sie aus dem Stand liest, ehe er die Tabelle laedt.
+    gruppen_b = branche_gruppen(z.get("branche") for z in zeilen.values())
+    zaehler_b, teile_b = Counter(), {}
+    for z in zeilen.values():
+        z["branche_gruppe"] = gruppen_b.get(str(z.get("branche") or "").strip())
+        if z["branche_gruppe"]:
+            zaehler_b[z["branche_gruppe"]] += 1
+            teile_b.setdefault(z["branche_gruppe"], set()).add(str(z.get("branche")).strip())
+    stand["branchen"] = [{"gruppe": g, "aktien": int(zaehler_b[g]), "teile": sorted(teile_b[g], key=str.lower)}
+                         for g in sorted(zaehler_b, key=str.lower)]
 
     # --- Termine ------------------------------------------------------------------
     if kalender is None:
@@ -1752,6 +2134,21 @@ def bauen(pfad_tabelle=TABELLE, pfad_stand=STAND, archiv=ARCHIV, grenze=None, an
             if z["termin_eps_konsens"] is not None:
                 mit_termin_konsens += 1
     stand["quellen"]["kalender"]["mit_eps_konsens"] = mit_termin_konsens
+
+    # --- Tage seit den letzten Quartalszahlen und Rekordvolumen (27.09.2026) ------
+    mit_zahlen = 0
+    for s, z in zeilen.items():
+        daten_s, vol_s = vol_auszug.get(s, ([], []))
+        letzter = daten_s[-1] if daten_s else None
+        lage = z.get("termin_lage") if letzter and z.get("termin_datum") == letzter else None
+        tage_s = None if termine_lang is None else termine_lang.get(s, set())
+        z.update(zahlen_werte(daten_s, vol_s, tage_s, lage))
+        if z.get("tage_seit_zahlen") is not None:
+            mit_zahlen += 1
+        einzeln = [z.get("rekord_1j"), z.get("rekord_zahlen"), z.get("rekord_ipo")]
+        z["rekord_alle"] = any(bool(x) for x in einzeln) if any(x is not None for x in einzeln) else None
+    stand["quellen"]["zahlen_rueckblick"] = {"status": "ok" if termine_lang is not None else "nicht verfuegbar",
+                                             "tage": ZAHLEN_RUECKBLICK_TAGE, "mit_zahlen": mit_zahlen}
 
     # --- Fundament ------------------------------------------------------------------
     ciks = {}
@@ -2198,6 +2595,15 @@ def selbsttest() -> int:
     p("Umsatz y/y: vier Quartale gegen die vier davor",
       fw["umsatz_ttm_pct"] == _pct(150 + 160 + 170 + 180, 110 + 120 + 130 + 140), str(fw["umsatz_ttm_pct"]))
     p("EPS q/q", fw["eps_q_vj_pct"] == _pct(1.8, 1.4), str(fw["eps_q_vj_pct"]))
+    p("Wachstum je Quartal: die zwei Quartale davor, je gegen ihr Vorjahresquartal",
+      fw["umsatz_q1_vj_pct"] == _pct(170.0, 130.0) and fw["umsatz_q2_vj_pct"] == _pct(160.0, 120.0)
+      and fw["eps_q1_vj_pct"] == _pct(1.7, 1.3) and fw["eps_q2_vj_pct"] == _pct(1.6, 1.2),
+      f"{fw['umsatz_q1_vj_pct']} {fw['umsatz_q2_vj_pct']} {fw['eps_q1_vj_pct']} {fw['eps_q2_vj_pct']}")
+    luecke = {"umsatz": {"Q": [e for e in reihen["umsatz"]["Q"] if e[1] != "2026-03-31"]}}
+    fl = fundament_werte(luecke, heute=date(2026, 9, 14))
+    p("Wachstum je Quartal: fehlt das Vorquartal, bleiben beide Vorquartale leer",
+      fl["umsatz_q_vj_pct"] == _pct(180.0, 140.0) and fl["umsatz_q1_vj_pct"] is None and fl["umsatz_q2_vj_pct"] is None,
+      f"{fl['umsatz_q1_vj_pct']} {fl['umsatz_q2_vj_pct']}")
     p("Bruttomarge und ihre Entwicklung in Prozentpunkten",
       fw["bruttomarge_pct"] == 48.0 and fw["bruttomarge_q_vj_pp"] == 4.0 and fw["bruttomarge_seq_pp"] == 1.0,
       f"{fw['bruttomarge_pct']} {fw['bruttomarge_q_vj_pp']} {fw['bruttomarge_seq_pp']}")
@@ -2268,6 +2674,19 @@ def selbsttest() -> int:
                  "DDD": _kunstreihe(seed=14, schritt=0.004),
                  "CCC": _kunstreihe(seed=13, tage=40)}
         abrufe = []
+        # 27.09.2026: SPY und QQQ am Handelstag, die ersten Minuten fuer AAA
+        tage_k2 = kunst["AAA"]["datetime"]
+        letzter_k = pd.Timestamp(tage_k2.iloc[-1])
+
+        def markt_probe():
+            idx = pd.DatetimeIndex([pd.Timestamp(tage_k2.iloc[-2]), letzter_k])
+            return {"SPY": pd.DataFrame({"Close": [100.0, 99.0]}, index=idx),
+                    "QQQ": pd.DataFrame({"Close": [200.0, 202.0]}, index=idx)}
+
+        def eroeffnung_probe(liste):
+            zeiten = pd.DatetimeIndex([letzter_k + pd.Timedelta(minutes=570 + 5 * i) for i in range(6)])
+            zeiten = zeiten.tz_localize("America/New_York")
+            return {"AAA": pd.DataFrame({"Volume": [100.0] * 6}, index=zeiten)} if "AAA" in liste else {}
 
         def je(t):
             abrufe.append(t)
@@ -2338,7 +2757,8 @@ def selbsttest() -> int:
                    je_aktie=je, kennzahlen=pd.DataFrame(), leise=True,
                    pfad_analysten=pfad_a, konsens_pfade=[pfad_k], revisionen=rev, short=finra,
                    zuordnung_pfad=pfad_z, pfad_gruppen=pfad_g, markttiefs=["2024-10-01"],
-                   termine_vergangen={}, fuenf_minuten=lambda liste: {}, crash_scharf=False)
+                   termine_vergangen={}, fuenf_minuten=lambda liste: {}, crash_scharf=False,
+                   markt_holen=markt_probe, eroeffnung_holen=eroeffnung_probe)
         t = pd.read_parquet(os.path.join(tmp, "t.parquet"))
         a = pd.read_parquet(pfad_a)
         g1 = json.load(open(pfad_g, encoding="utf-8"))
@@ -2346,6 +2766,17 @@ def selbsttest() -> int:
         aaa = t[t["ticker"] == "AAA"].iloc[0]
         p("Ganzer Lauf: Marktkapitalisierung in Milliarden, Sektor, Wochenliste",
           aaa["marktkap_mrd"] == 0.3 and aaa["sektor"] == "Technology" and bool(aaa["in_wochenliste"]))
+        p("Templates, ganzer Lauf: SPY und QQQ am Handelstag fuer jede Aktie, erste Minuten gegen den Schnitt "
+          "der 20 Tage davor, Performance-Rang 1 bis 99, Branchengruppe und Liste im Stand",
+          aaa["spy_veraenderung_pct"] == -1.0 and aaa["qqq_veraenderung_pct"] == 1.0
+          and t[t["ticker"] == "BBB"].iloc[0]["spy_veraenderung_pct"] == -1.0
+          and aaa["vol_erste15_pct"] == round(300.0 / aaa["volumen_20_vorher"] * 100.0, 1)
+          and aaa["vol_erste20_pct"] == round(400.0 / aaa["volumen_20_vorher"] * 100.0, 1)
+          and pd.isna(t[t["ticker"] == "BBB"].iloc[0]["vol_erste15_pct"])
+          and 1 <= aaa["perf_rang_1m"] <= 99 and aaa["branche_gruppe"] == "Software"
+          and st["branchen"] == [{"gruppe": "Software", "aktien": 1, "teile": ["Software"]}]
+          and st["quellen"]["eroeffnungsvolumen"]["aktien"] == 1 and st["quellen"]["markt"]["status"] == "ok",
+          f"{aaa['spy_veraenderung_pct']} {aaa['vol_erste15_pct']} {aaa['perf_rang_1m']} {st.get('branchen')}")
         p("Ganzer Lauf: Termin der Wochenliste und Nasdaq-Termin",
           aaa["termin_quelle"] == "Wochenliste" and t[t["ticker"] == "BBB"].iloc[0]["termin_lage"] == "vorboerslich")
         p("Ganzer Lauf: RS-Linien gegen SPY und QQQ in der Tabelle",
@@ -2452,7 +2883,8 @@ def selbsttest() -> int:
                     kurse_download=lambda teil: {s: kunst[s] for s in teil if s in kunst},
                     rs_daten={}, ratings={}, termine_listen={}, screener={}, kalender={}, kennzahlen=pd.DataFrame(),
                     leise=True, pfad_analysten=pfad_a, short=lambda tag: (404, ""), pfad_gruppen=pfad_g,
-                    markttiefs=[], termine_vergangen={}, fuenf_minuten=lambda liste: {}, crash_scharf=False)
+                    markttiefs=[], termine_vergangen={}, fuenf_minuten=lambda liste: {}, crash_scharf=False,
+                    markt_holen=lambda: {}, eroeffnung_holen="aus")
         a2 = pd.read_parquet(pfad_a)
         p("Zweite Nacht ohne Abruf behaelt die Analysten der ersten",
           a2[a2["ticker"] == "AAA"].iloc[0]["analysten_anzahl"] == 4 and st2["quellen"]["analysten"]["status"] == "aus")
@@ -2506,6 +2938,81 @@ def selbsttest() -> int:
                                                                         "noch nicht vor"
           and st2["quellen"]["gruppen_rs"]["status"] == "nicht verfuegbar" and g2["gruppen"] == []
           and g2["status"] == "nicht verfuegbar", f"{a2_aaa['gruppe_hinweis']}, {g2}")
+
+    # --- Kennzahlen der Templates (27.09.2026) ------------------------------------
+    k_t = np.linspace(20.0, 30.0, 80)
+    rmv_weit = rmv_werte(pd.Series(np.r_[k_t[:70] * 1.03, k_t[70:] * 1.001]),
+                         pd.Series(np.r_[k_t[:70] * 0.97, k_t[70:] * 0.999]), pd.Series(k_t))
+    rmv_zu = rmv_werte(pd.Series(np.r_[k_t[:79] * 1.001, k_t[79:] * 1.2]),
+                       pd.Series(np.r_[k_t[:79] * 0.999, k_t[79:] * 0.8]), pd.Series(k_t))
+    p("RMV: nach engen Tagen 0, nach einem weiten Tag 100, zu kurze Reihe ohne Wert",
+      rmv_weit["rmv_5"] == 0.0 and rmv_weit["rmv_15"] == 0.0 and rmv_zu["rmv_5"] == 100.0
+      and rmv_werte(pd.Series(k_t[:10]), pd.Series(k_t[:10]), pd.Series(k_t[:10]))["rmv_15"] is None,
+      f"{rmv_weit} {rmv_zu}")
+    k_r = _kunstreihe(seed=21, tage=300)
+    tw = kurs_werte(k_r, extrema(k_r))
+    c_r, h_r, l_r, o_r, v_r = (k_r[x].astype(float) for x in ("close", "high", "low", "open", "volume"))
+    p("Template-Kurswerte: Trend Intensity, Vortagesspanne, Eroeffnung, Volumen und SMA",
+      tw["trend_intensity"] == round(float(c_r.iloc[-7:].mean()) / float(c_r.iloc[-65:].mean()), 4)
+      and tw["vortagesspanne_lage"] == round((c_r.iloc[-1] - l_r.iloc[-2]) / (h_r.iloc[-2] - l_r.iloc[-2]) * 100.0, 1)
+      and tw["eroeffnung_unter_vortagestief"] == bool(o_r.iloc[-1] < l_r.iloc[-2])
+      and tw["vol_min_3"] == float(v_r.iloc[-3:].min()) and tw["vol_max_12m"] == float(v_r.iloc[-252:-1].max())
+      and tw["rekord_1j"] == bool(v_r.iloc[-1] > v_r.iloc[-252:-1].max())
+      and tw["vol5_20"] == round(float(v_r.iloc[-5:].mean()) / float(v_r.iloc[-20:].mean()), 3)
+      and tw["abst_sma10_pct"] == _pct(c_r.iloc[-1], c_r.iloc[-10:].mean())
+      and tw["perf_40t_pct"] == _pct(c_r.iloc[-1], c_r.iloc[-41]) and tw["rendite_1m_pct"] == _pct(c_r.iloc[-1], c_r.iloc[-22])
+      and isinstance(tw["sma50_ueber_200"], bool) and tw["sma200_10t_pct"] is not None
+      and tw["volumen_20_vorher"] == round(float(v_r.iloc[-21:-1].mean()), 0),
+      str({k: tw.get(k) for k in ("trend_intensity", "vortagesspanne_lage", "vol5_20", "rekord_1j")}))
+    tage_z = ["2026-09-08", "2026-09-09", "2026-09-10", "2026-09-11", "2026-09-14"]
+    vol_z = [100.0, 100.0, 300.0, 150.0, 120.0]
+    p("Tage seit den Zahlen: der Tag mit dem hoeheren Volumen reagiert, ein Tag ohne Handel wirkt am naechsten",
+      zahlen_werte(tage_z, vol_z, {"2026-09-10"})["tage_seit_zahlen"] == 2
+      and zahlen_werte(tage_z, vol_z, {"2026-09-09"})["tage_seit_zahlen"] == 2
+      and zahlen_werte(tage_z, vol_z, {"2026-09-12"})["tage_seit_zahlen"] == 0)
+    p("Tage seit den Zahlen: nachboerslich am letzten Tag steht noch aus, es zaehlen die davor",
+      zahlen_werte(tage_z, vol_z, {"2026-09-14"}, "nachboerslich")["tage_seit_zahlen"] is None
+      and zahlen_werte(tage_z, vol_z, {"2026-09-14", "2026-09-09"}, "nachboerslich")["tage_seit_zahlen"] == 2
+      and zahlen_werte(tage_z, vol_z, {"2026-09-14"}, "vorboerslich")["tage_seit_zahlen"] == 0
+      and zahlen_werte(tage_z, vol_z, {"2026-09-14"})["tage_seit_zahlen"] is None
+      and zahlen_werte(tage_z, [100.0, 100.0, 300.0, 150.0, 400.0], {"2026-09-14"})["tage_seit_zahlen"] == 0
+      and zahlen_werte(tage_z, vol_z, set())["tage_seit_zahlen"] is None
+      and zahlen_werte(tage_z, vol_z, None)["rekord_zahlen"] is None)
+    p("Rekordvolumen seit den Zahlen: groesser als jeder Tag seit der Reaktion, diese eingeschlossen",
+      zahlen_werte(tage_z, [100.0, 500.0, 100.0, 90.0, 600.0], {"2026-09-09"})["rekord_zahlen"] is True
+      and zahlen_werte(tage_z, [100.0, 500.0, 100.0, 90.0, 400.0], {"2026-09-09"})["rekord_zahlen"] is False
+      and zahlen_werte(tage_z, vol_z, {"2026-09-14"}, "vorboerslich")["rekord_zahlen"] is False)
+    bg = branche_gruppen(["Biotechnology: A", "Biotechnology: B", "Auto Parts:O.E.M.", "Software", None, ""])
+    p("Branchengruppen: Biotechnology fasst zusammen, Einzelne bleiben, wie sie heissen",
+      bg == {"Biotechnology: A": "Biotechnology", "Biotechnology: B": "Biotechnology",
+             "Auto Parts:O.E.M.": "Auto Parts:O.E.M.", "Software": "Software"}, str(bg))
+    z5 = pd.DatetimeIndex([pd.Timestamp("2026-09-11 09:30") + pd.Timedelta(minutes=5 * i) for i in range(6)])
+    df5 = pd.DataFrame({"Volume": [10.0, 20.0, 30.0, 40.0, 50.0, 60.0]}, index=z5.tz_localize("America/New_York"))
+    p("Erste Minuten: 15 und 20 Minuten ab 09:30, anderer Tag ohne Wert",
+      erste_minuten(df5, "2026-09-11") == {15: 60.0, 20: 100.0} and erste_minuten(df5, "2026-09-10") is None)
+
+    def kaputt(liste):
+        raise RuntimeError("Probe")
+    ev_k = eroeffnungsvolumen(["A", "B", "C"], "2026-09-11", holen=kaputt, block=2)
+    ev_z = eroeffnungsvolumen(["A"], "2026-09-11", holen=lambda liste: {"A": df5}, zeitgrenze=-1)
+    ev_o = eroeffnungsvolumen(["A"], "2026-09-11", holen=lambda liste: {"A": df5})
+    p("Erste Minuten fuer die Tabelle: Fehler je Block gezaehlt, Zeitgrenze haelt an, Werte je Aktie",
+      ev_k[1]["fehler"] == 2 and ev_k[0] == {} and ev_z[1]["status"] == "zeitgrenze"
+      and ev_o[0] == {"A": {15: 60.0, 20: 100.0}} and ev_o[1]["status"] == "ok", f"{ev_k[1]} {ev_z[1]}")
+    mv, mb = markt_veraenderung("2026-09-11", holen=lambda: {
+        "SPY": pd.DataFrame({"Close": [100.0, 101.0]}, index=pd.DatetimeIndex(["2026-09-10", "2026-09-11"]))})
+    p("Markt: SPY am Handelstag, fehlendes QQQ ohne Wert, Fehler beim Abruf haelt den Bau nicht auf",
+      mv == {"spy_veraenderung_pct": 1.0, "qqq_veraenderung_pct": None} and mb["status"] == "unvollstaendig"
+      and markt_veraenderung("2026-09-11", holen=kaputt)[1]["status"].startswith("fehler"), str(mv))
+    zr = {"A": {"kurse_aktuell": True, "rendite_1m_pct": 5.0}, "B": {"kurse_aktuell": True, "rendite_1m_pct": 1.0},
+          "C": {"kurse_aktuell": True, "rendite_1m_pct": 9.0}, "D": {"kurse_aktuell": False, "rendite_1m_pct": 50.0}}
+    perf_raenge(zr)
+    p("Performance-Rang: Perzentil gegen die Aktien mit aktuellen Kursen, alte Kurse ohne Rang",
+      zr["C"]["perf_rang_1m"] == 99 and zr["B"]["perf_rang_1m"] == 1 and zr["A"]["perf_rang_1m"] == 50
+      and zr["D"]["perf_rang_1m"] is None and zr["A"]["perf_rang_3m"] is None, str({k: v["perf_rang_1m"] for k, v in zr.items()}))
+    p("Langer Rueckblick der Zahlen: Episodic Pivot und Earnings-Pullback bekommen ihr kurzes Fenster",
+      termine_kuerzen({"A": {"2026-09-11", "2026-06-01"}}, date(2026, 9, 14)) == {"A": {"2026-09-11"}}
+      and termine_kuerzen(None, date(2026, 9, 14)) is None)
 
     quelle = open(__file__, encoding="utf-8").read()
     p("Keine Vernetzung: kein Sendecode, keine Alarmdateien",

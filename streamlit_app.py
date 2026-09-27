@@ -1554,6 +1554,15 @@ def _sc_sektor_schluessel(sektor: str) -> str:
     return "sc_sektor_" + (re.sub(r"[^a-z0-9]+", "_", str(sektor).lower()).strip("_") or "ohne_angabe")
 
 
+def _sc_branche_schluessel(branche: str) -> str:
+    """Der Schluessel des Hakens einer Nasdaq-Branche. Die Pruefsumme des Namens
+    haengt dran, weil zwei Namen dieselbe Kurzform ergeben koennten; zwei gleiche
+    Schluessel liessen die Seite abbrechen."""
+    import hashlib
+    kurz = re.sub(r"[^a-z0-9]+", "_", str(branche).lower()).strip("_")[:40] or "ohne_angabe"
+    return f"sc_branche_{kurz}_{hashlib.md5(str(branche).encode('utf-8')).hexdigest()[:6]}"
+
+
 def _sc_felder_leeren():
     for feld in sa.FELDER:
         st.session_state[_sc_schluessel(feld.schluessel, "an")] = False
@@ -1583,6 +1592,7 @@ def _sc_vorgaben_setzen(nur_grenzen: bool = False):
 
 
 def _sc_strategie_gewaehlt():
+    st.session_state["sc_template"] = None
     _sc_vorgaben_setzen()
 
 
@@ -1595,7 +1605,14 @@ def _sc_sektoren_setzen(an: bool):
         st.session_state[_sc_sektor_schluessel(s)] = an
 
 
-def _sc_alles_zuruecksetzen():
+def _sc_branchen_setzen(an: bool):
+    for b in st.session_state.get("sc_branchenliste") or []:
+        st.session_state[_sc_branche_schluessel(b)] = an
+
+
+def _sc_alles_zuruecksetzen(template_behalten: bool = False):
+    if not template_behalten:
+        st.session_state["sc_template"] = None
     st.session_state["sc_strategie"] = ""
     st.session_state["sc_toleranz"] = "streng"
     st.session_state["sc_handelbar"] = True
@@ -1609,7 +1626,49 @@ def _sc_alles_zuruecksetzen():
     st.session_state["sc_termine_ohne_zeit"] = False
     st.session_state["sc_termine_umfang"] = "markt"
     _sc_sektoren_setzen(True)
+    _sc_branchen_setzen(True)
     st.session_state["sc_sortierung"] = "rs"
+
+
+# TEMPLATES BEKANNTER TRADER (Gerhard, 27.09.2026, Teil 2): Die Wahl setzt
+# zuerst alles zurueck und hakt dann genau die Kennzahlen des Templates mit
+# seinen Werten an; die Schnellbox zeigt sie von selbst, weil sie Teil 2
+# spiegelt. Alles andere bleibt aus, auch Nur handelbare Aktien. Die Werte
+# gehoeren danach dem Scanner und lassen sich aendern, das Template bleibt,
+# wie es ist (sa.TEMPLATES). Getrennt von den eigenen Vorlagen: Die Wahl steht
+# nicht unter den Schluesseln einer Vorlage.
+def _sc_template_gewaehlt():
+    t = sa.TEMPLATE.get(st.session_state.get("sc_template"))
+    if t is None:
+        return
+    _sc_alles_zuruecksetzen(template_behalten=True)
+    st.session_state["sc_handelbar"] = False
+    for s, werte in t["felder"].items():
+        st.session_state[_sc_schluessel(s, "an")] = True
+        for teil in ("min", "max"):
+            if teil in werte:
+                st.session_state[_sc_schluessel(s, teil)] = werte[teil]
+    gruppen = {sa.FELD[s].gruppe for s in t["felder"]}
+    for g, _name in sa.GRUPPEN:
+        st.session_state[f"sc_gruppe_{g}"] = g in gruppen
+    for s in t["sektoren_aus"]:
+        st.session_state[_sc_sektor_schluessel(s)] = False
+    for b in t["branchen_aus"]:
+        st.session_state[_sc_branche_schluessel(b)] = False
+    st.session_state["sc_gruppe_sektoren"] = bool(t["sektoren_aus"])
+    st.session_state["sc_gruppe_branchen"] = bool(t["branchen_aus"])
+
+
+def _sc_templates():
+    """Die Kategorie ganz oben im Scanner, noch vor der Schnellbox: nur die
+    Ueberschrift und die Auswahl, kein Erklaertext, keine Knoepfe, keine
+    Fragen. Das Kriterium jedes Templates steht im Regelwerk."""
+    ids = [t["id"] for t in sa.TEMPLATES]
+    if st.session_state.get("sc_template") not in ids:
+        st.session_state["sc_template"] = None
+    st.markdown("### Templates bekannter Trader", anchors=False)
+    st.selectbox("Template", ids, format_func=lambda i: sa.TEMPLATE[i]["name"], key="sc_template",
+                 on_change=_sc_template_gewaehlt, placeholder="Bitte wählen")
 
 
 def _sc_einstellung(sektoren) -> dict:
@@ -1632,6 +1691,8 @@ def _sc_einstellung(sektoren) -> dict:
             "langweilig_raus": bool(st.session_state.get("sc_langweilig", True)),
             "felder": felder, "termine": termine,
             "sektoren": [s for s in sektoren if st.session_state.get(_sc_sektor_schluessel(s), True)],
+            "branchen_aus": [b for b in (st.session_state.get("sc_branchenliste") or [])
+                             if not st.session_state.get(_sc_branche_schluessel(b), True)],
             "sortierung": st.session_state.get("sc_sortierung") or ""}
 
 
@@ -1684,7 +1745,7 @@ def _sc_schnellbox():
 def _sc_vorlage_schluessel(sektoren) -> list:
     k = ["sc_strategie", "sc_toleranz", "sc_handelbar", "sc_langweilig", "sc_rs_vorlaeufig", "sc_termine_an",
          "sc_termine_ohne_zeit", "sc_termine_umfang", "sc_sortierung", "sc_anzahl", "sc_format",
-         "sc_gruppe_sektoren"]
+         "sc_gruppe_sektoren", "sc_gruppe_branchen"]
     for f in sa.FELDER:
         k += [_sc_schluessel(f.schluessel, teil) for teil in ("an", "min", "max")]
     for g, _name in sa.GRUPPEN:
@@ -1693,6 +1754,8 @@ def _sc_vorlage_schluessel(sektoren) -> list:
         k.append(f"sc_termine_{key}")
     for s in sektoren:
         k.append(_sc_sektor_schluessel(s))
+    for b in st.session_state.get("sc_branchenliste") or []:
+        k.append(_sc_branche_schluessel(b))
     return k
 
 
@@ -1907,12 +1970,14 @@ def _sc_scannen(vergleich: dict) -> dict:
     sektoren = sa.sektoren_in(tabelle)
     heute = sa.ny_jetzt().date()
     einstellung = _sc_einstellung(sektoren)
-    # RELATIVES VOLUMEN HEUTE (Gerhard, 27.09.2026): gerechnet beim Scan und
-    # nur, wenn es angehakt ist; waehrend des Handels mit dem Volumen von heute.
-    if (einstellung["felder"].get("rvol_heute") or {}).get("an"):
-        tabelle, rvol_hinweis = _sc_rvol_ergaenzen(tabelle)
-        if rvol_hinweis:
-            erg["hinweise"].append(rvol_hinweis)
+    # RELATIVES VOLUMEN UND DOLLARVOLUMEN HEUTE (Gerhard, 27.09.2026): gerechnet
+    # beim Scan und nur, wenn angehakt; waehrend des Handels mit Kurs und Volumen
+    # von heute.
+    rvol_an = bool((einstellung["felder"].get("rvol_heute") or {}).get("an"))
+    dollar_an = bool((einstellung["felder"].get("dollarvol_heute") or {}).get("an"))
+    if rvol_an or dollar_an:
+        tabelle, live_hinweise = _sc_live_ergaenzen(tabelle, rvol_an, dollar_an)
+        erg["hinweise"] += live_hinweise
     ausw = sa.auswerten(tabelle, einstellung, heute, analysten_da)
     erg.update({"ausw": ausw, "treffer": len(ausw["df"]), "sektor_tabelle": tabelle[["sektor"]].copy()
                 if "sektor" in tabelle.columns else None})
@@ -1929,27 +1994,34 @@ def _sc_volumenkurven() -> dict:
     return volumen.lade_kurven(leise=True)
 
 
-def _sc_rvol_ergaenzen(tabelle):
-    """Die Spalte rvol_heute fuer den Scan (sa.rvol_spalte). Waehrend des
-    Handels holt sie das Volumen von heute fuer die Aktien mit eigener
-    F(t)-Kurve; ausserhalb gilt der letzte Handelstag der Tabelle."""
+def _sc_live_ergaenzen(tabelle, rvol: bool, dollar: bool):
+    """Die Spalten rvol_heute und dollarvol_heute fuer den Scan (sa.rvol_spalte,
+    sa.dollarvol_spalte). Waehrend des Handels holt sie Kurs und Volumen von
+    heute fuer die Aktien mit eigener F(t)-Kurve, einmal fuer beide;
+    ausserhalb gilt der letzte Handelstag der Tabelle."""
     import volumen
     minute = volumen.minute_seit_eroeffnung()
     jetzt = sa.ny_jetzt()
     werktag = jetzt.weekday() < 5
-    kurven, live, hinweis = {}, {}, None
+    kurven, live, ohne_kurve = {}, {}, None
     if minute is not None and werktag:
         kurven = _sc_volumenkurven()
         mit_kurve = [t for t in tabelle["ticker"].astype(str).str.upper() if t in kurven]
         if mit_kurve:
             live = sa.rvol_live_holen(mit_kurve)
         else:
-            hinweis = ("Während des Handels braucht das relative Volumen heute die eigene F(t)-Kurve einer Aktie; "
-                       "derzeit hat keine Aktie der Tabelle eine.")
-    werte, h = sa.rvol_spalte(tabelle, minute, live, kurven, jetzt.date(), werktag)
+            ohne_kurve = ("Während des Handels brauchen das relative Volumen heute und das Dollarvolumen heute die "
+                          "eigene F(t)-Kurve einer Aktie; derzeit hat keine Aktie der Tabelle eine.")
     tabelle = tabelle.copy()
-    tabelle["rvol_heute"] = werte
-    return tabelle, hinweis or h
+    hinweise = []
+    for an, name, rechnung in ((rvol, "rvol_heute", sa.rvol_spalte), (dollar, "dollarvol_heute", sa.dollarvol_spalte)):
+        if not an:
+            continue
+        werte, h = rechnung(tabelle, minute, live, kurven, jetzt.date(), werktag)
+        tabelle[name] = werte
+        if h:
+            hinweise.append(h)
+    return tabelle, ([ohne_kurve] if ohne_kurve else hinweise)
 
 
 def _sc_neu_zeichnen():
@@ -2224,6 +2296,8 @@ def scanner_reiter():
     lese_token = bool(_daten_token())
     sektoren = sa.sektoren_in(None)
     st.session_state["sc_sektorliste"] = sektoren
+    branchen = sa.branchen_in(stand)
+    st.session_state["sc_branchenliste"] = branchen
     if not st.session_state.get("sc_bereit"):
         _sc_alles_zuruecksetzen()
         st.session_state["sc_anzahl"] = "50"
@@ -2232,9 +2306,14 @@ def scanner_reiter():
     for s in sektoren:
         if _sc_sektor_schluessel(s) not in st.session_state:
             st.session_state[_sc_sektor_schluessel(s)] = True
+    for b in branchen:
+        if _sc_branche_schluessel(b) not in st.session_state:
+            st.session_state[_sc_branche_schluessel(b)] = True
 
-    # Die Schnellbox steht ganz oben (Gerhard, 27.09.2026), vor dem Stand der
-    # Tabelle; zwischen ihren Feldern steht nichts anderes.
+    # Ganz oben die Templates bekannter Trader, darunter die Schnellbox, beide
+    # vor dem Stand der Tabelle (Gerhard, 27.09.2026); zwischen ihren Feldern
+    # steht nichts anderes.
+    _sc_templates()
     _sc_schnellbox()
 
     for satz in sa.stand_saetze(stand, analysten_da=lese_token, nur_voll=rolle != "voll"):
@@ -2374,6 +2453,21 @@ def scanner_reiter():
                            oberflaeche.SEKTOR_ERKLAERUNGEN.get(s, "Aktien, die die Nasdaq diesem Sektor zuordnet."),
                            frage=(f"Was ist der Sektor {sa.sektor_name(s)}?" if s
                                   else f"Was ist mit „{sa.OHNE_SEKTOR}“ gemeint?"))
+    # NASDAQ-BRANCHEN ABWAEHLEN (Gerhard, 27.09.2026, B10): wie die Sektoren;
+    # angehakt heisst dabei. Aktien ohne Branchenangabe bleiben immer drin.
+    gewaehlt_b = sum(1 for b in branchen if st.session_state.get(_sc_branche_schluessel(b), True))
+    st.markdown("#### Nasdaq-Branchen", anchors=False)
+    if st.checkbox(f"Gruppe Nasdaq-Branchen anzeigen, {gewaehlt_b} von {len(branchen)} angehakt",
+                   key="sc_gruppe_branchen"):
+        if not stand.get("branchen"):
+            st.markdown("Die Scanner-Tabelle kennt die Nasdaq-Branchen erst nach ihrem nächsten Bau.")
+        st.button("Alle Nasdaq-Branchen anhaken", key="sc_branchen_alle", on_click=_sc_branchen_setzen, args=(True,))
+        st.button("Alle Nasdaq-Branchen abhaken", key="sc_branchen_keine", on_click=_sc_branchen_setzen,
+                  args=(False,))
+        for b in branchen:
+            st.checkbox(b, key=_sc_branche_schluessel(b), persist_state="page")
+            _sc_erklaerung(_sc_branche_schluessel(b)[3:], b, sa.branche_erklaerung(b, stand),
+                           frage=f"Was ist die Nasdaq-Branche {b}?")
     # Der Knopf steht am Ende von Teil 2, vor dem Scan (Antwort 70 vom 24.09.2026):
     # Er setzt Teil 1 und Teil 2 zurueck.
     st.button("Alle Einstellungen zurücksetzen", key="sc_zuruecksetzen", on_click=_sc_alles_zuruecksetzen)
@@ -2779,6 +2873,13 @@ with tab_info:
     st.markdown("### Chartmuster bei den Treffern", anchors=False)
     for satz in sa.chartmuster_erklaerung():
         st.markdown(sa.md(satz))
+    # Die Templates bekannter Trader (Gerhard, 27.09.2026): Trader, Quelle und
+    # was davon eigene Festlegung ist; in der Kategorie selbst steht nichts davon.
+    st.markdown("### Templates bekannter Trader", anchors=False)
+    for satz in sa.template_einleitung():
+        st.markdown(sa.md(satz))
+    for rw_name, rw_text in sa.template_regelwerk():
+        st.markdown(f"**{sa.md(rw_name)}.** {sa.md(rw_text)}")
 
 
 # --- Ab hier nur mit vollem Zugang -----------------------------------------

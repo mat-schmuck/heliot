@@ -596,6 +596,18 @@ class Feld:
             v = self.wert(r, fe) if v is _FEHLT else _num(v)
             return ("Relatives Volumen heute nicht verifizierbar" if v is None
                     else f"Relatives Volumen heute {zahl(v, self.stellen)}")
+        if s == "dollarvol_heute":
+            v = self.wert(r, fe) if v is _FEHLT else _num(v)
+            return ("Dollarvolumen heute nicht verifizierbar" if v is None
+                    else f"Dollarvolumen heute {zahl(v, self.stellen)} Millionen Dollar")
+        if s == "tage_zahlen":
+            tage = _num(r.get(self.spalte))
+            if tage is None:
+                return "letzte Quartalszahlen nicht bekannt"
+            n = int(tage)
+            return ("Reaktion auf die Quartalszahlen am letzten Handelstag" if n == 0 else
+                    "Reaktion auf die Quartalszahlen vor einem Handelstag" if n == 1 else
+                    f"Reaktion auf die Quartalszahlen vor {n} Handelstagen")
         if s == "volmax":
             tage = _num(r.get("volumen_max_tage_her"))
             menge = zahl(r.get("volumen_max"), 0)
@@ -708,6 +720,20 @@ class Feld:
         return [(kopf, werte)]
 
 
+def _rang_text(tage):
+    return (f"Die Rendite über {tage} Handelstage als Perzentil von 1 bis 99 gegen alle Aktien der Scanner-Tabelle "
+            "mit Kursen vom letzten Handelstag; 97 heißt besser als 97 Prozent. Anders als das RS nur dieser eine "
+            "Zeitraum, ohne Gewichtung und ohne Kappung; das RS bleibt davon unberührt.")
+
+
+def _rmv_text(n):
+    return (f"Wie eng die Aktie gerade schwankt, gemessen an den letzten {n} Handelstagen samt dem letzten, auf einer "
+            f"Skala von 0 bis 100: 0 heißt so eng wie an keinem dieser {n} Tage, 100 so weit wie an keinem; niedrig "
+            "heißt eng, unter 15 gilt als eng. Die Enge eines Tages ist das Mittel aus ATR 3, ATR 5 und ATR 8 in "
+            "Prozent vom Kurs. Die Originalformel ist nicht veröffentlicht; diese Rechnung ist eine eigene "
+            "Festlegung.")
+
+
 def _felder():
     F = Feld
     tech = ZENTRAL["technik"]
@@ -718,6 +744,12 @@ def _felder():
         # Wachstum von Umsatz und Gewinn
         F("umsatz_q", "wachstum", "Umsatzwachstum q/q", spalte="umsatz_q_vj_pct", signed=True,
           erklaerung="Jüngstes Quartal gegen dasselbe Quartal des Vorjahres, aus den SEC-Zahlen."),
+        F("umsatz_q1", "wachstum", "Umsatzwachstum q/q im Quartal davor", spalte="umsatz_q1_vj_pct", signed=True,
+          erklaerung="Das Quartal vor dem jüngsten gegen dasselbe Quartal des Vorjahres, aus den SEC-Zahlen. Mit "
+                     "dem Umsatzwachstum q/q und dem Quartal zwei davor lässt sich jedes der letzten drei Quartale "
+                     "einzeln prüfen."),
+        F("umsatz_q2", "wachstum", "Umsatzwachstum q/q zwei Quartale davor", spalte="umsatz_q2_vj_pct", signed=True,
+          erklaerung="Das Quartal zwei vor dem jüngsten gegen dasselbe Quartal des Vorjahres, aus den SEC-Zahlen."),
         F("umsatz_j", "wachstum", "Umsatzwachstum y/y", spalte="umsatz_ttm_pct", signed=True,
           erklaerung="Die letzten vier Quartale gegen die vier Quartale ein Jahr davor."),
         F("umsatz_s", "wachstum", "Umsatzwachstum sequenziell", spalte="umsatz_seq_pct", signed=True,
@@ -725,6 +757,12 @@ def _felder():
         F("eps_q", "wachstum", "EPS-Wachstum q/q", spalte="eps_q_vj_pct", signed=True,
           erklaerung="Verwässerter Gewinn je Aktie, jüngstes Quartal gegen das Vorjahresquartal. Lag der "
                      "Vorjahreswert bei null oder im Minus, ist kein Prozentwert berechenbar."),
+        F("eps_q1", "wachstum", "EPS-Wachstum q/q im Quartal davor", spalte="eps_q1_vj_pct", signed=True,
+          erklaerung="Verwässerter Gewinn je Aktie des Quartals vor dem jüngsten gegen dasselbe Quartal des "
+                     "Vorjahres. Lag der Vorjahreswert bei null oder im Minus, ist kein Prozentwert berechenbar."),
+        F("eps_q2", "wachstum", "EPS-Wachstum q/q zwei Quartale davor", spalte="eps_q2_vj_pct", signed=True,
+          erklaerung="Verwässerter Gewinn je Aktie des Quartals zwei vor dem jüngsten gegen dasselbe Quartal des "
+                     "Vorjahres. Lag der Vorjahreswert bei null oder im Minus, ist kein Prozentwert berechenbar."),
         F("eps_j", "wachstum", "EPS-Wachstum y/y", spalte="eps_ttm_pct", signed=True,
           erklaerung="Gewinn je Aktie der letzten vier Quartale gegen die vier Quartale ein Jahr davor."),
         F("eps_s", "wachstum", "EPS-Wachstum sequenziell", spalte="eps_seq_pct", signed=True,
@@ -743,6 +781,18 @@ def _felder():
         F("rule40", "wachstum", "Rule of 40", spalte="fu_rule40", einheit="", signed=True,
           erklaerung="Umsatzwachstum der letzten vier Quartale in Prozent plus FCF-Marge in Prozent; ab 40 erfüllt, "
                      "gedacht für Software."),
+        F("tage_zahlen", "wachstum", "Handelstage seit den letzten Quartalszahlen", spalte="tage_seit_zahlen",
+          einheit="Handelstage", stellen=0,
+          erklaerung="Wie viele Handelstage seit dem Tag vergangen sind, an dem die Aktie auf ihre letzten "
+                     "Quartalszahlen reagiert hat. 0 heißt, der letzte Handelstag hat reagiert: Zahlen an diesem "
+                     "Tag vor oder während des Handels oder am Vortag nachbörslich. Die Tage der Zahlen kommen aus "
+                     f"dem Nasdaq-Kalender der letzten {sd.ZAHLEN_RUECKBLICK_TAGE} Kalendertage. Für vergangene "
+                     "Tage nennt er keine Tageszeit; als Tag der Reaktion gilt deshalb der mit dem höheren Volumen, "
+                     "der Tag der Zahlen oder der Handelstag danach, eine eigene Festlegung. Kamen die Zahlen am "
+                     "letzten Handelstag nachbörslich, steht die Reaktion noch aus, und es zählen die Zahlen davor; "
+                     "ohne bekannte Tageszeit zählt der letzte Handelstag als Tag der Reaktion, wenn sein Volumen "
+                     f"mindestens das {zahl_eingabe(sd.ZAHLEN_VOLUMEN_FAKTOR)}-Fache des Schnitts der 50 "
+                     "Handelstage davor war."),
         # Margen, Renditen und Cashflow
         F("marge", "margen", "Bruttomarge", spalte="bruttomarge_pct",
           erklaerung="Bruttogewinn in Prozent des Umsatzes im jüngsten Quartal. Banken, Versicherer und "
@@ -814,6 +864,10 @@ def _felder():
         # Volumen
         F("volumen", "volumen", "Durchschnittliches Tagesvolumen, 50 Tage", spalte="volumen_50", einheit="Stück",
           stellen=0, erklaerung="Gehandelte Aktien je Tag im Schnitt der letzten 50 Handelstage."),
+        F("vol50_10t", "volumen", "Veränderung des Durchschnittsvolumens 50 Tage über 10 Handelstage",
+          spalte="vol50_10t_pct", signed=True,
+          erklaerung="Das durchschnittliche Tagesvolumen der letzten 50 Handelstage gegen denselben Schnitt vor 10 "
+                     "Handelstagen; positiv heißt steigend, negativ fallend."),
         F("umsatz_dollar", "volumen", "Durchschnittlicher Tagesumsatz, 50 Tage", spalte="dollarvolumen_50",
           einheit="Millionen Dollar", faktor=1e-6, stellen=1,
           erklaerung="Kurs mal Volumen im Schnitt der letzten 50 Handelstage. Dieselbe Rechnung wie das "
@@ -821,6 +875,13 @@ def _felder():
                      "Haken Nur handelbare Aktien in Teil 1 den Tagesumsatz."),
         F("tag_volumen", "volumen", "Volumen am letzten Handelstag", spalte="volumen", einheit="Stück", stellen=0,
           erklaerung="Gehandelte Aktien am letzten Handelstag."),
+        F("vol_min_3", "volumen", "Kleinstes Tagesvolumen der letzten 3 Handelstage", spalte="vol_min_3",
+          einheit="Stück", stellen=0,
+          erklaerung="Das kleinste Tagesvolumen der letzten 3 Handelstage samt dem letzten; eine Grenze von unten "
+                     "verlangt, dass an jedem der drei Tage mindestens so viel gehandelt wurde."),
+        F("vol_hoeher", "volumen", "Volumen am letzten Handelstag höher als am Vortag", art="ja",
+          spalte="vol_hoeher_gestern",
+          erklaerung="Am letzten Handelstag wurden mehr Aktien gehandelt als am Tag davor."),
         F("vol_faktor", "volumen", "Volumenfaktor zum 50-Tage-Schnitt", spalte="tk_vol_faktor", einheit="", stellen=2,
           erklaerung=f"Volumen des letzten Handelstags geteilt durch den Schnitt der {tech['volumen_schnitt_tage']} "
                      "Handelstage davor; 2 heißt doppelt so hoch."),
@@ -833,6 +894,24 @@ def _felder():
                      "haben die Aktien der Wochenlisten und die einzeln überwachten; für alle anderen ist der Wert "
                      "während des Handels nicht verifizierbar, sie fallen beim Filtern heraus. Außerhalb des "
                      "Handels gilt der letzte vollständige Handelstag, dann ist nichts hochzurechnen."),
+        F("dollarvol_heute", "volumen", "Dollarvolumen heute, hochgerechnet über die F(t)-Kurve",
+          spalte="dollarvol_heute", einheit="Millionen Dollar", stellen=1,
+          erklaerung="Kurs mal Volumen des Tages in Millionen Dollar. Während des Handels holt der Scan Kurs und "
+                     "bisheriges Volumen von heute und rechnet das Volumen über die F(t)-Kurve der Aktie auf den "
+                     "ganzen Tag hoch. Das geht wie beim relativen Volumen heute nur für die Aktien mit eigener "
+                     "Kurve; alle anderen sind während des Handels nicht verifizierbar und fallen beim Filtern "
+                     "heraus. Außerhalb des Handels gilt der letzte vollständige Handelstag."),
+        F("vol_erste15", "volumen", "Volumen der ersten 15 Minuten im Verhältnis zum Tagesschnitt",
+          spalte="vol_erste15_pct",
+          erklaerung="Gehandelte Aktien in den ersten 15 Minuten des letzten Handelstags ab 09:30 New York, aus den "
+                     "Fünf-Minuten-Kerzen, in Prozent des durchschnittlichen Tagesvolumens der 20 Handelstage davor; "
+                     "100 heißt, schon in diesen Minuten wurde ein ganzes Durchschnitts-Tagesvolumen gehandelt. Die "
+                     "Scanner-Tabelle entsteht nachts, der Wert gilt deshalb für den letzten vollständigen "
+                     "Handelstag."),
+        F("vol_erste20", "volumen", "Volumen der ersten 20 Minuten im Verhältnis zum Tagesschnitt",
+          spalte="vol_erste20_pct",
+          erklaerung="Dasselbe für die ersten 20 Minuten des letzten Handelstags ab 09:30 New York, in Prozent des "
+                     "durchschnittlichen Tagesvolumens der 20 Handelstage davor."),
         F("vol63", "volumen", "Durchschnittsvolumen über drei Monate", spalte="tk_vol63", einheit="Stück", stellen=0,
           erklaerung="Gehandelte Aktien je Tag im Schnitt der letzten 63 Handelstage."),
         F("dv20", "volumen", "Dollarvolumen über 20 Tage", spalte="tk_dv20", einheit="Millionen Dollar", faktor=1e-6,
@@ -842,6 +921,9 @@ def _felder():
         F("vdu", "volumen", "Austrocknen des Volumens", spalte="vdu", einheit="", stellen=2,
           erklaerung="Volumen der letzten 10 Handelstage im Schnitt geteilt durch den Schnitt der 50 Handelstage "
                      "davor; unter 1 trocknet das Volumen aus."),
+        F("vol5_20", "volumen", "Volumen 5 Tage zu Volumen 20 Tage", spalte="vol5_20", einheit="", stellen=2,
+          erklaerung="Das durchschnittliche Tagesvolumen der letzten 5 Handelstage geteilt durch das der letzten 20; "
+                     "unter 1 heißt, das Volumen trocknet aus."),
         F("vol_spitze", "volumen", "Volumenspitze der letzten 10 Tage", spalte="vol_spitze_10", einheit="", stellen=2,
           erklaerung="Das größte Tagesvolumen der letzten 10 Handelstage geteilt durch den Schnitt der 50 "
                      "Handelstage davor."),
@@ -852,6 +934,26 @@ def _felder():
           einheit="Handelstage", stellen=0,
           erklaerung="Wie viele Handelstage der Tag mit dem höchsten Volumen der ganzen Kurshistorie zurückliegt; 0 "
                      "heißt am letzten Handelstag. Liegt der Tag mehr als drei Jahre zurück, gibt es keinen Wert."),
+        F("vol_max_12m", "volumen", "Höchstes Tagesvolumen der letzten 12 Monate, ohne den letzten Handelstag",
+          spalte="vol_max_12m", einheit="Stück", stellen=0,
+          erklaerung="Das größte Tagesvolumen der 251 Handelstage vor dem letzten, also des Jahres davor ohne den "
+                     "letzten Tag selbst. Zusammen mit dem Volumen am letzten Handelstag findet es Aktien, die an "
+                     "einem Tag so viel handeln wie im ganzen Jahr davor nie."),
+        F("rekord_1j", "volumen", "Rekordvolumen seit einem Jahr", art="ja", spalte="rekord_1j",
+          erklaerung="Das Volumen des letzten Handelstags ist größer als jedes Tagesvolumen der 251 Handelstage "
+                     "davor."),
+        F("rekord_zahlen", "volumen", "Rekordvolumen seit den letzten Quartalszahlen", art="ja",
+          spalte="rekord_zahlen",
+          erklaerung="Das Volumen des letzten Handelstags ist größer als jedes Tagesvolumen seit dem Tag, an dem die "
+                     "Aktie auf ihre letzten Quartalszahlen reagiert hat, diesen Tag eingeschlossen. Welcher Tag das "
+                     "war, steht bei den Handelstagen seit den letzten Quartalszahlen."),
+        F("rekord_ipo", "volumen", "Rekordvolumen seit dem Börsengang", art="ja", spalte="rekord_ipo",
+          erklaerung="Das Volumen des letzten Handelstags ist das größte der ganzen Kurshistorie seit dem ersten "
+                     "Kurs, also zugleich das größte jemals."),
+        F("rekord_alle", "volumen", "Rekordvolumen irgendeiner Art", art="ja", spalte="rekord_alle",
+          erklaerung="Das Volumen des letzten Handelstags ist ein Rekord: jemals, seit einem Jahr, seit den letzten "
+                     "Quartalszahlen oder seit dem Börsengang. Jemals und seit dem Börsengang sind dasselbe, weil die "
+                     "Kurshistorie mit dem ersten Kurs beginnt."),
         # Letzter Handelstag
         F("veraenderung", "tag", "Veränderung zum Vortag", spalte="veraenderung_pct", signed=True, stellen=2,
           erklaerung="Schlusskurs des letzten Handelstags gegen den Schlusskurs davor."),
@@ -878,6 +980,21 @@ def _felder():
           erklaerung="Schlusskurs des vorletzten Handelstags gegen den Schlusskurs davor."),
         F("vortag_spanne", "tag", "Tagesspanne am Vortag", spalte="tk_vortag_spanne",
           erklaerung="Hoch geteilt durch Tief des vorletzten Handelstags, minus 1, in Prozent."),
+        F("vortagesspanne", "tag", "Kurs in der Vortagesspanne", spalte="vortagesspanne_lage", stellen=0,
+          erklaerung="Wo der Schlusskurs des letzten Handelstags gegenüber der Spanne des Vortags liegt: 0 heißt am "
+                     "Vortagestief, 50 in der Mitte, 100 am Vortageshoch; unter 0 liegt er unter dem Vortagestief, "
+                     "über 100 über dem Vortageshoch."),
+        F("oops", "tag", "Eröffnung unter dem Vortagestief", art="ja", spalte="eroeffnung_unter_vortagestief",
+          erklaerung="Der letzte Handelstag hat unter dem Tief des Vortags eröffnet, der Ausgangspunkt des Musters "
+                     "Oops nach Larry Williams."),
+        F("spy_tag", "tag", "Veränderung des SPY am letzten Handelstag", spalte="spy_veraenderung_pct", signed=True,
+          stellen=2,
+          erklaerung="Schlusskurs des S&P-500-ETF SPY am letzten Handelstag gegen seinen Schluss davor, für jede "
+                     "Aktie derselbe Wert; damit lassen sich Tage nach der Richtung des Markts auswählen."),
+        F("qqq_tag", "tag", "Veränderung des QQQ am letzten Handelstag", spalte="qqq_veraenderung_pct", signed=True,
+          stellen=2,
+          erklaerung="Schlusskurs des Nasdaq-100-ETF QQQ am letzten Handelstag gegen seinen Schluss davor, für jede "
+                     "Aktie derselbe Wert."),
         # Volatilitaet und Schwankung
         F("adr", "volatilitaet", "ADR nach Qullamaggie, 20 Tage", spalte="volatilitaet_20_pct", stellen=2,
           erklaerung="Mittlere Tagesspanne der letzten 20 Handelstage: je Tag Hoch geteilt durch Tief, davon das "
@@ -899,6 +1016,18 @@ def _felder():
           einheit="", stellen=2,
           erklaerung="Mittlere wahre Tagesspanne der letzten 5 Handelstage geteilt durch die der letzten 50; unter 1 "
                      "wird die Aktie ruhiger."),
+        F("rmv_5", "volatilitaet", "Enge nach RMV-Art über 5 Handelstage", spalte="rmv_5", einheit="",
+          stellen=0, erklaerung=_rmv_text(5)),
+        F("rmv_10", "volatilitaet", "Enge nach RMV-Art über 10 Handelstage", spalte="rmv_10", einheit="",
+          stellen=0, erklaerung=_rmv_text(10)),
+        F("rmv_15", "volatilitaet", "Enge nach RMV-Art über 15 Handelstage", spalte="rmv_15", einheit="",
+          stellen=0, erklaerung=_rmv_text(15)),
+        F("rmv_20", "volatilitaet", "Enge nach RMV-Art über 20 Handelstage", spalte="rmv_20", einheit="",
+          stellen=0, erklaerung=_rmv_text(20)),
+        F("atr14_10t", "volatilitaet", "Veränderung der ATR 14 über 10 Handelstage", spalte="atr14_10t_pct",
+          signed=True,
+          erklaerung="Die ATR 14 des letzten Handelstags gegen die ATR 14 vor 10 Handelstagen; negativ heißt, die "
+                     "Schwankung nimmt ab."),
         F("beta", "volatilitaet", f"Beta gegen SPY über {int(tech['beta_tage'])} Handelstage", spalte="tk_beta",
           einheit="", stellen=2, signed=True,
           erklaerung=f"Schwankung gegenüber dem S&P-500-ETF SPY über die Tagesrenditen der letzten "
@@ -912,6 +1041,9 @@ def _felder():
           spalte="ema8_21_darueber",
           erklaerung="Der exponentielle Durchschnitt der letzten 8 Tage liegt über dem der letzten 21 Tage, und der "
                      "Schlusskurs liegt über beiden."),
+        F("ema10", "durchschnitte", "Abstand zur EMA 10", spalte="abst_ema10_pct", signed=True, stellen=2,
+          linie="EMA 10", erklaerung="Schlusskurs gegen den exponentiellen Durchschnitt der letzten 10 Tage; "
+                                    "negativ heißt darunter; von 0 an liegt der Kurs darüber."),
         F("ema21", "durchschnitte", "Abstand zur EMA 21", spalte="abst_ema21_pct", signed=True, stellen=2,
           linie="EMA 21", erklaerung="Schlusskurs gegen den exponentiellen Durchschnitt der letzten 21 Tage; "
                                     "negativ heißt darunter; von 0 an liegt der Kurs darüber."),
@@ -921,16 +1053,30 @@ def _felder():
         F("ema200", "durchschnitte", "Abstand zur EMA 200", spalte="abst_ema200_pct", signed=True, stellen=2,
           linie="EMA 200", erklaerung="Schlusskurs gegen den exponentiellen Durchschnitt der letzten 200 Tage; "
                                      "negativ heißt darunter; von 0 an liegt der Kurs darüber."),
+        F("sma10", "durchschnitte", "Abstand zur SMA 10", spalte="abst_sma10_pct", signed=True, linie="SMA 10",
+          erklaerung="Schlusskurs gegen den einfachen Durchschnitt der letzten 10 Tage; negativ heißt darunter; von 0 an liegt der Kurs darüber."),
         F("sma20", "durchschnitte", "Abstand zur SMA 20", spalte="tk_sma20_abst", signed=True, linie="SMA 20",
           erklaerung="Schlusskurs gegen den einfachen Durchschnitt der letzten 20 Tage; negativ heißt darunter; von 0 an liegt der Kurs darüber."),
         F("sma50", "durchschnitte", "Abstand zur SMA 50", spalte="tk_sma50_abst", signed=True, linie="SMA 50",
           erklaerung="Schlusskurs gegen den einfachen Durchschnitt der letzten 50 Tage; negativ heißt darunter; von 0 an liegt der Kurs darüber."),
+        F("sma126", "durchschnitte", "Abstand zur SMA 126", spalte="abst_sma126_pct", signed=True, linie="SMA 126",
+          erklaerung="Schlusskurs gegen den einfachen Durchschnitt der letzten 126 Tage, rund eines halben Jahres; negativ heißt darunter; von 0 an liegt der Kurs darüber."),
         F("sma200", "durchschnitte", "Abstand zur SMA 200", spalte="tk_sma200_abst", signed=True, linie="SMA 200",
           erklaerung="Schlusskurs gegen den einfachen Durchschnitt der letzten 200 Tage; negativ heißt darunter; von 0 an liegt der Kurs darüber."),
+        F("sma50_200", "durchschnitte", "SMA 50 über SMA 200", art="ja", spalte="sma50_ueber_200",
+          erklaerung="Der einfache Durchschnitt der letzten 50 Tage liegt über dem der letzten 200 Tage."),
+        F("sma200_10t", "durchschnitte", "Veränderung der SMA 200 über 10 Handelstage", spalte="sma200_10t_pct",
+          signed=True, stellen=2,
+          erklaerung="Die SMA 200 des letzten Handelstags gegen die SMA 200 vor 10 Handelstagen; positiv heißt "
+                     "steigend."),
         F("ma200_steigt", "durchschnitte", "Anstieg der SMA 200 in Folge", spalte="ma200_steigt_tage",
           einheit="Handelstage", stellen=0,
           erklaerung="Wie viele Handelstage in Folge der einfache 200-Tage-Durchschnitt zuletzt gestiegen ist; 0 "
                      "heißt, er ist am letzten Handelstag nicht gestiegen."),
+        F("ti65", "durchschnitte", "Trend Intensity nach Stockbee, TI65", spalte="trend_intensity", einheit="",
+          stellen=2,
+          erklaerung="Der Schnitt der letzten 7 Schlusskurse geteilt durch den Schnitt der letzten 65; über 1 liegt "
+                     "der kurze Schnitt über dem langen, 1,05 heißt 5 Prozent darüber."),
         F("weinstein", "durchschnitte", "Weinstein-Stufe", spalte="tk_stufe", einheit="", stellen=0,
           erklaerung="Stufe nach Stan Weinstein aus der 30-Wochen-Linie und dem Kurs: 1 Boden, 2 Aufwärtstrend, "
                      "die Linie steigt und die letzten zwei Wochenschlüsse liegen darüber, 3 Top, 4 Abwärtstrend, "
@@ -980,6 +1126,10 @@ def _felder():
           erklaerung="Schlusskurs gegen den Schluss vor 5 Handelstagen, wie bei Finviz."),
         F("perf_1m", "entwicklung", "Wertentwicklung ein Monat", spalte="tk_perf_1m", signed=True,
           erklaerung="Schlusskurs gegen den Schluss vor 21 Handelstagen, wie bei Finviz."),
+        F("perf_40t", "entwicklung", "Wertentwicklung über 40 Handelstage", spalte="perf_40t_pct", signed=True,
+          erklaerung="Schlusskurs gegen den Schluss vor 40 Handelstagen."),
+        F("perf_60t", "entwicklung", "Wertentwicklung über 60 Handelstage", spalte="perf_60t_pct", signed=True,
+          erklaerung="Schlusskurs gegen den Schluss vor 60 Handelstagen."),
         F("perf_3m", "entwicklung", "Wertentwicklung drei Monate", spalte="tk_perf_3m", signed=True,
           erklaerung="Schlusskurs gegen den Schluss vor 63 Handelstagen, wie bei Finviz."),
         F("perf_6m", "entwicklung", "Wertentwicklung sechs Monate", spalte="tk_perf_6m", signed=True,
@@ -1002,6 +1152,12 @@ def _felder():
           erklaerung="RS heute minus RS vor einer Woche."),
         F("rs_4w", "rs", "RS-Veränderung über vier Wochen", spalte="tk_rs_4w", einheit="Punkte", stellen=0, signed=True,
           erklaerung="RS heute minus RS vor vier Wochen."),
+        F("perf_rang_1m", "rs", "Performance-Rang ein Monat", spalte="perf_rang_1m", einheit="", stellen=0,
+          erklaerung=_rang_text(21)),
+        F("perf_rang_3m", "rs", "Performance-Rang drei Monate", spalte="perf_rang_3m", einheit="", stellen=0,
+          erklaerung=_rang_text(63)),
+        F("perf_rang_6m", "rs", "Performance-Rang sechs Monate", spalte="perf_rang_6m", einheit="", stellen=0,
+          erklaerung=_rang_text(126)),
         F("mrs", "rs", "Mansfield RS gegen SPY", spalte="tk_mrs", einheit="", signed=True,
           erklaerung="Relation von Kurs zu SPY, geteilt durch ihren 52-Wochen-Schnitt, minus 1, mal 100, nach "
                      "Weinstein; über null ist die Aktie stärker als der Markt."),
@@ -1230,6 +1386,156 @@ SCHNELLBOX = (("kurs", "Kurs"),
               ("umsatz_q", "Umsatzwachstum q/q"))
 
 
+# TEMPLATES BEKANNTER TRADER (Gerhard, 27.09.2026, Teile 2 und 3): fest
+# vorgebaute Einstellungen, getrennt von den eigenen Vorlagen, weder zu
+# ueberschreiben noch zu loeschen. Wer eines waehlt, dem setzt die App zuerst
+# alles zurueck und hakt dann genau diese Kennzahlen mit diesen Werten an, in
+# der Schnellbox und in Teil 2; alles andere bleibt aus, auch Nur handelbare
+# Aktien. Die Werte stehen so, wie man sie tippt. Die Grenzen des Scanners
+# schliessen den Grenzwert ein; "ueber 0 Prozent" Veraenderung und "steigend"
+# oder "fallend" stehen deshalb als 0,01 und minus 0,01. Eine Kennzahl, die es
+# noch nicht gibt, bleibt aus, bis sie da ist (Short Interest bei MAGNA); die
+# Kursziel-Erhoehungen gibt es nur fuer die Aktien der Wochenlisten und bleiben
+# deshalb bei MAGNA ebenfalls aus. Keine Strategie, kein Muster, kein Alarm.
+def _t(tid, name, trader, felder, hinweis="", quelle="", festlegung="", sektoren_aus=(), branchen_aus=(),
+       fehlt=""):
+    return {"id": tid, "name": name, "trader": trader, "felder": felder, "hinweis": hinweis, "quelle": quelle,
+            "festlegung": festlegung, "sektoren_aus": tuple(sektoren_aus), "branchen_aus": tuple(branchen_aus),
+            "fehlt": fehlt}
+
+
+_KELL = {"kurs": {"min": "20"}, "volumen": {"min": "500.000"}}
+_QM = {"dv20": {"min": "1,5"}, "adr": {"min": "3,5"}}
+_JA = {}
+TEMPLATES = (
+    _t("kell_bull_snort", "Kell: Bull Snort", "Oliver Kell",
+       {**_KELL, "veraenderung": {"min": "0,01"}, "rvol_heute": {"min": "2,0"}},
+       hinweis="Kell bevorzugt ein relatives Volumen ab 3,0, nutzt aber 2,0 für mehr Treffer."),
+    _t("kell_52w", "Kell: 52 Week Highs", "Oliver Kell",
+       {**_KELL, "tage_hoch_1j": {"min": "0", "max": "0"}, "beta": {"min": "1"}},
+       hinweis="Neues 52-Wochen-Hoch heute heißt 0 Handelstage seit dem letzten 52-Wochen-Hoch."),
+    _t("kell_gappers", "Kell: Gappers", "Oliver Kell", {**_KELL, "luecke": {"min": "3"}},
+       hinweis="Sinnvoll ab der Eröffnung."),
+    _t("kell_doublers", "Kell: Doublers", "Oliver Kell", {**_KELL, "perf_ytd": {"min": "100"}}),
+    _t("kell_fundies", "Kell: Fundies", "Oliver Kell",
+       {**_KELL, "hoch_1j": {"min": "0", "max": "10"}, "eps_q": {"min": "20"}, "umsatz_q": {"min": "20"},
+        "roe": {"min": "15"}}),
+    _t("kell_down_days", "Kell: Strength on Down Days", "Oliver Kell",
+       {**_KELL, "veraenderung": {"min": "0,01"}, "beta": {"min": "1"}, "spy_tag": {"max": "-1"}},
+       hinweis="Liefert nur an deutlich roten Markttagen Treffer."),
+    _t("qm_ep", "Qullamaggie: Episodic Pivot", "Qullamaggie",
+       {"luecke": {"min": "10"}, "vol_erste20": {"min": "100"}},
+       hinweis="Sinnvoll ab 20 Minuten nach der Eröffnung."),
+    _t("qm_ep_weit", "Qullamaggie: Episodic Pivot weites Netz", "Qullamaggie",
+       {"veraenderung": {"min": "7,5"}, "vortagesspanne": {"min": "100"}, "dollarvol_heute": {"min": "100"}},
+       hinweis="Kurs in der Vortagesspanne ab 100 heißt über dem Vortageshoch."),
+    _t("qm_top_1m", "Qullamaggie: Top Gainers 1 Monat", "Qullamaggie", {**_QM, "perf_rang_1m": {"min": "97"}}),
+    _t("qm_top_3m", "Qullamaggie: Top Gainers 3 Monate", "Qullamaggie", {**_QM, "perf_rang_3m": {"min": "98"}}),
+    _t("qm_top_6m", "Qullamaggie: Top Gainers 6 Monate", "Qullamaggie", {**_QM, "perf_rang_6m": {"min": "97"}}),
+    _t("qm_continuation", "Qullamaggie: Continuation Base", "Qullamaggie",
+       {"perf_1m": {"min": "25"}, "adr": {"min": "4"}, "sma10": {"min": "-2", "max": "2"}},
+       quelle="der Continuation-Base-Scan von Deepvue",
+       hinweis="Die Bedingung zum Wochenvolumen dort ist unklar formuliert und bleibt weg."),
+    _t("qm_ipos", "Qullamaggie: IPOs", "Qullamaggie", {"historie": {"max": "504"}, "dv20": {"min": "1,5"}},
+       hinweis="Tage seit dem Börsengang bis 504 Handelstage, rund zwei Jahre.", festlegung="das Dollarvolumen"),
+    _t("sb_4pct", "Stockbee: 4 %-Breakout", "Stockbee",
+       {"veraenderung": {"min": "4"}, "vol_hoeher": _JA, "tag_volumen": {"min": "100.000"},
+        "schlusslage": {"min": "70"}},
+       quelle="Stockbee; die Schlussposition aus einer Sekundärquelle"),
+    _t("sb_momentum", "Stockbee: Momentum-Universum", "Stockbee",
+       {"ti65": {"min": "1,05"}, "sma126": {"min": "19"}, "tief_1j": {"min": "80"}},
+       quelle="Stockbees TI65, MDT und Double Trouble"),
+    _t("sb_anticipation", "Stockbee: Anticipation", "Stockbee",
+       {"ti65": {"min": "1,04"}, "veraenderung": {"min": "-0,4", "max": "0,4"}, "vol_min_3": {"min": "100.000"},
+        "kurs": {"min": "3"}},
+       hinweis="Gedacht für nach Börsenschluss."),
+    _t("sb_ep9", "Stockbee: EP 9 Millionen", "Stockbee",
+       {"tag_volumen": {"min": "9.000.000"}, "vol_max_12m": {"max": "9.000.000"}, "kurs": {"min": "3"}},
+       hinweis="Heute ab 9 Millionen Stück, im Jahr davor nie."),
+    _t("sb_magna", "Stockbee: MAGNA, soweit möglich", "Stockbee",
+       {"umsatz_q": {"min": "30"}, "umsatz_q1": {"min": "30"}, "luecke": {"min": "4"}, "marktkap": {"max": "10"},
+        "historie": {"max": "2.520"}},
+       hinweis="Umsatzwachstum ab 30 Prozent im jüngsten Quartal und im Quartal davor; Tage seit dem Börsengang "
+               "bis 2.520 Handelstage, rund zehn Jahre.",
+       festlegung="die Eröffnungslücke ab 4 Prozent",
+       fehlt="Short Interest ab 5 Tagen fehlt noch; Kursziel-Erhöhungen ab 3 gibt es nur für die Aktien der "
+             "Wochenlisten. Beide bleiben aus, bis sie für den ganzen Markt da sind."),
+    _t("soreide_htf", "Soreide: High Tight Flag", "Leif Soreide",
+       {"sma50": {"min": "0"}, "sma200": {"min": "0"}, "sma50_200": _JA, "sma200_10t": {"min": "0,01"},
+        "perf_40t": {"min": "90"}, "perf_60t": {"min": "50"}, "atr_pct": {"max": "8"},
+        "atr14_10t": {"max": "-0,01"}, "vol50_10t": {"max": "-0,01"}},
+       quelle="Soreides eigener StockCharts-Scan",
+       hinweis="Kurs über SMA 50 und SMA 200 heißt Abstand zu beiden ab 0."),
+    _t("rai_rekord", "Rai: Rekordvolumen", "Ameet Rai", {"rekord_alle": _JA, "veraenderung": {"min": "0,01"}},
+       festlegung="nur Aktien im Plus"),
+    _t("moglen_eng", "Moglen: Enge und Stärke", "Richard Moglen",
+       {"rmv_15": {"min": "0", "max": "15"}, "perf_rang_3m": {"min": "90"}, "ema21": {"min": "-3", "max": "3"},
+        "vol5_20": {"max": "1"}},
+       festlegung="der Abstand zur EMA 21 von minus 3 bis plus 3 Prozent und die Volumenbedingung"),
+    _t("jt_peg", "JT: Power Earnings Gap", "JT",
+       {"tage_zahlen": {"min": "0", "max": "1"}, "veraenderung": {"min": "10"}, "rvol_heute": {"min": "3,0"},
+        "ueberraschung": {"min": "20"}},
+       quelle="die Forschung von Pocorobba und Thompson"),
+    _t("jt_monster", "JT: Monster Gap", "JT",
+       {"tage_zahlen": {"min": "0", "max": "1"}, "veraenderung": {"min": "20"}, "rvol_heute": {"min": "4,0"}}),
+    _t("walker_4040", "Walker: 40,40", "Patrick Walker",
+       {"kurs": {"min": "10"}, "hoch_1j": {"min": "0", "max": "20"}, "eps_q": {"min": "40"},
+        "eps_q1": {"min": "40"}, "eps_q2": {"min": "40"}},
+       hinweis="EPS-Wachstum ab 40 Prozent in jedem der letzten drei Quartale."),
+    _t("walker_30eps", "Walker: 30 % EPS", "Patrick Walker",
+       {"kurs": {"min": "12"}, "hoch_1j": {"min": "0", "max": "20"}, "eps_q": {"min": "30"}},
+       sektoren_aus=("Utilities",), branchen_aus=("Biotechnology",),
+       hinweis="Ohne die Nasdaq-Branche Biotechnology und ohne den Sektor Versorger."),
+    _t("haber_rs", "Haber: RS vor Kurs", "Ross Haber", {"rs_linie": _JA, "tage_hoch_1j": {"min": "1"}},
+       hinweis="Die Stärke führt, der Kurs ist noch nicht am Hoch."),
+    _t("oops", "Oops", "Larry Williams", {"oops": _JA, "vortagesspanne": {"min": "0"}}),
+    _t("oops_stark", "Oops: stark", "Larry Williams, verschärft nach JT", {"oops": _JA, "vortagesspanne": {"min": "50"}},
+       hinweis="Schluss über der Mitte der Vortagesspanne."),
+    _t("oops_super", "Oops: Super Oops", "Larry Williams, verschärft nach JT",
+       {"oops": _JA, "vortagesspanne": {"min": "100"}}, hinweis="Schluss über dem Vortageshoch."),
+)
+TEMPLATE = {t["id"]: t for t in TEMPLATES}
+
+
+def template_einleitung():
+    """Die Saetze vor den Templates im Regelwerk."""
+    return [
+        "Die Templates stehen ganz oben im Scanner, noch vor der Schnellbox. Sie sind fest vorgebaute Einstellungen "
+        "nach den Scans bekannter Trader, getrennt von den eigenen Vorlagen, und lassen sich weder überschreiben "
+        "noch löschen. Wer eines wählt, dem setzt der Scanner zuerst alles zurück und hakt dann genau diese "
+        "Kennzahlen mit diesen Werten an, in der Schnellbox und in Teil 2; alles andere bleibt aus, auch Nur "
+        "handelbare Aktien. Danach lassen sich die Werte ändern, das Template bleibt, wie es ist. Keine Strategie, "
+        "kein Muster, kein Alarm: Die Templates wählen nur Aktien aus.",
+        "Die Grenzen des Scanners schließen den Grenzwert ein. Wo ein Template über oder unter sagt, zählt der "
+        "Grenzwert deshalb mit; nur über 0 Prozent Veränderung und steigend oder fallend stehen als 0,01 und "
+        "minus 0,01, damit unveränderte Werte nicht mitzählen.",
+        "Die Scanner-Tabelle entsteht nachts aus den Tageskerzen; heute heißt deshalb der letzte vollständige "
+        "Handelstag. Nur das relative Volumen heute und das Dollarvolumen heute rechnen während des Handels mit Kurs "
+        "und Volumen von heute, und das nur für die Aktien mit eigener F(t)-Kurve.",
+    ]
+
+
+def template_regelwerk():
+    """[(Name, Absatz)] fuer das Regelwerk: je Template Trader, Quelle, die
+    Kennzahlen mit ihren Werten und was davon eigene Festlegung ist."""
+    raus = []
+    for t in TEMPLATES:
+        teile = [FELD[s].einstellung_text({"an": True, **w}) for s, w in t["felder"].items()]
+        satz = f"Trader {t['trader']}. " + "; ".join(teile) + "."
+        if t["sektoren_aus"] or t["branchen_aus"]:
+            satz += (" Abgewählt: " + ", ".join([f"die Nasdaq-Branche {b}" for b in t["branchen_aus"]]
+                                               + [f"der Sektor {sektor_name(s)}" for s in t["sektoren_aus"]]) + ".")
+        if t["hinweis"]:
+            satz += " " + t["hinweis"]
+        if t["fehlt"]:
+            satz += " " + t["fehlt"]
+        satz += f" Quelle: {t['quelle'] or 'die Recherche zu den Scans des Traders'}."
+        satz += (f" Eigene Festlegung: {t['festlegung']}." if t["festlegung"]
+                 else " Alle Werte stammen vom Trader.")
+        raus.append((t["name"], satz))
+    return raus
+
+
 def schnellbox_grenze_titel(feld, teil):
     """Die kurze Beschriftung eines Grenzfelds in der Schnellbox: von oder bis,
     mit der Einheit, ohne den Namen des Merkmals, der steht am Haken davor."""
@@ -1261,7 +1567,7 @@ def rvol_spalte(tabelle, minute=None, live=None, kurven=None, heute=None, werkta
     heute_iso = heute.isoformat() if heute else None
     if minute is None or not werktag:
         return _zahlen(tabelle, "tk_vol_faktor"), None
-    von_heute = {t: v for t, (tag, v) in live.items() if tag == heute_iso}
+    von_heute = {t: w[1] for t, w in live.items() if w[0] == heute_iso}
     if live and not von_heute:
         return _zahlen(tabelle, "tk_vol_faktor"), None
     if not live:
@@ -1282,10 +1588,46 @@ def rvol_spalte(tabelle, minute=None, live=None, kurven=None, heute=None, werkta
                "beim Filtern heraus.")
 
 
+def dollarvol_spalte(tabelle, minute=None, live=None, kurven=None, heute=None, werktag=True):
+    """Die Spalte dollarvol_heute fuer einen Scan: Dollarvolumen heute in
+    Millionen Dollar, hochgerechnet ueber die F(t)-Kurve (Gerhard, 27.09.2026).
+    Rueckgabe (Werte, Hinweis oder None). Dieselben Regeln wie rvol_spalte:
+    ausserhalb des Handels Kurs mal Volumen des letzten Handelstags aus der
+    Tabelle; waehrend des Handels der Kurs von heute mal dem ueber die EIGENE
+    Kurve der Aktie hochgerechneten Volumen, live: {Ticker: (Datum, Volumen,
+    Kurs)}. Ohne eigene Kurve nicht verifizierbar."""
+    import volumen
+    live, kurven = live or {}, kurven or {}
+    heute_iso = heute.isoformat() if heute else None
+    eod = _zahlen(tabelle, "dollarvolumen_heute_mio")
+    if minute is None or not werktag:
+        return eod, None
+    von_heute = {t: w for t, w in live.items() if w[0] == heute_iso}
+    if live and not von_heute:
+        return eod, None
+    if not live:
+        return (pd.Series(np.nan, index=tabelle.index, dtype="float64"),
+                "Das Volumen von heute ließ sich nicht abrufen; das Dollarvolumen heute ist deshalb für keine "
+                "Aktie verifizierbar.")
+    werte = []
+    for t in tabelle["ticker"].astype(str).str.upper():
+        kurve, w = kurven.get(t), von_heute.get(t)
+        anteil = volumen.tagesanteil(minute, kurve) if kurve and w is not None else None
+        kurs = _num(w[2]) if w is not None and len(w) > 2 else None
+        werte.append(round(kurs * float(w[1]) / anteil / 1e6, 3) if anteil and kurs and _num(w[1]) is not None
+                     else np.nan)
+    s = pd.Series(werte, index=tabelle.index, dtype="float64")
+    n = int(s.notna().sum())
+    return s, (f"Dollarvolumen heute: während des Handels hochgerechnet über die F(t)-Kurve der Aktie, für "
+               f"{nachschlagen.zahl(n)} Aktien mit eigener Kurve; alle anderen sind nicht verifizierbar und fallen "
+               "beim Filtern heraus.")
+
+
 def rvol_live_holen(tickers):
-    """{Ticker: (Datum der juengsten Tageskerze, Volumen)} von Yahoo, fuer das
-    relative Volumen waehrend des Handels. Ein Fehler ergibt ein leeres
-    Ergebnis; dann ist der Wert nicht verifizierbar, geschaetzt wird nichts."""
+    """{Ticker: (Datum der juengsten Tageskerze, Volumen, Kurs)} von Yahoo, fuer
+    das relative Volumen und das Dollarvolumen waehrend des Handels. Ein Fehler
+    ergibt ein leeres Ergebnis; dann ist der Wert nicht verifizierbar,
+    geschaetzt wird nichts."""
     tickers = sorted({str(t).strip().upper() for t in tickers if str(t).strip()})
     if not tickers:
         return {}
@@ -1309,7 +1651,8 @@ def rvol_live_holen(tickers):
             teil = teil.dropna(subset=["Volume"])
             if teil.empty:
                 continue
-            raus[t] = (pd.Timestamp(teil.index[-1]).date().isoformat(), float(teil["Volume"].iloc[-1]))
+            kurs = _num(teil["Close"].iloc[-1]) if "Close" in teil.columns else None
+            raus[t] = (pd.Timestamp(teil.index[-1]).date().isoformat(), float(teil["Volume"].iloc[-1]), kurs)
         except Exception:  # noqa
             continue
     return raus
@@ -1333,6 +1676,51 @@ SEKTOREN = {"Basic Materials": "Grundstoffe", "Consumer Discretionary": "Zyklisc
             "Health Care": "Gesundheit", "Industrials": "Industrie", "Miscellaneous": "Sonstiges",
             "Real Estate": "Immobilien", "Technology": "Technologie", "Telecommunications": "Telekommunikation",
             "Utilities": "Versorger"}
+
+
+# BRANCHEN AUSSCHLIESSEN (Gerhard, 27.09.2026, B10): "Einzelne Branchen abwaehlen
+# koennen, etwa Biotechnologie, nicht nur ganze Sektoren." Die Branchen sind
+# die Gruppen der Scanner-Tabelle (scanner_daten.branche_gruppen): Teilen sich
+# mehrere Nasdaq-Branchen den Teil vor dem Doppelpunkt, bilden sie eine Gruppe,
+# so fasst Biotechnology sechs zusammen. Der Scanner liest die Liste aus dem
+# Stand, ehe er die Tabelle laedt; die Namen bleiben die der Nasdaq.
+def branchen_in(stand):
+    """Die Branchen zum Abwaehlen, nach Namen sortiert: die der Scanner-Tabelle
+    laut Stand, dazu jede, die ein Template abwaehlt."""
+    namen = {str(b.get("gruppe")) for b in ((stand or {}).get("branchen") or [])
+             if isinstance(b, dict) and b.get("gruppe")}
+    namen |= {b for t in TEMPLATES for b in t.get("branchen_aus", ())}
+    return sorted(namen, key=str.lower)
+
+
+def branche_erklaerung(gruppe, stand=None):
+    """Der Satz zum Erklaerungsknopf einer Branche."""
+    eintrag = next((b for b in ((stand or {}).get("branchen") or [])
+                    if isinstance(b, dict) and b.get("gruppe") == gruppe), None)
+    if eintrag is None:
+        return (f"Aktien, die die Nasdaq der Branche {gruppe} zuordnet; die Scanner-Tabelle kennt die "
+                "Nasdaq-Branchen erst nach ihrem nächsten Bau.")
+    teile = [t for t in (eintrag.get("teile") or []) if t]
+    n = int(eintrag.get("aktien") or 0)
+    zahl_satz = f"In der Scanner-Tabelle {'ist es' if n == 1 else 'sind es'} {_aktien(n)}."
+    if len(teile) > 1 or (teile and teile[0] != gruppe):
+        namen = [t.split(":", 1)[1].strip() if ":" in t else t for t in teile]
+        liste = ", ".join(namen[:-1]) + " und " + namen[-1] if len(namen) > 1 else namen[0]
+        return (f"Aktien, die die Nasdaq einer der Branchen {gruppe} zuordnet; die Gruppe fasst diese Nasdaq-"
+                f"Branchen zusammen: {liste}. {zahl_satz}")
+    return f"Aktien, die die Nasdaq der Branche {gruppe} zuordnet. {zahl_satz}"
+
+
+def branche_spalte(df, tabelle=None):
+    """Die Branchengruppe je Zeile: die Spalte branche_gruppe der Tabelle, bei
+    einer aelteren Tabelle aus der Spalte branche gerechnet; ohne beides None."""
+    if "branche_gruppe" in df.columns:
+        return df["branche_gruppe"]
+    if "branche" in df.columns:
+        quelle = tabelle if tabelle is not None and "branche" in tabelle.columns else df
+        gruppen = sd.branche_gruppen(quelle["branche"].dropna().unique())
+        return df["branche"].map(lambda b: gruppen.get(str(b).strip()) if isinstance(b, str) else None)
+    return None
 
 
 def sektor_name(kennung):
@@ -1464,7 +1852,7 @@ def voreinstellung(kennung, toleranz=False):
 
 def standard_einstellung():
     return {"strategie": "", "toleranz": False, "nur_handelbar": True, "langweilig_raus": True, "felder": {},
-            "termine": {"an": False, "umfang": "markt"}, "sektoren": None, "sortierung": ""}
+            "termine": {"an": False, "umfang": "markt"}, "sektoren": None, "branchen_aus": [], "sortierung": ""}
 
 
 def wirksame_einstellung(e):
@@ -1490,7 +1878,8 @@ def wirksame_einstellung(e):
     return {"strategie": k, "toleranz": bool(e.get("toleranz")) and toleranz_moeglich(k),
             "nur_handelbar": bool(e.get("nur_handelbar")),
             "langweilig_raus": bool(e.get("langweilig_raus")) and k == "darvas", "felder": felder,
-            "termine": termine, "sektoren": None if e.get("sektoren") is None else sorted(e.get("sektoren"))}
+            "termine": termine, "sektoren": None if e.get("sektoren") is None else sorted(e.get("sektoren")),
+            "branchen_aus": sorted({str(b) for b in (e.get("branchen_aus") or []) if b})}
 
 
 # ---------------------------------------------------------------------------
@@ -1573,10 +1962,20 @@ def auswerten(tabelle, e, heute=None, analysten_da=True):
             df = df[df["sektor"].fillna("").astype(str).str.strip().isin(gewaehlt)]
             if not gewaehlt:
                 hinweise.append("Kein Sektor angehakt; es bleibt keine Aktie übrig.")
+    aus_b = sorted({str(b) for b in (e.get("branchen_aus") or []) if b}, key=str.lower)
+    branchen_aus = []
+    if aus_b:
+        gruppe_b = branche_spalte(df, tabelle)
+        if gruppe_b is None:
+            hinweise.append("Die Scanner-Tabelle kennt die Nasdaq-Branchen noch nicht; das Abwählen von "
+                            "Branchen wirkt deshalb nicht.")
+        else:
+            branchen_aus = aus_b
+            df = df[~gruppe_b.reindex(df.index).isin(set(aus_b)).fillna(False).astype(bool)]
     ausw = {"df": df, "felder": felder, "fehler": fehler, "hinweise": hinweise, "strategie": k,
             "toleranz": bool(e.get("toleranz") and toleranz_moeglich(k)), "termine": termine,
-            "sektor_aktiv": sektor_aktiv, "analysten_da": analysten_da, "gesamt": gesamt, "heute": heute,
-            "einstellung": e}
+            "sektor_aktiv": sektor_aktiv, "branchen_aus": branchen_aus, "analysten_da": analysten_da,
+            "gesamt": gesamt, "heute": heute, "einstellung": e}
     ausw["df"] = sortieren(ausw, e.get("sortierung") or "")
     return ausw
 
@@ -2035,6 +2434,9 @@ def satz_teile(ausw, r, werte=None):
         teile.append(termin_teil(r))
     if ausw.get("sektor_aktiv"):
         teile.append(sektor_im_satz(r.get('sektor') if isinstance(r.get('sektor'), str) else ''))
+    if ausw.get("branchen_aus"):
+        b = r.get("branche_gruppe") if isinstance(r.get("branche_gruppe"), str) else r.get("branche")
+        teile.append(f"Nasdaq-Branche {b}" if isinstance(b, str) and b else "ohne Branchenangabe")
     teile += muster_saetze(r)
     return teile
 
@@ -2097,6 +2499,9 @@ def einstellungs_teile(e, tabelle=None):
         if len(gewaehlt) != len(alle):
             t.append("Sektoren " + (", ".join(sektor_name(s) if s else klein_anfang(OHNE_SEKTOR) for s in gewaehlt)
                                     if gewaehlt else "keiner"))
+    aus_b = sorted({str(b) for b in (e.get("branchen_aus") or []) if b}, key=str.lower)
+    if aus_b:
+        t.append(("ohne die Nasdaq-Branche " if len(aus_b) == 1 else "ohne die Nasdaq-Branchen ") + ", ".join(aus_b))
     return t
 
 
@@ -2133,6 +2538,10 @@ def ergebnis_tabelle(ausw, basis_url, stand=None):
         raus["Quelle des Termins"] = _sp(df, "termin_quelle").map(termin_quelle_text)
     if ausw.get("sektor_aktiv"):
         raus["Sektor"] = _sp(df, "sektor").map(lambda s: sektor_name(s if isinstance(s, str) else ""))
+    if ausw.get("branchen_aus"):
+        spalte_b = branche_spalte(df)
+        raus["Nasdaq-Branche"] = (spalte_b if spalte_b is not None else _sp(df, "branche")).map(
+            lambda b: b if isinstance(b, str) and b else "ohne Branchenangabe")
     if "cm_f" in df.columns:
         raus["Chartmuster"] = ["; ".join(muster_saetze(r)) for r in df.to_dict("records")]
     raus["Schlusskurse vom"] =nachschlagen.datum_text((stand or {}).get("handelstag")) if (stand or {}).get("handelstag") else ""
@@ -3316,6 +3725,143 @@ def selbsttest() -> int:
                               "der letzten 10 Handelstage", "der ersten 5 Minuten"))
       and not any(x in erkl for x in ("Double Bottom:", "höchstens 13 Wochen", "höchstens 3 enge Wochen"))
       and len(cm.FESTLEGUNGEN) == 34 and "a_wochen_max" not in cm.FESTLEGUNGEN, erkl[:200])
+
+    # --- Templates bekannter Trader und ihre Kennzahlen (Gerhard, 27.09.2026) ------
+    neu = {"umsatz_q1": "umsatz_q1_vj_pct", "umsatz_q2": "umsatz_q2_vj_pct", "eps_q1": "eps_q1_vj_pct",
+           "eps_q2": "eps_q2_vj_pct", "tage_zahlen": "tage_seit_zahlen", "vol50_10t": "vol50_10t_pct",
+           "vol_min_3": "vol_min_3", "vol_hoeher": "vol_hoeher_gestern", "dollarvol_heute": "dollarvol_heute",
+           "vol_erste15": "vol_erste15_pct", "vol_erste20": "vol_erste20_pct", "vol5_20": "vol5_20",
+           "vol_max_12m": "vol_max_12m", "rekord_1j": "rekord_1j", "rekord_zahlen": "rekord_zahlen",
+           "rekord_ipo": "rekord_ipo", "rekord_alle": "rekord_alle", "vortagesspanne": "vortagesspanne_lage",
+           "oops": "eroeffnung_unter_vortagestief", "spy_tag": "spy_veraenderung_pct",
+           "qqq_tag": "qqq_veraenderung_pct", "rmv_5": "rmv_5", "rmv_10": "rmv_10", "rmv_15": "rmv_15",
+           "rmv_20": "rmv_20", "atr14_10t": "atr14_10t_pct", "ema10": "abst_ema10_pct", "sma10": "abst_sma10_pct",
+           "sma126": "abst_sma126_pct", "sma50_200": "sma50_ueber_200", "sma200_10t": "sma200_10t_pct",
+           "ti65": "trend_intensity", "perf_40t": "perf_40t_pct", "perf_60t": "perf_60t_pct",
+           "perf_rang_1m": "perf_rang_1m", "perf_rang_3m": "perf_rang_3m", "perf_rang_6m": "perf_rang_6m"}
+    p("Neue Kennzahlen: jede als eigenes Merkmal mit Spalte und Erklärung",
+      all(s in FELD and FELD[s].spalte == sp and FELD[s].erklaerung for s, sp in neu.items())
+      and len({f.schluessel for f in FELDER}) == len(FELDER),
+      str([s for s, sp in neu.items() if s not in FELD or FELD[s].spalte != sp]))
+    p("Neue Kennzahlen: in der passenden Gruppe",
+      [FELD[s].gruppe for s in ("perf_rang_1m", "rmv_15", "ti65", "vol_erste20", "rekord_alle", "vortagesspanne",
+                                "tage_zahlen", "perf_40t", "spy_tag", "atr14_10t", "sma200_10t", "vol50_10t")]
+      == ["rs", "volatilitaet", "durchschnitte", "volumen", "volumen", "tag", "wachstum", "entwicklung", "tag",
+          "volatilitaet", "durchschnitte", "volumen"]
+      and all(FELD[s].art == "ja" for s in ("vol_hoeher", "rekord_1j", "rekord_zahlen", "rekord_ipo", "rekord_alle",
+                                            "oops", "sma50_200")))
+    erwartet_t = ["Kell: Bull Snort", "Kell: 52 Week Highs", "Kell: Gappers", "Kell: Doublers", "Kell: Fundies",
+                  "Kell: Strength on Down Days", "Qullamaggie: Episodic Pivot",
+                  "Qullamaggie: Episodic Pivot weites Netz", "Qullamaggie: Top Gainers 1 Monat",
+                  "Qullamaggie: Top Gainers 3 Monate", "Qullamaggie: Top Gainers 6 Monate",
+                  "Qullamaggie: Continuation Base", "Qullamaggie: IPOs", "Stockbee: 4 %-Breakout",
+                  "Stockbee: Momentum-Universum", "Stockbee: Anticipation", "Stockbee: EP 9 Millionen",
+                  "Stockbee: MAGNA, soweit möglich", "Soreide: High Tight Flag", "Rai: Rekordvolumen",
+                  "Moglen: Enge und Stärke", "JT: Power Earnings Gap", "JT: Monster Gap", "Walker: 40,40",
+                  "Walker: 30 % EPS", "Haber: RS vor Kurs", "Oops", "Oops: stark", "Oops: Super Oops"]
+    p("Templates: genau die 29 aus dem Auftrag, in seiner Reihenfolge und mit seinen Namen",
+      [t["name"] for t in TEMPLATES] == erwartet_t and len(TEMPLATE) == 29, str([t["name"] for t in TEMPLATES]))
+    t_fehler = []
+    for t in TEMPLATES:
+        for s, w in t["felder"].items():
+            f = FELD.get(s)
+            if f is None:
+                t_fehler.append(f"{t['name']}: {s} unbekannt")
+                continue
+            if f.art == "ja" and w:
+                t_fehler.append(f"{t['name']}: {s} ist Ja-Nein und trägt Grenzen")
+            if f.art == "bereich":
+                if not ({"min", "max"} & set(w)):
+                    t_fehler.append(f"{t['name']}: {s} ohne Grenze")
+                for teil in ("min", "max"):
+                    if teil in w and (zahl_lesen(w[teil])[0] is None or zahl_lesen(w[teil])[1]):
+                        t_fehler.append(f"{t['name']}: {s} {teil} unlesbar")
+                if f.filtert(w) is False:
+                    t_fehler.append(f"{t['name']}: {s} filtert nicht")
+        if any(x not in SEKTOREN for x in t["sektoren_aus"]):
+            t_fehler.append(f"{t['name']}: unbekannter Sektor")
+    p("Templates: jede Kennzahl bekannt, Ja-Nein ohne Grenzen, jede Grenze lesbar und wirksam", not t_fehler,
+      "; ".join(t_fehler))
+    w = {t["id"]: t["felder"] for t in TEMPLATES}
+    p("Templates: Stichproben der Werte aus dem Auftrag",
+      w["kell_bull_snort"] == {"kurs": {"min": "20"}, "volumen": {"min": "500.000"}, "veraenderung": {"min": "0,01"},
+                               "rvol_heute": {"min": "2,0"}}
+      and w["kell_52w"]["tage_hoch_1j"] == {"min": "0", "max": "0"} and w["kell_down_days"]["spy_tag"] == {"max": "-1"}
+      and w["qm_top_3m"]["perf_rang_3m"] == {"min": "98"} and w["sb_ep9"]["vol_max_12m"] == {"max": "9.000.000"}
+      and w["moglen_eng"]["rmv_15"] == {"min": "0", "max": "15"} and w["oops_super"]["vortagesspanne"] == {"min": "100"}
+      and TEMPLATE["walker_30eps"]["branchen_aus"] == ("Biotechnology",)
+      and TEMPLATE["walker_30eps"]["sektoren_aus"] == ("Utilities",)
+      and "short" not in str(w["sb_magna"]) and "stufen" not in str(w["sb_magna"]))
+    rw = template_regelwerk()
+    p("Templates im Regelwerk: 29 Absätze mit Trader, Quelle und eigener Festlegung, ohne Klammern und Striche",
+      len(rw) == 29 and all("Trader " in x and "Quelle: " in x for _n, x in rw)
+      and "Eigene Festlegung: das Dollarvolumen" in dict(rw)["Qullamaggie: IPOs"]
+      and "Eigene Festlegung: nur Aktien im Plus" in dict(rw)["Rai: Rekordvolumen"]
+      and "Short Interest" in dict(rw)["Stockbee: MAGNA, soweit möglich"]
+      and not any("(" in x.replace("F(t)", "") or "\u2013" in x or "|" in x for _n, x in rw), rw[0][1][:120])
+
+    # Branchen ausschliessen
+    tb = pd.DataFrame({"ticker": ["AAA", "BBB", "CCC", "DDD"], "kurse_aktuell": [True] * 4, "handelbar": [True] * 4,
+                       "branche": ["Biotechnology: Pharmaceutical Preparations", "Biotechnology: In Vitro",
+                                   "Computer Software", None],
+                       "branche_gruppe": ["Biotechnology", "Biotechnology", "Computer Software", None],
+                       "sektor": ["Health Care", "Health Care", "Technology", None]})
+    ab = auswerten(tb, {"nur_handelbar": False, "branchen_aus": ["Biotechnology"]}, heute)
+    p("Branchen: Biotechnology abgewählt nimmt beide Biotech-Branchen heraus, ohne Angabe bleibt",
+      list(ab["df"]["ticker"]) == ["CCC", "DDD"] and ab["branchen_aus"] == ["Biotechnology"], str(list(ab["df"]["ticker"])))
+    ab2 = auswerten(tb.drop(columns=["branche_gruppe"]), {"nur_handelbar": False, "branchen_aus": ["Biotechnology"]},
+                    heute)
+    ab3 = auswerten(tb.drop(columns=["branche_gruppe", "branche"]),
+                    {"nur_handelbar": False, "branchen_aus": ["Biotechnology"]}, heute)
+    p("Branchen: ältere Tabelle rechnet die Gruppe aus der Branche; ganz ohne Branche ein Hinweis",
+      list(ab2["df"]["ticker"]) == ["CCC", "DDD"] and len(ab3["df"]) == 4 and not ab3["branchen_aus"]
+      and any("kennt die Nasdaq-Branchen noch nicht" in h for h in ab3["hinweise"]))
+    p("Branchen: Einstellung, Vergleich, Satz und Datei nennen die Abwahl",
+      "ohne die Nasdaq-Branche Biotechnology" in einstellungs_teile({"branchen_aus": ["Biotechnology"]})
+      and wirksame_einstellung({"branchen_aus": ["B", "A", "A"]})["branchen_aus"] == ["A", "B"]
+      and wirksame_einstellung({})["branchen_aus"] == []
+      and "Nasdaq-Branche Computer Software" in satz_teile(ab, ab["df"].iloc[0].to_dict())
+      and list(ergebnis_tabelle(ab, "https://x")["Nasdaq-Branche"]) == ["Computer Software", "ohne Branchenangabe"])
+    st_b = {"branchen": [{"gruppe": "Biotechnology", "aktien": 736,
+                          "teile": ["Biotechnology: In Vitro", "Biotechnology: Pharmaceutical Preparations"]},
+                         {"gruppe": "Computer Software", "aktien": 1, "teile": ["Computer Software"]}]}
+    p("Branchen: Liste aus dem Stand samt Template-Branche, Erklärung nennt die zusammengefassten Branchen",
+      branchen_in(st_b) == ["Biotechnology", "Computer Software"] and branchen_in({}) == ["Biotechnology"]
+      and "In Vitro und Pharmaceutical Preparations" in branche_erklaerung("Biotechnology", st_b)
+      and "736 Aktien" in branche_erklaerung("Biotechnology", st_b)
+      and branche_erklaerung("Computer Software", st_b).endswith("ist es 1 Aktie.")
+      and "nächsten Bau" in branche_erklaerung("Biotechnology", {}), branche_erklaerung("Biotechnology", st_b))
+
+    # Dollarvolumen heute
+    tab_d = pd.DataFrame({"ticker": ["AAA", "BBB"], "dollarvolumen_heute_mio": [12.5, None]})
+    kurve_d = {0: 0.05, 30: 0.25, 390: 1.0}
+    d_zu, h_dzu = dollarvol_spalte(tab_d, None, {}, {"AAA": kurve_d}, date(2026, 9, 28))
+    d_on, h_don = dollarvol_spalte(tab_d, 30, {"AAA": ("2026-09-28", 1e6, 50.0), "BBB": ("2026-09-28", 1e6, 5.0)},
+                                   {"AAA": kurve_d}, date(2026, 9, 28))
+    d_fei, _h = dollarvol_spalte(tab_d, 30, {"AAA": ("2026-09-25", 1e6, 50.0)}, {"AAA": kurve_d}, date(2026, 9, 28))
+    d_leer, h_dleer = dollarvol_spalte(tab_d, 30, {}, {"AAA": kurve_d}, date(2026, 9, 28))
+    p("Dollarvolumen heute: außerhalb des Handels der letzte Tag, während des Handels hochgerechnet, ohne Kurve "
+      "nicht verifizierbar",
+      list(d_zu.fillna(-1)) == [12.5, -1] and h_dzu is None and d_on.iloc[0] == 200.0 and pd.isna(d_on.iloc[1])
+      and "für 1 Aktien" in (h_don or "") and list(d_fei.fillna(-1)) == [12.5, -1]
+      and d_leer.isna().all() and "nicht abrufen" in (h_dleer or ""), f"{list(d_on)}")
+    s_3, _h3 = rvol_spalte(pd.DataFrame({"ticker": ["AAA"], "volumen_50": [1000.0], "tk_vol_faktor": [1.0]}), 30,
+                           {"AAA": ("2026-09-28", 500.0, 12.0)}, {"AAA": kurve_d}, date(2026, 9, 28))
+    p("Relatives Volumen heute nimmt auch Kerzen samt Kurs", s_3.iloc[0] == 2.0, str(list(s_3)))
+    p("Sätze: Dollarvolumen heute und Tage seit den Quartalszahlen",
+      FELD["dollarvol_heute"].satz({"dollarvol_heute": 123.4}) == "Dollarvolumen heute 123,4 Millionen Dollar"
+      and FELD["dollarvol_heute"].satz({}) == "Dollarvolumen heute nicht verifizierbar"
+      and FELD["tage_zahlen"].satz({"tage_seit_zahlen": 0}) == "Reaktion auf die Quartalszahlen am letzten Handelstag"
+      and FELD["tage_zahlen"].satz({"tage_seit_zahlen": 3}) == "Reaktion auf die Quartalszahlen vor 3 Handelstagen"
+      and FELD["tage_zahlen"].satz({}) == "letzte Quartalszahlen nicht bekannt")
+
+    # Ein Template ueber auswerten: Oops stark
+    tp = pd.DataFrame({"ticker": ["AAA", "BBB", "CCC"], "kurse_aktuell": [True] * 3, "handelbar": [False] * 3,
+                       "eroeffnung_unter_vortagestief": [True, True, False], "vortagesspanne_lage": [60.0, 40.0, 80.0]})
+    ein = {"nur_handelbar": False,
+           "felder": {s: {"an": True, **ww} for s, ww in TEMPLATE["oops_stark"]["felder"].items()}}
+    p("Template Oops: stark über den Scanner: Eröffnung unter dem Vortagestief und Schluss ab der Mitte",
+      list(auswerten(tp, ein, heute)["df"]["ticker"]) == ["AAA"])
 
     print(f"\n{len(fehler)} Fehler." if fehler else "\nAlles bestanden.")
     return 1 if fehler else 0

@@ -3696,6 +3696,9 @@ def oberflaechen_texte(quelle=None) -> list:
              + list(oberflaeche.SEKTOR_ERKLAERUNGEN.values())]
     raus += [("Scanner", x) for f in sa.FELDER for x in (f.titel, f.erklaerung)]
     raus += [("Scanner", n) for _s, n in sa.SCHNELLBOX]
+    raus += [("Scanner", "Templates bekannter Trader")] + [("Scanner", t["name"]) for t in sa.TEMPLATES]
+    raus += [("Scanner", x) for x in sa.template_einleitung()]
+    raus += [("Scanner", f"{n}. {x}") for n, x in sa.template_regelwerk()]
     raus += [("Scanner", sa.schnellbox_grenze_titel(sa.FELD[s], t)) for s, _n in sa.SCHNELLBOX
              if s in sa.FELD and sa.FELD[s].art == "bereich" for t in ("min", "max")]
     raus += [("Scanner", n) for _k, n in sa.AUSWAHL] + [("Scanner", n) for _k, n in sa.GRUPPEN]
@@ -3905,12 +3908,16 @@ def schnellbox_pruefen(pfad) -> tuple:
     if not widgets or any(not any(k.arg == "on_change" and getattr(k.value, "id", "") == "_sc_schnellbox_uebernehmen"
                                   for k in w.keywords) for w in widgets):
         maengel.append("nicht jedes Feld der Schnellbox schreibt nach Teil 2")
+    # Seit den Templates (Gerhard, 27.09.2026) steht direkt ueber der Schnellbox
+    # die Kategorie Templates bekannter Trader und sonst nichts.
     for i, s in enumerate(reiter.body):
         if _ast.unparse(s) == "_sc_schnellbox()":
+            if i == 0 or _ast.unparse(reiter.body[i - 1]) != "_sc_templates()":
+                maengel.append("direkt über der Schnellbox stehen nicht die Templates")
             davor = " ".join(_ast.unparse(x) for x in reiter.body[:i])
             if any(f"st.{w}(" in davor for w in ("markdown", "caption", "write", "checkbox", "selectbox", "button",
                                                  "text_input", "radio")):
-                maengel.append("vor der Schnellbox zeigt der Scanner schon etwas")
+                maengel.append("vor der Schnellbox zeigt der Scanner außer den Templates schon etwas")
             break
     else:
         maengel.append("scanner_reiter ruft die Schnellbox nicht auf")
@@ -3919,7 +3926,86 @@ def schnellbox_pruefen(pfad) -> tuple:
         maengel.append("die Vorlagen speichern die Schnellbox getrennt von Teil 2")
     if maengel:
         return False, "; ".join(maengel)
-    return True, f"{len(namen)} Merkmale ganz oben, mit Teil 2 verknuepft, ohne Erklaerungen"
+    return True, f"{len(namen)} Merkmale direkt unter den Templates, mit Teil 2 verknuepft, ohne Erklaerungen"
+
+
+# Die 29 Templates bekannter Trader in Gerhards Wortlaut und Reihenfolge
+# (27.09.2026, Teil 3).
+TEMPLATES_SOLL = ("Kell: Bull Snort", "Kell: 52 Week Highs", "Kell: Gappers", "Kell: Doublers", "Kell: Fundies",
+                  "Kell: Strength on Down Days", "Qullamaggie: Episodic Pivot",
+                  "Qullamaggie: Episodic Pivot weites Netz", "Qullamaggie: Top Gainers 1 Monat",
+                  "Qullamaggie: Top Gainers 3 Monate", "Qullamaggie: Top Gainers 6 Monate",
+                  "Qullamaggie: Continuation Base", "Qullamaggie: IPOs", "Stockbee: 4 %-Breakout",
+                  "Stockbee: Momentum-Universum", "Stockbee: Anticipation", "Stockbee: EP 9 Millionen",
+                  "Stockbee: MAGNA, soweit möglich", "Soreide: High Tight Flag", "Rai: Rekordvolumen",
+                  "Moglen: Enge und Stärke", "JT: Power Earnings Gap", "JT: Monster Gap", "Walker: 40,40",
+                  "Walker: 30 % EPS", "Haber: RS vor Kurs", "Oops", "Oops: stark", "Oops: Super Oops")
+
+
+def templates_pruefen(pfad) -> tuple:
+    """Die Templates bekannter Trader (Gerhard, 27.09.2026): ganz oben im Scanner,
+    noch vor der Schnellbox, nur Ueberschrift und Auswahl, ohne Erklaertext,
+    Knoepfe und Fragen; die 29 Templates in seinem Wortlaut; jede Kennzahl
+    bekannt und jede Grenze lesbar; die Wahl setzt zuerst alles zurueck und
+    schaltet Nur handelbare Aktien aus; getrennt von den eigenen Vorlagen; im
+    Regelwerk beschrieben. Liefert (ok, Befund)."""
+    import ast as _ast
+    import scanner_ansicht as sa
+    maengel = []
+    if tuple(t["name"] for t in sa.TEMPLATES) != TEMPLATES_SOLL:
+        maengel.append("die Templates oder ihre Reihenfolge weichen ab")
+    for t in sa.TEMPLATES:
+        for s, w in t["felder"].items():
+            f = sa.FELD.get(s)
+            if f is None:
+                maengel.append(f"{t['name']}: {s} fehlt in Teil 2")
+            elif f.art == "ja" and w:
+                maengel.append(f"{t['name']}: {s} ist Ja-Nein und traegt Grenzen")
+            elif f.art == "bereich" and (not ({"min", "max"} & set(w)) or any(
+                    sa.zahl_lesen(w[x])[0] is None for x in ("min", "max") if x in w)):
+                maengel.append(f"{t['name']}: {s} ohne lesbare Grenze")
+        if any(x not in sa.SEKTOREN for x in t["sektoren_aus"]):
+            maengel.append(f"{t['name']}: unbekannter Sektor")
+    baum = _ast.parse(open(pfad, encoding="utf-8").read())
+    funktionen = {k.name: k for k in baum.body if isinstance(k, _ast.FunctionDef)}
+    kat, wahl, reiter = (funktionen.get(n) for n in ("_sc_templates", "_sc_template_gewaehlt", "scanner_reiter"))
+    if kat is None or wahl is None or reiter is None:
+        return False, "_sc_templates, _sc_template_gewaehlt oder scanner_reiter fehlt"
+    q = _ast.unparse(kat)
+    for verboten in ("_sc_erklaerung", "st.caption", "st.write", "st.info", "st.button", "help=", "st.expander",
+                     "st.checkbox", "st.radio", "st.text_input"):
+        if verboten in q:
+            maengel.append(f"in der Kategorie steht {verboten}")
+    if q.count("st.markdown(") != 1 or "Templates bekannter Trader" not in q:
+        maengel.append("in der Kategorie steht mehr als die Ueberschrift Templates bekannter Trader")
+    wahlen = [n for n in _ast.walk(kat) if isinstance(n, _ast.Call) and isinstance(n.func, _ast.Attribute)
+              and getattr(n.func.value, "id", "") == "st" and n.func.attr == "selectbox"]
+    if len(wahlen) != 1 or not any(k.arg == "on_change" and getattr(k.value, "id", "") == "_sc_template_gewaehlt"
+                                   for k in wahlen[0].keywords):
+        maengel.append("die Kategorie hat nicht genau eine Auswahl, die das Template setzt")
+    koerper = [_ast.unparse(s) for s in reiter.body]
+    if "_sc_templates()" not in koerper:
+        maengel.append("scanner_reiter ruft die Templates nicht auf")
+    else:
+        davor = " ".join(koerper[:koerper.index("_sc_templates()")])
+        if any(f"st.{w}(" in davor for w in ("markdown", "caption", "write", "checkbox", "selectbox", "button",
+                                             "text_input", "radio")):
+            maengel.append("vor den Templates zeigt der Scanner schon etwas")
+    qw = _ast.unparse(wahl)
+    if ("_sc_alles_zuruecksetzen(template_behalten=True)" not in qw or "t['felder'].items()" not in qw
+            or qw.index("_sc_alles_zuruecksetzen(") > qw.index("t['felder'].items()")
+            or "st.session_state['sc_handelbar'] = False" not in qw):
+        maengel.append("die Wahl setzt nicht zuerst alles zurueck oder laesst Nur handelbare Aktien an")
+    if "sc_template" in _ast.unparse(funktionen.get("_sc_vorlage_schluessel") or kat):
+        maengel.append("die eigenen Vorlagen speichern die Wahl des Templates mit")
+    quelle = open(pfad, encoding="utf-8").read()
+    if "sa.template_regelwerk()" not in quelle.split("with tab_info:", 1)[-1].split("# --- Ab hier nur mit", 1)[0]:
+        maengel.append("das Regelwerk beschreibt die Templates nicht")
+    if len(sa.template_regelwerk()) != len(sa.TEMPLATES):
+        maengel.append("nicht jedes Template hat seinen Absatz im Regelwerk")
+    if maengel:
+        return False, "; ".join(maengel[:6])
+    return True, f"{len(sa.TEMPLATES)} Templates ganz oben, nur die Auswahl, im Regelwerk beschrieben"
 
 
 def erklaerungsknoepfe_pruefen(pfad) -> tuple:
@@ -3931,7 +4017,10 @@ def erklaerungsknoepfe_pruefen(pfad) -> tuple:
     "Gruppe "). AUSDRUECKLICH AUSGENOMMEN ist die Schnellbox ganz oben (Gerhard,
     27.09.2026: nur Kontrollkaestchen und Felder mit kurzer Beschriftung); sie
     steht vor Teil 1 und liegt damit ausserhalb des geprueften Bereichs, ihre
-    eigene Pruefung ist schnellbox_pruefen. Liefert (ok, Befund)."""
+    eigene Pruefung ist schnellbox_pruefen. Ebenso AUSGENOMMEN sind die Templates
+    bekannter Trader darueber (Gerhard, 27.09.2026: "Der Pruefstand nimmt diese
+    Kategorie ausdruecklich aus"); ihre Pruefung ist templates_pruefen.
+    Liefert (ok, Befund)."""
     import ast as _ast
     baum = _ast.parse(open(pfad, encoding="utf-8").read())
     reiter = next((k for k in baum.body if isinstance(k, _ast.FunctionDef) and k.name == "scanner_reiter"), None)
@@ -4091,7 +4180,10 @@ def block_i():
     pruefe("I", "Unter jedem Kriterium im Scanner steht ein Erklaerungsknopf, die Schnellbox ausgenommen", ok,
            zusatz)
     ok, zusatz = schnellbox_pruefen(app)
-    pruefe("I", "Die Schnellbox steht ganz oben, schlank und mit Teil 2 verknuepft", ok, zusatz)
+    pruefe("I", "Die Schnellbox steht direkt unter den Templates, schlank und mit Teil 2 verknuepft", ok, zusatz)
+    ok, zusatz = templates_pruefen(app)
+    pruefe("I", "Die Templates bekannter Trader stehen ganz oben, nur mit der Auswahl, und setzen zuerst alles "
+                "zurueck", ok, zusatz)
     ohne = [f.schluessel for f in sa.FELDER if not str(f.erklaerung or "").strip()]
     pruefe("I", "Jedes Merkmal des Scanners hat eine Erklaerung", not ohne, nennen(ohne))
     ohne = [s for s in list(sa.SEKTOREN) + [""] if s not in oberflaeche.SEKTOR_ERKLAERUNGEN]
