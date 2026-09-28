@@ -91,7 +91,7 @@
     "RDVT|Fallback: MA50-Pullback": "draussen",
     "SANM|Rectangle Top": "drin",
     "SN|Cup & Handle (Wochenbasis)": "draussen",
-    "SN|Fallback: MA50-Pullback": "drin",
+    "SN|Fallback: MA50-Pullback": "draussen",
     "TH|Fallback: MA50-Pullback": "draussen",
     "VECO|Fallback: MA50-Pullback": "drin",
     "PLSE|Fallback: MA50-Pullback": "draussen",
@@ -130,7 +130,9 @@
     "FIVN|Cup & Handle (Wochenbasis)": "drin",
     "MAZE|Fallback: MA50-R\u00fcckeroberung": "drin",
     "NTAP|Cup & Handle (Wochenbasis)": "drin",
-    "NTAP|Wick Play": "drin"
+    "NTAP|Wick Play": "drin",
+    "ICHR|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "CDNA|Fallback: 52W-Hoch-Breakout": "drin"
   },
   "gemeldet": {
     "INSIDER|FTK|pfad_a|1": "2026-09-16",
@@ -211,7 +213,11 @@
     "MAZE|Fallback: MA50-R\u00fcckeroberung": "2026-09-28",
     "BEST|MAZE|Fallback: MA50-R\u00fcckeroberung": "2026-09-28",
     "NTAP|Cup & Handle (Wochenbasis)": "2026-09-28",
-    "BEST|NTAP|Cup & Handle (Wochenbasis)": "2026-09-28"
+    "BEST|NTAP|Cup & Handle (Wochenbasis)": "2026-09-28",
+    "NTAP|Wick Play": "2026-09-28",
+    "BEST|NTAP|Wick Play": "2026-09-28",
+    "UEBER|AEO|EMA Crossback": "2026-09-28",
+    "TEIL|CDNA|Cup & Handle (Wochenbasis)": "2026-09-28"
   },
   "gemeldet_kp": {
     "CXW|Cup & Handle (Wochenbasis)": 31.67,
@@ -275,7 +281,9 @@
     "MAZE|Fallback: MA50-R\u00fcckeroberung": 27.29,
     "BEST|MAZE|Fallback: MA50-R\u00fcckeroberung": 27.29,
     "NTAP|Cup & Handle (Wochenbasis)": 203.92,
-    "BEST|NTAP|Cup & Handle (Wochenbasis)": 203.92
+    "BEST|NTAP|Cup & Handle (Wochenbasis)": 203.92,
+    "NTAP|Wick Play": 204.01,
+    "BEST|NTAP|Wick Play": 204.01
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-09-28"
