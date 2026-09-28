@@ -22,9 +22,9 @@
     "STX|Fallback: MA50-Pullback": "draussen",
     "TJGC|Fallback: MA50-Pullback": "draussen",
     "UMC|Fallback: MA50-Pullback": "draussen",
-    "AAON|Fallback: MA50-Pullback": "drin",
+    "AAON|Fallback: MA50-Pullback": "draussen",
     "ADPT|Fallback: MA50-Pullback": "draussen",
-    "AEHR|Fallback: MA50-Pullback": "drin",
+    "AEHR|Fallback: MA50-Pullback": "draussen",
     "ARX|Fallback: MA50-Pullback": "draussen",
     "FEIM|Fallback: MA50-Pullback": "draussen",
     "FORM|Fallback: MA50-Pullback": "draussen",
@@ -102,7 +102,10 @@
     "NESR|Fallback: MA50-Pullback": "drin",
     "OLLI|Fallback: MA50-Pullback": "draussen",
     "RMBS|Fallback: MA50-Pullback": "draussen",
-    "NTAP|Inside Day": "drin"
+    "NTAP|Inside Day": "drin",
+    "AAON|EMA Crossback": "drin",
+    "ACLS|EMA Crossback": "drin",
+    "RDVT|Cup & Handle (Wochenbasis)": "drin"
   },
   "gemeldet": {
     "INSIDER|FTK|pfad_a|1": "2026-09-16",
@@ -139,7 +142,21 @@
     "HALO|Cup & Handle (Wochenbasis)": "2026-09-28",
     "BEST|HALO|Cup & Handle (Wochenbasis)": "2026-09-28",
     "SANM|Rectangle Top": "2026-09-28",
-    "BEST|SANM|Rectangle Top": "2026-09-28"
+    "BEST|SANM|Rectangle Top": "2026-09-28",
+    "NTAP|Inside Day": "2026-09-28",
+    "BEST|NTAP|Inside Day": "2026-09-28",
+    "AAON|EMA Crossback": "2026-09-28",
+    "BEST|AAON|EMA Crossback": "2026-09-28",
+    "ACLS|EMA Crossback": "2026-09-28",
+    "BEST|ACLS|EMA Crossback": "2026-09-28",
+    "RDVT|Cup & Handle (Wochenbasis)": "2026-09-28",
+    "BEST|RDVT|Cup & Handle (Wochenbasis)": "2026-09-28",
+    "GEWINN|zonenwechsel|AXTI|Fallback: MA50-R\u00fcckeroberung|stark": "2026-09-28",
+    "GEWINN|zonenwechsel|KEYS|1|mittel": "2026-09-28",
+    "GEWINN|zonenwechsel|MXL|Fallback: 20-Tage-Hoch (Pivot)|stark": "2026-09-28",
+    "GEWINN|zonenwechsel|MXL|Fallback: MA50-R\u00fcckeroberung|stark": "2026-09-28",
+    "GEWINN|zonenwechsel|OUST|Fallback: MA50-Pullback|mittel": "2026-09-28",
+    "GEWINN|zonenwechsel|SMTC|EMA Crossback|stark": "2026-09-28"
   },
   "gemeldet_kp": {
     "CXW|Cup & Handle (Wochenbasis)": 31.67,
@@ -169,7 +186,15 @@
     "HALO|Cup & Handle (Wochenbasis)": 109.67,
     "BEST|HALO|Cup & Handle (Wochenbasis)": 109.67,
     "SANM|Rectangle Top": 221.33,
-    "BEST|SANM|Rectangle Top": 221.33
+    "BEST|SANM|Rectangle Top": 221.33,
+    "NTAP|Inside Day": 201.39,
+    "BEST|NTAP|Inside Day": 201.39,
+    "AAON|EMA Crossback": 90.01,
+    "BEST|AAON|EMA Crossback": 90.01,
+    "ACLS|EMA Crossback": 123.39,
+    "BEST|ACLS|EMA Crossback": 123.39,
+    "RDVT|Cup & Handle (Wochenbasis)": 77.37,
+    "BEST|RDVT|Cup & Handle (Wochenbasis)": 77.37
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-09-28"
