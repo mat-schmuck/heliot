@@ -9444,7 +9444,7 @@
   "klasse": "standard",
   "musterziel": 23.86,
   "zone": "mittel",
-  "zone_gemeldet": "leicht",
+  "zone_gemeldet": "mittel",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
    "2_groesster_tagesgewinn"
