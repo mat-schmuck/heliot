@@ -194,7 +194,9 @@
     "NTRA|Fallback: 52W-Hoch-Breakout": "2026-09-28",
     "BEST|NTRA|Fallback: 52W-Hoch-Breakout": "2026-09-28",
     "BLFS|Fallback: 52W-Hoch-Breakout": "2026-09-28",
-    "BEST|BLFS|Fallback: 52W-Hoch-Breakout": "2026-09-28"
+    "BEST|BLFS|Fallback: 52W-Hoch-Breakout": "2026-09-28",
+    "SENEA|Fallback: MA50-R\u00fcckeroberung": "2026-09-28",
+    "BEST|SENEA|Fallback: MA50-R\u00fcckeroberung": "2026-09-28"
   },
   "gemeldet_kp": {
     "CXW|Cup & Handle (Wochenbasis)": 31.67,
@@ -248,7 +250,9 @@
     "NTRA|Fallback: 52W-Hoch-Breakout": 416.17,
     "BEST|NTRA|Fallback: 52W-Hoch-Breakout": 416.17,
     "BLFS|Fallback: 52W-Hoch-Breakout": 38.93,
-    "BEST|BLFS|Fallback: 52W-Hoch-Breakout": 38.93
+    "BEST|BLFS|Fallback: 52W-Hoch-Breakout": 38.93,
+    "SENEA|Fallback: MA50-R\u00fcckeroberung": 184.06,
+    "BEST|SENEA|Fallback: MA50-R\u00fcckeroberung": 184.06
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-09-28"
