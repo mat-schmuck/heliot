@@ -378,5 +378,16 @@
    "zeichen": null,
    "text": "INFORMATION: VSAT; Rectangle Top; Kurs 71.72 unter der 8-Tage-EMA 73.31; reiner Hinweis, kein Ausstiegssignal; Kurs 71,72, seit Trigger -6,0 % gleich -0,6 R"
   }
+ ],
+ "geprueft": "2026-09-28",
+ "zurueckgenommen": [
+  "AAOI|SPRING-2026-09-23",
+  "DOCN|Fallback: 20-Tage-Hoch (Pivot)",
+  "OSCR|3",
+  "TEAM|1",
+  "TEAM|2",
+  "TH|Cup & Handle (Wochenbasis)",
+  "TH|Fallback: 52W-Hoch-Breakout",
+  "VSAT|1"
  ]
 }
