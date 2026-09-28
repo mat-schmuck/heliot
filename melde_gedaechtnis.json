@@ -116,7 +116,9 @@
     "CAKE|Wick Play": "drin",
     "CBRL|Fallback: MA50-R\u00fcckeroberung": "drin",
     "HHH|Rectangle Top": "drin",
-    "AMPH|Cup & Handle (Wochenbasis)": "drin"
+    "AMPH|Cup & Handle (Wochenbasis)": "drin",
+    "TWST|Fallback: 52W-Hoch-Breakout": "drin",
+    "TWST|Fallback: 20-Tage-Hoch (Pivot)": "drin"
   },
   "gemeldet": {
     "INSIDER|FTK|pfad_a|1": "2026-09-16",
@@ -177,7 +179,11 @@
     "BEST|HHH|Rectangle Top": "2026-09-28",
     "AMPH|Cup & Handle (Wochenbasis)": "2026-09-28",
     "BEST|AMPH|Cup & Handle (Wochenbasis)": "2026-09-28",
-    "R2GX|TWLO|2026-09-28": "2026-09-28"
+    "R2GX|TWLO|2026-09-28": "2026-09-28",
+    "TWST|Fallback: 52W-Hoch-Breakout": "2026-09-28",
+    "BEST|TWST|Fallback: 52W-Hoch-Breakout": "2026-09-28",
+    "TWST|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-28",
+    "BEST|TWST|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-28"
   },
   "gemeldet_kp": {
     "CXW|Cup & Handle (Wochenbasis)": 31.67,
@@ -221,7 +227,11 @@
     "HHH|Rectangle Top": 69.18,
     "BEST|HHH|Rectangle Top": 69.18,
     "AMPH|Cup & Handle (Wochenbasis)": 26.64,
-    "BEST|AMPH|Cup & Handle (Wochenbasis)": 26.64
+    "BEST|AMPH|Cup & Handle (Wochenbasis)": 26.64,
+    "TWST|Fallback: 52W-Hoch-Breakout": 186.39,
+    "BEST|TWST|Fallback: 52W-Hoch-Breakout": 186.39,
+    "TWST|Fallback: 20-Tage-Hoch (Pivot)": 186.21,
+    "BEST|TWST|Fallback: 20-Tage-Hoch (Pivot)": 186.21
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-09-28"
