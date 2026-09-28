@@ -24,7 +24,7 @@
     "UMC|Fallback: MA50-Pullback": "draussen",
     "AAON|Fallback: MA50-Pullback": "drin",
     "ADPT|Fallback: MA50-Pullback": "draussen",
-    "AEHR|Fallback: MA50-Pullback": "draussen",
+    "AEHR|Fallback: MA50-Pullback": "drin",
     "ARX|Fallback: MA50-Pullback": "draussen",
     "FEIM|Fallback: MA50-Pullback": "draussen",
     "FORM|Fallback: MA50-Pullback": "draussen",
@@ -115,7 +115,7 @@
     "UMAC|Fallback: MA50-Pullback": "drin",
     "CAKE|Wick Play": "drin",
     "CBRL|Fallback: MA50-R\u00fcckeroberung": "drin",
-    "HHH|Rectangle Top": "drin",
+    "HHH|Rectangle Top": "draussen",
     "AMPH|Cup & Handle (Wochenbasis)": "drin",
     "TWST|Fallback: 52W-Hoch-Breakout": "drin",
     "TWST|Fallback: 20-Tage-Hoch (Pivot)": "drin",
@@ -220,7 +220,8 @@
     "UEBER|AEO|EMA Crossback": "2026-09-28",
     "TEIL|CDNA|Cup & Handle (Wochenbasis)": "2026-09-28",
     "VCYT|Fallback: MA50-R\u00fcckeroberung": "2026-09-28",
-    "BEST|VCYT|Fallback: MA50-R\u00fcckeroberung": "2026-09-28"
+    "BEST|VCYT|Fallback: MA50-R\u00fcckeroberung": "2026-09-28",
+    "UEBER|HHH|Rectangle Top": "2026-09-28"
   },
   "gemeldet_kp": {
     "CXW|Cup & Handle (Wochenbasis)": 31.67,
