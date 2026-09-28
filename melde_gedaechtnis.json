@@ -115,7 +115,8 @@
     "UMAC|Fallback: MA50-Pullback": "drin",
     "CAKE|Wick Play": "drin",
     "CBRL|Fallback: MA50-R\u00fcckeroberung": "drin",
-    "HHH|Rectangle Top": "drin"
+    "HHH|Rectangle Top": "drin",
+    "AMPH|Cup & Handle (Wochenbasis)": "drin"
   },
   "gemeldet": {
     "INSIDER|FTK|pfad_a|1": "2026-09-16",
@@ -173,7 +174,9 @@
     "CBRL|Fallback: MA50-R\u00fcckeroberung": "2026-09-28",
     "BEST|CBRL|Fallback: MA50-R\u00fcckeroberung": "2026-09-28",
     "HHH|Rectangle Top": "2026-09-28",
-    "BEST|HHH|Rectangle Top": "2026-09-28"
+    "BEST|HHH|Rectangle Top": "2026-09-28",
+    "AMPH|Cup & Handle (Wochenbasis)": "2026-09-28",
+    "BEST|AMPH|Cup & Handle (Wochenbasis)": "2026-09-28"
   },
   "gemeldet_kp": {
     "CXW|Cup & Handle (Wochenbasis)": 31.67,
@@ -215,7 +218,9 @@
     "CBRL|Fallback: MA50-R\u00fcckeroberung": 54.06,
     "BEST|CBRL|Fallback: MA50-R\u00fcckeroberung": 54.06,
     "HHH|Rectangle Top": 69.18,
-    "BEST|HHH|Rectangle Top": 69.18
+    "BEST|HHH|Rectangle Top": 69.18,
+    "AMPH|Cup & Handle (Wochenbasis)": 26.64,
+    "BEST|AMPH|Cup & Handle (Wochenbasis)": 26.64
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-09-28"
