@@ -105,7 +105,10 @@
     "NTAP|Inside Day": "drin",
     "AAON|EMA Crossback": "drin",
     "ACLS|EMA Crossback": "drin",
-    "RDVT|Cup & Handle (Wochenbasis)": "drin"
+    "RDVT|Cup & Handle (Wochenbasis)": "drin",
+    "ARW|Fallback: MA50-Pullback": "draussen",
+    "TALO|Fallback: MA50-Pullback": "drin",
+    "AMBQ|Fallback: MA50-Pullback": "draussen"
   },
   "gemeldet": {
     "INSIDER|FTK|pfad_a|1": "2026-09-16",
@@ -156,7 +159,8 @@
     "GEWINN|zonenwechsel|MXL|Fallback: 20-Tage-Hoch (Pivot)|stark": "2026-09-28",
     "GEWINN|zonenwechsel|MXL|Fallback: MA50-R\u00fcckeroberung|stark": "2026-09-28",
     "GEWINN|zonenwechsel|OUST|Fallback: MA50-Pullback|mittel": "2026-09-28",
-    "GEWINN|zonenwechsel|SMTC|EMA Crossback|stark": "2026-09-28"
+    "GEWINN|zonenwechsel|SMTC|EMA Crossback|stark": "2026-09-28",
+    "SEKTORAUF|2026-09-28": "2026-09-28"
   },
   "gemeldet_kp": {
     "CXW|Cup & Handle (Wochenbasis)": 31.67,
