@@ -421,7 +421,9 @@ def power_gap(d):
         return None
     return {"strategie": STRATEGIE_NAMEN["power_gap"], "kaufpunkt": round(h + 0.01, 2),
             "stop": round(l - 0.01, 2), "ziel": None,
-            "status": f"Lücke {gap * 100:.1f} Prozent, Volumen {v / vol50:.1f} mal der 50-Tage-Schnitt".replace(".", ",")}
+            # Volumen in Prozent des Schnitts (Gerhard, 30.09.2026, Frage 2).
+            "status": (f"Lücke {gap * 100:.1f} Prozent, Volumen {v / vol50 * 100:.0f} Prozent des "
+                       "50-Tage-Schnitts").replace(".", ",")}
 
 
 def chartmuster_werte(d, voll=None, markttiefs=None, termine=None):

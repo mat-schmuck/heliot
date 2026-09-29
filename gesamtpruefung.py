@@ -3998,6 +3998,46 @@ def _namen_pruefen():
     return not funde, nennen(funde) if funde else "ein Name je Sache"
 
 
+# Die alten Schreibweisen fuer Volumen gegen einen Schnitt: Prozent ueber dem
+# Schnitt, Vielfache, Faktor. Seit 30.09.2026 steht Volumen ueberall in Prozent
+# des Schnitts (Gerhard, Antwort auf Frage 2).
+ALTE_VOLUMEN_SCHREIBWEISE = (r"über Ø|unter Ø|% vom Ø|mal Ø|(Prozent|%) über dem (50-Tage-)?Schnitt|"
+                             r"gegenüber dem 50-Tage-Schnitt|mal so hoch wie der 50|mal der 50|"
+                             r"Fache[ns]? des (50-Tage-)?Schnitt|Fache[ns]? des Volumens|Fache[ns]? der 50|"
+                             r"Volumenfaktor|Schnittvolumens")
+# Mess- und Entwicklerwerkzeuge, die nur Zahlen auf die Konsole schreiben.
+VOLUMEN_SCHREIBWEISE_AUSGENOMMEN = {"gesamtpruefung.py", "gapgo_rueckblick.py", "liquiditaet.py",
+                                    "feedpruefung.py", "datenvergleich.py"}
+
+
+def _volumen_schreibweise_pruefen():
+    """Gerhard, 30.09.2026, Antwort auf Frage 2: Volumen steht im ganzen System in
+    Prozent des 50-Tage-Schnitts, 100 ist der Schnitt, 200 das Doppelte; ein Wert
+    gegen einen anderen Schnitt nennt diesen, etwa den 10-Tage-Schnitt. Geprueft
+    werden die sichtbaren Texte der Oberflaeche und jede Zeichenkette im Quelltext
+    ausser Kommentaren und Docstrings, damit auch Meldungen und Berichte darunter
+    fallen."""
+    import re as _re
+    muster = _re.compile(ALTE_VOLUMEN_SCHREIBWEISE)
+    funde = [f"{q}: {x[:50]}" for q, x in oberflaechen_texte() if muster.search(x)]
+    for pfad in sorted(WURZEL.glob("*.py")):
+        if pfad.name in VOLUMEN_SCHREIBWEISE_AUSGENOMMEN:
+            continue
+        im_doc = False
+        for nr, z in enumerate(pfad.read_text(encoding="utf-8").splitlines(), 1):
+            s = z.strip()
+            n3 = s.count('"""') + s.count("'''")
+            war = im_doc
+            if n3 % 2 == 1:
+                im_doc = not im_doc
+            if war or n3 or s.startswith("#"):
+                continue
+            code = _re.split(r"\s#\s", z, maxsplit=1)[0]
+            if ('"' in code or "'" in code) and muster.search(code):
+                funde.append(f"{pfad.name} Zeile {nr}")
+    return not funde, nennen(funde) if funde else "Volumen überall in Prozent des Schnitts"
+
+
 # (Name, Pruefung, "Pflicht" oder "Warnung"); die Pruefung liefert (bestanden, Befund).
 KOHAERENZ_KRITERIEN = [
     ("Keine Klammern in sichtbaren Texten (Antwort 112)", _klammern_pruefen, "Warnung"),
@@ -4008,6 +4048,8 @@ KOHAERENZ_KRITERIEN = [
      "Pflicht"),
     ("Jede Kennzahl im Nachschlagen mit Erklaerung (Antwort 118)", _nachschlagen_erklaerungen_pruefen, "Warnung"),
     ("Ein Name je Sache (Antwort 119)", _namen_pruefen, "Warnung"),
+    ("Volumen ueberall in Prozent des Schnitts (Antwort auf Frage 2 vom 30.09.2026)", _volumen_schreibweise_pruefen,
+     "Pflicht"),
 ]
 
 

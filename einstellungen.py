@@ -161,7 +161,8 @@ ALARME = [
      "erklaerung": "Nach starken Quartalszahlen wird nicht der Sprung gekauft, sondern die erste ruhige "
                    "Konsolidierung darüber; Alarm beim Ausbruch aus dieser Konsolidierung.",
      "regel": "Nach Quartalszahlen eine Eröffnung mindestens 8 Prozent oder ein Schluss mindestens 10 Prozent über "
-              "dem Vortag, mit mindestens dem Dreifachen des Volumens; danach 2 bis 15 Handelstage ruhige "
+              "dem Vortag, mit einem Volumen von mindestens 300 Prozent des 10-Tage-Schnitts; danach 2 bis 15 "
+              "Handelstage ruhige "
               "Konsolidierung, deren Tiefs über dem Tief des Sprungtags bleiben. Kaufpunkt einen Cent über dem Hoch "
               "der Konsolidierung, Stop 4 Prozent unter ihrem Tief."},
     {"schluessel": "ema", "gruppe": "kauf", "name": "EMA Crossback",
@@ -247,21 +248,21 @@ ALARME = [
                    "über ihren Vortagesschluss.",
      "regel": "Nach einer schwachen Eröffnung des Nasdaq dreht eine Aktie der Fokusliste mit einem Volumenschub über "
               "ihren Vortagesschluss. Kaufpunkt ist der Kurs der Meldung, der Stop liegt am Vortagesschluss; die "
-              "Position ist ein Tagesgeschäft."},
+              "Position ist ein Tagesgeschäft. Das Volumen wird ab fünf Minuten nach Handelsbeginn beurteilt."},
     {"schluessel": "r2gx", "gruppe": "weitere", "name": "Red to Green Explosive",
      "namen": ["Red-to-Green Explosive", "Red to Green Explosive"],
      "erklaerung": "Eine Aktie eröffnet unter ihrem Vortagesschluss und dreht aus eigener Kraft ins Plus, "
                    "unabhängig vom Markt.",
      "regel": "Eine Aktie der Fokusliste eröffnet unter ihrem Vortagesschluss und dreht aus eigener Kraft ins Plus, "
-              "ohne Bedingung an den Markt; Kaufpunkt und Stop wie bei Red to Green."},
+              "ohne Bedingung an den Markt; Kaufpunkt, Stop und Beurteilung des Volumens wie bei Red to Green."},
     {"schluessel": "gapgo", "gruppe": "weitere", "name": "Power-Gap",
      "namen": ["Gap and Go", "Lücken-Bestätigungstag", "Power-Gap"],
      "erklaerung": "Eine Kurslücke von mindestens sieben Prozent nach oben mit hohem Volumen; Meldung am Lückentag, "
                    "der Einstieg folgt am Handelstag danach.",
      "regel": "Eine Kurslücke von mindestens sieben Prozent nach oben mit hohem Volumen. Am Lückentag kommt die "
               "Meldung; gekauft wird am Handelstag danach, solange der Kurs höchstens 3 Prozent über dem Kaufpunkt "
-              "steht und das Volumen dieses Tages mindestens den 50-Tage-Schnitt erreicht, darüber ist es nur eine "
-              "Auskunft."},
+              "steht und das Volumen dieses Tages hochgerechnet über die F(t)-Kurve mindestens 100 Prozent des "
+              "50-Tage-Schnitts erreicht, darüber ist es nur eine Auskunft."},
     {"schluessel": "insider", "gruppe": "weitere", "name": "Insider-Käufe",
      "namen": ["Insider-Kauf"],
      "erklaerung": "Große Käufe von Vorständen und Direktoren laut den Meldungen an die SEC; Meldung mit dem Kurs "
@@ -442,8 +443,11 @@ def volumen_satz(einst: dict, schluessel) -> str:
     if p is None:
         return ""
     wann = "am Lückentag " if schluessel == "gapgo" else "beim Ausbruch "
+    # Seit 30.09.2026 mit der ersten Pruefung ab 09:35 New York (Gerhard,
+    # Frage 1); die Uhrzeit steht hier als Abstand zum Handelsbeginn, weil sie
+    # bei uns in den Umstellwochen eine Stunde frueher liegt.
     return (f"Gemeldet wird nur, wenn das Volumen {wann}hochgerechnet über die F(t)-Kurve mindestens "
-            f"{p} Prozent des 50-Tage-Schnitts erreicht.")
+            f"{p} Prozent des 50-Tage-Schnitts erreicht; beurteilt wird es ab fünf Minuten nach Handelsbeginn.")
 
 
 def lesen(roh) -> dict:
@@ -619,7 +623,11 @@ def selbsttest() -> int:
     texte += list(GRUPPEN_REGEL.values()) + [TREND_TEMPLATE_REGEL] + [n for _g, n in GRUPPEN]
     p("Kein Gedankenstrich und kein senkrechter Strich in Namen, Erklaerungen und Regeln",
       not any(z in t for t in texte for z in verboten))
-    p("Keine Klammern in Namen und Texten der Anzeige", not any(z in t for t in texte for z in "()"))
+    # F(t) ist keine Klammer, sondern der Name der Volumenkurve (wie in der
+    # Gesamtpruefung, Antwort 112); er steht seit 30.09.2026 auch in der Regel
+    # des Power-Gap.
+    p("Keine Klammern in Namen und Texten der Anzeige",
+      not any(z in t.replace("F(t)", "") for t in texte for z in "()"))
     p("Jede Meldung zu offenen Positionen hat eine Warnung",
       all(a.get("warnung") for a in ALARME if a["gruppe"] == "positionen"))
     p("Nur die Meldungen zu offenen Positionen tragen eine Warnung",

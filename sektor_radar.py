@@ -286,9 +286,10 @@ def absaetze(treffer):
             continue
         zeilen = [f"{ueberschrift}:"]
         for i, t in enumerate(gruppe, 1):
+            # Volumen in Prozent des Schnitts (Gerhard, 30.09.2026, Frage 2).
             zeilen.append(f"{i}. {t['etf']} ({t['name']}); Kurs "
-                          f"{t['kurs']:.2f}; Volumen {t['volumen_pct']:+.0f}% "
-                          f"gegenüber dem 50-Tage-Schnitt")
+                          f"{t['kurs']:.2f}; Volumen {t['volumen_pct'] + 100:.0f} % "
+                          f"des 50-Tage-Schnitts")
         raus.append("\n".join(zeilen))
     return raus
 
@@ -485,6 +486,9 @@ def selbsttest() -> int:
       len(absaetze(t)) == 2, len(absaetze(t)))
     p("Ohne Treffer keine Absaetze", absaetze([]) == [])
     p("Meldung enthaelt keinen Gedankenstrich", "—" not in text and "–" not in text)
+    p("Volumen in Prozent des 50-Tage-Schnitts (Frage 2 vom 30.09.2026)",
+      "Volumen 228 % des 50-Tage-Schnitts" in text and "Volumen 161 % des 50-Tage-Schnitts" in text
+      and "gegenüber" not in text, text)
     p("Titel zaehlt beide Richtungen",
       titel(t) == "Sektor-Radar: 1 nach oben, 1 nach unten", titel(t))
     p("Ohne Treffer bleibt der Text leer", baue_meldung([]) == "")
