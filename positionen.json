@@ -14812,5 +14812,32 @@
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
   "wedge_drop_gemeldet": false
+ },
+ "HNGE|Darvas Box": {
+  "symbol": "HNGE",
+  "firma": "Hinge Health Inc",
+  "strategie": "Darvas Box",
+  "einstieg": 96.67,
+  "einstieg_datum": "2026-09-29",
+  "einstieg_index": 0,
+  "struktur_stop": 89.74,
+  "aktueller_stop": 89.74,
+  "stop_quelle": "struktur",
+  "hoechstkurs": 96.67,
+  "teilverkauft": false,
+  "halteregel_aktiv": false,
+  "beobachtung": true,
+  "status": "offen",
+  "verlauf": [],
+  "klasse": "darvas",
+  "musterziel": null,
+  "zone": null,
+  "zone_gemeldet": null,
+  "ziel_gemeldet": false,
+  "klimax_gemeldet": [],
+  "weinstein_gemeldet": false,
+  "zahlen_hinweis_gemeldet": false,
+  "sektor_hinweis_gemeldet": false,
+  "wedge_drop_gemeldet": false
  }
 }
