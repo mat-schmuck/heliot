@@ -37,7 +37,7 @@
     "PSX|Fallback: MA50-Pullback": "draussen",
     "S|Fallback: MA50-Pullback": "draussen",
     "SNX|Fallback: MA50-Pullback": "drin",
-    "ZETA|Fallback: MA50-Pullback": "drin",
+    "ZETA|Fallback: MA50-Pullback": "draussen",
     "BAND|Fallback: MA50-Pullback": "draussen",
     "CRWD|Fallback: MA50-Pullback": "draussen",
     "ILMN|Fallback: MA50-Pullback": "draussen",
@@ -186,7 +186,8 @@
     "QMCO|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "HUT|Fallback: MA50-R\u00fcckeroberung": "drin",
     "AEO|Pocket Pivot": "drin",
-    "AEHR|Fallback: 20-Tage-Hoch (Pivot)": "drin"
+    "AEHR|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "MXL|Inside Day": "drin"
   },
   "gemeldet": {
     "INSIDER|FTK|pfad_a|1": "2026-09-16",
@@ -368,7 +369,8 @@
     "MRNA|Fallback: 52W-Hoch-Breakout": "2026-09-29",
     "BEST|MRNA|Fallback: 52W-Hoch-Breakout": "2026-09-29",
     "MRNA|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-29",
-    "BEST|MRNA|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-29"
+    "BEST|MRNA|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-29",
+    "TEIL|QMCO|Fallback: 52W-Hoch-Breakout": "2026-09-29"
   },
   "gemeldet_kp": {
     "CXW|Cup & Handle (Wochenbasis)": 31.67,
