@@ -183,7 +183,7 @@
     "ILMN|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "QMCO|Inside Day": "draussen",
     "QMCO|Fallback: 52W-Hoch-Breakout": "drin",
-    "QMCO|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "QMCO|Fallback: 20-Tage-Hoch (Pivot)": "draussen",
     "HUT|Fallback: MA50-R\u00fcckeroberung": "drin",
     "AEO|Pocket Pivot": "drin",
     "AEHR|Fallback: 20-Tage-Hoch (Pivot)": "drin",
@@ -381,7 +381,8 @@
     "BEST|AEHR|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-29",
     "BE|Cup & Handle (Wochenbasis)": "2026-09-29",
     "BEST|BE|Cup & Handle (Wochenbasis)": "2026-09-29",
-    "UEBER|QMCO|Inside Day": "2026-09-29"
+    "UEBER|QMCO|Inside Day": "2026-09-29",
+    "UEBER|QMCO|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-29"
   },
   "gemeldet_kp": {
     "CXW|Cup & Handle (Wochenbasis)": 31.67,
