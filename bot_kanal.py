@@ -206,6 +206,15 @@ def sende_kauf(treffer: list[dict], tag=None, melder=print,
             # Netz, damit es auch gilt, wenn ein Treffer je einmal ueber
             # einen anderen Sendeweg laeuft.
             continue
+        if "vol_ok" in t and t.get("vol_ok") is not True:
+            # KEIN KAUF OHNE BESTAETIGTES VOLUMEN (Gerhard, 29.09.2026,
+            # Regel 3). Der Waechter schickt solche Treffer seither gar
+            # nicht mehr; das steht hier als Netz fuer jeden Sendeweg. Wege
+            # ohne eigenes Volumenurteil am Treffer (Red-to-Green, dessen
+            # Signatur das Volumen schon enthaelt) tragen das Feld nicht.
+            melder(f"  Bot-Kaufkanal: {str(t.get('ticker') or '?')} ohne "
+                   f"bestätigtes Volumen, nicht gesendet.")
+            continue
         zeile = kauf_zeile(t.get("ticker"), t.get("firma"),
                            t.get(feld, t.get("kaufpunkt")), t.get("stop"), tag)
         if zeile is None:

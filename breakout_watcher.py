@@ -124,6 +124,9 @@ def ws_kurse_einblenden(quotes: dict, ws=None) -> tuple:
         # Ruecksetzer waere immer ein Fehler.
         if wert.volumen and wert.volumen > (q.get("volume") or 0):
             q["volume"] = float(wert.volumen)
+            # Regel 3: Das Volumen stammt jetzt aus Yahoos Strom, auch wenn
+            # die Zeile selbst von Twelve Data kam.
+            q["volumenquelle"] = "yahoo_ws"
             volumina += 1
         # TAGESSPANNE: immer der AEUSSERE Wert aus Tageskerze und Strom.
         # Hoch kann nur steigen, Tief nur fallen — die Vereinigung beider
@@ -327,13 +330,27 @@ VOL_FAKTOR = {
     # alarm_muster.VOL_SCHLUESSEL und nur dort.
     **{name: _VOL[alarm_muster.VOL_SCHLUESSEL.get(name, alarm_muster.VOL_SCHLUESSEL_STANDARD)]
        for name in alarm_muster.NAMEN.values()},
+    # REGEL 2 (Gerhard, 29.09.2026): das 52-Wochen-Hoch als Ersatzmuster nur
+    # bei Volumen ueber 200 % (200 % ueber dem Schnitt, also das Dreifache).
+    # Die uebrigen Ausweich-Marken behalten die Standard-Huerde.
+    "Fallback: 52W-Hoch-Breakout": _VOL["breakout_faktor_52w"],
 }
 VOL_FAKTOR_FALLBACK = _VOL["breakout_faktor"]
 
-# WER DARF OHNE VOLUMENBESTAETIGUNG MELDEN (Gerhard, 12.08.2026)?
-# Nur diese. Bei allen uebrigen Mustern bleibt ein Ausbruch ohne
-# Bestaetigung STILL und wird erst gemeldet, wenn das Volumen nachzieht.
-UNBESTAETIGT_ERLAUBT = set(_VOL.get("unbestaetigt_melden_bei", []))
+# REGEL 3 (Gerhard, 29.09.2026): Gemeldet wird nur mit verifiziertem Volumen,
+# und zwar mit Volumendaten von yfinance. Bis dahin durften einige Muster
+# ohne Bestaetigung melden (Ausnahmeliste vom 12.08.2026), und "nicht
+# verifizierbar" wurde gemeldet; beides gibt es nicht mehr. Twelve Data
+# springt ein, wenn Yahoo eine Aktie nicht liefert; sein Volumen traegt
+# keine Meldung. Der Yahoo-Strom ist Yahoo und zaehlt.
+YAHOO_VOLUMEN = ("yfinance", "yahoo_ws")
+
+
+def volumen_von_yahoo(q) -> bool:
+    """Stammt das Tagesvolumen dieser Kurszeile von Yahoo? Nur dann darf es
+    eine Meldung tragen (Regel 3). Eine Zeile ohne Vermerk kommt aus dem
+    Yahoo-Abruf; Twelve Data traegt seinen Namen ausdruecklich."""
+    return str((q or {}).get("volumenquelle") or "yfinance") in YAHOO_VOLUMEN
 
 # Volumenfenster: EINHEITLICH 10 Tage (Gerhard, 28.07.2026). Der Waechter
 # verglich den Ausbruch bisher gegen den Ø20, waehrend Gap and Go schon
@@ -371,9 +388,8 @@ PRUEF_TAKT = CFG["betrieb"].get("pruef_takt_sekunden", 2)
 # Wie weit ueber dem Kaufpunkt gilt ein Ausbruch noch als einsteigbar,
 # und was passiert mit dem, was darueber liegt (siehe pruefe_breakout).
 NACHLAUF_GRENZE = CFG["betrieb"].get("nachlauf_grenze", 0.05)
-# Wie weit UNTER die Grenze der Kurs zurueck muss, damit der Kaufpunkt
-# wieder als "im Einstiegsfenster" gilt. Siehe fenster_zustand().
-WIEDEREINTRITT_TOTZONE = CFG["betrieb"].get("wiedereintritt_totzone", 0.01)
+# Die Totzone fuer den Wiedereintritt ins Einstiegsfenster gibt es seit
+# 29.09.2026 nicht mehr (Gerhard, Regel 1); siehe HEUTE_FELD.
 # Regel 3 (Gerhard, 23.09.2026): So weit muss ein neu gerechneter Kaufpunkt
 # ueber dem schon gemeldeten liegen, damit dasselbe Muster in derselben
 # Woche noch einmal melden darf.
@@ -836,7 +852,9 @@ def load_state() -> dict:
     # Ausbrueche kamen doppelt. Der Checkout dagegen ist beim Start
     # frisch und enthaelt alles, was der Vorgaenger IM Lauf committet
     # hat. Union statt Vorrang: Verlieren ist teurer als Behalten.
-    gemeldet, gemeldet_kp, fenster, ampel_tag = {}, {}, {}, ""
+    gemeldet, gemeldet_kp, ampel_tag = {}, {}, ""
+    ny_heute = (heute_ny() or date.today()).isoformat()
+    heute_marken_alle: list = []
     for quelle in (REPO_STATE, STATE_FILE):
         data = _staat_aus(quelle)
         # Der juengere Ampel-Tag gewinnt: Hat die Tagwache die Zeile schon
@@ -848,23 +866,26 @@ def load_state() -> dict:
         gemeldet.update(g)
         # Die gemeldeten Kaufpunkte fuer Regel 3 (Gerhard, 23.09.2026).
         gemeldet_kp.update(data.get("gemeldet_kp") or {})
-        # DAS FENSTER-GEDAECHTNIS gilt nur fuer DIESEN Handelstag
-        # (Mathias, 13.08.2026) — gestrige Zustaende sagen nichts mehr.
-        # M4, MOEGLICHKEIT 2 (Gerhard, 12.09.2026): Der Fensterzustand
-        # bleibt UEBER NACHT erhalten, ein Wiedereintritt laeuft nur ueber
-        # die Totzone; das erhaelt die acht echten Faelle aus W1. Er
-        # verfaellt erst mit dem Freitags-Putz, wie die Meldungen, weil
-        # dann die neue Wochenliste gilt. (Bis 12.09.2026 galt er nur fuer
-        # den laufenden Handelstag.)
-        if str(data.get("fenster_tag") or "") > letzter_putz():
-            fenster.update(data.get("fenster", {}))
+        # DAS TAGESGEDAECHTNIS (Gerhard, 29.09.2026, Regel 1): nur das von
+        # HEUTE, aus beiden Quellen vereinigt. So weiss die Schlussstunde,
+        # welche Kaufpunkte die Tagwache schon gemeldet hat.
+        h = data.get(HEUTE_FELD)
+        if isinstance(h, dict) and h.get("tag") == ny_heute:
+            for m in h.get("marken") or []:
+                if m not in heute_marken_alle:
+                    heute_marken_alle.append(m)
+        # Den FENSTERZUSTAND samt Totzone (13.08.2026, ueber Nacht seit
+        # 12.09.2026) gibt es seit 29.09.2026 nicht mehr (Gerhard, Regel 1:
+        # "Die bisherige Wiederalarm-Logik bei 3 % Abstand ist komplett
+        # abzudrehen"). Ein alter Eintrag im Zustand wird nicht mehr gelesen
+        # und faellt beim naechsten Speichern weg.
     # DIE WARTELISTE der Luecken-Bestaetigungstage muss den TAGESWECHSEL
     # ueberleben, denn ihr Einstieg liegt im Folgetag. Sie kommt aus
     # denselben zwei Quellen und wird hier ausdruecklich mitgeladen: Dieses
     # Dict wird frisch gebaut, ein nicht genannter Schluessel waere beim
     # naechsten Speichern weg.
     frisch = _gemeldet_filtern(_htf_ohne_vorzeichen(gemeldet), heute)
-    return {"fenster_tag": heute, "fenster": fenster,
+    return {HEUTE_FELD: {"tag": ny_heute, "marken": heute_marken_alle},
             "gemeldet": frisch,
             # Nur die Preise, deren Schluessel noch gesperrt ist; was mit
             # dem Freitagsputz faellt, braucht keinen Preis mehr.
@@ -1664,6 +1685,9 @@ def fetch_quotes(tickers: list[str], api_key: str, batch_size: int = 8,
                     "avg_volume": float(q.get("average_volume") or 0),
                     "is_open": bool(q.get("is_market_open", False)),
                     "name": q.get("name", ""),
+                    # Regel 3 (Gerhard, 29.09.2026): Dieses Volumen ist
+                    # nicht von yfinance und traegt keine Meldung.
+                    "volumenquelle": "twelvedata",
                 }
             except (KeyError, TypeError, ValueError):
                 continue
@@ -1799,16 +1823,43 @@ def pruefe_breakout(item: dict, quote: dict) -> dict | None:
                 # Fuer kam_von_unten(): Lag der Kurs GESTERN noch unter
                 # dem Kaufpunkt? Nur dann ist hier etwas passiert.
                 "vortagesschluss": vortagesschluss(item, quote),
-                # Kein Volumenurteil: Ob das Volumen stimmt, aendert
-                # nichts daran, dass der Einstieg vorbei ist. Eine
-                # Volumenzahl wuerde die Meldung wie ein Signal aussehen
-                # lassen, und genau das ist sie nicht.
-                "vol_ratio": None, "vol_pct": None, "vol_ok": None,
-                "vol_noetig": VOL_FAKTOR.get(item["strategie"],
-                                             VOL_FAKTOR_FALLBACK),
-                "vol_anteil": None, "vol_roh": quote.get("volume"),
-                "vol_nicht_verifizierbar": False, **ema_felder(quote)}
+                # MIT VOLUMENURTEIL seit 29.09.2026 (Gerhard, Regel 3, "alle
+                # Strategien"). Bis dahin ging diese Meldung bewusst ohne
+                # hinaus; seit 23.09.2026 bekommt der Bot mit ihr eine
+                # Kaufzeile, also gilt fuer sie dasselbe wie fuer jeden
+                # Kauf: erst mit bestaetigtem Volumen. Der Text der Meldung
+                # bleibt, wie er war.
+                **volumen_urteil(item, quote), **ema_felder(quote)}
+    return {
+        **item,
+        "kurs": kurs,
+        "ueber_pct": ueber * 100,
+        # FUER riss_schon_gestern() UND fallback_ohne_riss(): Lag der Kurs
+        # gestern noch unter dem Kaufpunkt? Bis 12.09.2026 stand der
+        # Vortagesschluss NUR am uebersprungenen Treffer (oben), der
+        # gewoehnliche trug ihn nicht. fallback_ohne_riss() fragte hier
+        # also einen fehlenden Wert ab und hielt damit JEDE Ausweich-Marke
+        # fuer "heute nicht gerissen" - sie konnte im Meldefenster gar
+        # nicht mehr melden. GEMESSEN am Trigger-Logbuch: Seit dem Einbau
+        # der Ausweich-Marken am 19.08.2026 stammen ALLE 37 Fallback-
+        # Eintraege aus dem Weg "uebersprungen", kein einziger aus dem
+        # gewoehnlichen Ausbruchsweg - genau die Meldungen, die der
+        # AEHR-Befund vom 19.08. haben wollte, blieben still.
+        "vortagesschluss": vortagesschluss(item, quote),
+        **volumen_urteil(item, quote),
+        **ema_felder(quote),
+    }
 
+
+def volumen_urteil(item: dict, quote: dict) -> dict:
+    """Das Volumenurteil eines gerissenen Kaufpunkts, fuer beide Wege
+    (im Einstiegsfenster und uebersprungen).
+
+    vol_ok ist True (Huerde erreicht), False (geprueft und zu schwach) oder
+    None (nicht verifizierbar: keine eigene Volumenkurve, kein 50-Tage-
+    Schnitt oder Volumen nicht von Yahoo). Gemeldet wird seit 29.09.2026
+    nur bei True (Gerhard, Regel 3); alles andere bleibt offen und wird im
+    naechsten Durchlauf neu beurteilt."""
     faktor = VOL_FAKTOR.get(item["strategie"], VOL_FAKTOR_FALLBACK)
     vol, avg = quote["volume"], quote["avg_volume"]
 
@@ -1840,31 +1891,22 @@ def pruefe_breakout(item: dict, quote: dict) -> dict | None:
     else:
         vol_ok = vol_ratio >= faktor
         nicht_pruefbar = False
+    # REGEL 3: Volumen, das nicht von Yahoo stammt, bestaetigt nichts. Die
+    # Zahl bleibt fuer die Anzeige stehen, das Urteil ist "nicht
+    # verifizierbar", der Kaufpunkt bleibt offen.
+    fremd = not volumen_von_yahoo(quote)
+    if fremd:
+        vol_ok = None
 
     return {
-        **item,
-        "kurs": kurs,
-        "ueber_pct": ueber * 100,
-        # FUER riss_schon_gestern() UND fallback_ohne_riss(): Lag der Kurs
-        # gestern noch unter dem Kaufpunkt? Bis 12.09.2026 stand der
-        # Vortagesschluss NUR am uebersprungenen Treffer (oben), der
-        # gewoehnliche trug ihn nicht. fallback_ohne_riss() fragte hier
-        # also einen fehlenden Wert ab und hielt damit JEDE Ausweich-Marke
-        # fuer "heute nicht gerissen" - sie konnte im Meldefenster gar
-        # nicht mehr melden. GEMESSEN am Trigger-Logbuch: Seit dem Einbau
-        # der Ausweich-Marken am 19.08.2026 stammen ALLE 37 Fallback-
-        # Eintraege aus dem Weg "uebersprungen", kein einziger aus dem
-        # gewoehnlichen Ausbruchsweg - genau die Meldungen, die der
-        # AEHR-Befund vom 19.08. haben wollte, blieben still.
-        "vortagesschluss": vortagesschluss(item, quote),
         "vol_ratio": vol_ratio,
         "vol_pct": None if vol_ratio is None else (vol_ratio - 1) * 100,
         "vol_noetig": faktor,
         "vol_ok": vol_ok,
         "vol_nicht_verifizierbar": nicht_pruefbar,
+        "vol_fremdquelle": fremd,
         "vol_roh": vol,
         "vol_anteil": anteil,
-        **ema_felder(quote),
     }
 
 
@@ -1946,6 +1988,8 @@ def pruefe_gap_and_go(ticker: str, q: dict):
     kurs, vol = q.get("close"), q.get("volume")
     if None in (open_, high, low, prev, kurs, vol) or not vol50 or prev <= 0:
         return None
+    if not volumen_von_yahoo(q):
+        return None                      # Regel 3: nur Volumen von yfinance
     gap = open_ / prev - 1
     if not mind_erreicht(gap, GAP_MIN):
         return None
@@ -2128,6 +2172,8 @@ def pruefe_red_to_green(ticker: str, q: dict, eintrag: dict):
     kurs, vol, eroeffnung = q.get("close"), q.get("volume"), q.get("open")
     if not (vortag and v50 and kurs and vol and eroeffnung):
         return None
+    if not volumen_von_yahoo(q):
+        return None                      # Regel 3: nur Volumen von yfinance
     if not red_to_green.aktien_gap(eroeffnung, vortag)[0]:
         return None
 
@@ -2156,6 +2202,8 @@ def pruefe_red_to_green_explosive(ticker, q, eintrag):
     kurs, vol, eroeffnung = q.get("close"), q.get("volume"), q.get("open")
     if not (vortag and v50 and kurs and vol and eroeffnung):
         return None
+    if not volumen_von_yahoo(q):
+        return None                      # Regel 3: nur Volumen von yfinance
     if not red_to_green_explosive.aktien_gap(eroeffnung, vortag)[0]:
         return None
 
@@ -2650,7 +2698,9 @@ def gapgo_einstiege_pruefen(state: dict, quotes: dict) -> tuple:
         if tage > GAPGO_WARTE_TAGE or (pruef and pruef != heute_s):
             kp_txt = _zahl(e.get("kp"))
             kp_txt = "?" if kp_txt is None else f"{kp_txt:.2f}"
-            grund = ("am Folgetag nicht erreicht" if pruef
+            grund = ("am Folgetag erreicht, aber ohne bestätigtes Volumen"
+                     if pruef and e.get("ohne_volumen")
+                     else "am Folgetag nicht erreicht" if pruef
                      else f"seit {tage} Tagen kein Wachtag")
             print(f"  {t}: {GAP_NAME} vom {_datum_de(signal)} verfallen, "
                   f"Kaufpunkt {kp_txt} {grund}.")
@@ -2667,6 +2717,21 @@ def gapgo_einstiege_pruefen(state: dict, quotes: dict) -> tuple:
             continue
         if kurs < kp:
             continue                   # das Hoch von gestern steht noch
+        # REGEL 3 (Gerhard, 29.09.2026, "alle Strategien"): Auch der Einstieg
+        # am Folgetag meldet erst mit bestaetigtem Volumen DES EINSTIEGSTAGS,
+        # hochgerechnet ueber die F(t)-Kurve mit der Standard-Huerde und nur
+        # mit Volumen von Yahoo. Bis dahin sah er allein den Kurs an; das
+        # Volumen stand nur am Luecken-Tag. Ohne Bestaetigung bleibt der
+        # Einstieg offen und wird im naechsten Durchlauf neu beurteilt; am
+        # Ende des Folgetags verfaellt er wie bisher.
+        vol_ratio = vol_verhaeltnis(q.get("volume"), q.get("avg_volume"), t)
+        vol_ok = (vol_ratio is not None and vol_ratio >= VOL_FAKTOR_FALLBACK
+                  and volumen_von_yahoo(q))
+        if not vol_ok:
+            if not e.get("ohne_volumen"):
+                e["ohne_volumen"] = True
+                geaendert = True
+            continue
         eroeffnung = _zahl(q.get("open"))
         einstieg = max(eroeffnung, kp) if eroeffnung else kp
         # W2 (Gerhard, 12.09.2026): Der Folgetags-Einstieg gilt nur bis
@@ -2680,6 +2745,8 @@ def gapgo_einstiege_pruefen(state: dict, quotes: dict) -> tuple:
             "kaufpunkt": kp, "einstieg": einstieg, "stop": stop,
             "kurs": kurs, "bestaetigt": bool(e.get("bestaetigt")),
             "uebersprungen": ueber,
+            "vol_ratio": vol_ratio, "vol_pct": (vol_ratio - 1) * 100,
+            "vol_noetig": VOL_FAKTOR_FALLBACK, "vol_ok": True,
             "key": f"{GAPGO_UEBER_MARKE if ueber else GAPGO_EIN_MARKE}{t}|{signal}"})
     return einstiege, geaendert
 
@@ -3518,6 +3585,9 @@ def vol_satz(t: dict) -> str:
         return f"Vol BESTÄTIGT, {lage}{huerde}"
     if t["vol_ok"] is False:
         return f"Vol NICHT bestätigt, {lage}{huerde}"
+    if t.get("vol_fremdquelle"):
+        # Regel 3 (Gerhard, 29.09.2026): nur Volumen von yfinance zaehlt.
+        return f"Vol noch nicht von Yahoo, {lage}{huerde}"
     if t.get("vol_nicht_verifizierbar"):
         # DER DRITTE STATUS (Gerhard, 06.08.2026). Er darf NICHT mit
         # "nicht bestätigt" zusammenfallen: Dort wurde geprüft und für zu
@@ -4080,12 +4150,6 @@ def uebersprungen_schluessel(t: dict) -> str:
     return uebersprungen_schluessel_alle(t)[0]
 
 
-def fenster_schluessel(t: dict) -> str:
-    """Wo das Einstiegsfenster eines Kaufpunkts im Tageszustand steht:
-    Aktie plus Muster, wie die Meldeschluessel."""
-    return f"{t['ticker']}|{' + '.join(kp_namen(t))}"
-
-
 def vortagesschluss(item, quote):
     """Der Schlusskurs des Vortags, aus ZWEI Quellen. Oder None.
 
@@ -4223,70 +4287,161 @@ def fallback_ohne_riss(res: dict) -> bool:
     return not kam_von_unten(res)
 
 
-def melde_uebersprungen(res, wechsel, schon_gemeldet) -> bool:
-    """Darf dieser uebersprungene Kaufpunkt gemeldet werden? DREI Riegel.
+def melde_uebersprungen(res, schon_gemeldet, gemeldet_kp=None, state=None) -> bool:
+    """Darf dieser uebersprungene Kaufpunkt gemeldet werden? VIER Riegel.
 
-    1. Es muss ein WECHSEL sein (Tageszustand, siehe fenster_wechsel).
-    2. Der Kaufpunkt muss von UNTEN gerissen worden sein (kam_von_unten).
-    3. Er darf nicht ohnehin schon als draussen angesagt sein
-       (Wochengedaechtnis) - sonst meldete derselbe Vorgang taeglich neu.
+    1. Der Kaufpunkt muss von UNTEN gerissen worden sein (kam_von_unten).
+       Ein Kurs, der schon gestern darueber schloss, meldet nichts; das
+       haelt auch die Ruecksetzer-Marken still, die bauartbedingt weit
+       unter dem Kurs liegen (114 gegen 6 am 14.08.2026).
+    2. REGEL 3 (Gerhard, 29.09.2026): Das Volumen muss mit Daten von Yahoo
+       bestaetigt sein. Bis dahin bleibt der Kaufpunkt offen und wird in
+       jedem Durchlauf neu beurteilt.
+    3. REGEL 1 (Gerhard, 29.09.2026): Hat dieser Kaufpunkt heute schon
+       gemeldet, gleich auf welchem Weg, meldet er nicht noch einmal.
+    4. Die Wochen-Sperre ueber alle Meldewege (offene_muster).
+
+    BIS 29.09.2026 verlangte der erste Riegel einen WECHSEL des
+    Fensterzustands, also dass der Kurs in genau diesem Durchlauf ueber
+    die Grenze ging. Mit Regel 3 kann die Meldung erst faellig werden,
+    wenn das Volumen Minuten spaeter nachzieht; da waere der Wechsel
+    laengst vorbei. Gegen das taegliche Wiederholen, vor dem er schuetzte,
+    stehen jetzt der erste und der vierte Riegel.
+
+    Und BIS 29.09.2026 unterdrueckte ein schon gemeldeter Ausbruch diese
+    Meldung ausdruecklich NICHT (Mathias, 14.08.2026: "genau so wollen wir
+    es haben"). Gerhards Regel 1 vom 29.09.2026 geht vor ("Danach wird fuer
+    diesen Kaufpunkt an diesem Tag nie wieder alarmiert"), zumal mit dieser
+    Meldung seit 23.09.2026 eine Kaufzeile an den Bot geht.
 
     Steht als eigene Funktion hier statt verstreut in der Schleife, aus
     demselben Grund wie melde_stufe(): damit man sie pruefen kann."""
-    return (wechsel == "verlassen" and kam_von_unten(res)
-            and not any(k in schon_gemeldet
-                        for k in uebersprungen_schluessel_alle(res)))
+    return (kam_von_unten(res)
+            and res.get("vol_ok") is True
+            and not heute_gemeldet(res, state)
+            and bool(offene_muster(res, schon_gemeldet, gemeldet_kp)))
 
 
-DRIN, DRAUSSEN = "drin", "draussen"
+# REGEL 1 (Gerhard, 29.09.2026): "Kaufpunkt nur einmal pro Tag alarmieren
+# (alle Strategien). Wird der Kaufpunkt einmal am Tag gerissen, gibt es
+# Alarm und Kauf. Danach wird fuer diesen Kaufpunkt an diesem Tag nie wieder
+# alarmiert, auch nicht, wenn die Aktie wieder nahe an den Kaufpunkt
+# zurueckkommt." Das Tagesgedaechtnis steht im Zustand unter diesem
+# Schluessel und wandert mit dem Melde-Gedaechtnis ins Repo; so weiss die
+# Schlussstunde, was die Tagwache gemeldet hat.
+#
+# DAS EINSTIEGSFENSTER ALS ZUSTAND GIBT ES NICHT MEHR. Seit 13.08.2026 kam
+# ein Kaufpunkt, dessen Kurs mehr als 5 % darueber lag, erst bei 3 % oder
+# darunter wieder ins Fenster (Totzone, Gerhard am 13.08.2026), und danach
+# konnte er noch einmal melden; bis 23.09.2026 sogar mit eigener Meldung
+# "wieder im Einstiegsfenster". Gerhard am 29.09.2026: "Die bisherige
+# Wiederalarm-Logik bei 3 % Abstand ist komplett abzudrehen." Ob ein
+# gerissener Kaufpunkt im Fenster liegt (bis 5 %) oder uebersprungen ist,
+# entscheidet jetzt allein der Kurs im Augenblick der Meldung; dass er nur
+# einmal meldet, besorgen Tagesgedaechtnis und Wochen-Sperre. Das Zappeln
+# an der Grenze (MNDY, 13.08.2026: neun Ueberquerungen in 22 Minuten)
+# ergibt damit von selbst keine zweite Meldung.
+HEUTE_FELD = "heute_gemeldet"
 
 
-def fenster_zustand(ueber: float, vorher: str | None) -> str | None:
-    """In welchem Zustand ist das Einstiegsfenster JETZT?
-
-    'ueber' ist der Abstand zum Kaufpunkt als Anteil (0,051 = 5,1 %).
-    Rueckgabe: DRIN, DRAUSSEN — oder None, wenn nichts entschieden wird
-    und der bisherige Zustand gilt.
-
-    DIE TOTZONE, und warum es sie gibt (gemessen am 13.08.2026 an
-    MNDY-Minutendaten, Mathias' Fall): Ohne sie pendelt ein Kurs, der
-    genau auf der Grenze liegt, staendig hin und her. MNDY hat die
-    Fuenf-Prozent-Linie an diesem Tag sechsmal ueberquert und haette
-    NEUN Meldungen in 22 Minuten erzeugt; mit einer Totzone von einem
-    Prozentpunkt war es EINE. Und das ist noch geschoent: Gemessen wurde
-    an Minutenkerzen, der Waechter prueft alle zwei Sekunden.
-
-    Hinaus geht es also ueber der Grenze, herein erst wieder DEUTLICH
-    darunter. Steht die Totzone auf 0, gibt es die Reinform: jede
-    Ueberquerung zaehlt.
-
-    WIE GROSS die Totzone ist, hat GERHARD entschieden (13.08.2026, ueber
-    Mathias): zwei Prozentpunkte, also hinaus ueber 5 % und wieder herein
-    erst bei 3 % oder darunter. Meine Messung hatte einen Prozentpunkt
-    nahegelegt, das haette gereicht, um das Zappeln zu beenden; seine
-    Fassung verlangt zusaetzlich, dass der Kurs wirklich in die Kaufzone
-    zurueckkommt und nicht bloss an ihrem Rand kratzt. Der Wert steht in
-    config.py und nur dort."""
-    if ueber > NACHLAUF_GRENZE:
-        return DRAUSSEN
-    if ueber <= NACHLAUF_GRENZE - WIEDEREINTRITT_TOTZONE:
-        return DRIN
-    return None if vorher else DRIN
+def heute_marken(t: dict) -> list[str]:
+    """Woran Regel 1 einen Kaufpunkt wiedererkennt: Aktie plus Muster, je
+    Muster eine Marke, und Aktie plus Preis auf den Cent. Der Preis faengt
+    zwei Wege mit verschiedenen Namen auf demselben Kaufpunkt ab, etwa ein
+    Alarm-Muster und eine Strategie der Mappe, die bewusst nicht
+    zusammengelegt werden (alarm_items)."""
+    tk = str(t.get("ticker") or "").upper()
+    marken = [f"{tk}|{n}" for n in kp_namen(t)]
+    kp = _zahl(t.get("kaufpunkt"))
+    if kp:
+        marken.append(f"{tk}|@{kp:.2f}")
+    return marken
 
 
-def fenster_wechsel(neu: str | None, vorher: str | None) -> str | None:
-    """Was ist zu melden? 'verlassen', 'wiedereintritt' oder nichts.
+def _heute_liste(state: dict | None) -> list:
+    """Die Marken des heutigen New Yorker Handelstags; ein Stand von
+    gestern wird verworfen."""
+    if state is None:
+        return []
+    tag = (heute_ny() or date.today()).isoformat()
+    h = state.get(HEUTE_FELD)
+    if not isinstance(h, dict) or h.get("tag") != tag or not isinstance(h.get("marken"), list):
+        h = {"tag": tag, "marken": []}
+        state[HEUTE_FELD] = h
+    return h["marken"]
 
-    Der ERSTE Blick auf einen Kaufpunkt ist kein Wechsel — mit einer
-    Ausnahme: Liegt der Kurs schon beim ersten Mal ueber der Grenze, ist
-    das genau der Fall, fuer den es die Meldung gibt (Gerhards Fall Sea
-    am 11.08.2026: 10,3 % Eroeffnungsluecke, der Kaufpunkt wurde nie
-    angesagt). Der wird gemeldet."""
-    if neu is None or neu == vorher:
-        return None
-    if neu == DRAUSSEN:
-        return "verlassen"
-    return "wiedereintritt" if vorher == DRAUSSEN else None
+
+def heute_gemeldet(t: dict, state: dict | None) -> bool:
+    """Hat dieser Kaufpunkt heute schon gemeldet, auf welchem Weg auch
+    immer (Ausbruch, uebersprungen, Alarm-Muster, Power-Gap)?"""
+    marken = set(_heute_liste(state))
+    return any(m in marken for m in heute_marken(t))
+
+
+def heute_vermerken(state: dict | None, treffer: list[dict]) -> None:
+    """Die Marken gemeldeter Kaufpunkte fuer den Rest des Tages vermerken,
+    auch im Trockenlauf, damit er sich wie der Ernstfall verhaelt.
+    Abgewaehlte Muster (stumm) werden hier NICHT vermerkt: Sie melden nicht,
+    und ihre Preis-Marke sperrte sonst ein eingeschaltetes Muster auf
+    demselben Kaufpunkt."""
+    if state is None:
+        return
+    liste = _heute_liste(state)
+    for t in treffer:
+        if t.get("stumm"):
+            continue
+        for m in heute_marken(t):
+            if m not in liste:
+                liste.append(m)
+
+
+def zyklus_frei(res: dict, zyklus: set) -> bool:
+    """Regel 1 innerhalb EINES Durchlaufs: Liegen zwei Kaufpunkte mit
+    verschiedenen Namen auf demselben Preis und reissen gleichzeitig (ein
+    Alarm-Muster und eine Strategie der Mappe), meldet nur der erste. Das
+    Tagesgedaechtnis kennt beide erst nach dem Senden. Abgewaehlte Muster
+    melden nicht und belegen deshalb nichts."""
+    if res.get("stumm"):
+        return True
+    marken = heute_marken(res)
+    if any(m in zyklus for m in marken):
+        return False
+    zyklus.update(marken)
+    return True
+
+
+# Uebersprungene Kaufpunkte ohne jeden Vortagesschluss: die Diagnosezeile
+# einmal je Lauf, nicht in jedem Durchlauf (seit dem Wegfall des
+# Fensterzustands am 29.09.2026 gibt es keinen Wechsel mehr, an dem sie
+# einmalig haengen koennte).
+_ohne_vortag_gesagt: set = set()
+
+
+def offene_muster(res: dict, schon_gemeldet: set,
+                  gemeldet_kp: dict | None = None) -> list[str]:
+    """Die Muster dieses Kaufpunkts, die in dieser Woche noch melden duerfen.
+
+    WOCHEN-SPERRE (Gerhard, 23.09.2026, am 29.09.2026 bekraeftigt): je Aktie
+    und Muster eine Meldung in der Woche, dasselbe Muster wieder erst ab
+    MELDE_NEU_AB hoeherem Kaufpunkt (schluessel_offen). SEIT 29.09.2026
+    UEBER ALLE MELDEWEGE: Ein als uebersprungen gemeldeter Kaufpunkt sperrt
+    den Ausbruch desselben Musters und umgekehrt. Bis dahin fuehrten beide
+    getrennte Schluessel; nach "Kaufpunkt uebersprungen" konnte derselbe
+    Kaufpunkt nach dem Wiedereintritt ins Fenster noch einmal als Ausbruch
+    melden, und nach einem Ausbruch kam "uebersprungen" nach.
+
+    Deckt ein Kaufpunkt mehrere Muster ab, genuegt eines, das noch offen
+    ist; sonst verloere die Meldung ein Muster, das fuer sich allein melden
+    duerfte (Regel 2 vom 23.09.2026)."""
+    tk = res["ticker"]
+    kp = res.get("kaufpunkt")
+    offen = []
+    for n in kp_namen(res):
+        familie = (f"{tk}|{n}", f"{UEBERSPRUNGEN_MARKE}{tk}|{n}",
+                   f"{NACHTRAG_MARKE}{tk}|{n}")
+        if all(schluessel_offen(k, kp, schon_gemeldet, gemeldet_kp) for k in familie):
+            offen.append(n)
+    return offen
 
 
 def schluessel_offen(k: str, kaufpunkt, schon_gemeldet: set,
@@ -4323,7 +4478,8 @@ def kp_merken(state: dict, schluessel: str, kaufpunkt) -> None:
 
 
 def melde_stufe(res: dict, schon_gemeldet: set,
-                gemeldet_kp: dict | None = None) -> str | None:
+                gemeldet_kp: dict | None = None,
+                state: dict | None = None) -> str | None:
     """Welche Meldung ist faellig — und vor allem: welche NICHT?
 
     Mathias' Sorge vom 29.07.2026, woertlich: "So lange sie da ist, löst
@@ -4331,67 +4487,41 @@ def melde_stufe(res: dict, schon_gemeldet: set,
     Genau das darf nicht passieren, und deshalb steht die Entscheidung
     hier als eigene, pruefbare Funktion statt verstreut in der Schleife.
 
-    Zwei GETRENNTE Schluessel, wie bei Gap and Go seit jeher:
-      res["key"]      wird beim ERSTEN Melden gesetzt, ob bestaetigt oder
-                      nicht. Der Ausbruch ist damit abgehakt.
-      res["key_best"] wird gesetzt, sobald die Bestaetigung gemeldet
-                      wurde — oder gleich mit, wenn schon die erste
-                      Meldung bestaetigt war.
+    SEIT 29.09.2026 (Gerhard, Regeln 1 und 3) gibt es nur noch EINE Stufe,
+    "neu", und die nur mit bestaetigtem Volumen von Yahoo. Ein Ausbruch
+    ohne Bestaetigung bleibt offen und meldet, sobald das Volumen die
+    Huerde nimmt: "Liefert yfinance noch kein Volumen, bleibt der
+    Kaufpunkt offen, es wird nachgeprueft, und der Alarm kommt erst,
+    sobald das Volumen da ist und die Schwelle stimmt." Das gilt auch fuer
+    "nicht verifizierbar" (vol_ok None), das bis dahin gemeldet wurde
+    (Gerhard, 06.08.2026), und fuer die Muster, die ohne Bestaetigung
+    melden durften (Gerhard, 12.08.2026).
 
-    Daraus folgt zwingend: hoechstens ZWEI Meldungen je Kaufpunkt und
-    Woche. Ein Schluessel, der erst bei Bestaetigung schliesst, haette
-    bei zwei Sekunden Prueftakt dreissigmal je Minute gemeldet."""
-    # Je Muster ein Schluessel (seit 10.09.2026); einer genuegt.
-    keys = res.get("keys") or [res["key"]]
-    keys_best = res.get("keys_best") or [res["key_best"]]
-    kp = res.get("kaufpunkt")
-    if any(schluessel_offen(k, kp, schon_gemeldet, gemeldet_kp) for k in keys):
-        # ZWISCHENLOESUNG M4 (Mathias, 11.09.2026): Ein Ausbruch, der
-        # schon gestern gerissen wurde, ist heute keine neue Meldung.
-        # Steht ausdruecklich VOR der Volumenpruefung: Sonst kaeme
-        # derselbe Fall morgen als Nachtrag wieder.
-        if riss_schon_gestern(res):
-            if NUR_FRISCHE_AUSBRUECHE:
-                return None
-            # W1 (Gerhard, 12.09.2026): "Bestaetigung am Folgetag" wird
-            # GEMELDET, nicht unterdrueckt; aber nur MIT Volumenbestaetigung
-            # (sonst ist es keine Bestaetigung) und nur innerhalb des
-            # Einstiegsfensters bis 5 Prozent, das der Fensterzustand davor
-            # prueft. M4, Moeglichkeit 2: Der Fensterzustand bleibt ueber
-            # Nacht (load_state), der Wiedereintritt laeuft ueber die Totzone.
-            if res["vol_ok"] is not True:
-                return None
-            res["folgetag"] = True
-        # SEIT 12.08.2026 (Gerhard): Ohne Volumenbestaetigung melden nur
-        # noch die Muster, bei denen das Volumen TEIL des Musters ist.
-        # Alle uebrigen bleiben still und kommen erst als Nachtrag, wenn
-        # die Bestaetigung nachzieht — verloren geht also nichts, es
-        # kommt nur spaeter und dafuer belastbar.
-        #
-        # AUSDRUECKLICH NICHT betroffen ist der dritte Status "nicht
-        # verifizierbar" (vol_ok is None). Der heisst "konnte gar nicht
-        # geprueft werden" und ist etwas anderes als "geprueft und zu
-        # schwach"; ihn mit zu unterdruecken wuerde genau die
-        # Unterscheidung aufheben, auf der Gerhard am 06.08.2026
-        # bestanden hat.
-        if res["vol_ok"] is False and not darf_unbestaetigt_melden(res):
+    Bis dahin kam die Bestaetigung einer unbestaetigten Meldung als
+    zweite Stufe nach ("Vol jetzt bestätigt", seit 29.07.2026). Diese
+    Stufe liefert die Funktion nicht mehr: Die erste Meldung ist schon
+    bestaetigt, und eine zweite verbietet Regel 1.
+
+    Dazu Regel 1: hoechstens eine Meldung je Kaufpunkt und Tag
+    (heute_gemeldet) und die Wochen-Sperre ueber alle Meldewege
+    (offene_muster)."""
+    if res.get("vol_ok") is not True:
+        return None
+    if heute_gemeldet(res, state):
+        return None
+    if not offene_muster(res, schon_gemeldet, gemeldet_kp):
+        return None
+    # ZWISCHENLOESUNG M4 (Mathias, 11.09.2026): Ein Ausbruch, der schon
+    # gestern gerissen wurde, ist heute keine neue Meldung.
+    if riss_schon_gestern(res):
+        if NUR_FRISCHE_AUSBRUECHE:
             return None
-        return "neu"
-    if (res["vol_ok"] is True
-            and any(schluessel_offen(k, kp, schon_gemeldet, gemeldet_kp)
-                    for k in keys_best)):
-        return "nachtrag"
-    return None
-
-
-def darf_unbestaetigt_melden(res: dict) -> bool:
-    """Darf dieser Treffer OHNE Volumenbestaetigung gemeldet werden?
-
-    Deckt ein Kaufpunkt mehrere Muster ab (zusammengelegte gleiche
-    Preise), genuegt EINES aus der Liste — sonst verloere die Meldung
-    ein Muster, das fuer sich allein melden duerfte."""
-    namen = res.get("strategien") or [res.get("strategie")]
-    return any(n in UNBESTAETIGT_ERLAUBT for n in namen)
+        # W1 (Gerhard, 12.09.2026): "Bestaetigung am Folgetag" wird
+        # GEMELDET, nicht unterdrueckt; nur MIT Volumenbestaetigung (oben
+        # schon verlangt) und nur innerhalb des Einstiegsfensters bis
+        # 5 Prozent, weil ein Kurs darueber im Weg "uebersprungen" landet.
+        res["folgetag"] = True
+    return "neu"
 
 
 def gruppiere_je_aktie(treffer: list[dict]) -> list[list[dict]]:
@@ -5136,7 +5266,7 @@ def main():
             # Die Alarm-Muster gehen ueber dieselben Melderegeln, aber in
             # einer eigenen Meldung hinaus (Gerhard, 22.09.2026, O5 und O10).
             alarm_neben = []
-            fenster = state.setdefault("fenster", {})
+            zyklus = set()           # Regel 1 innerhalb des Durchlaufs
             # ALARME JE MUSTER (23.09.2026): Geprueft werden alle Muster; die
             # abgewaehlten tragen stumm=True und fallen erst vor dem Senden
             # heraus (Frage 9, siehe items_nach_einstellung).
@@ -5147,54 +5277,39 @@ def main():
                 res = pruefe_breakout(item, q)
                 if not res:
                     continue
-                # DAS EINSTIEGSFENSTER ALS ZUSTAND (Mathias, 13.08.2026,
-                # "das Fenster ist das Fenster"). Ein Kaufpunkt ist DRIN
-                # oder DRAUSSEN, und JEDER Wechsel wird gemeldet: hinaus
-                # als "uebersprungen", herein als "wieder im
-                # Einstiegsfenster". Solange er draussen ist, schweigt der
-                # gewoehnliche Ausbruchsweg ganz - sonst kaeme, wie bei
-                # MNDY am 13.08.2026, zwei Minuten nach "kein Kaufsignal"
-                # ein "Vol BESTAETIGT".
-                fkey = fenster_schluessel(item)
-                vorher = fenster.get(fkey)
-                zustand = fenster_zustand(res["ueber_pct"] / 100.0, vorher)
-                wechsel = fenster_wechsel(zustand, vorher)
-                if zustand:
-                    fenster[fkey] = zustand
                 if fallback_ohne_riss(res):
                     # Ausweich-Marke, ueber der der Kurs schon gestern
                     # stand: kein Riss, keine Meldung - auf KEINEM Weg.
-                    # Der Fensterzustand ist oben trotzdem gepflegt.
                     continue
+                # KEIN FENSTERZUSTAND MEHR (Gerhard, 29.09.2026, Regel 1):
+                # Ob ein gerissener Kaufpunkt im Einstiegsfenster liegt oder
+                # uebersprungen ist, sagt der Kurs in diesem Augenblick; dass
+                # er nur einmal meldet, sagen Tagesgedaechtnis und
+                # Wochen-Sperre (siehe HEUTE_FELD). Bis dahin trug ein
+                # Zustand samt Totzone den Wiedereintritt bei 3 %.
                 if res.get("uebersprungen"):
                     res["keys"] = uebersprungen_schluessel_alle(res)
                     res["key"] = res["keys"][0]
-                    if melde_uebersprungen(res, wechsel, schon_gemeldet):
+                    if (melde_uebersprungen(res, schon_gemeldet,
+                                            state.get("gemeldet_kp"), state)
+                            and zyklus_frei(res, zyklus)):
                         if res.get("alarm"):
                             res["anlass"] = "uebersprungen"
                             alarm_neben.append(res)
                         else:
                             uebersprungen.append(res)
-                    elif (wechsel == "verlassen"
-                          and res.get("vortagesschluss") is None):
+                    elif (res.get("vortagesschluss") is None
+                          and res["key"] not in _ohne_vortag_gesagt):
                         # BEIDE Quellen ausgefallen. Dann wird geschwiegen
                         # (Mathias, 14.08.2026) - eine Meldung "im Zweifel"
                         # waere die Hintertuer, durch die die 114
                         # Ruecksetzer-Marken zurueckkaemen. Die Zeile ist
                         # reine Diagnose fuer mich und keine Absicherung;
-                        # das Protokoll liest sonst niemand.
+                        # das Protokoll liest sonst niemand. Einmal je Lauf.
+                        _ohne_vortag_gesagt.add(res["key"])
                         print(f"  {item['ticker']}: über der Nachlaufgrenze, "
                               f"aber weder Vortagesschluss noch Mappen-Kurs "
                               f"— keine Meldung.")
-                    continue
-                if wechsel == "wiedereintritt":
-                    # KEINE MELDUNG (Gerhard, 23.09.2026, Regel 1). Der
-                    # Zustand ist oben schon gepflegt; verlaesst der Kurs
-                    # das Fenster spaeter wieder, greift die
-                    # Uebersprungen-Sperre des Wochengedaechtnisses.
-                    continue
-                if (zustand or vorher) == DRAUSSEN:
-                    # Noch in der Totzone auf dem Rueckweg: nichts melden.
                     continue
                 # Kennung am Treffer mitfuehren. Vorgemerkt wird ERST nach
                 # einem erfolgreichen Push - siehe unten.
@@ -5233,8 +5348,13 @@ def main():
                 res["keys_best"] = [NACHTRAG_MARKE + k for k in res["keys"]]
                 res["key_best"] = res["keys_best"][0]
                 treffer.append(res)
+                # Seit 29.09.2026 nur noch "neu", und nur bestaetigt (Regeln
+                # 1 und 3); der Zweig "nachtrag" bleibt fuer den Fall, dass
+                # melde_stufe ihn je wieder liefert.
                 stufe = melde_stufe(res, schon_gemeldet,
-                                    state.get("gemeldet_kp"))
+                                    state.get("gemeldet_kp"), state)
+                if stufe and not zyklus_frei(res, zyklus):
+                    stufe = None
                 if stufe == "neu":
                     neu.append(res)
                 elif stufe == "nachtrag":
@@ -5359,6 +5479,8 @@ def main():
                                 schon_gemeldet.add(k)
                                 state["gemeldet"][k] = heute_s
                                 kp_merken(state, k, t.get("kaufpunkt"))
+                    # Regel 1 (Gerhard, 29.09.2026): heute nicht noch einmal.
+                    heute_vermerken(state, zu_melden)
                     save_state(state)
                     # Kapitel 12: Jede gemeldete Kaufpunkt-Meldung wird
                     # ab jetzt als Beobachtung im Chart ueberwacht.
@@ -5382,6 +5504,7 @@ def main():
                     if t["vol_ok"] is True:
                         schon_gemeldet.update(t.get("keys_best")
                                               or [t["key_best"]])
+                heute_vermerken(state, zu_melden)
 
             # --- Die Alarm-Muster (O10): Auskunft, kein Kaufsignal ------
             # EINE Nachricht je Durchlauf, egal aus welchem Anlass: gerissen,
@@ -5455,8 +5578,11 @@ def main():
                 if args.dry_run:
                     print("(Dry-Run — keine Alarm-Meldung gesendet)")
                     alarm_vormerken()
+                    heute_vermerken(state, alarm_alle)
                 elif push_alarm(topic, alarm_alle):
                     alarm_vormerken(date.today().isoformat())
+                    # Regel 1 (Gerhard, 29.09.2026): heute nicht noch einmal.
+                    heute_vermerken(state, alarm_alle)
                     save_state(state)
                 else:
                     sperre_bis = jetzt_s + TAKT
@@ -5488,6 +5614,7 @@ def main():
                     for t in nachtrag:
                         schon_gemeldet.update(t.get("keys_best")
                                               or [t["key_best"]])
+                    heute_vermerken(state, nachtrag)
                 elif push_nachtrag(topic, nachtrag):
                     heute_s = date.today().isoformat()
                     for t in nachtrag:
@@ -5495,6 +5622,7 @@ def main():
                             schon_gemeldet.add(k)
                             state["gemeldet"][k] = heute_s
                             kp_merken(state, k, t.get("kaufpunkt"))
+                    heute_vermerken(state, nachtrag)
                     save_state(state)
                 else:
                     sperre_bis = jetzt_s + TAKT
@@ -5516,18 +5644,30 @@ def main():
                       "kaufpunkt": t.get("kaufpunkt"), "kurs": t.get("kurs"),
                       "stop": t.get("stop"), "ueber_pct": t.get("ueber_pct"),
                       "uebersprungen": True,
+                      # Regel 3 (29.09.2026): gemeldet nur mit Bestaetigung.
+                      "vol_ratio": t.get("vol_ratio"),
+                      "vol_noetig": t.get("vol_noetig"),
+                      "vol_bestaetigt": t.get("vol_ok"),
+                      "vol_anteil": t.get("vol_anteil"),
                       "trockenlauf": bool(args.dry_run)}
                      for t in uebersprungen], quelle="waechter/uebersprungen")
                 if args.dry_run:
                     print("(Dry-Run — nichts gesendet)")
                     for t in uebersprungen:
                         schon_gemeldet.update(t.get("keys") or [t["key"]])
+                    heute_vermerken(state, uebersprungen)
                 elif push_uebersprungen(topic, uebersprungen):
                     heute_s = date.today().isoformat()
                     for t in uebersprungen:
                         for k in t.get("keys") or [t["key"]]:
                             schon_gemeldet.add(k)
                             state["gemeldet"][k] = heute_s
+                            # Seit 29.09.2026 auch hier der Preis: Die
+                            # Wochen-Sperre gilt ueber alle Meldewege, und
+                            # ab MELDE_NEU_AB hoeher darf dasselbe Muster
+                            # wieder melden (offene_muster).
+                            kp_merken(state, k, t.get("kaufpunkt"))
+                    heute_vermerken(state, uebersprungen)
                     save_state(state)
                 else:
                     sperre_bis = jetzt_s + TAKT
@@ -5771,6 +5911,7 @@ def main():
                     print("(Dry-Run — kein Einstiegs-Push)")
                     for g in gap_ein:   # sonst alle zwei Sekunden erneut
                         schon_gemeldet.add(g["key"])
+                    heute_vermerken(state, gap_ein)
                 elif jetzt_s < sperre_bis:
                     pass                # Sendesperre nach Fehlschlag
                 else:
@@ -5792,6 +5933,7 @@ def main():
                             schon_gemeldet.add(g["key"])
                             state["gemeldet"][g["key"]] = date.today().isoformat()
                             warten.pop(g["ticker"], None)
+                        heute_vermerken(state, gap_ein)
                         trigger_logbuch.protokolliere_viele(
                             [{"ticker": g["ticker"],
                               "firma": g.get("firma", ""),
@@ -5800,6 +5942,10 @@ def main():
                               "kurs": g.get("kurs"),
                               "kaufpunkt": g.get("einstieg"),
                               "stop": g.get("stop"),
+                              # Regel 3 (29.09.2026): Volumen des Einstiegstags.
+                              "vol_ratio": g.get("vol_ratio"),
+                              "vol_noetig": g.get("vol_noetig"),
+                              "vol_bestaetigt": g.get("vol_ok"),
                               **zusatz_logbuch(g["ticker"]),
                               "gemeldet": True} for g in gap_ein],
                             quelle="waechter/kapitel7")

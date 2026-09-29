@@ -154,36 +154,22 @@ CFG = {
         # 04.08. (das Kriterium verschlechtert das Ergebnis) passt dazu.
         # Genommen wird das obere, strengere Ende von Weinsteins Spanne.
         "gap_and_go_faktor": 3.0,    # Lücken-Bestätigungstag: ≥ 3× Ø
-        # WER DARF OHNE VOLUMENBESTAETIGUNG MELDEN? (Gerhard, 12.08.2026)
-        # Nur noch diese drei. Bei allen uebrigen Mustern wird ein
-        # Ausbruch ohne Volumenbestaetigung gar nicht mehr gemeldet — er
-        # bleibt offen und kommt erst, wenn das Volumen nachzieht (das
-        # macht der Nachtrag, den es seit 29.07.2026 gibt).
-        #
-        # Die drei sind nicht willkuerlich: Bei ihnen IST das Volumen
-        # Teil des Musters und wird eigens geprueft, statt nur als Filter
-        # obendrauf zu liegen. Gap and Go verlangt das Dreifache am
-        # Luecken-Tag, beide Red-to-Green-Kapitel eine dreiteilige
-        # Signatur (ruhiger Anflug, Sprung, haelt an), die Flagge das
-        # Volumen im Fahnenmast.
-        #
-        # ACHTUNG, was das NICHT betrifft: den dritten Status "nicht
-        # verifizierbar". Der heisst "konnte gar nicht geprueft werden"
-        # und ist etwas anderes als "geprueft und zu schwach" — genau
-        # darauf hat Gerhard am 06.08.2026 bestanden. Er wird weiterhin
-        # gemeldet, sonst verschwaende eine Aktie ohne eigene
-        # Volumenkurve lautlos.
-        "unbestaetigt_melden_bei": [
-            "Red-to-Green",
-            "Red-to-Green Explosive",
-            "High & Tight Flag",
-            # Der Innen-Einstieg ist dieselbe Flagge mit engerer Marke
-            # (Soreide-Ausbau, 31.08.2026, Regelfrage G9): Das Volumen
-            # steckt wie bei der Flagge im Fahnenmast, also gilt
-            # dieselbe Ausnahme.
-            "HTF Innen-Einstieg",
-            "Lücken-Bestätigungstag",
-        ],
+        # REGEL 2 (Gerhard, 29.09.2026): "52-Wochen-Hoch (Ersatzmuster bei
+        # Aktien): Neu: nur bei Volumen über 200 %", gemessen wie jede
+        # Huerde ueber die F(t)-Kurve. Die Meldungen schreiben das Volumen
+        # als "X % über Ø50"; 200 % darueber ist das Dreifache des
+        # Schnitts. Gilt nur fuer "Fallback: 52W-Hoch-Breakout", alle
+        # anderen Muster behalten ihre Huerde.
+        "breakout_faktor_52w": 3.0,
+        # KEINE MELDUNG OHNE BESTAETIGTES VOLUMEN (Gerhard, 29.09.2026,
+        # Regel 3, "alle Strategien"). Bis dahin durften fuenf Muster ohne
+        # Bestaetigung melden (Red-to-Green, Red-to-Green Explosive, High &
+        # Tight Flag, HTF Innen-Einstieg, Lücken-Bestätigungstag; Gerhard,
+        # 12.08.2026), und der Zustand "nicht verifizierbar" wurde gemeldet
+        # (Gerhard, 06.08.2026). Beides ist vorbei: Ein Kaufpunkt ohne
+        # bestaetigtes Volumen bleibt offen und meldet erst, wenn die
+        # Formel die Huerde mit Volumen von Yahoo bestaetigt. Deshalb gibt
+        # es hier keine Ausnahmeliste mehr.
     },
 
     # --- Insider-Kauf-Scanner (Gerhards Kapitel vom 14.08.2026) -----------
@@ -618,29 +604,24 @@ CFG = {
         # FIVE und PTGX am 10.09.; ASH, KEYS, OSCR, LITE und CXW am 09.09.).
         # Fehlt der Vortagesschluss, wird wie bisher gemeldet - nur ein
         # BEKANNTER Vortagesschluss ueber dem Kaufpunkt schweigt.
-        # GERHARD HAT ENTSCHIEDEN (M4, 12.09.2026): Moeglichkeit 2. Der
-        # Fensterzustand bleibt ueber Nacht erhalten, ein Wiedereintritt
-        # laeuft nur ueber die Totzone; ein Vortagesschluss ueber dem
-        # Kaufpunkt schweigt damit von selbst, ohne diese Zwischenloesung.
-        # Und W1: Die "Bestaetigung am Folgetag" wird innerhalb des
-        # Einstiegsfensters (bis 5 Prozent) gemeldet, nicht unterdrueckt.
+        # GERHARD HAT ENTSCHIEDEN (M4, 12.09.2026): Moeglichkeit 2, der
+        # Fensterzustand ueber Nacht samt Wiedereintritt ueber die Totzone.
+        # Den Wiedereintritt hat Gerhard am 29.09.2026 abgeschafft (Regel
+        # 1, siehe unten); geblieben ist W1: Die "Bestaetigung am Folgetag"
+        # wird innerhalb des Einstiegsfensters (bis 5 Prozent) gemeldet,
+        # nicht unterdrueckt, und nur mit bestaetigtem Volumen.
         "nur_frische_ausbrueche": False,
-        # WIEDEREINTRITT (Mathias, 13.08.2026): Faellt der Kurs wieder ins
-        # Einstiegsfenster zurueck, wird das gemeldet - "das Fenster ist
-        # das Fenster". Damit ein Kurs, der genau auf der Grenze liegt,
-        # nicht staendig hin und her meldet, geht es erst UNTER
-        # (nachlauf_grenze minus totzone) wieder hinein.
-        # GEMESSEN an MNDY-Minutendaten vom 13.08.2026: ohne Totzone
-        # NEUN Meldungen in 22 Minuten (sechs Ueberquerungen), mit einem
-        # Prozentpunkt Totzone genau EINE. Auf 0 gesetzt gibt es die
-        # Reinform, in der jede Ueberquerung zaehlt.
-        #
-        # ZWEI Prozentpunkte auf GERHARDS Entscheidung (13.08.2026,
-        # Mathias hat mit ihm geredet): Wieder herein geht es erst bei
-        # 3 % ueber dem Kaufpunkt, nicht schon bei 4. Der Kurs muss also
-        # wirklich in die Kaufzone zurueckkommen und nicht bloss an ihrem
-        # Rand kratzen.
-        "wiedereintritt_totzone": 0.02,
+        # KEIN WIEDEREINTRITT MEHR (Gerhard, 29.09.2026, Regel 1): "Die
+        # bisherige Wiederalarm-Logik bei 3 % Abstand ist komplett
+        # abzudrehen." Bis dahin kam ein Kaufpunkt, dessen Kurs mehr als
+        # 5 % darueber lag, erst bei 3 % oder darunter wieder ins
+        # Einstiegsfenster (Totzone von zwei Prozentpunkten, Gerhard am
+        # 13.08.2026), und danach konnte er noch einmal melden. Jetzt meldet
+        # ein Kaufpunkt am Tag hoechstens einmal und je Aktie und Muster in
+        # der Woche hoechstens einmal, gleich auf welchem Weg (Ausbruch oder
+        # uebersprungen). Das Zappeln an der Grenze (MNDY, 13.08.2026: neun
+        # Ueberquerungen in 22 Minuten) erzeugt damit von selbst keine
+        # zweite Meldung mehr; eine Totzone braucht es nicht.
         # NEUE MELDUNG DESSELBEN MUSTERS erst ab diesem Abstand ueber dem
         # schon gemeldeten Kaufpunkt (Gerhard, 23.09.2026, Regel 3):
         # "Alles darunter gilt als Neuberechnung und bleibt still."

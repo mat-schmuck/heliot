@@ -1437,12 +1437,12 @@ def block_e():
                "datetime": _tage_h, "open": [10.0] * 60,
                "close": [10.0] * 60, "high": [10.2] * 60,
                "low": [9.8] * 60, "volume": [1_000_000] * 60})) is None)
+    # Seit 29.09.2026 ohne die Ausnahmeliste "unbestaetigt melden": Gerhards
+    # Regel 3 laesst kein Muster mehr ohne bestaetigtes Volumen melden.
     pruefe("E", "Innen-Einstieg steht in allen Registern",
            "HTF Innen-Einstieg" in ps.PRIORITY
            and "HTF Innen-Einstieg" in bw.VOL_FAKTOR
-           and "HTF Innen-Einstieg" in ex.STRUKTURPUNKT
-           and "HTF Innen-Einstieg" in
-           __import__("config").CFG["volumen"]["unbestaetigt_melden_bei"])
+           and "HTF Innen-Einstieg" in ex.STRUKTURPUNKT)
     import kell_zyklus as _kzk
     pruefe("E", "Kell-Phase: Nachtscan klassifiziert und protokolliert",
            "res[\"zyklus\"] = kell_zyklus.klassifiziere(df)" in
@@ -1462,9 +1462,7 @@ def block_e():
     pruefe("E", "EMA Crossback steht in allen Registern",
            "EMA Crossback" in _psk.PRIORITY
            and "EMA Crossback" in bw.VOL_FAKTOR
-           and "EMA Crossback" in _exk.STRUKTURPUNKT
-           and "EMA Crossback" not in
-           __import__("config").CFG["volumen"]["unbestaetigt_melden_bei"])
+           and "EMA Crossback" in _exk.STRUKTURPUNKT)
     pruefe("E", "Kapselung: kein anderes Betriebsmodul importiert die "
            "Ruecksetzer-Logik",
            "import ema_crossback" not in _bw_quelle
@@ -1600,101 +1598,162 @@ def block_e():
            ex11.STRUKTURPUNKT.get(k11.NAME) is not None,
            str(ex11.STRUKTURPUNKT.get(k11.NAME))[:40])
 
-    # ZWEI NEUE REGELN VON GERHARD (12.08.2026)
-    # (1) Unbestaetigtes Volumen melden nur noch drei Muster.
-    def stufe(strategie, vol_ok):
-        return bw.melde_stufe({"key": "K", "key_best": "B",
-                               "vol_ok": vol_ok, "strategie": strategie}, set())
-    still = [x for x in ("Darvas Box", "Rectangle Top", "VCP",
-                         "Cup & Handle", "Cup & Handle (Wochenbasis)")
-             if stufe(x, False) is not None]
-    pruefe("E", "Ohne Volumenbestaetigung schweigen die uebrigen Muster",
-           not still, ", ".join(still))
-    laut = [x for x in ("Red-to-Green", "Red-to-Green Explosive",
-                        "High & Tight Flag", "Lücken-Bestätigungstag")
-            if stufe(x, False) is None]
-    pruefe("E", "Die drei erlaubten melden weiterhin unbestaetigt",
-           not laut, ", ".join(laut))
-    pruefe("E", "MIT Bestaetigung meldet jedes Muster",
-           stufe("Darvas Box", True) == "neu")
-    pruefe("E", "'nicht verifizierbar' wird NICHT mitunterdrueckt",
-           stufe("Darvas Box", None) == "neu")
+    # GERHARDS DREI REGELN VOM 29.09.2026 (Teil 1, "alle Strategien")
+    # REGEL 3: nur mit verifiziertem Volumen melden. Bis dahin durften fuenf
+    # Muster ohne Bestaetigung melden (12.08.2026), und "nicht verifizierbar"
+    # wurde gemeldet (06.08.2026); beides ist vorbei.
+    def stufe(strategie, vol_ok, gem=None, st=None):
+        return bw.melde_stufe({"ticker": "TST", "kaufpunkt": 10.0,
+                               "key": "TST|" + strategie,
+                               "key_best": "BEST|TST|" + strategie,
+                               "vol_ok": vol_ok, "strategie": strategie},
+                              gem if gem is not None else set(), None, st)
+    laut = [x for x in ("Darvas Box", "Rectangle Top", "VCP", "Cup & Handle",
+                        "Cup & Handle (Wochenbasis)", "Red-to-Green",
+                        "Red-to-Green Explosive", "High & Tight Flag",
+                        "HTF Innen-Einstieg", "Lücken-Bestätigungstag",
+                        "Fallback: 52W-Hoch-Breakout", "Inside Day")
+            if stufe(x, False) is not None or stufe(x, None) is not None]
+    pruefe("E", "Regel 3: ohne bestaetigtes Volumen meldet KEIN Muster, "
+           "auch nicht 'nicht verifizierbar'", not laut, ", ".join(laut))
+    pruefe("E", "Regel 3: MIT Bestaetigung meldet jedes Muster",
+           stufe("Darvas Box", True) == "neu"
+           and stufe("High & Tight Flag", True) == "neu")
     # Unterdrueckt heisst NICHT abgehakt: kommt das Volumen nach, meldet er.
-    r = {"key": "K", "key_best": "B", "vol_ok": False, "strategie": "Darvas Box"}
-    gemeldet = set()
-    bw.melde_stufe(r, gemeldet)
-    pruefe("E", "Ein unterdrueckter Ausbruch gilt NICHT als gemeldet",
-           "K" not in gemeldet)
+    _gem3 = set()
+    stufe("Darvas Box", False, _gem3)
+    pruefe("E", "Regel 3: ein unbestaetigter Ausbruch bleibt offen",
+           not _gem3 and stufe("Darvas Box", True, _gem3) == "neu")
+    pruefe("E", "Regel 3: die Ausnahmeliste gibt es nicht mehr",
+           "unbestaetigt_melden_bei" not in __import__("config").CFG["volumen"]
+           and not hasattr(bw, "UNBESTAETIGT_ERLAUBT")
+           and not hasattr(bw, "darf_unbestaetigt_melden"))
+    # Nur Volumen von yfinance zaehlt; Twelve Data springt nur ein.
+    pruefe("E", "Regel 3: Volumen von Twelve Data traegt keine Meldung",
+           bw.volumen_von_yahoo({}) and bw.volumen_von_yahoo({"volumenquelle": "yahoo_ws"})
+           and not bw.volumen_von_yahoo({"volumenquelle": "twelvedata"}))
+    _vv_alt = bw.vol_verhaeltnis
+    try:
+        bw.vol_verhaeltnis = lambda vol, avg, ticker=None, jetzt=None: vol / avg
+        _it3 = {"ticker": "TST", "strategie": "Darvas Box", "kaufpunkt": 10.0}
+        _q3 = {"close": 10.2, "volume": 3_000_000.0, "avg_volume": 1_000_000.0,
+               "prev_close": 9.9}
+        _r_y = bw.pruefe_breakout(_it3, _q3)
+        _r_td = bw.pruefe_breakout(_it3, {**_q3, "volumenquelle": "twelvedata"})
+        _r_ue = bw.pruefe_breakout(_it3, {**_q3, "close": 11.0,
+                                          "volumenquelle": "twelvedata"})
+        pruefe("E", "Regel 3: gleiches Volumen, von Yahoo bestaetigt, von Twelve "
+               "Data offen, auch beim uebersprungenen Kaufpunkt",
+               _r_y["vol_ok"] is True and _r_td["vol_ok"] is None
+               and _r_td["vol_fremdquelle"] and _r_ue.get("uebersprungen")
+               and _r_ue["vol_ok"] is None)
+        _r_ue_y = bw.pruefe_breakout(_it3, {**_q3, "close": 11.0})
+        pruefe("E", "Regel 3: der uebersprungene Kaufpunkt traegt jetzt ein "
+               "Volumenurteil", _r_ue_y.get("uebersprungen")
+               and _r_ue_y["vol_ok"] is True and _r_ue_y["vol_ratio"] == 3.0)
+        # REGEL 2: das 52-Wochen-Hoch nur ueber 200 % (das Dreifache).
+        _i52 = {"ticker": "TST", "strategie": "Fallback: 52W-Hoch-Breakout",
+                "kaufpunkt": 10.0}
+        _r52a = bw.pruefe_breakout(_i52, {**_q3, "volume": 2_900_000.0})
+        _r52b = bw.pruefe_breakout(_i52, {**_q3, "volume": 3_000_000.0})
+        _r20 = bw.pruefe_breakout({**_i52, "strategie": "Fallback: 20-Tage-Hoch (Pivot)"},
+                                  {**_q3, "volume": 1_100_000.0})
+        pruefe("E", "Regel 2: 52-Wochen-Hoch meldet erst ab 200 % ueber dem Schnitt",
+               _r52a["vol_ok"] is False and _r52b["vol_ok"] is True
+               and _r52b["vol_noetig"] == 3.0)
+        pruefe("E", "Regel 2: die uebrigen Huerden bleiben, wie sie sind",
+               _r20["vol_ok"] is True and _r20["vol_noetig"] == 1.0
+               and bw.VOL_FAKTOR["VCP"] == 1.4 and bw.VOL_FAKTOR["Darvas Box"] == 1.0
+               and bw.VOL_FAKTOR["Three Weeks Tight"] == 1.4
+               and bw.VOL_FAKTOR_FALLBACK == 1.0)
+        # REGEL 3 AUCH BEIM POWER-GAP-EINSTIEG AM FOLGETAG: bis dahin sah er
+        # nur den Kurs an.
+        _gestern = ((bw.heute_ny() or datetime.now().date())
+                    - timedelta(days=1)).isoformat()
+        def _gap(q):
+            st = {bw.GAPGO_WARTEN: {"GGG": {"signal": _gestern, "kp": 10.0,
+                                            "stop": 9.0}}}
+            return bw.gapgo_einstiege_pruefen(st, {"GGG": q})[0], st
+        _g_leise, _st_leise = _gap({**_q3, "volume": 500_000.0})
+        _g_td, _ = _gap({**_q3, "volumenquelle": "twelvedata"})
+        _g_ja, _ = _gap(_q3)
+        pruefe("E", "Regel 3: Power-Gap-Einstieg nur mit bestaetigtem Volumen "
+               "des Einstiegstags",
+               not _g_leise and not _g_td and len(_g_ja) == 1
+               and _g_ja[0]["vol_ok"] is True
+               and _st_leise[bw.GAPGO_WARTEN]["GGG"].get("ohne_volumen") is True)
+    finally:
+        bw.vol_verhaeltnis = _vv_alt
+    pruefe("E", "Regel 3: Red-to-Green und Power-Gap-Tag nur mit Yahoo-Volumen",
+           bw.pruefe_red_to_green("TST", {"close": 1.0, "volume": 1.0, "open": 1.0,
+                                          "volumenquelle": "twelvedata"},
+                                  {"vortagesschluss": 1.1, "v50": 1.0}) is None
+           and bw.pruefe_red_to_green_explosive(
+               "TST", {"close": 1.0, "volume": 1.0, "open": 1.0,
+                       "volumenquelle": "twelvedata"},
+               {"vortagesschluss": 1.1, "v50": 1.0}) is None
+           and bw.pruefe_gap_and_go("TST", {"open": 1.2, "high": 1.3, "low": 1.15,
+                                            "prev_close": 1.0, "close": 1.25,
+                                            "volume": 9e9, "vol50": 1.0,
+                                            "volumenquelle": "twelvedata"}) is None)
+    import bot_kanal as _bk3
+    pruefe("E", "Regel 3: der Bot-Kanal nimmt keinen Treffer ohne Bestaetigung",
+           'if "vol_ok" in t and t.get("vol_ok") is not True:'
+           in pathlib.Path("bot_kanal.py").read_text(encoding="utf-8")
+           and _bk3.sende_kauf.__doc__ is not None)
 
-    # DAS EINSTIEGSFENSTER ALS ZUSTAND (Mathias, 13.08.2026, Fall MNDY).
-    # Er hat sich fuer "das Fenster ist das Fenster" entschieden: Der Kurs
-    # darf zurueckkommen, und jeder Wechsel wird gemeldet - hinaus als
-    # "uebersprungen", herein als "wieder im Einstiegsfenster".
-    #
-    # DER FALL, der dazu gefuehrt hat: MNDY stand um 20:59 bei 93,00 und
-    # damit 5,10 % ueber dem Kaufpunkt 88,49, zwei Minuten spaeter bei
-    # 92,91 und damit 4,99 %. Ergebnis waren zwei einander
-    # widersprechende Meldungen ("kein Kaufsignal", dann "Vol
-    # BESTAETIGT") fuer neun Cent Kursbewegung.
-    D, A = bw.DRIN, bw.DRAUSSEN
-    pruefe("E", "Über der Grenze heißt draußen",
-           bw.fenster_zustand(0.051, D) == A)
-    pruefe("E", "Deutlich darunter heißt drin",
-           bw.fenster_zustand(0.030, A) == D)
-    # DIE TOTZONE: gemessen an MNDY-Minutendaten haette die Reinform NEUN
-    # Meldungen in 22 Minuten erzeugt, mit einem Prozentpunkt Totzone EINE.
-    pruefe("E", "In der Totzone bleibt es beim bisherigen Zustand",
-           bw.fenster_zustand(0.045, A) is None
-           and bw.fenster_zustand(0.045, D) is None)
-    pruefe("E", "Beim ERSTEN Blick gilt die Totzone als drin",
-           bw.fenster_zustand(0.045, None) == D)
-    pruefe("E", "Der genaue Grenzwert zählt noch als drin",
-           bw.fenster_zustand(bw.NACHLAUF_GRENZE, D) is not A)
-
-    pruefe("E", "Hinausgehen wird gemeldet",
-           bw.fenster_wechsel(A, D) == "verlassen")
-    pruefe("E", "Zurückkommen wird gemeldet",
-           bw.fenster_wechsel(D, A) == "wiedereintritt")
-    pruefe("E", "Gleicher Zustand meldet nichts",
-           bw.fenster_wechsel(D, D) is None and bw.fenster_wechsel(A, A) is None)
-    pruefe("E", "Ohne Entscheidung (Totzone) meldet nichts",
-           bw.fenster_wechsel(None, A) is None)
-    # Der Fall Sea (Gerhard, 11.08.2026): 10,3 % Eroeffnungsluecke, der
-    # Kaufpunkt wurde NIE angesagt. Der erste Blick ist schon draussen.
-    pruefe("E", "Erster Blick schon über der Grenze wird gemeldet (Fall Sea)",
-           bw.fenster_wechsel(A, None) == "verlassen")
-    pruefe("E", "Erster Blick im Fenster meldet keinen Wiedereintritt",
-           bw.fenster_wechsel(D, None) is None)
-
-    # Der ECHTE Tagesverlauf von MNDY, auf die Minute nachgespielt.
-    verlauf = [0.004, 0.017, 0.036, 0.049, 0.051, 0.046, 0.050, 0.0489,
-               0.051, 0.0457, 0.0535, 0.0489, 0.0507, 0.030]
-    zustand, meldungen = None, []
-    for u in verlauf:
-        neu_z = bw.fenster_zustand(u, zustand)
-        w = bw.fenster_wechsel(neu_z, zustand)
-        if neu_z:
-            zustand = neu_z
-        if w:
-            meldungen.append(w)
-    pruefe("E", "MNDY-Tagesverlauf ergibt genau zwei Meldungen statt neun",
-           meldungen == ["verlassen", "wiedereintritt"], meldungen)
-
-    # DER WOCHENRIEGEL, teuer erkauft (13.08.2026, beim Umbau selbst
-    # hineingelaufen): Beim ersten Blick eines Tages hat ein Kaufpunkt
-    # keinen Vorzustand. Steht der Kurs dann schon ueber der Grenze, gilt
-    # das als Wechsel - und OHNE zweiten Riegel meldete jeder Kaufpunkt,
-    # der seit Tagen weit oben steht, an jedem Morgen aufs Neue. Gemessen
-    # an der echten Mappe waeren das 131 Meldungen an einem Morgen.
+    # REGEL 1: ein Kaufpunkt meldet am Tag hoechstens einmal, und je Aktie
+    # und Muster in der Woche hoechstens einmal, gleich auf welchem Weg.
+    # "Die bisherige Wiederalarm-Logik bei 3 % Abstand ist komplett
+    # abzudrehen": Den Fensterzustand samt Totzone gibt es nicht mehr.
+    pruefe("E", "Regel 1: kein Fensterzustand und keine Totzone mehr",
+           not any(hasattr(bw, n) for n in ("fenster_zustand", "fenster_wechsel",
+                                            "DRIN", "DRAUSSEN",
+                                            "WIEDEREINTRITT_TOTZONE"))
+           and "wiedereintritt_totzone" not in __import__("config").CFG["betrieb"])
+    _st1 = {}
+    _t1 = {"ticker": "QQQQ", "strategie": "Fallback: 20-Tage-Hoch (Pivot)",
+           "kaufpunkt": 26.51}
+    pruefe("E", "Regel 1: vor der ersten Meldung ist der Kaufpunkt frei",
+           not bw.heute_gemeldet(_t1, _st1))
+    bw.heute_vermerken(_st1, [_t1])
+    pruefe("E", "Regel 1: nach der Meldung ist er fuer den Tag gesperrt",
+           bw.heute_gemeldet(_t1, _st1)
+           and stufe("Fallback: 20-Tage-Hoch (Pivot)", True, set(), None) == "neu")
+    pruefe("E", "Regel 1: derselbe Preis unter anderem Namen ist ebenfalls gesperrt",
+           bw.heute_gemeldet({"ticker": "QQQQ", "strategie": "Inside Day",
+                              "kaufpunkt": 26.51}, _st1)
+           and not bw.heute_gemeldet({"ticker": "QQQQ", "strategie": "Inside Day",
+                                      "kaufpunkt": 25.00}, _st1))
+    _st1[bw.HEUTE_FELD]["tag"] = "2000-01-01"
+    pruefe("E", "Regel 1: das Tagesgedaechtnis gilt nur fuer heute",
+           not bw.heute_gemeldet(_t1, _st1))
+    bw.heute_vermerken(_st1, [{**_t1, "stumm": True}])
+    pruefe("E", "Regel 1: ein abgewaehltes Muster sperrt nichts",
+           not bw.heute_gemeldet(_t1, _st1))
+    _z = set()
+    pruefe("E", "Regel 1: zwei Wege auf demselben Preis im selben Durchlauf, "
+           "nur der erste meldet",
+           bw.zyklus_frei(_t1, _z)
+           and not bw.zyklus_frei({**_t1, "strategie": "Inside Day"}, _z))
+    # Die Wochen-Sperre gilt jetzt ueber alle Meldewege.
+    _sea = {"ticker": "SE", "strategie": "Cup & Handle (Wochenbasis)",
+            "kaufpunkt": 115.91, "kurs": 127.87, "vortagesschluss": 114.80,
+            "vol_ok": True}
+    pruefe("E", "Regel 1: nach 'uebersprungen' meldet derselbe Kaufpunkt "
+           "auch spaeter in der Woche keinen Ausbruch mehr",
+           not bw.offene_muster(_sea, {bw.uebersprungen_schluessel(_sea)})
+           and bw.melde_stufe({**_sea, "kurs": 118.0, "vortagesschluss": 110.0},
+                              {bw.uebersprungen_schluessel(_sea)}) is None)
+    pruefe("E", "Regel 1: nach einem Ausbruch kommt kein 'uebersprungen' mehr",
+           not bw.melde_uebersprungen(_sea, {bw.ausbruch_schluessel(_sea)}))
+    pruefe("E", "Regel 1: ab 2 Prozent hoeherem Kaufpunkt meldet dasselbe "
+           "Muster wieder, ueber alle Meldewege",
+           bw.offene_muster({**_sea, "kaufpunkt": 118.3},
+                            {bw.uebersprungen_schluessel(_sea)},
+                            {bw.uebersprungen_schluessel(_sea): 115.91}) != [])
     quelle_loop = pathlib.Path("breakout_watcher.py").read_text(encoding="utf-8")
-    # Seit 10.09.2026 je Muster ein Schluessel: geprueft wird, ob EINER
-    # davon schon im Gedaechtnis steht.
-    pruefe("E", "Übersprungen prüft ZUSÄTZLICH das Wochengedächtnis",
-           'wechsel == "verlassen"' in quelle_loop
-           and "for k in uebersprungen_schluessel_alle(res)" in quelle_loop)
-    # Bis zum 23.09.2026 loeste ein Wiedereintritt den Wochenriegel der
-    # Uebersprungen-Meldung wieder. Gerhards Regel 1 streicht das.
-    pruefe("E", "Regel 1: ein Wiedereintritt loest den Wochenriegel NICHT mehr",
+    pruefe("E", "Regel 1: ein Wiedereintritt loest den Wochenriegel NICHT",
            "schon_gemeldet.discard(k)" not in quelle_loop)
 
     # DAS UEBERGABEFESTE MELDE-GEDAECHTNIS (18.08.2026, Fall RSG/CRNX):
@@ -2108,26 +2167,33 @@ def block_e():
     #
     # DER FALL SEA (Gerhard, 11.08.2026), mit den echten Zahlen: Schluss
     # am 10.08. 114,80, Kaufpunkt 115,91, Eroeffnung am 11.08. 127,87.
+    # Seit 29.09.2026 (Gerhard, Regel 3) nur mit bestaetigtem Volumen.
     sea = {"ticker": "SE", "nr": 1, "strategie": "Cup & Handle (Wochenbasis)",
-           "kaufpunkt": 115.91, "kurs": 127.87, "vortagesschluss": 114.80}
+           "kaufpunkt": 115.91, "kurs": 127.87, "vortagesschluss": 114.80,
+           "vol_ok": True}
     pruefe("E", "Sea kam von unten und wird gemeldet",
-           bw.kam_von_unten(sea) and bw.melde_uebersprungen(sea, "verlassen", set()))
+           bw.kam_von_unten(sea) and bw.melde_uebersprungen(sea, set()))
+    pruefe("E", "Regel 3: ohne bestaetigtes Volumen bleibt Sea offen",
+           not bw.melde_uebersprungen({**sea, "vol_ok": None}, set())
+           and not bw.melde_uebersprungen({**sea, "vol_ok": False}, set()))
     # DER FALL TEAM, ebenfalls echt: Kurs 165,98, Ruecksetzer-Marke 98,21.
     team = {"ticker": "TEAM", "nr": 3, "strategie": "Fallback: MA50-Pullback",
-            "kaufpunkt": 98.21, "kurs": 167.40, "vortagesschluss": 165.98}
+            "kaufpunkt": 98.21, "kurs": 167.40, "vortagesschluss": 165.98,
+            "vol_ok": True}
     pruefe("E", "Eine Rücksetzer-Marke, unter der der Kurs nie war, "
            "meldet NICHTS",
            not bw.kam_von_unten(team)
-           and not bw.melde_uebersprungen(team, "verlassen", set()))
+           and not bw.melde_uebersprungen(team, set()))
     # NICHT nach Muster ausgeschlossen: ETON kam am 14.08. aus einer
     # Fallback-Marke und war trotzdem ein echter Fall (gestern 40,80,
     # Kaufpunkt 50,23, heute 58,12).
     eton = {"ticker": "ETON", "nr": 1,
             "strategie": "Fallback: 52W-Hoch-Breakout",
-            "kaufpunkt": 50.23, "kurs": 58.12, "vortagesschluss": 40.80}
+            "kaufpunkt": 50.23, "kurs": 58.12, "vortagesschluss": 40.80,
+            "vol_ok": True}
     pruefe("E", "Auch eine Fallback-Marke wird gemeldet, wenn sie von "
            "unten kam",
-           bw.melde_uebersprungen(eton, "verlassen", set()))
+           bw.melde_uebersprungen(eton, set()))
     pruefe("E", "Ohne Vortagesschluss wird nicht gemeldet",
            not bw.kam_von_unten({**sea, "vortagesschluss": None}))
     # ZWEI QUELLEN fuer den Vortagesschluss (Mathias, 14.08.2026). Die
@@ -2154,17 +2220,20 @@ def block_e():
     pruefe("E", "Genau auf dem Kaufpunkt geschlossen zählt nicht als "
            "von unten",
            not bw.kam_von_unten({**sea, "vortagesschluss": 115.91}))
-    pruefe("E", "Ohne Wechsel keine Meldung",
-           not bw.melde_uebersprungen(sea, None, set()))
     pruefe("E", "Schon angesagt heißt nicht noch einmal",
-           not bw.melde_uebersprungen(
-               sea, "verlassen", {bw.uebersprungen_schluessel(sea)}))
-    # Mathias ausdruecklich am 14.08.2026: "Die Uebersprungenmeldung
-    # stoert uns nicht, im Gegenteil, genau so wollen wir es haben." Ein
-    # bereits gemeldeter AUSBRUCH darf sie also NICHT unterdruecken.
-    pruefe("E", "Ein bereits gemeldeter Ausbruch unterdrückt sie NICHT",
-           bw.melde_uebersprungen(sea, "verlassen",
-                                  {bw.ausbruch_schluessel(sea)}))
+           not bw.melde_uebersprungen(sea, {bw.uebersprungen_schluessel(sea)}))
+    # BIS 29.09.2026 unterdrueckte ein gemeldeter AUSBRUCH die
+    # Uebersprungen-Meldung ausdruecklich NICHT (Mathias, 14.08.2026: "genau
+    # so wollen wir es haben"). Gerhards Regel 1 vom 29.09.2026 geht vor:
+    # "Danach wird fuer diesen Kaufpunkt an diesem Tag nie wieder alarmiert",
+    # zumal mit der Uebersprungen-Meldung seit 23.09.2026 eine Kaufzeile an
+    # den Bot geht.
+    pruefe("E", "Regel 1: ein bereits gemeldeter Ausbruch unterdrückt sie",
+           not bw.melde_uebersprungen(sea, {bw.ausbruch_schluessel(sea)}))
+    _st_sea = {}
+    bw.heute_vermerken(_st_sea, [{**sea, "strategie": "Inside Day"}])
+    pruefe("E", "Regel 1: heute auf demselben Preis gemeldet, dann nicht noch einmal",
+           not bw.melde_uebersprungen(sea, set(), None, _st_sea))
 
     # MELDESCHLUESSEL NACH MUSTER (Befund 09.09.2026, gebaut 10.09.2026).
     # LITE: Rectangle Top stand am 08.09. auf Platz 1, am 09.09. auf Platz 3.
@@ -2178,8 +2247,10 @@ def block_e():
     pruefe("E", "Zwei Muster auf einem Preis: je Muster ein Schluessel",
            bw.ausbruch_schluessel_alle(_paar)
            == ["CRDX|Darvas Box", "CRDX|High & Tight Flag"])
-    _rk = {"key": "X", "key_best": "Y", "vol_ok": True,
-           "strategie": "Darvas Box",
+    _rk = {"ticker": "LITE", "kaufpunkt": 900.0, "vol_ok": True,
+           "strategie": "Cup & Handle",
+           "strategien": ["Cup & Handle", "Rectangle Top"],
+           "key": "LITE|Cup & Handle", "key_best": "BEST|LITE|Cup & Handle",
            "keys": ["LITE|Cup & Handle", "LITE|Rectangle Top"],
            "keys_best": ["BEST|LITE|Cup & Handle", "BEST|LITE|Rectangle Top"]}
     # SEIT GERHARDS REGEL 2 (23.09.2026) anders als bis dahin: Liegen zwei
@@ -2190,16 +2261,17 @@ def block_e():
     # Muster als abgehakt.
     pruefe("E", "Regel 2: das noch nicht gemeldete Muster meldet auch bei gleichem Preis",
            bw.melde_stufe(_rk, {"LITE|Rectangle Top"}) == "neu")
-    pruefe("E", "Sind beide Muster gemeldet, kommt nur noch der Nachtrag",
+    # Bis 29.09.2026 kam hier noch der Nachtrag; seit Gerhards Regeln 1 und 3
+    # meldet ein Kaufpunkt, dessen Muster alle gemeldet sind, gar nichts mehr.
+    pruefe("E", "Sind beide Muster gemeldet, meldet der Kaufpunkt nichts mehr",
            bw.melde_stufe(_rk, {"LITE|Rectangle Top", "LITE|Cup & Handle"})
-           == "nachtrag"
+           is None
            and bw.melde_stufe(_rk, {"LITE|Rectangle Top", "LITE|Cup & Handle",
                                     "BEST|LITE|Cup & Handle",
                                     "BEST|LITE|Rectangle Top"}) is None)
-    pruefe("E", "Uebersprungen- und Fenster-Schluessel ebenfalls nach Muster",
+    pruefe("E", "Uebersprungen-Schluessel ebenfalls nach Muster",
            bw.uebersprungen_schluessel(_lite)
-           == bw.UEBERSPRUNGEN_MARKE + "LITE|Rectangle Top"
-           and bw.fenster_schluessel(_lite) == "LITE|Rectangle Top")
+           == bw.UEBERSPRUNGEN_MARKE + "LITE|Rectangle Top")
     import beobachtungen as _bbk
     _bstk = {}
     _bbk.oeffnen(_bstk, "LITE", 1, "Rectangle Top", 900.0, 850.0)
@@ -2267,8 +2339,9 @@ def block_e():
 
     # DIE WIEDEREINTRITTS-MELDUNG IST WEG (Gerhard, 23.09.2026, Regel 1):
     # "Die bisherige Ausnahme zweites Mal nach Wiedereintritt fällt komplett
-    # weg." Der ZUSTAND bleibt, er traegt die Totzone und entscheidet, ob
-    # ein Kaufpunkt als uebersprungen gemeldet wird.
+    # weg." Seit 29.09.2026 ist auch der Zustand samt Totzone weg (Gerhard,
+    # Regel 1: "Die bisherige Wiederalarm-Logik bei 3 % Abstand ist komplett
+    # abzudrehen"); die Pruefung dazu steht bei den drei Regeln oben.
     _bwq = (WURZEL / "breakout_watcher.py").read_text(encoding="utf-8")
     pruefe("E", "Regel 1: es gibt keine Meldung 'wieder im Einstiegsfenster'",
            not hasattr(bw, "push_wiedereintritt")
@@ -2277,9 +2350,6 @@ def block_e():
            and "wiedereintritt" not in bw.ALARM_ANLASS)
     pruefe("E", "Regel 1: der Wiedereintritt hebt die Uebersprungen-Sperre nicht auf",
            "schon_gemeldet.discard" not in _bwq)
-    pruefe("E", "Der Fensterzustand samt Totzone bleibt",
-           bw.fenster_wechsel(bw.DRIN, bw.DRAUSSEN) == "wiedereintritt"
-           and bw.fenster_zustand(0.04, bw.DRAUSSEN) is None)
 
     # -----------------------------------------------------------------
     # GERHARDS MELDELOGIK VOM 23.09.2026 (Regel 1 bis 4)
@@ -2325,9 +2395,12 @@ def block_e():
                {"CAI|Cup & Handle (Wochenbasis)": bw.letzter_putz()}, "2026-09-23")
            and "CAI|Cup & Handle (Wochenbasis)" in bw._gemeldet_filtern(
                {"CAI|Cup & Handle (Wochenbasis)": "2099-01-01"}, "2026-09-23"))
-    pruefe("E", "Der Nachtrag der Volumenbestaetigung bleibt moeglich",
+    # Bis 29.09.2026 zog hier der Nachtrag "Vol jetzt bestaetigt" nach.
+    # Seit Gerhards Regeln 1 und 3 ist schon die erste Meldung bestaetigt,
+    # und eine zweite Meldung zum selben Kaufpunkt gibt es nicht.
+    pruefe("E", "Regeln 1 und 3: kein Nachtrag mehr zu einem gemeldeten Ausbruch",
            bw.melde_stufe(_res(50.0), {"CAI|Cup & Handle (Wochenbasis)"},
-                          {"CAI|Cup & Handle (Wochenbasis)": 50.0}) == "nachtrag")
+                          {"CAI|Cup & Handle (Wochenbasis)": 50.0}) is None)
 
     # ZWEI LISTEN (Gerhard, 14.08.2026): Darvas ausschliesslich auf der
     # Darvas-Liste, alle anderen Muster auf beiden. An echten Kursdaten
