@@ -197,5 +197,9 @@
    "zeichen": null,
    "text": "INFORMATION: SNX; Rectangle Top; Kurs 258.12 unter der 8-Tage-EMA 264.50; reiner Hinweis, kein Ausstiegssignal; Kurs 258,12, seit Trigger -2,6 % gleich -0,3 R"
   }
+ ],
+ "geprueft": "2026-09-29",
+ "zurueckgenommen": [
+  "AXGN|Fallback: MA50-Rückeroberung"
  ]
 }
