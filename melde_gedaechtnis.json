@@ -57,7 +57,7 @@
     "DINO|Fallback: MA50-Pullback": "draussen",
     "DOCN|Fallback: MA50-Pullback": "draussen",
     "FLY|Fallback: MA50-Pullback": "draussen",
-    "FSLY|Fallback: MA50-Pullback": "draussen",
+    "FSLY|Fallback: MA50-Pullback": "drin",
     "GRAL|Fallback: 52W-Hoch-Breakout": "drin",
     "GRAL|Fallback: MA50-Pullback": "draussen",
     "GRAL|Fallback: 20-Tage-Hoch (Pivot)": "drin",
@@ -302,7 +302,9 @@
     "BEST|P|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-29",
     "GRAL|Cup & Handle (Wochenbasis)": "2026-09-29",
     "BEST|GRAL|Cup & Handle (Wochenbasis)": "2026-09-29",
-    "GEWINN|klimax_zeichen|GRAL|Fallback: 20-Tage-Hoch (Pivot)|4_ma200_abstand": "2026-09-29"
+    "GEWINN|klimax_zeichen|GRAL|Fallback: 20-Tage-Hoch (Pivot)|4_ma200_abstand": "2026-09-29",
+    "SEKTORAUF|2026-09-29": "2026-09-29",
+    "GEWINN|klimax_zeichen|GRAL|Fallback: 20-Tage-Hoch (Pivot)|5_kanaluebershooting": "2026-09-29"
   },
   "gemeldet_kp": {
     "CXW|Cup & Handle (Wochenbasis)": 31.67,
