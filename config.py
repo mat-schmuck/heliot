@@ -156,11 +156,15 @@ CFG = {
         "gap_and_go_faktor": 3.0,    # Lücken-Bestätigungstag: ≥ 3× Ø
         # REGEL 2 (Gerhard, 29.09.2026): "52-Wochen-Hoch (Ersatzmuster bei
         # Aktien): Neu: nur bei Volumen über 200 %", gemessen wie jede
-        # Huerde ueber die F(t)-Kurve. Die Meldungen schreiben das Volumen
-        # als "X % über Ø50"; 200 % darueber ist das Dreifache des
-        # Schnitts. Gilt nur fuer "Fallback: 52W-Hoch-Breakout", alle
-        # anderen Muster behalten ihre Huerde.
-        "breakout_faktor_52w": 3.0,
+        # Huerde ueber die F(t)-Kurve. Gilt nur fuer "Fallback: 52W-Hoch-
+        # Breakout", alle anderen Muster behalten ihre Huerde.
+        # 200 % DES SCHNITTS, ALSO DAS DOPPELTE (berichtigt am 29.09.2026
+        # abends): Gerhards Auftrag zur Auswertung vom selben Abend rechnet
+        # ausdruecklich in "Prozent von diesem 50-Tage-Schnitt" und nennt
+        # das 52-Wochen-Hoch dabei "mit seinen 200 %". Gebaut war zuerst das
+        # Dreifache, gelesen als 200 % ueber dem Schnitt, weil die
+        # Meldungen das Volumen als "X % über Ø50" schreiben.
+        "breakout_faktor_52w": 2.0,
         # KEINE MELDUNG OHNE BESTAETIGTES VOLUMEN (Gerhard, 29.09.2026,
         # Regel 3, "alle Strategien"). Bis dahin durften fuenf Muster ohne
         # Bestaetigung melden (Red-to-Green, Red-to-Green Explosive, High &

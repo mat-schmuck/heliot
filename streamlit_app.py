@@ -2823,7 +2823,9 @@ with tab_info:
     st.markdown("## Regelwerk", anchors=False)
     st.markdown("### Was die App prüft", anchors=False)
     st.markdown("**Minervini Trend Template.** " + einstellungen.TREND_TEMPLATE_REGEL)
-    for rw_gruppe, rw_einleitung, rw_absaetze in einstellungen.regelwerk_gruppen():
+    # Mit den geltenden Einstellungen: Die Volumenschwelle je Muster steht mit
+    # dem Wert im Regelwerk, der im Reiter Einstellungen gilt.
+    for rw_gruppe, rw_einleitung, rw_absaetze in einstellungen.regelwerk_gruppen(_einstellungen()):
         st.markdown(f"#### {rw_gruppe}", anchors=False)
         if rw_einleitung:
             st.markdown(rw_einleitung)
@@ -3134,6 +3136,7 @@ def _einst_laden():
     design, ton = _einst_eigen_basis()
     st.session_state["einst_basis"] = {"daten": basis, "sha": sha, "fehler": fehler_text}
     st.session_state["einst_modell"] = {"aus": set(basis["alarme_aus"]), "design": design, "klang": ton,
+                                        "vol": dict(basis.get("volumen_prozent") or {}),
                                         "eigen_von": st.session_state.get("eigen_gemeldet") or ""}
 
 
@@ -3141,13 +3144,25 @@ def _einst_verwerfen():
     basis = (st.session_state.get("einst_basis") or {}).get("daten") or einstellungen.lesen(None)
     design, ton = _einst_eigen_basis()
     st.session_state["einst_modell"] = {"aus": set(basis["alarme_aus"]), "design": design, "klang": ton,
+                                        "vol": dict(basis.get("volumen_prozent") or {}),
                                         "eigen_von": st.session_state.get("eigen_gemeldet") or ""}
 
 
 def _einst_neu() -> dict:
-    """Die Alarme der Wahl als Inhalt von einstellungen.json."""
+    """Die Alarme und Volumenschwellen der Wahl als Inhalt von einstellungen.json;
+    eine Schwelle steht nur darin, wenn sie von der Vorgabe abweicht."""
     modell = st.session_state["einst_modell"]
-    return einstellungen.lesen({"alarme_aus": sorted(modell["aus"])})
+    vol = {k: v for k, v in (modell.get("vol") or {}).items() if v != einstellungen.volumen_vorgabe(k)}
+    return einstellungen.lesen({"alarme_aus": sorted(modell["aus"]), "volumen_prozent": vol})
+
+
+def _einst_vol_saetze(einst: dict) -> str:
+    """Die Volumenschwellen, die von der Vorgabe abweichen, als Aufzaehlung."""
+    return "; ".join(f"{a['name']} {einstellungen.volumen_prozent(einst, a['schluessel'])} Prozent"
+                     for a in einstellungen.ALARME
+                     if a["schluessel"] in (einst.get("volumen_prozent") or {})
+                     and einstellungen.volumen_prozent(einst, a["schluessel"])
+                     != einstellungen.volumen_vorgabe(a["schluessel"]))
 
 
 def _einst_aenderungen(basis: dict, neu: dict) -> list:
@@ -3158,6 +3173,12 @@ def _einst_aenderungen(basis: dict, neu: dict) -> list:
         namen = [a["name"] for a in einstellungen.ALARME if a["schluessel"] in menge]
         if namen:
             saetze.append(satz + "; ".join(namen) + ".")
+    geaendert = [f"{a['name']} {einstellungen.volumen_prozent(neu, a['schluessel'])} Prozent"
+                 for a in einstellungen.ALARME if a["schluessel"] in einstellungen.VOLUMEN_SCHLUESSEL
+                 and einstellungen.volumen_prozent(basis, a["schluessel"])
+                 != einstellungen.volumen_prozent(neu, a["schluessel"])]
+    if geaendert:
+        saetze.append("Volumenschwelle geändert: " + "; ".join(geaendert) + ".")
     return saetze
 
 
@@ -3177,6 +3198,14 @@ def _einst_haken(k: str, schluessel: str):
     modell = st.session_state.get("einst_modell")
     if isinstance(modell, dict):
         (modell["aus"].discard if st.session_state.get(k, True) else modell["aus"].add)(schluessel)
+
+
+def _einst_vol(k: str, schluessel: str):
+    """Die eingegebene Volumenschwelle in die Wahl uebernehmen."""
+    modell = st.session_state.get("einst_modell")
+    wert = st.session_state.get(k)
+    if isinstance(modell, dict) and wert is not None:
+        modell.setdefault("vol", {})[schluessel] = int(wert)
 
 
 def _einst_gruppe_setzen(gruppe: str, an: bool):
@@ -3239,7 +3268,9 @@ def _einst_speichern():
         return
     wann = datetime.now(ZoneInfo("Europe/Vienna")).strftime("%Y-%m-%d %H:%M")
     n_aus = len(neu["alarme_aus"])
-    daten = {"message": f"{einstellungen.DATEI}: {n_aus} {'Alarm' if n_aus == 1 else 'Alarme'} abgewählt (über Heliot)",
+    n_vol = len(neu.get("volumen_prozent") or {})
+    daten = {"message": f"{einstellungen.DATEI}: {n_aus} {'Alarm' if n_aus == 1 else 'Alarme'} abgewählt, "
+                        f"{n_vol} {'Volumenschwelle' if n_vol == 1 else 'Volumenschwellen'} eigen (über Heliot)",
              "content": base64.b64encode(einstellungen.schreiben(neu, geaendert=wann)).decode(), "branch": "main"}
     if basis.get("sha"):
         daten["sha"] = basis["sha"]
@@ -3312,10 +3343,16 @@ if tab_einst is not None:
                     "den Bot. Der Wächter prüft weiter und schreibt jeden Ausbruch ins Trigger-Logbuch, der "
                     "Nachtscan rechnet weiter, und die Kaufpunkte stehen weiter im Reiter Aktueller Scan. Auch die "
                     "Meldungen zu offenen Positionen lassen sich abwählen; abgewählt steht bei jeder eine Warnung.")
+        st.markdown("Bei jedem Kaufsignal legt eine Zahl fest, wie viel Volumen für eine Meldung nötig ist: das auf "
+                    "den ganzen Tag hochgerechnete Volumen in Prozent des 50-Tage-Schnitts, gemessen über die "
+                    "F(t)-Kurve. 100 heißt mindestens der Schnitt.")
         einst_aus_namen = einstellungen.abgewaehlte_namen(einst_basis["daten"])
         # Berichtigung 19 vom 24.09.2026
         st.markdown(("Gespeichert abgewählt: " + "; ".join(einst_aus_namen) + ".") if einst_aus_namen
                     else "Gespeichert: Alle Alarme sind eingeschaltet.")
+        einst_vol_gespeichert = _einst_vol_saetze(einst_basis["daten"])
+        st.markdown(("Gespeichert abweichend von der Vorgabe: " + einst_vol_gespeichert + ".")
+                    if einst_vol_gespeichert else "Gespeichert: Alle Volumenschwellen stehen auf der Vorgabe.")
         for einst_g, einst_gname in einstellungen.GRUPPEN:
             einst_eintraege = [a for a in einstellungen.ALARME if a["gruppe"] == einst_g]
             einst_n = sum(1 for a in einst_eintraege if a["schluessel"] not in einst_modell["aus"])
@@ -3337,6 +3374,19 @@ if tab_einst is not None:
                 # Die Warnung beim Abwaehlen (Antwort 7 vom 24.09.2026)
                 if a.get("warnung") and a["schluessel"] in einst_modell["aus"]:
                     st.warning("Achtung: " + a["warnung"])
+                # Die Volumenschwelle dieses Musters (Mathias, 29.09.2026), gleich
+                # unter seinem Haken, damit beides in der Tabulator-Folge
+                # zusammensteht.
+                einst_vorgabe = einstellungen.volumen_vorgabe(a["schluessel"])
+                if einst_vorgabe is not None:
+                    einst_vk = f"einst_vol_{a['schluessel']}"
+                    st.session_state[einst_vk] = einstellungen.volumen_prozent(
+                        {"volumen_prozent": einst_modell.get("vol") or {}}, a["schluessel"])
+                    st.number_input(f"{a['name']}: Volumen mindestens, in Prozent des 50-Tage-Schnitts, Vorgabe "
+                                    f"{einst_vorgabe}", min_value=einstellungen.VOLUMEN_MIN,
+                                    max_value=einstellungen.VOLUMEN_MAX, step=5, key=einst_vk,
+                                    on_change=_einst_vol, args=(einst_vk, a["schluessel"]),
+                                    disabled=rolle != "voll")
                 _sc_erklaerung(f"alarm_{a['schluessel']}", a["name"], a["erklaerung"],
                                frage=f"Was sind {a['name']}?" if a["schluessel"] in EINST_MEHRZAHL else None)
 

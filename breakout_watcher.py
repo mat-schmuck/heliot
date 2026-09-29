@@ -331,7 +331,7 @@ VOL_FAKTOR = {
     **{name: _VOL[alarm_muster.VOL_SCHLUESSEL.get(name, alarm_muster.VOL_SCHLUESSEL_STANDARD)]
        for name in alarm_muster.NAMEN.values()},
     # REGEL 2 (Gerhard, 29.09.2026): das 52-Wochen-Hoch als Ersatzmuster nur
-    # bei Volumen ueber 200 % (200 % ueber dem Schnitt, also das Dreifache).
+    # bei Volumen ueber 200 % des 50-Tage-Schnitts, also dem Doppelten.
     # Die uebrigen Ausweich-Marken behalten die Standard-Huerde.
     "Fallback: 52W-Hoch-Breakout": _VOL["breakout_faktor_52w"],
 }
@@ -351,6 +351,33 @@ def volumen_von_yahoo(q) -> bool:
     eine Meldung tragen (Regel 3). Eine Zeile ohne Vermerk kommt aus dem
     Yahoo-Abruf; Twelve Data traegt seinen Namen ausdruecklich."""
     return str((q or {}).get("volumenquelle") or "yfinance") in YAHOO_VOLUMEN
+
+
+def vol_faktor(strategie) -> float:
+    """Die Volumenhuerde einer Strategie als Vielfaches des 50-Tage-Schnitts.
+
+    SEIT 29.09.2026 EINSTELLBAR (Mathias: "Mache außerdem die Prozent in den
+    Einstellungen des Scanners einstellbar"): Weicht der Reiter Einstellungen
+    der App von der Vorgabe ab, gilt sein Wert, sonst VOL_FAKTOR. Gelesen wird
+    in jedem Datentakt (einstellungen_nachziehen), eine Aenderung wirkt also
+    binnen einer Minute."""
+    try:
+        eigen = einstellungen.volumen_faktor(_EINST["daten"], strategie)
+    except Exception:  # noqa: BLE001, eine kaputte Einstellung legt die Wache nie lahm
+        eigen = None
+    return eigen if eigen else VOL_FAKTOR.get(strategie, VOL_FAKTOR_FALLBACK)
+
+
+def gap_faktor(frueh: bool = False) -> float:
+    """Die Volumenhuerde des Power-Gap am Lueckentag: die Einstellung der App,
+    sonst die Vorgabe (GAP_VOL_FAKTOR, in der ersten halben Stunde
+    GAP_FRUEH_FAKTOR). Die Einstellung gilt fuer beide, weil beide dieselbe
+    Groesse messen (siehe pruefe_gap_and_go)."""
+    try:
+        eigen = einstellungen.volumen_faktor(_EINST["daten"], "Gap and Go")
+    except Exception:  # noqa: BLE001
+        eigen = None
+    return eigen if eigen else (GAP_FRUEH_FAKTOR if frueh else GAP_VOL_FAKTOR)
 
 # Volumenfenster: EINHEITLICH 10 Tage (Gerhard, 28.07.2026). Der Waechter
 # verglich den Ausbruch bisher gegen den Ø20, waehrend Gap and Go schon
@@ -1222,8 +1249,7 @@ def _lege_gleiche_preise_zusammen(items: list[dict], leise: bool = False) -> lis
         if it["strategie"] not in vorhanden["strategien"]:
             vorhanden["strategien"].append(it["strategie"])
         # Strengere Volumenhuerde und die engere Absicherung gewinnen
-        if (VOL_FAKTOR.get(it["strategie"], VOL_FAKTOR_FALLBACK)
-                > VOL_FAKTOR.get(vorhanden["strategie"], VOL_FAKTOR_FALLBACK)):
+        if vol_faktor(it["strategie"]) > vol_faktor(vorhanden["strategie"]):
             vorhanden["strategie"] = it["strategie"]
         if it.get("stop") is not None:
             if vorhanden.get("stop") is None or it["stop"] > vorhanden["stop"]:
@@ -1860,7 +1886,10 @@ def volumen_urteil(item: dict, quote: dict) -> dict:
     Schnitt oder Volumen nicht von Yahoo). Gemeldet wird seit 29.09.2026
     nur bei True (Gerhard, Regel 3); alles andere bleibt offen und wird im
     naechsten Durchlauf neu beurteilt."""
-    faktor = VOL_FAKTOR.get(item["strategie"], VOL_FAKTOR_FALLBACK)
+    # Die strengste Huerde der Muster auf diesem Kaufpunkt, mit den Werten aus
+    # den Einstellungen (vol_faktor); ohne eigene Einstellung ist das dieselbe
+    # Wahl wie beim Zusammenlegen gleicher Preise.
+    faktor = max(vol_faktor(n) for n in (item.get("strategien") or [item["strategie"]]))
     vol, avg = quote["volume"], quote["avg_volume"]
 
     # RELATIVES VOLUMEN, auf den ganzen Tag hochgerechnet (volumen.py).
@@ -2034,9 +2063,9 @@ def pruefe_gap_and_go(ticker: str, q: dict):
     # exakt auf der Schwelle liegt, soll sie ERREICHEN und nicht an einem
     # Gleitkommarest scheitern (config.mind_erreicht, siehe dort).
     if in_frueh_phase:
-        if not mind_erreicht(frueh_ratio, GAP_FRUEH_FAKTOR):
+        if not mind_erreicht(frueh_ratio, gap_faktor(frueh=True)):
             return None
-    elif not mind_erreicht(tages_ratio, GAP_VOL_FAKTOR):
+    elif not mind_erreicht(tages_ratio, gap_faktor()):
         return None
 
     spanne = high - low
@@ -2050,7 +2079,7 @@ def pruefe_gap_and_go(ticker: str, q: dict):
     # im Median 11,5 % und im Aeussersten 46 % entfernt.
     stop, stop_quelle = exit_regeln.berechne_initialen_stop(kp, low - 0.01)
     bestaetigt = (kurz_vor_schluss and mind_erreicht(pos, GAP_SCHLUSS_POS)
-                  and mind_erreicht(vol / vol50, GAP_VOL_FAKTOR))
+                  and mind_erreicht(vol / vol50, gap_faktor()))
     return {"ticker": ticker, "gap": gap, "frueh": in_frueh_phase,
             "frueh_ratio": frueh_ratio, "tages_ratio": tages_ratio,
             "roh_ratio": vol / vol50, "pos": pos, "kp": kp, "stop": stop,
@@ -2250,7 +2279,7 @@ def format_gapgo(g: dict) -> str:
     # der Zahlen-Termin ganz hinten anschliessen kann.
     status = ("BESTÄTIGT (Schluss im oberen Fünftel)" if g["bestaetigt"]
               else "im Aufbau")
-    noetig = GAP_FRUEH_FAKTOR if g["frueh"] else GAP_VOL_FAKTOR
+    noetig = gap_faktor(frueh=bool(g["frueh"]))
     vol = ("Volumen "
            + volumen.lage_text((g["tages_ratio"] - 1) * 100, VOL_FENSTER)
            + ", " + volumen.huerde_text(noetig))
@@ -2273,7 +2302,7 @@ def format_gapgo(g: dict) -> str:
               f"Kaufpunkt (Folgetag) {g['kp']:.2f}, {stop_txt}"]
     if not g["bestaetigt"]:
         zeilen.append(f"Schlussbestätigung (oberes Fünftel + "
-                      f"{GAP_VOL_FAKTOR:.0f} mal Volumen) folgt zum "
+                      f"{gap_faktor():g} mal Volumen) folgt zum "
                       f"Handelsende")
     z = zusatz_zeile(g.get("ticker"))
     if z:

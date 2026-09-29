@@ -258,9 +258,10 @@ ALARME = [
      "namen": ["Gap and Go", "Lücken-Bestätigungstag", "Power-Gap"],
      "erklaerung": "Eine Kurslücke von mindestens sieben Prozent nach oben mit hohem Volumen; Meldung am Lückentag, "
                    "der Einstieg folgt am Handelstag danach.",
-     "regel": "Eine Kurslücke von mindestens sieben Prozent nach oben mit mindestens dem Fünffachen des üblichen "
-              "Volumens. Am Lückentag kommt die Meldung; gekauft wird am Handelstag danach, solange der Kurs höchstens "
-              "3 Prozent über dem Kaufpunkt steht, darüber ist es nur eine Auskunft."},
+     "regel": "Eine Kurslücke von mindestens sieben Prozent nach oben mit hohem Volumen. Am Lückentag kommt die "
+              "Meldung; gekauft wird am Handelstag danach, solange der Kurs höchstens 3 Prozent über dem Kaufpunkt "
+              "steht und das Volumen dieses Tages mindestens den 50-Tage-Schnitt erreicht, darüber ist es nur eine "
+              "Auskunft."},
     {"schluessel": "insider", "gruppe": "weitere", "name": "Insider-Käufe",
      "namen": ["Insider-Kauf"],
      "erklaerung": "Große Käufe von Vorständen und Direktoren laut den Meldungen an die SEC; Meldung mit dem Kurs "
@@ -357,11 +358,92 @@ KLAENGE = [
 DESIGN_VORGABE = "standard"
 KLANG_VORGABE = "kristall"
 
-VORGABE = {"alarme_aus": []}
+# DIE VOLUMENSCHWELLE JE MUSTER (Mathias, 29.09.2026: "Mache außerdem die
+# Prozent in den Einstellungen des Scanners einstellbar"; Anlass war Gerhards
+# Auftrag vom selben Abend, die Schwelle in Prozent des 50-Tage-Schnitts
+# auszuwerten). Gemessen wird wie immer ueber die F(t)-Kurve: das auf den
+# ganzen Tag hochgerechnete Volumen in Prozent des 50-Tage-Schnitts; 100 heisst
+# mindestens der Schnitt. Je Registereintrag steht hier, welche Vorgabe aus
+# config.py (volumen.*) gilt; der Waechter rechnet mit denselben Zahlen
+# (breakout_watcher.VOL_FAKTOR, die Gesamtpruefung haelt beide gleich). In der
+# Datei steht nur, was von der Vorgabe abweicht. Red to Green und die Insider-
+# Kaeufe haben keine solche Schwelle; beim Power-Gap gilt sie fuer den
+# Lueckentag.
+VOLUMEN_SCHLUESSEL = {
+    "htf": "breakout_faktor", "htf_innen": "breakout_faktor", "vcp": "breakout_faktor_vcp",
+    "cup": "breakout_faktor", "cup_woche": "breakout_faktor", "darvas": "breakout_faktor",
+    "earnings": "breakout_faktor_vcp", "ema": "breakout_faktor", "rechteck": "breakout_faktor",
+    "shakeout": "breakout_faktor", "crash": "breakout_faktor",
+    "fb_52w": "breakout_faktor_52w", "fb_20t": "breakout_faktor", "fb_ma50p": "breakout_faktor",
+    "fb_ma50r": "breakout_faktor", "fb_63t": "breakout_faktor",
+    "a_3wt": "breakout_faktor_vcp", "a_inside": "breakout_faktor", "a_pocket": "breakout_faktor",
+    "a_ipo": "breakout_faktor", "a_shakeout3": "breakout_faktor", "a_wick": "breakout_faktor",
+    "gapgo": "gap_and_go_faktor",
+}
+# Erlaubte Werte in Prozent des 50-Tage-Schnitts.
+VOLUMEN_MIN, VOLUMEN_MAX = 10, 1000
+
+VORGABE = {"alarme_aus": [], "volumen_prozent": {}}
 
 
 def _schluessel_alle() -> list[str]:
     return [a["schluessel"] for a in ALARME]
+
+
+def volumen_vorgabe(schluessel) -> int | None:
+    """Die Vorgabe der Volumenschwelle eines Registereintrags in Prozent des
+    50-Tage-Schnitts, aus config.py; None heisst: keine solche Schwelle."""
+    k = VOLUMEN_SCHLUESSEL.get(str(schluessel or ""))
+    if not k:
+        return None
+    from config import CFG
+    return int(round(float(CFG["volumen"][k]) * 100))
+
+
+def _volumen_gueltig(wert) -> int | None:
+    """Ein Prozentwert aus Datei oder Eingabe als ganze Zahl, oder None."""
+    if isinstance(wert, bool):
+        return None
+    try:
+        w = float(wert)
+    except (TypeError, ValueError):
+        return None
+    if w != w or not VOLUMEN_MIN <= w <= VOLUMEN_MAX:
+        return None
+    return int(round(w))
+
+
+def volumen_prozent(einst: dict, schluessel) -> int | None:
+    """Die geltende Volumenschwelle eines Registereintrags in Prozent: die
+    gespeicherte, sonst die Vorgabe; None ohne solche Schwelle."""
+    vorgabe = volumen_vorgabe(schluessel)
+    if vorgabe is None:
+        return None
+    eigen = _volumen_gueltig(((einst or {}).get("volumen_prozent") or {}).get(str(schluessel)))
+    return vorgabe if eigen is None else eigen
+
+
+def volumen_faktor(einst: dict, name) -> float | None:
+    """Fuer den Waechter: die Volumenschwelle zu einem Strategienamen als
+    Vielfaches des 50-Tage-Schnitts, WENN sie in den Einstellungen von der
+    Vorgabe abweicht; sonst None, und es gilt die Vorgabe des Waechters."""
+    s = schluessel_fuer(name)
+    if s is None or s not in VOLUMEN_SCHLUESSEL:
+        return None
+    eigen = _volumen_gueltig(((einst or {}).get("volumen_prozent") or {}).get(s))
+    if eigen is None or eigen == volumen_vorgabe(s):
+        return None
+    return eigen / 100.0
+
+
+def volumen_satz(einst: dict, schluessel) -> str:
+    """Der Satz zur Volumenschwelle fuer Regelwerk und Anzeige, oder leer."""
+    p = volumen_prozent(einst, schluessel)
+    if p is None:
+        return ""
+    wann = "am Lückentag " if schluessel == "gapgo" else "beim Ausbruch "
+    return (f"Gemeldet wird nur, wenn das Volumen {wann}hochgerechnet über die F(t)-Kurve mindestens "
+            f"{p} Prozent des 50-Tage-Schnitts erreicht.")
 
 
 def lesen(roh) -> dict:
@@ -383,7 +465,15 @@ def lesen(roh) -> dict:
     bekannt = set(_schluessel_alle())
     aus = daten.get("alarme_aus")
     aus = sorted({str(x) for x in aus if str(x) in bekannt}) if isinstance(aus, list) else []
-    raus = {"alarme_aus": aus}
+    # Die Volumenschwellen: nur bekannte Eintraege mit Schwelle und gueltige Werte.
+    vol_roh = daten.get("volumen_prozent")
+    vol = {}
+    if isinstance(vol_roh, dict):
+        for k in sorted(vol_roh):
+            w = _volumen_gueltig(vol_roh[k])
+            if str(k) in VOLUMEN_SCHLUESSEL and w is not None:
+                vol[str(k)] = w
+    raus = {"alarme_aus": aus, "volumen_prozent": vol}
     if isinstance(daten.get("geaendert"), str):
         raus["geaendert"] = daten["geaendert"][:40]
     return raus
@@ -482,15 +572,19 @@ def eintrag(schluessel: str) -> dict | None:
     return next((a for a in ALARME if a["schluessel"] == schluessel), None)
 
 
-def regelwerk_gruppen() -> list[tuple[str, str, list[tuple[str, str]]]]:
+def regelwerk_gruppen(einst: dict | None = None) -> list[tuple[str, str, list[tuple[str, str]]]]:
     """Das Regelwerk der Strategien, aus dem Register erzeugt (Frage 76):
     je Gruppe (Name, Einleitung, [(Strategie, Absatz)]). Eine neue Strategie
-    steht damit von selbst darin."""
+    steht damit von selbst darin. Seit 29.09.2026 endet jeder Absatz einer
+    Strategie mit Volumenschwelle mit dem Satz dazu, und zwar mit dem Wert,
+    der in den Einstellungen gilt."""
     raus = []
     for g, gname in GRUPPEN:
         if g not in STRATEGIE_GRUPPEN:
             continue
-        absaetze = [(a["name"], a.get("regel") or a["erklaerung"]) for a in ALARME if a["gruppe"] == g]
+        absaetze = [(a["name"], " ".join(t for t in ((a.get("regel") or a["erklaerung"]),
+                                                     volumen_satz(einst, a["schluessel"])) if t))
+                    for a in ALARME if a["gruppe"] == g]
         if absaetze:
             raus.append((gname, GRUPPEN_REGEL.get(g, ""), absaetze))
     return raus
@@ -551,6 +645,31 @@ def selbsttest() -> int:
     p("Die Datei endet mit LF und hat kein CR", roh.endswith(b"\n") and b"\r" not in roh)
     p("Der Zeitpunkt der Aenderung steht in der Datei", lesen(roh).get("geaendert") == "2026-09-23 22:10")
     p("Die Datei fuehrt weder Aussehen noch Ton", b"design" not in roh and b"klang" not in roh)
+
+    # Die Volumenschwellen je Muster (29.09.2026)
+    p("Jeder Eintrag mit Volumenschwelle steht im Register und hat eine Vorgabe",
+      all(eintrag(s) and volumen_vorgabe(s) for s in VOLUMEN_SCHLUESSEL))
+    p("Vorgaben in Prozent: Standard 100, VCP 140, 52-Wochen-Hoch 200, Power-Gap 300",
+      (volumen_vorgabe("darvas"), volumen_vorgabe("vcp"), volumen_vorgabe("fb_52w"), volumen_vorgabe("gapgo"))
+      == (100, 140, 200, 300))
+    p("Ohne Schwelle: Red to Green, Insider, Meldungen zu Positionen",
+      volumen_vorgabe("r2g") is None and volumen_vorgabe("insider") is None and volumen_vorgabe("ausstiege") is None)
+    ev = lesen(json.dumps({"volumen_prozent": {"vcp": 150, "darvas": "80", "r2g": 50, "gibtsnicht": 90,
+                                               "htf": 5, "cup": 2000, "ema": True}}).encode())
+    p("Volumen: gueltige Werte bleiben, der Rest faellt weg", ev["volumen_prozent"] == {"darvas": 80, "vcp": 150},
+      str(ev))
+    p("Volumen: geltender Wert oder Vorgabe",
+      volumen_prozent(ev, "vcp") == 150 and volumen_prozent(ev, "cup") == 100 and volumen_prozent(ev, "r2g") is None)
+    p("Volumen: Faktor fuer den Waechter nur bei Abweichung",
+      volumen_faktor(ev, "VCP") == 1.5 and volumen_faktor(ev, "Darvas Box") == 0.8
+      and volumen_faktor(ev, "Cup & Handle") is None and volumen_faktor(None, "VCP") is None
+      and volumen_faktor({"volumen_prozent": {"vcp": 140}}, "VCP") is None
+      and volumen_faktor(ev, "Red-to-Green") is None and volumen_faktor(ev, "Gibt es nicht") is None)
+    p("Volumen: Schreiben und Lesen ergeben dasselbe",
+      lesen(schreiben(ev))["volumen_prozent"] == ev["volumen_prozent"])
+    p("Volumen: Satz im Regelwerk mit dem geltenden Wert",
+      "mindestens 150 Prozent des 50-Tage-Schnitts" in volumen_satz(ev, "vcp")
+      and "am Lückentag" in volumen_satz(None, "gapgo") and volumen_satz(None, "r2g") == "")
 
     p("Eintrag im Browser: gueltig", eigen_lesen("zukunft.pixel") == ("zukunft", "pixel"))
     p("Eintrag im Browser: leer ergibt die Grundeinstellung", eigen_lesen("") == ("standard", "kristall"))

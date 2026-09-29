@@ -1651,16 +1651,17 @@ def block_e():
         pruefe("E", "Regel 3: der uebersprungene Kaufpunkt traegt jetzt ein "
                "Volumenurteil", _r_ue_y.get("uebersprungen")
                and _r_ue_y["vol_ok"] is True and _r_ue_y["vol_ratio"] == 3.0)
-        # REGEL 2: das 52-Wochen-Hoch nur ueber 200 % (das Dreifache).
+        # REGEL 2: das 52-Wochen-Hoch nur ueber 200 % des Schnitts, also dem
+        # Doppelten (Gerhard rechnet in Prozent DES 50-Tage-Schnitts).
         _i52 = {"ticker": "TST", "strategie": "Fallback: 52W-Hoch-Breakout",
                 "kaufpunkt": 10.0}
-        _r52a = bw.pruefe_breakout(_i52, {**_q3, "volume": 2_900_000.0})
-        _r52b = bw.pruefe_breakout(_i52, {**_q3, "volume": 3_000_000.0})
+        _r52a = bw.pruefe_breakout(_i52, {**_q3, "volume": 1_900_000.0})
+        _r52b = bw.pruefe_breakout(_i52, {**_q3, "volume": 2_000_000.0})
         _r20 = bw.pruefe_breakout({**_i52, "strategie": "Fallback: 20-Tage-Hoch (Pivot)"},
                                   {**_q3, "volume": 1_100_000.0})
-        pruefe("E", "Regel 2: 52-Wochen-Hoch meldet erst ab 200 % ueber dem Schnitt",
+        pruefe("E", "Regel 2: 52-Wochen-Hoch meldet erst ab 200 % des Schnitts",
                _r52a["vol_ok"] is False and _r52b["vol_ok"] is True
-               and _r52b["vol_noetig"] == 3.0)
+               and _r52b["vol_noetig"] == 2.0)
         pruefe("E", "Regel 2: die uebrigen Huerden bleiben, wie sie sind",
                _r20["vol_ok"] is True and _r20["vol_noetig"] == 1.0
                and bw.VOL_FAKTOR["VCP"] == 1.4 and bw.VOL_FAKTOR["Darvas Box"] == 1.0
@@ -1682,6 +1683,39 @@ def block_e():
                not _g_leise and not _g_td and len(_g_ja) == 1
                and _g_ja[0]["vol_ok"] is True
                and _st_leise[bw.GAPGO_WARTEN]["GGG"].get("ohne_volumen") is True)
+        # DIE VOLUMENSCHWELLEN SIND EINSTELLBAR (Mathias, 29.09.2026): im Reiter
+        # Einstellungen je Muster in Prozent des 50-Tage-Schnitts.
+        import einstellungen as _ei
+        _abw = []
+        for _s in _ei.VOLUMEN_SCHLUESSEL:
+            for _n in (_ei.eintrag(_s) or {}).get("namen") or []:
+                _soll = bw.GAP_VOL_FAKTOR if _s == "gapgo" else bw.VOL_FAKTOR.get(_n, bw.VOL_FAKTOR_FALLBACK)
+                if abs(_ei.volumen_vorgabe(_s) / 100.0 - _soll) > 1e-9:
+                    _abw.append(f"{_n} {_ei.volumen_vorgabe(_s)} gegen {_soll}")
+        pruefe("E", "Einstellungen: jede Vorgabe der Volumenschwelle gleicht der des Waechters",
+               not _abw, "; ".join(_abw))
+        _einst_alt = dict(bw._EINST)
+        try:
+            bw._EINST["daten"] = _ei.lesen({"volumen_prozent": {"darvas": 80, "gapgo": 250}})
+            _id = {"ticker": "TST", "strategie": "Darvas Box", "kaufpunkt": 10.0}
+            _r80 = bw.pruefe_breakout(_id, {**_q3, "volume": 850_000.0})
+            _r70 = bw.pruefe_breakout(_id, {**_q3, "volume": 700_000.0})
+            _rvcp = bw.pruefe_breakout({**_id, "strategie": "VCP"}, {**_q3, "volume": 1_300_000.0})
+            pruefe("E", "Einstellungen: eine eigene Schwelle wirkt im Waechter, die uebrigen bleiben",
+                   _r80["vol_ok"] is True and _r80["vol_noetig"] == 0.8 and _r70["vol_ok"] is False
+                   and _rvcp["vol_ok"] is False and _rvcp["vol_noetig"] == 1.4
+                   and bw.gap_faktor() == 2.5 and bw.gap_faktor(frueh=True) == 2.5)
+            _zus = bw._lege_gleiche_preise_zusammen(
+                [{**_id, "strategie": "Darvas Box", "stop": 9.0},
+                 {**_id, "strategie": "Rectangle Top", "stop": 9.1}], leise=True)
+            pruefe("E", "Einstellungen: gleicher Preis, es gilt die strengere der eingestellten Huerden",
+                   len(_zus) == 1 and bw.pruefe_breakout(_zus[0], {**_q3, "volume": 900_000.0})["vol_noetig"]
+                   == 1.0)
+        finally:
+            bw._EINST.clear()
+            bw._EINST.update(_einst_alt)
+        pruefe("E", "Einstellungen: ohne eigene Werte gelten die Vorgaben",
+               bw.vol_faktor("Darvas Box") == 1.0 and bw.gap_faktor() == bw.GAP_VOL_FAKTOR)
     finally:
         bw.vol_verhaeltnis = _vv_alt
     pruefe("E", "Regel 3: Red-to-Green und Power-Gap-Tag nur mit Yahoo-Volumen",
