@@ -22,6 +22,10 @@ on:
     # Zeitplan verspaetet sich oft um Stunden; bei einem Lauf, der ohnehin
     # bis zu fuenf Stunden dauert, ist das unerheblich.
     - cron: "20 0 * * *"
+    # 19:30 UTC (Mathias, 29.09.2026: "keine Pause mehr"): ein Abendlauf, der
+    # das Restbudget des Tages nimmt, ueber Mitternacht GMT wartet und das neue
+    # Tagesbudget sofort nutzt, statt auf den verspaeteten Morgenlauf zu warten.
+    - cron: "30 19 * * *"
   workflow_dispatch:
     inputs:
       modus:
@@ -34,7 +38,7 @@ on:
           - tarif
         default: voll
       stufen:
-        description: "voll: Stufen mit Beistrich (delisted_stock,stock_boerse,delisted_rest,stock_otc,sonstige,etf,fund,index,makro, seit 24.09.2026 dazu kal_earnings,kal_ipos,kal_splits,kal_events,idmap,listen,ust,kal_dividenden,boersenwert,news,schluss,ausland); leer = alle in Vorrangfolge"
+        description: "voll: Stufen mit Beistrich (delisted_stock,stock_boerse,delisted_rest,stock_otc,sonstige,etf,fund,index,makro, seit 24.09.2026 dazu kal_earnings,kal_ipos,kal_splits,kal_events,idmap,listen,ust,kal_dividenden,boersenwert,news,schluss,ausland, seit 29.09.2026 dazu zusatz); leer = alle in Vorrangfolge"
         required: false
         default: ""
       hoechstens:
@@ -44,7 +48,7 @@ on:
       zeitgrenze:
         description: "voll: Minuten, nach denen keine neuen Abrufe mehr beginnen (Archiv und Upload folgen danach)"
         required: false
-        default: "300"
+        default: "330"
 
 concurrency:
   group: eodhd-voll
@@ -52,6 +56,8 @@ concurrency:
 
 permissions:
   contents: read
+  # Der Schritt "Naechster Lauf ohne Pause" stoesst diesen Ablauf erneut an.
+  actions: write
 
 jobs:
   eodhd_voll:
@@ -89,6 +95,7 @@ jobs:
         if: steps.secrets.outputs.da == 'ja'
         run: python eodhd_voll.py --selbsttest
       - name: Abzug
+        id: abzug
         if: steps.secrets.outputs.da == 'ja'
         env:
           EODHD_API_KEY: ${{ secrets.EODHD_API_KEY }}
@@ -98,9 +105,10 @@ jobs:
           MODUS: ${{ github.event.inputs.modus || 'voll' }}
           STUFEN: ${{ github.event.inputs.stufen || '' }}
           HOECHSTENS: ${{ github.event.inputs.hoechstens || '0' }}
-          ZEITGRENZE: ${{ github.event.inputs.zeitgrenze || '300' }}
+          ZEITGRENZE: ${{ github.event.inputs.zeitgrenze || '330' }}
         run: python eodhd_voll.py --daten daten --modus "$MODUS" --stufen "$STUFEN" --hoechstens "$HOECHSTENS" --zeitgrenze-min "$ZEITGRENZE"
       - name: Register ins Datenrepo
+        id: register
         # always(): auch nach einem Abbruch wandert das Register mit dem
         # bis dahin Geholten ins Datenrepo.
         if: always() && steps.secrets.outputs.da == 'ja'
@@ -123,3 +131,32 @@ jobs:
           done
           echo "Push nach drei Anlaeufen gescheitert."
           exit 1
+      - name: Naechster Lauf ohne Pause
+        # Mathias, 29.09.2026: "schau, dass bis zum Schluss maximal abgerufen
+        # wird und keine Pause mehr entsteht". Endet ein Lauf an der
+        # Zeitgrenze, geht der naechste sofort los. Endet er am Tagesbudget
+        # und Mitternacht GMT liegt hoechstens 310 Minuten entfernt, ebenso:
+        # Der neue Lauf wartet ueber Mitternacht und nutzt das neue Budget.
+        # Sonst uebernimmt der Abendlauf um 19:30 UTC. Nur nach gesichertem
+        # Register, sonst holte der naechste Lauf dasselbe noch einmal.
+        if: always() && steps.register.outcome == 'success' && (github.event.inputs.modus || 'voll') == 'voll'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ART: ${{ steps.abzug.outputs.abbruch }}
+          OFFEN: ${{ steps.abzug.outputs.offen }}
+          STUFEN: ${{ github.event.inputs.stufen || '' }}
+        run: |
+          heute=$(date -u +%Y-%m-%d)
+          if [[ "$heute" > "2026-10-03" ]]; then echo "Das Abo ist zu Ende."; exit 0; fi
+          if [ -z "$OFFEN" ] || [ "$OFFEN" = "0" ]; then echo "Nichts offen (Abbruch: ${ART:-keiner})."; exit 0; fi
+          bis=$(( $(date -u -d "tomorrow 00:00" +%s) - $(date -u +%s) ))
+          weiter=nein
+          if [ "$ART" = "zeit" ]; then weiter=ja; fi
+          if [ "$ART" = "budget" ] && [ "$bis" -le 18600 ] && [[ "$heute" < "2026-10-03" ]]; then weiter=ja; fi
+          if [ "$weiter" = "ja" ]; then
+            gh workflow run eodhd_voll.yml --repo "$GITHUB_REPOSITORY" --ref fundament-phase1 \
+              -f modus=voll -f stufen="$STUFEN" -f hoechstens=0 -f zeitgrenze=330
+            echo "Naechster Lauf angestossen (Abbruch: $ART, offen: $OFFEN)."
+          else
+            echo "Kein Anschluss (Abbruch: ${ART:-keiner}, Mitternacht GMT in $(( bis / 60 )) Minuten)."
+          fi

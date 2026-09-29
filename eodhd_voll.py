@@ -68,7 +68,10 @@ BASIS = "https://eodhd.com/api"
 ORDNER = "eodhd_voll"
 DATENREPO = "mat-schmuck/heliot-daten"
 ABSTAND_S = 0.2                    # 5 Anfragen je Sekunde, weit unter 1.000 je Minute
-RESERVE_CALLS = 3000               # bleibt frei fuer Konsens-Laeufe und Proben
+# Gemessen 25. bis 28.09.2026: neben dem Vollabzug brauchten die uebrigen
+# Ablaeufe hoechstens rund 15 Calls am Tag; 3.000 liessen jeden Tag Budget
+# liegen (Mathias, 29.09.2026: "maximal abrufen").
+RESERVE_CALLS = 1000               # bleibt frei fuer Konsens-Laeufe und Proben
 CALLS_FUNDAMENTALS = 10
 # EINZELNE SPERREN (Befund 24.09.2026): EODHD sperrt einzelne Symbole, etwa den
 # Index DJINR.INDX ("Forbidden. Please contact support"), waehrend 254 andere
@@ -81,6 +84,10 @@ CALLS_FUNDAMENTALS = 10
 GEGENPROBE_SYMBOL = "AAPL.US"
 GEGENPROBE_ALLE = 20
 CALLS_MAKRO = 10
+# Nachrichten und Stimmungswerte kosten laut Kontozaehler je Anfrage 5 Calls
+# (Tarif-Probe vom 15.09.2026: news 5, sentiments 5). Bis zum 29.09.2026 zaehlte
+# der Lauf je 10 und hielt sich damit fuer doppelt so teuer, wie er war.
+CALLS_NEWS = 5
 ARCHIV_TEILE_BYTES = 1_900_000_000  # Release-Anhaenge duerfen 2 GB nicht ueberschreiten
 KONTO_FELDER = ("subscriptionType", "dailyRateLimit", "apiRequests", "apiRequestsDate", "extraLimit")
 
@@ -139,6 +146,7 @@ NEUE_STUFEN = [
     ("kal_dividenden", "Dividendentermine je Monat ab 2000, Tag fuer Tag"),
     ("boersenwert", "Boersenwert je Woche seit 2020 fuer US-Aktien samt der ab 2022 delisteten; "
                     "von den 2020 und 2021 delisteten nur, was schon geholt ist"),
+    ("zusatz", "Zinsen, Kredit- und Laenderrisiko, Rohstoffe, Immobilienpreise und ASX-Kapitalmassnahmen"),
     ("news", "Nachrichten und Stimmungswerte seit Maerz 2021 fuer die Boersenaktien"),
     ("schluss", "Schlussstand der Fundamentals aller Boersenaktien, ab 2. Oktober"),
     ("ausland", "Fundamentals auslaendischer Aktien nach Boersen-Vorrang"),
@@ -148,17 +156,20 @@ STUFEN_NAMEN = [s for s, _ in STUFEN]
 # Stufen, deren Ergebnis direkt im Dateibaum des Datenrepos liegt (Unterordner
 # von eodhd_voll); alle uebrigen gehen als Archiv ins Release.
 BAUM_STUFEN = {"kal_earnings": "kalender/earnings", "kal_ipos": "kalender/ipos", "kal_splits": "kalender/splits",
-               "kal_events": "kalender/events", "idmap": "idmap", "listen": "listen/boersen", "ust": "ust"}
+               "kal_events": "kalender/events", "idmap": "idmap", "listen": "listen/boersen", "ust": "ust",
+               "zusatz": "zusatz"}
 # Register je Gruppe: GitHub nimmt keine Datei ueber 100 MB, stand.json allein
 # hat 62 MB. Nicht genannte Stufen bleiben in stand.json.
 REGISTER_DATEIEN = {s: "stand_kalender.json" for s in ("kal_earnings", "kal_ipos", "kal_splits", "kal_events", "idmap",
                                                        "listen", "ust", "kal_dividenden")}
 REGISTER_DATEIEN.update({"boersenwert": "stand_boersenwert.json", "news": "stand_news.json",
-                         "schluss": "stand_schluss.json", "ausland": "stand_ausland.json"})
+                         "schluss": "stand_schluss.json", "ausland": "stand_ausland.json",
+                         "zusatz": "stand_zusatz.json"})
 # Geschaetzte Calls je Abruf fuer die Budgetpruefung vor dem Abruf; gezaehlt
 # werden danach die wirklich gestellten Anfragen.
 SCHAETZUNG_CALLS = {"makro": CALLS_MAKRO, "kal_earnings": 3, "kal_ipos": 3, "kal_splits": 3, "kal_events": 4,
-                    "idmap": 200, "listen": 1, "ust": 1, "kal_dividenden": 80, "boersenwert": 10, "news": 40,
+                    "idmap": 200, "listen": 1, "ust": 1, "kal_dividenden": 80, "boersenwert": 10, "news": 10,
+                    "zusatz": 5,
                     "schluss": CALLS_FUNDAMENTALS, "ausland": CALLS_FUNDAMENTALS}
 ABO_ENDE = dt.date(2026, 10, 3)       # Abrechnungsseite: "Valid until: 2026-10-03"
 SCHLUSS_AB = dt.date(2026, 10, 2)
@@ -175,6 +186,47 @@ BOERSENWERT_DELISTED_AB = "2022-01-01"
 NEWS_MAX_SEITEN = 10
 DIVIDENDEN_MAX_SEITEN = 30
 UST_ARTEN = ["bill-rates", "yield-rates", "long-term-rates", "real-yield-rates"]
+# ZUSATZ (29.09.2026, Mathias: "schau, dass bis zum Schluss maximal abgerufen
+# wird"): Datensaetze, die unser Tarif laut Preisseite enthaelt ("Fundamentals,
+# financial statements, macro, Form 4, ASX corporate actions, credit & sovereign
+# risk, interest rates, real estate") und die das Konto als freigeschaltet
+# fuehrt, die der Abzug aber nie geholt hatte. Alle klein; je Seite 1 Call
+# (Zinsen, Kredit, ASX) oder 5 Calls (Rohstoffe, Immobilien); Seiten ueber
+# page[limit] und page[offset], Antwort {data, meta, links}. Doku gelesen am
+# 29.09.2026 in eodhd.com/llms-full.txt. Form 4 steht bewusst nicht hier: je
+# Seite 10 Calls fuer jede US-Aktie, das ist eine Entscheidung gegen das Ausland.
+ZINS_LEIT = ["FED_TARGET_LOWER", "FED_TARGET_UPPER", "ECB_DFR", "ECB_MRO", "ECB_MLF", "BOE_BANK_RATE"]
+ZINS_REFERENZ = ["SOFR", "EFFR", "OBFR", "TGCR", "BGCR", "SOFR30D", "SOFR90D", "SOFR180D", "SOFRINDEX", "SONIA",
+                 "ESTR"]
+ZINS_SPREADS = ["EFFR_SOFR", "OBFR_EFFR", "TGCR_BGCR", "SOFR_TARGET_LOWER", "EFFR_TARGET_MID", "TARGET_UPPER_SOFR"]
+KREDIT_REIHEN = [
+    ("risk-premium", "credit-risk/sovereign/risk-premium", {}),
+    ("credit-ratings", "credit-risk/sovereign/credit-ratings", {}),
+    ("cds-spreads", "credit-risk/sovereign/cds-spreads", {}),
+    ("default-spreads", "credit-risk/sovereign/default-spreads", {}),
+    ("cmdi", "credit-risk/corporate/cmdi", {"filter[from]": "1990-01-01"}),
+    ("hqm-par", "credit-risk/corporate/hqm-yields",
+     {"filter[type]": "par", "filter[tenor]": "1,2,3,5,7,10,15,20,25,30", "filter[from]": "1980-01-01"}),
+    ("hqm-spot", "credit-risk/corporate/hqm-yields",
+     {"filter[type]": "spot", "filter[tenor]": "1,2,3,5,7,10,15,20,25,30", "filter[from]": "1980-01-01"}),
+    ("cds-grade", "credit-risk/cds-market/aggregates",
+     {"filter[metric]": "gross_notional", "filter[dimension]": "grade", "filter[from]": "2000-01-01"}),
+    ("cds-cleared", "credit-risk/cds-market/aggregates",
+     {"filter[metric]": "gross_notional", "filter[dimension]": "cleared_status", "filter[from]": "2000-01-01"}),
+]
+ROHSTOFFE_ENERGIE = ["WTI", "BRENT", "NATURAL_GAS", "GASOLINE_US", "DIESEL_USGULF", "HEATING_OIL_NYH",
+                     "JET_FUEL_USGULF", "PROPANE_MBTX", "COAL_AU", "URANIUM"]
+ROHSTOFFE_UEBRIGE = ["ALUMINUM", "COPPER", "WHEAT", "CORN", "SUGAR", "COTTON", "COFFEE_MILD_ARABICA",
+                     "COFFEE_ROBUSTAS", "ALL_COMMODITIES", "ALL_COMMODITIES_PRODUCER", "ENERGY_INDEX", "NATGAS_EU",
+                     "LNG_ASIA"]
+ASX_ARTEN = ["dividends", "splits", "bonus-issues", "rights-issues", "buybacks", "capital-returns", "spp", "other"]
+# Laender der BIS-Wohnimmobilienpreise (ISO alpha-2 und XM fuer den
+# Euroraum); gilt, solange die Laenderliste des Anbieters (Abruf immo_laender)
+# noch nicht im Dateibaum liegt.
+IMMO_LAENDER = ["AE", "AR", "AT", "AU", "BE", "BG", "BR", "CA", "CH", "CL", "CN", "CO", "CY", "CZ", "DE", "DK", "EE",
+                "ES", "FI", "FR", "GB", "GR", "HK", "HR", "HU", "ID", "IE", "IL", "IN", "IS", "IT", "JP", "KR", "LT",
+                "LU", "LV", "MA", "MK", "MT", "MX", "MY", "NL", "NO", "NZ", "PE", "PH", "PL", "PT", "RO", "RS", "RU",
+                "SA", "SE", "SG", "SI", "SK", "TH", "TR", "US", "ZA", "XM"]
 # Vorgelegt am 24.09.2026: Deutschland, London, Kanada, Euronext, Schweiz,
 # Wien; danach die uebrigen grossen Boersen, dann alle weiteren nach Groesse.
 AUSLAND_VORRANG = ["XETRA", "LSE", "TO", "PA", "AS", "BR", "LS", "SW", "VI", "MI", "MC", "ST", "OL", "HE", "CO",
@@ -866,6 +918,63 @@ def listen_eintraege(wurzel):
     return [{"Code": f"{c}_{art}", "boerse": c, "delisted": art == "delistet"} for c in codes for art in ("aktiv", "delistet")]
 
 
+def zusatz_eintraege(wurzel, heute=None):
+    """Die Abrufe der Stufe zusatz, je Reihe ein Eintrag mit Pfad, Filtern,
+    Seitengroesse und Kosten je Seite. Die Immobilienlaender kommen aus der
+    Laenderliste des Anbieters (mit den Merkmalen has_spp und has_dpp), sobald
+    sie im Dateibaum liegt, sonst aus IMMO_LAENDER."""
+    heute = heute or _utc_jetzt().date()
+    bis = heute.isoformat()
+    raus = []
+
+    def neu(code, pfad, params=None, limit=100, kosten=1, seiten=True):
+        raus.append({"Code": code, "pfad": pfad, "params": dict(params or {}), "limit": limit, "kosten": kosten,
+                     "seiten": seiten})
+
+    for c in ZINS_LEIT:
+        neu(f"zins_leit_{c}", "rates/policy-rates", {"filter[code]": c, "filter[from]": "1900-01-01", "filter[to]": bis})
+    for c in ZINS_REFERENZ:
+        neu(f"zins_ref_{c}", "rates/reference-rates",
+            {"filter[code]": c, "filter[from]": "1900-01-01", "filter[to]": bis})
+    for c in ZINS_SPREADS:
+        # Laut Doku ohne Seiten; ohne Zeitraum kaemen nur die letzten 30 Tage.
+        neu(f"zins_spread_{c}", "spreads/funding-stress",
+            {"filter[code]": c, "filter[from]": "1990-01-01", "filter[to]": bis}, seiten=False)
+    for name, pfad, params in KREDIT_REIHEN:
+        neu(f"kredit_{name}", pfad, params)
+    for c in ROHSTOFFE_ENERGIE:
+        neu(f"rohstoff_{c}_daily", f"commodities/historical/{c}", {"interval": "daily"}, limit=1000, kosten=5)
+    for c in ROHSTOFFE_ENERGIE + ROHSTOFFE_UEBRIGE:
+        neu(f"rohstoff_{c}_monthly", f"commodities/historical/{c}", {"interval": "monthly"}, limit=1000, kosten=5)
+    neu("immo_laender", "real-estate/countries", {}, limit=500, kosten=5)
+    laender = [(c, True, True) for c in IMMO_LAENDER]
+    pfad = os.path.join(wurzel, BAUM_STUFEN["zusatz"], "IMMO_LAENDER.json.gz")
+    if os.path.exists(pfad):
+        try:
+            with gzip.open(pfad, "rt", encoding="utf-8") as f:
+                z = (json.load(f) or {}).get("zeilen") or []
+            gefunden = [(str(x["code"]).strip(), x.get("has_spp") is not False, x.get("has_dpp") is not False)
+                        for x in z if isinstance(x, dict) and str(x.get("code") or "").strip()]
+            if gefunden:
+                laender = gefunden
+        except (OSError, ValueError, AttributeError):
+            pass
+    for code, spp, dpp in laender:
+        if spp:
+            for typ in ("nominal", "real"):
+                for metrik in ("index", "yoy"):
+                    neu(f"immo_{code}_{typ}_{metrik}", f"real-estate/{code}",
+                        {"filter[type]": typ, "filter[metric]": metrik}, limit=500, kosten=5)
+        if dpp:
+            neu(f"immo_{code}_detailed", f"real-estate/{code}/detailed", {}, limit=500, kosten=5)
+            neu(f"immo_{code}_series", f"real-estate/{code}/detailed/series", {}, limit=500, kosten=5, seiten=False)
+    for art in ASX_ARTEN:
+        for jahr in range(2000, heute.year + 2):
+            neu(f"asx_{art}_{jahr}", "asx-corporate-actions",
+                {"type": art, "date_from": f"{jahr}-01-01", "date_to": f"{jahr}-12-31"}, limit=1000, kosten=1)
+    return raus
+
+
 def _isin(x):
     return str(x.get("Isin") or "").strip().upper()
 
@@ -1120,6 +1229,46 @@ def _jsonapi_seiten(pfad, filter_params, token, fetcher, warte, max_seiten):
     return 200, zeilen, calls, True, ""
 
 
+def _seiten_holen(pfad, params, token, fetcher, warte, limit=100, kosten=1, seiten=True, max_seiten=400):
+    """Seiten ueber page[limit] und page[offset] mit der Huelle {data, meta,
+    links} (Zinsen, Kredit, Rohstoffe, Immobilien, ASX): weiter, solange
+    links.next gesetzt ist; ohne links, solange eine volle Seite kam. Weist
+    der Anbieter die Seitengroesse ab (422), gilt 100. Fehler kosten laut
+    Anbieter nichts und werden nicht gezaehlt. Rueckgabe (status, zeilen,
+    calls, gekappt, meta, meldung)."""
+    zeilen, calls, meta, seite, erste_vorher = [], 0, None, 0, None
+    while seite < (max_seiten if seiten else 1):
+        p = dict(params)
+        if seiten:
+            p.update({"page[limit]": limit, "page[offset]": seite * limit})
+        st, d, _, _, text = abruf_json_mit_text(pfad, token, p, fetcher, warte)
+        warte(ABSTAND_S)
+        if st == 422 and seiten and seite == 0 and limit > 100:
+            limit = 100
+            continue
+        if st != 200:
+            return st, None, calls, False, meta, text
+        calls += kosten
+        z = _zeilen(d)
+        if z is None:
+            z = [d] if d else []
+        if meta is None and isinstance(d, dict) and isinstance(d.get("meta"), dict):
+            meta = d["meta"]
+        if z and erste_vorher is not None and z[0] == erste_vorher:
+            return 200, zeilen, calls, True, meta, "offset wirkungslos"
+        erste_vorher = z[0] if z else None
+        zeilen.extend(z)
+        links = d.get("links") if isinstance(d, dict) else None
+        if isinstance(links, dict) and "next" in links:
+            weiter = bool(links.get("next"))
+        else:
+            weiter = len(z) >= limit
+        if not seiten or not weiter or not z:
+            return 200, zeilen, calls, False, meta, ""
+        seite += 1
+    return 200, zeilen, calls, True, meta, ""
+
+
 def _anleihe_ersatz(e, token, fetcher, warte):
     """Fundamentals liefern fuer manche boersennotierte Anleihe nur 422. Ersatz:
     der Anleihen-Endpunkt mit der ISIN; fehlt sie, wird sie gesucht."""
@@ -1164,7 +1313,7 @@ def _news_holen(e, token, fetcher, warte, heute, max_seiten=None):
     for seite in range(max_seiten or NEWS_MAX_SEITEN):
         st, d, _, _, text = abruf_json_mit_text("news", token, {"s": symbol, "from": NEWS_AB, "to": heute.isoformat(),
                                                                 "limit": 1000, "offset": seite * 1000}, fetcher, warte)
-        calls += 10
+        calls += CALLS_NEWS
         warte(ABSTAND_S)
         if st != 200:
             return st, None, calls, text, {}
@@ -1176,7 +1325,7 @@ def _news_holen(e, token, fetcher, warte, heute, max_seiten=None):
         gekappt = True
     st, d, _, _, text = abruf_json_mit_text("sentiments", token, {"s": symbol, "from": NEWS_AB, "to": heute.isoformat()},
                                             fetcher, warte)
-    calls += 10
+    calls += CALLS_NEWS
     warte(ABSTAND_S)
     stimmung = d if (st == 200 and isinstance(d, dict)) else None
     stimmung_zeilen = len((stimmung or {}).get(symbol) or []) if stimmung else 0
@@ -1265,6 +1414,13 @@ def hole(stufe, e, token, fetcher=None, warte=time.sleep, heute=None):
     if stufe == "news":
         st, d, calls, text, zusatz = _news_holen(e, token, fetcher, warte, heute)
         return fertig(st, d, calls, text, **zusatz)
+    if stufe == "zusatz":
+        st, zeilen, calls, gek, meta, text = _seiten_holen(e["pfad"], e.get("params") or {}, token, fetcher, warte,
+                                                          e.get("limit", 100), e.get("kosten", 1),
+                                                          e.get("seiten", True))
+        d = ({"pfad": e["pfad"], "params": e.get("params") or {}, "meta": meta, "zeilen": zeilen}
+             if (st == 200 and zeilen) else None)
+        return fertig(st, d, calls, text, zeilen=len(zeilen or []), gekappt=gek)
     raise ValueError(f"Unbekannte Stufe {stufe}")
 
 
@@ -1314,6 +1470,7 @@ def warteschlange(daten, token, stufen_gewuenscht, stand, fetcher=None, warte=ti
         "ust": ust_eintraege,
         "kal_dividenden": fenster_monate,
         "boersenwert": lambda: boersenwert_eintraege(stufen, wurzel, stand, runner, arbeit, log),
+        "zusatz": lambda: zusatz_eintraege(wurzel, heute),
         "news": lambda: [dict(e) for e in stufen["stock_boerse"]],
         "schluss": lambda: [dict(e) for e in stufen["stock_boerse"]] if heute >= SCHLUSS_AB else [],
         "ausland": lambda: ausland_eintraege(wurzel, us_isins()),
@@ -1455,7 +1612,8 @@ def lauf_voll(daten, token, stufen=None, hoechstens=0, zeitgrenze_min=300, reser
         if budget < calls:
             rest_s = sekunden_bis_mitternacht_gmt(jetzt())
             verbleibend_s = zeitgrenze_min * 60 - (time.monotonic() - start)
-            if ueber_mitternacht and rest_s + 900 < verbleibend_s:
+            morgen = (jetzt() + dt.timedelta(seconds=rest_s + 90)).date()
+            if ueber_mitternacht and morgen <= ABO_ENDE and rest_s + 900 < verbleibend_s:
                 log(f"  Tagesbudget erreicht nach {i - 1} Abrufen; warte {int(rest_s // 60) + 2} Minuten bis "
                     f"Mitternacht GMT und rechne mit dem neuen Budget weiter.")
                 speichern()
@@ -2247,7 +2405,65 @@ def selbsttest() -> int:
         return 404, "", {}
     st_n, d_n, c_n, _, z_n = _news_holen({"Code": "AAPL"}, "x", f_news, still, dt.date(2026, 9, 24), max_seiten=2)
     p("Nachrichten: Seiten bis zur Grenze mit Vermerk, dazu die Stimmungswerte",
-      st_n == 200 and len(d_n["news"]) == 2000 and z_n["gekappt"] is True and z_n["stimmung"] == 2 and c_n == 30, (c_n, z_n))
+      st_n == 200 and len(d_n["news"]) == 2000 and z_n["gekappt"] is True and z_n["stimmung"] == 2 and c_n == 15, (c_n, z_n))
+
+    # Stufe zusatz (29.09.2026): Seiten bis links.next leer, Rueckfall auf 100
+    # bei zu grosser Seite, Reihen ohne Seiten, Kosten je Seite, Eintraege.
+    def f_zus(kennung):
+        pfad, q = zerlege(kennung)
+        off = int(q.get("page[offset]", 0) or 0)
+        if pfad == "rates/policy-rates":
+            if int(q.get("page[limit]", 0) or 0) != 100:
+                return 422, json.dumps({"errors": {"page.limit": ["max 100"]}}), {}
+            zeilen = [{"date": f"d{off + i}"} for i in range(100 if off < 200 else 7)]
+            return 200, json.dumps({"data": zeilen, "meta": {"total": 207},
+                                    "links": {"next": "weiter" if off < 200 else None}}), {}
+        if pfad == "spreads/funding-stress":
+            if "page[limit]" in q:
+                return 422, "", {}
+            return 200, json.dumps({"data": [{"date": f"2020-01-0{i + 1}"} for i in range(3)]}), {}
+        if pfad == "commodities/historical/WTI":
+            return 200, json.dumps({"meta": {"total": 1500}, "data": [{"date": off + i} for i in
+                                                                       range(1000 if off == 0 else 500)],
+                                    "links": {"next": "weiter" if off == 0 else None}}), {}
+        if pfad == "real-estate/XX":
+            return 200, json.dumps({"data": [], "meta": {"total": 0}, "links": {"next": None}}), {}
+        return 404, "", {}
+    r = hole("zusatz", {"Code": "zins_leit_ECB_DFR", "pfad": "rates/policy-rates", "params": {"filter[code]": "ECB_DFR"},
+                        "limit": 500, "kosten": 1, "seiten": True}, "x", f_zus, still)
+    p("Zusatz: Seiten bis links.next leer, zu grosse Seite faellt auf 100, Fehler kosten nichts",
+      r["status"] == 200 and r["extra"].get("zeilen") == 207 and r["calls"] == 3 and r["daten"]["meta"]["total"] == 207,
+      (r["extra"], r["calls"]))
+    r = hole("zusatz", {"Code": "zins_spread_EFFR_SOFR", "pfad": "spreads/funding-stress", "params": {},
+                        "limit": 100, "kosten": 1, "seiten": False}, "x", f_zus, still)
+    p("Zusatz: Reihe ohne Seiten mit genau einem Abruf", r["status"] == 200 and r["extra"].get("zeilen") == 3
+      and r["calls"] == 1, (r["extra"], r["calls"]))
+    r = hole("zusatz", {"Code": "rohstoff_WTI_daily", "pfad": "commodities/historical/WTI",
+                        "params": {"interval": "daily"}, "limit": 1000, "kosten": 5, "seiten": True}, "x", f_zus, still)
+    p("Zusatz: Rohstoffe zu 5 Calls je Seite", r["status"] == 200 and r["extra"].get("zeilen") == 1500
+      and r["calls"] == 10, (r["extra"], r["calls"]))
+    r = hole("zusatz", {"Code": "immo_XX_real_yoy", "pfad": "real-estate/XX", "params": {}, "limit": 500,
+                        "kosten": 5, "seiten": True}, "x", f_zus, still)
+    p("Zusatz: leere Antwort ist leer, nicht Fehler", r["status"] == 200 and r["daten"] is None and r["calls"] == 5,
+      (r["status"], r["calls"]))
+    ze = zusatz_eintraege(os.path.join(os.sep, "gibt_es_nicht_eodhd"), dt.date(2026, 9, 29))
+    codes = [x["Code"] for x in ze]
+    p("Zusatz: Eintraege eindeutig, alle Reihen dabei, Tagesreihen nur fuer Energie",
+      len(codes) == len(set(codes)) and "immo_laender" in codes and "asx_dividends_2027" in codes
+      and "zins_ref_SOFR" in codes and "kredit_hqm-spot" in codes and "rohstoff_LNG_ASIA_monthly" in codes
+      and "rohstoff_LNG_ASIA_daily" not in codes and "immo_XM_detailed" in codes
+      and len({sicherer_dateiname(c) for c in codes}) == len(codes), len(codes))
+    pa = os.path.join(tempfile.gettempdir(), f"eodhd_ausgabe_{os.getpid()}.txt")
+    try:
+        art = ausgabe_fuer_ablauf({"abbruch": "Zeitgrenze 330 Minuten erreicht nach 5 Abrufen", "offen_danach": 7}, pa)
+        art2 = ausgabe_fuer_ablauf({"abbruch": "Tagesbudget erreicht nach 9 Abrufen", "offen_danach": 3}, pa)
+        with io.open(pa, encoding="utf-8") as f:
+            inhalt = f.read()
+    finally:
+        if os.path.exists(pa):
+            os.remove(pa)
+    p("Ablauf: Art des Abbruchs und offene Abrufe als Schrittausgaben",
+      art == "zeit" and art2 == "budget" and inhalt == "abbruch=zeit\noffen=7\nabbruch=budget\noffen=3\n", inhalt)
     r = hole("boersenwert", {"Code": "AAPL"}, "x",
              lambda k: ((200, json.dumps({"0": {"date": "2020-01-03", "value": 1}}), {}) if k.startswith("historical-market-cap/AAPL.US")
                         else (404, "", {})), still, dt.date(2026, 9, 24))
@@ -2453,6 +2669,27 @@ def selbsttest() -> int:
     return fehler
 
 
+def ausgabe_fuer_ablauf(bilanz, pfad=None):
+    """Fuer den Schritt "Naechster Lauf ohne Pause" des Ablaufs: die Art des
+    Abbruchs (zeit, budget, fertig, fehler) und die Zahl der offenen Abrufe
+    als Ausgaben des Schritts; nur Woerter und Zahlen (oeffentliches Protokoll)."""
+    pfad = pfad or os.environ.get("GITHUB_OUTPUT")
+    if not pfad:
+        return None
+    grund = str(bilanz.get("abbruch") or "")
+    if not grund:
+        art = "fertig"
+    elif grund.startswith("Zeitgrenze"):
+        art = "zeit"
+    elif grund.startswith(("Tagesbudget", "Budget auch nach Mitternacht")):
+        art = "budget"
+    else:
+        art = "fehler"
+    with io.open(pfad, "a", encoding="utf-8") as f:
+        f.write(f"abbruch={art}\noffen={int(bilanz.get('offen_danach') or 0)}\n")
+    return art
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--daten", default="")
@@ -2493,6 +2730,7 @@ def main():
         stufen = [s.strip() for s in a.stufen.split(",") if s.strip()] or None
         b, text = lauf_voll(a.daten, token, stufen=stufen, hoechstens=a.hoechstens,
                             zeitgrenze_min=a.zeitgrenze_min, reserve=a.reserve, leer_pruefung=True)
+        ausgabe_fuer_ablauf(b)
         fehlerhaft = ist_fehlerabbruch(b["abbruch"])
         if fehlerhaft and _utc_jetzt().date() >= ABO_ENDE and re.search(r"HTTP 40[123]", str(b["abbruch"])):
             push("EODHD-Vollabzug: Zugang beendet", text)
