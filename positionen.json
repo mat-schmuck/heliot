@@ -14758,5 +14758,32 @@
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
   "wedge_drop_gemeldet": false
+ },
+ "LEN|INS-2026-09-29": {
+  "symbol": "LEN",
+  "firma": "",
+  "strategie": "Insider-Kauf",
+  "einstieg": 82.04,
+  "einstieg_datum": "2026-09-29",
+  "einstieg_index": 0,
+  "struktur_stop": null,
+  "aktueller_stop": 73.84,
+  "stop_quelle": "deckel",
+  "hoechstkurs": 82.04,
+  "teilverkauft": false,
+  "halteregel_aktiv": false,
+  "beobachtung": true,
+  "status": "offen",
+  "verlauf": [],
+  "klasse": "insider",
+  "musterziel": null,
+  "zone": null,
+  "zone_gemeldet": null,
+  "ziel_gemeldet": false,
+  "klimax_gemeldet": [],
+  "weinstein_gemeldet": false,
+  "zahlen_hinweis_gemeldet": false,
+  "sektor_hinweis_gemeldet": false,
+  "wedge_drop_gemeldet": false
  }
 }
