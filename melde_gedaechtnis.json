@@ -56,7 +56,7 @@
     "CEVA|Fallback: MA50-Pullback": "draussen",
     "DINO|Fallback: MA50-Pullback": "draussen",
     "DOCN|Fallback: MA50-Pullback": "draussen",
-    "FLY|Fallback: MA50-Pullback": "draussen",
+    "FLY|Fallback: MA50-Pullback": "drin",
     "FSLY|Fallback: MA50-Pullback": "drin",
     "GRAL|Fallback: 52W-Hoch-Breakout": "drin",
     "GRAL|Fallback: MA50-Pullback": "draussen",
@@ -190,7 +190,8 @@
     "MXL|Inside Day": "drin",
     "AXTI|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "BE|Cup & Handle (Wochenbasis)": "drin",
-    "ASX|Cup & Handle (Wochenbasis)": "drin"
+    "ASX|Cup & Handle (Wochenbasis)": "drin",
+    "ASX|Fallback: 52W-Hoch-Breakout": "drin"
   },
   "gemeldet": {
     "INSIDER|FTK|pfad_a|1": "2026-09-16",
@@ -385,7 +386,9 @@
     "UEBER|QMCO|Inside Day": "2026-09-29",
     "UEBER|QMCO|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-29",
     "ASX|Cup & Handle (Wochenbasis)": "2026-09-29",
-    "BEST|ASX|Cup & Handle (Wochenbasis)": "2026-09-29"
+    "BEST|ASX|Cup & Handle (Wochenbasis)": "2026-09-29",
+    "ASX|Fallback: 52W-Hoch-Breakout": "2026-09-29",
+    "BEST|ASX|Fallback: 52W-Hoch-Breakout": "2026-09-29"
   },
   "gemeldet_kp": {
     "CXW|Cup & Handle (Wochenbasis)": 31.67,
@@ -542,7 +545,9 @@
     "BEST|BE|Cup & Handle (Wochenbasis)": 292.73,
     "UEBER|QMCO|Inside Day": 32.9,
     "ASX|Cup & Handle (Wochenbasis)": 45.25,
-    "BEST|ASX|Cup & Handle (Wochenbasis)": 45.25
+    "BEST|ASX|Cup & Handle (Wochenbasis)": 45.25,
+    "ASX|Fallback: 52W-Hoch-Breakout": 45.57,
+    "BEST|ASX|Fallback: 52W-Hoch-Breakout": 45.57
   },
   "gapgo_warten": {
     "BE": {
