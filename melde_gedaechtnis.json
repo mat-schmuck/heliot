@@ -197,9 +197,10 @@
     "CORT|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "NTAP|Fallback: 52W-Hoch-Breakout": "drin",
     "AEO|Rectangle Top": "drin",
-    "TJGC|VCP": "drin",
-    "TJGC|Fallback: 52W-Hoch-Breakout": "drin",
-    "HHH|Cup & Handle (Wochenbasis)": "drin"
+    "TJGC|VCP": "draussen",
+    "TJGC|Fallback: 52W-Hoch-Breakout": "draussen",
+    "HHH|Cup & Handle (Wochenbasis)": "drin",
+    "RDVT|Wick Play": "drin"
   },
   "gemeldet": {
     "INSIDER|FTK|pfad_a|1": "2026-09-16",
@@ -402,7 +403,9 @@
     "AEO|Pocket Pivot": "2026-09-29",
     "BEST|AEO|Pocket Pivot": "2026-09-29",
     "HHH|Cup & Handle (Wochenbasis)": "2026-09-29",
-    "BEST|HHH|Cup & Handle (Wochenbasis)": "2026-09-29"
+    "BEST|HHH|Cup & Handle (Wochenbasis)": "2026-09-29",
+    "UEBER|TJGC|VCP": "2026-09-29",
+    "UEBER|TJGC|Fallback: 52W-Hoch-Breakout": "2026-09-29"
   },
   "gemeldet_kp": {
     "CXW|Cup & Handle (Wochenbasis)": 31.67,
