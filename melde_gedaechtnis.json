@@ -305,7 +305,17 @@
     "GEWINN|klimax_zeichen|GRAL|Fallback: 20-Tage-Hoch (Pivot)|4_ma200_abstand": "2026-09-29",
     "SEKTORAUF|2026-09-29": "2026-09-29",
     "GEWINN|klimax_zeichen|GRAL|Fallback: 20-Tage-Hoch (Pivot)|5_kanaluebershooting": "2026-09-29",
-    "INSIDER|LEN|pfad_a|0": "2026-09-29"
+    "INSIDER|LEN|pfad_a|0": "2026-09-29",
+    "GEWINN|zonenwechsel|AMRX|Rectangle Top|mittel": "2026-09-29",
+    "GEWINN|zonenwechsel|CRWD|1|stark": "2026-09-29",
+    "GEWINN|zonenwechsel|CRWD|Fallback: 20-Tage-Hoch (Pivot)|stark": "2026-09-29",
+    "GEWINN|zonenwechsel|CRWD|Fallback: 52W-Hoch-Breakout|stark": "2026-09-29",
+    "GEWINN|zonenwechsel|LGND|EMA Crossback|stark": "2026-09-29",
+    "GEWINN|zonenwechsel|SIMO|SPRING-2026-09-23|mittel": "2026-09-29",
+    "GEWINN|zonenwechsel|SIMO|SPRING-2026-09-25|mittel": "2026-09-29",
+    "GEWINN|zonenwechsel|TWLO|1|mittel": "2026-09-29",
+    "GEWINN|zonenwechsel|TXG|Fallback: 20-Tage-Hoch (Pivot)|stark": "2026-09-29",
+    "GEWINN|zonenwechsel|XMTR|Fallback: MA50-R\u00fcckeroberung|mittel": "2026-09-29"
   },
   "gemeldet_kp": {
     "CXW|Cup & Handle (Wochenbasis)": 31.67,
