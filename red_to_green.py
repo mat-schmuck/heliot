@@ -295,6 +295,14 @@ def pruefe(verlauf, vortagesschluss, v50, kurve=None):
             war_rot = True
             continue
         if war_rot and kurs > vortagesschluss:
+            # ERSTE PRUEFUNG DES VOLUMENS erst ab dem ersten gemessenen
+            # Kurvenwert, 09:35 New Yorker Zeit (Gerhard, 30.09.2026, Frage 1;
+            # volumen.ERSTE_PRUEFUNG_MINUTE). Eine Kreuzung davor bleibt offen:
+            # war_rot bleibt stehen, und der naechste gruene Punkt ab Minute 5
+            # wird an ihrer Stelle geprueft. Faellt die Aktie vorher wieder
+            # unter den Vortagesschluss, zaehlt die naechste Kreuzung.
+            if not volumen.schon_messbar(punkt["minute"]):
+                continue
             sig = volumen_signatur(verlauf, v50, i, kurve)
             if sig["ok"]:
                 return {
@@ -432,6 +440,23 @@ def selbsttest() -> int:
     t2 = pruefe(frueh, 100.0, v50, testkurve)
     pruefe_es("In den ersten 30 Minuten entfällt die Anflug-Bedingung",
               t2 is not None and t2["signatur"]["in_fruehphase"])
+
+    # --- Erste Prüfung ab Minute 5 (Gerhard, 30.09.2026, Frage 1) ----
+    # Kreuzung in Minute 2: dort wird das Volumen nicht beurteilt. Bleibt
+    # die Aktie grün, gilt der erste Punkt ab Minute 5 als Kreuzung.
+    # Minute 2 mit dem 1,5-Fachen dessen, was sonst nach fünf Minuten
+    # gehandelt ist: Die gerade Linie hätte daraus 375 Prozent des Schnitts
+    # gemacht, genug für den Sprung. Genau diese Meldung darf nicht kommen.
+    eroeffnung = []
+    punkt_setzen(eroeffnung, 1, 99.5, v50 * anteil(5) * 0.10)
+    punkt_setzen(eroeffnung, 2, 100.5, v50 * anteil(5) * 1.50)
+    pruefe_es("Kreuzung vor Minute 5 wird noch nicht beurteilt",
+              pruefe(eroeffnung, 100.0, v50, testkurve) is None)
+    punkt_setzen(eroeffnung, 5, 100.8, v50 * anteil(5) * 3.00)
+    punkt_setzen(eroeffnung, 12, 101.0, v50 * anteil(12) * 2.90)
+    t3 = pruefe(eroeffnung, 100.0, v50, testkurve)
+    pruefe_es("Ab Minute 5 wird die offene Kreuzung geprüft",
+              t3 is not None and t3["minute"] == 5)
 
     # --- Nur grün, nie rot: keine Kreuzung --------------------------
     nur_gruen = []

@@ -582,6 +582,17 @@ def vol_verhaeltnis(vol, avg, ticker=None, jetzt=None):
                                volumen.kurve_fuer(ticker))
 
 
+def volumen_messbar(jetzt=None) -> bool:
+    """Darf das Volumen JETZT beurteilt werden? Erst ab dem ersten gemessenen
+    Wert der F(t)-Kurve, 09:35 New Yorker Zeit (Gerhard, 30.09.2026, Frage 1;
+    Begruendung bei volumen.ERSTE_PRUEFUNG_MINUTE). Vorher gibt es fuer
+    Ausbruch, uebersprungen, Alarm-Muster, Power-Gap am Lueckentag und am
+    Folgetag sowie Red to Green kein Volumenurteil: keine Meldung, keine
+    Bot-Zeile, der Kaufpunkt bleibt offen und wird im naechsten Durchlauf
+    neu beurteilt."""
+    return volumen.schon_messbar(volumen.minute_seit_eroeffnung(jetzt))
+
+
 def markt_offen(jetzt=None) -> tuple:
     """Handelt die US-Börse gerade? Liefert (offen, Begruendung).
 
@@ -1910,8 +1921,16 @@ def volumen_urteil(item: dict, quote: dict) -> dict:
     # (unter 40 Handelstagen), ist das Volumen NICHT VERIFIZIERBAR — ein
     # eigener, dritter Status neben bestaetigt und nicht bestaetigt.
     anteil = tagesanteil(item["ticker"])
-    vol_ratio = vol_verhaeltnis(vol, avg, item["ticker"])
-    if vol_ratio is None:
+    # ERSTE PRUEFUNG AB 09:35 NEW YORK (Gerhard, 30.09.2026, Frage 1): Vor
+    # dem ersten gemessenen Kurvenwert gibt es kein Urteil und keine Zahl;
+    # die Hochrechnung haette dort das Volumen der Eroeffnungsauktion
+    # vervielfacht (Gruppe F des Pruefberichts).
+    vor_messung = not volumen_messbar()
+    vol_ratio = None if vor_messung else vol_verhaeltnis(vol, avg, item["ticker"])
+    if vor_messung:
+        vol_ok = None
+        nicht_pruefbar = False
+    elif vol_ratio is None:
         # Warum keine Zahl? Fehlt der 50-Tage-Schnitt oder die eigene
         # Kurve? Die Meldung soll das benennen koennen.
         vol_ok = None
@@ -1934,6 +1953,7 @@ def volumen_urteil(item: dict, quote: dict) -> dict:
         "vol_ok": vol_ok,
         "vol_nicht_verifizierbar": nicht_pruefbar,
         "vol_fremdquelle": fremd,
+        "vol_vor_messung": vor_messung,
         "vol_roh": vol,
         "vol_anteil": anteil,
     }
@@ -2042,6 +2062,11 @@ def pruefe_gap_and_go(ticker: str, q: dict):
         # Keine eigene Volumenkurve: Gap and Go laesst sich fuer diese
         # Aktie nicht pruefen. Frueher sprang hier die geliehene Kurve
         # ein; seit 06.08.2026 gibt es die nicht mehr.
+        return None
+    if not volumen_messbar():
+        # Erste Pruefung ab 09:35 New York (Gerhard, 30.09.2026, Frage 1).
+        # Der Lueckentag wird in jedem Durchlauf neu geprueft; er meldet,
+        # sobald das Volumen ab dem ersten Messwert die Schwelle haelt.
         return None
     # BEIDE Zahlen sind rechnerisch dieselbe Groesse — v/(Ø×F) und
     # (v/F)/Ø. Aufgefallen beim Aufschreiben der Formel fuer Gerhard am
@@ -2254,7 +2279,8 @@ def format_r2g(t: dict) -> str:
         kopfzeile(t["ticker"], t.get("firma", ""), "Red-to-Green"),
         f"Kreuzung {t['kurs']:.2f} über Vortagesschluss "
         f"{t['vortagesschluss']:.2f}; Minute {t['minute']} des Handelstages",
-        f"Vol Sprung {sig['sprung_pct']:.0f} % über Ø50"
+        # Seit 30.09.2026 in Prozent des 50-Tage-Schnitts (Gerhard, Frage 2).
+        f"Vol Sprung {volumen.prozent_des_schnitts(sig['sprung_pct'])}"
         + (", Anflug trocken" if sig["anflug_pct"] is not None
            and sig["anflug_pct"] <= 0 else "")
         + ("; erste 30 Minuten, Anflug entfällt" if sig["in_fruehphase"] else ""),
@@ -2271,7 +2297,9 @@ def format_gapgo(g: dict) -> str:
       innerhalb; keine Titel, keine Gedankenstriche, kein senkrechter
       Strich.
     - Ø statt "20-Tage-Durchschnitt" (kuerzer); Vielfache mit dem Wort
-      "mal" statt dem Kreuz-Symbol ×.
+      "mal" statt dem Kreuz-Symbol ×. Das VOLUMEN steht seit 30.09.2026
+      ueberall in Prozent des 50-Tage-Schnitts (Gerhard, Frage 2), also
+      "300 % des 50-Tage-Schnitts" statt "3 mal Volumen".
     - Fuellwoerter wie "erst"/"nur" weglassen; die immer wahre Zeile
       "Luecke verteidigt" bleibt draussen.
     - Sonst alle Angaben drin — radikaleres Kuerzen war Mathias zu viel."""
@@ -2282,7 +2310,7 @@ def format_gapgo(g: dict) -> str:
     noetig = gap_faktor(frueh=bool(g["frueh"]))
     vol = ("Volumen "
            + volumen.lage_text((g["tages_ratio"] - 1) * 100, VOL_FENSTER)
-           + ", " + volumen.huerde_text(noetig))
+           + ", " + volumen.huerde_text(noetig, mit_einheit=False))
     luecke = f"Lücke +{g['gap']*100:.1f}%"
     # DIE BASIS IST SEIT 05.08.2026 EIN VERMERK, kein Ausschluss mehr.
     # Sie steht deshalb weiterhin in der Meldung, jetzt aber in beiden
@@ -2301,9 +2329,9 @@ def format_gapgo(g: dict) -> str:
               f"Position in der Tagesspanne {g['pos']*100:.0f}%",
               f"Kaufpunkt (Folgetag) {g['kp']:.2f}, {stop_txt}"]
     if not g["bestaetigt"]:
-        zeilen.append(f"Schlussbestätigung (oberes Fünftel + "
-                      f"{gap_faktor():g} mal Volumen) folgt zum "
-                      f"Handelsende")
+        zeilen.append(f"Schlussbestätigung (oberes Fünftel + Volumen "
+                      f"{gap_faktor() * 100:.0f} % {volumen.SCHNITT_WORT}) "
+                      f"folgt zum Handelsende")
     z = zusatz_zeile(g.get("ticker"))
     if z:
         zeilen.append(z)
@@ -2753,7 +2781,10 @@ def gapgo_einstiege_pruefen(state: dict, quotes: dict) -> tuple:
         # Volumen stand nur am Luecken-Tag. Ohne Bestaetigung bleibt der
         # Einstieg offen und wird im naechsten Durchlauf neu beurteilt; am
         # Ende des Folgetags verfaellt er wie bisher.
-        vol_ratio = vol_verhaeltnis(q.get("volume"), q.get("avg_volume"), t)
+        # Erste Pruefung ab 09:35 New York (Gerhard, 30.09.2026, Frage 1):
+        # davor keine Zahl und kein Urteil, der Einstieg bleibt offen.
+        vol_ratio = (vol_verhaeltnis(q.get("volume"), q.get("avg_volume"), t)
+                     if volumen_messbar() else None)
         vol_ok = (vol_ratio is not None and vol_ratio >= VOL_FAKTOR_FALLBACK
                   and volumen_von_yahoo(q))
         if not vol_ok:
@@ -3475,8 +3506,9 @@ def schlussnahe_befunde(topic, nacht, basis, ws, state, schon_gemeldet,
                               "key": tr["etf"], "symbol": tr["etf"], "zeichen": tr["richtung"],
                               "text": f"INFORMATION: Sektor-Radar {tr['etf']} ({tr['name']}) "
                                       f"dreht nach {'oben' if tr['richtung'] == 'hoch' else 'unten'}; "
-                                      f"Volumen hochgerechnet {tr['volumen_pct']:+.0f}% gegenüber "
-                                      f"dem 50-Tage-Schnitt; Kurs {tr['kurs']:.2f}"})
+                                      f"Volumen hochgerechnet "
+                                      f"{volumen.prozent_des_schnitts(tr['volumen_pct'])}; "
+                                      f"Kurs {tr['kurs']:.2f}"})
     except Exception as ex:
         print(f"  Schlussnah, Sektor-Radar: {type(ex).__name__}: {ex}")
 
@@ -3607,13 +3639,18 @@ def vol_satz(t: dict) -> str:
     Seit 22.09.2026 eine eigene Funktion, weil die Alarm-Muster (O10) ihre
     eigene Meldung bauen und darin GENAU dieselbe Volumenaussage stehen soll."""
     lage = volumen.lage_text(t.get("vol_pct"), VOL_FENSTER)
-    # Die Huerde nur nennen, wo sie vom Ueblichen abweicht (VCP).
+    # Die Huerde nur nennen, wo sie vom Ueblichen abweicht (VCP). Seit
+    # 30.09.2026 in Prozent des Schnitts (Gerhard, Frage 2); die Einheit
+    # steht schon in der Lage davor.
     huerde = ("" if t["vol_noetig"] <= 1.0
-              else ", " + volumen.huerde_text(t["vol_noetig"]))
+              else ", " + volumen.huerde_text(t["vol_noetig"], mit_einheit=False))
     if t["vol_ok"] is True:
         return f"Vol BESTÄTIGT, {lage}{huerde}"
     if t["vol_ok"] is False:
         return f"Vol NICHT bestätigt, {lage}{huerde}"
+    if t.get("vol_vor_messung"):
+        # Erste Pruefung ab 09:35 New York (Gerhard, 30.09.2026, Frage 1).
+        return "Vol noch nicht beurteilt, erste Prüfung fünf Minuten nach Handelsbeginn"
     if t.get("vol_fremdquelle"):
         # Regel 3 (Gerhard, 29.09.2026): nur Volumen von yfinance zaehlt.
         return f"Vol noch nicht von Yahoo, {lage}{huerde}"

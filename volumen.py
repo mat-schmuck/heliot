@@ -385,6 +385,33 @@ def minute_seit_eroeffnung(jetzt=None):
     return m
 
 
+# ERSTE PRUEFUNG DES VOLUMENS (Gerhard, 30.09.2026, Antwort auf Frage 1):
+# Beurteilt wird das Volumen erst, wenn F(t) einen GEMESSENEN Wert hat. Die
+# Kurven entstehen aus Fuenf-Minuten-Kerzen (RASTER); ihr erster Messpunkt
+# liegt bei Minute 5, also 09:35 New Yorker Zeit, bei uns meist 15:35. Bei
+# Minute 0 steht per Definition null, in den Minuten 1 bis 4 die gerade Linie
+# von null zum Wert bei Minute 5. Wer dort hochrechnet, teilt das Volumen der
+# Eroeffnungsauktion durch einen winzigen Anteil: MGA am 07.08.2026 um 15:30
+# mit 744 Prozent des Schnitts laut Meldung, fuenf Minuten spaeter 81. So
+# kamen vom 06.08. bis 29.09.2026 306 Meldungen zustande (Pruefbericht zu
+# Regel 3, Gruppe F).
+# Gerhard haette gern 15:33 genommen, falls es fuer Minute 3 einen echten
+# Messwert gibt. Es gibt keinen: Alle 183 Kurven in volumenkurven.json haben
+# Stellen nur bei 0, 5, 10 und so weiter (gemessen 30.09.2026). Also gilt
+# Minute 5. Formel und Kurven bleiben unveraendert; geaendert ist nur der
+# Zeitpunkt der ersten Pruefung. Vorher kommt keine Meldung und keine
+# Bot-Zeile, der Kaufpunkt bleibt offen.
+ERSTE_PRUEFUNG_MINUTE = RASTER
+
+
+def schon_messbar(minute) -> bool:
+    """Darf das Volumen zu dieser Minute seit Handelsbeginn beurteilt werden?
+
+    None heisst ausserhalb der Handelszeit: Dann ist der Tag komplett, F(t)
+    ist 1, und es gibt nichts hochzurechnen (der reine EOD-Fall)."""
+    return minute is None or int(minute) >= ERSTE_PRUEFUNG_MINUTE
+
+
 def tagesanteil(minute=None, kurve=None):
     """F(t): Anteil des Tagesvolumens, der bis zu dieser Minute seit
     Handelsbeginn ueblicherweise schon gehandelt ist — nach der Kurve
@@ -455,7 +482,24 @@ def text(v_bisher, v50, minute=None, kurve=None):
     p = volume_pct_change(v_bisher, v50, kurve, minute)
     if p is None:
         return NICHT_VERIFIZIERBAR
-    return f"{p:+.0f} % gegenüber dem 50-Tage-Schnitt"
+    return prozent_des_schnitts(p)
+
+
+# EINE SCHREIBWEISE UEBERALL (Gerhard, 30.09.2026, Antwort auf Frage 2):
+# Volumen steht im ganzen System in Prozent des 50-Tage-Schnitts; 100 ist
+# der Schnitt, 200 das Doppelte, 300 das Dreifache. Vorher schrieben die
+# Meldungen "5 % über Ø50", wo Gerhard 105 Prozent des Schnitts meint. Nur
+# der Text aendert sich, keine Rechnung: Gerechnet wird weiter mit der
+# IBD-Zahl (volume_pct_change) und dem Verhaeltnis (verhaeltnis).
+SCHNITT_WORT = "des 50-Tage-Schnitts"
+
+
+def prozent_des_schnitts(pct, wort="%", fenster=50):
+    """IBD-Zahl (Volume % Change) in der einheitlichen Schreibweise:
+    +5 wird "105 % des 50-Tage-Schnitts", -40 wird "60 % des 50-Tage-Schnitts".
+    wort: "%" fuer Meldungen, "Prozent" fuer Saetze in der App."""
+    schnitt = SCHNITT_WORT if fenster == 50 else f"des {fenster}-Tage-Schnitts"
+    return f"{pct + 100:.0f} {wort} {schnitt}"
 
 
 # Der dritte Status, woertlich und an EINER Stelle — damit er nirgends
@@ -482,20 +526,21 @@ NICHT_VERIFIZIERBAR = ("Volumen NICHT VERIFIZIERBAR, keine eigene "
 # beeinflusst. Der Code steht im Git-Verlauf unter 'IBD-Zusatzmasse'.
 
 
-def huerde_text(faktor):
-    """Was verlangt wird, in lesbarer Form."""
-    if faktor <= 1.0:
-        return "nötig wäre mindestens der Schnitt"
-    return f"nötig {(faktor - 1) * 100:.0f} % darüber"
+def huerde_text(faktor, mit_einheit=True):
+    """Was verlangt wird, in lesbarer Form. Seit 30.09.2026 in Prozent des
+    Schnitts (Gerhard, Frage 2); damit liest sich auch der Faktor 1,0 als
+    "nötig mindestens 100 %" und nicht mehr wie "keine Anforderung".
+    mit_einheit=False, wo die Lage mit derselben Einheit direkt davor steht."""
+    return f"nötig mindestens {faktor * 100:.0f} %" + (f" {SCHNITT_WORT}" if mit_einheit else "")
 
 
 def lage_text(pct, fenster=50):
-    """Wo die Aktie steht, ohne Vorzeichen-Rätsel."""
+    """Wo die Aktie steht: seit 30.09.2026 in Prozent des 50-Tage-Schnitts
+    statt "X % über Ø50" (Gerhard, Frage 2). fenster bleibt als Parameter
+    fuer alte Aufrufer; gerechnet wird immer gegen den 50-Tage-Schnitt."""
     if pct is None:
         return "Volumen nicht bewertbar"
-    if pct >= 0:
-        return f"{pct:.0f} % über Ø{fenster}"
-    return f"{abs(pct):.0f} % unter Ø{fenster}"
+    return prozent_des_schnitts(pct, fenster=fenster)
 
 
 # ---------------------------------------------------------------------------
@@ -664,5 +709,25 @@ if __name__ == "__main__":
     assert n_fertig == 1, "nach dem Schluss gehört der Tag hinein"
     print("  ok: Ein Nachzügler mitten im Handel verbiegt die Kurve nicht —")
     print("    nach dem Schlussgong zählt derselbe Tag dagegen mit")
+
+    print("\nTEST 10: Erste Prüfung erst beim ersten gemessenen Kurvenwert")
+    assert ERSTE_PRUEFUNG_MINUTE == RASTER == 5
+    assert [schon_messbar(m) for m in (0, 3, 4, 5, 6, 389)] == [False, False, False, True, True, True]
+    assert schon_messbar(None), "ausserhalb der Handelszeit ist der Tag komplett"
+    assert minute_seit_eroeffnung(_dt(2026, 9, 30, 9, 34, 59, tzinfo=NY)) == 4
+    assert schon_messbar(minute_seit_eroeffnung(_dt(2026, 9, 30, 9, 35, 0, tzinfo=NY)))
+    print("  ok: Minute 0 bis 4 nein, ab 09:35 New York ja, ausserhalb des Handels ja")
+
+    print("\nTEST 11: Schreibweise in Prozent des 50-Tage-Schnitts")
+    assert lage_text(5) == "105 % des 50-Tage-Schnitts"
+    assert lage_text(-40) == "60 % des 50-Tage-Schnitts"
+    assert lage_text(275.6) == "376 % des 50-Tage-Schnitts"
+    assert lage_text(None) == "Volumen nicht bewertbar"
+    assert huerde_text(1.0) == "nötig mindestens 100 % des 50-Tage-Schnitts"
+    assert huerde_text(1.4) == "nötig mindestens 140 % des 50-Tage-Schnitts"
+    assert prozent_des_schnitts(200, "Prozent") == "300 Prozent des 50-Tage-Schnitts"
+    assert text(700_000, 700_000) == "100 % des 50-Tage-Schnitts"
+    assert "über" not in lage_text(5) + huerde_text(3.0)
+    print(f"  ok: {lage_text(5)}; {huerde_text(3.0)}")
 
     print("\nAlle Volumen-Tests bestanden (ohne Netzwerk).")

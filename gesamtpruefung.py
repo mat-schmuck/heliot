@@ -1633,8 +1633,12 @@ def block_e():
            bw.volumen_von_yahoo({}) and bw.volumen_von_yahoo({"volumenquelle": "yahoo_ws"})
            and not bw.volumen_von_yahoo({"volumenquelle": "twelvedata"}))
     _vv_alt = bw.vol_verhaeltnis
+    _vm_alt = bw.volumen_messbar
     try:
         bw.vol_verhaeltnis = lambda vol, avg, ticker=None, jetzt=None: vol / avg
+        # Uhrzeitunabhaengig: Diese Pruefungen gelten ab dem ersten Messwert der
+        # Kurve; die Sperre davor pruefen eigene Faelle weiter unten.
+        bw.volumen_messbar = lambda jetzt=None: True
         _it3 = {"ticker": "TST", "strategie": "Darvas Box", "kaufpunkt": 10.0}
         _q3 = {"close": 10.2, "volume": 3_000_000.0, "avg_volume": 1_000_000.0,
                "prev_close": 9.9}
@@ -1716,8 +1720,74 @@ def block_e():
             bw._EINST.update(_einst_alt)
         pruefe("E", "Einstellungen: ohne eigene Werte gelten die Vorgaben",
                bw.vol_faktor("Darvas Box") == 1.0 and bw.gap_faktor() == bw.GAP_VOL_FAKTOR)
+
+        # GERHARDS ANTWORTEN VOM 30.09.2026
+        # FRAGE 1: Das Volumen wird erst ab dem ersten gemessenen Wert der
+        # F(t)-Kurve beurteilt, 09:35 New York; Formel und Kurven bleiben.
+        import volumen as _vo
+        bw.volumen_messbar = lambda jetzt=None: False
+        _f_aus = bw.pruefe_breakout(_it3, _q3)
+        _f_ue = bw.pruefe_breakout(_it3, {**_q3, "close": 11.0})
+        _f_gap, _f_st = _gap(_q3)
+        _f_gem = set()
+        pruefe("E", "Frage 1: vor 09:35 New York kein Volumenurteil, keine Zahl, keine Meldung",
+               _f_aus["vol_ok"] is None and _f_aus["vol_vor_messung"] is True
+               and _f_aus["vol_ratio"] is None
+               and bw.melde_stufe({**_f_aus, "key": "TST|Darvas Box",
+                                   "key_best": "BEST|TST|Darvas Box"}, _f_gem, None, None) is None
+               and _f_ue.get("uebersprungen") and _f_ue["vol_ok"] is None
+               and not _f_gap and _f_st[bw.GAPGO_WARTEN]["GGG"].get("ohne_volumen") is True)
+        pruefe("E", "Frage 1: die Meldezeile sagt, warum noch nichts beurteilt ist",
+               bw.vol_satz(_f_aus) == "Vol noch nicht beurteilt, erste Prüfung fünf Minuten "
+                                     "nach Handelsbeginn")
+        _tg_alt, _mse_alt = bw.tagesanteil, _vo.minute_seit_eroeffnung
+        try:
+            bw.tagesanteil = lambda ticker=None, jetzt=None: 1.0
+            _vo.minute_seit_eroeffnung = lambda jetzt=None: None
+            _qg = {"open": 1.2, "high": 1.3, "low": 1.15, "prev_close": 1.0,
+                   "close": 1.25, "volume": 9e9, "vol50": 1.0}
+            _g_zu = bw.pruefe_gap_and_go("TST", _qg)
+            bw.volumen_messbar = lambda jetzt=None: True
+            _g_auf = bw.pruefe_gap_and_go("TST", _qg)
+        finally:
+            bw.tagesanteil, _vo.minute_seit_eroeffnung = _tg_alt, _mse_alt
+        pruefe("E", "Frage 1: Power-Gap am Lueckentag erst ab dem ersten Messwert",
+               _g_zu is None and _g_auf is not None)
+        # Ab 09:35 bleibt alles, wie es war: derselbe Kaufpunkt meldet jetzt.
+        bw.volumen_messbar = lambda jetzt=None: True
+        _f_an = bw.pruefe_breakout(_it3, _q3)
+        _f_gap2, _ = _gap(_q3)
+        pruefe("E", "Frage 1: ab 09:35 derselbe Kaufpunkt wie bisher bestaetigt",
+               _f_an["vol_ok"] is True and _f_an["vol_vor_messung"] is False
+               and _f_an["vol_ratio"] == 3.0 and len(_f_gap2) == 1)
+        pruefe("E", "Frage 1: erste Pruefung beim ersten Messpunkt der Kurven, Minute 5",
+               _vo.ERSTE_PRUEFUNG_MINUTE == _vo.RASTER == 5
+               and [_vo.schon_messbar(m) for m in (0, 4, 5, None)] == [False, False, True, True]
+               and _vm_alt(datetime(2026, 9, 30, 13, 34, 59, tzinfo=timezone.utc)) is False
+               and _vm_alt(datetime(2026, 9, 30, 13, 35, 0, tzinfo=timezone.utc)) is True)
+        # FRAGE 2: Volumen ueberall in Prozent des 50-Tage-Schnitts, nur der Text.
+        _vcp = bw.pruefe_breakout({**_it3, "strategie": "VCP"}, _q3)
+        _schw = bw.pruefe_breakout(_it3, {**_q3, "volume": 800_000.0})
+        pruefe("E", "Frage 2: Meldezeile in Prozent des 50-Tage-Schnitts",
+               bw.vol_satz(_f_an) == "Vol BESTÄTIGT, 300 % des 50-Tage-Schnitts"
+               and bw.vol_satz(_vcp) == "Vol BESTÄTIGT, 300 % des 50-Tage-Schnitts, nötig mindestens 140 %"
+               and bw.vol_satz(_schw) == "Vol NICHT bestätigt, 80 % des 50-Tage-Schnitts",
+               f"{bw.vol_satz(_f_an)} / {bw.vol_satz(_vcp)} / {bw.vol_satz(_schw)}")
     finally:
         bw.vol_verhaeltnis = _vv_alt
+        bw.volumen_messbar = _vm_alt
+    _r2g_text = bw.format_r2g({"ticker": "TST", "firma": "Test", "kurs": 10.1, "vortagesschluss": 10.0,
+                               "minute": 7, "signatur": {"sprung_pct": 275.0, "anflug_pct": -10.0,
+                                                         "in_fruehphase": True}})
+    _gg_text = bw.format_gapgo({"ticker": "TST", "firma": "Test", "bestaetigt": False, "frueh": False,
+                                "tages_ratio": 3.5, "gap": 0.12, "pos": 0.8, "kp": 11.0, "stop": 9.9,
+                                "stop_quelle": "tief"})
+    pruefe("E", "Frage 2: Red to Green und Power-Gap schreiben das Volumen in Prozent des Schnitts",
+           "Vol Sprung 375 % des 50-Tage-Schnitts, Anflug trocken" in _r2g_text
+           and "Volumen 350 % des 50-Tage-Schnitts, nötig mindestens 300 %" in _gg_text
+           and "Volumen 300 % des 50-Tage-Schnitts" in _gg_text
+           and "über Ø" not in _r2g_text + _gg_text and " mal Volumen" not in _gg_text,
+           _gg_text.replace("\n", "; "))
     pruefe("E", "Regel 3: Red-to-Green und Power-Gap-Tag nur mit Yahoo-Volumen",
            bw.pruefe_red_to_green("TST", {"close": 1.0, "volume": 1.0, "open": 1.0,
                                           "volumenquelle": "twelvedata"},
