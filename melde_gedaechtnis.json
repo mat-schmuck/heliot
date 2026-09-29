@@ -57,7 +57,7 @@
     "DINO|Fallback: MA50-Pullback": "draussen",
     "DOCN|Fallback: MA50-Pullback": "draussen",
     "FLY|Fallback: MA50-Pullback": "drin",
-    "FSLY|Fallback: MA50-Pullback": "drin",
+    "FSLY|Fallback: MA50-Pullback": "draussen",
     "GRAL|Fallback: 52W-Hoch-Breakout": "drin",
     "GRAL|Fallback: MA50-Pullback": "draussen",
     "GRAL|Fallback: 20-Tage-Hoch (Pivot)": "drin",
@@ -108,7 +108,7 @@
     "RDVT|Cup & Handle (Wochenbasis)": "drin",
     "ARW|Fallback: MA50-Pullback": "draussen",
     "TALO|Fallback: MA50-Pullback": "drin",
-    "AMBQ|Fallback: MA50-Pullback": "draussen",
+    "AMBQ|Fallback: MA50-Pullback": "drin",
     "PNTG|Rectangle Top": "drin",
     "FTNT|Rectangle Top": "drin",
     "AEO|EMA Crossback": "drin",
@@ -191,7 +191,14 @@
     "AXTI|Fallback: 20-Tage-Hoch (Pivot)": "drin",
     "BE|Cup & Handle (Wochenbasis)": "drin",
     "ASX|Cup & Handle (Wochenbasis)": "drin",
-    "ASX|Fallback: 52W-Hoch-Breakout": "drin"
+    "ASX|Fallback: 52W-Hoch-Breakout": "drin",
+    "UMAC|EMA Crossback": "drin",
+    "CORT|Rectangle Top": "drin",
+    "CORT|Fallback: 20-Tage-Hoch (Pivot)": "drin",
+    "NTAP|Fallback: 52W-Hoch-Breakout": "drin",
+    "AEO|Rectangle Top": "drin",
+    "TJGC|VCP": "drin",
+    "TJGC|Fallback: 52W-Hoch-Breakout": "drin"
   },
   "gemeldet": {
     "INSIDER|FTK|pfad_a|1": "2026-09-16",
@@ -244,8 +251,8 @@
     "BEST|BLFS|Fallback: 52W-Hoch-Breakout": "2026-09-28",
     "SENEA|Fallback: MA50-R\u00fcckeroberung": "2026-09-28",
     "BEST|SENEA|Fallback: MA50-R\u00fcckeroberung": "2026-09-28",
-    "AEO|EMA Crossback": "2026-09-28",
-    "BEST|AEO|EMA Crossback": "2026-09-28",
+    "AEO|EMA Crossback": "2026-09-29",
+    "BEST|AEO|EMA Crossback": "2026-09-29",
     "PNTG|Rectangle Top": "2026-09-28",
     "BEST|PNTG|Rectangle Top": "2026-09-28",
     "MAZE|Fallback: MA50-R\u00fcckeroberung": "2026-09-28",
@@ -388,7 +395,9 @@
     "ASX|Cup & Handle (Wochenbasis)": "2026-09-29",
     "BEST|ASX|Cup & Handle (Wochenbasis)": "2026-09-29",
     "ASX|Fallback: 52W-Hoch-Breakout": "2026-09-29",
-    "BEST|ASX|Fallback: 52W-Hoch-Breakout": "2026-09-29"
+    "BEST|ASX|Fallback: 52W-Hoch-Breakout": "2026-09-29",
+    "AEO|Rectangle Top": "2026-09-29",
+    "BEST|AEO|Rectangle Top": "2026-09-29"
   },
   "gemeldet_kp": {
     "CXW|Cup & Handle (Wochenbasis)": 31.67,
@@ -425,8 +434,8 @@
     "BEST|BLFS|Fallback: 52W-Hoch-Breakout": 38.93,
     "SENEA|Fallback: MA50-R\u00fcckeroberung": 184.06,
     "BEST|SENEA|Fallback: MA50-R\u00fcckeroberung": 184.06,
-    "AEO|EMA Crossback": 16.6,
-    "BEST|AEO|EMA Crossback": 16.6,
+    "AEO|EMA Crossback": 17.62,
+    "BEST|AEO|EMA Crossback": 17.62,
     "PNTG|Rectangle Top": 40.85,
     "BEST|PNTG|Rectangle Top": 40.85,
     "MAZE|Fallback: MA50-R\u00fcckeroberung": 27.29,
@@ -547,7 +556,9 @@
     "ASX|Cup & Handle (Wochenbasis)": 45.25,
     "BEST|ASX|Cup & Handle (Wochenbasis)": 45.25,
     "ASX|Fallback: 52W-Hoch-Breakout": 45.57,
-    "BEST|ASX|Fallback: 52W-Hoch-Breakout": 45.57
+    "BEST|ASX|Fallback: 52W-Hoch-Breakout": 45.57,
+    "AEO|Rectangle Top": 17.94,
+    "BEST|AEO|Rectangle Top": 17.94
   },
   "gapgo_warten": {
     "BE": {
