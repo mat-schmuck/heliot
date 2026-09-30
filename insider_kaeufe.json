@@ -1,5 +1,5 @@
 {
- "stand": "2026-09-29",
+ "stand": "2026-09-30",
  "gelesen": [
   "0000001750-26-000100",
   "0000001750-26-000102",
@@ -798,9 +798,20 @@
   "0000752642-26-000110",
   "0000752642-26-000111",
   "0000752642-26-000112",
+  "0000752642-26-000113",
+  "0000752642-26-000114",
+  "0000752642-26-000115",
+  "0000752642-26-000116",
+  "0000752642-26-000117",
+  "0000752642-26-000118",
+  "0000752642-26-000119",
+  "0000752642-26-000120",
   "0000752642-26-000121",
   "0000752642-26-000122",
   "0000752642-26-000123",
+  "0000752642-26-000124",
+  "0000752642-26-000125",
+  "0000752642-26-000126",
   "0000759944-26-000168",
   "0000759944-26-000169",
   "0000759944-26-000170",
@@ -903,6 +914,7 @@
   "0000805928-26-000101",
   "0000806968-26-000054",
   "0000811589-26-000157",
+  "0000811589-26-000160",
   "0000812011-26-000059",
   "0000812011-26-000060",
   "0000812011-26-000061",
@@ -1712,6 +1724,7 @@
   "0000930413-26-002926",
   "0000930413-26-002927",
   "0000930413-26-002928",
+  "0000930413-26-003008",
   "0000931148-26-000077",
   "0000932781-26-000045",
   "0000932781-26-000046",
@@ -1988,6 +2001,7 @@
   "0000950103-26-014420",
   "0000950103-26-014457",
   "0000950103-26-014647",
+  "0000950103-26-014830",
   "0000950130-26-000223",
   "0000950138-26-000028",
   "0000950138-26-000030",
@@ -3202,6 +3216,15 @@
   "0001104659-26-111946",
   "0001104659-26-111947",
   "0001104659-26-111965",
+  "0001104659-26-112058",
+  "0001104659-26-112060",
+  "0001104659-26-112061",
+  "0001104659-26-112062",
+  "0001104659-26-112065",
+  "0001104659-26-112066",
+  "0001104659-26-112076",
+  "0001104659-26-112133",
+  "0001104659-26-112212",
   "0001104954-26-000004",
   "0001105838-26-000009",
   "0001105838-26-000010",
@@ -3578,6 +3601,7 @@
   "0001140361-26-038026",
   "0001140361-26-038027",
   "0001140361-26-038028",
+  "0001140361-26-038036",
   "0001140536-26-000219",
   "0001140536-26-000220",
   "0001140536-26-000221",
@@ -3601,6 +3625,7 @@
   "0001159036-26-000117",
   "0001159036-26-000119",
   "0001159036-26-000123",
+  "0001160193-26-000005",
   "0001160512-26-000010",
   "0001161662-26-000008",
   "0001161697-26-000205",
@@ -3652,6 +3677,8 @@
   "0001171843-26-006227",
   "0001171843-26-006228",
   "0001171843-26-006235",
+  "0001171843-26-006301",
+  "0001171843-26-006302",
   "0001172508-26-000006",
   "0001172508-26-000007",
   "0001173731-26-000006",
@@ -3726,6 +3753,10 @@
   "0001178913-26-004552",
   "0001178913-26-004567",
   "0001178913-26-004589",
+  "0001178913-26-004658",
+  "0001178913-26-004660",
+  "0001178913-26-004662",
+  "0001178913-26-004664",
   "0001179680-26-000005",
   "0001179684-26-000013",
   "0001179684-26-000015",
@@ -3773,6 +3804,7 @@
   "0001184178-26-000022",
   "0001184178-26-000024",
   "0001184237-26-000008",
+  "0001184258-26-000005",
   "0001184295-26-000020",
   "0001184681-26-000008",
   "0001184728-26-000006",
@@ -6294,6 +6326,7 @@
   "0001193125-26-406155",
   "0001193125-26-406248",
   "0001193125-26-406299",
+  "0001193125-26-406966",
   "0001193125-26-407271",
   "0001193125-26-407272",
   "0001193125-26-407335",
@@ -6335,6 +6368,18 @@
   "0001193125-26-407948",
   "0001193125-26-407950",
   "0001193125-26-407951",
+  "0001193125-26-408004",
+  "0001193125-26-408007",
+  "0001193125-26-408009",
+  "0001193125-26-408014",
+  "0001193125-26-408016",
+  "0001193125-26-408019",
+  "0001193125-26-408061",
+  "0001193125-26-408064",
+  "0001193125-26-408648",
+  "0001193125-26-408652",
+  "0001193125-26-408806",
+  "0001193125-26-408818",
   "0001193202-26-000011",
   "0001193202-26-000012",
   "0001193210-26-000025",
@@ -6349,6 +6394,7 @@
   "0001194106-26-000014",
   "0001194409-26-000010",
   "0001194455-26-000013",
+  "0001194455-26-000014",
   "0001194948-26-000013",
   "0001195052-26-000008",
   "0001195052-26-000010",
@@ -6442,6 +6488,7 @@
   "0001207637-26-000015",
   "0001207928-26-000008",
   "0001207928-26-000009",
+  "0001207928-26-000010",
   "0001208109-26-000007",
   "0001208109-26-000008",
   "0001208730-26-000004",
@@ -7060,6 +7107,7 @@
   "0001215333-26-000005",
   "0001216055-26-000012",
   "0001216515-26-000014",
+  "0001216704-26-000005",
   "0001216955-26-000019",
   "0001216955-26-000021",
   "0001217081-26-000005",
@@ -7483,11 +7531,24 @@
   "0001225208-26-007967",
   "0001225208-26-007968",
   "0001225208-26-007970",
+  "0001225208-26-007984",
+  "0001225208-26-007985",
+  "0001225208-26-007986",
+  "0001225208-26-007987",
+  "0001225208-26-007988",
+  "0001225208-26-007989",
   "0001225208-26-007990",
   "0001225208-26-007993",
   "0001225208-26-007997",
   "0001225208-26-007999",
   "0001225208-26-008000",
+  "0001225208-26-008002",
+  "0001225208-26-008011",
+  "0001225208-26-008012",
+  "0001225208-26-008013",
+  "0001225208-26-008014",
+  "0001225208-26-008015",
+  "0001225208-26-008020",
   "0001225817-26-000008",
   "0001227228-26-000006",
   "0001227348-26-000009",
@@ -7550,6 +7611,7 @@
   "0001231919-26-001197",
   "0001231919-26-001201",
   "0001231919-26-001224",
+  "0001231919-26-001406",
   "0001232142-26-000008",
   "0001232602-26-000007",
   "0001232819-26-000004",
@@ -7946,6 +8008,7 @@
   "0001294172-26-000019",
   "0001294192-26-000007",
   "0001294280-26-000006",
+  "0001294280-26-000007",
   "0001294357-26-000015",
   "0001294600-26-000014",
   "0001294600-26-000016",
@@ -8179,6 +8242,8 @@
   "0001341767-26-000006",
   "0001342195-26-000001",
   "0001342195-26-000002",
+  "0001342195-26-000003",
+  "0001342195-26-000004",
   "0001343297-26-000006",
   "0001343352-26-000021",
   "0001343352-26-000023",
@@ -8333,6 +8398,7 @@
   "0001385613-26-000127",
   "0001385613-26-000129",
   "0001385613-26-000131",
+  "0001385613-26-000133",
   "0001385769-26-000007",
   "0001387148-26-000006",
   "0001387196-26-000004",
@@ -9225,6 +9291,8 @@
   "0001437749-26-031504",
   "0001437749-26-031506",
   "0001437749-26-031508",
+  "0001437749-26-031513",
+  "0001437749-26-031545",
   "0001437906-26-000003",
   "0001438133-26-000126",
   "0001438133-26-000127",
@@ -9397,6 +9465,7 @@
   "0001470831-26-000907",
   "0001471436-26-000002",
   "0001471881-26-000010",
+  "0001472420-26-000004",
   "0001472457-26-000010",
   "0001473289-26-000023",
   "0001473289-26-000025",
@@ -9494,6 +9563,7 @@
   "0001477932-26-005782",
   "0001477932-26-005811",
   "0001477932-26-005831",
+  "0001477932-26-005918",
   "0001478037-26-000008",
   "0001478340-26-000008",
   "0001479079-26-000039",
@@ -10058,6 +10128,18 @@
   "0001493152-26-044939",
   "0001493152-26-044940",
   "0001493152-26-044943",
+  "0001493152-26-044971",
+  "0001493152-26-044972",
+  "0001493152-26-044973",
+  "0001493152-26-044974",
+  "0001493152-26-044990",
+  "0001493152-26-044992",
+  "0001493152-26-044996",
+  "0001493152-26-045002",
+  "0001493152-26-045006",
+  "0001493152-26-045031",
+  "0001493152-26-045051",
+  "0001493152-26-045053",
   "0001493848-26-000005",
   "0001494259-26-000064",
   "0001494259-26-000065",
@@ -10091,6 +10173,7 @@
   "0001498428-26-000005",
   "0001498547-26-000057",
   "0001498547-26-000058",
+  "0001498935-26-000006",
   "0001499076-26-000004",
   "0001499643-26-000001",
   "0001500081-26-000009",
@@ -10135,6 +10218,7 @@
   "0001509284-26-000001",
   "0001509318-26-000005",
   "0001509318-26-000007",
+  "0001509370-26-000009",
   "0001509409-26-000010",
   "0001509409-26-000011",
   "0001510025-26-000026",
@@ -10381,6 +10465,7 @@
   "0001536588-26-000033",
   "0001536588-26-000034",
   "0001536588-26-000036",
+  "0001536588-26-000037",
   "0001537435-26-000086",
   "0001537435-26-000087",
   "0001537435-26-000088",
@@ -10611,6 +10696,7 @@
   "0001569187-26-000150",
   "0001569187-26-000152",
   "0001569187-26-000154",
+  "0001569789-26-000015",
   "0001569832-26-000002",
   "0001569904-26-000017",
   "0001570337-26-000012",
@@ -12496,6 +12582,10 @@
   "0001628280-26-063858",
   "0001628280-26-063864",
   "0001628280-26-063865",
+  "0001628280-26-063879",
+  "0001628280-26-063882",
+  "0001628280-26-063883",
+  "0001628280-26-063931",
   "0001628328-26-000009",
   "0001628369-26-000120",
   "0001628369-26-000122",
@@ -13307,6 +13397,10 @@
   "0001709116-26-000007",
   "0001709164-26-000161",
   "0001709183-26-000008",
+  "0001709423-26-000001",
+  "0001709423-26-000002",
+  "0001709423-26-000003",
+  "0001709423-26-000004",
   "0001709738-26-000011",
   "0001709934-26-000015",
   "0001709934-26-000017",
@@ -13505,6 +13599,7 @@
   "0001736769-26-000020",
   "0001736979-26-000015",
   "0001736979-26-000017",
+  "0001737206-26-000007",
   "0001737329-26-000016",
   "0001737364-26-000007",
   "0001737388-26-000007",
@@ -13651,6 +13746,7 @@
   "0001760581-26-000056",
   "0001760581-26-000058",
   "0001760581-26-000061",
+  "0001760581-26-000063",
   "0001760782-26-000003",
   "0001760864-26-000003",
   "0001760914-26-000010",
@@ -14415,10 +14511,13 @@
   "0001829126-26-010322",
   "0001829126-26-010485",
   "0001829126-26-010557",
+  "0001829126-26-010588",
+  "0001829126-26-010590",
   "0001829270-26-000012",
   "0001830043-26-000108",
   "0001830165-26-000030",
   "0001830165-26-000032",
+  "0001830165-26-000034",
   "0001831558-26-000003",
   "0001831631-26-000098",
   "0001831631-26-000102",
@@ -15301,6 +15400,7 @@
   "0001946505-26-000009",
   "0001947439-26-000008",
   "0001947527-26-000002",
+  "0001948274-26-000012",
   "0001948442-26-000007",
   "0001949215-26-000004",
   "0001949911-26-000016",
@@ -15377,6 +15477,7 @@
   "0001962926-26-000008",
   "0001962926-26-000009",
   "0001963638-26-000011",
+  "0001963638-26-000013",
   "0001963701-26-000009",
   "0001963781-26-000012",
   "0001963785-26-000001",
@@ -15386,6 +15487,8 @@
   "0001964342-26-000004",
   "0001964406-26-000014",
   "0001964474-26-000004",
+  "0001964490-26-000012",
+  "0001964500-26-000010",
   "0001964540-26-000003",
   "0001964741-26-000005",
   "0001964743-26-000015",
@@ -15480,7 +15583,9 @@
   "0001970357-26-000016",
   "0001970590-26-000010",
   "0001970614-26-000008",
+  "0001970748-26-000002",
   "0001970778-26-000014",
+  "0001971298-26-000003",
   "0001971363-26-000006",
   "0001971552-26-000018",
   "0001971702-26-000017",
@@ -15595,6 +15700,7 @@
   "0001976408-26-000871",
   "0001976408-26-000872",
   "0001976408-26-000873",
+  "0001976408-26-000874",
   "0001976540-26-000008",
   "0001976572-26-000005",
   "0001976684-26-000011",
@@ -15691,6 +15797,7 @@
   "0001988277-26-000003",
   "0001988460-26-000007",
   "0001988564-26-000008",
+  "0001988737-26-000005",
   "0001988855-26-000011",
   "0001988894-26-000089",
   "0001989065-26-000010",
@@ -16370,6 +16477,7 @@
   "0002060166-26-000017",
   "0002060195-26-000002",
   "0002060469-26-000004",
+  "0002060508-26-000012",
   "0002060511-26-000002",
   "0002060650-26-000010",
   "0002060697-26-000014",
@@ -16450,6 +16558,7 @@
   "0002065340-26-000019",
   "0002065340-26-000021",
   "0002065459-26-000006",
+  "0002065589-26-000012",
   "0002065630-26-000008",
   "0002065757-26-000007",
   "0002066234-26-000002",
@@ -17230,13 +17339,6 @@
   "BGDE": [
    {
     "insider": "Endeavor Blockchain, LLC",
-    "wert_dollar": 7936.75,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "Endeavor Blockchain, LLC",
     "wert_dollar": 2959.06,
     "datum": "2026-09-18",
     "transaktionscode": "P",
@@ -17283,13 +17385,6 @@
   "CLPR": [
    {
     "insider": "Levinson Sam",
-    "wert_dollar": 14239.5,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "Levinson Sam",
     "wert_dollar": 45947.462,
     "datum": "2026-09-23",
     "transaktionscode": "P",
@@ -17304,13 +17399,6 @@
    }
   ],
   "DLHC": [
-   {
-    "insider": "Mink Brook Asset Management LLC",
-    "wert_dollar": 2284.7832,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
    {
     "insider": "Mink Brook Asset Management LLC",
     "wert_dollar": 3940.5,
@@ -17371,24 +17459,10 @@
   "TPL": [
    {
     "insider": "HORIZON KINETICS ASSET MANAGEMENT LLC",
-    "wert_dollar": 370.59,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "HORIZON KINETICS ASSET MANAGEMENT LLC",
     "wert_dollar": 352.36,
     "datum": "2026-09-16",
     "transaktionscode": "P",
     "rolle": "Insider"
-   },
-   {
-    "insider": "DOYLE PETER",
-    "wert_dollar": 1858.1999999999998,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
    },
    {
     "insider": "HORIZON KINETICS ASSET MANAGEMENT LLC",
@@ -17448,13 +17522,6 @@
    }
   ],
   "RCG": [
-   {
-    "insider": "HORIZON KINETICS ASSET MANAGEMENT LLC",
-    "wert_dollar": 2305.7999999999997,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
    {
     "insider": "HORIZON KINETICS ASSET MANAGEMENT LLC",
     "wert_dollar": 2298.2400000000002,
@@ -17520,27 +17587,6 @@
    }
   ],
   "JCTC": [
-   {
-    "insider": "AJB Investment Fund II, LP",
-    "wert_dollar": 13871.970000000001,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "AJB Investment Fund II, LP",
-    "wert_dollar": 675.6999999999999,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "AJB Investment Fund II, LP",
-    "wert_dollar": 14400.0,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
    {
     "insider": "AJB Investment Fund II, LP",
     "wert_dollar": 769.8249999999999,
@@ -17610,6 +17656,27 @@
     "datum": "2026-09-25",
     "transaktionscode": "P",
     "rolle": "Insider"
+   },
+   {
+    "insider": "AJB Investment Fund II, LP",
+    "wert_dollar": 1353.73,
+    "datum": "2026-09-28",
+    "transaktionscode": "P",
+    "rolle": "Insider"
+   },
+   {
+    "insider": "AJB Investment Fund II, LP",
+    "wert_dollar": 807.5899999999999,
+    "datum": "2026-09-29",
+    "transaktionscode": "P",
+    "rolle": "Insider"
+   },
+   {
+    "insider": "AJB Investment Fund II, LP",
+    "wert_dollar": 5404.41,
+    "datum": "2026-09-29",
+    "transaktionscode": "P",
+    "rolle": "Insider"
    }
   ],
   "UUU": [
@@ -17657,13 +17724,6 @@
    }
   ],
   "AFCG": [
-   {
-    "insider": "TANNENBAUM LEONARD M",
-    "wert_dollar": 2128.0,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
    {
     "insider": "TANNENBAUM LEONARD M",
     "wert_dollar": 8029.63,
@@ -17725,13 +17785,6 @@
   ],
   "TENX": [
    {
-    "insider": "Giordano Christopher Thomas",
-    "wert_dollar": 8837.185,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "CEO"
-   },
-   {
     "insider": "Doogan Declan",
     "wert_dollar": 101760.0,
     "datum": "2026-09-16",
@@ -17762,23 +17815,7 @@
     "rolle": "Chief Executive Officer"
    }
   ],
-  "EQPT": [
-   {
-    "insider": "Schlacks Jabbok",
-    "wert_dollar": 406704.00000000006,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Founder & CEO"
-   }
-  ],
   "GF": [
-   {
-    "insider": "Saba Capital Management, L.P.",
-    "wert_dollar": 36101.52,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
    {
     "insider": "Saba Capital Management, L.P.",
     "wert_dollar": 16689.920000000002,
@@ -17830,13 +17867,6 @@
    }
   ],
   "RGCO": [
-   {
-    "insider": "WILLIAMSON JOHN B III",
-    "wert_dollar": 2374.4,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
    {
     "insider": "Nester Paul W",
     "wert_dollar": 6323.999999999999,
@@ -17957,13 +17987,6 @@
   "GPUS": [
    {
     "insider": "AULT MILTON C III",
-    "wert_dollar": 3718.0,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Executive Chairman"
-   },
-   {
-    "insider": "AULT MILTON C III",
     "wert_dollar": 3541.2000000000003,
     "datum": "2026-09-16",
     "transaktionscode": "P",
@@ -18069,13 +18092,6 @@
    }
   ],
   "BRID": [
-   {
-    "insider": "Bridgford Allan Jr.",
-    "wert_dollar": 1160.25,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
    {
     "insider": "Bridgford Allan Jr.",
     "wert_dollar": 1923.4,
@@ -18315,20 +18331,6 @@
   "BZUN": [
    {
     "insider": "Qiu Wenbin",
-    "wert_dollar": 19856.0,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Chief Executive Officer"
-   },
-   {
-    "insider": "Wu Junhua",
-    "wert_dollar": 37947.0,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Chief Strategy Officer"
-   },
-   {
-    "insider": "Qiu Wenbin",
     "wert_dollar": 20002.0,
     "datum": "2026-09-16",
     "transaktionscode": "P",
@@ -18441,34 +18443,6 @@
   ],
   "FGBI": [
    {
-    "insider": "WALKER ROBERT W",
-    "wert_dollar": 70960.0,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "McAnally Bruce",
-    "wert_dollar": 10117.5,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "McAnally Bruce",
-    "wert_dollar": 2923.7999999999997,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "McAnally Bruce",
-    "wert_dollar": 2215.0,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
     "insider": "McAnally Bruce",
     "wert_dollar": 352.0,
     "datum": "2026-09-16",
@@ -18494,64 +18468,11 @@
   ],
   "OXM": [
    {
-    "insider": "GRASSMYER SCOTT",
-    "wert_dollar": 29730.0,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "EVP"
-   },
-   {
     "insider": "Chubb Thomas Caldecot III",
     "wert_dollar": 65374.75,
     "datum": "2026-09-24",
     "transaktionscode": "P",
     "rolle": "CEO and President"
-   }
-  ],
-  "CTSO": [
-   {
-    "insider": "Chan Phillip P.",
-    "wert_dollar": 22644.0,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Chief Executive Officer"
-   },
-   {
-    "insider": "Sobel Alan D.",
-    "wert_dollar": 11628.0,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "Sobel Alan D.",
-    "wert_dollar": 3025.0,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "Sobel Alan D.",
-    "wert_dollar": 601.0,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   }
-  ],
-  "CELH": [
-   {
-    "insider": "DeSantis Damon",
-    "wert_dollar": 447200.0,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "Kravitz Hal",
-    "wert_dollar": 336000.0,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
    }
   ],
   "IRIX": [
@@ -18616,16 +18537,16 @@
     "datum": "2026-09-24",
     "transaktionscode": "P",
     "rolle": "Direktor"
+   },
+   {
+    "insider": "Catelani Michael",
+    "wert_dollar": 15620.0,
+    "datum": "2026-09-30",
+    "transaktionscode": "P",
+    "rolle": "President, COO, & CFO"
    }
   ],
   "CRBG": [
-   {
-    "insider": "NIPPON LIFE INSURANCE CO",
-    "wert_dollar": 7385801.9697,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
    {
     "insider": "NIPPON LIFE INSURANCE CO",
     "wert_dollar": 11232960.4235,
@@ -18693,22 +18614,8 @@
   "ALP": [
    {
     "insider": "Villani Fiorenzo",
-    "wert_dollar": 42263.045600000005,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "See Remarks"
-   },
-   {
-    "insider": "Villani Fiorenzo",
     "wert_dollar": 17273.25,
     "datum": "2026-09-16",
-    "transaktionscode": "P",
-    "rolle": "See Remarks"
-   },
-   {
-    "insider": "Villani Fiorenzo",
-    "wert_dollar": 32811.07,
-    "datum": "2026-09-15",
     "transaktionscode": "P",
     "rolle": "See Remarks"
    },
@@ -18729,24 +18636,6 @@
     "rolle": "Insider"
    }
   ],
-  "NNOX": [
-   {
-    "insider": "Meltzer Erez",
-    "wert_dollar": 6899.999999999999,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Chief Executive Officer"
-   }
-  ],
-  "NTHI": [
-   {
-    "insider": "Heshmatpour Amir F",
-    "wert_dollar": 115395.0,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "CEO, President"
-   }
-  ],
   "FBDT": [
    {
     "insider": "LEITH CHARLES KENNETH",
@@ -18756,30 +18645,7 @@
     "rolle": "Chief Revenue Officer"
    }
   ],
-  "CROX": [
-   {
-    "insider": "SMACH THOMAS J",
-    "wert_dollar": 75813.2,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "KAPLAN BETH J",
-    "wert_dollar": 99227.5275,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   }
-  ],
   "RVSB": [
-   {
-    "insider": "Wills Bessie Ross",
-    "wert_dollar": 11170.0,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
    {
     "insider": "Sherman Nicole",
     "wert_dollar": 10042.85,
@@ -18821,13 +18687,6 @@
   "AIM": [
    {
     "insider": "Equels Thomas K",
-    "wert_dollar": 4862.0,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "CEO & President"
-   },
-   {
-    "insider": "Equels Thomas K",
     "wert_dollar": 2310.0,
     "datum": "2026-09-16",
     "transaktionscode": "P",
@@ -18843,39 +18702,11 @@
   ],
   "RWT": [
    {
-    "insider": "Abate Christopher J",
-    "wert_dollar": 383900.0,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Chief Executive Officer"
-   },
-   {
-    "insider": "Carillo Brooke",
-    "wert_dollar": 100238.1705,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Chief Financial Officer"
-   },
-   {
-    "insider": "KUBICEK GREG H",
-    "wert_dollar": 192560.0,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
     "insider": "Robinson Dashiell I",
     "wert_dollar": 251580.29739999998,
     "datum": "2026-09-16",
     "transaktionscode": "P",
     "rolle": "President"
-   },
-   {
-    "insider": "Abate Christopher J",
-    "wert_dollar": 383900.0,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Chief Executive Officer"
    },
    {
     "insider": "Macomber Sasha G.",
@@ -18940,30 +18771,7 @@
     "rolle": "Direktor"
    }
   ],
-  "CSPI": [
-   {
-    "insider": "NERGES JOSEPH R",
-    "wert_dollar": 221.20000000000002,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "NERGES JOSEPH R",
-    "wert_dollar": 3757.12,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   }
-  ],
   "GAM": [
-   {
-    "insider": "Stark Eugene S",
-    "wert_dollar": 120000.0,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "VP Administration"
-   },
    {
     "insider": "Jin Samantha X.",
     "wert_dollar": 23660.0,
@@ -19007,110 +18815,6 @@
     "rolle": "VP Administration"
    }
   ],
-  "LMB": [
-   {
-    "insider": "Horowitz Joshua",
-    "wert_dollar": 10739.92,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "Horowitz Joshua",
-    "wert_dollar": 169330.68740000002,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "Horowitz Joshua",
-    "wert_dollar": 33927.5,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "Krzeminski Laurel J",
-    "wert_dollar": 25287.5,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   }
-  ],
-  "VIRC": [
-   {
-    "insider": "VIRTUE DOUGLAS A",
-    "wert_dollar": 18300.0,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Executive Vice President"
-   }
-  ],
-  "SBLK": [
-   {
-    "insider": "Spyrou Symeon",
-    "wert_dollar": 424050.0,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "co CFO"
-   },
-   {
-    "insider": "Karellis Nikolaos",
-    "wert_dollar": 56540.0,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "Erhardt Koert",
-    "wert_dollar": 169620.0,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "Zagari Raffaele",
-    "wert_dollar": 282700.0,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "Zagari Raffaele",
-    "wert_dollar": 1413500.0,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "Plakantonaki Charis",
-    "wert_dollar": 84810.0,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Chief Strategy Officer"
-   },
-   {
-    "insider": "Pappa Milena Maria",
-    "wert_dollar": 2103288.0,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "Pappas Alexandros",
-    "wert_dollar": 2103288.0,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "Reskos Nikolaos",
-    "wert_dollar": 282700.0,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Chief Operating Officer"
-   }
-  ],
   "RDGL": [
    {
     "insider": "Weeks Brad Allan",
@@ -19120,51 +18824,7 @@
     "rolle": "President"
    }
   ],
-  "RICK": [
-   {
-    "insider": "Elaine Johnson Martin",
-    "wert_dollar": 17396.1854,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   }
-  ],
   "BUKS": [
-   {
-    "insider": "Loh Michael Anthony",
-    "wert_dollar": 39100.0,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "Veradace Partners LP",
-    "wert_dollar": 58650.0,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "Daly Joseph Patrick",
-    "wert_dollar": 374.4,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "Daly Joseph Patrick",
-    "wert_dollar": 1579.64,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "Daly Joseph Patrick",
-    "wert_dollar": 4040.0,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
    {
     "insider": "Daly Joseph Patrick",
     "wert_dollar": 16400.0,
@@ -19190,13 +18850,6 @@
   "INM": [
    {
     "insider": "ADAR1 Capital Management, LLC",
-    "wert_dollar": 70445.9904,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "ADAR1 Capital Management, LLC",
     "wert_dollar": 10750.26,
     "datum": "2026-09-16",
     "transaktionscode": "P",
@@ -19204,13 +18857,6 @@
    }
   ],
   "TELA": [
-   {
-    "insider": "Capper Joseph H",
-    "wert_dollar": 52940.0,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
    {
     "insider": "Capper Joseph H",
     "wert_dollar": 58265.0,
@@ -19226,39 +18872,7 @@
     "rolle": "Direktor"
    }
   ],
-  "KWY": [
-   {
-    "insider": "Hansen Kent A",
-    "wert_dollar": 1561.38,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "CFO & EVP"
-   },
-   {
-    "insider": "Fitzgerald John Taylor Maloney",
-    "wert_dollar": 2494.28,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "President and CEO"
-   }
-  ],
-  "FOX": [
-   {
-    "insider": "MURDOCH LACHLAN K",
-    "wert_dollar": 10274977.02,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Executive Chair, CEO"
-   }
-  ],
   "ACOG": [
-   {
-    "insider": "Opaleye Management Inc.",
-    "wert_dollar": 28830.600000000002,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
    {
     "insider": "Opaleye Management Inc.",
     "wert_dollar": 454607.01120000007,
@@ -19318,15 +18932,6 @@
     "rolle": "Direktor"
    }
   ],
-  "AAON": [
-   {
-    "insider": "Stewart David Raymond",
-    "wert_dollar": 74660.0,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   }
-  ],
   "AXIA3": [
    {
     "insider": "Batista de Lima Filho Pedro",
@@ -19373,13 +18978,6 @@
   ],
   "TH": [
    {
-    "insider": "Archer James Bradley",
-    "wert_dollar": 250165.65000000002,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Director and CEO and President"
-   },
-   {
     "insider": "Schrenk Troy C.",
     "wert_dollar": 124992.12,
     "datum": "2026-09-18",
@@ -19388,13 +18986,6 @@
    }
   ],
   "PHIO": [
-   {
-    "insider": "BRADFORD PATRICIA A",
-    "wert_dollar": 12360.0,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
    {
     "insider": "Bitterman Robert J",
     "wert_dollar": 2057.7999999999997,
@@ -19410,78 +19001,7 @@
     "rolle": "Direktor"
    }
   ],
-  "GABC": [
-   {
-    "insider": "Bawel Zachary W",
-    "wert_dollar": 19999.84887824,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "Ryan Christina M",
-    "wert_dollar": 6199.99845528,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "Seger Andrew M",
-    "wert_dollar": 7500.00070652,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   }
-  ],
-  "WULF": [
-   {
-    "insider": "Bucella Michael C.",
-    "wert_dollar": 89966.725,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   }
-  ],
-  "CAVA": [
-   {
-    "insider": "KADOW JOSEPH JOHN",
-    "wert_dollar": 49960.0,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "CLO & Secretary"
-   }
-  ],
-  "ED": [
-   {
-    "insider": "Miller Joseph",
-    "wert_dollar": 111.10050000000001,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "VP & Controller"
-   }
-  ],
   "CBKM": [
-   {
-    "insider": "Hudak Hillary A",
-    "wert_dollar": 3708.3399200000003,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "SVP, Chief People Officer"
-   },
-   {
-    "insider": "Chuckalovchak Kimberly K",
-    "wert_dollar": 2998.791,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "SVP, Chief Information Officer"
-   },
-   {
-    "insider": "PADEN FRANK L",
-    "wert_dollar": 6000.871103,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
    {
     "insider": "Lober Ralph J II",
     "wert_dollar": 2281.3,
@@ -19491,13 +19011,6 @@
    }
   ],
   "GLP": [
-   {
-    "insider": "Global GP LLC",
-    "wert_dollar": 254450.0,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
    {
     "insider": "Global GP LLC",
     "wert_dollar": 252750.0,
@@ -19539,20 +19052,6 @@
   "INLX": [
    {
     "insider": "SEID PAUL",
-    "wert_dollar": 652.8,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "SEID PAUL",
-    "wert_dollar": 1002.75,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "SEID PAUL",
     "wert_dollar": 137.7,
     "datum": "2026-09-17",
     "transaktionscode": "P",
@@ -19589,27 +19088,6 @@
   ],
   "MCFT": [
    {
-    "insider": "Lambert Roch",
-    "wert_dollar": 75015.95000000001,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "Nelson Bradley M.",
-    "wert_dollar": 46800.0,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Chief Executive Officer"
-   },
-   {
-    "insider": "Nelson Bradley M.",
-    "wert_dollar": 1945.0,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Chief Executive Officer"
-   },
-   {
     "insider": "LEEMPUTTE PETER G",
     "wert_dollar": 24958.45,
     "datum": "2026-09-18",
@@ -19617,37 +19095,7 @@
     "rolle": "Direktor"
    }
   ],
-  "MNR": [
-   {
-    "insider": "McMullen William Wallace",
-    "wert_dollar": 248895.0,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "McMullen William Wallace",
-    "wert_dollar": 140007.0,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   }
-  ],
   "UMH": [
-   {
-    "insider": "Miller Kevin S.",
-    "wert_dollar": 1000.0462500000001,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "EVP, CFO, Treasurer"
-   },
-   {
-    "insider": "Mitchell William Edward",
-    "wert_dollar": 1000.0462500000001,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
    {
     "insider": "Mitchell William Edward",
     "wert_dollar": 19890.0,
@@ -19657,13 +19105,6 @@
    }
   ],
   "EU": [
-   {
-    "insider": "SHERIFF WILLIAM M",
-    "wert_dollar": 44500.0,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Executive Chairman"
-   },
    {
     "insider": "SHERIFF WILLIAM M",
     "wert_dollar": 81000.0,
@@ -19686,15 +19127,6 @@
     "rolle": "Chief Executive Officer"
    }
   ],
-  "MPB": [
-   {
-    "insider": "RITRIEVI RORY G",
-    "wert_dollar": 7154.51,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "President and CEO"
-   }
-  ],
   "ISBA": [
    {
     "insider": "Bourland Jill",
@@ -19705,13 +19137,6 @@
    }
   ],
   "MXF": [
-   {
-    "insider": "Saba Capital Management, L.P.",
-    "wert_dollar": 9588.51,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
    {
     "insider": "Saba Capital Management, L.P.",
     "wert_dollar": 132093.88999999998,
@@ -19762,15 +19187,6 @@
     "rolle": "Insider"
    }
   ],
-  "ACNB": [
-   {
-    "insider": "ELSNER FRANK III",
-    "wert_dollar": 250.00193900000002,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   }
-  ],
   "BORR": [
    {
     "insider": "Troim Tor Olav",
@@ -19792,15 +19208,6 @@
     "datum": "2026-09-18",
     "transaktionscode": "P",
     "rolle": "Chief Executive Officer"
-   }
-  ],
-  "QXL": [
-   {
-    "insider": "Baranes Yakov",
-    "wert_dollar": 24400.0,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Co-CEO"
    }
   ],
   "ADC": [
@@ -19826,15 +19233,6 @@
     "rolle": "CHIEF GROWTH OFFICER"
    }
   ],
-  "LXU": [
-   {
-    "insider": "Ackerman Jonathan Z.",
-    "wert_dollar": 11300.0,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   }
-  ],
   "ADAG": [
    {
     "insider": "Luo Peter",
@@ -19849,50 +19247,6 @@
     "datum": "2026-09-23",
     "transaktionscode": "P",
     "rolle": "Chief Financial Officer"
-   }
-  ],
-  "XBP": [
-   {
-    "insider": "CHADHA PAR",
-    "wert_dollar": 579997.18,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "Avramovic Dejan",
-    "wert_dollar": 24997.39,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Chief Financial Officer"
-   },
-   {
-    "insider": "Jonovic Andrej",
-    "wert_dollar": 89145.0,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Chief Executive Officer"
-   },
-   {
-    "insider": "Avenue RP Opportunities Fund, L.P.",
-    "wert_dollar": 920652.77,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "Avenue RP Opportunities Fund, L.P.",
-    "wert_dollar": 572472.21,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "Avenue Global Opportunities Master Fund LP",
-    "wert_dollar": 204875.02000000002,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Insider"
    }
   ],
   "PLAY": [
@@ -19921,24 +19275,10 @@
   "SKIL": [
    {
     "insider": "HOVSEPIAN RONALD W",
-    "wert_dollar": 24624.95,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "CEO & Executive Chair"
-   },
-   {
-    "insider": "HOVSEPIAN RONALD W",
     "wert_dollar": 8377.9318,
     "datum": "2026-09-16",
     "transaktionscode": "P",
     "rolle": "CEO & Executive Chair"
-   },
-   {
-    "insider": "FRANKOLA JIM",
-    "wert_dollar": 128594.99999999999,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
    },
    {
     "insider": "HOVSEPIAN RONALD W",
@@ -19979,24 +19319,10 @@
    },
    {
     "insider": "Campos Luis",
-    "wert_dollar": 731646.0,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "Campos Luis",
     "wert_dollar": 575456.0,
     "datum": "2026-09-16",
     "transaktionscode": "P",
     "rolle": "Direktor"
-   },
-   {
-    "insider": "CHEVALLIER ANDRES CAMPOS",
-    "wert_dollar": 492291.0,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "CHIEF EXECUTIVE OFFICER"
    },
    {
     "insider": "CHEVALLIER ANDRES CAMPOS",
@@ -20020,38 +19346,6 @@
     "insider": "Arnoult J Tim",
     "wert_dollar": 7970.0,
     "datum": "2026-09-16",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   }
-  ],
-  "BENF": [
-   {
-    "insider": "Silk James G.",
-    "wert_dollar": 10000.04,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Chief Executive Officer"
-   },
-   {
-    "insider": "Fletcher Derek L.",
-    "wert_dollar": 5000.02,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "See Remarks"
-   },
-   {
-    "insider": "CANGANY PETER T JR",
-    "wert_dollar": 20000.08,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   }
-  ],
-  "CORZ": [
-   {
-    "insider": "Weiss Eric Stanton",
-    "wert_dollar": 97979.99999999999,
-    "datum": "2026-09-15",
     "transaktionscode": "P",
     "rolle": "Direktor"
    }
@@ -20098,26 +19392,10 @@
   "LSAK": [
    {
     "insider": "Mazanderani Ali",
-    "wert_dollar": 118831.45999999999,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Executive Chairman"
-   },
-   {
-    "insider": "Mazanderani Ali",
     "wert_dollar": 65005.600000000006,
     "datum": "2026-09-16",
     "transaktionscode": "P",
     "rolle": "Executive Chairman"
-   }
-  ],
-  "LFVN": [
-   {
-    "insider": "Lewis Darwin",
-    "wert_dollar": 6070.719999999999,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
    }
   ],
   "THRY": [
@@ -20130,13 +19408,6 @@
    }
   ],
   "CUEN": [
-   {
-    "insider": "Maimon Shalom Arik",
-    "wert_dollar": 46.0,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "CEO"
-   },
    {
     "insider": "Maimon Shalom Arik",
     "wert_dollar": 168.00000000000003,
@@ -20374,20 +19645,6 @@
    }
   ],
   "CV": [
-   {
-    "insider": "Shen Ching Hang",
-    "wert_dollar": 4999996.46,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "Shen Ching Hang",
-    "wert_dollar": 4999996.46,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
    {
     "insider": "HARARI ELIYAHOU ET AL",
     "wert_dollar": 5000002.15,
@@ -20628,6 +19885,13 @@
     "datum": "2026-09-22",
     "transaktionscode": "P",
     "rolle": "Chief Financial Officer"
+   },
+   {
+    "insider": "CULP ROBERT GEORGE IV",
+    "wert_dollar": 11514.4,
+    "datum": "2026-09-28",
+    "transaktionscode": "P",
+    "rolle": "President & CEO"
    }
   ],
   "HLEO": [
@@ -21165,6 +20429,55 @@
     "datum": "2026-09-24",
     "transaktionscode": "P",
     "rolle": "CTO and Co Founder"
+   },
+   {
+    "insider": "Nechmad Yair",
+    "wert_dollar": 357680.0,
+    "datum": "2026-09-28",
+    "transaktionscode": "P",
+    "rolle": "CEO, Co Founder & Chairman"
+   },
+   {
+    "insider": "Nechmad Yair",
+    "wert_dollar": 45486.5,
+    "datum": "2026-09-28",
+    "transaktionscode": "P",
+    "rolle": "CEO, Co Founder & Chairman"
+   },
+   {
+    "insider": "Nechmad Yair",
+    "wert_dollar": 247807.1424,
+    "datum": "2026-09-28",
+    "transaktionscode": "P",
+    "rolle": "CEO, Co Founder & Chairman"
+   },
+   {
+    "insider": "Nechmad Yair",
+    "wert_dollar": 435871.431,
+    "datum": "2026-09-28",
+    "transaktionscode": "P",
+    "rolle": "CEO, Co Founder & Chairman"
+   },
+   {
+    "insider": "Nechmad Yair",
+    "wert_dollar": 851110.7,
+    "datum": "2026-09-29",
+    "transaktionscode": "P",
+    "rolle": "CEO, Co Founder & Chairman"
+   },
+   {
+    "insider": "Nechmad Yair",
+    "wert_dollar": 45490.0,
+    "datum": "2026-09-29",
+    "transaktionscode": "P",
+    "rolle": "CEO, Co Founder & Chairman"
+   },
+   {
+    "insider": "Nechmad Yair",
+    "wert_dollar": 124134.2065,
+    "datum": "2026-09-29",
+    "transaktionscode": "P",
+    "rolle": "CEO, Co Founder & Chairman"
    }
   ],
   "YORW": [
@@ -21336,13 +20649,6 @@
    }
   ],
   "NWPP": [
-   {
-    "insider": "White Blaine Scott",
-    "wert_dollar": 24250.0,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
    {
     "insider": "White Blaine Scott",
     "wert_dollar": 2430.0,
@@ -21646,6 +20952,13 @@
     "datum": "2026-09-23",
     "transaktionscode": "P",
     "rolle": "Direktor"
+   },
+   {
+    "insider": "Dai Kun",
+    "wert_dollar": 10610.768,
+    "datum": "2026-09-29",
+    "transaktionscode": "P",
+    "rolle": "Chief Executive Officer"
    }
   ],
   "HHH": [
@@ -21748,15 +21061,6 @@
     "datum": "2026-09-23",
     "transaktionscode": "P",
     "rolle": "Chief Executive Officer"
-   }
-  ],
-  "HRGN": [
-   {
-    "insider": "He Junli",
-    "wert_dollar": 14458.75,
-    "datum": "2026-09-15",
-    "transaktionscode": "P",
-    "rolle": "CEO"
    }
   ],
   "EDRY": [
@@ -22289,6 +21593,164 @@
     "transaktionscode": "P",
     "rolle": "Vicepresident"
    }
+  ],
+  "ADRX": [
+   {
+    "insider": "George Simeon",
+    "wert_dollar": 10074081.0,
+    "datum": "2026-09-28",
+    "transaktionscode": "P",
+    "rolle": "Direktor"
+   },
+   {
+    "insider": "George Simeon",
+    "wert_dollar": 7051838.0,
+    "datum": "2026-09-28",
+    "transaktionscode": "P",
+    "rolle": "Direktor"
+   },
+   {
+    "insider": "George Simeon",
+    "wert_dollar": 10074081.0,
+    "datum": "2026-09-28",
+    "transaktionscode": "P",
+    "rolle": "Direktor"
+   },
+   {
+    "insider": "SR ONE CAPITAL MANAGEMENT, LLC",
+    "wert_dollar": 10074081.0,
+    "datum": "2026-09-28",
+    "transaktionscode": "P",
+    "rolle": "Insider"
+   },
+   {
+    "insider": "SR ONE CAPITAL MANAGEMENT, LLC",
+    "wert_dollar": 7051838.0,
+    "datum": "2026-09-28",
+    "transaktionscode": "P",
+    "rolle": "Insider"
+   },
+   {
+    "insider": "SR ONE CAPITAL MANAGEMENT, LLC",
+    "wert_dollar": 10074081.0,
+    "datum": "2026-09-28",
+    "transaktionscode": "P",
+    "rolle": "Insider"
+   }
+  ],
+  "MOALX": [
+   {
+    "insider": "Shuman Gregory M.",
+    "wert_dollar": 19999.999239999997,
+    "datum": "2026-09-28",
+    "transaktionscode": "P",
+    "rolle": "Insider"
+   }
+  ],
+  "TSI": [
+   {
+    "insider": "HADEN PATRICK C",
+    "wert_dollar": 267239.7,
+    "datum": "2026-09-29",
+    "transaktionscode": "P",
+    "rolle": "Direktor"
+   }
+  ],
+  "TPYTX": [
+   {
+    "insider": "Tarica Andrew",
+    "wert_dollar": 12862.504299999999,
+    "datum": "2026-09-28",
+    "transaktionscode": "P",
+    "rolle": "Direktor"
+   }
+  ],
+  "ASGI": [
+   {
+    "insider": "Baird Gordon A",
+    "wert_dollar": 612.16,
+    "datum": "2026-09-29",
+    "transaktionscode": "P",
+    "rolle": "Direktor"
+   }
+  ],
+  "FUL": [
+   {
+    "insider": "HANDLEY THOMAS W",
+    "wert_dollar": 98820.0,
+    "datum": "2026-09-28",
+    "transaktionscode": "P",
+    "rolle": "Direktor"
+   },
+   {
+    "insider": "Rasmussen Trangsrud Teresa J",
+    "wert_dollar": 75494.3154,
+    "datum": "2026-09-28",
+    "transaktionscode": "P",
+    "rolle": "Direktor"
+   },
+   {
+    "insider": "Rasmussen Trangsrud Teresa J",
+    "wert_dollar": 24490.0,
+    "datum": "2026-09-28",
+    "transaktionscode": "P",
+    "rolle": "Direktor"
+   },
+   {
+    "insider": "FLORNESS DANIEL L",
+    "wert_dollar": 100160.20000000001,
+    "datum": "2026-09-28",
+    "transaktionscode": "P",
+    "rolle": "Direktor"
+   },
+   {
+    "insider": "Lauber Charles T",
+    "wert_dollar": 99984.538,
+    "datum": "2026-09-29",
+    "transaktionscode": "P",
+    "rolle": "Direktor"
+   },
+   {
+    "insider": "Zaheer Srilata",
+    "wert_dollar": 98120.0,
+    "datum": "2026-09-28",
+    "transaktionscode": "P",
+    "rolle": "Direktor"
+   },
+   {
+    "insider": "Zaheer Srilata",
+    "wert_dollar": 1998.904,
+    "datum": "2026-09-29",
+    "transaktionscode": "P",
+    "rolle": "Direktor"
+   }
+  ],
+  "BFS": [
+   {
+    "insider": "Friedman Joel Albert",
+    "wert_dollar": 3706.0,
+    "datum": "2026-09-28",
+    "transaktionscode": "P",
+    "rolle": "Exec VP, CAO & Treasurer"
+   }
+  ],
+  "LBSR": [
+   {
+    "insider": "O'HEERON PETE",
+    "wert_dollar": 3909.7896,
+    "datum": "2026-09-28",
+    "transaktionscode": "P",
+    "rolle": "COB, Secretary, Treasurer"
+   }
+  ],
+  "MNSO": [
+   {
+    "insider": "Zhang Jingjing Eason",
+    "wert_dollar": 340099.98000000004,
+    "datum": "2026-09-29",
+    "transaktionscode": "P",
+    "rolle": "VP and Chief Financial Officer"
+   }
   ]
  },
  "rollen": {
@@ -22307,118 +21769,53 @@
   "A-6684 Ltd.": "Insider",
   "Opaleye Management Inc.": "Insider",
   "Bridgford Allan Jr.": "Insider",
-  "Schlacks Jabbok": "Founder & CEO",
   "WILLIAMSON JOHN B III": "Direktor",
   "Horne William B.": "Chief Executive Officer",
   "Conifer Management, L.L.C.": "Insider",
-  "Wu Junhua": "Chief Strategy Officer",
   "Apeiron Investment Group Ltd.": "Direktor",
   "McAnally Bruce": "Direktor",
   "Kayyem Jon Faiz": "Direktor",
-  "Chan Phillip P.": "Chief Executive Officer",
   "Attal Alain": "Direktor",
   "Cohen Ryan": "President, CEO and Chairman",
-  "Horowitz Joshua": "Direktor",
   "Dizon Romeo R": "Chief Financial Officer",
   "Nester Paul W": "President & CEO",
   "NIPPON LIFE INSURANCE CO": "Insider",
-  "WALKER ROBERT W": "Direktor",
   "JOHNSTON ROBERT B": "Direktor",
   "Parks Kevin": "Insider",
   "Titterton Lewis H jr": "Direktor",
-  "Meltzer Erez": "Chief Executive Officer",
   "Villani Fiorenzo": "See Remarks",
-  "Heshmatpour Amir F": "CEO, President",
-  "SMACH THOMAS J": "Direktor",
   "Walle Jade": "VICE PRESIDENT FINANCE",
   "Equels Thomas K": "CEO & President",
-  "Abate Christopher J": "Chief Executive Officer",
   "Alford Tony L": "Direktor",
   "Guicardi Neto Bruno": "Pres. of N. Am. and Europe Ops",
   "Kurzius Lawrence Erik": "Direktor",
-  "NERGES JOSEPH R": "Insider",
-  "Carillo Brooke": "Chief Financial Officer",
-  "DeSantis Damon": "Direktor",
   "Stark Eugene S": "VP Administration",
-  "GRASSMYER SCOTT": "EVP",
-  "Giordano Christopher Thomas": "CEO",
-  "KUBICEK GREG H": "Direktor",
-  "VIRTUE DOUGLAS A": "Executive Vice President",
-  "Spyrou Symeon": "co CFO",
   "Weeks Brad Allan": "President",
-  "Karellis Nikolaos": "Direktor",
-  "Elaine Johnson Martin": "Direktor",
-  "Erhardt Koert": "Direktor",
-  "Kravitz Hal": "Direktor",
   "Qiu Wenbin": "Chief Executive Officer",
-  "Loh Michael Anthony": "Direktor",
   "Capper Joseph H": "Direktor",
-  "Hansen Kent A": "CFO & EVP",
-  "Fitzgerald John Taylor Maloney": "President and CEO",
-  "MURDOCH LACHLAN K": "Executive Chair, CEO",
-  "KAPLAN BETH J": "Direktor",
-  "Veradace Partners LP": "Insider",
   "ROBO JAMES L": "Direktor",
-  "Stewart David Raymond": "Direktor",
   "Batista de Lima Filho Pedro": "Direktor",
-  "Archer James Bradley": "Director and CEO and President",
   "BRADFORD PATRICIA A": "Direktor",
-  "Bawel Zachary W": "Direktor",
-  "Bucella Michael C.": "Direktor",
-  "KADOW JOSEPH JOHN": "CLO & Secretary",
-  "Miller Joseph": "VP & Controller",
   "Lober Ralph J II": "CEO & President",
-  "Hudak Hillary A": "SVP, Chief People Officer",
-  "Chuckalovchak Kimberly K": "SVP, Chief Information Officer",
-  "PADEN FRANK L": "Direktor",
-  "Sobel Alan D.": "Direktor",
-  "Ryan Christina M": "Direktor",
-  "Seger Andrew M": "Direktor",
   "Global GP LLC": "Insider",
   "SEID PAUL": "Direktor",
-  "Krzeminski Laurel J": "Direktor",
-  "Lambert Roch": "Direktor",
-  "Nelson Bradley M.": "Chief Executive Officer",
-  "Miller Kevin S.": "EVP, CFO, Treasurer",
   "Mitchell William Edward": "Direktor",
   "Robinson Dashiell I": "President",
   "SHERIFF WILLIAM M": "Executive Chairman",
-  "RITRIEVI RORY G": "President and CEO",
-  "Zagari Raffaele": "Direktor",
-  "Wills Bessie Ross": "Direktor",
-  "Plakantonaki Charis": "Chief Strategy Officer",
   "Bourland Jill": "Direktor",
-  "Pappa Milena Maria": "Direktor",
-  "Pappas Alexandros": "Insider",
-  "ELSNER FRANK III": "Direktor",
   "Troim Tor Olav": "Direktor",
-  "Reskos Nikolaos": "Chief Operating Officer",
-  "Baranes Yakov": "Co-CEO",
   "RAKOLTA JOHN JR": "Direktor",
   "Agree Joey": "PRESIDENT & CEO",
-  "Ackerman Jonathan Z.": "Direktor",
   "Luo Peter": "Chief Executive Officer",
-  "CHADHA PAR": "Direktor",
-  "Avramovic Dejan": "Chief Financial Officer",
-  "Jonovic Andrej": "Chief Executive Officer",
   "Sherman Nicole": "President/CEO",
-  "McMullen William Wallace": "Direktor",
   "Lipman Nathaniel": "Direktor",
   "HOVSEPIAN RONALD W": "CEO & Executive Chair",
-  "FRANKOLA JIM": "Direktor",
   "CHEVALLIER SANTIAGO CAMPOS": "MD Betterware Mexico",
   "Campos Luis": "Direktor",
   "CHEVALLIER ANDRES CAMPOS": "CHIEF EXECUTIVE OFFICER",
   "Plaumann Mark Lawrence": "Direktor",
   "Arnoult J Tim": "Direktor",
   "Daly Joseph Patrick": "Direktor",
-  "Avenue RP Opportunities Fund, L.P.": "Insider",
-  "Avenue Global Opportunities Master Fund LP": "Insider",
-  "Silk James G.": "Chief Executive Officer",
-  "Fletcher Derek L.": "See Remarks",
-  "CANGANY PETER T JR": "Direktor",
-  "Weiss Eric Stanton": "Direktor",
-  "DOYLE PETER": "Direktor",
   "Doogan Declan": "Direktor",
   "Galbato Chan": "Direktor",
   "EVERETS JOHN": "Direktor",
@@ -22426,7 +21823,6 @@
   "Scott Peggy": "Direktor",
   "Graham Stacey": "Direktor",
   "Mazanderani Ali": "Executive Chairman",
-  "Lewis Darwin": "Direktor",
   "Lightheart Charmaine": "EVP/CRDEO",
   "Walsh Joe": "Chairman and CEO",
   "Maimon Shalom Arik": "CEO",
@@ -22435,7 +21831,6 @@
   "Petryszyn Mary D": "Direktor",
   "Twitty Stephen": "Direktor",
   "Lyons Michael P.": "President & CEO",
-  "Shen Ching Hang": "Insider",
   "Kritzmire Anne W.": "Direktor",
   "Priest Jeffrey W": "President & CEO",
   "Wiens David Victor": "Chief Executive Officer",
@@ -22555,7 +21950,6 @@
   "Gupta Navdeep": "EVP, Chief Financial Officer",
   "MARTZ BRAD": "President & CEO",
   "Dinsdale Mike John": "Chief Executive Officer",
-  "He Junli": "CEO",
   "Pittas Aristeidis P": "Direktor",
   "Clark Anthony S.": "Direktor",
   "Lerner Neil": "Chief Accounting Officer",
@@ -22610,6 +22004,22 @@
   "Wittman Lori": "Direktor",
   "Dakos Andrew": "President and CEO",
   "Burnham William L": "Direktor",
-  "Mariani Gustavo": "Vicepresident"
+  "Mariani Gustavo": "Vicepresident",
+  "George Simeon": "Direktor",
+  "SR ONE CAPITAL MANAGEMENT, LLC": "Insider",
+  "Shuman Gregory M.": "Insider",
+  "HADEN PATRICK C": "Direktor",
+  "Tarica Andrew": "Direktor",
+  "Baird Gordon A": "Direktor",
+  "HANDLEY THOMAS W": "Direktor",
+  "Rasmussen Trangsrud Teresa J": "Direktor",
+  "FLORNESS DANIEL L": "Direktor",
+  "Lauber Charles T": "Direktor",
+  "Zaheer Srilata": "Direktor",
+  "Catelani Michael": "President, COO, & CFO",
+  "Friedman Joel Albert": "Exec VP, CAO & Treasurer",
+  "Dai Kun": "Chief Executive Officer",
+  "O'HEERON PETE": "COB, Secretary, Treasurer",
+  "Zhang Jingjing Eason": "VP and Chief Financial Officer"
  }
 }

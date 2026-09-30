@@ -1,13 +1,13 @@
 {
- "stand": "2026-09-29",
+ "stand": "2026-09-30",
  "funde": [
   {
    "ticker": "GME",
    "status": "pfad_a",
-   "marktkap": 11986944000.0,
-   "stichtag": "2026-09-29",
+   "marktkap": 12448561152.0,
+   "stichtag": "2026-09-30",
    "zeilen": [
-    "GME; Großkauf; Marktwert 12,0 Mrd $",
+    "GME; Großkauf; Marktwert 12,4 Mrd $",
     "Größter Einzelkauf 26,4 Mio $ am 21.09.; Cohen Ryan, President, CEO and Chairman"
    ],
    "kennung": "GME|pfad_a|0"
@@ -15,8 +15,8 @@
   {
    "ticker": "GRAB",
    "status": "pfad_a",
-   "marktkap": 12764861440.0,
-   "stichtag": "2026-09-29",
+   "marktkap": 12785317888.0,
+   "stichtag": "2026-09-30",
    "zeilen": [
     "GRAB; Großkauf; Marktwert 12,8 Mrd $",
     "Größter Einzelkauf 29,9 Mio $ am 21.09.; Tan Anthony Ping Yeow, Chief Executive Officer"
@@ -26,8 +26,8 @@
   {
    "ticker": "GSAT",
    "status": "pfad_a",
-   "marktkap": 10700640256.0,
-   "stichtag": "2026-09-29",
+   "marktkap": 10748578816.0,
+   "stichtag": "2026-09-30",
    "zeilen": [
     "GSAT; Großkauf; Marktwert 10,7 Mrd $",
     "Größter Einzelkauf 29,8 Mio $ am 18.09.; Monroe James III, Direktor"
@@ -37,10 +37,10 @@
   {
    "ticker": "LEN",
    "status": "pfad_a",
-   "marktkap": 19996704768.0,
-   "stichtag": "2026-09-29",
+   "marktkap": 19620909056.0,
+   "stichtag": "2026-09-30",
    "zeilen": [
-    "LEN; Großkauf; Marktwert 20,0 Mrd $",
+    "LEN; Großkauf; Marktwert 19,6 Mrd $",
     "Größter Einzelkauf 43,5 Mio $ am 23.09.; BERKSHIRE HATHAWAY INC, Insider"
    ],
    "kennung": "LEN|pfad_a|0"
@@ -48,10 +48,10 @@
   {
    "ticker": "LEN, LEN.B",
    "status": "pfad_a",
-   "marktkap": 19996704768.0,
-   "stichtag": "2026-09-29",
+   "marktkap": 19620909056.0,
+   "stichtag": "2026-09-30",
    "zeilen": [
-    "LEN, LEN.B; Großkauf; Marktwert 20,0 Mrd $",
+    "LEN, LEN.B; Großkauf; Marktwert 19,6 Mrd $",
     "Größter Einzelkauf 93,1 Mio $ am 18.09.; BERKSHIRE HATHAWAY INC, Insider"
    ],
    "kennung": "LEN, LEN.B|pfad_a|0"
