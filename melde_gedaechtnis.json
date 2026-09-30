@@ -25,7 +25,17 @@
       "NTAP|Cup & Handle (Wochenbasis)",
       "NTAP|@210.05",
       "SNPS|EMA Crossback",
-      "SNPS|@418.01"
+      "SNPS|@418.01",
+      "SNPS|Wick Play",
+      "SNPS|@418.10",
+      "HPE|Cup & Handle (Wochenbasis)",
+      "HPE|@65.66",
+      "HPE|Fallback: 52W-Hoch-Breakout",
+      "HPE|@65.72",
+      "INSW|Darvas Box",
+      "INSW|@113.15",
+      "INSW|Fallback: 52W-Hoch-Breakout",
+      "INSW|@113.25"
     ]
   },
   "gemeldet": {
@@ -259,7 +269,19 @@
     "AVT|Pocket Pivot": "2026-09-30",
     "BEST|AVT|Pocket Pivot": "2026-09-30",
     "SNPS|EMA Crossback": "2026-09-30",
-    "BEST|SNPS|EMA Crossback": "2026-09-30"
+    "BEST|SNPS|EMA Crossback": "2026-09-30",
+    "SNPS|Wick Play": "2026-09-30",
+    "BEST|SNPS|Wick Play": "2026-09-30",
+    "HPE|Cup & Handle (Wochenbasis)": "2026-09-30",
+    "BEST|HPE|Cup & Handle (Wochenbasis)": "2026-09-30",
+    "HPE|Fallback: 52W-Hoch-Breakout": "2026-09-30",
+    "BEST|HPE|Fallback: 52W-Hoch-Breakout": "2026-09-30",
+    "INSW|Darvas Box": "2026-09-30",
+    "BEST|INSW|Darvas Box": "2026-09-30",
+    "INSW|Fallback: 52W-Hoch-Breakout": "2026-09-30",
+    "BEST|INSW|Fallback: 52W-Hoch-Breakout": "2026-09-30",
+    "TEIL|ILMN|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-30",
+    "TEIL|ILMN|Fallback: 52W-Hoch-Breakout": "2026-09-30"
   },
   "gemeldet_kp": {
     "CXW|Cup & Handle (Wochenbasis)": 31.67,
@@ -438,7 +460,17 @@
     "AVT|Pocket Pivot": 102.99,
     "BEST|AVT|Pocket Pivot": 102.99,
     "SNPS|EMA Crossback": 418.01,
-    "BEST|SNPS|EMA Crossback": 418.01
+    "BEST|SNPS|EMA Crossback": 418.01,
+    "SNPS|Wick Play": 418.1,
+    "BEST|SNPS|Wick Play": 418.1,
+    "HPE|Cup & Handle (Wochenbasis)": 65.66,
+    "BEST|HPE|Cup & Handle (Wochenbasis)": 65.66,
+    "HPE|Fallback: 52W-Hoch-Breakout": 65.72,
+    "BEST|HPE|Fallback: 52W-Hoch-Breakout": 65.72,
+    "INSW|Darvas Box": 113.15,
+    "BEST|INSW|Darvas Box": 113.15,
+    "INSW|Fallback: 52W-Hoch-Breakout": 113.25,
+    "BEST|INSW|Fallback: 52W-Hoch-Breakout": 113.25
   },
   "gapgo_warten": {
     "BE": {
