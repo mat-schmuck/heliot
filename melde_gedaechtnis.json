@@ -39,7 +39,9 @@
       "AEO|Fallback: 20-Tage-Hoch (Pivot)",
       "AEO|@18.22",
       "AMN|Rectangle Top",
-      "AMN|@35.57"
+      "AMN|@35.57",
+      "PARR|Fallback: MA50-R\u00fcckeroberung",
+      "PARR|@79.67"
     ]
   },
   "gemeldet": {
@@ -290,7 +292,9 @@
     "BEST|AEO|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-30",
     "AMN|Rectangle Top": "2026-09-30",
     "BEST|AMN|Rectangle Top": "2026-09-30",
-    "TEIL|FORM|Rectangle Top": "2026-09-30"
+    "TEIL|FORM|Rectangle Top": "2026-09-30",
+    "PARR|Fallback: MA50-R\u00fcckeroberung": "2026-09-30",
+    "BEST|PARR|Fallback: MA50-R\u00fcckeroberung": "2026-09-30"
   },
   "gemeldet_kp": {
     "CXW|Cup & Handle (Wochenbasis)": 31.67,
@@ -483,7 +487,9 @@
     "AEO|Fallback: 20-Tage-Hoch (Pivot)": 18.22,
     "BEST|AEO|Fallback: 20-Tage-Hoch (Pivot)": 18.22,
     "AMN|Rectangle Top": 35.57,
-    "BEST|AMN|Rectangle Top": 35.57
+    "BEST|AMN|Rectangle Top": 35.57,
+    "PARR|Fallback: MA50-R\u00fcckeroberung": 79.67,
+    "BEST|PARR|Fallback: MA50-R\u00fcckeroberung": 79.67
   },
   "gapgo_warten": {
     "BE": {
