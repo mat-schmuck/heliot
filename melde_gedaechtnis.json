@@ -289,7 +289,8 @@
     "AEO|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-30",
     "BEST|AEO|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-30",
     "AMN|Rectangle Top": "2026-09-30",
-    "BEST|AMN|Rectangle Top": "2026-09-30"
+    "BEST|AMN|Rectangle Top": "2026-09-30",
+    "TEIL|FORM|Rectangle Top": "2026-09-30"
   },
   "gemeldet_kp": {
     "CXW|Cup & Handle (Wochenbasis)": 31.67,
