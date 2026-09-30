@@ -316,7 +316,11 @@
     "BEST|TNGX|EMA Crossback": "2026-09-30",
     "TEIL|CDNA|Fallback: 52W-Hoch-Breakout": "2026-09-30",
     "CDNA|Inside Day": "2026-09-30",
-    "BEST|CDNA|Inside Day": "2026-09-30"
+    "BEST|CDNA|Inside Day": "2026-09-30",
+    "GEWINN|klimax_zeichen|FORM|Cup & Handle (Wochenbasis)|5_kanaluebershooting": "2026-09-30",
+    "GEWINN|klimax_zeichen|FORM|Fallback: 20-Tage-Hoch (Pivot)|5_kanaluebershooting": "2026-09-30",
+    "GEWINN|klimax_zeichen|FORM|Rectangle Top|5_kanaluebershooting": "2026-09-30",
+    "SCHLUSSNAH|2026-09-30": "2026-09-30"
   },
   "gemeldet_kp": {
     "CXW|Cup & Handle (Wochenbasis)": 31.67,
