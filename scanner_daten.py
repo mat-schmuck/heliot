@@ -421,9 +421,9 @@ def power_gap(d):
         return None
     return {"strategie": STRATEGIE_NAMEN["power_gap"], "kaufpunkt": round(h + 0.01, 2),
             "stop": round(l - 0.01, 2), "ziel": None,
-            # Volumen in Prozent des Schnitts (Gerhard, 30.09.2026, Frage 2).
-            "status": (f"Lücke {gap * 100:.1f} Prozent, Volumen {v / vol50 * 100:.0f} Prozent des "
-                       "50-Tage-Schnitts").replace(".", ",")}
+            # In IBD-Sprache, Prozent ueber dem Schnitt (Gerhard, 30.09.2026 nachmittags).
+            "status": (f"Lücke {gap * 100:.1f} Prozent, Volumen plus {(v / vol50 - 1) * 100:.0f} Prozent über dem "
+                       "50-Tage-Schnitt").replace(".", ",")}
 
 
 def chartmuster_werte(d, voll=None, markttiefs=None, termine=None):
@@ -2485,7 +2485,7 @@ def selbsttest() -> int:
     e = pd.DataFrame({"datetime": pd.bdate_range("2026-04-01", periods=len(kurse_e)),
                       "open": [k * 0.995 for k in kurse_e], "high": [k * 1.01 for k in kurse_e],
                       "low": [k * 0.99 for k in kurse_e], "close": kurse_e,
-                      "volume": [1_000_000.0] * 90 + [5_000_000.0] + [1_500_000.0] * 4})
+                      "volume": [1_000_000.0] * 90 + [5_000_000.0] + [400_000.0] * 4})
     e.loc[90, "low"] = 109.0
     gap_tag = e["datetime"].iloc[90].date().isoformat()
     werte_e = kurs_werte(e, extrema(e))
@@ -2493,6 +2493,13 @@ def selbsttest() -> int:
     p("Earnings-Pullback mit belegtem Termin erkannt, Kauf über dem Konsolidierungshoch",
       m_e["m_earnings_pullback"] == 2 and m_e["kp_earnings_pullback"] == round(113.5 * 1.01 + 0.01, 2),
       f"{m_e['m_earnings_pullback']} {m_e['kp_earnings_pullback']}")
+    # Seit 30.09.2026 muessen die Ruecksetzer-Tage leise sein, hoechstens minus 50
+    # Prozent ueber dem 50-Tage-Schnitt (Gerhard); oben 400.000, rund minus 62.
+    e_laut = e.copy()
+    e_laut.loc[92, "volume"] = 1_500_000.0
+    p("Earnings-Pullback mit einem lauten Ruecksetzer-Tag kein Treffer",
+      muster_werte(e_laut, 80.0, kurs_werte(e_laut, extrema(e_laut)), ticker="TST",
+                   termine={gap_tag})["m_earnings_pullback"] == 0)
     p("Earnings-Pullback ohne Termin am Gap-Tag kein Treffer",
       muster_werte(e, 80.0, werte_e, ticker="TST", termine=set())["m_earnings_pullback"] == 0)
     p("Earnings-Pullback ohne Kalender kein Treffer",

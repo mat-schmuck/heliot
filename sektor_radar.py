@@ -286,10 +286,9 @@ def absaetze(treffer):
             continue
         zeilen = [f"{ueberschrift}:"]
         for i, t in enumerate(gruppe, 1):
-            # Volumen in Prozent des Schnitts (Gerhard, 30.09.2026, Frage 2).
+            # In IBD-Sprache, Prozent ueber dem Schnitt (Gerhard, 30.09.2026 nachmittags).
             zeilen.append(f"{i}. {t['etf']} ({t['name']}); Kurs "
-                          f"{t['kurs']:.2f}; Volumen {t['volumen_pct'] + 100:.0f} % "
-                          f"des 50-Tage-Schnitts")
+                          f"{t['kurs']:.2f}; Volumen {volumen.prozent_text(t['volumen_pct'])}")
         raus.append("\n".join(zeilen))
     return raus
 
@@ -486,8 +485,8 @@ def selbsttest() -> int:
       len(absaetze(t)) == 2, len(absaetze(t)))
     p("Ohne Treffer keine Absaetze", absaetze([]) == [])
     p("Meldung enthaelt keinen Gedankenstrich", "—" not in text and "–" not in text)
-    p("Volumen in Prozent des 50-Tage-Schnitts (Frage 2 vom 30.09.2026)",
-      "Volumen 228 % des 50-Tage-Schnitts" in text and "Volumen 161 % des 50-Tage-Schnitts" in text
+    p("Volumen in IBD-Sprache, Prozent ueber dem 50-Tage-Schnitt (30.09.2026)",
+      "Volumen plus 128 % über dem 50-Tage-Schnitt" in text and "Volumen plus 61 % über dem 50-Tage-Schnitt" in text
       and "gegenüber" not in text, text)
     p("Titel zaehlt beide Richtungen",
       titel(t) == "Sektor-Radar: 1 nach oben, 1 nach unten", titel(t))

@@ -161,10 +161,9 @@ ALARME = [
      "erklaerung": "Nach starken Quartalszahlen wird nicht der Sprung gekauft, sondern die erste ruhige "
                    "Konsolidierung darüber; Alarm beim Ausbruch aus dieser Konsolidierung.",
      "regel": "Nach Quartalszahlen eine Eröffnung mindestens 8 Prozent oder ein Schluss mindestens 10 Prozent über "
-              "dem Vortag, mit einem Volumen von mindestens 300 Prozent des 10-Tage-Schnitts; danach 2 bis 15 "
-              "Handelstage ruhige "
-              "Konsolidierung, deren Tiefs über dem Tief des Sprungtags bleiben. Kaufpunkt einen Cent über dem Hoch "
-              "der Konsolidierung, Stop 4 Prozent unter ihrem Tief."},
+              "dem Vortag, mit einem Volumen von mindestens plus 200 Prozent über dem 10-Tage-Schnitt; danach 2 "
+              "bis 15 Handelstage ruhige Konsolidierung, deren Tiefs über dem Tief des Sprungtags bleiben. Kaufpunkt "
+              "einen Cent über dem Hoch der Konsolidierung, Stop 4 Prozent unter ihrem Tief."},
     {"schluessel": "ema", "gruppe": "kauf", "name": "EMA Crossback",
      "namen": ["EMA Crossback"],
      "erklaerung": "EMA Crossback nach Oliver Kell: der erste Rücksetzer an die 10- und 20-Tage-Linie nach ihrer "
@@ -261,8 +260,8 @@ ALARME = [
                    "der Einstieg folgt am Handelstag danach.",
      "regel": "Eine Kurslücke von mindestens sieben Prozent nach oben mit hohem Volumen. Am Lückentag kommt die "
               "Meldung; gekauft wird am Handelstag danach, solange der Kurs höchstens 3 Prozent über dem Kaufpunkt "
-              "steht und das Volumen dieses Tages hochgerechnet über die F(t)-Kurve mindestens 100 Prozent des "
-              "50-Tage-Schnitts erreicht, darüber ist es nur eine Auskunft."},
+              "steht und das Volumen dieses Tages hochgerechnet über die F(t)-Kurve mindestens den Schnitt "
+              "erreicht, also 0 Prozent über dem 50-Tage-Schnitt; darüber ist es nur eine Auskunft."},
     {"schluessel": "insider", "gruppe": "weitere", "name": "Insider-Käufe",
      "namen": ["Insider-Kauf"],
      "erklaerung": "Große Käufe von Vorständen und Direktoren laut den Meldungen an die SEC; Meldung mit dem Kurs "
@@ -360,20 +359,24 @@ DESIGN_VORGABE = "standard"
 KLANG_VORGABE = "kristall"
 
 # DIE VOLUMENSCHWELLE JE MUSTER (Mathias, 29.09.2026: "Mache außerdem die
-# Prozent in den Einstellungen des Scanners einstellbar"; Anlass war Gerhards
-# Auftrag vom selben Abend, die Schwelle in Prozent des 50-Tage-Schnitts
-# auszuwerten). Gemessen wird wie immer ueber die F(t)-Kurve: das auf den
-# ganzen Tag hochgerechnete Volumen in Prozent des 50-Tage-Schnitts; 100 heisst
-# mindestens der Schnitt. Je Registereintrag steht hier, welche Vorgabe aus
-# config.py (volumen.*) gilt; der Waechter rechnet mit denselben Zahlen
+# Prozent in den Einstellungen des Scanners einstellbar"). Gemessen wird wie
+# immer ueber die F(t)-Kurve: das auf den ganzen Tag hochgerechnete Volumen.
+# SEIT 30.09.2026 NACHMITTAGS IN IBD-SPRACHE (Gerhard: "Bitte alles in den
+# Einstellungen je Muster in IBD-Sprache eintragen"): Prozent UEBER dem
+# 50-Tage-Schnitt, 0 ist der Schnitt, plus 60 das 1,6-Fache, minus 50 die
+# Haelfte. Je Registereintrag steht hier, welche Vorgabe aus config.py
+# (volumen.*) gilt; der Waechter rechnet mit denselben Zahlen
 # (breakout_watcher.VOL_FAKTOR, die Gesamtpruefung haelt beide gleich). In der
-# Datei steht nur, was von der Vorgabe abweicht. Red to Green und die Insider-
-# Kaeufe haben keine solche Schwelle; beim Power-Gap gilt sie fuer den
-# Lueckentag.
+# Datei steht nur, was von der Vorgabe abweicht, unter "volumen_ueber"; das
+# Feld "volumen_prozent" der Fassung vom Vorabend (Prozent DES Schnitts) war nie
+# belegt und faellt beim Lesen weg. Red to Green und die Insider-Kaeufe haben
+# keine solche Schwelle; beim Power-Gap gilt sie fuer den Lueckentag. Der
+# Earnings-Pullback hat am Tag des Ausbruchs keine Huerde, dafuer eine
+# Obergrenze fuer die Ruecksetzer-Tage (RUECKSETZER_SCHLUESSEL).
 VOLUMEN_SCHLUESSEL = {
     "htf": "breakout_faktor", "htf_innen": "breakout_faktor", "vcp": "breakout_faktor_vcp",
     "cup": "breakout_faktor", "cup_woche": "breakout_faktor", "darvas": "breakout_faktor",
-    "earnings": "breakout_faktor_vcp", "ema": "breakout_faktor", "rechteck": "breakout_faktor",
+    "ema": "breakout_faktor", "rechteck": "breakout_faktor",
     "shakeout": "breakout_faktor", "crash": "breakout_faktor",
     "fb_52w": "breakout_faktor_52w", "fb_20t": "breakout_faktor", "fb_ma50p": "breakout_faktor",
     "fb_ma50r": "breakout_faktor", "fb_63t": "breakout_faktor",
@@ -381,27 +384,49 @@ VOLUMEN_SCHLUESSEL = {
     "a_ipo": "breakout_faktor", "a_shakeout3": "breakout_faktor", "a_wick": "breakout_faktor",
     "gapgo": "gap_and_go_faktor",
 }
-# Erlaubte Werte in Prozent des 50-Tage-Schnitts.
-VOLUMEN_MIN, VOLUMEN_MAX = 10, 1000
+# EARNINGS-PULLBACK (Gerhard, 30.09.2026 nachmittags): jeder Ruecksetzer-Tag
+# hoechstens minus 50 Prozent ueber dem 50-Tage-Schnitt, also hoechstens die
+# Haelfte; eine Obergrenze, gerechnet im Nachtscan (earnings_pullback.py).
+RUECKSETZER_SCHLUESSEL = {"earnings": "earnings_ruecksetzer_max"}
+# Erlaubte Werte in Prozent ueber dem 50-Tage-Schnitt: Huerden und Obergrenze.
+VOLUMEN_MIN, VOLUMEN_MAX = -90, 900
+RUECKSETZER_MIN, RUECKSETZER_MAX = -95, 100
 
-VORGABE = {"alarme_aus": [], "volumen_prozent": {}}
+VORGABE = {"alarme_aus": [], "volumen_ueber": {}, "ruecksetzer_ueber": {}}
+
+
+def vorzeichen_text(zahl) -> str:
+    """"plus 60", "minus 50" oder "0" wie in IBD-Sprache (gleich
+    volumen.vorzeichen_zahl, hier ohne Abhaengigkeit fuer die App)."""
+    w = int(round(float(zahl)))
+    return "0" if w == 0 else (f"plus {w}" if w > 0 else f"minus {-w}")
 
 
 def _schluessel_alle() -> list[str]:
     return [a["schluessel"] for a in ALARME]
 
 
-def volumen_vorgabe(schluessel) -> int | None:
-    """Die Vorgabe der Volumenschwelle eines Registereintrags in Prozent des
-    50-Tage-Schnitts, aus config.py; None heisst: keine solche Schwelle."""
-    k = VOLUMEN_SCHLUESSEL.get(str(schluessel or ""))
-    if not k:
-        return None
+def _cfg_prozent(k) -> int:
+    """Ein Vielfaches aus config.py (volumen.*) in Prozent ueber dem Schnitt."""
     from config import CFG
-    return int(round(float(CFG["volumen"][k]) * 100))
+    return int(round((float(CFG["volumen"][k]) - 1.0) * 100))
 
 
-def _volumen_gueltig(wert) -> int | None:
+def volumen_vorgabe(schluessel) -> int | None:
+    """Die Vorgabe der Volumenschwelle eines Registereintrags in Prozent UEBER
+    dem 50-Tage-Schnitt, aus config.py; None heisst: keine solche Schwelle."""
+    k = VOLUMEN_SCHLUESSEL.get(str(schluessel or ""))
+    return _cfg_prozent(k) if k else None
+
+
+def ruecksetzer_vorgabe(schluessel="earnings") -> int | None:
+    """Die Vorgabe der Obergrenze fuer die Ruecksetzer-Tage in Prozent ueber
+    dem 50-Tage-Schnitt (Earnings-Pullback: minus 50); sonst None."""
+    k = RUECKSETZER_SCHLUESSEL.get(str(schluessel or ""))
+    return _cfg_prozent(k) if k else None
+
+
+def _gueltig(wert, unten=VOLUMEN_MIN, oben=VOLUMEN_MAX) -> int | None:
     """Ein Prozentwert aus Datei oder Eingabe als ganze Zahl, oder None."""
     if isinstance(wert, bool):
         return None
@@ -409,19 +434,40 @@ def _volumen_gueltig(wert) -> int | None:
         w = float(wert)
     except (TypeError, ValueError):
         return None
-    if w != w or not VOLUMEN_MIN <= w <= VOLUMEN_MAX:
+    if w != w or not unten <= w <= oben:
         return None
     return int(round(w))
 
 
-def volumen_prozent(einst: dict, schluessel) -> int | None:
-    """Die geltende Volumenschwelle eines Registereintrags in Prozent: die
-    gespeicherte, sonst die Vorgabe; None ohne solche Schwelle."""
+def _volumen_gueltig(wert) -> int | None:
+    return _gueltig(wert, VOLUMEN_MIN, VOLUMEN_MAX)
+
+
+def volumen_ueber(einst: dict, schluessel) -> int | None:
+    """Die geltende Volumenschwelle eines Registereintrags in Prozent ueber dem
+    Schnitt: die gespeicherte, sonst die Vorgabe; None ohne solche Schwelle."""
     vorgabe = volumen_vorgabe(schluessel)
     if vorgabe is None:
         return None
-    eigen = _volumen_gueltig(((einst or {}).get("volumen_prozent") or {}).get(str(schluessel)))
+    eigen = _volumen_gueltig(((einst or {}).get("volumen_ueber") or {}).get(str(schluessel)))
     return vorgabe if eigen is None else eigen
+
+
+def ruecksetzer_ueber(einst: dict, schluessel="earnings") -> int | None:
+    """Die geltende Obergrenze der Ruecksetzer-Tage in Prozent ueber dem
+    Schnitt: die gespeicherte, sonst die Vorgabe; None ohne solche Grenze."""
+    vorgabe = ruecksetzer_vorgabe(schluessel)
+    if vorgabe is None:
+        return None
+    eigen = _gueltig(((einst or {}).get("ruecksetzer_ueber") or {}).get(str(schluessel)),
+                     RUECKSETZER_MIN, RUECKSETZER_MAX)
+    return vorgabe if eigen is None else eigen
+
+
+def ruecksetzer_faktor(einst: dict, schluessel="earnings") -> float:
+    """Fuer den Nachtscan: die Obergrenze als Vielfaches des Schnitts, 0,5 bei
+    minus 50 Prozent."""
+    return 1.0 + (ruecksetzer_ueber(einst, schluessel) or 0) / 100.0
 
 
 def volumen_faktor(einst: dict, name) -> float | None:
@@ -431,23 +477,32 @@ def volumen_faktor(einst: dict, name) -> float | None:
     s = schluessel_fuer(name)
     if s is None or s not in VOLUMEN_SCHLUESSEL:
         return None
-    eigen = _volumen_gueltig(((einst or {}).get("volumen_prozent") or {}).get(s))
+    eigen = _volumen_gueltig(((einst or {}).get("volumen_ueber") or {}).get(s))
     if eigen is None or eigen == volumen_vorgabe(s):
         return None
-    return eigen / 100.0
+    return 1.0 + eigen / 100.0
 
 
 def volumen_satz(einst: dict, schluessel) -> str:
     """Der Satz zur Volumenschwelle fuer Regelwerk und Anzeige, oder leer."""
-    p = volumen_prozent(einst, schluessel)
+    r = ruecksetzer_ueber(einst, schluessel)
+    if r is not None:
+        # Earnings-Pullback (Gerhard, 30.09.2026 nachmittags).
+        haelfte = ", also höchstens die Hälfte des Schnitts" if r == -50 else ""
+        return ("Am Tag des Ausbruchs gibt es keine Volumenhürde. Dafür darf jeder Rücksetzer-Tag, also jeder "
+                "Handelstag nach dem Sprungtag bis zum letzten abgeschlossenen Handelstag, höchstens "
+                f"{vorzeichen_text(r)} Prozent über dem 50-Tage-Schnitt haben{haelfte}; liegt einer darüber oder "
+                "fehlen seine Volumendaten, ist das Setup ungültig.")
+    p = volumen_ueber(einst, schluessel)
     if p is None:
         return ""
     wann = "am Lückentag " if schluessel == "gapgo" else "beim Ausbruch "
-    # Seit 30.09.2026 mit der ersten Pruefung ab 09:35 New York (Gerhard,
-    # Frage 1); die Uhrzeit steht hier als Abstand zum Handelsbeginn, weil sie
-    # bei uns in den Umstellwochen eine Stunde frueher liegt.
+    # Mit der ersten Pruefung ab 09:35 New York (Gerhard, 30.09.2026, Frage 1);
+    # die Uhrzeit steht als Abstand zum Handelsbeginn, weil sie bei uns in den
+    # Umstellwochen eine Stunde frueher liegt.
     return (f"Gemeldet wird nur, wenn das Volumen {wann}hochgerechnet über die F(t)-Kurve mindestens "
-            f"{p} Prozent des 50-Tage-Schnitts erreicht; beurteilt wird es ab fünf Minuten nach Handelsbeginn.")
+            f"{vorzeichen_text(p)} Prozent über dem 50-Tage-Schnitt erreicht; beurteilt wird es ab fünf Minuten "
+            "nach Handelsbeginn.")
 
 
 def lesen(roh) -> dict:
@@ -469,15 +524,21 @@ def lesen(roh) -> dict:
     bekannt = set(_schluessel_alle())
     aus = daten.get("alarme_aus")
     aus = sorted({str(x) for x in aus if str(x) in bekannt}) if isinstance(aus, list) else []
-    # Die Volumenschwellen: nur bekannte Eintraege mit Schwelle und gueltige Werte.
-    vol_roh = daten.get("volumen_prozent")
-    vol = {}
-    if isinstance(vol_roh, dict):
-        for k in sorted(vol_roh):
-            w = _volumen_gueltig(vol_roh[k])
-            if str(k) in VOLUMEN_SCHLUESSEL and w is not None:
-                vol[str(k)] = w
-    raus = {"alarme_aus": aus, "volumen_prozent": vol}
+    # Die Volumenschwellen in IBD-Sprache: nur bekannte Eintraege mit Schwelle
+    # und gueltige Werte; ebenso die Obergrenze der Ruecksetzer-Tage.
+    def _feld(name, erlaubt, unten, oben):
+        roh_feld = daten.get(name)
+        raus_feld = {}
+        if isinstance(roh_feld, dict):
+            for k in sorted(roh_feld):
+                w = _gueltig(roh_feld[k], unten, oben)
+                if str(k) in erlaubt and w is not None:
+                    raus_feld[str(k)] = w
+        return raus_feld
+    raus = {"alarme_aus": aus,
+            "volumen_ueber": _feld("volumen_ueber", VOLUMEN_SCHLUESSEL, VOLUMEN_MIN, VOLUMEN_MAX),
+            "ruecksetzer_ueber": _feld("ruecksetzer_ueber", RUECKSETZER_SCHLUESSEL, RUECKSETZER_MIN,
+                                       RUECKSETZER_MAX)}
     if isinstance(daten.get("geaendert"), str):
         raus["geaendert"] = daten["geaendert"][:40]
     return raus
@@ -654,30 +715,47 @@ def selbsttest() -> int:
     p("Der Zeitpunkt der Aenderung steht in der Datei", lesen(roh).get("geaendert") == "2026-09-23 22:10")
     p("Die Datei fuehrt weder Aussehen noch Ton", b"design" not in roh and b"klang" not in roh)
 
-    # Die Volumenschwellen je Muster (29.09.2026)
+    # Die Volumenschwellen je Muster, seit 30.09.2026 nachmittags in IBD-Sprache
     p("Jeder Eintrag mit Volumenschwelle steht im Register und hat eine Vorgabe",
-      all(eintrag(s) and volumen_vorgabe(s) for s in VOLUMEN_SCHLUESSEL))
-    p("Vorgaben in Prozent: Standard 100, VCP 140, 52-Wochen-Hoch 200, Power-Gap 300",
-      (volumen_vorgabe("darvas"), volumen_vorgabe("vcp"), volumen_vorgabe("fb_52w"), volumen_vorgabe("gapgo"))
-      == (100, 140, 200, 300))
+      all(eintrag(s) and volumen_vorgabe(s) is not None for s in VOLUMEN_SCHLUESSEL)
+      and all(eintrag(s) and ruecksetzer_vorgabe(s) is not None for s in RUECKSETZER_SCHLUESSEL))
+    p("Vorgaben in Prozent ueber dem Schnitt: Standard und VCP plus 60, 52-Wochen-Hoch plus 100, Power-Gap plus 200",
+      (volumen_vorgabe("darvas"), volumen_vorgabe("vcp"), volumen_vorgabe("a_3wt"), volumen_vorgabe("fb_52w"),
+       volumen_vorgabe("gapgo")) == (60, 60, 60, 100, 200))
+    p("Earnings-Pullback: keine Huerde am Ausbruch, Ruecksetzer-Tage hoechstens minus 50",
+      volumen_vorgabe("earnings") is None and ruecksetzer_vorgabe("earnings") == -50
+      and ruecksetzer_faktor(None) == 0.5 and ruecksetzer_vorgabe("darvas") is None)
     p("Ohne Schwelle: Red to Green, Insider, Meldungen zu Positionen",
       volumen_vorgabe("r2g") is None and volumen_vorgabe("insider") is None and volumen_vorgabe("ausstiege") is None)
-    ev = lesen(json.dumps({"volumen_prozent": {"vcp": 150, "darvas": "80", "r2g": 50, "gibtsnicht": 90,
-                                               "htf": 5, "cup": 2000, "ema": True}}).encode())
-    p("Volumen: gueltige Werte bleiben, der Rest faellt weg", ev["volumen_prozent"] == {"darvas": 80, "vcp": 150},
-      str(ev))
+    ev = lesen(json.dumps({"volumen_ueber": {"vcp": 50, "darvas": "-20", "r2g": 50, "gibtsnicht": 90,
+                                             "htf": -95, "cup": 2000, "ema": True, "earnings": 10},
+                           "ruecksetzer_ueber": {"earnings": -40, "darvas": -40},
+                           "volumen_prozent": {"vcp": 150}}).encode())
+    p("Volumen: gueltige Werte bleiben, der Rest faellt weg, das alte Feld auch",
+      ev["volumen_ueber"] == {"darvas": -20, "vcp": 50} and ev["ruecksetzer_ueber"] == {"earnings": -40}
+      and "volumen_prozent" not in ev, str(ev))
     p("Volumen: geltender Wert oder Vorgabe",
-      volumen_prozent(ev, "vcp") == 150 and volumen_prozent(ev, "cup") == 100 and volumen_prozent(ev, "r2g") is None)
+      volumen_ueber(ev, "vcp") == 50 and volumen_ueber(ev, "cup") == 60 and volumen_ueber(ev, "r2g") is None
+      and ruecksetzer_ueber(ev) == -40 and ruecksetzer_faktor(ev) == 0.6)
     p("Volumen: Faktor fuer den Waechter nur bei Abweichung",
       volumen_faktor(ev, "VCP") == 1.5 and volumen_faktor(ev, "Darvas Box") == 0.8
       and volumen_faktor(ev, "Cup & Handle") is None and volumen_faktor(None, "VCP") is None
-      and volumen_faktor({"volumen_prozent": {"vcp": 140}}, "VCP") is None
-      and volumen_faktor(ev, "Red-to-Green") is None and volumen_faktor(ev, "Gibt es nicht") is None)
+      and volumen_faktor({"volumen_ueber": {"vcp": 60}}, "VCP") is None
+      and volumen_faktor(ev, "Red-to-Green") is None and volumen_faktor(ev, "Gibt es nicht") is None
+      and volumen_faktor(ev, "Earnings-Pullback") is None)
     p("Volumen: Schreiben und Lesen ergeben dasselbe",
-      lesen(schreiben(ev))["volumen_prozent"] == ev["volumen_prozent"])
-    p("Volumen: Satz im Regelwerk mit dem geltenden Wert",
-      "mindestens 150 Prozent des 50-Tage-Schnitts" in volumen_satz(ev, "vcp")
-      and "am Lückentag" in volumen_satz(None, "gapgo") and volumen_satz(None, "r2g") == "")
+      lesen(schreiben(ev))["volumen_ueber"] == ev["volumen_ueber"]
+      and lesen(schreiben(ev))["ruecksetzer_ueber"] == ev["ruecksetzer_ueber"])
+    p("Volumen: Satz im Regelwerk in IBD-Sprache mit dem geltenden Wert",
+      "mindestens plus 50 Prozent über dem 50-Tage-Schnitt" in volumen_satz(ev, "vcp")
+      and "mindestens plus 60 Prozent über dem 50-Tage-Schnitt" in volumen_satz(None, "cup")
+      and "am Lückentag" in volumen_satz(None, "gapgo") and volumen_satz(None, "r2g") == ""
+      and "keine Volumenhürde" in volumen_satz(None, "earnings")
+      and "höchstens minus 50 Prozent über dem 50-Tage-Schnitt haben, also höchstens die Hälfte"
+      in volumen_satz(None, "earnings")
+      and "höchstens minus 40 Prozent" in volumen_satz(ev, "earnings"))
+    p("Vorzeichen als Wort", (vorzeichen_text(60), vorzeichen_text(-50), vorzeichen_text(0.2))
+      == ("plus 60", "minus 50", "0"))
 
     p("Eintrag im Browser: gueltig", eigen_lesen("zukunft.pixel") == ("zukunft", "pixel"))
     p("Eintrag im Browser: leer ergibt die Grundeinstellung", eigen_lesen("") == ("standard", "kristall"))

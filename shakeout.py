@@ -638,7 +638,7 @@ def selbsttest() -> int:
     typ, verh = klassifiziere_volumen_typ(
         pd.Series({"Volume": 500_000.0}), df)
     pruefe("Volumentyp 1 bei wenig Volumen", typ.startswith("Typ 1"),
-           f"{verh * 100:.0f} Prozent des 20-Tage-Schnitts")
+           f"{(verh - 1) * 100:+.0f} Prozent über dem 20-Tage-Schnitt")
     typ3, _ = klassifiziere_volumen_typ(
         pd.Series({"Volume": 5_000_000.0}), df)
     pruefe("Volumentyp 3 bei viel Volumen", typ3.startswith("Typ 3"))

@@ -143,8 +143,27 @@ CFG = {
         # Wächter"). Er hat den Wechsel im Übergabepapier ausdrücklich als
         # eigene, bewusste Entscheidung neben der Formelkorrektur benannt.
         "fenster_tage": 50,          # Durchschnittsvolumen über N Handelstage
-        "breakout_faktor": 1.0,      # Standard: Volumen > Ø
-        "breakout_faktor_vcp": 1.4,  # VCP strenger: ≥ 140 % vom Ø
+        # NEUE SCHWELLEN IN IBD-SPRACHE (Gerhard, 30.09.2026 nachmittags,
+        # "dringend"): alle Muster und Strategien, auch VCP, Three Weeks
+        # Tight, Fallbacks und Alarm-Muster, ab PLUS 60 PROZENT ueber dem
+        # 50-Tage-Schnitt, also dem 1,6-Fachen. Anlass: PARR (plus 4) und AMN
+        # (plus 22) meldeten, weil die Schwelle bei plus 0 lag; Gerhard war von
+        # plus 50 ausgegangen. Die Faktoren bleiben Vielfache, weil der Waechter
+        # damit rechnet; geschrieben wird ueberall plus oder minus in Prozent
+        # ueber dem Schnitt (volumen.prozent_text).
+        "breakout_faktor": 1.6,      # plus 60 Prozent über dem Schnitt
+        "breakout_faktor_vcp": 1.6,  # VCP und Three Weeks Tight ebenso, bis 30.09. plus 40
+        # EARNINGS-PULLBACK, EIGENE REGEL (Gerhard, 30.09.2026): am Tag des
+        # Ausbruchs KEINE Volumenhuerde; dafuer darf jeder Ruecksetzer-Tag
+        # hoechstens minus 50 Prozent ueber dem 50-Tage-Schnitt haben, also
+        # hoechstens die Haelfte. Liegt einer darueber, ist das Setup ungueltig
+        # (earnings_pullback.py, im Nachtscan).
+        "earnings_ruecksetzer_max": 0.5,
+        # POWER-GAP-EINSTIEG AM FOLGETAG: bleibt bei plus 0 Prozent, also
+        # mindestens der Schnitt (Gerhard, 30.09.2026). Bis dahin stand hier
+        # breakout_faktor; seit dessen Anhebung braucht der Folgetag einen
+        # eigenen Wert.
+        "gap_folgetag_faktor": 1.0,
         # VON 5× AUF 3× GESENKT (Gerhard, 05.08.2026). Seine Begründung
         # nach dem Nachrecherchieren: KEINE der etablierten Quellen
         # verlangt das Fünffache. Weinstein nennt für einen gültigen
@@ -153,7 +172,7 @@ CFG = {
         # strenger als jeder publizierte Standard — und die Messung vom
         # 04.08. (das Kriterium verschlechtert das Ergebnis) passt dazu.
         # Genommen wird das obere, strengere Ende von Weinsteins Spanne.
-        "gap_and_go_faktor": 3.0,    # Lücken-Bestätigungstag: ≥ 3× Ø
+        "gap_and_go_faktor": 3.0,    # Lücken-Bestätigungstag: plus 200 Prozent über dem Schnitt
         # REGEL 2 (Gerhard, 29.09.2026): "52-Wochen-Hoch (Ersatzmuster bei
         # Aktien): Neu: nur bei Volumen über 200 %", gemessen wie jede
         # Huerde ueber die F(t)-Kurve. Gilt nur fuer "Fallback: 52W-Hoch-
@@ -164,6 +183,8 @@ CFG = {
         # das 52-Wochen-Hoch dabei "mit seinen 200 %". Gebaut war zuerst das
         # Dreifache, gelesen als 200 % ueber dem Schnitt, weil die
         # Meldungen das Volumen als "X % über Ø50" schreiben.
+        # In IBD-Sprache seit 30.09.2026 nachmittags: plus 100 Prozent ueber
+        # dem Schnitt, das Doppelte, "so wie seit gestern gebaut" (Gerhard).
         "breakout_faktor_52w": 2.0,
         # KEINE MELDUNG OHNE BESTAETIGTES VOLUMEN (Gerhard, 29.09.2026,
         # Regel 3, "alle Strategien"). Bis dahin durften fuenf Muster ohne

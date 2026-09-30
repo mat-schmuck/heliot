@@ -1548,8 +1548,12 @@ def block_e():
     zusammen = bw._lege_gleiche_preise_zusammen(zwei)
     pruefe("E", "Zwei Muster auf demselben Preis werden zusammengelegt",
            len(zusammen) == 1 and len(zusammen[0]["strategien"]) == 2)
+    # Seit 30.09.2026 haben VCP und Darvas dieselbe Huerde (plus 60 Prozent);
+    # die strengere zeigt sich deshalb am 52-Wochen-Hoch (plus 100 Prozent).
+    zusammen52 = bw._lege_gleiche_preise_zusammen(
+        [dict(item), dict(item, strategie="Fallback: 52W-Hoch-Breakout")], leise=True)
     pruefe("E", "Dabei gewinnt die STRENGERE Volumenhuerde",
-           zusammen[0]["strategie"] == "VCP")
+           len(zusammen52) == 1 and zusammen52[0]["strategie"] == "Fallback: 52W-Hoch-Breakout")
 
     # Schutznetz: zu weiter Stop wird nachgezogen
     weit = [dict(item, stop=50.0)]
@@ -1655,22 +1659,44 @@ def block_e():
         pruefe("E", "Regel 3: der uebersprungene Kaufpunkt traegt jetzt ein "
                "Volumenurteil", _r_ue_y.get("uebersprungen")
                and _r_ue_y["vol_ok"] is True and _r_ue_y["vol_ratio"] == 3.0)
-        # REGEL 2: das 52-Wochen-Hoch nur ueber 200 % des Schnitts, also dem
-        # Doppelten (Gerhard rechnet in Prozent DES 50-Tage-Schnitts).
+        # SCHWELLEN IN IBD-SPRACHE (Gerhard, 30.09.2026 nachmittags): das
+        # 52-Wochen-Hoch ab plus 100 Prozent ueber dem Schnitt, alle anderen
+        # Muster ab plus 60, der Power-Gap am Lueckentag plus 200, der Einstieg am
+        # Folgetag 0, der Earnings-Pullback am Tag des Ausbruchs ohne Huerde.
         _i52 = {"ticker": "TST", "strategie": "Fallback: 52W-Hoch-Breakout",
                 "kaufpunkt": 10.0}
         _r52a = bw.pruefe_breakout(_i52, {**_q3, "volume": 1_900_000.0})
         _r52b = bw.pruefe_breakout(_i52, {**_q3, "volume": 2_000_000.0})
-        _r20 = bw.pruefe_breakout({**_i52, "strategie": "Fallback: 20-Tage-Hoch (Pivot)"},
-                                  {**_q3, "volume": 1_100_000.0})
-        pruefe("E", "Regel 2: 52-Wochen-Hoch meldet erst ab 200 % des Schnitts",
+        _i20 = {**_i52, "strategie": "Fallback: 20-Tage-Hoch (Pivot)"}
+        _r20a = bw.pruefe_breakout(_i20, {**_q3, "volume": 1_590_000.0})
+        _r20b = bw.pruefe_breakout(_i20, {**_q3, "volume": 1_600_000.0})
+        pruefe("E", "Schwellen: 52-Wochen-Hoch meldet erst ab plus 100 Prozent ueber dem Schnitt",
                _r52a["vol_ok"] is False and _r52b["vol_ok"] is True
                and _r52b["vol_noetig"] == 2.0)
-        pruefe("E", "Regel 2: die uebrigen Huerden bleiben, wie sie sind",
-               _r20["vol_ok"] is True and _r20["vol_noetig"] == 1.0
-               and bw.VOL_FAKTOR["VCP"] == 1.4 and bw.VOL_FAKTOR["Darvas Box"] == 1.0
-               and bw.VOL_FAKTOR["Three Weeks Tight"] == 1.4
-               and bw.VOL_FAKTOR_FALLBACK == 1.0)
+        pruefe("E", "Schwellen: alle anderen Muster ab plus 60 Prozent, auch VCP, Three Weeks Tight und Fallbacks",
+               _r20a["vol_ok"] is False and _r20b["vol_ok"] is True and _r20b["vol_noetig"] == 1.6
+               and bw.VOL_FAKTOR["VCP"] == 1.6 and bw.VOL_FAKTOR["Darvas Box"] == 1.6
+               and bw.VOL_FAKTOR["Three Weeks Tight"] == 1.6 and bw.VOL_FAKTOR["Inside Day"] == 1.6
+               and bw.VOL_FAKTOR_FALLBACK == 1.6 and bw.GAP_VOL_FAKTOR == 3.0
+               and bw.GAP_FOLGETAG_FAKTOR == 1.0 and bw.VOL_FAKTOR["Earnings-Pullback"] == 0.0)
+        # EARNINGS-PULLBACK: am Tag des Ausbruchs keine Huerde, gleich zu welcher
+        # Uhrzeit und aus welcher Quelle; auf gleichem Preis mit einem anderen
+        # Muster gilt dessen Huerde.
+        _iep = {"ticker": "TST", "strategie": "Earnings-Pullback", "kaufpunkt": 10.0}
+        _rep = bw.pruefe_breakout(_iep, {**_q3, "volume": 100_000.0})
+        _rep_td = bw.pruefe_breakout(_iep, {**_q3, "volume": 100_000.0, "volumenquelle": "twelvedata"})
+        bw.volumen_messbar = lambda jetzt=None: False
+        _rep_frueh = bw.pruefe_breakout(_iep, {**_q3, "volume": 100_000.0})
+        bw.volumen_messbar = lambda jetzt=None: True
+        _rep_zus = bw.pruefe_breakout({**_iep, "strategien": ["Earnings-Pullback", "Rectangle Top"]},
+                                      {**_q3, "volume": 1_000_000.0})
+        pruefe("E", "Earnings-Pullback: keine Volumenhuerde am Tag des Ausbruchs",
+               _rep["vol_ok"] is True and _rep["vol_ohne_huerde"] is True
+               and _rep_td["vol_ok"] is True and _rep_frueh["vol_ok"] is True
+               and bw.vol_satz(_rep) == "Vol ohne Hürde, minus 90 % über dem 50-Tage-Schnitt"
+               and bw.vol_satz(_rep_frueh) == "Vol ohne Hürde"
+               and _rep_zus["vol_ok"] is False and _rep_zus["vol_noetig"] == 1.6,
+               f"{bw.vol_satz(_rep)} / {bw.vol_satz(_rep_frueh)}")
         # REGEL 3 AUCH BEIM POWER-GAP-EINSTIEG AM FOLGETAG: bis dahin sah er
         # nur den Kurs an.
         _gestern = ((bw.heute_ny() or datetime.now().date())
@@ -1682,44 +1708,49 @@ def block_e():
         _g_leise, _st_leise = _gap({**_q3, "volume": 500_000.0})
         _g_td, _ = _gap({**_q3, "volumenquelle": "twelvedata"})
         _g_ja, _ = _gap(_q3)
+        _g_knapp, _ = _gap({**_q3, "volume": 1_200_000.0})
         pruefe("E", "Regel 3: Power-Gap-Einstieg nur mit bestaetigtem Volumen "
                "des Einstiegstags",
                not _g_leise and not _g_td and len(_g_ja) == 1
                and _g_ja[0]["vol_ok"] is True
                and _st_leise[bw.GAPGO_WARTEN]["GGG"].get("ohne_volumen") is True)
+        pruefe("E", "Schwellen: Power-Gap-Einstieg am Folgetag bleibt bei 0 Prozent ueber dem Schnitt",
+               len(_g_knapp) == 1 and _g_knapp[0]["vol_noetig"] == 1.0)
         # DIE VOLUMENSCHWELLEN SIND EINSTELLBAR (Mathias, 29.09.2026): im Reiter
-        # Einstellungen je Muster in Prozent des 50-Tage-Schnitts.
+        # Einstellungen je Muster, seit 30.09.2026 nachmittags in IBD-Sprache.
         import einstellungen as _ei
         _abw = []
         for _s in _ei.VOLUMEN_SCHLUESSEL:
             for _n in (_ei.eintrag(_s) or {}).get("namen") or []:
                 _soll = bw.GAP_VOL_FAKTOR if _s == "gapgo" else bw.VOL_FAKTOR.get(_n, bw.VOL_FAKTOR_FALLBACK)
-                if abs(_ei.volumen_vorgabe(_s) / 100.0 - _soll) > 1e-9:
+                if abs(1.0 + _ei.volumen_vorgabe(_s) / 100.0 - _soll) > 1e-9:
                     _abw.append(f"{_n} {_ei.volumen_vorgabe(_s)} gegen {_soll}")
+        if "earnings" in _ei.VOLUMEN_SCHLUESSEL or _ei.ruecksetzer_vorgabe("earnings") != -50:
+            _abw.append("Earnings-Pullback")
         pruefe("E", "Einstellungen: jede Vorgabe der Volumenschwelle gleicht der des Waechters",
                not _abw, "; ".join(_abw))
         _einst_alt = dict(bw._EINST)
         try:
-            bw._EINST["daten"] = _ei.lesen({"volumen_prozent": {"darvas": 80, "gapgo": 250}})
+            bw._EINST["daten"] = _ei.lesen({"volumen_ueber": {"darvas": -20, "gapgo": 150}})
             _id = {"ticker": "TST", "strategie": "Darvas Box", "kaufpunkt": 10.0}
             _r80 = bw.pruefe_breakout(_id, {**_q3, "volume": 850_000.0})
             _r70 = bw.pruefe_breakout(_id, {**_q3, "volume": 700_000.0})
             _rvcp = bw.pruefe_breakout({**_id, "strategie": "VCP"}, {**_q3, "volume": 1_300_000.0})
             pruefe("E", "Einstellungen: eine eigene Schwelle wirkt im Waechter, die uebrigen bleiben",
                    _r80["vol_ok"] is True and _r80["vol_noetig"] == 0.8 and _r70["vol_ok"] is False
-                   and _rvcp["vol_ok"] is False and _rvcp["vol_noetig"] == 1.4
+                   and _rvcp["vol_ok"] is False and _rvcp["vol_noetig"] == 1.6
                    and bw.gap_faktor() == 2.5 and bw.gap_faktor(frueh=True) == 2.5)
             _zus = bw._lege_gleiche_preise_zusammen(
                 [{**_id, "strategie": "Darvas Box", "stop": 9.0},
                  {**_id, "strategie": "Rectangle Top", "stop": 9.1}], leise=True)
             pruefe("E", "Einstellungen: gleicher Preis, es gilt die strengere der eingestellten Huerden",
                    len(_zus) == 1 and bw.pruefe_breakout(_zus[0], {**_q3, "volume": 900_000.0})["vol_noetig"]
-                   == 1.0)
+                   == 1.6)
         finally:
             bw._EINST.clear()
             bw._EINST.update(_einst_alt)
         pruefe("E", "Einstellungen: ohne eigene Werte gelten die Vorgaben",
-               bw.vol_faktor("Darvas Box") == 1.0 and bw.gap_faktor() == bw.GAP_VOL_FAKTOR)
+               bw.vol_faktor("Darvas Box") == 1.6 and bw.gap_faktor() == bw.GAP_VOL_FAKTOR)
 
         # GERHARDS ANTWORTEN VOM 30.09.2026
         # FRAGE 1: Das Volumen wird erst ab dem ersten gemessenen Wert der
@@ -1765,13 +1796,16 @@ def block_e():
                and [_vo.schon_messbar(m) for m in (0, 4, 5, None)] == [False, False, True, True]
                and _vm_alt(datetime(2026, 9, 30, 13, 34, 59, tzinfo=timezone.utc)) is False
                and _vm_alt(datetime(2026, 9, 30, 13, 35, 0, tzinfo=timezone.utc)) is True)
-        # FRAGE 2: Volumen ueberall in Prozent des 50-Tage-Schnitts, nur der Text.
+        # IBD-SPRACHE (Gerhard, 30.09.2026 nachmittags, ersetzt Frage 2 der Nacht):
+        # Volumen ueberall in Prozent UEBER dem Schnitt, mit Vorzeichen als Wort,
+        # die Huerde steht in jeder Meldezeile dabei.
         _vcp = bw.pruefe_breakout({**_it3, "strategie": "VCP"}, _q3)
         _schw = bw.pruefe_breakout(_it3, {**_q3, "volume": 800_000.0})
-        pruefe("E", "Frage 2: Meldezeile in Prozent des 50-Tage-Schnitts",
-               bw.vol_satz(_f_an) == "Vol BESTÄTIGT, 300 % des 50-Tage-Schnitts"
-               and bw.vol_satz(_vcp) == "Vol BESTÄTIGT, 300 % des 50-Tage-Schnitts, nötig mindestens 140 %"
-               and bw.vol_satz(_schw) == "Vol NICHT bestätigt, 80 % des 50-Tage-Schnitts",
+        pruefe("E", "IBD-Sprache: Meldezeile in Prozent ueber dem 50-Tage-Schnitt, mit Huerde",
+               bw.vol_satz(_f_an) == "Vol BESTÄTIGT, plus 200 % über dem 50-Tage-Schnitt, nötig mindestens plus 60 %"
+               and bw.vol_satz(_vcp) == "Vol BESTÄTIGT, plus 200 % über dem 50-Tage-Schnitt, nötig mindestens plus 60 %"
+               and bw.vol_satz(_schw) == ("Vol NICHT bestätigt, minus 20 % über dem 50-Tage-Schnitt, nötig "
+                                          "mindestens plus 60 %"),
                f"{bw.vol_satz(_f_an)} / {bw.vol_satz(_vcp)} / {bw.vol_satz(_schw)}")
     finally:
         bw.vol_verhaeltnis = _vv_alt
@@ -1782,10 +1816,10 @@ def block_e():
     _gg_text = bw.format_gapgo({"ticker": "TST", "firma": "Test", "bestaetigt": False, "frueh": False,
                                 "tages_ratio": 3.5, "gap": 0.12, "pos": 0.8, "kp": 11.0, "stop": 9.9,
                                 "stop_quelle": "tief"})
-    pruefe("E", "Frage 2: Red to Green und Power-Gap schreiben das Volumen in Prozent des Schnitts",
-           "Vol Sprung 375 % des 50-Tage-Schnitts, Anflug trocken" in _r2g_text
-           and "Volumen 350 % des 50-Tage-Schnitts, nötig mindestens 300 %" in _gg_text
-           and "Volumen 300 % des 50-Tage-Schnitts" in _gg_text
+    pruefe("E", "IBD-Sprache: Red to Green und Power-Gap schreiben das Volumen in Prozent ueber dem Schnitt",
+           "Vol Sprung plus 275 % über dem 50-Tage-Schnitt, Anflug trocken" in _r2g_text
+           and "Volumen plus 250 % über dem 50-Tage-Schnitt, nötig mindestens plus 200 %" in _gg_text
+           and "Volumen plus 200 % über dem 50-Tage-Schnitt" in _gg_text
            and "über Ø" not in _r2g_text + _gg_text and " mal Volumen" not in _gg_text,
            _gg_text.replace("\n", "; "))
     pruefe("E", "Regel 3: Red-to-Green und Power-Gap-Tag nur mit Yahoo-Volumen",
@@ -3998,10 +4032,14 @@ def _namen_pruefen():
     return not funde, nennen(funde) if funde else "ein Name je Sache"
 
 
-# Die alten Schreibweisen fuer Volumen gegen einen Schnitt: Prozent ueber dem
-# Schnitt, Vielfache, Faktor. Seit 30.09.2026 steht Volumen ueberall in Prozent
-# des Schnitts (Gerhard, Antwort auf Frage 2).
-ALTE_VOLUMEN_SCHREIBWEISE = (r"über Ø|unter Ø|% vom Ø|mal Ø|(Prozent|%) über dem (50-Tage-)?Schnitt|"
+# Die fremden Schreibweisen fuer Volumen gegen einen Schnitt. Seit 30.09.2026
+# nachmittags steht Volumen ueberall in IBD-Sprache (Gerhard): Prozent UEBER dem
+# Schnitt, mit Vorzeichen als Wort, "plus 60 Prozent über dem 50-Tage-Schnitt".
+# Verboten sind also Prozent DES Schnitts (die Fassung der Nacht davor), Zahlen
+# ueber dem Schnitt ohne plus oder minus, Vielfache, Faktoren und die alte
+# Kurzform "über Ø50".
+ALTE_VOLUMEN_SCHREIBWEISE = (r"über Ø|unter Ø|% vom Ø|mal Ø|(Prozent|%) des (\d+-Tage-)?Schnitts|"
+                             r"(?<!plus )(?<!minus )\b(?!0 )\d+(,\d+)? (Prozent|%) über dem (\d+-Tage-)?Schnitt|"
                              r"gegenüber dem 50-Tage-Schnitt|mal so hoch wie der 50|mal der 50|"
                              r"Fache[ns]? des (50-Tage-)?Schnitt|Fache[ns]? des Volumens|Fache[ns]? der 50|"
                              r"Volumenfaktor|Schnittvolumens")
@@ -4011,9 +4049,10 @@ VOLUMEN_SCHREIBWEISE_AUSGENOMMEN = {"gesamtpruefung.py", "gapgo_rueckblick.py", 
 
 
 def _volumen_schreibweise_pruefen():
-    """Gerhard, 30.09.2026, Antwort auf Frage 2: Volumen steht im ganzen System in
-    Prozent des 50-Tage-Schnitts, 100 ist der Schnitt, 200 das Doppelte; ein Wert
-    gegen einen anderen Schnitt nennt diesen, etwa den 10-Tage-Schnitt. Geprueft
+    """Gerhard, 30.09.2026 nachmittags: Volumen steht im ganzen System in
+    IBD-Sprache, in Prozent ueber dem 50-Tage-Schnitt mit Vorzeichen; 0 ist der
+    Schnitt, plus 100 das Doppelte, minus 50 die Haelfte. Ein Wert gegen einen
+    anderen Schnitt nennt diesen, etwa den 10-Tage-Schnitt. Geprueft
     werden die sichtbaren Texte der Oberflaeche und jede Zeichenkette im Quelltext
     ausser Kommentaren und Docstrings, damit auch Meldungen und Berichte darunter
     fallen."""
@@ -4035,7 +4074,7 @@ def _volumen_schreibweise_pruefen():
             code = _re.split(r"\s#\s", z, maxsplit=1)[0]
             if ('"' in code or "'" in code) and muster.search(code):
                 funde.append(f"{pfad.name} Zeile {nr}")
-    return not funde, nennen(funde) if funde else "Volumen überall in Prozent des Schnitts"
+    return not funde, nennen(funde) if funde else "Volumen überall in Prozent über dem Schnitt"
 
 
 # (Name, Pruefung, "Pflicht" oder "Warnung"); die Pruefung liefert (bestanden, Befund).
@@ -4048,8 +4087,8 @@ KOHAERENZ_KRITERIEN = [
      "Pflicht"),
     ("Jede Kennzahl im Nachschlagen mit Erklaerung (Antwort 118)", _nachschlagen_erklaerungen_pruefen, "Warnung"),
     ("Ein Name je Sache (Antwort 119)", _namen_pruefen, "Warnung"),
-    ("Volumen ueberall in Prozent des Schnitts (Antwort auf Frage 2 vom 30.09.2026)", _volumen_schreibweise_pruefen,
-     "Pflicht"),
+    ("Volumen ueberall in IBD-Sprache, Prozent ueber dem Schnitt (Anweisung vom 30.09.2026 nachmittags)",
+     _volumen_schreibweise_pruefen, "Pflicht"),
 ]
 
 

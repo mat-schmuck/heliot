@@ -482,24 +482,42 @@ def text(v_bisher, v50, minute=None, kurve=None):
     p = volume_pct_change(v_bisher, v50, kurve, minute)
     if p is None:
         return NICHT_VERIFIZIERBAR
-    return prozent_des_schnitts(p)
+    return prozent_text(p)
 
 
-# EINE SCHREIBWEISE UEBERALL (Gerhard, 30.09.2026, Antwort auf Frage 2):
-# Volumen steht im ganzen System in Prozent des 50-Tage-Schnitts; 100 ist
-# der Schnitt, 200 das Doppelte, 300 das Dreifache. Vorher schrieben die
-# Meldungen "5 % über Ø50", wo Gerhard 105 Prozent des Schnitts meint. Nur
-# der Text aendert sich, keine Rechnung: Gerechnet wird weiter mit der
-# IBD-Zahl (volume_pct_change) und dem Verhaeltnis (verhaeltnis).
-SCHNITT_WORT = "des 50-Tage-Schnitts"
+# EINE SCHREIBWEISE UEBERALL, UND ZWAR DIE VON IBD (Gerhard, 30.09.2026
+# nachmittags; ersetzt seine Antwort auf Frage 2 von der Nacht davor, die fuer
+# einen halben Tag "Prozent DES Schnitts" gebracht hatte): Volumen steht im
+# ganzen System in Prozent UEBER dem 50-Tage-Schnitt, mit dem Vorzeichen als
+# Wort. 0 ist genau der Schnitt, plus 60 das 1,6-Fache, plus 100 das Doppelte,
+# plus 200 das Dreifache, minus 50 die Haelfte. Das ist die IBD-Zahl
+# "Volume % Change" (volume_pct_change); gerechnet wird unveraendert mit ihr
+# und mit dem Verhaeltnis (verhaeltnis), nur die Schreibweise steht hier.
+SCHNITT_WORT = "über dem 50-Tage-Schnitt"
 
 
-def prozent_des_schnitts(pct, wort="%", fenster=50):
-    """IBD-Zahl (Volume % Change) in der einheitlichen Schreibweise:
-    +5 wird "105 % des 50-Tage-Schnitts", -40 wird "60 % des 50-Tage-Schnitts".
-    wort: "%" fuer Meldungen, "Prozent" fuer Saetze in der App."""
-    schnitt = SCHNITT_WORT if fenster == 50 else f"des {fenster}-Tage-Schnitts"
-    return f"{pct + 100:.0f} {wort} {schnitt}"
+def vorzeichen_zahl(pct, stellen=0) -> str:
+    """"plus 4", "minus 22" oder "0": die Zahl mit dem Vorzeichen als Wort,
+    wie es der Screenreader ohnehin vorliest und wie IBD es meint."""
+    w = round(float(pct), stellen)
+    if w == 0:
+        return "0"
+    betrag = f"{abs(w):.{stellen}f}".replace(".", ",")
+    return ("plus " if w > 0 else "minus ") + betrag
+
+
+def prozent_text(pct, wort="%", fenster=50):
+    """Die IBD-Zahl in der einheitlichen Schreibweise: +4 wird "plus 4 % über
+    dem 50-Tage-Schnitt", -22 wird "minus 22 % über dem 50-Tage-Schnitt".
+    wort: "%" fuer Meldungen, "Prozent" fuer Saetze in der App; ein anderes
+    Fenster nennt seinen eigenen Schnitt."""
+    schnitt = SCHNITT_WORT if fenster == 50 else f"über dem {fenster}-Tage-Schnitt"
+    return f"{vorzeichen_zahl(pct)} {wort} {schnitt}"
+
+
+def huerde_prozent(faktor) -> float:
+    """Eine Huerde als Vielfaches in Prozent ueber dem Schnitt: 1,6 wird 60."""
+    return (float(faktor) - 1.0) * 100.0
 
 
 # Der dritte Status, woertlich und an EINER Stelle — damit er nirgends
@@ -527,20 +545,20 @@ NICHT_VERIFIZIERBAR = ("Volumen NICHT VERIFIZIERBAR, keine eigene "
 
 
 def huerde_text(faktor, mit_einheit=True):
-    """Was verlangt wird, in lesbarer Form. Seit 30.09.2026 in Prozent des
-    Schnitts (Gerhard, Frage 2); damit liest sich auch der Faktor 1,0 als
-    "nötig mindestens 100 %" und nicht mehr wie "keine Anforderung".
+    """Was verlangt wird, in IBD-Sprache (Gerhard, 30.09.2026 nachmittags):
+    1,6 wird "nötig mindestens plus 60 %", 1,0 "nötig mindestens 0 %".
     mit_einheit=False, wo die Lage mit derselben Einheit direkt davor steht."""
-    return f"nötig mindestens {faktor * 100:.0f} %" + (f" {SCHNITT_WORT}" if mit_einheit else "")
+    return (f"nötig mindestens {vorzeichen_zahl(huerde_prozent(faktor))} %"
+            + (f" {SCHNITT_WORT}" if mit_einheit else ""))
 
 
 def lage_text(pct, fenster=50):
-    """Wo die Aktie steht: seit 30.09.2026 in Prozent des 50-Tage-Schnitts
-    statt "X % über Ø50" (Gerhard, Frage 2). fenster bleibt als Parameter
-    fuer alte Aufrufer; gerechnet wird immer gegen den 50-Tage-Schnitt."""
+    """Wo die Aktie steht, in IBD-Sprache: "plus 4 % über dem 50-Tage-Schnitt"
+    (Gerhard, 30.09.2026 nachmittags). Vorher "4 % über Ø50" ohne Vorzeichen
+    und fuer einen halben Tag "104 % des 50-Tage-Schnitts"."""
     if pct is None:
         return "Volumen nicht bewertbar"
-    return prozent_des_schnitts(pct, fenster=fenster)
+    return prozent_text(pct, fenster=fenster)
 
 
 # ---------------------------------------------------------------------------
@@ -718,16 +736,20 @@ if __name__ == "__main__":
     assert schon_messbar(minute_seit_eroeffnung(_dt(2026, 9, 30, 9, 35, 0, tzinfo=NY)))
     print("  ok: Minute 0 bis 4 nein, ab 09:35 New York ja, ausserhalb des Handels ja")
 
-    print("\nTEST 11: Schreibweise in Prozent des 50-Tage-Schnitts")
-    assert lage_text(5) == "105 % des 50-Tage-Schnitts"
-    assert lage_text(-40) == "60 % des 50-Tage-Schnitts"
-    assert lage_text(275.6) == "376 % des 50-Tage-Schnitts"
+    print("\nTEST 11: Schreibweise in IBD-Sprache, Prozent über dem 50-Tage-Schnitt")
+    assert lage_text(4) == "plus 4 % über dem 50-Tage-Schnitt"
+    assert lage_text(-22.4) == "minus 22 % über dem 50-Tage-Schnitt"
+    assert lage_text(0.2) == "0 % über dem 50-Tage-Schnitt"
     assert lage_text(None) == "Volumen nicht bewertbar"
-    assert huerde_text(1.0) == "nötig mindestens 100 % des 50-Tage-Schnitts"
-    assert huerde_text(1.4) == "nötig mindestens 140 % des 50-Tage-Schnitts"
-    assert prozent_des_schnitts(200, "Prozent") == "300 Prozent des 50-Tage-Schnitts"
-    assert text(700_000, 700_000) == "100 % des 50-Tage-Schnitts"
-    assert "über" not in lage_text(5) + huerde_text(3.0)
-    print(f"  ok: {lage_text(5)}; {huerde_text(3.0)}")
+    assert huerde_text(1.6) == "nötig mindestens plus 60 % über dem 50-Tage-Schnitt"
+    assert huerde_text(1.0, mit_einheit=False) == "nötig mindestens 0 %"
+    assert huerde_text(3.0, mit_einheit=False) == "nötig mindestens plus 200 %"
+    assert prozent_text(100, "Prozent") == "plus 100 Prozent über dem 50-Tage-Schnitt"
+    assert prozent_text(200, fenster=10) == "plus 200 % über dem 10-Tage-Schnitt"
+    assert text(700_000, 700_000) == "0 % über dem 50-Tage-Schnitt"
+    assert text(1_120_000, 700_000) == "plus 60 % über dem 50-Tage-Schnitt"
+    assert vorzeichen_zahl(-50) == "minus 50" and vorzeichen_zahl(12.34, 1) == "plus 12,3"
+    assert "des 50-Tage" not in lage_text(5) + huerde_text(3.0)
+    print(f"  ok: {lage_text(4)}; {huerde_text(1.6)}")
 
     print("\nAlle Volumen-Tests bestanden (ohne Netzwerk).")

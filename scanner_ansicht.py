@@ -301,17 +301,20 @@ def strategie_text(kennung):
                           "ihrer Rückeroberung; Kauf über dem Hoch des Umkehrtags."),
         "earnings_pullback": (f"Earnings-Pullback: ein Kurssprung nach Quartalszahlen, Eröffnung mindestens "
                               f"{p(ep['min_gap_open'])} Prozent oder Schluss mindestens {p(ep['min_gap_close'])} "
-                              f"Prozent über dem Vortag bei einem Volumen von mindestens {p(ep['vol_faktor'])} "
-                              f"Prozent des 10-Tage-Schnitts, in den letzten {ep['suchfenster_tage']} Handelstagen; "
-                              f"danach {ep['min_konsolidierung']} bis {ep['max_konsolidierung']} ruhige Tage über dem "
-                              "Tief "
-                              "des Sprungtags. Kauf über dem Hoch dieser Tage, Stop "
+                              f"Prozent über dem Vortag bei einem Volumen von mindestens plus "
+                              f"{p(ep['vol_faktor'] - 1)} Prozent über dem 10-Tage-Schnitt, in den letzten "
+                              f"{ep['suchfenster_tage']} Handelstagen; danach {ep['min_konsolidierung']} bis "
+                              f"{ep['max_konsolidierung']} ruhige Tage über dem Tief des Sprungtags, an denen das "
+                              "Volumen jeweils höchstens "
+                              f"{mit_vorzeichen((ZENTRAL['volumen']['earnings_ruecksetzer_max'] - 1) * 100, 0)} "
+                              "Prozent über dem 50-Tage-Schnitt liegt. Kauf über dem Hoch dieser Tage, ohne "
+                              "Volumenhürde am Tag des Ausbruchs, Stop "
                               f"{p(ep['porosity'])} Prozent unter ihrem Tief. Den Termin belegt der "
                               "Nasdaq-Kalender."),
         "power_gap": (f"Power-Gap: Eröffnung mindestens {p(ZENTRAL['gap_and_go']['gap_min'])} Prozent über dem "
                       "Vortagesschluss, das Tief bleibt darüber, Schluss im oberen Fünftel der Tagesspanne und "
-                      f"Volumen mindestens {p(ZENTRAL['volumen']['gap_and_go_faktor'])} Prozent des "
-                      "50-Tage-Schnitts; Kauf über dem Tageshoch."),
+                      f"Volumen mindestens plus {p(ZENTRAL['volumen']['gap_and_go_faktor'] - 1)} Prozent über "
+                      "dem 50-Tage-Schnitt; Kauf über dem Tageshoch."),
         "shakeout_spring": ("Shakeout-Spring: eine Aktie im Aufwärtstrend fällt kurz unter eine starke "
                             "Unterstützungszone und schließt am selben Tag wieder darüber; ein späterer Rücksetzer in "
                             "die Zone mit weniger Volumen bestätigt den Spring. Treffer ist die Aktie an dem Tag, an "
@@ -456,7 +459,7 @@ class Feld:
 
     def __init__(self, schluessel, gruppe, titel, art="bereich", spalte=None, einheit="Prozent", erklaerung="",
                  stellen=1, faktor=1.0, vorzeichen=False, signed=False, analysten=False, rechnung=None, quellen=(),
-                 bezug="", linie=""):
+                 bezug="", linie="", versatz=0.0):
         self.schluessel = schluessel
         self.gruppe = gruppe
         self.titel = titel
@@ -466,6 +469,10 @@ class Feld:
         self.erklaerung = erklaerung
         self.stellen = stellen
         self.faktor = faktor
+        # versatz kommt VOR dem faktor dazu: Ein Verhaeltnis zum Schnitt (1,35)
+        # wird mit versatz -1 und faktor 100 zu plus 35 Prozent ueber dem
+        # Schnitt, der IBD-Schreibweise (Gerhard, 30.09.2026 nachmittags).
+        self.versatz = versatz
         self.vorzeichen = vorzeichen
         self.signed = signed
         self.analysten = analysten
@@ -484,9 +491,9 @@ class Feld:
     def werte(self, df, fe=None):
         """Die Werte in der Einheit der Eingabe, als Gleitkommazahlen."""
         if self.rechnung is not None:
-            v = pd.to_numeric(self.rechnung(df), errors="coerce").astype("float64") * self.faktor
+            v = (pd.to_numeric(self.rechnung(df), errors="coerce").astype("float64") + self.versatz) * self.faktor
         elif self.spalte:
-            v = _zahlen(df, self.spalte) * self.faktor
+            v = (_zahlen(df, self.spalte) + self.versatz) * self.faktor
         else:
             v = pd.Series(np.nan, index=df.index, dtype="float64")
         if self.schluessel == "rs" and (fe or {}).get("vorlaeufig"):
@@ -596,7 +603,7 @@ class Feld:
         if s == "rvol_heute":
             v = self.wert(r, fe) if v is _FEHLT else _num(v)
             return ("Relatives Volumen heute nicht verifizierbar" if v is None
-                    else f"Relatives Volumen heute {zahl(v, self.stellen)} {self.einheit}")
+                    else f"Relatives Volumen heute {mit_vorzeichen(v, self.stellen)} {self.einheit}")
         if s == "dollarvol_heute":
             v = self.wert(r, fe) if v is _FEHLT else _num(v)
             return ("Dollarvolumen heute nicht verifizierbar" if v is None
@@ -667,12 +674,16 @@ class Feld:
             return self.titel
         von, bis, _f = self.grenzen(fe)
         einheit = f" {self.einheit}" if self.einheit else ""
+        # Volumen in IBD-Sprache mit dem Vorzeichen als Wort (Gerhard,
+        # 30.09.2026 nachmittags): "ab plus 100 Prozent über dem 50-Tage-Schnitt".
+        ibd = self.einheit.startswith("Prozent über dem") and "Schnitt" in self.einheit
+        z = (lambda x: mit_vorzeichen(x, 0 if float(x).is_integer() else 1)) if ibd else zahl_eingabe
         if von is not None and bis is not None:
-            teil = f"von {zahl_eingabe(von)} bis {zahl_eingabe(bis)}{einheit}"
+            teil = f"von {z(von)} bis {z(bis)}{einheit}"
         elif von is not None:
-            teil = f"ab {zahl_eingabe(von)}{einheit}, nach oben offen"
+            teil = f"ab {z(von)}{einheit}, nach oben offen"
         elif bis is not None:
-            teil = f"bis {zahl_eingabe(bis)}{einheit}, nach unten offen"
+            teil = f"bis {z(bis)}{einheit}, nach unten offen"
         else:
             teil = "angezeigt"
         return f"{self.titel} {teil}" + (", mit vorläufigem RS" if self.schluessel == "rs" and fe.get("vorlaeufig") else "")
@@ -792,8 +803,8 @@ def _felder():
                      "der Tag der Zahlen oder der Handelstag danach, eine eigene Festlegung. Kamen die Zahlen am "
                      "letzten Handelstag nachbörslich, steht die Reaktion noch aus, und es zählen die Zahlen davor; "
                      "ohne bekannte Tageszeit zählt der letzte Handelstag als Tag der Reaktion, wenn sein Volumen "
-                     f"mindestens {zahl_eingabe(sd.ZAHLEN_VOLUMEN_FAKTOR * 100)} Prozent des 50-Tage-Schnitts "
-                     "davor war."),
+                     f"mindestens plus {zahl_eingabe((sd.ZAHLEN_VOLUMEN_FAKTOR - 1) * 100)} Prozent über dem "
+                     "50-Tage-Schnitt davor lag."),
         # Margen, Renditen und Cashflow
         F("marge", "margen", "Bruttomarge", spalte="bruttomarge_pct",
           erklaerung="Bruttogewinn in Prozent des Umsatzes im jüngsten Quartal. Banken, Versicherer und "
@@ -883,20 +894,24 @@ def _felder():
         F("vol_hoeher", "volumen", "Volumen am letzten Handelstag höher als am Vortag", art="ja",
           spalte="vol_hoeher_gestern",
           erklaerung="Am letzten Handelstag wurden mehr Aktien gehandelt als am Tag davor."),
-        # VOLUMEN IN PROZENT DES SCHNITTS (Gerhard, 30.09.2026, Frage 2: "Ueberall
-        # im System soll dieselbe Schreibweise stehen"). Die Spalten bleiben
-        # Verhaeltnisse wie bisher; faktor=100 zeigt sie in Prozent, und die
-        # Grenzen werden in Prozent eingegeben. Die drei gespeicherten Vorlagen
-        # hatten diese Felder am 30.09.2026 alle leer (read-only nachgesehen),
-        # es war also nichts umzurechnen.
+        # VOLUMEN IN IBD-SPRACHE (Gerhard, 30.09.2026 nachmittags: "Das ganze
+        # System ... schreibt das Volumen wieder in Prozent UEBER dem
+        # 50-Tage-Schnitt, genau wie IBD"). Die Spalten bleiben Verhaeltnisse wie
+        # bisher; versatz -1 und faktor 100 zeigen sie als plus oder minus in
+        # Prozent ueber dem Schnitt, und so werden auch die Grenzen eingegeben.
+        # Die drei gespeicherten Vorlagen hatten diese Felder am 30.09.2026 alle
+        # leer (read-only nachgesehen), es war also nichts umzurechnen.
         F("vol_faktor", "volumen", "Relatives Volumen am letzten Handelstag", spalte="tk_vol_faktor",
-          einheit=f"Prozent des {tech['volumen_schnitt_tage']}-Tage-Schnitts", stellen=0, faktor=100.0,
-          erklaerung=f"Volumen des letzten Handelstags in Prozent des Schnitts der {tech['volumen_schnitt_tage']} "
-                     "Handelstage davor; 100 heißt üblich, 200 doppelt so hoch."),
+          einheit=f"Prozent über dem {tech['volumen_schnitt_tage']}-Tage-Schnitt", stellen=0, faktor=100.0,
+          versatz=-1.0, signed=True,
+          erklaerung=f"Volumen des letzten Handelstags in Prozent über dem Schnitt der "
+                     f"{tech['volumen_schnitt_tage']} Handelstage davor, wie bei IBD; 0 heißt üblich, plus 100 doppelt "
+                     "so hoch, minus 50 die Hälfte."),
         F("rvol_heute", "volumen", "Relatives Volumen heute, hochgerechnet über die F(t)-Kurve", spalte="rvol_heute",
-          einheit="Prozent des 50-Tage-Schnitts", stellen=0, faktor=100.0,
-          erklaerung="Das Volumen des Tages in Prozent des Schnitts der 50 Handelstage davor; 100 heißt üblich, 200 "
-                     "doppelt so hoch. Während des Handels holt der Scan das bisherige Volumen von heute und rechnet "
+          einheit="Prozent über dem 50-Tage-Schnitt", stellen=0, faktor=100.0, versatz=-1.0, signed=True,
+          erklaerung="Das Volumen des Tages in Prozent über dem Schnitt der 50 Handelstage davor, wie bei IBD; 0 "
+                     "heißt üblich, plus 100 doppelt so hoch. Während des Handels holt der Scan das bisherige "
+                     "Volumen von heute und rechnet "
                      "es über die F(t)-Kurve der Aktie auf den ganzen Tag hoch, also über den Anteil des "
                      "Tagesvolumens, der zu dieser Uhrzeit üblicherweise schon gehandelt ist. Eine eigene Kurve "
                      "haben die Aktien der Wochenlisten und die einzeln überwachten; für alle anderen ist der Wert "
@@ -910,14 +925,14 @@ def _felder():
                      "Kurve; alle anderen sind während des Handels nicht verifizierbar und fallen beim Filtern "
                      "heraus. Außerhalb des Handels gilt der letzte vollständige Handelstag."),
         F("vol_erste15", "volumen", "Volumen der ersten 15 Minuten im Verhältnis zum Tagesschnitt",
-          spalte="vol_erste15_pct", einheit="Prozent des 20-Tage-Schnitts",
+          spalte="vol_erste15_pct",
           erklaerung="Gehandelte Aktien in den ersten 15 Minuten des letzten Handelstags ab 09:30 New York, aus den "
                      "Fünf-Minuten-Kerzen, in Prozent des durchschnittlichen Tagesvolumens der 20 Handelstage davor; "
                      "100 heißt, schon in diesen Minuten wurde ein ganzes Durchschnitts-Tagesvolumen gehandelt. Die "
                      "Scanner-Tabelle entsteht nachts, der Wert gilt deshalb für den letzten vollständigen "
                      "Handelstag."),
         F("vol_erste20", "volumen", "Volumen der ersten 20 Minuten im Verhältnis zum Tagesschnitt",
-          spalte="vol_erste20_pct", einheit="Prozent des 20-Tage-Schnitts",
+          spalte="vol_erste20_pct",
           erklaerung="Dasselbe für die ersten 20 Minuten des letzten Handelstags ab 09:30 New York, in Prozent des "
                      "durchschnittlichen Tagesvolumens der 20 Handelstage davor."),
         F("vol63", "volumen", "Durchschnittsvolumen über drei Monate", spalte="tk_vol63", einheit="Stück", stellen=0,
@@ -926,17 +941,17 @@ def _felder():
           erklaerung="Kurs mal Volumen im Schnitt der letzten 20 Handelstage. Dieselbe Rechnung wie der "
                      "durchschnittliche Tagesumsatz über 50 Tage, nur über den kürzeren Zeitraum; es zeigt früher, "
                      "wenn der Handel zu- oder abnimmt."),
-        F("vdu", "volumen", "Austrocknen des Volumens", spalte="vdu", einheit="Prozent des 50-Tage-Schnitts",
-          stellen=0, faktor=100.0,
-          erklaerung="Volumen der letzten 10 Handelstage im Schnitt, in Prozent des Schnitts der 50 Handelstage "
-                     "davor; unter 100 trocknet das Volumen aus."),
+        F("vdu", "volumen", "Austrocknen des Volumens", spalte="vdu", einheit="Prozent über dem 50-Tage-Schnitt",
+          stellen=0, faktor=100.0, versatz=-1.0, signed=True,
+          erklaerung="Volumen der letzten 10 Handelstage im Schnitt, in Prozent über dem Schnitt der 50 Handelstage "
+                     "davor; unter 0 trocknet das Volumen aus."),
         F("vol5_20", "volumen", "Volumen 5 Tage zu Volumen 20 Tage", spalte="vol5_20",
-          einheit="Prozent des 20-Tage-Schnitts", stellen=0, faktor=100.0,
-          erklaerung="Das durchschnittliche Tagesvolumen der letzten 5 Handelstage in Prozent des Schnitts der "
-                     "letzten 20; unter 100 heißt, das Volumen trocknet aus."),
+          einheit="Prozent über dem 20-Tage-Schnitt", stellen=0, faktor=100.0, versatz=-1.0, signed=True,
+          erklaerung="Das durchschnittliche Tagesvolumen der letzten 5 Handelstage in Prozent über dem Schnitt der "
+                     "letzten 20; unter 0 heißt, das Volumen trocknet aus."),
         F("vol_spitze", "volumen", "Volumenspitze der letzten 10 Tage", spalte="vol_spitze_10",
-          einheit="Prozent des 50-Tage-Schnitts", stellen=0, faktor=100.0,
-          erklaerung="Das größte Tagesvolumen der letzten 10 Handelstage in Prozent des Schnitts der 50 "
+          einheit="Prozent über dem 50-Tage-Schnitt", stellen=0, faktor=100.0, versatz=-1.0, signed=True,
+          erklaerung="Das größte Tagesvolumen der letzten 10 Handelstage in Prozent über dem Schnitt der 50 "
                      "Handelstage davor."),
         F("ud50", "volumen", "Up/Down-Volumen über 50 Tage", spalte="tk_ud50", einheit="", stellen=2,
           erklaerung=f"Volumen der Plus-Tage der letzten {tech['updown_tage']} Handelstage geteilt durch das Volumen "
@@ -1420,9 +1435,9 @@ _QM = {"dv20": {"min": "1,5"}, "adr": {"min": "3,5"}}
 _JA = {}
 TEMPLATES = (
     _t("kell_bull_snort", "Kell: Bull Snort", "Oliver Kell",
-       {**_KELL, "veraenderung": {"min": "0,01"}, "rvol_heute": {"min": "200"}},
-       hinweis="Kell bevorzugt ein relatives Volumen ab 300 Prozent des 50-Tage-Schnitts, nutzt aber 200 für mehr "
-               "Treffer."),
+       {**_KELL, "veraenderung": {"min": "0,01"}, "rvol_heute": {"min": "100"}},
+       hinweis="Kell bevorzugt ein relatives Volumen ab plus 200 Prozent über dem 50-Tage-Schnitt, nutzt aber plus "
+               "100 für mehr Treffer."),
     _t("kell_52w", "Kell: 52 Week Highs", "Oliver Kell",
        {**_KELL, "tage_hoch_1j": {"min": "0", "max": "0"}, "beta": {"min": "1"}},
        hinweis="Neues 52-Wochen-Hoch heute heißt 0 Handelstage seit dem letzten 52-Wochen-Hoch."),
@@ -1482,14 +1497,14 @@ TEMPLATES = (
        festlegung="nur Aktien im Plus"),
     _t("moglen_eng", "Moglen: Enge und Stärke", "Richard Moglen",
        {"rmv_15": {"min": "0", "max": "15"}, "perf_rang_3m": {"min": "90"}, "ema21": {"min": "-3", "max": "3"},
-        "vol5_20": {"max": "100"}},
+        "vol5_20": {"max": "0"}},
        festlegung="der Abstand zur EMA 21 von minus 3 bis plus 3 Prozent und die Volumenbedingung"),
     _t("jt_peg", "JT: Power Earnings Gap", "JT",
-       {"tage_zahlen": {"min": "0", "max": "1"}, "veraenderung": {"min": "10"}, "rvol_heute": {"min": "300"},
+       {"tage_zahlen": {"min": "0", "max": "1"}, "veraenderung": {"min": "10"}, "rvol_heute": {"min": "200"},
         "ueberraschung": {"min": "20"}},
        quelle="die Forschung von Pocorobba und Thompson"),
     _t("jt_monster", "JT: Monster Gap", "JT",
-       {"tage_zahlen": {"min": "0", "max": "1"}, "veraenderung": {"min": "20"}, "rvol_heute": {"min": "400"}}),
+       {"tage_zahlen": {"min": "0", "max": "1"}, "veraenderung": {"min": "20"}, "rvol_heute": {"min": "300"}}),
     _t("walker_4040", "Walker: 40,40", "Patrick Walker",
        {"kurs": {"min": "10"}, "hoch_1j": {"min": "0", "max": "20"}, "eps_q": {"min": "40"},
         "eps_q1": {"min": "40"}, "eps_q2": {"min": "40"}},
@@ -2276,8 +2291,8 @@ def muster_saetze(r):
                  f"von {_cm_dollar(r.get('cm_q_linie'))} vom {_cm_tag(r.get('cm_q_linie_tag'))}"
                  + (f", das {int(n)} Handelstage stand" if n else "")
                  + f", erster Schluss darüber am {_cm_tag(r.get('cm_q_ausbruch_tag'))}"
-                 + (f", Volumen je Tag {zahl(f * 100, 0)} Prozent des Schnitts der 50 Tage davor"
-                    if f is not None else "")
+                 + (f", Volumen je Tag {mit_vorzeichen((f - 1) * 100, 0)} Prozent über dem Schnitt der 50 "
+                    "Tage davor" if f is not None else "")
                  + f", Einstieg über {_cm_dollar(r.get('cm_q_kp'))}, Stop {_cm_dollar(r.get('cm_q_stop'))}"
                  + ", Volumenschwelle eigene Festlegung")
     if _cm_ja(r, "cm_m"):
@@ -2304,7 +2319,8 @@ def muster_saetze(r):
         lu, f, ab = _num(r.get("cm_v_luecke_pct")), _num(r.get("cm_v_vol_faktor")), _num(r.get("cm_v_abstand_pct"))
         satz = kopf.format(tag=_cm_tag(r.get("cm_v_tag")))
         satz += (f", Lücke {zahl(lu, 1)} Prozent" if lu is not None else "")
-        satz += (f", Volumen {zahl(f * 100, 0)} Prozent des 50-Tage-Schnitts" if f is not None else "")
+        satz += (f", Volumen {mit_vorzeichen((f - 1) * 100, 0)} Prozent über dem 50-Tage-Schnitt"
+                 if f is not None else "")
         satz += (f", davor {zahl(ab, 1)} Prozent unter dem 200-Tage-Hoch" if ab is not None else "")
         satz += " und zwei Monate flach oder fallend"
         if _num(r.get("cm_v_kp")) is not None:
@@ -2403,13 +2419,14 @@ def chartmuster_erklaerung():
         "gezeigt wird es erst nach dem bestätigten Monatsschluss und dann im ganzen Folgemonat. Einstieg über der "
         "Linie, Stop am letzten Tief der Erkennung von Hochs und Tiefs vor dem ersten Schluss über der Linie, mit "
         "dem Zehn-Prozent-Deckel. Eigene Festlegung dazu: Volumen deutlich über dem Schnitt heißt, der Schnitt "
-        f"je Handelstag im Ausbruchsmonat beträgt mindestens {zahl(f['q_vol_faktor'] * 100, 0)} Prozent des "
-        f"Schnitts der {f['q_vol_tage']} Handelstage vor diesem Monat. Ein Monat gilt als abgeschlossen, wenn sein "
-        "letzter "
+        f"je Handelstag im Ausbruchsmonat liegt mindestens plus {zahl((f['q_vol_faktor'] - 1) * 100, 0)} "
+        f"Prozent über dem Schnitt der {f['q_vol_tage']} Handelstage vor diesem Monat. Ein Monat gilt als "
+        "abgeschlossen, wenn sein letzter "
         "Werktag vorbei ist.",
         f"Episodic Pivot: eine Eröffnungslücke von mehr als "
-        f"{pz(q['v_luecke'])} Prozent über dem Schluss des Vortags mit einem Volumen von mindestens "
-        f"{zahl(q['v_vol_faktor'] * 100, 0)} Prozent des {q['v_vol_tage']}-Tage-Schnitts davor, nachdem die "
+        f"{pz(q['v_luecke'])} Prozent über dem Schluss des Vortags mit einem Volumen von mindestens plus "
+        f"{zahl((q['v_vol_faktor'] - 1) * 100, 0)} Prozent über dem {q['v_vol_tage']}-Tage-Schnitt davor, nachdem "
+        "die "
         f"Aktie mindestens zwei Monate tot war und mindestens {pz(q['v_abstand_200'])} Prozent unter ihrem "
         f"{q['v_hoch_tage']}-Tage-Hoch lag. Der Auslöser sind Zahlen am Lückentag oder am Handelstag davor laut "
         "Nasdaq-Kalender; eine Lücke ohne erkannten Auslöser steht getrennt da. Zulassung, Auftrag und "
@@ -3212,19 +3229,25 @@ def selbsttest() -> int:
                            werktag=False)
     p("Am Wochenende gilt der letzte Handelstag", list(s_we.round(2).fillna(-1)) == [1.5, 0.8, -1])
     p("Satz des relativen Volumens",
-      FELD["rvol_heute"].satz({"rvol_heute": 2.0}) == "Relatives Volumen heute 200 Prozent des 50-Tage-Schnitts"
+      FELD["rvol_heute"].satz({"rvol_heute": 2.0}) == "Relatives Volumen heute plus 100 Prozent über dem "
+                                                         "50-Tage-Schnitt"
       and FELD["rvol_heute"].satz({}) == "Relatives Volumen heute nicht verifizierbar")
-    # Volumen in Prozent des Schnitts (Gerhard, 30.09.2026, Frage 2): die Spalte
-    # bleibt ein Verhaeltnis, angezeigt und gefiltert wird in Prozent.
+    # Volumen in IBD-Sprache (Gerhard, 30.09.2026 nachmittags): die Spalte bleibt
+    # ein Verhaeltnis, angezeigt und gefiltert wird in Prozent ueber dem Schnitt.
     _vt = pd.DataFrame({"ticker": ["AAA", "BBB"], "tk_vol_faktor": [2.35, 0.9], "vdu": [0.62, 1.1],
                         "vol_spitze_10": [3.0, 1.2], "vol5_20": [0.8, 1.3]})
-    p("Volumen in Prozent des Schnitts: Werte, Eingabe und Satz",
-      list(FELD["vol_faktor"].werte(_vt)) == [235.0, 90.0]
-      and FELD["vol_faktor"].eingabe_titel("min") == ("Relatives Volumen am letzten Handelstag von, in Prozent des "
-                                                     "50-Tage-Schnitts")
-      and FELD["vdu"].satz({"vdu": 0.62}) == "Austrocknen des Volumens 62 Prozent des 50-Tage-Schnitts"
-      and FELD["vol_spitze"].filtert({"an": True, "min": "250"}) is not False
-      and list(FELD["vol5_20"].werte(_vt)) == [80.0, 130.0],
+    p("Volumen in IBD-Sprache: Werte, Eingabe und Satz",
+      [round(x, 6) for x in FELD["vol_faktor"].werte(_vt)] == [135.0, -10.0]
+      and FELD["vol_faktor"].eingabe_titel("min") == ("Relatives Volumen am letzten Handelstag von, in Prozent über "
+                                                     "dem 50-Tage-Schnitt")
+      and FELD["vdu"].satz({"vdu": 0.62}) == "Austrocknen des Volumens minus 38 Prozent über dem 50-Tage-Schnitt"
+      and FELD["vol_spitze"].filtert({"an": True, "min": "150"}) is not False
+      and [round(x, 6) for x in FELD["vol5_20"].werte(_vt)] == [-20.0, 30.0]
+      and FELD["rvol_heute"].einstellung_text({"an": True, "min": "100"}) == (
+          "Relatives Volumen heute, hochgerechnet über die F(t)-Kurve ab plus 100 Prozent über dem "
+          "50-Tage-Schnitt, nach oben offen")
+      and FELD["vol5_20"].einstellung_text({"an": True, "max": "0"}) == (
+          "Volumen 5 Tage zu Volumen 20 Tage bis 0 Prozent über dem 20-Tage-Schnitt, nach unten offen"),
       FELD["vdu"].satz({"vdu": 0.62}))
     a = auswerten(tab, felder(kurs={"an": True, "min": "100", "max": "10"}), heute)
     p("Von ueber Bis wirkt nicht und wird gemeldet",
@@ -3667,8 +3690,9 @@ def selbsttest() -> int:
            "cm_s_kp": 10.0, "cm_s_stop": 9.0})[0])
     p("Das Zweifache statt 2fache, auch beim Power-Gap (Berichtigung 9)",
       "mindestens das Zweifache des 52-Wochen-Tiefs" in langweile_text()
-      and "Volumen mindestens 300 Prozent des 50-Tage-Schnitts" in strategie_text("power_gap")
-      and "300 Prozent des 10-Tage-Schnitts" in strategie_text("earnings_pullback")
+      and "Volumen mindestens plus 200 Prozent über dem 50-Tage-Schnitt" in strategie_text("power_gap")
+      and "plus 200 Prozent über dem 10-Tage-Schnitt" in strategie_text("earnings_pullback")
+      and "höchstens minus 50 Prozent über dem 50-Tage-Schnitt" in strategie_text("earnings_pullback")
       and _fache(2) == "Zweifache" and _fache(2.5) == "2,5-Fache")
     p("Die vier Strategien aus Antwort 55 stehen in Teil 1 samt Erklärung",
       all(k in AUSWAHL_NAMEN and strategie_text(k) for k in ("cup_woche", "earnings_pullback", "shakeout_spring",
@@ -3696,8 +3720,8 @@ def selbsttest() -> int:
       ms == ["Base-on-Base, die obere Basis seit 7 Wochen nur 3,1 Prozent über dem Ausbruch der unteren, beide "
              "zählen als eine Stufe, Kaufpunkt 287,30 Dollar, Stop 258,57 Dollar",
              "Green Line Breakout mit dem Monatsschluss August 2026 über dem Allzeithoch von 50,25 Dollar vom "
-             "28.11.2025, das 179 Handelstage stand, erster Schluss darüber am 07.08.2026, Volumen je Tag 200 "
-             "Prozent des Schnitts der 50 Tage davor, Einstieg über 50,25 Dollar, Stop 45,23 Dollar, "
+             "28.11.2025, das 179 Handelstage stand, erster Schluss darüber am 07.08.2026, Volumen je Tag "
+             "plus 100 Prozent über dem Schnitt der 50 Tage davor, Einstieg über 50,25 Dollar, Stop 45,23 Dollar, "
              "Volumenschwelle eigene Festlegung",
              "Basis Stufe 1, in Bildung seit 7 Wochen, 14,9 Prozent tief, als Base-on-Base gleiche Stufe wie die "
              "Basis darunter, gezählt seit dem Markttief am 29.07.2026"], " | ".join(ms))
@@ -3723,12 +3747,12 @@ def selbsttest() -> int:
     ms = muster_saetze({"cm_v": 1, "cm_vl": 0, **v_zeile})
     ms_l = muster_saetze({"cm_v": 0, "cm_vl": 1.0, **v_zeile, "cm_v_kp": None, "cm_v_stop": None})
     p("Chartmuster: Episodic Pivot mit Ausloeser und getrennt die Luecke ohne erkannten Ausloeser (O16)",
-      ms == ["Episodic Pivot am 17.09.2026 nach Quartalszahlen, Lücke 13,3 Prozent, Volumen 400 Prozent des "
-             "50-Tage-Schnitts, davor 25,4 Prozent unter dem 200-Tage-Hoch und zwei Monate flach oder fallend, "
+      ms == ["Episodic Pivot am 17.09.2026 nach Quartalszahlen, Lücke 13,3 Prozent, Volumen plus 300 Prozent über "
+             "dem 50-Tage-Schnitt, davor 25,4 Prozent unter dem 200-Tage-Hoch und zwei Monate flach oder fallend, "
              "Einstieg über 35,20 Dollar, dem Hoch der ersten fünf Minuten, Stop 33,66 Dollar, tote Phase und "
              "Eröffnungsbereich nach eigener Festlegung"]
-      and ms_l == ["Lücke ohne erkannten Auslöser am 17.09.2026, Lücke 13,3 Prozent, Volumen 400 Prozent des "
-                   "50-Tage-Schnitts, davor 25,4 Prozent unter dem 200-Tage-Hoch und zwei Monate flach oder "
+      and ms_l == ["Lücke ohne erkannten Auslöser am 17.09.2026, Lücke 13,3 Prozent, Volumen plus 300 Prozent "
+                   "über dem 50-Tage-Schnitt, davor 25,4 Prozent unter dem 200-Tage-Hoch und zwei Monate flach oder "
                    "fallend, Einstieg über dem Eröffnungsbereich, ohne Fünf-Minuten-Kurse nicht bestimmbar, tote "
                    "Phase und Eröffnungsbereich nach eigener Festlegung"], " | ".join(ms + ms_l))
     import chartmuster as cm
@@ -3743,12 +3767,12 @@ def selbsttest() -> int:
                               "höchstens 20 Handelstage zurückliegt", "bei 5 und 10 Prozent",
                               "höchstens 52 Wochen nach ihrer Erstnotiz", "mindestens 3 Wochen und ist 20 bis 50",
                               "mindestens 20 Handelstage zwischen 9 und 11 Dollar",
-                              "mindestens 140 Prozent des Schnitts der 50 Handelstage vor diesem Monat",
+                              "mindestens plus 40 Prozent über dem Schnitt der 50 Handelstage vor diesem Monat",
                               "nur für Aktien über 10 Dollar", "mindestens 5 Wochen, ist höchstens 35 Prozent tief",
                               "mindestens 20 Prozent gewonnen hat", "Follow-through Day bestätigt hat",
                               "mindestens 63 Handelstage ohne neues Hoch",
                               "Eröffnungslücke von mehr als 10 Prozent",
-                              "Volumen von mindestens 300 Prozent des 50-Tage-Schnitts",
+                              "Volumen von mindestens plus 200 Prozent über dem 50-Tage-Schnitt",
                               "mindestens 15 Prozent unter ihrem 200-Tage-Hoch", "höchstens 5 Prozent über dem Schluss",
                               "der letzten 10 Handelstage", "der ersten 5 Minuten"))
       and not any(x in erkl for x in ("Double Bottom:", "höchstens 13 Wochen", "höchstens 3 enge Wochen"))
@@ -3813,9 +3837,9 @@ def selbsttest() -> int:
     w = {t["id"]: t["felder"] for t in TEMPLATES}
     p("Templates: Stichproben der Werte aus dem Auftrag",
       w["kell_bull_snort"] == {"kurs": {"min": "20"}, "volumen": {"min": "500.000"}, "veraenderung": {"min": "0,01"},
-                               "rvol_heute": {"min": "200"}}
-      and w["jt_peg"]["rvol_heute"] == {"min": "300"} and w["jt_monster"]["rvol_heute"] == {"min": "400"}
-      and w["moglen_eng"]["vol5_20"] == {"max": "100"}
+                               "rvol_heute": {"min": "100"}}
+      and w["jt_peg"]["rvol_heute"] == {"min": "200"} and w["jt_monster"]["rvol_heute"] == {"min": "300"}
+      and w["moglen_eng"]["vol5_20"] == {"max": "0"}
       and w["kell_52w"]["tage_hoch_1j"] == {"min": "0", "max": "0"} and w["kell_down_days"]["spy_tag"] == {"max": "-1"}
       and w["qm_top_3m"]["perf_rang_3m"] == {"min": "98"} and w["sb_ep9"]["vol_max_12m"] == {"max": "9.000.000"}
       and w["moglen_eng"]["rmv_15"] == {"min": "0", "max": "15"} and w["oops_super"]["vortagesspanne"] == {"min": "100"}

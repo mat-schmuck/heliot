@@ -3136,7 +3136,8 @@ def _einst_laden():
     design, ton = _einst_eigen_basis()
     st.session_state["einst_basis"] = {"daten": basis, "sha": sha, "fehler": fehler_text}
     st.session_state["einst_modell"] = {"aus": set(basis["alarme_aus"]), "design": design, "klang": ton,
-                                        "vol": dict(basis.get("volumen_prozent") or {}),
+                                        "vol": dict(basis.get("volumen_ueber") or {}),
+                                        "rs": dict(basis.get("ruecksetzer_ueber") or {}),
                                         "eigen_von": st.session_state.get("eigen_gemeldet") or ""}
 
 
@@ -3144,25 +3145,40 @@ def _einst_verwerfen():
     basis = (st.session_state.get("einst_basis") or {}).get("daten") or einstellungen.lesen(None)
     design, ton = _einst_eigen_basis()
     st.session_state["einst_modell"] = {"aus": set(basis["alarme_aus"]), "design": design, "klang": ton,
-                                        "vol": dict(basis.get("volumen_prozent") or {}),
+                                        "vol": dict(basis.get("volumen_ueber") or {}),
+                                        "rs": dict(basis.get("ruecksetzer_ueber") or {}),
                                         "eigen_von": st.session_state.get("eigen_gemeldet") or ""}
 
 
 def _einst_neu() -> dict:
     """Die Alarme und Volumenschwellen der Wahl als Inhalt von einstellungen.json;
-    eine Schwelle steht nur darin, wenn sie von der Vorgabe abweicht."""
+    eine Schwelle steht nur darin, wenn sie von der Vorgabe abweicht. Seit
+    30.09.2026 nachmittags in IBD-Sprache, Prozent ueber dem 50-Tage-Schnitt."""
     modell = st.session_state["einst_modell"]
     vol = {k: v for k, v in (modell.get("vol") or {}).items() if v != einstellungen.volumen_vorgabe(k)}
-    return einstellungen.lesen({"alarme_aus": sorted(modell["aus"]), "volumen_prozent": vol})
+    rs = {k: v for k, v in (modell.get("rs") or {}).items() if v != einstellungen.ruecksetzer_vorgabe(k)}
+    return einstellungen.lesen({"alarme_aus": sorted(modell["aus"]), "volumen_ueber": vol, "ruecksetzer_ueber": rs})
+
+
+def _einst_vol_liste(einst: dict, nur=None) -> list:
+    """Die Volumenschwellen als Satzteile in IBD-Sprache, je Eintrag mit Schwelle
+    oder Obergrenze; nur: Menge von Schluesseln, sonst die von der Vorgabe
+    abweichenden."""
+    raus = []
+    for a in einstellungen.ALARME:
+        s = a["schluessel"]
+        w, vorgabe = einstellungen.volumen_ueber(einst, s), einstellungen.volumen_vorgabe(s)
+        if w is not None and ((s in nur) if nur is not None else w != vorgabe):
+            raus.append(f"{a['name']} {einstellungen.vorzeichen_text(w)} Prozent")
+        r, r_vorgabe = einstellungen.ruecksetzer_ueber(einst, s), einstellungen.ruecksetzer_vorgabe(s)
+        if r is not None and ((s in nur) if nur is not None else r != r_vorgabe):
+            raus.append(f"{a['name']}, Rücksetzer-Tage höchstens {einstellungen.vorzeichen_text(r)} Prozent")
+    return raus
 
 
 def _einst_vol_saetze(einst: dict) -> str:
     """Die Volumenschwellen, die von der Vorgabe abweichen, als Aufzaehlung."""
-    return "; ".join(f"{a['name']} {einstellungen.volumen_prozent(einst, a['schluessel'])} Prozent"
-                     for a in einstellungen.ALARME
-                     if a["schluessel"] in (einst.get("volumen_prozent") or {})
-                     and einstellungen.volumen_prozent(einst, a["schluessel"])
-                     != einstellungen.volumen_vorgabe(a["schluessel"]))
+    return "; ".join(_einst_vol_liste(einst))
 
 
 def _einst_aenderungen(basis: dict, neu: dict) -> list:
@@ -3173,10 +3189,11 @@ def _einst_aenderungen(basis: dict, neu: dict) -> list:
         namen = [a["name"] for a in einstellungen.ALARME if a["schluessel"] in menge]
         if namen:
             saetze.append(satz + "; ".join(namen) + ".")
-    geaendert = [f"{a['name']} {einstellungen.volumen_prozent(neu, a['schluessel'])} Prozent"
-                 for a in einstellungen.ALARME if a["schluessel"] in einstellungen.VOLUMEN_SCHLUESSEL
-                 and einstellungen.volumen_prozent(basis, a["schluessel"])
-                 != einstellungen.volumen_prozent(neu, a["schluessel"])]
+    anders = {a["schluessel"] for a in einstellungen.ALARME
+              if einstellungen.volumen_ueber(basis, a["schluessel"]) != einstellungen.volumen_ueber(neu, a["schluessel"])
+              or einstellungen.ruecksetzer_ueber(basis, a["schluessel"])
+              != einstellungen.ruecksetzer_ueber(neu, a["schluessel"])}
+    geaendert = _einst_vol_liste(neu, nur=anders)
     if geaendert:
         saetze.append("Volumenschwelle geändert: " + "; ".join(geaendert) + ".")
     return saetze
@@ -3200,12 +3217,13 @@ def _einst_haken(k: str, schluessel: str):
         (modell["aus"].discard if st.session_state.get(k, True) else modell["aus"].add)(schluessel)
 
 
-def _einst_vol(k: str, schluessel: str):
-    """Die eingegebene Volumenschwelle in die Wahl uebernehmen."""
+def _einst_vol(k: str, schluessel: str, feld: str = "vol"):
+    """Die eingegebene Volumenschwelle in die Wahl uebernehmen; feld "rs" fuer
+    die Obergrenze der Ruecksetzer-Tage."""
     modell = st.session_state.get("einst_modell")
     wert = st.session_state.get(k)
     if isinstance(modell, dict) and wert is not None:
-        modell.setdefault("vol", {})[schluessel] = int(wert)
+        modell.setdefault(feld, {})[schluessel] = int(wert)
 
 
 def _einst_gruppe_setzen(gruppe: str, an: bool):
@@ -3268,7 +3286,7 @@ def _einst_speichern():
         return
     wann = datetime.now(ZoneInfo("Europe/Vienna")).strftime("%Y-%m-%d %H:%M")
     n_aus = len(neu["alarme_aus"])
-    n_vol = len(neu.get("volumen_prozent") or {})
+    n_vol = len(neu.get("volumen_ueber") or {}) + len(neu.get("ruecksetzer_ueber") or {})
     daten = {"message": f"{einstellungen.DATEI}: {n_aus} {'Alarm' if n_aus == 1 else 'Alarme'} abgewählt, "
                         f"{n_vol} {'Volumenschwelle' if n_vol == 1 else 'Volumenschwellen'} eigen (über Heliot)",
              "content": base64.b64encode(einstellungen.schreiben(neu, geaendert=wann)).decode(), "branch": "main"}
@@ -3344,8 +3362,11 @@ if tab_einst is not None:
                     "Nachtscan rechnet weiter, und die Kaufpunkte stehen weiter im Reiter Aktueller Scan. Auch die "
                     "Meldungen zu offenen Positionen lassen sich abwählen; abgewählt steht bei jeder eine Warnung.")
         st.markdown("Bei jedem Kaufsignal legt eine Zahl fest, wie viel Volumen für eine Meldung nötig ist: das auf "
-                    "den ganzen Tag hochgerechnete Volumen in Prozent des 50-Tage-Schnitts, gemessen über die "
-                    "F(t)-Kurve. 100 heißt mindestens der Schnitt.")
+                    "den ganzen Tag hochgerechnete Volumen in Prozent über dem 50-Tage-Schnitt, gemessen über die "
+                    "F(t)-Kurve, wie bei IBD. 0 heißt mindestens der Schnitt, plus 60 das 1,6-Fache, plus 100 das "
+                    "Doppelte. Beim Earnings-Pullback legt die Zahl fest, wie viel Volumen jeder Rücksetzer-Tag "
+                    "höchstens haben darf; minus 50 heißt höchstens die Hälfte des Schnitts. Am Tag des Ausbruchs "
+                    "hat er keine Volumenhürde.")
         einst_aus_namen = einstellungen.abgewaehlte_namen(einst_basis["daten"])
         # Berichtigung 19 vom 24.09.2026
         st.markdown(("Gespeichert abgewählt: " + "; ".join(einst_aus_namen) + ".") if einst_aus_namen
@@ -3377,15 +3398,28 @@ if tab_einst is not None:
                 # Die Volumenschwelle dieses Musters (Mathias, 29.09.2026), gleich
                 # unter seinem Haken, damit beides in der Tabulator-Folge
                 # zusammensteht.
+                # Seit 30.09.2026 nachmittags in IBD-Sprache, Prozent ueber dem
+                # Schnitt; beim Earnings-Pullback die Obergrenze der Ruecksetzer-Tage.
                 einst_vorgabe = einstellungen.volumen_vorgabe(a["schluessel"])
                 if einst_vorgabe is not None:
                     einst_vk = f"einst_vol_{a['schluessel']}"
-                    st.session_state[einst_vk] = einstellungen.volumen_prozent(
-                        {"volumen_prozent": einst_modell.get("vol") or {}}, a["schluessel"])
-                    st.number_input(f"{a['name']}: Volumen mindestens, in Prozent des 50-Tage-Schnitts, Vorgabe "
-                                    f"{einst_vorgabe}", min_value=einstellungen.VOLUMEN_MIN,
-                                    max_value=einstellungen.VOLUMEN_MAX, step=5, key=einst_vk,
-                                    on_change=_einst_vol, args=(einst_vk, a["schluessel"]),
+                    st.session_state[einst_vk] = einstellungen.volumen_ueber(
+                        {"volumen_ueber": einst_modell.get("vol") or {}}, a["schluessel"])
+                    st.number_input(f"{a['name']}: Volumen mindestens, in Prozent über dem 50-Tage-Schnitt, "
+                                    f"Vorgabe {einstellungen.vorzeichen_text(einst_vorgabe)}",
+                                    min_value=einstellungen.VOLUMEN_MIN, max_value=einstellungen.VOLUMEN_MAX,
+                                    step=5, key=einst_vk, on_change=_einst_vol, args=(einst_vk, a["schluessel"]),
+                                    disabled=rolle != "voll")
+                einst_rs_vorgabe = einstellungen.ruecksetzer_vorgabe(a["schluessel"])
+                if einst_rs_vorgabe is not None:
+                    einst_rk = f"einst_rs_{a['schluessel']}"
+                    st.session_state[einst_rk] = einstellungen.ruecksetzer_ueber(
+                        {"ruecksetzer_ueber": einst_modell.get("rs") or {}}, a["schluessel"])
+                    st.number_input(f"{a['name']}: Volumen der Rücksetzer-Tage höchstens, in Prozent über dem "
+                                    f"50-Tage-Schnitt, Vorgabe {einstellungen.vorzeichen_text(einst_rs_vorgabe)}",
+                                    min_value=einstellungen.RUECKSETZER_MIN,
+                                    max_value=einstellungen.RUECKSETZER_MAX, step=5, key=einst_rk,
+                                    on_change=_einst_vol, args=(einst_rk, a["schluessel"], "rs"),
                                     disabled=rolle != "voll")
                 _sc_erklaerung(f"alarm_{a['schluessel']}", a["name"], a["erklaerung"],
                                frage=f"Was sind {a['name']}?" if a["schluessel"] in EINST_MEHRZAHL else None)

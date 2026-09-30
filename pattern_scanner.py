@@ -516,10 +516,10 @@ def detect_darvas(df: pd.DataFrame) -> dict | None:
         "stop": round(box_bottom - 0.01, 2),
         "ziel": None,
         "status": "Box bestätigt — auf Breakout mit Volumen warten",
-        # Volumen in Prozent des Schnitts (Gerhard, 30.09.2026, Frage 2).
-        "notiz": f"Box {box_bottom:.2f} bis {box_top:.2f}; Breakout nur mit Volumen ab "
-                 f"100 % des {CFG['darvas_vol_avg']}-Tage-Schnitts "
-                 f"({last['vol_schnitt']:,.0f}) gültig",
+        # In IBD-Sprache mit der geltenden Huerde (Gerhard, 30.09.2026 nachmittags).
+        "notiz": f"Box {box_bottom:.2f} bis {box_top:.2f}; Breakout nur mit Volumen ab plus "
+                 f"{(ZENTRAL['volumen']['breakout_faktor'] - 1) * 100:.0f} % über dem "
+                 f"{CFG['darvas_vol_avg']}-Tage-Schnitt ({last['vol_schnitt']:,.0f}) gültig",
     }
 
 
@@ -606,7 +606,8 @@ def detect_vcp(df: pd.DataFrame, tt_pass: bool) -> dict | None:
                    else "VCP (Toleranz)" if dryup
                    else "VCP ohne sauberen Vol-Dry-Up"),
         "notiz": f"Kontraktionen: {seq}; Pivot {pivot:.2f}; "
-                 f"Breakout braucht Volumen ab {CFG['vcp_vol_breakout']*100:.0f} % des 50-Tage-Schnitts",
+                 f"Breakout braucht Volumen ab plus {(CFG['vcp_vol_breakout'] - 1) * 100:.0f} % über dem "
+                 f"50-Tage-Schnitt",
     }
 
 

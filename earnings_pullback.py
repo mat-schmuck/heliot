@@ -41,6 +41,57 @@ C = CFG["earnings_pullback"]
 
 NAME = "Earnings-Pullback"
 
+# DIE RUECKSETZER-TAGE MUESSEN LEISE SEIN (Gerhard, 30.09.2026 nachmittags):
+# "Beim Zurueckkommen soll das Volumen bewusst niedrig sein, damit kein
+# Verkaufsdruck da ist." Jeder Ruecksetzer-Tag hat hoechstens minus 50 Prozent
+# ueber dem 50-Tage-Schnitt, also hoechstens die Haelfte; das ist eine
+# Obergrenze, liegt ein Tag darueber, ist das Setup ungueltig. Am Tag des
+# Ausbruchs gibt es dafuer keine Volumenhuerde mehr (breakout_watcher).
+# RUECKSETZER-TAGE sind alle Handelstage nach dem Sprungtag bis zum letzten
+# abgeschlossenen Handelstag, also genau die 2 bis 15 Tage der Konsolidierung.
+# Der Schnitt je Tag wie im ganzen System: die 50 Handelstage vor diesem Tag.
+# REGEL 3 bleibt: Fehlt das Volumen eines Ruecksetzer-Tags oder eines der 50
+# Tage davor, laesst es sich nicht verifizieren, und es gibt keine Meldung.
+# Die Grenze kommt aus dem Reiter Einstellungen der App (einstellungen.json im
+# Repo), sonst aus config.py (volumen.earnings_ruecksetzer_max).
+_OBERGRENZE = None
+SCHNITT_TAGE = 50
+
+
+def ruecksetzer_obergrenze():
+    """Die Obergrenze als Vielfaches des Schnitts, einmal je Lauf gelesen."""
+    global _OBERGRENZE
+    if _OBERGRENZE is None:
+        try:
+            from pathlib import Path
+            import einstellungen
+            pfad = Path(einstellungen.DATEI)
+            _OBERGRENZE = einstellungen.ruecksetzer_faktor(
+                einstellungen.lesen(pfad.read_bytes() if pfad.exists() else None))
+        except Exception:
+            _OBERGRENZE = float(CFG["volumen"]["earnings_ruecksetzer_max"])
+    return _OBERGRENZE
+
+
+def ruecksetzer_leise(df, gap_i, obergrenze):
+    """Pruefen, ob jeder Ruecksetzer-Tag hoechstens obergrenze mal den Schnitt
+    der 50 Handelstage davor hat. Rueckgabe (ok, hoechster Wert in Prozent ueber
+    dem Schnitt oder None, Grund); Grund ist leer, wenn alles verifiziert ist."""
+    vol = pd.to_numeric(df["volume"], errors="coerce")
+    hoechst = None
+    for d in range(gap_i + 1, len(df)):
+        if d < SCHNITT_TAGE:
+            return False, None, "keine 50 Handelstage vor einem Rücksetzer-Tag"
+        v = vol.iloc[d]
+        davor = vol.iloc[d - SCHNITT_TAGE:d]
+        if pd.isna(v) or v <= 0 or bool(davor.isna().any()) or bool((davor <= 0).any()):
+            return False, None, "Volumen eines Rücksetzer-Tags nicht verifizierbar"
+        verh = float(v) / float(davor.mean())
+        hoechst = verh if hoechst is None else max(hoechst, verh)
+        if verh > obergrenze + 1e-12:
+            return False, (verh - 1) * 100, "Rücksetzer-Tag zu laut"
+    return True, None if hoechst is None else (hoechst - 1) * 100, ""
+
 
 def _gap_tage(df):
     """Alle Gap-Kandidaten der letzten `suchfenster_tage`, juengster zuerst.
@@ -147,7 +198,7 @@ def _termin_belegt(ticker, gap_datum, termine=None, kalender=None):
     return False
 
 
-def detect_earnings_pullback(df, ticker, termine=None, kalender=None):
+def detect_earnings_pullback(df, ticker, termine=None, kalender=None, obergrenze=None):
     """Der Detektor im Format der uebrigen Muster, oder None.
 
     Kaufpunkt = Konsolidierungshoch plus 1 Cent. Stop (Regelfrage G7,
@@ -166,12 +217,19 @@ def detect_earnings_pullback(df, ticker, termine=None, kalender=None):
     die gemeinte und die wirksame.
 
     Kein Kursziel: Die Bewirtschaftung uebernimmt Kapitel 12 in der
-    Klasse zahlen_luecke (60 Tage Zeitdeckel, exakt die PEAD-Frist)."""
+    Klasse zahlen_luecke (60 Tage Zeitdeckel, exakt die PEAD-Frist).
+
+    obergrenze: das Hoechste fuer die Ruecksetzer-Tage als Vielfaches des
+    Schnitts (Gerhard, 30.09.2026); None heisst aus den Einstellungen."""
     if df is None or len(df) < 30:
         return None
+    grenze = ruecksetzer_obergrenze() if obergrenze is None else float(obergrenze)
     for gap_i, gap_pct in _gap_tage(df):
         kons = _konsolidierung(df, gap_i)
         if not kons:
+            continue
+        leise, laut_pct, _grund = ruecksetzer_leise(df, gap_i, grenze)
+        if not leise:
             continue
         try:
             gap_datum = pd.Timestamp(df["datetime"].iloc[gap_i]).date()
@@ -191,9 +249,18 @@ def detect_earnings_pullback(df, ticker, termine=None, kalender=None):
                        f"Konsolidierung"),
             "notiz": (f"Gap-Tag {gap_datum:%d.%m.} +{gap_pct * 100:.0f}%; "
                       f"Konsolidierung {kons['dauer']} Tage, "
-                      f"{kons['tief']:.2f} bis {kons['hoch']:.2f}"),
+                      f"{kons['tief']:.2f} bis {kons['hoch']:.2f}; lautester "
+                      f"Rücksetzer-Tag {_vz(laut_pct)} % über dem 50-Tage-Schnitt"),
         }
     return None
+
+
+def _vz(pct):
+    """"plus 4", "minus 55" oder "0"; None wird "unbekannt"."""
+    if pct is None:
+        return "unbekannt"
+    w = int(round(float(pct)))
+    return "0" if w == 0 else (f"plus {w}" if w > 0 else f"minus {-w}")
 
 
 # ---------------------------------------------------------------------------
@@ -229,16 +296,20 @@ def selbsttest() -> int:
     # pauschale _reihe setzt das Tief zu eng; der Gap-Tag bekommt es
     # deshalb ausdruecklich gesetzt, sonst prueft jeder Fall nur die
     # Luecken-Regel statt seines eigentlichen Gegenstands.
-    kurse = [100.0] * 30 + [115.0] + [113.0, 113.5, 113.0, 113.5]
-    vol = [1_000_000] * 30 + [5_000_000] + [1_500_000] * 4
+    # Seit 30.09.2026 mit 60 ruhigen Tagen davor, damit jeder Ruecksetzer-Tag
+    # seinen 50-Tage-Schnitt hat, und mit leisen Ruecksetzer-Tagen: 400.000
+    # gegen gut eine Million Schnitt, rund minus 62 bis 63 Prozent.
+    VOR = 60
+    kurse = [100.0] * VOR + [115.0] + [113.0, 113.5, 113.0, 113.5]
+    vol = [1_000_000] * VOR + [5_000_000] + [400_000] * 4
 
     def bau(kursliste, volliste, gap_low=109.0):
         d = _reihe(kursliste, volliste)
-        d.loc[30, "low"] = gap_low
+        d.loc[VOR, "low"] = gap_low
         return d
 
     df = bau(kurse, vol)
-    gap_datum = pd.Timestamp(df["datetime"].iloc[30]).date()
+    gap_datum = pd.Timestamp(df["datetime"].iloc[VOR]).date()
     kal_ok = [(gap_datum, 25.0)]
     kal_negativ = [(gap_datum, -12.0)]
 
@@ -269,19 +340,40 @@ def selbsttest() -> int:
     p("Bruch des Gap-Tag-Tiefs ergibt kein Signal",
       detect_earnings_pullback(df_bruch, "TST", kalender=kal_ok) is None)
 
-    vol_duenn = [1_000_000] * 30 + [1_400_000] + [1_500_000] * 4
+    vol_duenn = [1_000_000] * VOR + [1_400_000] + [400_000] * 4
     p("Gap ohne Volumen ergibt kein Signal",
       detect_earnings_pullback(bau(kurse, vol_duenn), "TST",
                                kalender=kal_ok) is None)
 
-    kurse_breit = [100.0] * 30 + [115.0] + [113.0, 116.0, 111.0, 113.5]
+    # Die Ruecksetzer-Tage (Gerhard, 30.09.2026 nachmittags)
+    vol_laut = [1_000_000] * VOR + [5_000_000] + [400_000, 700_000, 400_000, 400_000]
+    p("Ein lauter Ruecksetzer-Tag macht das Setup ungueltig",
+      detect_earnings_pullback(bau(kurse, vol_laut), "TST", kalender=kal_ok, obergrenze=0.5) is None)
+    p("Dieselbe Reihe mit Obergrenze minus 30 Prozent aus den Einstellungen gilt",
+      detect_earnings_pullback(bau(kurse, vol_laut), "TST", kalender=kal_ok, obergrenze=0.7) is not None)
+    vol_fehlt = [1_000_000] * VOR + [5_000_000] + [400_000, float("nan"), 400_000, 400_000]
+    p("Fehlt das Volumen eines Ruecksetzer-Tags, keine Meldung (Regel 3)",
+      detect_earnings_pullback(bau(kurse, vol_fehlt), "TST", kalender=kal_ok, obergrenze=0.5) is None)
+    kurz = bau([100.0] * 30 + kurse[VOR:], [1_000_000] * 30 + vol[VOR:])
+    kurz.loc[30, "low"] = 109.0
+    p("Ohne 50 Handelstage vor den Ruecksetzer-Tagen keine Meldung",
+      detect_earnings_pullback(kurz, "TST", kalender=[(pd.Timestamp(kurz["datetime"].iloc[30]).date(), 25.0)],
+                               obergrenze=0.5) is None)
+    ok_r, laut_r, grund_r = ruecksetzer_leise(df, VOR, 0.5)
+    p("Der lauteste der leisen Ruecksetzer-Tage liegt bei rund minus 62 Prozent",
+      ok_r and grund_r == "" and -63 < laut_r < -61, f"{laut_r}")
+    p("Die Notiz nennt den lautesten Ruecksetzer-Tag in IBD-Sprache",
+      "lautester Rücksetzer-Tag minus 62 % über dem 50-Tage-Schnitt"
+      in (detect_earnings_pullback(df, "TST", kalender=kal_ok, obergrenze=0.5) or {}).get("notiz", ""))
+
+    kurse_breit = [100.0] * VOR + [115.0] + [113.0, 116.0, 111.0, 113.5]
     p("Zu breite Konsolidierung ergibt kein Signal",
       detect_earnings_pullback(bau(kurse_breit, vol), "TST",
                                kalender=kal_ok) is None)
 
     p("Zu kurze Konsolidierung (1 Tag) ergibt noch kein Signal",
       detect_earnings_pullback(
-          bau(kurse[:32], vol[:32]), "TST", kalender=kal_ok) is None)
+          bau(kurse[:VOR + 2], vol[:VOR + 2]), "TST", kalender=kal_ok) is None)
 
     zweitquelle = {"TST": {"datum": gap_datum.isoformat()}}
     p("Zweitquelle Terminmodul belegt den Termin",

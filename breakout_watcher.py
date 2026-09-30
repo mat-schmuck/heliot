@@ -13,15 +13,17 @@ Wächter prüft, ob ein Ausbruch wirklich stattfindet und ob er gültig ist.
 Volumen: GERECHNET WIRD AUSSCHLIESSLICH IN volumen.py (Gerhard,
 28.07.2026) — IBD "Volume % Change" mit Hochrechnung über die
 Fünf-Minuten-Referenzkurve, Maßstab ist der 50-Tage-Schnitt. Die
-Schwellen je Strategie (als Prozent gegenüber dem Üblichen FÜR DIESE
-UHRZEIT):
-  Darvas Box          0 % (Volumen über dem Schnitt)
-  VCP                +40 % (Minervini: 40 bis 50 % über Ø)
-  Cup & Handle        0 % (O'Neil: Volumen-Bestätigung)
-  Rectangle Top       0 % UND Kurs > SMA21 (Bulkowskis bestes Setup)
-  High & Tight Flag   0 %
-  Fallback-Level      0 %
-  Gap and Go       +400 %, vor 10:00 New Yorker Zeit +200 %
+Schwellen je Strategie in IBD-Sprache, als Prozent UEBER dem Ueblichen FUER
+DIESE UHRZEIT (Gerhard, 30.09.2026 nachmittags; config.py volumen.*):
+  alle Muster, Fallbacks und Alarm-Muster   plus 60 %
+  Fallback 52-Wochen-Hoch                   plus 100 %
+  Earnings-Pullback                         keine Huerde am Tag des Ausbruchs;
+                                            jeder Ruecksetzer-Tag hoechstens
+                                            minus 50 % (im Nachtscan)
+  Power-Gap am Lueckentag                   plus 200 %
+  Power-Gap-Einstieg am Folgetag            0 %
+  Red to Green                              eigene Signatur
+Beurteilt wird ab fuenf Minuten nach Handelsbeginn (volumen.schon_messbar).
 
 Aufruf:
   export TWELVE_DATA_API_KEY="dein_key"
@@ -311,12 +313,14 @@ VOL_FAKTOR = {
     "Rectangle Top": _VOL["breakout_faktor"],
     "High & Tight Flag": _VOL["breakout_faktor"],
     # Earnings-Pullback (Gerhards Freigabe 31.08.2026): Ausbruch aus der
-    # Konsolidierung nach dem Zahlen-Gap. Die VCP-Huerde (140 Prozent
-    # vom Schnitt) statt der Standard-Huerde — der Ausbruch soll zeigen,
-    # dass die Nachfrage nach der Ruhephase ZURUECK ist; O'Neils Rahmen
-    # fuer solche Fortsetzungen nennt 40 bis 50 Prozent ueber dem
-    # Schnitt, genau dieses Band.
-    "Earnings-Pullback": _VOL["breakout_faktor_vcp"],
+    # Konsolidierung nach dem Zahlen-Gap. Bis 30.09.2026 mit der VCP-Huerde;
+    # SEITHER KEINE HUERDE AM TAG DES AUSBRUCHS (Gerhard, 30.09.2026
+    # nachmittags: "Am Alarm-Tag ... gibt es keine Volumenhuerde"). Die
+    # Strategie kauft einen Ruecksetzer, dessen Tage bewusst leise sein
+    # muessen; das prueft der Nachtscan (earnings_pullback.py, hoechstens
+    # minus 50 Prozent je Ruecksetzer-Tag). 0 heisst hier: keine Huerde,
+    # siehe volumen_urteil.
+    "Earnings-Pullback": 0.0,
     # HTF Innen-Einstieg (Soreide-Ausbau, 31.08.2026): dieselbe Huerde
     # wie die Flagge selbst — das Volumen steckt im Fahnenmast.
     "HTF Innen-Einstieg": _VOL["breakout_faktor"],
@@ -325,9 +329,9 @@ VOL_FAKTOR = {
     # Volumen-Massstab, keine Sonderhuerde.
     "EMA Crossback": _VOL["breakout_faktor"],
     # DIE SECHS ALARM-MUSTER (Gerhard, 22.09.2026, O5): dieselben Melderegeln
-    # wie bei den bestehenden Strategien, bei Three Weeks Tight mit 40 Prozent
-    # ueber dem Schnitt. Welche Huerde je Muster gilt, steht in
-    # alarm_muster.VOL_SCHLUESSEL und nur dort.
+    # wie bei den bestehenden Strategien. Welche Huerde je Muster gilt, steht
+    # in alarm_muster.VOL_SCHLUESSEL und nur dort; seit 30.09.2026 haben alle,
+    # auch Three Weeks Tight, plus 60 Prozent ueber dem Schnitt.
     **{name: _VOL[alarm_muster.VOL_SCHLUESSEL.get(name, alarm_muster.VOL_SCHLUESSEL_STANDARD)]
        for name in alarm_muster.NAMEN.values()},
     # REGEL 2 (Gerhard, 29.09.2026): das 52-Wochen-Hoch als Ersatzmuster nur
@@ -336,6 +340,10 @@ VOL_FAKTOR = {
     "Fallback: 52W-Hoch-Breakout": _VOL["breakout_faktor_52w"],
 }
 VOL_FAKTOR_FALLBACK = _VOL["breakout_faktor"]
+# Power-Gap-Einstieg am Folgetag: mindestens der Schnitt, also 0 Prozent
+# (Gerhard, 30.09.2026). Bis dahin nahm er VOL_FAKTOR_FALLBACK; seit dessen
+# Anhebung auf plus 60 Prozent hat er einen eigenen Wert.
+GAP_FOLGETAG_FAKTOR = _VOL["gap_folgetag_faktor"]
 
 # REGEL 3 (Gerhard, 29.09.2026): Gemeldet wird nur mit verifiziertem Volumen,
 # und zwar mit Volumendaten von yfinance. Bis dahin durften einige Muster
@@ -1902,6 +1910,19 @@ def volumen_urteil(item: dict, quote: dict) -> dict:
     # Wahl wie beim Zusammenlegen gleicher Preise.
     faktor = max(vol_faktor(n) for n in (item.get("strategien") or [item["strategie"]]))
     vol, avg = quote["volume"], quote["avg_volume"]
+    if faktor <= 0:
+        # KEINE HUERDE AM TAG DES AUSBRUCHS (Earnings-Pullback, Gerhard,
+        # 30.09.2026 nachmittags): Das Urteil lautet ja, gleich zu welcher
+        # Uhrzeit und aus welcher Quelle. Regel 3 gilt fuer diese Strategie den
+        # Ruecksetzer-Tagen, die der Nachtscan prueft. Die Zahl steht nur zur
+        # Auskunft da, und nur, wenn sie schon messbar ist und von Yahoo kommt.
+        zeigen = volumen_messbar() and volumen_von_yahoo(quote)
+        r = vol_verhaeltnis(vol, avg, item["ticker"]) if zeigen else None
+        return {"vol_ratio": r, "vol_pct": None if r is None else (r - 1) * 100,
+                "vol_noetig": 0.0, "vol_ok": True, "vol_ohne_huerde": True,
+                "vol_nicht_verifizierbar": False, "vol_fremdquelle": not volumen_von_yahoo(quote),
+                "vol_vor_messung": not volumen_messbar(), "vol_roh": vol,
+                "vol_anteil": tagesanteil(item["ticker"])}
 
     # RELATIVES VOLUMEN, auf den ganzen Tag hochgerechnet (volumen.py).
     #
@@ -2279,8 +2300,8 @@ def format_r2g(t: dict) -> str:
         kopfzeile(t["ticker"], t.get("firma", ""), "Red-to-Green"),
         f"Kreuzung {t['kurs']:.2f} über Vortagesschluss "
         f"{t['vortagesschluss']:.2f}; Minute {t['minute']} des Handelstages",
-        # Seit 30.09.2026 in Prozent des 50-Tage-Schnitts (Gerhard, Frage 2).
-        f"Vol Sprung {volumen.prozent_des_schnitts(sig['sprung_pct'])}"
+        # In IBD-Sprache, Prozent ueber dem Schnitt (Gerhard, 30.09.2026).
+        f"Vol Sprung {volumen.prozent_text(sig['sprung_pct'])}"
         + (", Anflug trocken" if sig["anflug_pct"] is not None
            and sig["anflug_pct"] <= 0 else "")
         + ("; erste 30 Minuten, Anflug entfällt" if sig["in_fruehphase"] else ""),
@@ -2298,8 +2319,8 @@ def format_gapgo(g: dict) -> str:
       Strich.
     - Ø statt "20-Tage-Durchschnitt" (kuerzer); Vielfache mit dem Wort
       "mal" statt dem Kreuz-Symbol ×. Das VOLUMEN steht seit 30.09.2026
-      ueberall in Prozent des 50-Tage-Schnitts (Gerhard, Frage 2), also
-      "300 % des 50-Tage-Schnitts" statt "3 mal Volumen".
+      ueberall in IBD-Sprache, als Prozent ueber dem 50-Tage-Schnitt, also
+      "plus 200 % über dem 50-Tage-Schnitt" statt "3 mal Volumen".
     - Fuellwoerter wie "erst"/"nur" weglassen; die immer wahre Zeile
       "Luecke verteidigt" bleibt draussen.
     - Sonst alle Angaben drin — radikaleres Kuerzen war Mathias zu viel."""
@@ -2330,8 +2351,8 @@ def format_gapgo(g: dict) -> str:
               f"Kaufpunkt (Folgetag) {g['kp']:.2f}, {stop_txt}"]
     if not g["bestaetigt"]:
         zeilen.append(f"Schlussbestätigung (oberes Fünftel + Volumen "
-                      f"{gap_faktor() * 100:.0f} % {volumen.SCHNITT_WORT}) "
-                      f"folgt zum Handelsende")
+                      f"{volumen.vorzeichen_zahl(volumen.huerde_prozent(gap_faktor()))} % "
+                      f"{volumen.SCHNITT_WORT}) folgt zum Handelsende")
     z = zusatz_zeile(g.get("ticker"))
     if z:
         zeilen.append(z)
@@ -2785,7 +2806,7 @@ def gapgo_einstiege_pruefen(state: dict, quotes: dict) -> tuple:
         # davor keine Zahl und kein Urteil, der Einstieg bleibt offen.
         vol_ratio = (vol_verhaeltnis(q.get("volume"), q.get("avg_volume"), t)
                      if volumen_messbar() else None)
-        vol_ok = (vol_ratio is not None and vol_ratio >= VOL_FAKTOR_FALLBACK
+        vol_ok = (vol_ratio is not None and vol_ratio >= GAP_FOLGETAG_FAKTOR
                   and volumen_von_yahoo(q))
         if not vol_ok:
             if not e.get("ohne_volumen"):
@@ -2806,7 +2827,7 @@ def gapgo_einstiege_pruefen(state: dict, quotes: dict) -> tuple:
             "kurs": kurs, "bestaetigt": bool(e.get("bestaetigt")),
             "uebersprungen": ueber,
             "vol_ratio": vol_ratio, "vol_pct": (vol_ratio - 1) * 100,
-            "vol_noetig": VOL_FAKTOR_FALLBACK, "vol_ok": True,
+            "vol_noetig": GAP_FOLGETAG_FAKTOR, "vol_ok": True,
             "key": f"{GAPGO_UEBER_MARKE if ueber else GAPGO_EIN_MARKE}{t}|{signal}"})
     return einstiege, geaendert
 
@@ -3507,7 +3528,7 @@ def schlussnahe_befunde(topic, nacht, basis, ws, state, schon_gemeldet,
                               "text": f"INFORMATION: Sektor-Radar {tr['etf']} ({tr['name']}) "
                                       f"dreht nach {'oben' if tr['richtung'] == 'hoch' else 'unten'}; "
                                       f"Volumen hochgerechnet "
-                                      f"{volumen.prozent_des_schnitts(tr['volumen_pct'])}; "
+                                      f"{volumen.prozent_text(tr['volumen_pct'])}; "
                                       f"Kurs {tr['kurs']:.2f}"})
     except Exception as ex:
         print(f"  Schlussnah, Sektor-Radar: {type(ex).__name__}: {ex}")
@@ -3639,11 +3660,15 @@ def vol_satz(t: dict) -> str:
     Seit 22.09.2026 eine eigene Funktion, weil die Alarm-Muster (O10) ihre
     eigene Meldung bauen und darin GENAU dieselbe Volumenaussage stehen soll."""
     lage = volumen.lage_text(t.get("vol_pct"), VOL_FENSTER)
-    # Die Huerde nur nennen, wo sie vom Ueblichen abweicht (VCP). Seit
-    # 30.09.2026 in Prozent des Schnitts (Gerhard, Frage 2); die Einheit
+    if t.get("vol_ohne_huerde"):
+        # Earnings-Pullback: keine Huerde am Tag des Ausbruchs (Gerhard,
+        # 30.09.2026); die Zahl nur, wenn sie schon messbar ist.
+        return "Vol ohne Hürde" + (f", {lage}" if t.get("vol_pct") is not None else "")
+    # DIE HUERDE STEHT IMMER DABEI (seit 30.09.2026 nachmittags): Gerhard war
+    # von plus 50 Prozent ausgegangen, wo plus 0 galt; mit Huerde in jeder
+    # Meldung kann das nicht mehr unbemerkt bleiben. IBD-Sprache, die Einheit
     # steht schon in der Lage davor.
-    huerde = ("" if t["vol_noetig"] <= 1.0
-              else ", " + volumen.huerde_text(t["vol_noetig"], mit_einheit=False))
+    huerde = ", " + volumen.huerde_text(t["vol_noetig"], mit_einheit=False)
     if t["vol_ok"] is True:
         return f"Vol BESTÄTIGT, {lage}{huerde}"
     if t["vol_ok"] is False:

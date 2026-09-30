@@ -443,15 +443,15 @@ def volumen_saetze(live, kurve, kurve_quelle=""):
             s.append("Nach unserer Volumenformel nicht verifizierbar: "
                      + ("kein 50-Tage-Schnitt." if not v50 else "keine eigene Volumenkurve, unter 40 Handelstagen Historie."))
         else:
-            # Seit 30.09.2026 in Prozent des 50-Tage-Schnitts (Gerhard, Frage 2).
-            s.append(f"Nach unserer Volumenformel, hochgerechnet auf den ganzen Tag: {zahl(p + 100, 0)} Prozent des "
-                     "50-Tage-Schnitts"
+            # In IBD-Sprache, Prozent ueber dem Schnitt (Gerhard, 30.09.2026 nachmittags).
+            s.append(f"Nach unserer Volumenformel, hochgerechnet auf den ganzen Tag: {prozent(p)} über dem "
+                     "50-Tage-Schnitt"
                      + (", Kurve aus dem Vorrat des Nachtscans" if kurve_quelle == "Vorrat" else ", Kurve frisch aus der eigenen Fünf-Minuten-Historie")
                      + ".")
     else:
         s.append(f"Letzter Handelstag {datum_text(live.get('tag'))}: {zahl(v_bisher)} Stück gehandelt.")
         p = volumen.volume_pct_change(v_bisher, v50, None, None) if v50 else None
-        s.append("Nach unserer Volumenformel: " + (f"{zahl(p + 100, 0)} Prozent des 50-Tage-Schnitts." if p is not None
+        s.append("Nach unserer Volumenformel: " + (f"{prozent(p)} über dem 50-Tage-Schnitt." if p is not None
                                                      else "nicht verifizierbar, kein 50-Tage-Schnitt."))
     if v50:
         s.append(f"50-Tage-Schnitt: {zahl(v50)} Stück je Tag.")
@@ -566,7 +566,7 @@ def technik_saetze(e, live=None):
     if tk.get("seit_eroeffnung") is not None:
         teile.append(f"seit Eröffnung {prozent(tk['seit_eroeffnung'], 1)}")
     if tk.get("vol_faktor") is not None:
-        teile.append(f"Volumen {zahl(tk['vol_faktor'] * 100, 0)} Prozent des 50-Tage-Schnitts")
+        teile.append(f"Volumen {prozent((tk['vol_faktor'] - 1) * 100)} über dem 50-Tage-Schnitt")
     s.append((f"Am {nacht}: " + "; ".join(teile) + ".") if teile else "Eröffnungslücke nicht bekannt.")
     if tk.get("pivot"):
         s.append("Episodic Pivot: Die Eröffnungslücke liegt bei 10 Prozent oder mehr.")
@@ -1555,9 +1555,9 @@ _ERKLAERUNG_EIGENE = {
                         "stammen: aus den amtlichen Berichten an die SEC über die genannte Zahl von Quartalen."),),
     "Volumen": (("Bisher gehandelt", "Die Stückzahl, die heute seit Handelsbeginn in New York gehandelt wurde."),
                 ("Volumenformel", "Das bisherige Volumen wird mit der eigenen Volumenkurve der Aktie auf den ganzen "
-                                  "Tag hochgerechnet und mit dem 50-Tage-Schnitt verglichen, in Prozent des Schnitts; "
-                                  "100 heißt üblich, 200 doppelt so viel. Ohne eigene Kurve ist das Volumen nicht "
-                                  "verifizierbar, geschätzt wird nichts."),
+                                  "Tag hochgerechnet und mit dem 50-Tage-Schnitt verglichen, in Prozent über dem "
+                                  "Schnitt wie bei IBD; 0 heißt üblich, plus 100 doppelt so viel, minus 50 die Hälfte. "
+                                  "Ohne eigene Kurve ist das Volumen nicht verifizierbar, geschätzt wird nichts."),
                 ("50-Tage-Schnitt", "Gehandelte Aktien je Tag im Schnitt der 50 Handelstage davor.")),
     "Technische Kennzahlen": (("Allzeithoch", "Der höchste Kurs der ganzen Kurshistorie und wie weit der Kurs "
                                               "darunter liegt."),),
@@ -2121,14 +2121,14 @@ def selbsttest() -> int:
       live_vor and not live_vor["handel_laeuft"] and live_vor["tag"] == "2026-09-11", live_vor)
     kurve = {0: 0.05, 30: 0.25, 60: 0.35, 390: 1.0}
     v_auf = volumen_saetze(live_auf, kurve, "Vorrat")
-    p("Volumen im Handel: Stueck, Minuten, hochgerechnet; 600.000 in 30 Minuten bei Anteil 0,25 gegen 1 Million heisst 240 Prozent des Schnitts",
-      v_auf[0].startswith("Bisher gehandelt: 600.000 Stück, 30 Minuten") and "240 Prozent des 50-Tage-Schnitts" in v_auf[1]
+    p("Volumen im Handel: Stueck, Minuten, hochgerechnet; 600.000 in 30 Minuten bei Anteil 0,25 gegen 1 Million heisst plus 140 Prozent",
+      v_auf[0].startswith("Bisher gehandelt: 600.000 Stück, 30 Minuten") and "plus 140 Prozent über dem 50-Tage-Schnitt" in v_auf[1]
       and "Vorrat" in v_auf[1], v_auf)
     v_ohne = volumen_saetze(live_auf, None, "keine")
     p("Volumen im Handel ohne Kurve: nicht verifizierbar, nie eine Ersatzrechnung", "nicht verifizierbar" in v_ohne[1] and "Volumenkurve" in v_ohne[1], v_ohne)
     v_zu = volumen_saetze(live_zu, None)
-    p("Volumen nach Schluss: Tagesformel, 60 Prozent des Schnitts", "Letzter Handelstag 11.09.2026: 600.000 Stück" in v_zu[0]
-      and "60 Prozent des 50-Tage-Schnitts" in v_zu[1], v_zu)
+    p("Volumen nach Schluss: Tagesformel, minus 40 Prozent", "Letzter Handelstag 11.09.2026: 600.000 Stück" in v_zu[0]
+      and "minus 40 Prozent über dem 50-Tage-Schnitt" in v_zu[1], v_zu)
 
     teile = bericht("AAOI", rs, ratings, sektoren, live=live_auf, kurve=kurve, kurve_quelle="Vorrat", sektor_name="Technology", sektor_quelle="Wochenliste")
     text = bericht_text(teile)
@@ -2182,7 +2182,7 @@ def selbsttest() -> int:
         "Momentum Burst nach Stockbee am 11.09.2026: plus 5,2 Prozent bei höherem Volumen als am Vortag; "
         "Schluss bei 85 Prozent der Tagesspanne; Vortag minus 0,8 Prozent bei 2,1 Prozent Spanne.",
         "Am 11.09.2026: Eröffnungslücke plus 11,0 Prozent; seit Eröffnung minus 0,5 Prozent; "
-        "Volumen 420 Prozent des 50-Tage-Schnitts.",
+        "Volumen plus 320 Prozent über dem 50-Tage-Schnitt.",
         "Episodic Pivot: Die Eröffnungslücke liegt bei 10 Prozent oder mehr.",
         "Beta gegen SPY über 252 Handelstage: 1,35.",
         "RSI 14 bei 62,5; RSI 2 bei 91,0.",

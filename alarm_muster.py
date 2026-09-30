@@ -365,7 +365,8 @@ def selbsttest() -> int:
       "Börsenmantel" in [e for e in kp if e["muster"] == "IPO Base"][0]["zusatz"])
 
     faktoren = {"breakout_faktor": 1.0, "breakout_faktor_vcp": 1.4}
-    p("O5: Three Weeks Tight braucht 40 Prozent ueber dem Schnitt, die uebrigen den Schnitt",
+    p("O5: Three Weeks Tight hat einen eigenen Schluessel der Huerde (die Werte selbst in config.py, "
+      "seit 30.09.2026 fuer alle plus 60 Prozent)",
       volumen_faktor("Three Weeks Tight", faktoren) == 1.4 and volumen_faktor("Inside Day", faktoren) == 1.0
       and volumen_faktor("IPO Base", faktoren) == 1.0)
 
@@ -392,7 +393,7 @@ def selbsttest() -> int:
 
     t = {"ticker": "AAA", "kaufpunkt": 41.89, "kurs": 42.1, "ueber_pct": 0.5, "stop": 39.89,
          "zusatz": "drei steigende Tage, dann der Inside Day"}
-    text = meldung(t, "AAA (Alpha); Alarm-Muster Inside Day", "Vol BESTÄTIGT, 132% des Schnitts", risiko=4.8)
+    text = meldung(t, "AAA (Alpha); Alarm-Muster Inside Day", "Vol BESTÄTIGT, plus 32 % über dem 50-Tage-Schnitt", risiko=4.8)
     p("O10: die Meldung traegt die Vorsilbe INFORMATION und kein Wort, aus dem die Handels-App eine Order baut",
       text.startswith("INFORMATION: ") and not kein_kaufwort(text), text.replace("\n", " | "))
     p("Die Meldung nennt Einstieg, Kurs, Volumen, Stop und den Zusatz",

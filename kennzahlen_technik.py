@@ -759,7 +759,7 @@ def selbsttest() -> int:
       and momentum_burst([100.0, 100.0, 105.0], [1.0] * 3, [1.0] * 3, [1.0, 5e5, 4e5], 4.0, 100000)["burst"] is False
       and momentum_burst([100.0, 100.0, 105.0], [1.0] * 3, [1.0] * 3, [1.0, 5e4, 9e4], 4.0, 100000)["burst"] is False)
     lk = luecke([0.0] * 50 + [110.0], [100.0] * 50 + [99.0], [100.0] * 50 + [300.0], 10.0, 50)
-    p("Luecke: Eroeffnung 110 nach Schluss 100 heisst plus 10 Prozent, Pivot; seit Eroeffnung minus 10; Volumen 300 Prozent des Schnitts",
+    p("Luecke: Eroeffnung 110 nach Schluss 100 heisst plus 10 Prozent, Pivot; seit Eroeffnung minus 10; Volumen plus 200 Prozent ueber dem Schnitt",
       lk == {"luecke": 10.0, "seit_eroeffnung": -10.0, "vol_faktor": 3.0, "pivot": True}, lk)
     p("Luecke: ohne Eroeffnungskurs nichts, das relative Volumen bleibt",
       luecke([], [100.0] * 51, [100.0] * 50 + [200.0], 10.0, 50)
