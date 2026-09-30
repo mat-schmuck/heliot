@@ -19,7 +19,13 @@
       "TXG|Fallback: 20-Tage-Hoch (Pivot)",
       "TXG|@92.00",
       "ACLS|Fallback: 20-Tage-Hoch (Pivot)",
-      "ACLS|@128.89"
+      "ACLS|@128.89",
+      "AVT|Pocket Pivot",
+      "AVT|@102.99",
+      "NTAP|Cup & Handle (Wochenbasis)",
+      "NTAP|@210.05",
+      "SNPS|EMA Crossback",
+      "SNPS|@418.01"
     ]
   },
   "gemeldet": {
@@ -79,8 +85,8 @@
     "BEST|PNTG|Rectangle Top": "2026-09-28",
     "MAZE|Fallback: MA50-R\u00fcckeroberung": "2026-09-28",
     "BEST|MAZE|Fallback: MA50-R\u00fcckeroberung": "2026-09-28",
-    "NTAP|Cup & Handle (Wochenbasis)": "2026-09-28",
-    "BEST|NTAP|Cup & Handle (Wochenbasis)": "2026-09-28",
+    "NTAP|Cup & Handle (Wochenbasis)": "2026-09-30",
+    "BEST|NTAP|Cup & Handle (Wochenbasis)": "2026-09-30",
     "NTAP|Wick Play": "2026-09-28",
     "BEST|NTAP|Wick Play": "2026-09-28",
     "UEBER|AEO|EMA Crossback": "2026-09-28",
@@ -249,7 +255,11 @@
     "TALO|Fallback: MA50-Pullback": "2026-09-30",
     "BEST|TALO|Fallback: MA50-Pullback": "2026-09-30",
     "ACLS|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-30",
-    "BEST|ACLS|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-30"
+    "BEST|ACLS|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-30",
+    "AVT|Pocket Pivot": "2026-09-30",
+    "BEST|AVT|Pocket Pivot": "2026-09-30",
+    "SNPS|EMA Crossback": "2026-09-30",
+    "BEST|SNPS|EMA Crossback": "2026-09-30"
   },
   "gemeldet_kp": {
     "CXW|Cup & Handle (Wochenbasis)": 31.67,
@@ -292,8 +302,8 @@
     "BEST|PNTG|Rectangle Top": 40.85,
     "MAZE|Fallback: MA50-R\u00fcckeroberung": 27.29,
     "BEST|MAZE|Fallback: MA50-R\u00fcckeroberung": 27.29,
-    "NTAP|Cup & Handle (Wochenbasis)": 203.92,
-    "BEST|NTAP|Cup & Handle (Wochenbasis)": 203.92,
+    "NTAP|Cup & Handle (Wochenbasis)": 210.05,
+    "BEST|NTAP|Cup & Handle (Wochenbasis)": 210.05,
     "NTAP|Wick Play": 204.01,
     "BEST|NTAP|Wick Play": 204.01,
     "VCYT|Fallback: MA50-R\u00fcckeroberung": 46.47,
@@ -424,7 +434,11 @@
     "TALO|Fallback: MA50-Pullback": 16.26,
     "BEST|TALO|Fallback: MA50-Pullback": 16.26,
     "ACLS|Fallback: 20-Tage-Hoch (Pivot)": 128.89,
-    "BEST|ACLS|Fallback: 20-Tage-Hoch (Pivot)": 128.89
+    "BEST|ACLS|Fallback: 20-Tage-Hoch (Pivot)": 128.89,
+    "AVT|Pocket Pivot": 102.99,
+    "BEST|AVT|Pocket Pivot": 102.99,
+    "SNPS|EMA Crossback": 418.01,
+    "BEST|SNPS|EMA Crossback": 418.01
   },
   "gapgo_warten": {
     "BE": {
