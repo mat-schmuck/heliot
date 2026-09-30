@@ -45,7 +45,9 @@
       "DK|Shakeout plus drei",
       "DK|@72.14",
       "SNOW|Wick Play",
-      "SNOW|@347.32"
+      "SNOW|@347.32",
+      "ZETA|Wick Play",
+      "ZETA|@30.51"
     ]
   },
   "gemeldet": {
@@ -303,7 +305,9 @@
     "DK|Shakeout plus drei": "2026-09-30",
     "BEST|DK|Shakeout plus drei": "2026-09-30",
     "SNOW|Wick Play": "2026-09-30",
-    "BEST|SNOW|Wick Play": "2026-09-30"
+    "BEST|SNOW|Wick Play": "2026-09-30",
+    "ZETA|Wick Play": "2026-09-30",
+    "BEST|ZETA|Wick Play": "2026-09-30"
   },
   "gemeldet_kp": {
     "CXW|Cup & Handle (Wochenbasis)": 31.67,
@@ -502,7 +506,9 @@
     "DK|Shakeout plus drei": 72.138,
     "BEST|DK|Shakeout plus drei": 72.138,
     "SNOW|Wick Play": 347.32,
-    "BEST|SNOW|Wick Play": 347.32
+    "BEST|SNOW|Wick Play": 347.32,
+    "ZETA|Wick Play": 30.509,
+    "BEST|ZETA|Wick Play": 30.509
   },
   "gapgo_warten": {
     "BE": {
