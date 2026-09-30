@@ -219,7 +219,8 @@
     "GEWINN|zonenwechsel|SANM|SPRING-2026-09-24|mittel": "2026-09-30",
     "GEWINN|zonenwechsel|VICR|Cup & Handle (Wochenbasis)|stark": "2026-09-30",
     "GEWINN|zonenwechsel|VICR|Fallback: 20-Tage-Hoch (Pivot)|stark": "2026-09-30",
-    "GEWINN|zonenwechsel|FROG|SPRING-2026-09-23|mittel": "2026-09-30"
+    "GEWINN|zonenwechsel|FROG|SPRING-2026-09-23|mittel": "2026-09-30",
+    "TEIL|FORM|Fallback: 20-Tage-Hoch (Pivot)": "2026-09-30"
   },
   "gemeldet_kp": {
     "CXW|Cup & Handle (Wochenbasis)": 31.67,
