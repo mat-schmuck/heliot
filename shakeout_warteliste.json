@@ -1,13 +1,4 @@
 {
- "FEIM": {
-  "spring_index": 500,
-  "spring_datum": "2026-09-11",
-  "zone_min": 80.0,
-  "zone_max": 80.5999984741211,
-  "spring_low": 78.31999969482422,
-  "spring_volumen": 1552200.0,
-  "tage_gewartet": 15
- },
  "VICR": {
   "spring_index": 500,
   "spring_datum": "2026-09-17",
@@ -15,7 +6,7 @@
   "zone_max": 209.52999877929688,
   "spring_low": 206.5500030517578,
   "spring_volumen": 1675610.0,
-  "tage_gewartet": 10
+  "tage_gewartet": 11
  },
  "UCTT": {
   "spring_index": 500,
@@ -24,7 +15,7 @@
   "zone_max": 69.31999969482422,
   "spring_low": 68.2699966430664,
   "spring_volumen": 1314643.0,
-  "tage_gewartet": 9
+  "tage_gewartet": 10
  },
  "AVT": {
   "spring_index": 500,
@@ -33,7 +24,7 @@
   "zone_max": 93.37000274658203,
   "spring_low": 92.66999816894531,
   "spring_volumen": 2665078.0,
-  "tage_gewartet": 9
+  "tage_gewartet": 10
  },
  "MRNA": {
   "spring_index": 500,
@@ -42,7 +33,7 @@
   "zone_max": 176.66000366210938,
   "spring_low": 168.3000030517578,
   "spring_volumen": 23782086.0,
-  "tage_gewartet": 6
+  "tage_gewartet": 7
  },
  "ICHR": {
   "spring_index": 500,
@@ -51,7 +42,7 @@
   "zone_max": 56.60100173950195,
   "spring_low": 56.0,
   "spring_volumen": 381200.0,
-  "tage_gewartet": 2
+  "tage_gewartet": 3
  },
  "SIMO": {
   "spring_index": 499,
@@ -60,7 +51,7 @@
   "zone_max": 275.0,
   "spring_low": 269.3399963378906,
   "spring_volumen": 413317.0,
-  "tage_gewartet": 1
+  "tage_gewartet": 2
  },
  "FROG": {
   "spring_index": 500,
@@ -69,6 +60,6 @@
   "zone_max": 89.16000366210938,
   "spring_low": 87.08999633789062,
   "spring_volumen": 1386814.0,
-  "tage_gewartet": 0
+  "tage_gewartet": 1
  }
 }

@@ -321,5 +321,14 @@
    "zeichen": null,
    "text": "INFORMATION: SNX; Fallback: MA50-Rückeroberung; Kurs 258.11 unter der 8-Tage-EMA 263.09; reiner Hinweis, kein Ausstiegssignal; Kurs 258,11, seit Trigger -0,1 % gleich -0,0 R"
   }
+ ],
+ "geprueft": "2026-09-30",
+ "zurueckgenommen": [
+  "FORM|Cup & Handle (Wochenbasis)",
+  "FORM|Fallback: 20-Tage-Hoch (Pivot)",
+  "FORM|Rectangle Top",
+  "HUT|Fallback: MA50-Rückeroberung",
+  "LUNR|Fallback: MA50-Rückeroberung",
+  "OMER|Cup & Handle (Wochenbasis)"
  ]
 }
