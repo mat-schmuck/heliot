@@ -2444,8 +2444,8 @@ def chartmuster_erklaerung():
         "ihre Einstiege, der Wächter meldet, sobald der Kurs sie überschreitet, und zwar nur für die Aktien "
         "der vier Wochenlisten und die einzeln überwachten. Es gelten dieselben Melderegeln wie bei den "
         "bestehenden Strategien; beim Inside Day meldet nur die Fassung mit drei steigenden Tagen davor, beim "
-        "Shakeout plus drei der Einstieg bei 10 Prozent. Die Meldungen kommen vorerst als Auskunft und nicht "
-        "als Alarm in der Handels-App, bis das Logbuch zeigt, wie die Muster laufen. Bestehende Kaufpunkte "
+        "Shakeout plus drei der Einstieg bei 10 Prozent. Sie melden als Kaufsignal wie die bestehenden "
+        "Strategien, samt Kaufzeile an den Handels-Bot. Bestehende Kaufpunkte "
         "verdrängen sie nie. Jedes der sechs lässt sich im Reiter Einstellungen abwählen; ein abgewähltes Muster "
         "wird weiter geprüft und im Logbuch vermerkt, nur nicht gemeldet.",
         "Alle Stops tragen den Zehn-Prozent-Deckel des Systems. Nach Handelsschluss vergleicht die App ganze "

@@ -1287,16 +1287,20 @@ def alarm_items() -> list[dict]:
     (Gerhard, 22.09.2026, O1: ein eigener Weg neben den bestehenden
     Strategien, in einer eigenen Datei).
 
-    BEWUSST NICHT durch _lege_gleiche_preise_zusammen: Ein Alarm-Muster und
-    ein Kaufpunkt der Mappe duerfen nie zu einer Meldung verschmelzen, sonst
-    wuerde aus einer Auskunft ein Kaufsignal oder umgekehrt. Der Stop bekommt
-    denselben Deckel wie jeder eingelesene Stop."""
+    BEWUSST NICHT durch _lege_gleiche_preise_zusammen. So gebaut am
+    22.09.2026, als die Alarm-Muster noch Auskunft waren; seit sie scharf
+    sind (Gerhard, 29.09.2026, Teil 2), bleibt es dabei, weil seine Regeln
+    dazu nichts sagen. Liegen ein Alarm-Muster und ein Kaufpunkt der Mappe auf
+    demselben Preis, meldet nach Regel 1 nur der zuerst gepruefte
+    (heute_marken, Aktie plus Preis). Der Stop bekommt denselben Deckel wie
+    jeder eingelesene Stop."""
     stand, aktien = alarm_muster.datei_lesen()
     items = _deckel_nachziehen(alarm_muster.eintraege(aktien))
     if items:
         print(f"Alarm-Muster: {len(items)} Kaufpunkt(e) über "
               f"{len({i['ticker'] for i in items})} Aktien "
-              f"(Stand {stand or 'unbekannt'}); sie melden als Auskunft, nicht als Alarm.")
+              f"(Stand {stand or 'unbekannt'}); sie melden wie die bestehenden Strategien, "
+              f"samt Kaufzeile an den Bot.")
     else:
         print("Alarm-Muster: keine Kaufpunkte aus dem letzten Nachtscan.")
     return items
@@ -3657,8 +3661,9 @@ def push_uebersprungen(topic: str, treffer: list[dict]) -> bool:
 def vol_satz(t: dict) -> str:
     """Die Volumenzeile einer Meldung, Wort fuer Wort wie seit dem 29.07.2026.
 
-    Seit 22.09.2026 eine eigene Funktion, weil die Alarm-Muster (O10) ihre
-    eigene Meldung bauen und darin GENAU dieselbe Volumenaussage stehen soll."""
+    Seit 22.09.2026 eine eigene Funktion; bis 30.09.2026 bauten die
+    Alarm-Muster damit ihre eigene Meldung (O10), seither melden sie ueber
+    format_treffer wie die bestehenden Strategien."""
     lage = volumen.lage_text(t.get("vol_pct"), VOL_FENSTER)
     if t.get("vol_ohne_huerde"):
         # Earnings-Pullback: keine Huerde am Tag des Ausbruchs (Gerhard,
@@ -3693,58 +3698,14 @@ def vol_satz(t: dict) -> str:
     return "Vol nicht bewertbar, zu wenig Kurshistorie"
 
 
-# Der Anlass einer Alarm-Meldung, im Wortlaut. KEINES dieser Woerter darf
-# in alarm_muster.KAUF_WOERTER stehen, sonst baute die Handels-App daraus eine
-# Order (der Wortlaut der Alarm-Anlaesse; der Wiedereintritt selbst ist am
-# 23.09.2026 mit Gerhards Regel 1 entfallen):
-# "Volumen hat nachgezogen" statt "Vol jetzt bestätigt".
-ALARM_ANLASS = {
-    "uebersprungen": "übersprungen, der Einstieg ist vorbei",
-    "nachtrag": "Volumen hat nachgezogen",
-}
-
-
-def format_alarm(t: dict) -> str:
-    """Die Meldung eines Alarm-Musters (Gerhard, 22.09.2026, O10): Sie kommt
-    als MELDUNG, nicht als Alarm in der Handels-App. Deshalb traegt sie die
-    Vorsilbe INFORMATION, nennt den Einstieg nicht Kaufpunkt und wird ohne
-    Klick-Adresse gesendet (siehe push_alarm)."""
-    anlass = ALARM_ANLASS.get(str(t.get("anlass") or ""), "")
-    kopf = kopfzeile(t["ticker"], t.get("firma", ""),
-                     f"Alarm-Muster {t['strategie']}"
-                     + (f"; {anlass}" if anlass else ""))
-    risiko = None
-    if t.get("stop") is not None:
-        risiko = exit_regeln.risiko_pct(t["kaufpunkt"], t["stop"])
-    # Beim uebersprungenen Einstieg gibt es bewusst KEIN Volumenurteil
-    # (wie bei den bestehenden Meldungen, siehe pruefe_breakout): Ob das
-    # Volumen stimmt, aendert nichts daran, dass der Einstieg vorbei ist.
-    vol = "" if t.get("anlass") == "uebersprungen" else vol_satz(t)
-    text = alarm_muster.meldung(t, kopf, vol, risiko)
-    # SCHUTZNETZ: Steht in der Meldung doch ein Wort, aus dem die Handels-App
-    # eine Order baut, wird es laut gesagt. Die Meldung geht trotzdem hinaus;
-    # ohne Klick-Adresse kann die App daraus keine Vorschau bauen.
-    treffer = alarm_muster.kein_kaufwort(text)
-    if treffer:
-        print(f"  Achtung: Alarm-Meldung für {t['ticker']} enthält "
-              f"{', '.join(treffer)} — bitte den Wortlaut prüfen.")
-    return text
-
-
-def push_alarm(topic: str, treffer: list[dict]) -> bool:
-    """Die Alarm-Muster-Meldungen, getrennt von den Kaufmeldungen.
-
-    OHNE Klick-Adresse (O10): Die Handels-App soll daraus keine Order bauen.
-    Priorität default, weil es eine Auskunft ist und kein Kaufsignal."""
-    if not treffer:
-        return False
-    absaetze = [format_alarm(t) for t in treffer]
-    aktien = len({t["ticker"] for t in treffer})
-    titel = (f"Alarm-Muster: {len(treffer)} Meldung"
-             + ("en" if len(treffer) != 1 else "")
-             + (f" über {aktien} Aktien" if aktien > 1 else "")
-             + tagesanteil_titel(treffer))
-    return sende(topic, titel, absaetze, "default")
+# DIE EIGENE MELDUNG DER ALARM-MUSTER IST ENTFALLEN (Gerhard, 29.09.2026,
+# Teil 2, "Alarm-Muster scharf schalten, auch fuer den Bot"): Seit dem
+# 30.09.2026 melden Three Weeks Tight, Inside Day, Pocket Pivot, IPO Base,
+# Shakeout plus drei und Wick Play wie die bestehenden Strategien, in
+# derselben Kaufmeldung samt Klick-Adresse der Handels-App, Beobachtung im
+# Chart (Kapitel 12) und Kaufzeile an den Bot. Weg sind damit format_alarm,
+# push_alarm und der Wortlaut ihrer Anlaesse mit der Vorsilbe INFORMATION;
+# der Musterzusatz (O7, O8) steht jetzt in format_treffer.
 
 
 def format_treffer(t: dict, kopfzusatz: str = "") -> str:
@@ -3797,6 +3758,12 @@ def format_treffer(t: dict, kopfzusatz: str = "") -> str:
         schluss.append(f"Ziel {t['ziel']:.2f} (+{chance:.1f}%)")
     if schluss:
         zeilen.append("; ".join(schluss))
+    # DER MUSTERZUSATZ DER ALARM-MUSTER (Gerhard, 22.09.2026, O7 und O8):
+    # beim Inside Day der konservative Einstieg daneben, beim Shakeout plus
+    # drei die 5 Prozent daneben, sonst was das Muster ausmacht. Bis
+    # 30.09.2026 stand er in der eigenen Alarm-Meldung, seither hier.
+    if t.get("alarm") and t.get("zusatz"):
+        zeilen.append(str(t["zusatz"]))
     # R18 (nur Anzeige) sowie R4 bis R6, R16 und R20 (Gerhard, 12.09.2026):
     # EMA-Lage, RS, Sektorrang und Ratings. Entscheidungshilfe, kein Filter.
     for z in (ema_lage_text(t), zusatz_zeile(t.get("ticker"))):
@@ -4734,44 +4701,6 @@ def nachtrag_ins_logbuch(nachtrag: list[dict], im_logbuch: set,
     return n
 
 
-def alarm_ins_logbuch(meldungen: list[dict], im_logbuch: set,
-                      trocken: bool) -> int:
-    """FRAGE 9 (Gerhard, 24.09.2026): Alle Strategien kommen ins Logbuch,
-    ausnahmslos. Die Ausbrueche der Alarm-Muster schreibt schon der
-    gemeinsame Weg; ihre uebersprungenen Einstiege und nachgereichten
-    Volumenbestaetigungen standen bis 25.09.2026 nur dann im Logbuch, wenn
-    das Muster abgewaehlt war. Jetzt dieselben Zeilen wie bei den
-    gewoehnlichen Kaufpunkten, mit alarm_muster true. Je Ereignis ein
-    Schluessel in im_logbuch, damit ein Sendefehler keine zweite Zeile
-    erzeugt. Fehler brechen die Meldekette nie. Rueckgabe: die Zahl der
-    geschriebenen Zeilen."""
-    n = nachtrag_ins_logbuch(
-        [t for t in meldungen if t.get("anlass") == "nachtrag"],
-        im_logbuch, trocken)
-    for t in meldungen:
-        if t.get("anlass") != "uebersprungen":
-            continue
-        schluessel = "UEBERSPRUNGEN|" + str(t.get("key"))
-        if schluessel in im_logbuch:
-            continue
-        im_logbuch.add(schluessel)
-        try:
-            trigger_logbuch.protokolliere(
-                {"ticker": t.get("ticker"), "firma": t.get("firma", ""),
-                 "strategie": t.get("strategie"),
-                 "kaufpunkt": t.get("kaufpunkt"), "kurs": t.get("kurs"),
-                 "stop": t.get("stop"), "ueber_pct": t.get("ueber_pct"),
-                 "uebersprungen": True,
-                 "alarm_muster": True,
-                 "trockenlauf": bool(trocken)},
-                quelle="waechter/uebersprungen")
-            n += 1
-        except Exception as e:
-            print(f"  Übersprungen {t.get('ticker')}: Logbuch-Eintrag "
-                  f"ausgelassen ({type(e).__name__}: {e}).")
-    return n
-
-
 def push_nachtrag(topic: str, treffer: list[dict]) -> bool:
     """Meldet, dass ein zuvor UNBESTAETIGT gemeldeter Ausbruch inzwischen
     die Volumenbestaetigung bekommen hat.
@@ -5354,9 +5283,6 @@ def main():
                 print("  Für diese Werte wird kein Ausbruch erkannt.")
 
             treffer, neu, nachtrag, uebersprungen = [], [], [], []
-            # Die Alarm-Muster gehen ueber dieselben Melderegeln, aber in
-            # einer eigenen Meldung hinaus (Gerhard, 22.09.2026, O5 und O10).
-            alarm_neben = []
             zyklus = set()           # Regel 1 innerhalb des Durchlaufs
             # ALARME JE MUSTER (23.09.2026): Geprueft werden alle Muster; die
             # abgewaehlten tragen stumm=True und fallen erst vor dem Senden
@@ -5384,11 +5310,9 @@ def main():
                     if (melde_uebersprungen(res, schon_gemeldet,
                                             state.get("gemeldet_kp"), state)
                             and zyklus_frei(res, zyklus)):
-                        if res.get("alarm"):
-                            res["anlass"] = "uebersprungen"
-                            alarm_neben.append(res)
-                        else:
-                            uebersprungen.append(res)
+                        # Seit 30.09.2026 auch die Alarm-Muster, samt
+                        # Kaufzeile an den Bot (Gerhard, 29.09.2026, Teil 2).
+                        uebersprungen.append(res)
                     elif (res.get("vortagesschluss") is None
                           and res["key"] not in _ohne_vortag_gesagt):
                         # BEIDE Quellen ausgefallen. Dann wird geschwiegen
@@ -5479,14 +5403,12 @@ def main():
                     print(f"{ohne_bestaetigung} Treffer ohne Volumenbestätigung — bleiben "
                           "offen und werden weiter beobachtet.")
 
-            # DIE ALARM-MUSTER GEHEN GETRENNT HINAUS (Gerhard, 22.09.2026,
-            # O10): Sie sind eine Meldung, kein Alarm in der Handels-App.
-            # Deshalb eine eigene Nachricht ohne Klick-Adresse (push_alarm)
-            # und ein eigener Sendeblock weiter unten. Alles davor, also
-            # Pruefung, Volumen, Totzone, Fenster und Wochenfrist, ist fuer
-            # sie dasselbe wie fuer jeden anderen Kaufpunkt (O5).
-            alarm_melden = [t for t in zu_melden if t.get("alarm")]
-            zu_melden = [t for t in zu_melden if not t.get("alarm")]
+            # DIE ALARM-MUSTER SIND SCHARF (Gerhard, 29.09.2026, Teil 2): Seit
+            # dem 30.09.2026 melden sie wie die bestehenden Strategien, in
+            # derselben Kaufmeldung samt Klick-Adresse, Beobachtung im Chart
+            # (Kapitel 12) und Kaufzeile an den Bot. Bis dahin gingen sie als
+            # Auskunft getrennt hinaus (O10). Ihre Treffer tragen weiter
+            # alarm=True, damit das Logbuch sie auseinanderhaelt.
 
             # ZAHLEN-KARENZ, STUFE A (Gerhards Entscheid 31.08.2026
             # abends, ersetzt Stufe B vom selben Tag): Es wird NICHTS
@@ -5494,7 +5416,7 @@ def main():
             # gemeldet, tragen aber den harten Warnkopf (siehe
             # termin_nachsatz) und das Logbuch-Feld zahlen_karenz, damit
             # ihre Trefferquote messbar bleibt.
-            for t in zu_melden + alarm_melden:
+            for t in zu_melden:
                 if im_zahlen_karenzfenster(t.get("ticker")):
                     t["zahlen_karenz"] = True
 
@@ -5502,9 +5424,8 @@ def main():
             # Frage 9). Die abgewaehlten Muster haben alles durchlaufen wie
             # die anderen; hier fallen sie aus den Meldungen heraus, stehen
             # aber gleich unten im Logbuch, mit gemeldet false.
-            stumm_neu = [t for t in zu_melden + alarm_melden if t.get("stumm")]
+            stumm_neu = [t for t in zu_melden if t.get("stumm")]
             zu_melden = [t for t in zu_melden if not t.get("stumm")]
-            alarm_melden = [t for t in alarm_melden if not t.get("stumm")]
 
             # INS LOGBUCH kommt JEDER erkannte Ausbruch — auch der ohne
             # Volumenbestaetigung, auch der im Trockenlauf, auch der,
@@ -5514,7 +5435,7 @@ def main():
             # Treffer wirklich die schlechteren waren. Eigener Merker,
             # weil schon_gemeldet erst nach erfolgreichem Push gesetzt
             # wird — sonst gaebe es je Fehlversuch einen Eintrag.
-            _melde_schluessel = {t["key"] for t in zu_melden + alarm_melden}
+            _melde_schluessel = {t["key"] for t in zu_melden}
             for t in neu:
                 if t["key"] in _im_logbuch:
                     continue
@@ -5532,9 +5453,9 @@ def main():
                      "gemeldet": t["key"] in _melde_schluessel,
                      "zahlen_karenz": bool(t.get("zahlen_karenz")),
                      "folgetag": bool(t.get("folgetag")),
-                     # O10: Damit messbar bleibt, wie die neuen Muster laufen
-                     # ("als Alarm in der Handels-App erst, wenn das Logbuch
-                     # nach einigen Wochen zeigt, wie sie laufen").
+                     # Die Alarm-Muster bleiben im Logbuch erkennbar, auch
+                     # seit sie scharf sind (30.09.2026): So bleibt messbar,
+                     # wie sie laufen.
                      "alarm_muster": bool(t.get("alarm")),
                      "einzelaktie": bool(t.get("einzel")),
                      "abgewaehlt": bool(t.get("stumm")),
@@ -5581,7 +5502,7 @@ def main():
                     print(f"Achtung: Zustand NICHT gespeichert — nächster Versuch "
                           f"in {TAKT} Sekunden.")
             elif not zu_melden:
-                if laut and not alarm_melden and not alarm_neben:
+                if laut:
                     print("Nichts Neues zu melden.")
             else:
                 print("(Dry-Run — kein Push gesendet, Zustand nicht gespeichert)")
@@ -5597,20 +5518,12 @@ def main():
                                               or [t["key_best"]])
                 heute_vermerken(state, zu_melden)
 
-            # --- Die Alarm-Muster (O10): Auskunft, kein Kaufsignal ------
-            # EINE Nachricht je Durchlauf, egal aus welchem Anlass: gerissen,
-            # uebersprungen, wieder im Meldefenster oder Volumen nachgezogen.
-            # Eigener Block, damit ein Fehlschlag auf einer Seite die andere
-            # nicht mitnimmt; KEINE Beobachtung im Chart (Kapitel 12), das ist
-            # den Kaufmeldungen vorbehalten. Gemessen wird ueber das
-            # Trigger-Logbuch, wo jede Zeile alarm_muster traegt.
-            #
-            # Frage 9: Ein abgewaehltes Muster, dessen Kaufpunkt uebersprungen
-            # wurde, steht im Logbuch wie jeder uebersprungene, nur ungemeldet.
-            stumm_ueber = [t for t in uebersprungen + alarm_neben if t.get("stumm")]
+            # --- Abgewaehlte Muster (Frage 9) ---------------------------
+            # Ein abgewaehltes Muster, dessen Kaufpunkt uebersprungen wurde,
+            # steht im Logbuch wie jeder uebersprungene, nur ungemeldet.
+            stumm_ueber = [t for t in uebersprungen if t.get("stumm")]
             if stumm_ueber:
                 uebersprungen = [t for t in uebersprungen if not t.get("stumm")]
-                alarm_neben = [t for t in alarm_neben if not t.get("stumm")]
                 trigger_logbuch.protokolliere_viele(
                     [{"ticker": t.get("ticker"), "firma": t.get("firma", ""),
                       "strategie": t.get("strategie"),
@@ -5621,12 +5534,6 @@ def main():
                       "trockenlauf": bool(args.dry_run)}
                      for t in stumm_ueber], quelle="waechter/uebersprungen")
                 stumm_vermerken(stumm_ueber, schon_gemeldet, state, bool(args.dry_run))
-            # DIE VOLUMENBESTAETIGUNG EINES ALARM-MUSTERS geht in der
-            # Alarm-Meldung hinaus (O10) und muss deshalb VOR dem
-            # Zusammenstellen herausgezogen werden. Bis 25.09.2026 stand
-            # dieser Schritt erst hinter dem Sendeblock: Die Bestaetigung
-            # ging weder hinaus noch ins Logbuch.
-            #
             # Frage 9: Die Bestaetigung eines abgewaehlten Musters steht im
             # Logbuch wie jede andere, nur ungemeldet.
             stumm_nachtrag = [x for x in nachtrag if x.get("stumm")]
@@ -5635,50 +5542,6 @@ def main():
                 nachtrag_ins_logbuch(stumm_nachtrag, _im_logbuch, bool(args.dry_run), gemeldet=False)
                 stumm_vermerken(stumm_nachtrag, schon_gemeldet, state, bool(args.dry_run),
                                 felder=("keys_best",))
-            for t in [x for x in nachtrag if x.get("alarm")]:
-                t["anlass"] = "nachtrag"
-                alarm_neben.append(t)
-            nachtrag = [x for x in nachtrag if not x.get("alarm")]
-            alarm_alle = alarm_melden + alarm_neben
-            if alarm_alle and jetzt_s >= sperre_bis:
-                print(f"\n{len(alarm_alle)} Meldung(en) der Alarm-Muster:")
-                for t in alarm_alle:
-                    print("  " + format_alarm(t).replace("\n", "\n  ") + "\n")
-                # Frage 9: Die Ausbrueche stehen schon oben im Logbuch; hier
-                # kommen die uebersprungenen Einstiege und die Nachtraege
-                # dazu, je einmal im Lauf, auch wenn der Push gleich scheitert.
-                alarm_ins_logbuch(alarm_alle, _im_logbuch, bool(args.dry_run))
-
-                def alarm_vormerken(heute_s=None):
-                    """Was gemeldet ist, ist gemeldet: je Anlass die
-                    Schluessel, die der Hauptweg auch setzen wuerde."""
-                    for t in alarm_alle:
-                        anlass = str(t.get("anlass") or "")
-                        if anlass == "nachtrag":
-                            kk = t.get("keys_best") or [t["key_best"]]
-                        else:
-                            kk = list(t.get("keys") or [t["key"]])
-                            if not anlass and t["vol_ok"] is True:
-                                kk += t.get("keys_best") or [t["key_best"]]
-                        for k in kk:
-                            schon_gemeldet.add(k)
-                            if heute_s:
-                                state["gemeldet"][k] = heute_s
-                                kp_merken(state, k, t.get("kaufpunkt"))
-
-                if args.dry_run:
-                    print("(Dry-Run — keine Alarm-Meldung gesendet)")
-                    alarm_vormerken()
-                    heute_vermerken(state, alarm_alle)
-                elif push_alarm(topic, alarm_alle):
-                    alarm_vormerken(date.today().isoformat())
-                    # Regel 1 (Gerhard, 29.09.2026): heute nicht noch einmal.
-                    heute_vermerken(state, alarm_alle)
-                    save_state(state)
-                else:
-                    sperre_bis = jetzt_s + TAKT
-                    print(f"Achtung: Alarm-Meldung NICHT gesendet — nächster "
-                          f"Versuch in {TAKT} Sekunden.")
 
             # --- Nachtrag: Volumen hat nachgezogen ---------------------
             # Eigener Wortlaut MIT ABSICHT (Mathias, 18.08.2026, nach
@@ -5686,10 +5549,9 @@ def main():
             # ja einen Sinn"): Diese Aktien wurden bereits unbestaetigt
             # gemeldet, und "Vol jetzt bestätigt" sagt, dass dies die
             # Bestaetigung von vorhin ist und kein zweiter Ausbruch.
-            # Die Volumen-Bestaetigung eines Alarm-Musters ist eine Auskunft
-            # und geht in der Alarm-Meldung hinaus (O10); sie und die
-            # Bestaetigungen abgewaehlter Muster sind schon vor dem
-            # Sendeblock der Alarm-Muster herausgezogen.
+            # Seit 30.09.2026 laufen hier auch die Alarm-Muster durch; die
+            # Bestaetigungen abgewaehlter Muster sind schon oben
+            # herausgezogen (Frage 9).
             if nachtrag and jetzt_s >= sperre_bis:
                 print(f"\n{len(nachtrag)} Ausbruch/Ausbrüche haben die "
                       f"Volumenbestätigung nachgereicht:")
@@ -5735,6 +5597,7 @@ def main():
                       "kaufpunkt": t.get("kaufpunkt"), "kurs": t.get("kurs"),
                       "stop": t.get("stop"), "ueber_pct": t.get("ueber_pct"),
                       "uebersprungen": True,
+                      "alarm_muster": bool(t.get("alarm")),
                       # Regel 3 (29.09.2026): gemeldet nur mit Bestaetigung.
                       "vol_ratio": t.get("vol_ratio"),
                       "vol_noetig": t.get("vol_noetig"),

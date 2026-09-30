@@ -483,7 +483,7 @@ def block_d(namen_aus_c=None):
 
     # O5: dieselben Melderegeln, bei Three Weeks Tight 40 Prozent ueber dem Schnitt.
     ohne = sorted(alarm_namen - set(bw.VOL_FAKTOR))
-    pruefe("D", "O5: jedes Alarm-Muster hat seine Volumenhuerde, Three Weeks Tight 40 Prozent",
+    pruefe("D", "O5: jedes Alarm-Muster hat seine Volumenhuerde aus config.py, Three Weeks Tight die der VCP-Gruppe",
            not ohne and bw.VOL_FAKTOR["Three Weeks Tight"] == CFG["volumen"]["breakout_faktor_vcp"]
            and bw.VOL_FAKTOR["Inside Day"] == CFG["volumen"]["breakout_faktor"],
            ", ".join(ohne))
@@ -502,18 +502,32 @@ def block_d(namen_aus_c=None):
     pruefe("D", "O8: beim Shakeout plus drei loesen die 10 Prozent aus",
            _n[0]["kaufpunkt"] == 11.0 and "5 Prozent" in _n[0]["zusatz"])
 
-    # O10: die Meldung ist eine Auskunft, kein Alarm in der Handels-App.
+    # SCHRITT 2 (Gerhard, 29.09.2026, Teil 2): Die Alarm-Muster melden wie die
+    # bestehenden Strategien, in der Kaufmeldung, samt Musterzusatz (O7, O8).
     _t = {"ticker": "TEST", "firma": "Probe AG", "strategie": "Inside Day",
-          "kaufpunkt": 10.0, "kurs": 10.2, "ueber_pct": 2.0, "stop": 9.2,
-          "vol_ok": True, "vol_pct": 30.0, "vol_noetig": 1.0, "zusatz": "Probe"}
-    _text = bw.format_alarm(_t)
-    pruefe("D", "O10: die Alarm-Meldung traegt INFORMATION und kein Wort, aus dem eine Order wird",
-           _text.startswith("INFORMATION: ") and not am.kein_kaufwort(_text),
-           ", ".join(am.kein_kaufwort(_text)))
+          "kaufpunkt": 10.0, "kurs": 10.2, "ueber_pct": 2.0, "stop": 9.2, "ziel": None,
+          "vol_ok": True, "vol_pct": 70.0, "vol_noetig": 1.6, "alarm": True,
+          "zusatz": "drei steigende Tage, dann der Inside Day; enger Einstieg über seinem Hoch"}
+    _text = bw.format_treffer(_t)
+    pruefe("D", "Schritt 2: die Meldung eines Alarm-Musters ist eine Kaufmeldung wie bei jeder Strategie",
+           _text.startswith("TEST") and "Kaufpunkt 10.00, Kurs 10.20" in _text
+           and "INFORMATION" not in _text and "Vol BESTÄTIGT" in _text, _text.replace("\n", " | "))
+    pruefe("D", "Schritt 2: der Musterzusatz steht in der Kaufmeldung (O7, O8)",
+           "enger Einstieg über seinem Hoch" in _text, _text.replace("\n", " | "))
     _quelle = (WURZEL / "breakout_watcher.py").read_text(encoding="utf-8")
-    pruefe("D", "O10: push_alarm sendet ohne die Klick-Adresse der Handels-App",
-           "def push_alarm" in _quelle
-           and "handel_adresse" not in _quelle.split("def push_alarm")[1].split("def format_treffer")[0])
+    pruefe("D", "Schritt 2: kein eigener Sendeweg der Alarm-Muster mehr",
+           not hasattr(bw, "push_alarm") and not hasattr(bw, "format_alarm")
+           and "alarm_melden" not in _quelle and "alarm_neben" not in _quelle
+           and not hasattr(am, "kein_kaufwort") and not hasattr(am, "meldung"))
+    import einstellungen as _es_s2
+    _alarm_reg = [e for e in _es_s2.ALARME if str(e.get("schluessel", "")).startswith("a_")]
+    pruefe("D", "Schritt 2: die sechs Alarm-Muster stehen in den Einstellungen als Kaufsignal, nicht als Auskunft",
+           len(_alarm_reg) == 6
+           and all(e["gruppe"] == "alarm" and "Auskunft" not in e["erklaerung"] for e in _alarm_reg)
+           and "Auskunft" not in dict(_es_s2.GRUPPEN)["alarm"]
+           and "Auskunft" not in _es_s2.GRUPPEN_REGEL["alarm"]
+           and "Kaufzeile" in _es_s2.GRUPPEN_REGEL["alarm"],
+           str([e["schluessel"] for e in _alarm_reg]))
 
     # O11 bis O13: die einzeln eingetragenen Aktien.
     pruefe("D", "O11: eine einzeln eingetragene Aktie darf alle Strategien, auch Darvas",
@@ -560,10 +574,24 @@ def block_d(namen_aus_c=None):
            bk.anteil_fuer("stop_raus") == 1 and bk.anteil_fuer("round_trip_raus") == 1
            and bk.anteil_fuer("trail_raus") == 1 and bk.anteil_fuer("teilverkauf") == 0.5
            and bk.anteil_fuer("wedge_drop") is None and bk.anteil_fuer(None) is None)
-    pruefe("D", "Bot: O10, die Alarm-Muster kommen nicht in den Kaufkanal",
-           bk.sende_kauf([{"ticker": "AAA", "firma": "A", "kaufpunkt": 10.0,
-                           "stop": 9.0, "alarm": True}], _date(2026, 9, 23),
-                         melder=lambda *_a: None) == 0)
+    _umg_bk = {k: os.environ.get(k) for k in (bk.ENV[bk.KAUF], bk.TROCKEN_ENV)}
+    _gesagt_bk = []
+    try:
+        os.environ[bk.ENV[bk.KAUF]] = "pruefkanal-kauf"
+        os.environ[bk.TROCKEN_ENV] = "1"
+        _n_bk = bk.sende_kauf([{"ticker": "AAA", "firma": "A", "kaufpunkt": 10.0,
+                                "stop": 9.0, "alarm": True, "vol_ok": True}],
+                              _date(2026, 9, 23), melder=_gesagt_bk.append)
+    finally:
+        for _k, _v in _umg_bk.items():
+            if _v is None:
+                os.environ.pop(_k, None)
+            else:
+                os.environ[_k] = _v
+    pruefe("D", "Bot: Schritt 2, die Alarm-Muster kommen in den Kaufkanal wie jeder Kaufpunkt",
+           _n_bk == 1 and len(_gesagt_bk) == 1
+           and '{"ticker":"AAA","name":"A","woche":"2026-W39","kaufpunkt":10.0,"stop":9.0}' in _gesagt_bk[0],
+           str(_gesagt_bk))
     pruefe("D", "Bot: ohne die zwei Geheimnisse geschieht gar nichts",
            bk.kanal(bk.KAUF) is None and bk.kanal(bk.VERKAUF) is None
            and bk.sende_kauf([{"ticker": "AAA", "firma": "A", "kaufpunkt": 10.0,
@@ -2189,7 +2217,7 @@ def block_e():
                                         "sende", "save_state",
                                         "beobachtungen_eintragen")}
     _alt_ie = {n: getattr(_ie2, n) for n in ("lies_speicher", "lies_rollen")}
-    _ins, _nach, _alarm_lb, _befund = False, False, False, ""
+    _ins, _nach, _befund = False, False, ""
     try:
         os.chdir(_probe)
         from datetime import date as _dz
@@ -2237,34 +2265,8 @@ def block_e():
                  and _zn[0].get("vol_bestaetigt") is True
                  and _zn[0].get("kurs") == 10.4
                  and not _tl2.zaehlt_mit(_zn[0]))
-        # FRAGE 9 (25.09.2026): Uebersprungene Einstiege und Nachtraege der
-        # Alarm-Muster stehen im Logbuch, je einmal, mit alarm_muster true.
-        _al = [{"ticker": "ALM", "strategie": "Inside Day", "alarm": True,
-                "anlass": "uebersprungen", "kaufpunkt": 20.0, "kurs": 21.5,
-                "ueber_pct": 7.5, "key": "ALM|Inside Day|u"},
-               {"ticker": "ALN", "strategie": "Pocket Pivot", "alarm": True,
-                "anlass": "nachtrag", "kaufpunkt": 30.0, "kurs": 30.6,
-                "vol_ok": True, "key": "ALN|Pocket Pivot",
-                "key_best": "ALN|Pocket Pivot|b"},
-               {"ticker": "ALO", "strategie": "Wick Play", "alarm": True,
-                "kaufpunkt": 40.0, "kurs": 40.2, "key": "ALO|Wick Play"}]
-        _a1 = bw.alarm_ins_logbuch(_al, _im, trocken=False)
-        _a2 = bw.alarm_ins_logbuch(_al, _im, trocken=False)
-        _za = [z for z in _tl2.lies("trigger_logbuch.jsonl")
-               if z.get("ticker") in ("ALM", "ALN", "ALO")]
-        _zu = [z for z in _za if z.get("uebersprungen")]
-        _zb = [z for z in _za if z.get("nachtrag")]
-        _alarm_lb = (_a1 == 2 and _a2 == 0 and len(_za) == 2
-                     and len(_zu) == 1 and _zu[0].get("ticker") == "ALM"
-                     and _zu[0].get("alarm_muster") is True
-                     and _zu[0].get("quelle") == "waechter/uebersprungen"
-                     and len(_zb) == 1 and _zb[0].get("ticker") == "ALN"
-                     and _zb[0].get("alarm_muster") is True
-                     and _zb[0].get("gemeldet") is True
-                     and not _tl2.zaehlt_mit(_zb[0]))
         _befund = (f"Insider {_ins} (Rueckgabe {_erg}, {len(_z)} Zeile(n)), "
-                   f"Nachtrag {_nach} ({_n1} und {_n2}), "
-                   f"Alarm-Muster {_alarm_lb} ({_a1} und {_a2}, {len(_za)} Zeile(n))")
+                   f"Nachtrag {_nach} ({_n1} und {_n2})")
     except Exception as _e:
         _befund = f"{type(_e).__name__}: {_e}"
     finally:
@@ -2278,24 +2280,28 @@ def block_e():
            "Signalzahlen im Logbuch (Luecke zwei)", _ins, _befund)
     pruefe("E", "Ein Nachtrag steht genau einmal im Logbuch und zaehlt "
            "nicht als eigenes Signal (Luecke drei)", _nach, _befund)
-    pruefe("E", "Uebersprungene Einstiege und Nachtraege der Alarm-Muster "
-           "stehen je einmal im Logbuch (Frage 9)",
-           _alarm_lb, _befund)
+    # FRAGE 9 UND SCHRITT 2: Seit die Alarm-Muster scharf sind, laufen ihre
+    # uebersprungenen Einstiege und Nachtraege durch die gemeinsamen Bloecke;
+    # das Logbuch haelt sie dort mit alarm_muster auseinander.
+    _bwq_lb = (WURZEL / "breakout_watcher.py").read_text(encoding="utf-8")
+    _ub_teil = (_bwq_lb.split("--- Uebersprungene Kaufpunkte ---")[1][:3000]
+                if "--- Uebersprungene Kaufpunkte ---" in _bwq_lb else "")
+    _na_teil = (_bwq_lb.split("def nachtrag_ins_logbuch")[1][:3500]
+                if "def nachtrag_ins_logbuch" in _bwq_lb else "")
+    pruefe("E", "Uebersprungene Einstiege und Nachtraege der Alarm-Muster stehen im Logbuch "
+           "mit alarm_muster (Frage 9, Schritt 2)",
+           '"alarm_muster": bool(t.get("alarm"))' in _ub_teil
+           and '"alarm_muster": bool(t.get("alarm"))' in _na_teil)
 
-    # O10 UND FRAGE 9 (25.09.2026): Die Volumenbestaetigung eines
-    # Alarm-Musters wird VOR dem Zusammenstellen der Alarm-Meldung
-    # herausgezogen. Bis dahin stand der Schritt hinter dem Sendeblock, und
-    # die Bestaetigung ging weder hinaus noch ins Logbuch.
+    # SCHRITT 2 (Gerhard, 29.09.2026, Teil 2): Die Alarm-Muster haben keinen
+    # eigenen Sendeweg mehr; Ausbruch, uebersprungener Einstieg und Nachtrag
+    # gehen wie bei jeder Strategie hinaus, samt Kaufzeile an den Bot.
     _bwq_alarm = (WURZEL / "breakout_watcher.py").read_text(encoding="utf-8")
-    _i_zieh = _bwq_alarm.find('t["anlass"] = "nachtrag"')
-    _i_alle = _bwq_alarm.find("alarm_alle = alarm_melden + alarm_neben")
-    _i_log = _bwq_alarm.find("alarm_ins_logbuch(alarm_alle,")
-    pruefe("E", "Die Volumenbestaetigung eines Alarm-Musters geht in der "
-           "Alarm-Meldung hinaus (O10)",
-           (_bwq_alarm.count('t["anlass"] = "nachtrag"') == 1
-            and 0 <= _i_zieh < _i_alle < _i_log),
-           f"Herausziehen an {_i_zieh}, Zusammenstellen an {_i_alle}, "
-           f"Logbuch an {_i_log}")
+    pruefe("E", "Schritt 2: Die Alarm-Muster gehen durch die gemeinsamen Sendebloecke",
+           'if res.get("alarm"):' not in _bwq_alarm
+           and 'x.get("alarm")]' not in _bwq_alarm
+           and 't["anlass"] = "nachtrag"' not in _bwq_alarm
+           and "alarm_alle" not in _bwq_alarm)
 
     # DIE EINTRITTSKARTE: kam der Kaufpunkt von UNTEN? (Mathias,
     # 14.08.2026). Ohne sie meldet der Waechter Ruecksetzer-Marken, unter
@@ -2484,8 +2490,7 @@ def block_e():
     pruefe("E", "Regel 1: es gibt keine Meldung 'wieder im Einstiegsfenster'",
            not hasattr(bw, "push_wiedereintritt")
            and not hasattr(bw, "format_wiedereintritt")
-           and 'kopfzusatz="wieder im Einstiegsfenster"' not in _bwq
-           and "wiedereintritt" not in bw.ALARM_ANLASS)
+           and 'kopfzusatz="wieder im Einstiegsfenster"' not in _bwq)
     pruefe("E", "Regel 1: der Wiedereintritt hebt die Uebersprungen-Sperre nicht auf",
            "schon_gemeldet.discard" not in _bwq)
 

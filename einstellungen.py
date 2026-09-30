@@ -57,7 +57,7 @@ DATEI = "einstellungen.json"
 GRUPPEN = [
     ("kauf", "Kaufsignale aus Chartmustern"),
     ("ausweich", "Fallbacks für Aktien mit weniger als drei Mustern"),
-    ("auskunft", "Chartmuster als Auskunft, ohne Kaufsignal"),
+    ("alarm", "Kaufsignale aus den sechs Alarm-Mustern"),
     ("weitere", "Weitere Kaufsignale"),
     ("positionen", "Meldungen zu offenen Positionen"),
     ("info", "Weitere Auskünfte"),
@@ -65,7 +65,7 @@ GRUPPEN = [
 
 # Die Gruppen, deren Eintraege Strategien sind: Sie stehen im Regelwerk und in
 # der Pruefung, ob jede Strategie ins Logbuch kommt.
-STRATEGIE_GRUPPEN = ("kauf", "ausweich", "auskunft", "weitere")
+STRATEGIE_GRUPPEN = ("kauf", "ausweich", "alarm", "weitere")
 
 # Ein Satz je Gruppe fuer das Regelwerk, vor den Absaetzen der Strategien.
 GRUPPEN_REGEL = {
@@ -75,9 +75,11 @@ GRUPPEN_REGEL = {
     "ausweich": "Hat eine Aktie weniger als drei Muster, füllen Fallbacks die freien Plätze: Kaufpunkte ohne "
                 "Muster, etwa knapp über dem 52-Wochen-Hoch. Ein Fallback, über dem der Kurs schon am Vortag stand, "
                 "meldet nicht.",
-    "auskunft": "Diese sechs Chartmuster melden als Auskunft, ohne Kaufsignal an den Handels-Bot. Jedes lässt sich "
-                "im Reiter Einstellungen abwählen; abgewählt kommt keine Meldung, der Wächter prüft es aber weiter "
-                "und schreibt jeden Ausbruch ins Logbuch.",
+    "alarm": "Diese sechs Chartmuster melden im Handel wie die übrigen Kaufsignale, samt Kaufzeile an den "
+             "Handels-Bot. Der Nachtscan rechnet ihre Kaufpunkte aus denselben Aktien wie die übrigen Chartmuster; "
+             "bestehende Kaufpunkte verdrängen sie nie. Jedes lässt sich im Reiter Einstellungen abwählen; "
+             "abgewählt kommt keine Meldung und keine Kaufzeile, der Wächter prüft es aber weiter und schreibt "
+             "jeden Ausbruch ins Logbuch.",
     "weitere": "Diese Strategien rechnet der Wächter selbst im Handel, nicht der Nachtscan.",
 }
 
@@ -215,30 +217,31 @@ ALARME = [
      "namen": ["Fallback: Quartals-Hoch (63 Tage)"],
      "erklaerung": "Ein Fallback: Alarm einen Cent über dem Hoch der letzten 63 Handelstage.",
      "regel": "Kaufpunkt einen Cent über dem Hoch der letzten 63 Handelstage, Stop 8 Prozent darunter."},
-    # Die sechs Alarm-Muster (alarm_muster.NAMEN), gemeldet als INFORMATION
-    {"schluessel": "a_3wt", "gruppe": "auskunft", "name": "Three Weeks Tight",
+    # Die sechs Alarm-Muster (alarm_muster.NAMEN), seit 30.09.2026 Kaufsignale
+    # wie die Strategien (Gerhard, 29.09.2026, Teil 2)
+    {"schluessel": "a_3wt", "gruppe": "alarm", "name": "Three Weeks Tight",
      "namen": ["Three Weeks Tight"],
      "erklaerung": "Nach einem Anstieg schließen drei oder vier Wochen hintereinander jeweils sehr nah am Schluss der "
-                   "Vorwoche; Auskunft beim Ausbruch über das Hoch dieser Wochen."},
-    {"schluessel": "a_inside", "gruppe": "auskunft", "name": "Inside Day",
+                   "Vorwoche; Alarm beim Ausbruch über das Hoch dieser Wochen."},
+    {"schluessel": "a_inside", "gruppe": "alarm", "name": "Inside Day",
      "namen": ["Inside Day"],
-     "erklaerung": "Ein Tag, dessen Hoch und Tief innerhalb des Vortags liegen, nach drei steigenden Tagen; Auskunft "
+     "erklaerung": "Ein Tag, dessen Hoch und Tief innerhalb des Vortags liegen, nach drei steigenden Tagen; Alarm "
                    "beim Ausbruch über sein Hoch."},
-    {"schluessel": "a_pocket", "gruppe": "auskunft", "name": "Pocket Pivot",
+    {"schluessel": "a_pocket", "gruppe": "alarm", "name": "Pocket Pivot",
      "namen": ["Pocket Pivot"],
      "erklaerung": "Ein Aufwärtstag in oder knapp über einer Basis mit mehr Volumen als jeder Abwärtstag der letzten "
-                   "zehn Handelstage; Auskunft beim Überschreiten seines Hochs."},
-    {"schluessel": "a_ipo", "gruppe": "auskunft", "name": "IPO Base",
+                   "zehn Handelstage; Alarm beim Überschreiten seines Hochs."},
+    {"schluessel": "a_ipo", "gruppe": "alarm", "name": "IPO Base",
      "namen": ["IPO Base"],
      "erklaerung": "Die erste Basis einer frisch notierten Aktie, schon nach drei Wochen und 20 bis 50 Prozent tief; "
-                   "Auskunft beim Ausbruch."},
-    {"schluessel": "a_shakeout3", "gruppe": "auskunft", "name": "Shakeout plus drei",
+                   "Alarm beim Ausbruch."},
+    {"schluessel": "a_shakeout3", "gruppe": "alarm", "name": "Shakeout plus drei",
      "namen": ["Shakeout plus drei"],
-     "erklaerung": "Nach dem ersten scharfen Abverkauf aus einem Hoch: Auskunft, wenn der Kurs zehn Prozent über das "
+     "erklaerung": "Nach dem ersten scharfen Abverkauf aus einem Hoch: Alarm, wenn der Kurs zehn Prozent über das "
                    "Tief dieses Abverkaufs steigt."},
-    {"schluessel": "a_wick", "gruppe": "auskunft", "name": "Wick Play",
+    {"schluessel": "a_wick", "gruppe": "alarm", "name": "Wick Play",
      "namen": ["Wick Play"],
-     "erklaerung": "Eine Kerze mit langem Docht und kleinem Körper an einer markanten Stelle; Auskunft beim "
+     "erklaerung": "Eine Kerze mit langem Docht und kleinem Körper an einer markanten Stelle; Alarm beim "
                    "Überschreiten ihres Hochs."},
     # Die eigenen Wege des Waechters
     {"schluessel": "r2g", "gruppe": "weitere", "name": "Red to Green",

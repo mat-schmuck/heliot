@@ -34,7 +34,10 @@ dem 50-Tage-Schnitt, hochgerechnet ueber die F(t)-Kurve; bis 5 Prozent ueber
 dem Einstieg, darueber uebersprungen; Totzone; je Muster einmal in der Woche).
 Deshalb laufen die Alarm-Kaufpunkte im Waechter durch dieselbe Pruefung wie
 jeder andere Kaufpunkt. Bei Three Weeks Tight sind es 40 Prozent ueber dem
-Schnitt (IBD nennt diese Groessenordnung fuer den Ausbruchstag).
+Schnitt (IBD nennt diese Groessenordnung fuer den Ausbruchstag). Seit dem
+30.09.2026 nachmittags gilt fuer alle sechs dieselbe Huerde wie fuer alle
+Muster, plus 60 Prozent ueber dem Schnitt (Gerhards dringende Anweisung); die
+Totzone ist mit Regel 1 vom 29.09.2026 entfallen.
 
 O6, INSIDE DAY: NUR die Fassung mit drei steigenden Tagen davor meldet.
 Gerhards Antwort woertlich: "nur die Fassung mit drei steigenden Tagen davor
@@ -53,11 +56,19 @@ O9, STOPS: Der Stop kommt aus dem Muster und traegt den Zehn-Prozent-Deckel
 (chartmuster rechnet ihn schon so). Fuer Kaeufe aus diesen Mustern gelten
 dieselben Ausstiegsregeln wie fuer die bestehenden Strategien.
 
-O10, KEIN ALARM IN DER HANDELS-APP: Die Meldungen kommen vorerst NUR als
-Meldung. Deshalb tragen sie die Vorsilbe INFORMATION, nennen den Einstieg
-nicht "Kaufpunkt" und werden ohne die Klick-Adresse gesendet, aus der die
-Handels-App eine Order baut. Erst wenn das Trigger-Logbuch nach einigen Wochen
-zeigt, wie die Muster laufen, wird daraus ein Alarm.
+O10, BIS 30.09.2026: Die Meldungen kamen nur als Auskunft, mit der Vorsilbe
+INFORMATION, ohne das Wort "Kaufpunkt", ohne die Klick-Adresse der
+Handels-App und ohne Kaufzeile an den Bot.
+
+SCHARF SEIT 30.09.2026 (Gerhard, Auftrag vom 29.09.2026, Teil 2, "Alarm-Muster
+scharf schalten, auch fuer den Bot"): Die sechs Muster melden im laufenden
+Handel wie die bestehenden Strategien, in derselben Kaufmeldung samt
+Klick-Adresse und Beobachtung im Chart. Sie laufen in den Bot-Kanal (JSON mit
+ticker, name, woche, kaufpunkt, stop; der Bot legt sein Limit bei Kaufpunkt
+mal 1,035 nach seinem Regelwerk R1 bis R18). Es gelten die drei Regeln vom
+29.09.2026 und die Wochen-Sperre. Die reinen Scanner-Muster F, G, K, M, Q, T
+und V bleiben im Scanner, ohne Alarm und ohne Bot. Der Zusatzsatz eines
+Musters (O7, O8) steht in der Kaufmeldung (breakout_watcher.format_treffer).
 
 Aufruf:
     python alarm_muster.py --selbsttest
@@ -267,48 +278,13 @@ def eintraege(aktien):
 
 
 # ---------------------------------------------------------------------------
-# Die Meldung (O10: Meldung, kein Alarm in der Handels-App)
+# Die Meldung: seit 30.09.2026 die Kaufmeldung des Waechters
 # ---------------------------------------------------------------------------
 
-# Die Handels-App liest den Text einer Meldung und haelt sie fuer ein
-# Kaufsignal, sobald darin eines dieser Woerter steht. Die Alarm-Meldungen
-# vermeiden sie deshalb alle und tragen die Vorsilbe INFORMATION; gesendet
-# werden sie ohne die Klick-Adresse, aus der die App eine Order baut. Seit
-# dem 24.09.2026 heisst Red-to-Green in den Meldungen Red to Green (Frage 94);
-# beide Schreibweisen gelten deshalb als Kaufwort.
-KAUF_WOERTER = ("Kaufpunkt", "Einstiegsfenster", "Vol jetzt bestätigt", "Lücke", "Red-to-Green",
-                "Red to Green")
-VORSILBE = "INFORMATION"
-TITEL = "Alarm-Muster"
-
-
-def meldung(t, kopf, vol_text, risiko=None):
-    """Eine Alarm-Meldung als Text. kopf ist die Kopfzeile des Waechters
-    (Kuerzel, Firma, Zusatz), vol_text seine Volumenzeile."""
-    zeilen = [f"{VORSILBE}: {kopf}"]
-    kurs, kp = _zahl(t.get("kurs")), _zahl(t.get("kaufpunkt"))
-    ueber = _zahl(t.get("ueber_pct"))
-    zeile = f"Einstieg über {dollar(kp)}"
-    if kurs is not None:
-        zeile += f", Kurs {dollar(kurs)}"
-        if ueber is not None:
-            zeile += f" (+{ueber:.1f}%)"
-    if vol_text:
-        zeile += f"; {vol_text}"
-    zeilen.append(zeile)
-    stop = _zahl(t.get("stop"))
-    if stop is not None:
-        zeilen.append(f"Stop {dollar(stop)}"
-                      + (f", Risk {risiko:.1f}%" if risiko is not None else ""))
-    if t.get("zusatz"):
-        zeilen.append(str(t["zusatz"]))
-    return "\n".join(zeilen)
-
-
-def kein_kaufwort(text):
-    """Enthaelt der Text ein Wort, aus dem die Handels-App ein Kaufsignal
-    macht? Der Waechter prueft das vor dem Senden."""
-    return [x for x in KAUF_WOERTER if x.lower() in str(text or "").lower()]
+# Bis 30.09.2026 stand hier die eigene Auskunfts-Meldung der Alarm-Muster
+# (O10) samt der Liste der Woerter, aus denen die Handels-App eine Order baut.
+# Seit die Muster scharf sind, melden sie ueber breakout_watcher.format_treffer
+# wie jede Strategie; beides ist damit entfallen.
 
 
 # ---------------------------------------------------------------------------
@@ -391,31 +367,17 @@ def selbsttest() -> int:
             f.write("{kaputt")
         p("Datei: eine kaputte Datei stoppt den Waechter nicht", datei_lesen(pfad) == ("", []))
 
-    t = {"ticker": "AAA", "kaufpunkt": 41.89, "kurs": 42.1, "ueber_pct": 0.5, "stop": 39.89,
-         "zusatz": "drei steigende Tage, dann der Inside Day"}
-    text = meldung(t, "AAA (Alpha); Alarm-Muster Inside Day", "Vol BESTÄTIGT, plus 32 % über dem 50-Tage-Schnitt", risiko=4.8)
-    p("O10: die Meldung traegt die Vorsilbe INFORMATION und kein Wort, aus dem die Handels-App eine Order baut",
-      text.startswith("INFORMATION: ") and not kein_kaufwort(text), text.replace("\n", " | "))
-    p("Die Meldung nennt Einstieg, Kurs, Volumen, Stop und den Zusatz",
-      "Einstieg über 41.89" in text and "Kurs 42.10 (+0.5%)" in text and "Vol BESTÄTIGT" in text
-      and "Stop 39.89, Risk 4.8%" in text and "drei steigende Tage" in text, text.replace("\n", " | "))
-    p("Der Waechter erkennt ein Kaufwort, falls je eines hineinruscht",
-      kein_kaufwort("Kaufpunkt 12,00") == ["Kaufpunkt"])
-
-    # DIE REGELN DER HANDELS-APP, nachgestellt (O10). Sie liest den Text einer
-    # Meldung und macht daraus ein Kaufsignal, sobald eines der KAUF_WOERTER
-    # darin steht; sonst ist es eine Auskunft. Die Vorsilbe INFORMATION ist
-    # dieselbe, die die bestehenden Auskunfts-Meldungen tragen
-    # (gewinnzonen_lauf.INFO), und die App schneidet sie ab.
-    import re
-    kopf = re.sub(r"^(INFORMATION|REGEL):\s*", "", text.splitlines()[0])
-    treffer = re.match(r"^([A-Z][A-Z0-9.\-]{0,7})\s*(?:\(([^)]*)\))?\s*;?\s*(.*)$", kopf)
-    p("O10: nach der Vorsilbe steht das Kuerzel, wie es die Handels-App erwartet",
-      treffer is not None and treffer.group(1) == "AAA", kopf)
-    p("O10: kein Wort der Meldung macht daraus ein Kaufsignal",
-      not any(re.search(w, text, re.I) for w in KAUF_WOERTER))
-    p("O10: ein Verkaufswort steht auch nicht darin",
-      not re.search(r"EXIT|Exit-Linie|Stop unterschritten", text))
+    # SCHARF SEIT 30.09.2026 (Gerhard, 29.09.2026, Teil 2): Die Eintraege gehen
+    # durch die Kaufmeldung des Waechters und in den Bot-Kanal; der braucht je
+    # Kaufpunkt Kuerzel, Kaufpunkt und Stop.
+    e = eintraege([{"ticker": "aaa", "firma": "Alpha", "kurs": 41.0,
+                    "punkte": [{"muster": "Inside Day", "kaufpunkt": 41.89, "stop": 39.89,
+                                "zusatz": "x"}]}])
+    p("Scharf: jeder Eintrag traegt Kuerzel, Kaufpunkt, Stop, Zusatz und das Kennzeichen alarm",
+      len(e) == 1 and e[0]["ticker"] == "AAA" and e[0]["kaufpunkt"] == 41.89 and e[0]["stop"] == 39.89
+      and e[0]["alarm"] is True and e[0]["zusatz"] == "x", str(e))
+    p("Die Auskunfts-Meldung ist entfallen",
+      "meldung" not in globals() and "kein_kaufwort" not in globals() and "KAUF_WOERTER" not in globals())
 
     print("\nAlles bestanden." if not fehler else f"\n{len(fehler)} Fehler.")
     return 1 if fehler else 0

@@ -200,12 +200,9 @@ def sende_kauf(treffer: list[dict], tag=None, melder=print,
         return 0
     raus = 0
     for t in treffer:
-        if t.get("alarm"):
-            # DIE SECHS ALARM-MUSTER NICHT (Gerhard, 22.09.2026, O10): Sie
-            # melden als Auskunft, nicht als Auftrag. Das steht hier als
-            # Netz, damit es auch gilt, wenn ein Treffer je einmal ueber
-            # einen anderen Sendeweg laeuft.
-            continue
+        # DIE SECHS ALARM-MUSTER GEHEN MIT (Gerhard, 29.09.2026, Teil 2: "Sie
+        # laufen in den Bot-Kanal"). Bis 30.09.2026 hielt sie hier ein Netz
+        # als Auskunft zurueck (O10).
         if "vol_ok" in t and t.get("vol_ok") is not True:
             # KEIN KAUF OHNE BESTAETIGTES VOLUMEN (Gerhard, 29.09.2026,
             # Regel 3). Der Waechter schickt solche Treffer seither gar
@@ -360,8 +357,18 @@ def selbsttest() -> int:
 
         gesehen.clear()
         raus = sende_kauf([{"ticker": "DDD", "firma": "D", "kaufpunkt": 10.0,
-                            "stop": 9.0, "alarm": True}], tag, melder=lambda *_a: None)
-        pruefe("Alarm-Muster gehen NICHT in den Kaufkanal (O10)",
+                            "stop": 9.0, "alarm": True, "vol_ok": True}], tag,
+                          melder=lambda *_a: None)
+        pruefe("Alarm-Muster gehen in den Kaufkanal wie jeder Kaufpunkt (Gerhard, 29.09.2026, Teil 2)",
+               raus == 1 and len(gesehen) == 1
+               and json.loads(gesehen[0]["rumpf"]) == {"ticker": "DDD", "name": "D", "woche": "2026-W39",
+                                                       "kaufpunkt": 10.0, "stop": 9.0}, str(raus))
+
+        gesehen.clear()
+        raus = sende_kauf([{"ticker": "EEE", "firma": "E", "kaufpunkt": 10.0,
+                            "stop": 9.0, "alarm": True, "vol_ok": False}], tag,
+                          melder=lambda *_a: None)
+        pruefe("Alarm-Muster ohne bestätigtes Volumen gehen nicht hinaus (Regel 3)",
                raus == 0 and not gesehen)
 
         gesehen.clear()
