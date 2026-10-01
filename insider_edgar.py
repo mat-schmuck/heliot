@@ -266,7 +266,7 @@ def schreibe_speicher(kaeufe, rollen, stichtag, pfad=SPEICHER, cfg=None,
     Fenster, wird nie wieder gebraucht und fliegt weg. Sonst waechst die
     Datei ewig."""
     cfg = cfg or isc.CFG_INSIDER
-    grenze = isc.handelstage_zurueck(stichtag, int(cfg["cluster_fenster_tage"]))
+    grenze = isc.fenster_start(stichtag, cfg)
     behalten, gesehen = {}, set()
     for t, liste in kaeufe.items():
         frisch = [k for k in liste if k.datum >= grenze]
@@ -380,12 +380,12 @@ def live_einreichungen(seiten=5, leise=False):
 def index_rueckblick(cfg):
     """Wie viele Handelstage der Lauf zuruecklesen muss.
 
-    GERHARDS FENSTER BESTIMMT DAS (Regelwerk 14.08.2026, Pfad B):
-    "Mindestens 3 VERSCHIEDENE Insider kaufen innerhalb desselben
-    Zeitfensters (Standard: 10 Handelstage)." Damit dieses Fenster
+    GERHARDS FENSTER BESTIMMT DAS (Pfad B, seit 30.09.2026 abends
+    "mindestens 3 Insider innerhalb von 14 Tagen"): Damit dieses Fenster
     vollstaendig gefuellt ist, muessen die Tagesindizes seit
     Fensterbeginn gelesen worden sein - sonst zaehlt Pfad B nur die
-    Kaeufer, die der Scanner zufaellig mitbekommen hat.
+    Kaeufer, die der Scanner zufaellig mitbekommen hat. 14 Kalendertage
+    umfassen hoechstens 11 Handelstage (isc.fenster_handelstage).
 
     Ein eigener Wert in der Einstellung ueberstimmt; 0 heisst
     errechnen. Aendert Gerhard das Cluster-Fenster, wandert der
@@ -393,7 +393,7 @@ def index_rueckblick(cfg):
     eigen = int(cfg.get("index_tage_zurueck", 0) or 0)
     if eigen > 0:
         return eigen
-    return int(cfg.get("cluster_fenster_tage", 10))
+    return isc.fenster_handelstage(cfg)
 
 
 def indextage(bis=None, anzahl=5):
@@ -500,7 +500,7 @@ def scan(datum=None, leise=False, cfg=None, speicher=SPEICHER, funde=FUNDE):
                                  gelesen)
     if not leise:
         print(f"  {dazu} neue Käufe im Speicher; {len(behalten)} Aktien im "
-              f"Fenster von {cfg['cluster_fenster_tage']} Handelstagen.")
+              f"Fenster von {cfg['cluster_fenster_kalendertage']} Tagen.")
 
     # Marktwert nur fuer Aktien, bei denen ueberhaupt etwas passiert ist.
     kandidaten = sorted(behalten)
@@ -647,13 +647,13 @@ def selbsttest() -> int:
     with tempfile.TemporaryDirectory() as ordner:
         pfad = str(pathlib.Path(ordner) / "s.json")
         heute = date(2026, 8, 14)
-        tag1 = {"AAA": [InsiderKauf("CEO", 22e6, date(2026, 8, 4), rolle="CEO")]}
+        tag1 = {"AAA": [InsiderKauf("CEO", 300_000, date(2026, 8, 4), rolle="CEO")]}
         schreibe_speicher(tag1, {"CEO": "CEO"}, heute, pfad)
         gelesen = lies_speicher(pfad)
         p("Was abgelegt wurde, kommt unverändert zurück",
           len(gelesen.get("AAA", [])) == 1
           and gelesen["AAA"][0].datum == date(2026, 8, 4))
-        tag2 = {"AAA": [InsiderKauf("CFO", 21e6, date(2026, 8, 14), rolle="CFO")]}
+        tag2 = {"AAA": [InsiderKauf("CFO", 260_000, date(2026, 8, 14), rolle="CFO")]}
         zusammen, dazu = _zusammenfuehren(gelesen, tag2)
         p("Ein zweiter Tag legt sich dazu",
           len(zusammen["AAA"]) == 2 and dazu == 1)
@@ -669,7 +669,9 @@ def selbsttest() -> int:
           zugangsnummer("edgar/data/1770787/0001610717-26-000358.txt")
           == "0001610717-26-000358")
         # DER PUNKT: Erst dadurch kann ein Cluster ueber Tage entstehen.
-        tag3 = {"AAA": [InsiderKauf("Direktor X", 20.5e6, date(2026, 8, 14))]}
+        # Betraege seit 01.10.2026 nach Gerhards neuen Schwellen (je ab 250.000
+        # Dollar, keiner ab 5 Mio Dollar, sonst waere es auch Pfad A).
+        tag3 = {"AAA": [InsiderKauf("Direktor X", 250_000, date(2026, 8, 14))]}
         zusammen, _ = _zusammenfuehren(zusammen, tag3)
         signal = isc.pruefe_insider_signal(zusammen["AAA"], 1e9, stichtag=heute)
         p("Drei Insider an DREI Tagen ergeben zusammen einen Cluster",

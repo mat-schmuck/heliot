@@ -270,7 +270,11 @@ ALARME = [
      "erklaerung": "Große Käufe von Vorständen und Direktoren laut den Meldungen an die SEC; Meldung mit dem Kurs "
                    "des Tages.",
      "regel": "Große Käufe von Vorständen und Direktoren laut den Meldungen an die SEC, bewertet mit dem Marktwert "
-              "des Tages; gemeldet mit dem Kurs des Tages, der zugleich der Einstieg ist."},
+              "des Tages; gemeldet mit dem Kurs des Tages, der zugleich der Einstieg ist. Ein Signal ist ein "
+              "einzelner Kauf ab 5 Millionen Dollar oder ein Cluster aus mindestens drei Insidern, die innerhalb von "
+              "14 Tagen je mindestens 250.000 Dollar kaufen; nur Käufe, keine Verkäufe, bei Firmen ab 300 Millionen "
+              "Dollar Börsenwert. Die Funde stehen im Reiter Berichte, ohne Volumenprüfung und ohne Kaufzeile an "
+              "den Bot."},
     # Die Meldungen zu offenen Positionen (Gerhard, 24.09.2026, Frage 7:
     # alles abwaehlbar, mit einer Warnung beim Abwaehlen)
     {"schluessel": "ausstiege", "gruppe": "positionen", "name": "Ausstiege und Stops",

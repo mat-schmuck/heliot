@@ -199,20 +199,22 @@ CFG = {
 
     # --- Insider-Kauf-Scanner (Gerhards Kapitel vom 14.08.2026) -----------
     # SEC Form 4, Transaktionscode "P" (echter Kauf am freien Markt).
-    # Zwei unabhaengige Pfade, jeder fuer sich ausreichend:
-    #   A  Groesse:  EIN Kauf >= min(5 % der Marktkap, 25 Mio $)
-    #   B  Cluster:  >= 3 verschiedene Insider, je >= 2 % der Marktkap,
-    #                innerhalb von 10 HANDELSTAGEN
-    # ALLE Werte sind Gerhards begruendete Startwerte, KEINE gemessenen
-    # Optima - sein eigener Hinweis. Sie gehoeren mitgeschrieben und
-    # nachgeschaerft, bevor jemand darauf Geld setzt.
+    # Zwei unabhaengige Pfade, jeder fuer sich ausreichend. SEIT 01.10.2026
+    # mit Gerhards neuen Schwellen (30.09.2026 abends, Antwort 9):
+    #   A  Groesse:  EIN Kauf >= 5 Mio $
+    #   B  Cluster:  >= 3 verschiedene Insider, je >= 250.000 $,
+    #                innerhalb von 14 Tagen
+    # "Die alten Schwellen (25 Millionen bzw. 2 % des Boersenwerts je
+    # Person) entfallen." Bis dahin galt fuer A min(5 % der Marktkap,
+    # 25 Mio $), fuer B 2 % der Marktkap je Person in 10 Handelstagen. Nur
+    # Kaeufe, keine Verkaeufe (Antwort 10). Die Mindestgroesse der Firma
+    # nennt die Antwort nicht; sie bleibt.
     "insider": {
         "min_marktkap": 300_000_000,        # kleinere Firmen sind Rauschen
-        "pfad_a_prozent_marktkap": 0.05,
-        "pfad_a_dollar_min": 25_000_000,    # was NIEDRIGER ist, gilt
-        "pfad_b_prozent_pro_person": 0.02,
+        "pfad_a_dollar_min": 5_000_000,
+        "pfad_b_dollar_pro_person": 250_000,
         "pfad_b_min_insider": 3,
-        "cluster_fenster_tage": 10,         # Handelstage, nicht Kalendertage
+        "cluster_fenster_kalendertage": 14,
         "melden": True,                     # meldet der Waechter die Funde?
 
         # WIE VIELE TAGE JE LAUF (Befund 26.08.2026): Der Scanner fragte
@@ -226,8 +228,10 @@ CFG = {
         #
         # 0 heisst: aus dem Cluster-Fenster errechnen (siehe
         # insider_edgar.index_rueckblick). GERHARDS REGEL VERLANGT DAS:
-        # Pfad B sucht drei Insider innerhalb von cluster_fenster_tage
-        # HANDELSTAGEN. Wer nur die letzten fuenf Indizes liest, hat die
+        # Pfad B sucht drei Insider innerhalb des Cluster-Fensters, seit
+        # 01.10.2026 innerhalb von 14 Tagen, also bis zu 11 Handelstagen
+        # (insider_scanner.fenster_handelstage). Wer nur die letzten fuenf
+        # Indizes liest, hat die
         # erste Haelfte dieses Fensters nie gesehen - ein Cluster, das
         # am 12. beginnt und am 25. drei Kaeufer zaehlt, faellt dann
         # durch. Im Dauerbetrieb faellt das nicht auf (der Speicher

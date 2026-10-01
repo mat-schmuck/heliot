@@ -812,19 +812,27 @@ def block_e():
     _v = lz._vorabwerte(_ohne_token, jetzt=_mitte)
     pruefe("E", "Vorabwerte: ohne DATEN_TOKEN still mit Grund", _v[3] is True and "DATEN_TOKEN" in _v[2], str(_v))
 
+    # Seit 01.10.2026 ein Fenster von 14 Kalendertagen (Gerhard, Antwort 9).
     pruefe("E", "Index-Rueckblick deckt Gerhards Cluster-Fenster ab",
-           ie.index_rueckblick({"cluster_fenster_tage": 10,
-                                "index_tage_zurueck": 0}) == 10)
+           ie.index_rueckblick({"cluster_fenster_kalendertage": 14,
+                                "index_tage_zurueck": 0}) == 11)
     pruefe("E", "Cluster-Fenster geaendert: Rueckblick wandert mit",
-           ie.index_rueckblick({"cluster_fenster_tage": 15,
-                                "index_tage_zurueck": 0}) == 15)
+           ie.index_rueckblick({"cluster_fenster_kalendertage": 21,
+                                "index_tage_zurueck": 0}) == 16)
     pruefe("E", "Eigener Wert ueberstimmt die Rechnung",
-           ie.index_rueckblick({"cluster_fenster_tage": 10,
+           ie.index_rueckblick({"cluster_fenster_kalendertage": 14,
                                 "index_tage_zurueck": 3}) == 3)
     import config as _cfgm
     pruefe("E", "Rueckblick der echten Einstellung deckt das Fenster",
            ie.index_rueckblick(_cfgm.CFG["insider"])
-           >= _cfgm.CFG["insider"]["cluster_fenster_tage"])
+           >= _cfgm.CFG["insider"]["cluster_fenster_kalendertage"] * 5 // 7 + 1)
+    pruefe("E", "Insider: Gerhards Schwellen vom 30.09.2026 abends, A ab 5 Mio, B je ab 250.000 in 14 Tagen",
+           _cfgm.CFG["insider"]["pfad_a_dollar_min"] == 5_000_000
+           and _cfgm.CFG["insider"]["pfad_b_dollar_pro_person"] == 250_000
+           and _cfgm.CFG["insider"]["pfad_b_min_insider"] == 3
+           and _cfgm.CFG["insider"]["cluster_fenster_kalendertage"] == 14
+           and "pfad_a_prozent_marktkap" not in _cfgm.CFG["insider"]
+           and "pfad_b_prozent_pro_person" not in _cfgm.CFG["insider"])
     pruefe("E", "Jede Einreichung wird nur einmal geladen (Zugangsnummer)",
            "einmalig.setdefault(zugangsnummer(p), p)" in
            pathlib.Path("insider_edgar.py").read_text(encoding="utf-8"))
