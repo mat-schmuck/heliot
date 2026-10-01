@@ -11,7 +11,11 @@
       "SNPS|Pocket Pivot",
       "SNPS|@445.57",
       "LITE|Fallback: 20-Tage-Hoch (Pivot)",
-      "LITE|@1026.77"
+      "LITE|@1026.77",
+      "LITE|Rectangle Top",
+      "LITE|@985.01",
+      "LITE|Wick Play",
+      "LITE|@1009.55"
     ]
   },
   "gemeldet": {
@@ -293,7 +297,9 @@
     "UEBER|VICR|Cup & Handle (Wochenbasis)": "2026-10-01",
     "UEBER|SNPS|Pocket Pivot": "2026-10-01",
     "LITE|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-01",
-    "BEST|LITE|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-01"
+    "BEST|LITE|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-01",
+    "UEBER|LITE|Rectangle Top": "2026-10-01",
+    "UEBER|LITE|Wick Play": "2026-10-01"
   },
   "gemeldet_kp": {
     "CXW|Cup & Handle (Wochenbasis)": 31.67,
@@ -504,7 +510,9 @@
     "UEBER|VICR|Cup & Handle (Wochenbasis)": 297.01,
     "UEBER|SNPS|Pocket Pivot": 445.57,
     "LITE|Fallback: 20-Tage-Hoch (Pivot)": 1026.77,
-    "BEST|LITE|Fallback: 20-Tage-Hoch (Pivot)": 1026.77
+    "BEST|LITE|Fallback: 20-Tage-Hoch (Pivot)": 1026.77,
+    "UEBER|LITE|Rectangle Top": 985.01,
+    "UEBER|LITE|Wick Play": 1009.55
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-10-01"
