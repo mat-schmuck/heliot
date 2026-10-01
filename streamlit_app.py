@@ -3484,6 +3484,46 @@ with tab_upload:
 # (blacklist.aendern); die Werkzeuge lesen den neuen Stand binnen einer Minute.
 _bl_status = st.components.v2.component(
     "heliot_bl_status", js=_SC_STATUS_JS.replace("heliot_scan_status", "heliot_bl_status"))
+# DER FOKUS FAELLT NICHT INS LEERE: Nach Ja oder Nein verschwinden die zwei
+# Knoepfe der Rueckfrage, nach dem Eintragen der Knopf zum Eintragen. Der Fokus
+# geht dann an das Bedienelement zurueck, das die Rueckfrage ausgeloest hat,
+# wie es fuer Dialoge ueblich ist; nach dem Eintragen und Loeschen an das
+# Eingabefeld. Je Ereignis einmal (Kennung), gesucht wird nur im Reiter.
+_BL_FOKUS_JS = """export default function (component) {
+  const d = component.data || {};
+  const art = String(d.art || ""), ziel = String(d.ziel || ""), id = String(d.id || "");
+  if (!ziel || !id || window.__heliot_bl_fokus === id) {
+    return;
+  }
+  window.__heliot_bl_fokus = id;
+  const finden = () => {
+    const bereich = document.querySelector(".st-key-blacklist_bereich");
+    if (!bereich) {
+      return null;
+    }
+    if (art === "knopf") {
+      return [...bereich.querySelectorAll("button")].find((x) => x.textContent.trim() === ziel) || null;
+    }
+    return [...bereich.querySelectorAll("input")].find((x) => x.getAttribute("aria-label") === ziel) || null;
+  };
+  const versuch = (n) => {
+    const el = finden();
+    if (el) {
+      el.focus();
+    } else if (n > 0) {
+      setTimeout(() => versuch(n - 1), 100);
+    }
+  };
+  versuch(30);
+}
+"""
+_bl_fokus = st.components.v2.component("heliot_bl_fokus", js=_BL_FOKUS_JS)
+BL_FELD = "Gib Kürzel oder Firmennamen der Aktie ein, die gesperrt werden soll, und drück die Eingabetaste"
+
+
+def _bl_fokus_setzen(art: str, ziel: str):
+    """art: feld, haken oder knopf; ziel: Beschriftung des Bedienelements."""
+    st.session_state["bl_fokus"] = {"art": art, "ziel": ziel, "id": str(time.time_ns())}
 
 
 @st.cache_data(ttl=3600, show_spinner=False)
@@ -3550,6 +3590,7 @@ def _bl_eintragen(ticker: str, name: str):
                      f"{ticker} steht jetzt auf der Blacklist."):
         st.session_state["bl_eingabe"] = ""
         st.session_state.pop("bl_wahl", None)
+        _bl_fokus_setzen("feld", BL_FELD)
 
 
 def _bl_haken_geaendert(ticker: str, schluessel: str):
@@ -3576,6 +3617,12 @@ def _bl_loeschen_fragen(ticker: str):
 
 def _bl_antwort(art: str, ticker: str, ja: bool, schluessel: str):
     st.session_state.pop("bl_frage", None)
+    if art in ("frei", "sperren"):
+        _bl_fokus_setzen("haken", f"{ticker} gesperrt")
+    elif ja:
+        _bl_fokus_setzen("feld", BL_FELD)
+    else:
+        _bl_fokus_setzen("knopf", f"{ticker} löschen")
     if art == "frei":
         if ja:
             _bl_schreiben(lambda liste: blacklist.umschalten(liste, ticker, False),
@@ -3600,8 +3647,9 @@ def _bl_antwort(art: str, ticker: str, ja: bool, schluessel: str):
 def _bl_suche(eintraege: list):
     """Das Eingabefeld und, sobald etwas gefunden ist, der Knopf zum Eintragen."""
     st.markdown("### Aktie sperren", anchors=False)
-    eingabe = (st.text_input("Gib ein Kürzel oder einen Firmennamen ein und drück die Eingabetaste", key="bl_eingabe",
-                             placeholder="Zum Beispiel AAOI oder Apple") or "").strip()
+    # Eine eigene Beschriftung: Das Feld Aktie nachschlagen oben auf der Seite
+    # steht zugleich da, zwei gleich benannte Felder waeren nicht zu unterscheiden.
+    eingabe = (st.text_input(BL_FELD, key="bl_eingabe", placeholder="Zum Beispiel AAOI oder Apple") or "").strip()
     if not eingabe:
         return
     rs = _bl_rs()
@@ -3630,6 +3678,26 @@ def _bl_suche(eintraege: list):
               args=(ticker, name))
 
 
+def _bl_rueckfrage(art: str, t: str, k: str, haken: str, aktiv: bool):
+    """Die Rueckfrage samt Ja und Nein. Sie steht gleich unter dem Bedienelement,
+    das sie ausgeloest hat: beim Haken unter dem Kontrollfeld, beim Loeschen unter
+    dem Knopf; so stimmt die Ansage, die Knoepfe stuenden gleich darunter."""
+    if art == "frei":
+        st.warning(f"{t} wieder freigeben? Die Aktie erscheint dann wieder in Alarmen, Berichten, beim "
+                   "Handels-Bot und in den Listen der App; Kaufpunkte rechnet der nächste Nachtscan.")
+        ja, nein = f"Ja, {t} freigeben", f"Nein, {t} gesperrt lassen"
+    elif art == "sperren":
+        st.warning(_bl_gehalten_satz(t) + f" {t} wieder sperren?")
+        ja, nein = f"Ja, {t} sperren", f"Nein, {t} frei lassen"
+    else:
+        st.warning(f"{t} von der Blacklist löschen? Der Eintrag verschwindet ganz"
+                   + ("; die Aktie erscheint dann wieder in Alarmen, Berichten, beim Handels-Bot und in den "
+                      "Listen der App." if aktiv else "."))
+        ja, nein = f"Ja, {t} löschen", f"Nein, {t} behalten"
+    st.button(ja, key=f"bl_ja_{k}", type="primary", on_click=_bl_antwort, args=(art, t, True, haken))
+    st.button(nein, key=f"bl_nein_{k}", on_click=_bl_antwort, args=(art, t, False, haken))
+
+
 def blacklist_reiter():
     """Der Reiter: Erklaerung, Eintragen, die Liste mit Haken und Loeschen."""
     st.markdown("## Blacklist", anchors=False)
@@ -3639,6 +3707,7 @@ def blacklist_reiter():
                 "einer Minute. Ein abgehakter Eintrag bleibt stehen und sperrt nichts; Kaufpunkte rechnet für eine "
                 "freigegebene Aktie der nächste Nachtscan.")
     _bl_status(key="bl_status", data={"text": st.session_state.get("bl_ansage", "")})
+    _bl_fokus(key="bl_fokus_ziel", data=st.session_state.get("bl_fokus") or {})
     meldung = st.session_state.pop("bl_meldung", None)
     if meldung:
         _sc_meldung_zeigen(meldung)
@@ -3665,25 +3734,14 @@ def blacklist_reiter():
         if not (frage and frage[1] == t and frage[0] in ("frei", "sperren")):
             st.session_state[haken] = aktiv
         st.checkbox(f"{t} gesperrt", key=haken, on_change=_bl_haken_geaendert, args=(t, haken))
+        if frage and frage[1] == t and frage[0] in ("frei", "sperren"):
+            _bl_rueckfrage(frage[0], t, k, haken, aktiv)
         seit = _bl_seit_text(e)
         if seit:
             st.caption(seit)
         st.button(f"{t} löschen", key=f"bl_loeschen_{k}", on_click=_bl_loeschen_fragen, args=(t,))
-        if frage and frage[1] == t:
-            if frage[0] == "frei":
-                st.warning(f"{t} wieder freigeben? Die Aktie erscheint dann wieder in Alarmen, Berichten, beim "
-                           "Handels-Bot und in den Listen der App; Kaufpunkte rechnet der nächste Nachtscan.")
-                ja, nein = f"Ja, {t} freigeben", f"Nein, {t} gesperrt lassen"
-            elif frage[0] == "sperren":
-                st.warning(_bl_gehalten_satz(t) + f" {t} wieder sperren?")
-                ja, nein = f"Ja, {t} sperren", f"Nein, {t} frei lassen"
-            else:
-                st.warning(f"{t} von der Blacklist löschen? Der Eintrag verschwindet ganz"
-                           + ("; die Aktie erscheint dann wieder in Alarmen, Berichten, beim Handels-Bot und in den "
-                              "Listen der App." if aktiv else "."))
-                ja, nein = f"Ja, {t} löschen", f"Nein, {t} behalten"
-            st.button(ja, key=f"bl_ja_{k}", type="primary", on_click=_bl_antwort, args=(frage[0], t, True, haken))
-            st.button(nein, key=f"bl_nein_{k}", on_click=_bl_antwort, args=(frage[0], t, False, haken))
+        if frage and frage[1] == t and frage[0] == "loeschen":
+            _bl_rueckfrage(frage[0], t, k, haken, aktiv)
 
 
 if tab_blacklist is not None:

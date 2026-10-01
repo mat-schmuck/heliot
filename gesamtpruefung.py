@@ -4726,12 +4726,17 @@ def block_i():
            and 'if globals().get("rolle") != "voll":\n        return [], None' in _quelle_app)
     pruefe("I", "Blacklist: Eingabe fuer Kuerzel oder Firmenname, Eintragen erst mit dem Knopf, Hinweis auf eine "
                 "offene Beobachtung vor dem Speichern, je Eintrag Ueberschrift, Kontrollfeld und Loeschen, Rueckfrage "
-                "beim Abhaken und Loeschen, Ansage",
+                "beim Abhaken gleich unter dem Kontrollfeld und beim Loeschen gleich unter dem Knopf, Ansage, danach der "
+                "Fokus zurueck am Bedienelement; das Eingabefeld heisst anders als das Feld Aktie nachschlagen",
            "nachschlagen.finde(eingabe, rs)" in _quelle_app and "auf die Blacklist setzen" in _quelle_app
            and "_bl_gehalten_satz(ticker)" in _quelle_app and 'st.markdown(f"#### {t}"' in _bl_teil
            and "st.checkbox(f\"{t} gesperrt\"" in _bl_teil and 'f"{t} löschen"' in _bl_teil
            and '("frei", ticker)' in _quelle_app and '("loeschen", ticker)' in _quelle_app
-           and "_bl_status(" in _bl_teil)
+           and "_bl_status(" in _bl_teil and "_bl_fokus(" in _bl_teil
+           and _quelle_app.count("_bl_fokus_setzen(") >= 5
+           and 0 < _bl_teil.find('st.checkbox(f"{t} gesperrt"') < _bl_teil.find("_bl_rueckfrage(frage[0]")
+           < _bl_teil.find('st.button(f"{t} löschen"') < _bl_teil.rfind("_bl_rueckfrage(frage[0]")
+           and _quelle_app.count('"Gib ein Kürzel oder einen Firmennamen ein und drück die Eingabetaste"') == 1)
     pruefe("I", "Blacklist: ausgeblendet im Aktuellen Scan samt Datei, unter den Treffern des Scanners und in Liste "
                 "pruefen; Hinweis beim Nachschlagen und bei den einzeln ueberwachten Aktien",
            '_bl_ohne(df_scan, "Ticker")' in _quelle_app and '_bl_ohne(tabelle, "ticker")' in _quelle_app
