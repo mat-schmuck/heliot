@@ -1685,6 +1685,10 @@ def freigabe_nachziehen(items: list[dict], firmen: dict, gewuenscht: set,
     ohnehin. Ins Protokoll, das oeffentlich ist, kommen nur Zahlen: Dass eine
     Aktie gesperrt war, ist privat. Liefert die neu ueberwachten Kuerzel."""
     try:
+        # Frisch gelesen, nicht aus dem Stand der letzten Minute: Die Freigabe
+        # aus der App soll im naechsten Datentakt greifen, nicht erst im
+        # uebernaechsten (die Pruefung der Sperren liest erst nach dieser Stelle).
+        blacklist.nachladen(zwingend=True)
         frei = blacklist.freigegeben()
     except Exception as e:  # noqa: BLE001, eine kaputte Liste legt die Wache nie lahm
         print(f"  Freigaben nicht lesbar: {type(e).__name__}.")

@@ -930,9 +930,10 @@ def antworten_0110_pruefen(bw, quelle_waechter):
     # 16 Freigegeben heisst sofort ueberwacht
     _frei = _bl.freigaben_fortschreiben([{"ticker": "FRE", "aktiv": True}], [{"ticker": "FRE", "aktiv": False}], [],
                                         u(2026, 10, 1, 13, 0))
-    _alt = (_li.alle_ticker, _li.darf_darvas, bw.einzel_kaufpunkte)
+    _alt = (_li.alle_ticker, _li.darf_darvas, bw.einzel_kaufpunkte, _bl.nachladen)
     _gerufen = []
     _bl.setzen([], freigaben=["FRE"])
+    _bl.nachladen = lambda *a, **k: None      # nie die echte Liste, auch mit Token in der Umgebung
     bw._FREIGABE_VERSUCHT.clear()
     try:
         _li.alle_ticker = lambda *a, **k: [("FRE", "Frei AG"), ("XXX", "X AG")]
@@ -947,7 +948,7 @@ def antworten_0110_pruefen(bw, quelle_waechter):
             _dazu = bw.freigabe_nachziehen(_its, {}, _gew, _abr)
             _dazu2 = bw.freigabe_nachziehen(_its, {}, _gew, _abr)
     finally:
-        _li.alle_ticker, _li.darf_darvas, bw.einzel_kaufpunkte = _alt
+        _li.alle_ticker, _li.darf_darvas, bw.einzel_kaufpunkte, _bl.nachladen = _alt
         _bl.zuruecksetzen()
         bw._FREIGABE_VERSUCHT.clear()
     pruefe("D", "Antwort 16: die Blacklist merkt sich, wann eine Aktie freigegeben wurde",
@@ -957,8 +958,9 @@ def antworten_0110_pruefen(bw, quelle_waechter):
            _dazu == ["FRE"] and _dazu2 == [] and _gerufen == [("FRE", False, "Freigegebene Aktie")]
            and _its and _its[0].get("freigabe") is True and not _its[0].get("einzel") and "FRE" in _gew
            and "FRE" in _abr and "FRE" not in _aus.getvalue(), _aus.getvalue().strip()[:120])
-    pruefe("D", "Antwort 16: der Waechter holt Freigaben beim Start und in jedem Datentakt",
-           quelle_waechter.count("freigabe_nachziehen(items, firmen, gewuenscht, abruf_ticker") == 2)
+    pruefe("D", "Antwort 16: der Waechter holt Freigaben beim Start und in jedem Datentakt, frisch gelesen",
+           quelle_waechter.count("freigabe_nachziehen(items, firmen, gewuenscht, abruf_ticker") == 2
+           and "blacklist.nachladen(zwingend=True)\n        frei = blacklist.freigegeben()" in quelle_waechter)
 
 
 # ---------------------------------------------------------------------------
