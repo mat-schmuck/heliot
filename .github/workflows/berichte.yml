@@ -1,0 +1,71 @@
+name: Berichte (Gap-Up vorbörslich)
+
+# GERHARDS TEIL 5 (29.09.2026) samt Fragen 12 und 13 (30.09.2026 nachts): der
+# vorboersliche Gap-Up-Bericht um 09:10 New Yorker Zeit, also 15:10 Wiener
+# Zeit und in den Umstellwochen 14:10, immer 20 Minuten vor der US-Eroeffnung.
+# Er steht nur im Reiter Berichte der App, keine ntfy-Meldung.
+#
+# Angestossen wird dieser Ablauf nach jedem Lauf des Scanners, also im
+# Zehn-Minuten-Takt von cron-job.org (dort steht der Takt fuer den Scanner,
+# hier braucht es keinen eigenen). gapup_bericht.py --faellig entscheidet:
+# Werktag, 09:10 bis 09:29 New York, einmal je Tag; sonst endet der Lauf nach
+# wenigen Sekunden, ohne Pakete zu installieren.
+#
+# Braucht das Secret DATEN_TOKEN: Der Bericht liegt im privaten Datenrepo
+# heliot-daten (berichte/berichte.json), dort liest ihn die App.
+
+on:
+  workflow_run:
+    workflows: ["Pattern-Scanner (Kaufpunkte)"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      jetzt:
+        description: "Sofort bauen, auch ausserhalb des Zeitfensters (ja/nein)"
+        required: false
+        default: "nein"
+
+concurrency:
+  group: berichte
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  gapup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Ist der Gap-Up-Bericht faellig?
+        id: pruefung
+        env:
+          DATEN_TOKEN: ${{ secrets.DATEN_TOKEN }}
+          JETZT: ${{ github.event.inputs.jetzt }}
+        run: |
+          if [ "$JETZT" = "ja" ]; then
+            echo "Von Hand angestossen: wird jetzt gebaut."
+            echo "noetig=ja" >> "$GITHUB_OUTPUT"
+          else
+            python3 gapup_bericht.py --faellig
+          fi
+      - uses: actions/setup-python@v5
+        if: steps.pruefung.outputs.noetig == 'ja'
+        with:
+          python-version: "3.12"
+      - name: Abhaengigkeiten
+        if: steps.pruefung.outputs.noetig == 'ja'
+        run: pip install requests pandas numpy pyarrow yfinance
+      - name: Selbsttests
+        if: steps.pruefung.outputs.noetig == 'ja'
+        run: |
+          python berichte.py --selbsttest
+          python gapup_bericht.py --selbsttest
+      - name: Gap-Up-Bericht bauen und ablegen
+        if: steps.pruefung.outputs.noetig == 'ja'
+        env:
+          DATEN_TOKEN: ${{ secrets.DATEN_TOKEN }}
+        run: python gapup_bericht.py --jetzt

@@ -422,13 +422,20 @@ def _portionen(absaetze, grenze=NTFY_GRENZE):
 
 
 def senden(topic, titel, absaetze, prio="low", poster=None):
-    """Eigener Sendeweg ohne Handelszeitsperre: Der Bericht kommt nach dem
-    Schluss (R7). Kennungen wandern in den ntfy-Verlauf, damit der
-    Wochenputz auch diese Meldungen raeumt. Die Namen Power-Gap und Red to
-    Green setzt einstellungen.meldungs_text ein (Gerhard, 24.09.2026, Fragen
-    93 und 94)."""
-    import requests
+    """SEIT 01.10.2026 IM REITER BERICHTE der App, nicht mehr per ntfy
+    (Gerhard, 29.09.2026, Teil 4: "Alle Berichte nur noch in Streamlit"; in
+    der Nacht auf den 30.09.2026: "Abendbericht (Nachtbericht)" in den
+    Reiter). Ein Bericht in einem Stueck, ohne Portionen. Die Namen Power-Gap
+    und Red to Green setzt einstellungen.meldungs_text ein (Gerhard,
+    24.09.2026, Fragen 93 und 94).
+
+    poster ersetzt in der Pruefung den Weg nach draussen; er bekommt die
+    Portionen wie frueher der ntfy-Abruf, mit Titel und Prioritaet."""
     import einstellungen
+    if poster is None:
+        import berichte
+        return berichte.ablegen("abend", einstellungen.meldungs_text(titel),
+                                [einstellungen.meldungs_text(a) for a in absaetze])
     portionen = _portionen(absaetze)
     ok = True
     for nr, teil in enumerate(portionen, 1):
@@ -436,16 +443,7 @@ def senden(topic, titel, absaetze, prio="low", poster=None):
         kopf = einstellungen.meldungs_text(kopf)
         body = einstellungen.meldungs_text("\n\n".join(teil))
         try:
-            if poster is not None:
-                r = poster(topic, kopf, body, prio)
-            else:
-                r = requests.post(f"https://ntfy.sh/{topic}", data=body.encode("utf-8"),
-                                  headers={"Title": kopf.encode("utf-8"), "Priority": prio}, timeout=20)
-                try:
-                    import ntfy_verlauf
-                    ntfy_verlauf.merke_antwort(r)
-                except Exception:  # noqa
-                    pass
+            r = poster(topic, kopf, body, prio)
             if getattr(r, "status_code", 200) >= 400:
                 ok = False
         except Exception as e:  # noqa
@@ -494,7 +492,8 @@ def lauf(topic=None, senden_erlaubt=True, heute=None, leise=False, poster=None, 
         for a in absaetze:
             print("  " + a.replace("\n", "\n  "))
     gesendet = False
-    if senden_erlaubt and CFGA.get("melden") and topic:
+    # Seit 01.10.2026 im Reiter Berichte; ein ntfy-Thema braucht es dafuer nicht mehr.
+    if senden_erlaubt and CFGA.get("melden"):
         gesendet = senden(topic, titel, absaetze, prio, poster=poster)
         if gesendet:
             ged_neu["gesendet"] = handelstag

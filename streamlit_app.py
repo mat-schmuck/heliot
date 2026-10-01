@@ -41,6 +41,7 @@ import pandas as pd
 import streamlit as st
 
 import ablaeufe
+import berichte
 import einstellungen
 import frischhalten
 import listen
@@ -448,10 +449,73 @@ def zeit_wien(zeitpunkt: float) -> str:
     return f"{w:%d.%m.%Y} um {w:%H:%M} Uhr Wiener Zeit"
 
 
+# GELESEN JE GERAET (Gerhard, 30.09.2026 abends, Antwort 14): Welche Berichte
+# im Reiter Berichte gelesen sind, merkt sich der Browser, genau wie Aussehen
+# und Ton, mit derselben Speicher-Komponente unter eigenem Namen. Gespeichert
+# werden die Kennungen der gelesenen Berichte (berichte.gelesen_wert).
+GELESEN_NAME = "heliot_gelesen"
+GELESEN_SCHLUESSEL = "gelesen_speicher"
+_gelesen_speicher = st.components.v2.component("heliot_gelesen", js=zugang.speicher_js(GELESEN_NAME))
+
+
+def _gelesen_gemeldet():
+    """Rueckruf der Komponente: Der Browser hat gemeldet, was gelesen ist."""
+    stand = st.session_state.get(GELESEN_SCHLUESSEL) or {}
+    st.session_state["gelesen_gemeldet"] = stand.get("wert") or ""
+
+
+def _gelesen_binden():
+    """Bindet die Komponente genau einmal je Lauf ein: Steht eine Aenderung an
+    (_gelesen_umschalten), schreibt sie diese, sonst liest sie."""
+    neu = st.session_state.pop("gelesen_setzen", None)
+    if neu is not None:
+        st.session_state["gelesen_gemeldet"] = neu
+        daten = zugang.speicher_daten("setzen", neu) if neu else zugang.speicher_daten("loeschen")
+    else:
+        daten = zugang.speicher_daten("lesen", bekannt=st.session_state.get("gelesen_gemeldet"))
+    _gelesen_speicher(key=GELESEN_SCHLUESSEL, data=daten, on_wert_change=_gelesen_gemeldet,
+                      on_gespeichert_change=lambda: None)
+
+
+def _gelesen() -> set:
+    return berichte.gelesen_aus_wert(st.session_state.get("gelesen_gemeldet"))
+
+
+def _gelesen_umschalten(kennung: str, sichtbare: tuple):
+    """Ein Bericht wurde von Hand auf gelesen gesetzt oder zurueckgesetzt. Im
+    Browser bleiben nur Kennungen, die im Reiter noch stehen."""
+    menge = _gelesen()
+    if st.session_state.get(f"gelesen_{kennung}"):
+        menge.add(kennung)
+    else:
+        menge.discard(kennung)
+    st.session_state["gelesen_setzen"] = berichte.gelesen_wert(menge, nur=set(sichtbare))
+
+
+def startseite_link():
+    """DER LINK ZUR STARTSEITE (Gerhard, 30.09.2026 abends, Antwort 11): ganz
+    oben UND am Ende jeder Registerkarte und jedes Unterreiters, damit er mit
+    VoiceOver von beiden Enden schnell erreichbar ist. Er laedt die App neu,
+    mit derselben Adresse wie beim Oeffnen; man landet ganz oben auf der
+    ersten Registerkarte, wie nach dem Start. Was eingegeben, aber nicht
+    gespeichert war, ist danach weg; wer Angemeldet bleiben gewaehlt hat,
+    bleibt angemeldet.
+
+    WARUM "." UND KEIN ZIEL OBEN: Streamlit Community Cloud zeigt die App in
+    einem inneren Rahmen, dessen Sandbox keine Navigation der aeusseren Seite
+    erlaubt (gemessen am 01.10.2026: allow-top-navigation fehlt). Der Link
+    laedt deshalb den inneren Rahmen neu, ueber den relativen Verweis auf
+    seine eigene Startadresse; die Angaben hinter dem Fragezeichen, etwa die
+    nachgeschlagene Aktie, fallen dabei weg. Kein Markdown-Link: Den oeffnet
+    Streamlit in einem neuen Fenster."""
+    st.html('<p class="zur-startseite"><a href="." target="_self">Zur Startseite</a></p>')
+
+
 # Die Komponenten fuer Toene und Browserspeicher zeichnen nichts; ihr Platz wird
 # ausgeblendet, damit sie keine Luecke in die Seite reissen.
 st.html("<style>" + oberflaeche.AMPEL_CSS
-        + "[class*='st-key-heliot_klang'],[class*='st-key-eigen_speicher']{display:none}</style>")
+        + "[class*='st-key-heliot_klang'],[class*='st-key-eigen_speicher'],"
+          "[class*='st-key-gelesen_speicher']{display:none}</style>")
 # Die Wache fuer die Toene: Sie gibt den Ton im Browser beim ersten Klick oder
 # Tastendruck frei; ohne diese Freigabe bliebe es auf dem iPhone still.
 _klang_komponente(key="heliot_klang_wache", data={"id": "", "klang": "aus"})
@@ -1369,18 +1433,135 @@ if rolle != "gast":
 # nicht, der Lauf endet hinter dem Scanner (Schranke "if tab_liste is None").
 # DER REITER EINSTELLUNGEN (Mathias und Gerhard, 23.09.2026) steht zuletzt; Gaeste
 # bekommen ihn nicht, ohne vollen Zugang laesst er sich nur ansehen.
+# DER REITER BERICHTE (Gerhard, 29.09.2026, Teil 4) steht als zweite
+# Registerkarte, gleich hinter der Startseite; nur im vollen Zugang, weil die
+# Berichte im privaten Datenrepo liegen (Gaeste sehen nichts daraus, S4).
+tab_berichte = None
 tab_upload = tab_gast = tab_ablaeufe = tab_einst = None
 if rolle == "gast":
     st.markdown("## Scanner", anchors=False)
     tab_scanner = st.container()
     tab_liste = tab_scan = tab_info = None
 elif rolle == "voll":
-    (tab_liste, tab_scan, tab_scanner, tab_upload, tab_gast, tab_ablaeufe, tab_info,
-     tab_einst) = st.tabs(["Liste prüfen", "Aktueller Scan", "Scanner", "Wochenlisten", "Gastzugang", "Abläufe",
-                           "Regelwerk", "Einstellungen"])
+    (tab_liste, tab_berichte, tab_scan, tab_scanner, tab_upload, tab_gast, tab_ablaeufe, tab_info,
+     tab_einst) = st.tabs(["Liste prüfen", "Berichte", "Aktueller Scan", "Scanner", "Wochenlisten", "Gastzugang",
+                           "Abläufe", "Regelwerk", "Einstellungen"])
 else:
     tab_liste, tab_scan, tab_scanner, tab_upload, tab_info, tab_einst = st.tabs(
         ["Liste prüfen", "Aktueller Scan", "Scanner", "Wochenlisten", "Regelwerk", "Einstellungen"])
+
+# Der Link zur Startseite ganz oben in jeder Registerkarte (Antwort 11); der
+# am Ende kommt ganz unten im Skript, nach allem anderen Inhalt. Ein Gast hat
+# keine Registerkarten, nur den Scanner.
+REITER_ALLE = [r for r in (tab_liste, tab_berichte, tab_scan, tab_scanner, tab_upload, tab_gast, tab_ablaeufe,
+                           tab_info, tab_einst) if r is not None]
+if rolle != "gast":
+    for _reiter in REITER_ALLE:
+        with _reiter:
+            startseite_link()
+
+
+@st.cache_data(ttl=60, show_spinner=False)
+def _berichte_holen() -> list:
+    """Die Berichte aus dem privaten Datenrepo (berichte/berichte.json), mit
+    DATEN_TOKEN wie die Analystenwerte. Fehlschlaege werfen und landen nicht
+    im Speicher. Aufgerufen nur im vollen Zugang (berichte_reiter)."""
+    token = _daten_token()
+    if not token:
+        raise LookupError("kein Token für das Datenrepo")
+    liste, _sha, grund = berichte.datei_lesen(token)
+    if grund:
+        raise LookupError(grund)
+    return liste
+
+
+def _md(text) -> str:
+    """Text eines Berichts fuer st.markdown: Jedes Zeichen, das Markdown oder
+    die Formelschreibweise deuten koennte, wird entwertet; ein Dollarzeichen
+    in einer Schlagzeile wird so keine Formel."""
+    return re.sub(r"([\\`*_{}\[\]()#+\-.!|$~<>])", r"\\\1", str(text or ""))
+
+
+def _schlicht(text) -> str:
+    """Text fuer die Beschriftung eines Bedienelements. Streamlit gibt sie dem
+    Screenreader unveraendert weiter; ein entwertendes Zeichen wuerde
+    mitgelesen (gemessen am 01.10.2026: "Gap", Rueckstrich, "-Ups"). Deshalb
+    fallen die Zeichen weg, die Markdown deuten koennte, statt sie zu entwerten."""
+    return re.sub(r"\s+", " ", re.sub(r"[\\`*_{}\[\]<>|~#$]", " ", str(text or ""))).strip()
+
+
+def _bericht_zeigen(e: dict, gelesen_menge: set, sichtbare: tuple):
+    """Ein Bericht: Ueberschrift mit Datum und Uhrzeit, darunter die Absaetze,
+    zuletzt das Kaestchen zum Abhaken (Antwort 14)."""
+    st.markdown(f"#### {_md(e['titel'])}, {_md(berichte.uhrzeit_wien(e['zeit']))}", anchors=False)
+    for absatz in e.get("absaetze") or []:
+        st.markdown("  \n".join(_md(z) for z in str(absatz).split("\n")))
+    k = e["id"]
+    st.session_state[f"gelesen_{k}"] = k in gelesen_menge
+    st.checkbox(f"{_schlicht(e['titel'])}, gelesen", key=f"gelesen_{k}", on_change=_gelesen_umschalten,
+                args=(k, sichtbare))
+
+
+def _berichte_art_gewechselt():
+    """Der gewaehlte Unterreiter, gemerkt als Berichtsart: Die Beschriftung
+    traegt die Zahl der ungelesenen und aendert sich deshalb; ohne diese
+    Merkstelle sprang die Auswahl nach jedem Haken auf den ersten Unterreiter
+    zurueck (Streamlit kennt eine Registerkarte an ihren Beschriftungen)."""
+    art = berichte.art_aus_unterreiter(st.session_state.get("berichte_unterreiter"))
+    if art:
+        st.session_state["berichte_art"] = art
+
+
+def berichte_reiter():
+    """Der Reiter Berichte (Gerhard, 29.09.2026, Teil 4; Antwort 14 vom
+    30.09.2026 abends): je Berichtsart ein Unterreiter, daneben die Zahl der
+    ungelesenen ohne Klammern, neueste oben, jeder Bericht mit Ueberschrift und
+    Uhrzeit, jeder von Hand auf gelesen setzbar. Was gelesen ist, merkt sich
+    der Browser des Geraets. Geleert wird Montag bis Freitag um 14:00 Uhr
+    Wiener Zeit (berichte.leerung_vor)."""
+    st.markdown("## Berichte", anchors=False)
+    try:
+        alle, grund = _berichte_holen(), ""
+    except LookupError as e:
+        alle, grund = [], str(e)
+    except Exception as e:  # noqa
+        alle, grund = [], f"Netzwerkfehler {type(e).__name__}"
+    if grund:
+        fehler("Die Berichte lassen sich gerade nicht laden. Versuche es in ein paar Minuten noch einmal.",
+               grund, kennung="berichte_laden")
+    sicht = berichte.sichtbar(alle)
+    gelesen_menge = _gelesen()
+    sichtbare = tuple(e["id"] for e in sicht)
+    zahl = berichte.ungelesen_je_art(sicht, gelesen_menge)
+    leer = berichte.uhrzeit_wien(berichte.zeit_text(berichte.leerung_vor()))
+    n, u = len(sicht), sum(zahl.values())
+    st.markdown(f"Seit der Leerung am {leer} sind {n} Bericht{'e' if n != 1 else ''} eingegangen, "
+                f"{u} davon ungelesen. Geleert wird Montag bis Freitag um 14:00 Uhr Wiener Zeit; was "
+                f"gelesen ist, merkt sich dieses Gerät.")
+    st.button("Berichte neu laden", key="berichte_neu", on_click=_berichte_holen.clear)
+    arten = [k for k, _name in berichte.ARTEN]
+    namen = [berichte.unterreiter_name(k, zahl[k]) for k in arten]
+    aktuell = st.session_state.get("berichte_art")
+    if aktuell not in arten:
+        aktuell = arten[0]
+    unterreiter = st.tabs(namen, key="berichte_unterreiter", default=namen[arten.index(aktuell)],
+                          on_change=_berichte_art_gewechselt)
+    je = berichte.je_art(sicht)
+    for (art, name), reiter in zip(berichte.ARTEN, unterreiter):
+        with reiter:
+            startseite_link()
+            st.markdown(f"### {name}", anchors=False)
+            if not je[art]:
+                st.markdown("Seit der Leerung ist hier kein Bericht eingegangen.")
+            for e in je[art]:
+                _bericht_zeigen(e, gelesen_menge, sichtbare)
+            startseite_link()
+
+
+if tab_berichte is not None:
+    _gelesen_binden()
+    with tab_berichte:
+        berichte_reiter()
 
 
 def tt_text(wert) -> str:
@@ -3490,6 +3671,13 @@ if tab_einst is not None:
             else:
                 fehler(einst_text, einst_technik, einst_kennung)
 
+
+# Der Link zur Startseite am Ende jeder Registerkarte (Antwort 11 vom
+# 30.09.2026 abends); oben steht er seit dem Bau der Registerkarten.
+if rolle != "gast":
+    for _reiter in REITER_ALLE:
+        with _reiter:
+            startseite_link()
 
 # Der Abmelden-Knopf am Seitenende (Antwort 25 vom 24.09.2026)
 abmelden_zeigen()

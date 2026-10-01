@@ -149,11 +149,14 @@ jobs:
         if: steps.pruefung.outputs.noetig == 'ja'
         env:
           TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
-          # ABENDBERICHT (Gerhard, R7, 12.09.2026): Der Nachtscan schickt
-          # nach dem Kapitel-12-Lauf einen Bericht, niedrige Prioritaet,
-          # einmal je Handelstag. Kein Alarm; die Alarme bleiben beim
-          # Waechter zur Handelszeit.
+          # ABENDBERICHT (Gerhard, R7, 12.09.2026): Der Nachtscan legt nach
+          # dem Kapitel-12-Lauf einen Bericht ab, einmal je Handelstag. Kein
+          # Alarm; die Alarme bleiben beim Waechter zur Handelszeit. SEIT
+          # 01.10.2026 steht er im Reiter Berichte der App (Gerhard,
+          # 29.09.2026, Teil 4), abgelegt im privaten Datenrepo mit
+          # DATEN_TOKEN; NTFY_TOPIC bleibt fuer Stoerungsmeldungen.
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          DATEN_TOKEN: ${{ secrets.DATEN_TOKEN }}
           # IBD-Ratings (R20 bis R22): Die Zuordnung Ticker zu CIK kommt
           # vom SEC-Verzeichnis; der Abruf braucht den User-Agent.
           SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}

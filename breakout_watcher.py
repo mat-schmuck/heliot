@@ -69,6 +69,7 @@ import alarm_muster    # Gerhards sechs Alarm-Muster (22.09.2026, O1 bis O10)
 import einstellungen   # Alarme je Muster abwaehlbar (Mathias und Gerhard, 23.09.2026)
 import listen          # Wochenlisten und die einzeln eingetragenen Aktien (O11 bis O13)
 import bot_kanal       # Die Signale als JSON für den degirobot (Vertrag KANAL.md)
+import berichte        # Der Reiter Berichte der App (Gerhard, 29.09.2026, Teil 4)
 import gewinnzonen_lauf  # Kapitel 12: Nachtbefunde zum Handelsstart mit heutigen Kursen nachrechnen
 import gewinn_zonen as gz  # Kapitel 12: Klimax-Katalog fuer die schlussnahen Befunde (M1, 12.09.2026)
 from config import CFG, hoechstens, mind_erreicht, pruefe_config
@@ -2573,13 +2574,9 @@ def tagesgeschaeft_wache(topic, quotes, dry_run, state=None):
                 + f"{pct:+.1f} %".replace(".", ","))
         titel = ("EXIT Tagesgeschäft: "
                  + ", ".join(e["symbol"] for _, e, _ in raus))
-        paket = handel_paket([{"ticker": e["symbol"],
-                               "firma": e.get("firma", ""),
-                               "strategie": e.get("strategie", ""),
-                               "kurs": kurs}
-                              for _, e, kurs in raus],
-                             art="verkauf", anlass="exit")
-        if sende(topic, titel, absaetze, "high", handel_adresse(paket)):
+        # SEIT 01.10.2026 IM REITER BERICHTE (Gerhard, Frage 6), nicht mehr
+        # per ntfy und damit auch ohne die Klick-Adresse der Handels-App.
+        if bericht_ablegen(topic, "verkauf", titel, absaetze):
             # DEM BOT: ganze Position raus (Mathias, 22.09.2026,
             # "Ausstiege gemaess den Meldungen durchfuehren").
             bot_kanal.sende_verkauf(
@@ -2655,11 +2652,8 @@ def teilverkauf_wache(topic, quotes, dry_run, state, schon_gemeldet):
                 f"{ex['teilverkauf_anteil'] * 100:.0f} % verkaufen; "
                 f"Kurs {kurs:.2f}, Einstieg {float(e['einstieg']):.2f}")
         titel = "REGEL Teilverkauf: " + ", ".join(e["symbol"] for _, e, _, _, _ in faellig)
-        paket = handel_paket([{"ticker": e["symbol"], "firma": e.get("firma", ""),
-                               "strategie": e.get("strategie", ""), "kurs": kurs,
-                               "key": k} for _, e, kurs, _, k in faellig],
-                             art="verkauf", anlass="teilverkauf")
-        if sende(topic, titel, absaetze, "high", handel_adresse(paket)):
+        # SEIT 01.10.2026 IM REITER BERICHTE (Gerhard, Frage 6).
+        if bericht_ablegen(topic, "verkauf", titel, absaetze):
             # DEM BOT: die Haelfte raus. Der Bot kennt nur ganz oder halb;
             # der eingestellte Anteil ist die Haelfte (CFG exit).
             bot_kanal.sende_verkauf(
@@ -3187,7 +3181,8 @@ def nachtbefunde_schritt(topic, nacht, basis, ws, schon_gemeldet, state,
     gesendet_gewinn, gesendet_insider = [], []
     if laut:
         eintrag, b, (titel, text, merker) = laut[0]
-        absaetze, prio = [text], b.get("prioritaet", "high")
+        absaetze = [text]
+        art = bericht_art(b.get("typ"))
         gesendet_gewinn = [(eintrag, b, merker)]
     elif insider:
         titel = ("Insider-Käufe: " + ", ".join(i[3] for i in insider)
@@ -3195,12 +3190,12 @@ def nachtbefunde_schritt(topic, nacht, basis, ws, schon_gemeldet, state,
                  else f"Insider-Käufe: {len(insider)} Aktien")
         absaetze = [f"{n}. " + "\n".join(i[2])
                     for n, i in enumerate(insider, 1)]
-        prio = "default"
+        art = "insider"
         gesendet_insider = insider
     elif leise:
         titel = f"Gewinnzonen: {len(leise)} Hinweis(e)"
         absaetze = [f"{n}. {erg[1]}" for n, (_, _, erg) in enumerate(leise, 1)]
-        prio = "default"
+        art = "gewinnzonen"
         gesendet_gewinn = [(eintrag, b, erg[2]) for eintrag, b, erg in leise]
     else:
         return None
@@ -3210,7 +3205,9 @@ def nachtbefunde_schritt(topic, nacht, basis, ws, schon_gemeldet, state,
         for a in absaetze:
             print("  " + a.replace("\n", "\n  "))
         _insider_ins_logbuch(gesendet_insider, trocken=True)
-    elif not sende(topic, titel, absaetze, prio):
+    elif not bericht_ablegen(topic, art, titel, absaetze):
+        # Seit 01.10.2026 im Reiter Berichte statt auf ntfy (Teil 4); die
+        # Dringlichkeit galt dem Push und faellt mit ihm weg.
         return False
     else:
         heute_s = date.today().isoformat()
@@ -3246,7 +3243,7 @@ def nachtbefunde_schritt(topic, nacht, basis, ws, schon_gemeldet, state,
         # SOFORT ins Repo, ohne die Minutendrossel: Die Melde-Merker stehen
         # in positionen.json, und die sichert der Endkommit des Laufs nicht.
         save_state(state, sofort=True)
-        print(f"Nachtbefund gemeldet: {titel}")
+        print(f"Nachtbefund abgelegt: {titel}")
     for eintrag, _, _ in gesendet_gewinn:
         if eintrag in offen:
             offen.remove(eintrag)
@@ -3321,7 +3318,8 @@ def sektor_morgen(topic, state, schon_gemeldet, dry_run):
             print("  " + a.replace("\n", "\n  "))
         schon_gemeldet.add(marke)
         return True
-    if sende(topic, titel, absaetze, "default"):
+    # Seit 01.10.2026 im Reiter Berichte statt auf ntfy (Teil 4).
+    if bericht_ablegen(topic, "sektor", titel, absaetze):
         schon_gemeldet.add(marke)
         state["gemeldet"][marke] = heute_s
         save_state(state)
@@ -3556,18 +3554,31 @@ def schlussnahe_befunde(topic, nacht, basis, ws, state, schon_gemeldet,
         if not dry_run:
             save_state(state, sofort=True)
         return None
-    absaetze = [f"{i}. {x['text']}; Schluss noch offen" for i, x in enumerate(eintraege, 1)]
-    absaetze.append(f"Gerechnet um {ny} New York mit den Handelskursen; der Nachtlauf "
+    # SEIT 01.10.2026 IM REITER BERICHTE (Gerhard, Teil 4 und Fragen 6 bis 8),
+    # je Art in ihrem Unterreiter: die Ausstiege bei den Verkaufssignalen,
+    # Klimax bei Klimax, Weinstein bei Stufe 3 und so fort. Jeder Teil traegt
+    # die Nummern ab 1 und denselben Schlusssatz wie die bisherige Sammelmeldung.
+    schluss_satz = (f"Gerechnet um {ny} New York mit den Handelskursen; der Nachtlauf "
                     f"prüft mit dem Schluss nach, Rücknahmen kommen im Abendbericht.")
-    prio = "high" if any(x["praefix"] == "REGEL" for x in eintraege) else "default"
+    je_art = {}
+    for x in eintraege:
+        je_art.setdefault(bericht_art(x["typ"]), []).append(x)
+    teile = []
+    for art, xs in je_art.items():
+        absaetze = [f"{i}. {x['text']}; Schluss noch offen" for i, x in enumerate(xs, 1)]
+        absaetze.append(schluss_satz)
+        teile.append((art, f"Schlussnahe Befunde {_datum_de(heute_s)}, Schluss noch offen: {len(xs)}",
+                      absaetze))
     titel = f"Schlussnahe Befunde {_datum_de(heute_s)}, Schluss noch offen: {len(eintraege)}"
     if dry_run:
         print(f"(Dry-Run) {titel}")
-        for a in absaetze:
-            print("  " + a)
+        for art, t, absaetze in teile:
+            print(f"  {berichte.ART_NAMEN[art]}: {t}")
+            for a in absaetze:
+                print("    " + a)
         schon_gemeldet.add(marke)
         return True
-    if not sende(topic, titel, absaetze, prio):
+    if not berichte_ablegen(topic, teile):
         return False
     # DEM BOT die Ausstiege des Exit-Regelwerks, jeden einzeln. Wedge Drop
     # und Zeitdeckel lassen eine Wahl, INFORMATIONEN sind keine Ausstiege;
@@ -3603,7 +3614,7 @@ def schlussnahe_befunde(topic, nacht, basis, ws, state, schon_gemeldet,
     schon_gemeldet.add(marke)
     state["gemeldet"][marke] = heute_s
     save_state(state, sofort=True)
-    print(f"Schlussnahe Befunde gemeldet: {titel}")
+    print(f"Schlussnahe Befunde abgelegt: {titel}")
     return True
 
 
@@ -4115,6 +4126,64 @@ def push_text(topic: str, titel: str, body: str) -> bool:
     (die Themen-Adresse) ein, was schlimmer ist. Am 24.07. auf Mathias'
     Wunsch wiederhergestellt."""
     return sende(topic, titel, body.split("\n\n"), "high")
+
+
+# ---------------------------------------------------------------------------
+# DER REITER BERICHTE (Gerhard, 29.09.2026, Teil 4: "Alle Berichte nur noch in
+# Streamlit"; Zuordnung in der Nacht auf den 30.09.2026, Fragen 6 bis 11)
+# ---------------------------------------------------------------------------
+# Was eine Auskunft ist und kein Kaufsignal, kommt seit dem 01.10.2026 nicht
+# mehr per ntfy, sondern steht im Reiter Berichte der App: die Verkaufssignale
+# (EXIT Tagesgeschaeft, Teilverkauf, Ausstiege im Schlussbefund), Zeitdeckel,
+# Klimax, Stufe 3, Zahlen voraus, Gewinnzonen, Insider-Kaeufe,
+# Sektor-Aufsteiger, der Rest des Schlussbefunds und der uebersprungene
+# Power-Gap-Einstieg. Auf ntfy bleiben die Kauf-Alarme samt uebersprungen mit
+# Bot-Zeile, Red to Green, der Power-Gap am Lueckentag samt Einstieg am
+# Folgetag und die Stoerungsmeldungen. Die Bot-Zeilen fuer Verkaeufe laufen
+# unveraendert weiter: Sie gehen hinaus, sobald der Bericht abgelegt ist, so
+# wie bisher, sobald die Meldung durch war.
+_bericht_stoerung_gesagt = False
+
+
+def berichte_ablegen(topic, liste) -> bool:
+    """Berichte in den Reiter Berichte: liste ist [(Art, Titel, Absaetze)].
+
+    Derselbe Wortlaut wie zuvor auf ntfy, samt den gewaehlten Namen
+    (einstellungen.meldungs_text). Alle in einem Schreibgang. Scheitert die
+    Ablage, versucht es der Aufrufer im naechsten Durchlauf wieder, wie zuvor
+    nach einem gescheiterten Push; EINE Stoerungsmeldung je Lauf sagt es auf
+    ntfy, weil technische Warnungen dort bleiben (Gerhard, 30.09.2026)."""
+    global _bericht_stoerung_gesagt
+    eintraege = [berichte.bericht(art, einstellungen.meldungs_text(titel),
+                                  [einstellungen.meldungs_text(a) for a in absaetze])
+                 for art, titel, absaetze in liste]
+    ok = berichte.ablegen_viele(eintraege)
+    if ok:
+        for e in eintraege:
+            print(f"Bericht im Reiter Berichte: {berichte.ART_NAMEN[e['art']]}; {e['titel']}")
+    elif topic and not _bericht_stoerung_gesagt:
+        _bericht_stoerung_gesagt = True
+        sende(topic, "Störung: Bericht nicht im Reiter Berichte",
+              ["Ein Bericht ließ sich nicht im privaten Datenrepo ablegen: "
+               + "; ".join(e["titel"] for e in eintraege)
+               + ". Der Wächter versucht es in jedem Durchlauf wieder."], "default")
+    return ok
+
+
+def bericht_ablegen(topic, art, titel, absaetze) -> bool:
+    """Ein Bericht in den Reiter Berichte, siehe berichte_ablegen."""
+    return berichte_ablegen(topic, [(art, titel, absaetze)])
+
+
+# Die Art eines Nachtbefunds (gewinnzonen_lauf, Feld typ) im Reiter Berichte.
+NACHT_ART = {"zeitdeckel": "zeitdeckel", "klimax_zeichen": "klimax", "weinstein": "stufe3",
+             "zahlen_hinweis": "zahlen", "ziel_erreicht": "gewinnzonen", "zonenwechsel": "gewinnzonen",
+             "sektor_hinweis": "sektorradar", "kapitel11": "verkauf", "wedge_drop": "verkauf",
+             "tagesende": "verkauf", "ema8_hinweis": "ema8", "sektor_radar": "sektorradar"}
+
+
+def bericht_art(typ) -> str:
+    return NACHT_ART.get(str(typ or ""), "weitere")
 
 
 def tagesanteil_titel(treffer: list[dict]) -> str:
@@ -5835,9 +5904,9 @@ def main():
                 else:
                     titel = (f"{GAP_NAME} Einstieg übersprungen: "
                              + ", ".join(g["ticker"] for g in gap_ueber))
-                    if sende(topic, titel,
-                             [format_gapgo_uebersprungen(g) for g in gap_ueber],
-                             "default"):
+                    # Seit 01.10.2026 im Reiter Berichte (Gerhard, Frage 11).
+                    if bericht_ablegen(topic, "powergap", titel,
+                                       [format_gapgo_uebersprungen(g) for g in gap_ueber]):
                         warten = state.get(GAPGO_WARTEN) or {}
                         for g in gap_ueber:
                             schon_gemeldet.add(g["key"])

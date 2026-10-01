@@ -135,6 +135,13 @@ jobs:
           # lesbaren Meldung. Fehlt ein Secret, geschieht dafuer nichts.
           BOT_KAUFKANAL: ${{ secrets.BOT_KAUFKANAL }}
           BOT_VERKAUFSKANAL: ${{ secrets.BOT_VERKAUFSKANAL }}
+          # Der Reiter Berichte der App (Gerhard, 29.09.2026, Teil 4): Seit
+          # 01.10.2026 legt der Waechter Verkaufssignale, Zeitdeckel, Klimax,
+          # Stufe 3, Zahlen voraus, Gewinnzonen, Insider-Kaeufe,
+          # Sektor-Aufsteiger, den Schlussbefund und den uebersprungenen
+          # Power-Gap-Einstieg im privaten Datenrepo ab statt sie per ntfy zu
+          # schicken.
+          DATEN_TOKEN: ${{ secrets.DATEN_TOKEN }}
         run: |
           if [ ! -f kaufpunkte.xlsx ]; then
             echo "Keine kaufpunkte.xlsx gefunden — erst den Scanner laufen lassen."

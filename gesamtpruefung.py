@@ -172,6 +172,8 @@ def block_b():
                     # Gerhards Antworten vom 12.09.2026
                     "rs_universum", "sektor_rangliste", "abendbericht",
                     "ibd_ratings",
+                    # Reiter Berichte und Gap-Up-Bericht (Gerhard, 29.09.2026, Teil 4 und 5)
+                    "berichte", "gapup_bericht",
                     # Nachschlagen (Mathias, 13.09.2026)
                     "nachschlagen",
                     # Wochenputz und Anmeldung (Mathias, 13.09.2026)
@@ -556,7 +558,7 @@ def block_d(namen_aus_c=None):
     pruefe("D", "Bot: gesendet wird erst, wenn die lesbare Meldung durch ist",
            "    ok = sende(topic, titel, absaetze,\n" in _quelle
            and _quelle.count("    if ok:\n        # DEM BOT") == 1
-           and "if not sende(topic, titel, absaetze, prio):\n        return False\n    # DEM BOT"
+           and "if not berichte_ablegen(topic, teile):\n        return False\n    # DEM BOT"
            in _quelle)
     _soll = ('{"ticker":"PVLA","name":"Palvella Therapeutics Inc","woche":"2026-W39",'
              '"kaufpunkt":158.01,"stop":142.21}')
@@ -592,6 +594,52 @@ def block_d(namen_aus_c=None):
            _n_bk == 1 and len(_gesagt_bk) == 1
            and '{"ticker":"AAA","name":"A","woche":"2026-W39","kaufpunkt":10.0,"stop":9.0}' in _gesagt_bk[0],
            str(_gesagt_bk))
+    # SCHRITT 3 (Gerhard, 29.09.2026, Teil 4; Zuordnung 30.09.2026 nachts):
+    # Berichte stehen im Reiter Berichte, Kauf-Alarme bleiben auf ntfy.
+    import abendbericht as _ab
+    import berichte as _br
+
+    def _rumpf(name):
+        teil = _quelle.split(f"\ndef {name}(")[1]
+        return teil.split("\ndef ")[0]
+    _in_reiter = ("tagesgeschaeft_wache", "teilverkauf_wache", "nachtbefunde_schritt", "sektor_morgen",
+                  "schlussnahe_befunde")
+    _falsch = [n for n in _in_reiter if "sende(topic" in _rumpf(n)
+               or not ("bericht_ablegen(" in _rumpf(n) or "berichte_ablegen(" in _rumpf(n))]
+    pruefe("D", "Schritt 3: Verkaufssignale, Nachtbefunde, Sektor-Aufsteiger und Schlussbefund gehen in den "
+                "Reiter Berichte, nicht auf ntfy", not _falsch, nennen(_falsch))
+    pruefe("D", "Schritt 3: der uebersprungene Power-Gap-Einstieg ebenso",
+           'bericht_ablegen(topic, "powergap", titel,' in _quelle
+           and 'GAP_NAME} Einstieg übersprungen: "' in _quelle)
+    _ntfy = [n for n in ("push", "push_uebersprungen", "push_text") if "sende(topic" not in _rumpf(n)]
+    pruefe("D", "Schritt 3: Kauf-Alarme samt uebersprungen, Red to Green und Power-Gap bleiben auf ntfy",
+           not _ntfy, nennen(_ntfy))
+    pruefe("D", "Schritt 3: die Bot-Zeilen fuer Verkaeufe laufen weiter, erst nach der Ablage",
+           _quelle.count("bot_kanal.sende_verkauf(") == 3
+           and 'if bericht_ablegen(topic, "verkauf", titel, absaetze):' in _quelle)
+    _abgelegt = []
+    _alt_ab = _br.ablegen
+    try:
+        _br.ablegen = lambda art, titel, absaetze, **k: (_abgelegt.append((art, titel, list(absaetze))) or True)
+        _ab_ok = _ab.senden("probe", "Abendbericht 01.10.2026, Bericht, kein Kaufsignal", ["a", "b"])
+    finally:
+        _br.ablegen = _alt_ab
+    pruefe("D", "Schritt 3: der Abendbericht steht im Reiter Berichte, in einem Stueck",
+           _ab_ok is True and _abgelegt == [("abend", "Abendbericht 01.10.2026, Bericht, kein Kaufsignal",
+                                             ["a", "b"])], str(_abgelegt))
+    _wf = {n: (WURZEL / ".github" / "workflows" / n).read_text(encoding="utf-8")
+           for n in ("watcher.yml", "scanner.yml", "berichte.yml")}
+    pruefe("D", "Schritt 3: Waechter, Nachtscan und Gap-Up-Bericht bekommen das Token fuer das Datenrepo",
+           all("DATEN_TOKEN: ${{ secrets.DATEN_TOKEN }}" in t for t in _wf.values()))
+    pruefe("D", "Schritt 3: der Gap-Up-Bericht haengt am Zehn-Minuten-Takt des Scanners und prueft selbst, "
+                "ob er faellig ist",
+           'workflows: ["Pattern-Scanner (Kaufpunkte)"]' in _wf["berichte.yml"]
+           and "python3 gapup_bericht.py --faellig" in _wf["berichte.yml"]
+           and "python gapup_bericht.py --jetzt" in _wf["berichte.yml"])
+    pruefe("D", "Schritt 3: jede Art eines Befunds hat ihren Unterreiter",
+           all(bw.bericht_art(t) in _br.ART_NAMEN for t in list(bw.NACHT_ART) + ["unbekannt"])
+           and bw.bericht_art("unbekannt") == "weitere")
+
     pruefe("D", "Bot: ohne die zwei Geheimnisse geschieht gar nichts",
            bk.kanal(bk.KAUF) is None and bk.kanal(bk.VERKAUF) is None
            and bk.sende_kauf([{"ticker": "AAA", "firma": "A", "kaufpunkt": 10.0,
@@ -959,11 +1007,15 @@ def block_e():
             # Der Waechter-Schritt selbst, ohne Netz und ohne Push
             _alt_sende, _alt_save = bw.sende, bw.save_state
             _alt_heute, _alt_push = bw.heute_ny, bw._LETZTER_PUSH
+            _alt_ablegen = bw.berichte_ablegen
             _gesendet_n = []
             try:
                 bw.sende = lambda topic, titel, absaetze, prio="default", \
                     klick=None: (_gesendet_n.append((titel, list(absaetze)))
                                  or True)
+                # Seit 01.10.2026 im Reiter Berichte (Schritt 3)
+                bw.berichte_ablegen = lambda topic, liste: (
+                    _gesendet_n.extend((t, list(a)) for _art, t, a in liste) or True)
                 bw.save_state = lambda state, sofort=False: None
                 bw.heute_ny = lambda: _dk(2026, 8, 31)
                 bw._LETZTER_PUSH = None
@@ -1024,6 +1076,7 @@ def block_e():
             finally:
                 bw.sende, bw.save_state = _alt_sende, _alt_save
                 bw.heute_ny, bw._LETZTER_PUSH = _alt_heute, _alt_push
+                bw.berichte_ablegen = _alt_ablegen
 
             # STRAFFUNGS-MELDUNGEN ABGESCHALTET (Gerhard, 11.09.2026, bis auf
             # Weiteres): Musterziel erreicht, Wedge Drop und Sektor dreht
@@ -2215,7 +2268,7 @@ def block_e():
     _probe = _tf.mkdtemp(prefix="logbuchzeilen_")
     _alt = {n: getattr(bw, n) for n in ("_marktwert_heute", "push_frei",
                                         "sende", "save_state",
-                                        "beobachtungen_eintragen")}
+                                        "beobachtungen_eintragen", "berichte_ablegen")}
     _alt_ie = {n: getattr(_ie2, n) for n in ("lies_speicher", "lies_rollen")}
     _ins, _nach, _befund = False, False, ""
     try:
@@ -2231,6 +2284,8 @@ def block_e():
         bw._marktwert_heute = lambda s, k, h: 5.0e9
         bw.push_frei = lambda jetzt=None: True
         bw.sende = lambda *a, **k: (_gesendet.append(a) or True)
+        # Seit 01.10.2026 legt der Insider-Fund im Reiter Berichte ab (Schritt 3)
+        bw.berichte_ablegen = lambda topic, liste: (_gesendet.extend(liste) or True)
         bw.save_state = lambda *a, **k: _gesichert.append(k)
         bw.beobachtungen_eintragen = lambda *a, **k: None
         _ie2.lies_speicher = lambda *a, **k: {"PRB": [_kauf]}
@@ -3903,6 +3958,8 @@ def oberflaechen_texte(quelle=None) -> list:
     if quelle is None:
         quelle = (WURZEL / "streamlit_app.py").read_text(encoding="utf-8")
     raus = [("App", x) for x in app_texte(quelle)]
+    import berichte
+    raus += [("Berichte", n) for _k, n in berichte.ARTEN]
     for a in einstellungen.ALARME:
         raus += [("Einstellungen", a[k]) for k in ("name", "erklaerung", "regel", "warnung") if a.get(k)]
     raus += [("Einstellungen", n) for _g, n in einstellungen.GRUPPEN]
@@ -4083,6 +4140,38 @@ def _volumen_schreibweise_pruefen():
 
 
 # (Name, Pruefung, "Pflicht" oder "Warnung"); die Pruefung liefert (bestanden, Befund).
+def _startseite_pruefen():
+    """Antwort 11 (Gerhard, 30.09.2026 abends): der Link Zur Startseite ganz
+    oben UND am Ende jeder Registerkarte und jedes Unterreiters. Jede
+    Registerkarte, die die App baut, muss in REITER_ALLE stehen; die zwei
+    Schleifen setzen den Link oben und unten. Jeder Unterreiter, also jedes
+    weitere st.tabs, braucht den Link selbst, oben und unten."""
+    import ast as _ast
+    quelle = (WURZEL / "streamlit_app.py").read_text(encoding="utf-8")
+    baum = _ast.parse(quelle)
+    karten = set()
+    unter_funktionen = []
+    for n in _ast.walk(baum):
+        if isinstance(n, _ast.Assign) and isinstance(n.value, _ast.Call):
+            f = n.value.func
+            if isinstance(f, _ast.Attribute) and f.attr == "tabs":
+                ziele = [e.id for z in n.targets for e in _ast.walk(z) if isinstance(e, _ast.Name)]
+                if all(z.startswith("tab_") for z in ziele):
+                    karten |= set(ziele)
+    for fn in [n for n in _ast.walk(baum) if isinstance(n, _ast.FunctionDef)]:
+        rumpf = _ast.get_source_segment(quelle, fn) or ""
+        if "st.tabs(" in rumpf:
+            unter_funktionen.append((fn.name, rumpf.count("startseite_link()")))
+    alle = quelle.split("REITER_ALLE = [")[1].split("]")[0] if "REITER_ALLE = [" in quelle else ""
+    fehlen = sorted(k for k in karten if k not in alle)
+    schleifen = quelle.count("for _reiter in REITER_ALLE:\n        with _reiter:\n            startseite_link()")
+    ohne = [f"{n}: {z}" for n, z in unter_funktionen if z < 2]
+    ok = (not fehlen and schleifen == 2 and not ohne and 'href="."' in quelle
+          and quelle.count("def startseite_link(") == 1)
+    return ok, (f"Karten {sorted(karten)}; fehlen in REITER_ALLE: {fehlen}; Schleifen {schleifen}; "
+                f"Unterreiter ohne zwei Links: {ohne}")
+
+
 KOHAERENZ_KRITERIEN = [
     ("Keine Klammern in sichtbaren Texten (Antwort 112)", _klammern_pruefen, "Warnung"),
     ("Jede Strategie und jedes Chartmuster im Regelwerk (Antwort 115)", _regelwerk_pruefen, "Warnung"),
@@ -4094,6 +4183,8 @@ KOHAERENZ_KRITERIEN = [
     ("Ein Name je Sache (Antwort 119)", _namen_pruefen, "Warnung"),
     ("Volumen ueberall in IBD-Sprache, Prozent ueber dem Schnitt (Anweisung vom 30.09.2026 nachmittags)",
      _volumen_schreibweise_pruefen, "Pflicht"),
+    ("Link Zur Startseite oben und am Ende jeder Registerkarte und jedes Unterreiters (Antwort 11 vom "
+     "30.09.2026 abends)", _startseite_pruefen, "Pflicht"),
 ]
 
 
