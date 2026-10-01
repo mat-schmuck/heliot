@@ -38,14 +38,33 @@ Antworten vom selben Abend (1 bis 5 und 12):
 WIE ES LAEUFT: nach jedem Lauf des Vorabwerte-Stroms (vorabwerte.yml, werktags
 06:00 bis 20:00 New York alle 30 Minuten, dazu der Zusatzlauf um 09:20 New
 York, den berichte.yml auf main anstoesst). Jede Vorabwert-Datei wird genau
-einmal bewertet; was die Kriterien erfuellt, kommt gesammelt als EIN Bericht
-je Lauf in den Unterreiter Earnings. Nach dem letzten Lauf des Abends steht dort
-ehrlich, wenn an diesem Abend keine Aktie die Kriterien erfuellt hat.
+einmal bewertet.
 
-AUSWAHL, so gebaut (die offene Regelfrage steht im Abschlussbericht an Gerhard):
-eine Aktie kommt in den Bericht, wenn sie alle Filter besteht (Umsatzwachstum,
-Kurs, Boersenwert, Volatilitaet) und Konsens geschlagen ODER Beschleunigung
-gilt; markiert ist, was davon erfuellt ist.
+EIN TAGESBERICHT (Gerhards Antworten 13 und 14 vom 01.10.2026): "EIN
+Earnings-Tagesbericht, der laufend ergaenzt wird. Neue Treffer stehen oben mit
+Uhrzeit, und der Zaehler ungelesen springt bei neuen Treffern wieder an."
+"Jeden Handelstag eine Meldung im Unterreiter Earnings, auch wenn keine
+Quartalszahlen kamen oder keine Aktie die Kriterien erfuellt hat. Dann steht
+dort kurz, ob und wie viele Zahlen gelesen wurden und dass keine Aktie die
+Kriterien erfuellt hat." Je New Yorker Tag gibt es deshalb EINEN Bericht mit
+dem Schluessel earnings-JJJJ-MM-TT, der sich im Reiter selbst ersetzt
+(berichte.py). Seine Kennung entsteht aus den Treffern: Ein neuer Treffer macht
+ihn wieder ungelesen, eine neue Zahl gelesener Meldungen nicht. Er steht bis zum
+naechsten Handelstag um 14:00 Uhr Wiener Zeit, auch wenn er vor der Leerung um
+14:00 begonnen hat. Die Treffer stehen im Stand (stand.json, tage) samt Text,
+damit jeder Lauf den Bericht neu bauen kann. Nach dem letzten Lauf des Abends,
+ab 19:30 New York, steht an jedem Handelstag der New Yorker Boerse
+(boersentage.py) der Stand des Abends da, ohne Treffer als Meldung, dass keine
+Aktie die Kriterien erfuellt hat. Faellt der Abendlauf aus, holt der naechste
+Lauf das nach, solange der Bericht noch stehen wuerde.
+
+AUSWAHL (Antwort 10 vom 01.10.2026: "Eines von beiden reicht, wie gebaut.
+Aktien, die beides erfuellen, stehen oben und sind markiert."): eine Aktie kommt
+in den Bericht, wenn sie alle Filter besteht (Umsatzwachstum, Kurs,
+Boersenwert, Volatilitaet) und Konsens geschlagen ODER Beschleunigung gilt;
+markiert ist, was davon erfuellt ist. Innerhalb eines Laufs stehen die Aktien
+mit beiden Bedingungen zuerst, als "beide Bedingungen erfuellt" markiert, dann
+nach der Abweichung beim Umsatz; die Laeufe stehen neueste zuerst.
 
 DATEN:
   * Zahlen des Quartals und Abweichung vom Konsens: die Vorabwert-Datei
@@ -97,6 +116,8 @@ YAHOO_CHART = "https://query1.finance.yahoo.com/v8/finance/chart/{}?range=2y&int
 KOPF = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)", "Accept": "application/json"}
 NUR_UMSATZ_UNSICHER = re.compile(r"^Umsatz \d+ Prozent neben dem Vorjahresquartal$")
 ABEND_SCHLUSS_NY = 19 * 60 + 30   # der letzte Stromlauf des Abends beginnt um 20:00 New York
+NACHHOLEN_TAGE = 4                # so lange holt ein Lauf einen ausgefallenen Abend nach
+TREFFER_TAGE = 6                  # so lange behaelt der Stand die Texte der Treffer
 KI = "KI, vorläufig"
 
 try:
@@ -537,9 +558,20 @@ def _ausblick_satz(vergleich) -> str:
     return "; ".join(teile)
 
 
-def absatz(nr, b, vergleich=None) -> str:
-    z1 = (f"{nr}. {b['ticker']}, {b['name'] or 'Firma unbekannt'}; Quartal bis {_datum(b['periodenende'])}, gemeldet "
-          f"am {_wien(b['filing_utc'])}; erfüllt: {_erfuellt(b)}")
+def absatz(nr, b, vergleich=None, aufgenommen=None) -> str:
+    return f"{nr}. " + absatz_text(b, vergleich, aufgenommen)
+
+
+def absatz_text(b, vergleich=None, aufgenommen=None) -> str:
+    """Der Absatz einer Aktie ohne Nummer: Die Nummer vergibt der
+    Tagesbericht, wenn er alle Treffer des Tages ordnet. Erfuellt sie beide
+    Bedingungen, steht das gleich hinter dem Namen (Antwort 10), dahinter die
+    Uhrzeit, zu der sie in den Bericht kam (Antwort 13)."""
+    beide = "; beide Bedingungen erfüllt" if b["a"] and b["b"] else ""
+    um = _utc(aufgenommen.isoformat() if isinstance(aufgenommen, dt.datetime) else aufgenommen)
+    zeit = f"; aufgenommen um {um.astimezone(WIEN):%H:%M} Uhr Wiener Zeit" if um else ""
+    z1 = (f"{b['ticker']}, {b['name'] or 'Firma unbekannt'}{beide}{zeit}; Quartal bis {_datum(b['periodenende'])}, "
+          f"gemeldet am {_wien(b['filing_utc'])}; erfüllt: {_erfuellt(b)}")
     eps_wort = "EPS bereinigt" if b["eps_basis"] == "bereinigt" else "EPS amtlich"
     if b["konsens_passt"]:
         z2 = (f"Gegen den Konsens, {KI}: Umsatz {dollar(b['umsatz'])} gegen {dollar(b['umsatz_konsens'])}, "
@@ -562,21 +594,60 @@ def absatz(nr, b, vergleich=None) -> str:
     return "\n".join((z1, z2, z3, z4, z5))
 
 
-def bericht_bauen(aufgenommen, jetzt=None):
-    """(Titel, Absaetze) fuer die aufgenommenen Aktien eines Laufs, sortiert:
-    beide Bedingungen zuerst, dann nach der Abweichung beim Umsatz."""
-    jetzt = jetzt or dt.datetime.now(dt.timezone.utc)
-    liste = sorted(aufgenommen, key=lambda x: (not (x[0]["a"] and x[0]["b"]), -(x[0]["umsatz_ue"] or -999)))
-    n = len(liste)
-    titel = f"Earnings: {n} Aktie{'n' if n != 1 else ''}, Stand {jetzt.astimezone(WIEN):%H:%M} Uhr Wiener Zeit"
-    absaetze = [f"Quartalszahlen, die die Kriterien erfüllen: Umsatzwachstum gegen das Vorjahresquartal mindestens "
-                f"{zahl(UMSATZ_WACHSTUM_MIN, 0)} Prozent, Kurs ab {zahl(KURS_MIN, 0)} Dollar, Börsenwert ab "
-                f"{zahl(MARKTKAP_MIN_MRD * 1000, 0)} Millionen Dollar, Jahresvolatilität ab {zahl(VOLA_MIN, 0)} "
-                f"Prozent; dazu Konsens geschlagen, beim EPS ab plus {zahl(KONSENS_EPS_MIN, 0)} Prozent oder beim "
-                f"Umsatz ab plus {zahl(KONSENS_UMSATZ_MIN, 0)} Prozent, oder Wachstum um mindestens "
-                f"{zahl(BESCHLEUNIGUNG_MIN, 0)} Prozentpunkte beschleunigt. Kein Alarm, keine Kaufzeile."]
-    absaetze += [absatz(i, b, v) for i, (b, v) in enumerate(liste, 1)]
-    return titel, absaetze
+def kriterien_satz() -> str:
+    return (f"Quartalszahlen, die die Kriterien erfüllen: Umsatzwachstum gegen das Vorjahresquartal mindestens "
+            f"{zahl(UMSATZ_WACHSTUM_MIN, 0)} Prozent, Kurs ab {zahl(KURS_MIN, 0)} Dollar, Börsenwert ab "
+            f"{zahl(MARKTKAP_MIN_MRD * 1000, 0)} Millionen Dollar, Jahresvolatilität ab {zahl(VOLA_MIN, 0)} "
+            f"Prozent; dazu Konsens geschlagen, beim EPS ab plus {zahl(KONSENS_EPS_MIN, 0)} Prozent oder beim "
+            f"Umsatz ab plus {zahl(KONSENS_UMSATZ_MIN, 0)} Prozent, oder Wachstum um mindestens "
+            f"{zahl(BESCHLEUNIGUNG_MIN, 0)} Prozentpunkte beschleunigt. Kein Alarm, keine Kaufzeile.")
+
+
+def treffer_eintrag(b, vergleich, jetzt) -> dict:
+    """Was der Stand je Treffer behaelt: genug, um den Tagesbericht in jedem
+    Lauf neu zu bauen, ohne SEC, Yahoo oder Mistral noch einmal zu fragen."""
+    return {"accession": b["accession"], "ticker": b["ticker"], "zeit": jetzt.astimezone(dt.timezone.utc).isoformat(),
+            "beide": bool(b["a"] and b["b"]), "umsatz_ue": b["umsatz_ue"], "text": absatz_text(b, vergleich, jetzt)}
+
+
+def _mehrzahl(n, einzahl, mehrzahl):
+    return f"{n} {einzahl if n == 1 else mehrzahl}"
+
+
+def tagesbericht(tag, eintrag, jetzt) -> tuple:
+    """(Titel, Absaetze, Kennung) des Earnings-Tagesberichts zum New Yorker
+    Tag tag (JJJJ-MM-TT). Die Treffer stehen neueste zuerst, innerhalb eines
+    Laufs die mit beiden Bedingungen zuerst, dann nach der Abweichung beim
+    Umsatz. Ohne Treffer ist es die Meldung, dass keine Aktie die Kriterien
+    erfuellt hat (Antwort 14). Die Kennung waechst mit den Treffern."""
+    datum = _datum(tag)
+    gelesen = int(eintrag.get("gelesen") or 0)
+    treffer = sorted(eintrag.get("treffer") or [],
+                     key=lambda t: (-(_utc(t.get("zeit")) or jetzt).timestamp(), not t.get("beide"),
+                                    -(_f(t.get("umsatz_ue")) if _f(t.get("umsatz_ue")) is not None else -999.0)))
+    frueher = max(0, int(eintrag.get("berichtet") or 0) - len(treffer))
+    if not treffer and not frueher:
+        if gelesen:
+            satz = (f"Am {datum} wurden in New York {_mehrzahl(gelesen, 'Quartalsmeldung', 'Quartalsmeldungen')} "
+                    "gelesen; keine Aktie hat die Kriterien des Earnings-Berichts erfüllt.")
+        else:
+            satz = (f"Am {datum} kamen in New York keine Quartalszahlen; keine Aktie hat die Kriterien des "
+                    "Earnings-Berichts erfüllt.")
+        return f"Earnings vom {datum}: keine Aktie erfüllt die Kriterien", [satz], ["leer", tag]
+    letzte = max((_utc(t.get("zeit")) for t in treffer if _utc(t.get("zeit"))), default=jetzt)
+    n = len(treffer) + frueher
+    titel = (f"Earnings vom {datum}: {_mehrzahl(n, 'Aktie', 'Aktien')}, zuletzt ergänzt um "
+             f"{letzte.astimezone(WIEN):%H:%M} Uhr Wiener Zeit")
+    stand_satz = (f"Gelesen am {datum} in New York: {_mehrzahl(gelesen, 'Quartalsmeldung', 'Quartalsmeldungen')}, "
+                  f"davon {n} im Bericht; Stand {jetzt.astimezone(WIEN):%H:%M} Uhr Wiener Zeit. Neue Treffer stehen "
+                  "oben, darin zuerst die Aktien, die beide Bedingungen erfüllen.")
+    if frueher:
+        # Der Tag der Umstellung: Was vorher gefunden wurde, steht in den
+        # Berichten je Lauf von frueher an diesem Tag, nicht im Stand.
+        stand_satz += (f" {_mehrzahl(frueher, 'Aktie steht', 'Aktien stehen')} in den früheren Earnings-Berichten "
+                       "dieses Tages.")
+    absaetze = [kriterien_satz(), stand_satz] + [f"{i}. {t.get('text')}" for i, t in enumerate(treffer, 1)]
+    return titel, absaetze, ["treffer", tag] + sorted(str(t.get("accession")) for t in treffer)
 
 
 # ---------------------------------------------------------------------------
@@ -717,40 +788,66 @@ def lauf(daten, trocken=False, jetzt=None, log=print, firma_laden=None, tabelle=
     ny = jetzt.astimezone(NY)
     tag = ny.date().isoformat()
     tage = stand.get("tage") or {}
-    heute = tage.setdefault(tag, {"gelesen": 0, "berichtet": 0, "keine_gemeldet": False})
+    heute = tage.setdefault(tag, {"gelesen": 0, "berichtet": 0})
     heute["gelesen"] += len(neu)
     heute["berichtet"] += len(aufgenommen)
+    heute.setdefault("treffer", []).extend(treffer_eintrag(b, v, jetzt) for b, v in aufgenommen)
     ablegen = ablegen or _ablegen
-    if aufgenommen:
-        titel, absaetze = bericht_bauen(aufgenommen, jetzt)
-        ergebnis["titel"] = titel
+    import berichte
+    import boersentage
+    # Welche Tagesberichte jetzt zu schreiben sind: der heutige bei neuen
+    # Treffern, und jeder Handelstag, dessen Abend (19:30 New York) vorbei ist
+    # und noch nicht gemeldet wurde (Antwort 14), heute oder nachgeholt.
+    faellig = [tag] if aufgenommen else []
+    abend = []
+    for t in sorted(tage):
+        e = tage[t]
+        if e.get("abend_gemeldet") or e.get("keine_gemeldet"):
+            continue
+        try:
+            d = dt.date.fromisoformat(t)
+        except ValueError:
+            continue
+        schluss = dt.datetime(d.year, d.month, d.day, ABEND_SCHLUSS_NY // 60, ABEND_SCHLUSS_NY % 60, tzinfo=NY)
+        if not boersentage.ist_handelstag(d) or jetzt < schluss or jetzt - schluss > dt.timedelta(days=NACHHOLEN_TAGE):
+            continue
+        if jetzt >= berichte.leerung_nach_handelstag(d):
+            e["abend_gemeldet"] = True        # stuende schon nicht mehr im Reiter
+            continue
+        abend.append(t)
+        if t not in faellig:
+            faellig.append(t)
+    for t in faellig:
+        titel, absaetze, kennung = tagesbericht(t, tage[t], jetzt)
+        if t == tag:
+            ergebnis["titel"] = titel
         if trocken:
             log(titel)
             for a in absaetze:
                 log(a)
-        elif not ablegen(titel, absaetze, jetzt, log):
+        elif not ablegen(titel, absaetze, jetzt, log, schluessel=f"earnings-{t}", kennung_aus=kennung,
+                         bis=berichte.leerung_nach_handelstag(dt.date.fromisoformat(t))):
             return {**ergebnis, "abbruch": "Bericht nicht abgelegt"}
-    elif (ny.hour * 60 + ny.minute >= ABEND_SCHLUSS_NY and heute["berichtet"] == 0 and heute["gelesen"] > 0
-          and not heute["keine_gemeldet"] and ny.weekday() < 5):
-        # Nur an Tagen, an denen Quartalszahlen gelesen wurden: Ausserhalb der
-        # Saison stuende sonst jeden Abend eine leere Meldung im Reiter.
-        titel = "Earnings: keine Aktie erfüllt heute die Kriterien"
-        absaetze = [f"Gelesen wurden heute {heute['gelesen']} Quartalsmeldungen; keine erfüllt die Kriterien des "
-                    "Earnings-Berichts."]
-        if not trocken and not ablegen(titel, absaetze, jetzt, log):
-            return {**ergebnis, "abbruch": "Bericht nicht abgelegt"}
-        heute["keine_gemeldet"] = True
+        if t in abend:
+            tage[t]["abend_gemeldet"] = True
     if not trocken:
         alt = (jetzt - dt.timedelta(days=30)).isoformat()
         stand["bewertet"] = {k: v for k, v in bewertet.items() if v.get("zeit", "") >= alt}
         stand["tage"] = {k: v for k, v in tage.items() if k >= (ny.date() - dt.timedelta(days=30)).isoformat()}
+        # Die Texte der Treffer braucht nur der Bericht, und der steht hoechstens
+        # bis zum naechsten Handelstag; danach bleiben die Zahlen.
+        grenze = (ny.date() - dt.timedelta(days=TREFFER_TAGE)).isoformat()
+        for k, v in stand["tage"].items():
+            if k < grenze and v.get("treffer"):
+                v["treffer"] = []
         _json_schreiben(stand_pfad, stand)
     return ergebnis
 
 
-def _ablegen(titel, absaetze, jetzt, log):
+def _ablegen(titel, absaetze, jetzt, log, schluessel=None, kennung_aus=None, bis=None):
     import berichte
-    return berichte.ablegen(ART, titel, absaetze, zeit=jetzt, melder=log)
+    return berichte.ablegen(ART, titel, absaetze, zeit=jetzt, melder=log, schluessel=schluessel,
+                            kennung_aus=kennung_aus, bis=bis)
 
 
 def messen(daten, tage=10, log=print, firma_laden=None, tabelle=None, schluesse_holen=None):
@@ -909,19 +1006,47 @@ def selbsttest() -> int:
     kurz = ausblick_text(lang)
     p("Der Text fuer den Ausblick behaelt die Stelle des Ausblicks", "Fourth Quarter 2026 Outlook" in kurz
       and len(kurz) <= 30000)
-    # Bericht
-    titel, absaetze = bericht_bauen([(b, vg), (b2, None)], dt.datetime(2026, 10, 1, 20, 30, tzinfo=dt.timezone.utc))
-    p("Titel mit Zahl und Uhrzeit", titel == "Earnings: 2 Aktien, Stand 22:30 Uhr Wiener Zeit", titel)
-    a1 = absaetze[1]
+    # Der Tagesbericht (Antworten 10, 13 und 14 vom 01.10.2026)
+    z1 = dt.datetime(2026, 10, 1, 20, 30, tzinfo=dt.timezone.utc)
+    z2 = dt.datetime(2026, 10, 1, 21, 0, tzinfo=dt.timezone.utc)
+    b2x = dict(b2, ticker="BBB", name="Beta Inc", accession="0000000001-26-000003", umsatz_ue=9.0)
+    tag_e = {"gelesen": 7, "berichtet": 3,
+             "treffer": [treffer_eintrag(b2x, None, z1), treffer_eintrag(b, vg, z1),
+                         treffer_eintrag(dict(b2, accession="0000000001-26-000004", ticker="CCC", name="Gamma Corp"),
+                                         None, z2)]}
+    titel, absaetze, kennung = tagesbericht("2026-10-01", tag_e, z2)
+    p("Tagesbericht: Titel mit Tag, Zahl und letzter Ergaenzung",
+      titel == "Earnings vom 01.10.2026: 3 Aktien, zuletzt ergänzt um 23:00 Uhr Wiener Zeit", titel)
+    p("Tagesbericht: gelesen, im Bericht und Stand",
+      absaetze[1].startswith("Gelesen am 01.10.2026 in New York: 7 Quartalsmeldungen, davon 3 im Bericht; Stand "
+                             "23:00 Uhr Wiener Zeit."), absaetze[1])
+    p("Tagesbericht: neueste Treffer oben, im selben Lauf beide Bedingungen zuerst, markiert und mit Uhrzeit",
+      absaetze[2].startswith("1. CCC, Gamma Corp; aufgenommen um 23:00 Uhr Wiener Zeit;")
+      and absaetze[3].startswith("2. ACME, Acme Corp; beide Bedingungen erfüllt; aufgenommen um 22:30 Uhr Wiener Zeit;")
+      and absaetze[4].startswith("3. BBB, Beta Inc; aufgenommen um 22:30 Uhr"), "\n".join(absaetze[2:])[:300])
+    _t2, _a2, kennung2 = tagesbericht("2026-10-01", dict(tag_e, gelesen=9), z2 + dt.timedelta(hours=2))
+    p("Tagesbericht: neue Zahl gelesener, dieselbe Kennung", kennung2 == kennung and "9 Quartalsmeldungen" in _a2[1])
+    _t3, _a3, kennung3 = tagesbericht("2026-10-01", dict(tag_e, treffer=tag_e["treffer"][:2], berichtet=2), z2)
+    p("Tagesbericht: ein Treffer mehr, eine neue Kennung", kennung3 != kennung)
+    tl, al, kl = tagesbericht("2026-10-02", {"gelesen": 4, "berichtet": 0}, z2)
+    p("Leermeldung mit gelesenen Zahlen", tl == "Earnings vom 02.10.2026: keine Aktie erfüllt die Kriterien"
+      and al == ["Am 02.10.2026 wurden in New York 4 Quartalsmeldungen gelesen; keine Aktie hat die Kriterien des "
+                 "Earnings-Berichts erfüllt."] and kl == ["leer", "2026-10-02"], str(al))
+    _tl, al0, _kl = tagesbericht("2026-10-02", {"gelesen": 0, "berichtet": 0}, z2)
+    p("Leermeldung ohne Quartalszahlen", al0 == ["Am 02.10.2026 kamen in New York keine Quartalszahlen; keine Aktie "
+                                                 "hat die Kriterien des Earnings-Berichts erfüllt."], str(al0))
+    tu, au, _ku = tagesbericht("2026-10-01", {"gelesen": 5, "berichtet": 2, "treffer": []}, z2)
+    p("Tag der Umstellung: frueher Gefundenes steht nicht als Leermeldung da",
+      tu.startswith("Earnings vom 01.10.2026: 2 Aktien") and "2 Aktien stehen in den früheren" in au[1], tu)
+    a1 = absatz(1, b, vg)
     p("Je Aktie: beide Bedingungen markiert, Konsens und Wachstum mit Vorzeichen, Ausblick, KI vorlaeufig",
-      a1.startswith("1. ACME, Acme Corp; Quartal bis 30.09.2026") and "erfüllt: Konsens geschlagen beim Umsatz und "
+      a1.startswith("1. ACME, Acme Corp; beide Bedingungen erfüllt; Quartal bis 30.09.2026") and "erfüllt: Konsens geschlagen beim Umsatz und "
       "beim EPS, Beschleunigung beim Umsatz und beim EPS" in a1 and "plus 4,6 Prozent, erfüllt" in a1
       and "Umsatz plus 36 Prozent nach plus 20 Prozent im Quartal davor, plus 16 Prozentpunkte, erfüllt" in a1
       and "Ausblick, KI, vorläufig: nächstes Quartal Umsatz 1,30 Milliarden Dollar bis 1,35 Milliarden Dollar" in a1
       and "Gesamtjahr Umsatz plus 30,0 Prozent bis plus 32,0 Prozent" in a1 and "Gegen den Konsens, KI, vorläufig" in a1,
       a1)
-    p("Die zweite Aktie ohne Ausblick", "Ausblick, KI, vorläufig: keiner genannt" in absaetze[2])
-    p("Beide Bedingungen stehen vorn", absaetze[1].startswith("1. ACME"))
+    p("Eine Aktie ohne Ausblick", "Ausblick, KI, vorläufig: keiner genannt" in absatz(2, b2, None))
     verboten = re.compile(r"[()–—|]")
     p("Kein Gedankenstrich, kein senkrechter Strich, keine Klammern im Bericht",
       not any(verboten.search(x) for x in [titel] + absaetze), str([x for x in absaetze if verboten.search(x)][:1]))
@@ -933,30 +1058,76 @@ def selbsttest() -> int:
             with io.open(os.path.join(d, "vorabwerte", "2026", f"{i}.json"), "w", encoding="utf-8") as h:
                 json.dump({**e, "filing_utc": dt.datetime.now(dt.timezone.utc).isoformat()}, h)
         abgelegt = []
-        r = lauf(d, firma_laden=lambda cik: _zeilen(), tabelle=tab, schluesse_holen=lambda t: kurse,
-                 ausblick=lambda text: g, pressetext=lambda cik, acc: "Outlook ...",
-                 ablegen=lambda t, a, j, log: abgelegt.append((t, a)) or True, log=lambda *x: None)
-        p("Lauf: zwei neue Dateien, eine im Bericht, ein Bericht abgelegt",
-          r["neu"] == 2 and r["aufgenommen"] == 1 and len(abgelegt) == 1 and "ACME" in abgelegt[0][1][1], str(r))
-        r2 = lauf(d, firma_laden=lambda cik: _zeilen(), tabelle=tab, schluesse_holen=lambda t: kurse,
-                  ausblick=lambda text: g, pressetext=lambda cik, acc: "x",
-                  ablegen=lambda t, a, j, log: abgelegt.append((t, a)) or True, log=lambda *x: None)
-        p("Zweiter Lauf: nichts doppelt", r2["neu"] == 0 and len(abgelegt) == 1, str(r2))
-        spaet = dt.datetime.now(NY).replace(hour=19, minute=45, second=0, microsecond=0)
-        while spaet.weekday() >= 5:
-            spaet -= dt.timedelta(days=1)
-        stand = _json_lesen(os.path.join(d, STAND), {})
-        stand["tage"] = {spaet.date().isoformat(): {"gelesen": 3, "berichtet": 0, "keine_gemeldet": False}}
-        _json_schreiben(os.path.join(d, STAND), stand)
+
+        def ablage(t, a, j, log, **k):
+            abgelegt.append((t, a, k))
+            return True
+        import boersentage
+        # Ein Handelstag, 10:00 New York; die Vorabwerte von heute
+        frueh = dt.datetime.combine(boersentage.letzter_handelstag(dt.datetime.now(NY).date()), dt.time(10, 0),
+                                    tzinfo=NY)
+        for name in os.listdir(os.path.join(d, "vorabwerte", "2026")):
+            pf = os.path.join(d, "vorabwerte", "2026", name)
+            e0 = _json_lesen(pf, {})
+            e0["filing_utc"] = (frueh - dt.timedelta(hours=1)).astimezone(dt.timezone.utc).isoformat()
+            _json_schreiben(pf, e0)
+        jetzt1 = frueh.astimezone(dt.timezone.utc)
+        jetzt_tag = frueh.date().isoformat()
+        r = lauf(d, jetzt=jetzt1, firma_laden=lambda cik: _zeilen(), tabelle=tab, schluesse_holen=lambda t: kurse,
+                 ausblick=lambda text: g, pressetext=lambda cik, acc: "Outlook ...", ablegen=ablage,
+                 log=lambda *x: None)
+        p("Lauf: zwei neue Dateien, eine im Tagesbericht, mit Schluessel, Kennung und Frist",
+          r["neu"] == 2 and r["aufgenommen"] == 1 and len(abgelegt) == 1 and "ACME" in abgelegt[0][1][2]
+          and abgelegt[0][2]["schluessel"] == f"earnings-{jetzt_tag}"
+          and abgelegt[0][2]["kennung_aus"] == ["treffer", jetzt_tag, "0000000001-26-000001"]
+          and abgelegt[0][2]["bis"] > jetzt1, str(r) + str(abgelegt[:1])[:200])
+        r2 = lauf(d, jetzt=jetzt1 + dt.timedelta(minutes=30), firma_laden=lambda cik: _zeilen(), tabelle=tab,
+                  schluesse_holen=lambda t: kurse, ausblick=lambda text: g, pressetext=lambda cik, acc: "x",
+                  ablegen=ablage, log=lambda *x: None)
+        p("Zweiter Lauf: nichts Neues, nichts geschrieben", r2["neu"] == 0 and len(abgelegt) == 1, str(r2))
+        spaet = frueh.replace(hour=19, minute=45)
         r3 = lauf(d, jetzt=spaet.astimezone(dt.timezone.utc), firma_laden=lambda cik: _zeilen(), tabelle=tab,
                   schluesse_holen=lambda t: kurse, ausblick=lambda text: g, pressetext=lambda cik, acc: "x",
-                  ablegen=lambda t, a, j, log: abgelegt.append((t, a)) or True, log=lambda *x: None)
-        p("Nach dem letzten Lauf des Abends ohne Treffer: ehrlich keine Aktie",
-          len(abgelegt) == 2 and abgelegt[1][0] == "Earnings: keine Aktie erfüllt heute die Kriterien", str(r3))
-        lauf(d, jetzt=spaet.astimezone(dt.timezone.utc) + dt.timedelta(minutes=30), firma_laden=lambda cik: _zeilen(),
+                  ablegen=ablage, log=lambda *x: None)
+        p("Abend: der Tagesbericht mit dem Stand des Abends, dieselbe Kennung, also nicht wieder ungelesen",
+          len(abgelegt) == 2 and abgelegt[1][2]["kennung_aus"] == abgelegt[0][2]["kennung_aus"]
+          and "2 Quartalsmeldungen, davon 1 im Bericht" in abgelegt[1][1][1], str(r3))
+        lauf(d, jetzt=spaet.astimezone(dt.timezone.utc) + dt.timedelta(minutes=15), firma_laden=lambda cik: _zeilen(),
              tabelle=tab, schluesse_holen=lambda t: kurse, ausblick=lambda text: g, pressetext=lambda cik, acc: "x",
-             ablegen=lambda t, a, j, log: abgelegt.append((t, a)) or True, log=lambda *x: None)
-        p("Die Meldung ohne Treffer kommt einmal am Tag", len(abgelegt) == 2)
+             ablegen=ablage, log=lambda *x: None)
+        p("Der Abend kommt einmal am Tag", len(abgelegt) == 2)
+        # Ein Handelstag ohne Treffer: die Leermeldung, einmal; ein Feiertag: nichts
+        stand = _json_lesen(os.path.join(d, STAND), {})
+        stand["tage"] = {"2026-10-07": {"gelesen": 3, "berichtet": 0}}
+        _json_schreiben(os.path.join(d, STAND), stand)
+        abgelegt.clear()
+        lauf(d, jetzt=dt.datetime(2026, 10, 7, 19, 45, tzinfo=NY).astimezone(dt.timezone.utc),
+             firma_laden=lambda cik: _zeilen(), tabelle=tab, schluesse_holen=lambda t: kurse,
+             ausblick=lambda text: g, pressetext=lambda cik, acc: "x", ablegen=ablage, log=lambda *x: None)
+        p("Leermeldung nach dem letzten Lauf des Abends, mit der Zahl der gelesenen",
+          len(abgelegt) == 1 and abgelegt[0][0] == "Earnings vom 07.10.2026: keine Aktie erfüllt die Kriterien"
+          and "3 Quartalsmeldungen gelesen" in abgelegt[0][1][0], str(abgelegt)[:200])
+        # Ein ausgefallener Abend wird am naechsten Morgen nachgeholt, solange der Bericht noch stuende.
+        # Die Zeit laeuft in diesem Teil nur vorwaerts: Der Stand vergisst Bewertungen nach 30 Tagen.
+        stand = _json_lesen(os.path.join(d, STAND), {})
+        stand["tage"] = {"2026-10-08": {"gelesen": 0, "berichtet": 0}, "2026-10-05": {"gelesen": 2, "berichtet": 0}}
+        _json_schreiben(os.path.join(d, STAND), stand)
+        abgelegt.clear()
+        lauf(d, jetzt=dt.datetime(2026, 10, 9, 6, 0, tzinfo=NY).astimezone(dt.timezone.utc),
+             firma_laden=lambda cik: _zeilen(), tabelle=tab, schluesse_holen=lambda t: kurse,
+             ausblick=lambda text: g, pressetext=lambda cik, acc: "x", ablegen=ablage, log=lambda *x: None)
+        st9 = _json_lesen(os.path.join(d, STAND), {})
+        p("Ein ausgefallener Abend wird nachgeholt, ein laengst geleerter nicht mehr",
+          [x[0] for x in abgelegt] == ["Earnings vom 08.10.2026: keine Aktie erfüllt die Kriterien"]
+          and st9["tage"]["2026-10-05"].get("abend_gemeldet") is True, str([x[0] for x in abgelegt]))
+        stand = _json_lesen(os.path.join(d, STAND), {})
+        stand["tage"] = {"2026-11-26": {"gelesen": 0, "berichtet": 0}}
+        _json_schreiben(os.path.join(d, STAND), stand)
+        abgelegt.clear()
+        lauf(d, jetzt=dt.datetime(2026, 11, 26, 19, 45, tzinfo=NY).astimezone(dt.timezone.utc),
+             firma_laden=lambda cik: _zeilen(), tabelle=tab, schluesse_holen=lambda t: kurse,
+             ausblick=lambda text: g, pressetext=lambda cik, acc: "x", ablegen=ablage, log=lambda *x: None)
+        p("An einem US-Boersenfeiertag keine Leermeldung", not abgelegt, str(abgelegt)[:200])
     # Der erste Lauf ohne Stand berichtet nur den laufenden Tag
     with tempfile.TemporaryDirectory() as d:
         os.makedirs(os.path.join(d, "vorabwerte", "2026"))
@@ -968,15 +1139,15 @@ def selbsttest() -> int:
         abgelegt = []
         r = lauf(d, firma_laden=lambda cik: _zeilen(), tabelle=tab, schluesse_holen=lambda t: kurse,
                  ausblick=lambda text: g, pressetext=lambda cik, acc: "x",
-                 ablegen=lambda t, a, j, log: abgelegt.append((t, a)) or True, log=lambda *x: None)
+                 ablegen=lambda t, a, j, log, **k: abgelegt.append((t, a)) or True, log=lambda *x: None)
         st = _json_lesen(os.path.join(d, STAND), {})
         p("Erster Lauf ohne Stand: nur der laufende Tag im Bericht, aeltere als Ausgangsstand",
           r["neu"] == 1 and r["aufgenommen"] == 1 and len(abgelegt) == 1
           and (st.get("bewertet") or {}).get("0000000001-26-000009", {}).get("gruende") == ["Ausgangsstand"], str(r))
         r2 = lauf(d, firma_laden=lambda cik: _zeilen(), tabelle=tab, schluesse_holen=lambda t: kurse,
                   ausblick=lambda text: g, pressetext=lambda cik, acc: "x",
-                  ablegen=lambda t, a, j, log: abgelegt.append((t, a)) or True, log=lambda *x: None)
-        p("Danach gilt der Stand: nichts Neues, kein zweiter Bericht", r2["neu"] == 0 and len(abgelegt) == 1, str(r2))
+                  ablegen=lambda t, a, j, log, **k: abgelegt.append((t, a)) or True, log=lambda *x: None)
+        p("Danach gilt der Stand: nichts Neues, kein zweiter Bericht", r2["neu"] == 0 and len(abgelegt) <= 2, str(r2))
     # Die Blacklist: nicht bewertet, nicht im Bericht, im Protokoll nur die Zahl
     import blacklist
     blacklist.setzen(["ACME"])
@@ -988,7 +1159,7 @@ def selbsttest() -> int:
             abgelegt, gesagt = [], []
             r = lauf(d, firma_laden=lambda cik: _zeilen(), tabelle=tab, schluesse_holen=lambda t: kurse,
                      ausblick=lambda text: g, pressetext=lambda cik, acc: "x",
-                     ablegen=lambda t, a, j, log: abgelegt.append((t, a)) or True, log=gesagt.append)
+                     ablegen=lambda t, a, j, log, **k: abgelegt.append((t, a)) or True, log=gesagt.append)
             p("Blacklist: eine gesperrte Aktie wird nicht bewertet und steht in keinem Bericht",
               r["neu"] == 1 and r["aufgenommen"] == 0 and r["gesperrt"] == 1 and not abgelegt, str(r))
             p("Blacklist: im Protokoll nur die Zahl, kein Kuerzel",

@@ -110,7 +110,9 @@ jobs:
           fi
       # EARNINGS-BERICHT (Gerhard, 30.09.2026, Antworten 1 bis 5 und 12): nach
       # jedem Stromlauf bewertet earnings_bericht.py die neuen Vorabwerte und
-      # legt, was die Kriterien erfuellt, als EIN Bericht in den Reiter Berichte.
+      # ergaenzt, was die Kriterien erfuellt, den EINEN Tagesbericht im Reiter
+      # Berichte; ab 19:30 New York steht an jedem Handelstag eine Meldung da,
+      # auch ohne Treffer (Antworten 13 und 14 vom 01.10.2026).
       # Ein Fehler hier haelt die Ablage der Vorabwerte nicht auf; gemeldet wird
       # er ueber ntfy wie jede Stoerung.
       - name: Earnings-Bericht
