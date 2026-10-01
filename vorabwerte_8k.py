@@ -608,6 +608,11 @@ def lauf_strom(daten, stunden=6, hoechstens=0, kette=None, hole=None, frage=None
     return bilanz
 
 
+def _gesperrt(ticker) -> bool:
+    import blacklist
+    return blacklist.gesperrt(ticker)
+
+
 def lauf_abgleich(daten, firma_laden=None, log=print, hoechstens_alter_tage=120):
     """Offene Vorabwerte gegen das amtliche Archiv pruefen und ersetzen."""
     if firma_laden is None:
@@ -641,6 +646,11 @@ def lauf_abgleich(daten, firma_laden=None, log=print, hoechstens_alter_tage=120)
             if e.get("abweichung_meldenswert"):
                 bilanz["meldenswert"] += 1
                 ab = e.get("abweichung_prozent") or {}
+            # DIE BLACKLIST (Gerhard, 30.09.2026, Antworten 8 und 13): ersetzt wird
+            # wie bei jeder Aktie, nur der Bericht nennt eine gesperrte nicht.
+            if e.get("abweichung_meldenswert") and _gesperrt(e.get("ticker")):
+                bilanz["gesperrt"] = bilanz.get("gesperrt", 0) + 1
+            elif e.get("abweichung_meldenswert"):
                 meldungen.append(f"{len(meldungen) + 1}. {e.get('ticker')}; Umsatz {ab.get('umsatz'):.1f} Prozent "
                                  f"daneben; EPS {ab.get('eps_verwaessert'):.1f} Prozent daneben; Quartal bis {pe}")
             log(f"  {e.get('ticker')} {e.get('accession')} ersetzt; Abweichung {e.get('abweichung_prozent')}"
@@ -919,6 +929,27 @@ def selbsttest() -> int:
         p("Abgleich: ersetzte Eintraege werden nicht erneut geprueft", b5["offen"] == 0)
         p("Antwort 3: der abweichende Nettogewinn allein ist nicht meldenswert",
           b4["meldenswert"] == 0 and d4["abweichung_meldenswert"] is False)
+        # Die Blacklist (Gerhard, 30.09.2026): ersetzt wird, der Bericht nennt die Aktie nicht
+        import berichte as _br
+        import blacklist as _bl
+        ke._schreibe_json(datei[0], dict(ke._json(datei[0], {}), status="vorlaeufig",
+                                         werte={"periodenende": "2026-06-27", "umsatz": 90.0e9, "nettogewinn": 23.434e9,
+                                                "eps_verwaessert": 1.50, "gaap": True},
+                                         filing_utc="2026-07-30T20:31:22+00:00"))
+
+        def firma4(cik):
+            return firma3(cik) + [{"typ": "Q", "kennzahl": "eps_verwaessert", "end": "2026-06-27", "wert_erst": 1.57}]
+        abgelegt = []
+        alt_ablegen = _br.ablegen
+        _br.ablegen = lambda art, titel, absaetze, **k: abgelegt.append((art, titel, absaetze)) or True
+        _bl.setzen(["AAPL"])
+        try:
+            b6 = lauf_abgleich(tmp, firma_laden=firma4, log=lambda *_: None)
+        finally:
+            _br.ablegen = alt_ablegen
+            _bl.zuruecksetzen()
+        p("Blacklist: ersetzt wie jede Aktie, meldenswert, aber kein Bericht",
+          b6["ersetzt"] == 1 and b6["meldenswert"] == 1 and b6.get("gesperrt") == 1 and not abgelegt, b6)
     print("\n" + ("Alles bestanden." if fehler == 0 else f"{fehler} Fehler."))
     return fehler
 

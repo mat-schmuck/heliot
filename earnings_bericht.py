@@ -653,7 +653,17 @@ def lauf(daten, trocken=False, jetzt=None, log=print, firma_laden=None, tabelle=
             import pressetexte as pt
             return pt.text_lesen(daten, cik, acc)
     aufgenommen = []
+    # DIE BLACKLIST (Gerhard, 30.09.2026, Antworten 8 und 13): Eine gesperrte
+    # Aktie wird nicht bewertet und steht in keinem Bericht; ihre Datei gilt als
+    # erledigt. Ins Protokoll nur die Zahl, das Protokoll ist oeffentlich.
+    import blacklist
+    gesperrt = 0
     for e in neu:
+        if blacklist.gesperrt(e.get("ticker")):
+            bewertet[e["accession"]] = {"zeit": jetzt.isoformat(), "aufgenommen": False, "gruende": ["Blacklist"],
+                                        "ticker": e.get("ticker")}
+            gesperrt += 1
+            continue
         ok, harte = vorpruefung(e, tabelle)
         if not ok:
             bewertet[e["accession"]] = {"zeit": jetzt.isoformat(), "aufgenommen": False, "gruende": harte,
@@ -686,7 +696,11 @@ def lauf(daten, trocken=False, jetzt=None, log=print, firma_laden=None, tabelle=
                                                                         (vergleich or {}).items()}}
         log(f"  {b['ticker']}: {'im Bericht' if b['aufnehmen'] else 'nicht im Bericht'}"
             + (f", {', '.join(b['gruende'])}" if b["gruende"] else ""))
-    ergebnis = {"neu": len(neu), "aufgenommen": len(aufgenommen), "abbruch": None}
+    if gesperrt:
+        log(f"  Blacklist: {gesperrt} Aktie(n) gesperrt, nicht bewertet.")
+    elif blacklist.fehler():
+        log(f"  ACHTUNG: Blacklist nicht lesbar ({blacklist.fehler()}); es ist keine Aktie gesperrt.")
+    ergebnis = {"neu": len(neu), "aufgenommen": len(aufgenommen), "abbruch": None, "gesperrt": gesperrt}
     ny = jetzt.astimezone(NY)
     tag = ny.date().isoformat()
     tage = stand.get("tage") or {}
@@ -736,6 +750,7 @@ def messen(daten, tage=10, log=print, firma_laden=None, tabelle=None, schluesse_
         import vorabwerte_8k as v8
         firma_laden = v8._zeilen_lader()
     schluesse_holen = schluesse_holen or yahoo_schluesse
+    import blacklist
     je_tag = collections.defaultdict(collections.Counter)
     namen = collections.defaultdict(list)
     for e in vorabwerte_dateien(daten, seit_tage=tage):
@@ -744,6 +759,9 @@ def messen(daten, tage=10, log=print, firma_laden=None, tabelle=None, schluesse_
             continue
         tag = z.astimezone(NY).date().isoformat()
         je_tag[tag]["gelesen"] += 1
+        if blacklist.gesperrt(e.get("ticker")):
+            je_tag[tag]["Blacklist"] += 1          # nur die Zahl, das Protokoll ist oeffentlich
+            continue
         ok, harte = vorpruefung(e, tabelle)
         if not ok:
             for g in harte:
@@ -926,6 +944,25 @@ def selbsttest() -> int:
              tabelle=tab, schluesse_holen=lambda t: kurse, ausblick=lambda text: g, pressetext=lambda cik, acc: "x",
              ablegen=lambda t, a, j, log: abgelegt.append((t, a)) or True, log=lambda *x: None)
         p("Die Meldung ohne Treffer kommt einmal am Tag", len(abgelegt) == 2)
+    # Die Blacklist: nicht bewertet, nicht im Bericht, im Protokoll nur die Zahl
+    import blacklist
+    blacklist.setzen(["ACME"])
+    try:
+        with tempfile.TemporaryDirectory() as d:
+            os.makedirs(os.path.join(d, "vorabwerte", "2026"))
+            with io.open(os.path.join(d, "vorabwerte", "2026", "0.json"), "w", encoding="utf-8") as h:
+                json.dump({**_beispiel(), "filing_utc": dt.datetime.now(dt.timezone.utc).isoformat()}, h)
+            abgelegt, gesagt = [], []
+            r = lauf(d, firma_laden=lambda cik: _zeilen(), tabelle=tab, schluesse_holen=lambda t: kurse,
+                     ausblick=lambda text: g, pressetext=lambda cik, acc: "x",
+                     ablegen=lambda t, a, j, log: abgelegt.append((t, a)) or True, log=gesagt.append)
+            p("Blacklist: eine gesperrte Aktie wird nicht bewertet und steht in keinem Bericht",
+              r["neu"] == 1 and r["aufgenommen"] == 0 and r["gesperrt"] == 1 and not abgelegt, str(r))
+            p("Blacklist: im Protokoll nur die Zahl, kein Kuerzel",
+              "  Blacklist: 1 Aktie(n) gesperrt, nicht bewertet." in gesagt
+              and not any("ACME" in str(x) for x in gesagt), str(gesagt))
+    finally:
+        blacklist.zuruecksetzen()
     print("Ergebnis:", "alles bestanden" if not fehler else f"{len(fehler)} Fehler")
     return 1 if fehler else 0
 
