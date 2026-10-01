@@ -435,6 +435,10 @@ def kennzahlen(k, indizes, cfg=None):
         linie = _linie(k, idx)
         kurz = name.lstrip("^").lower()
         e[f"linie_{kurz}_hoch"] = _hoch(linie, 252)
+        # Der Vortag aus derselben Reihe ohne den letzten Tag: Damit erkennt
+        # der RS-Linien-Bericht Neuzugaenge, den ersten Tag auf dem Hoch
+        # (Gerhard, 30.09.2026 abends, Antwort 6).
+        e[f"linie_{kurz}_hoch_vortag"] = _hoch(linie[:-1], 252) if len(linie) > 252 else None
         # Abstand zum Linienhoch in Prozent (Gerhard, 13.09.2026): 'kein Hoch'
         # sagte nicht, wie knapp die Linie darunter steht
         e[f"linie_{kurz}_abst_pct"] = _abstand(linie, 252)

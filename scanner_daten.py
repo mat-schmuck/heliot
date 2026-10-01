@@ -2011,7 +2011,11 @@ def bauen(pfad_tabelle=TABELLE, pfad_stand=STAND, archiv=ARCHIV, grenze=None, an
                      "rs": rs, "rs_vorlaeufig": e_rs.get("rs_vorlaeufig"),
                      "rs_linie_hoch": e_rs.get("linie_spy_hoch"), "rs_linie_abst_pct": e_rs.get("linie_spy_abst_pct"),
                      "rs_linie_qqq_hoch": e_rs.get("linie_qqq_hoch"),
-                     "rs_linie_qqq_abst_pct": e_rs.get("linie_qqq_abst_pct")}
+                     "rs_linie_qqq_abst_pct": e_rs.get("linie_qqq_abst_pct"),
+                     # Fuer den RS-Linien-Bericht: stand die Linie schon am
+                     # Vortag auf dem Hoch? (Gerhard, 30.09.2026, Antwort 6)
+                     "rs_linie_hoch_vortag": e_rs.get("linie_spy_hoch_vortag"),
+                     "rs_linie_qqq_hoch_vortag": e_rs.get("linie_qqq_hoch_vortag")}
             zeile["handelbar"] = handelbar(werte, ex)
             termine_s = None if termine_vergangen is None else termine_vergangen.get(s, set())
             zeile.update(muster_werte(d, rs, werte, ticker=s, termine=termine_s, crash=bool(crash_scharf)))

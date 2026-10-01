@@ -227,6 +227,16 @@ jobs:
           fi
           gh release upload scanner-daten scanner_tabelle.parquet scanner_stand.json --clobber
 
+      # Der RS-Linien-Bericht (Gerhard, 30.09.2026 abends, Antworten 6 und 7):
+      # einmal je Nacht aus der frisch gebauten Tabelle in den Reiter Berichte.
+      # Scheitert er, bleibt die Tabelle trotzdem veroeffentlicht.
+      - name: RS-Linien-Bericht in den Reiter Berichte
+        if: steps.bau.outputs.veroeffentlichen == 'ja' && steps.token.outputs.da == 'ja'
+        continue-on-error: true
+        env:
+          DATEN_TOKEN: ${{ secrets.DATEN_TOKEN }}
+        run: python rslinie_bericht.py --bauen --tabelle scanner_tabelle.parquet
+
       - name: Analystenwerte und Kursarchiv ins private Datenrepo
         if: steps.bau.outputs.veroeffentlichen == 'ja' && steps.token.outputs.da == 'ja'
         env:

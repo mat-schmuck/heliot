@@ -230,15 +230,18 @@ def listen_je_aktie() -> dict:
     raus = {}
 
     def dazu(menge, name):
+        # Die Listen liefern Paare aus Kuerzel und Firma, die Einzelaktien nur
+        # Kuerzel (listen.haupt_liste, listen.einzel_ticker).
         for t in menge or ():
-            raus.setdefault(str(t).upper(), []).append(name)
+            kuerzel = t[0] if isinstance(t, (tuple, list)) else t
+            k = str(kuerzel or "").strip().upper()
+            if k and name not in raus.setdefault(k, []):
+                raus[k].append(name)
     try:
         dazu(listen.haupt_liste(), "große Liste")
         dazu(listen.darvas_liste(), "Darvas-Liste")
-        weitere = listen.weitere_listen()
-        if isinstance(weitere, dict):
-            for datei, menge in weitere.items():
-                dazu(menge, "dritte Liste" if "dritte" in str(datei) else "vierte Liste")
+        dazu(listen.weitere_listen([listen.DRITTE_DATEI]), "dritte Liste")
+        dazu(listen.weitere_listen([listen.VIERTE_DATEI]), "vierte Liste")
         dazu(listen.einzel_ticker(), "einzeln überwacht")
     except Exception:  # noqa: BLE001, ohne Listen fehlt nur der Vermerk
         pass
@@ -524,6 +527,11 @@ def selbsttest() -> int:
       and abs0[1] == "Keine Aktie erfüllt heute die Kriterien.")
     p("Keine Klammer, kein Gedankenstrich, kein senkrechter Strich",
       not re.search(r"[()–—|]", text + titel), re.findall(r"[()–—|]", text)[:5])
+    lm = listen_je_aktie()
+    import listen as _li
+    erster = _li.haupt_liste()[:1]
+    p("Wochenlisten: die Paare aus Kuerzel und Firma werden zu Kuerzeln",
+      not erster or "große Liste" in lm.get(str(erster[0][0]).upper(), []), str(erster))
     print("\nAlles bestanden." if not fehler else f"\n{len(fehler)} Fehler.")
     return 1 if fehler else 0
 

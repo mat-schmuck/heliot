@@ -173,7 +173,7 @@ def block_b():
                     "rs_universum", "sektor_rangliste", "abendbericht",
                     "ibd_ratings",
                     # Reiter Berichte und Gap-Up-Bericht (Gerhard, 29.09.2026, Teil 4 und 5)
-                    "berichte", "gapup_bericht",
+                    "berichte", "gapup_bericht", "rslinie_bericht",
                     # Nachschlagen (Mathias, 13.09.2026)
                     "nachschlagen",
                     # Wochenputz und Anmeldung (Mathias, 13.09.2026)
@@ -636,6 +636,19 @@ def block_d(namen_aus_c=None):
            'workflows: ["Pattern-Scanner (Kaufpunkte)"]' in _wf["berichte.yml"]
            and "python3 gapup_bericht.py --faellig" in _wf["berichte.yml"]
            and "python gapup_bericht.py --jetzt" in _wf["berichte.yml"])
+    _sd = (WURZEL / ".github" / "workflows" / "scanner_daten.yml").read_text(encoding="utf-8")
+    pruefe("D", "RS-Linien-Bericht: nach dem Bau der Nachttabelle, mit Token, aus der frischen Tabelle",
+           "python rslinie_bericht.py --bauen --tabelle scanner_tabelle.parquet" in _sd
+           and _sd.count("DATEN_TOKEN: ${{ secrets.DATEN_TOKEN }}") >= 1
+           and _sd.find("python rslinie_bericht.py") > _sd.find("gh release upload scanner-daten scanner_tabelle"))
+    import rs_universum as _rsu
+    _k = {"daten": [f"t{i}" for i in range(300)], "close": [1.0 + i / 1000 for i in range(300)],
+          "high": [1.0 + i / 1000 for i in range(300)], "volume": [1000.0] * 300}
+    _ix = {"^SPY": {"daten": [f"t{i}" for i in range(300)], "close": [1.0] * 300}}
+    _e = _rsu.kennzahlen(_k, _ix)
+    pruefe("D", "RS-Linien-Bericht: das RS-Universum kennt den Vortag der Linie",
+           _e.get("linie_spy_hoch") is True and _e.get("linie_spy_hoch_vortag") is True, str(
+               {k: v for k, v in _e.items() if k.startswith("linie_spy")}))
     pruefe("D", "Schritt 3: jede Art eines Befunds hat ihren Unterreiter",
            all(bw.bericht_art(t) in _br.ART_NAMEN for t in list(bw.NACHT_ART) + ["unbekannt"])
            and bw.bericht_art("unbekannt") == "weitere")
