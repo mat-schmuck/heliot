@@ -642,13 +642,20 @@ def block_d(namen_aus_c=None):
            and _sd.count("DATEN_TOKEN: ${{ secrets.DATEN_TOKEN }}") >= 1
            and _sd.find("python rslinie_bericht.py") > _sd.find("gh release upload scanner-daten scanner_tabelle"))
     import rs_universum as _rsu
-    _k = {"daten": [f"t{i}" for i in range(300)], "close": [1.0 + i / 1000 for i in range(300)],
-          "high": [1.0 + i / 1000 for i in range(300)], "volume": [1000.0] * 300}
-    _ix = {"^SPY": {"daten": [f"t{i}" for i in range(300)], "close": [1.0] * 300}}
-    _e = _rsu.kennzahlen(_k, _ix)
+    _n = 300
+    from datetime import date as _dr2, timedelta as _tr2
+    _tage = [d for d in (_dr2(2025, 6, 2) + _tr2(days=i) for i in range(500)) if d.weekday() < 5][:_n]
+    _k = {"daten": [d.isoformat() for d in _tage], "close": [1.0 + i / 1000 for i in range(_n)],
+          "open": [1.0 + i / 1000 for i in range(_n)], "high": [1.001 + i / 1000 for i in range(_n)],
+          "low": [0.999 + i / 1000 for i in range(_n)], "volume": [1000.0] * _n}
+    _ix = {"^SPY": {"daten": [d.isoformat() for d in _tage], "close": [1.0] * _n}}
+    try:
+        _e = _rsu.kennzahlen(_k, _ix)
+        _befund_rs = str({k: v for k, v in _e.items() if k.startswith("linie_spy")})
+    except Exception as _f:  # noqa: BLE001, eine Probe darf die Gesamtpruefung nie abbrechen
+        _e, _befund_rs = {}, f"{type(_f).__name__}: {_f}"
     pruefe("D", "RS-Linien-Bericht: das RS-Universum kennt den Vortag der Linie",
-           _e.get("linie_spy_hoch") is True and _e.get("linie_spy_hoch_vortag") is True, str(
-               {k: v for k, v in _e.items() if k.startswith("linie_spy")}))
+           _e.get("linie_spy_hoch") is True and _e.get("linie_spy_hoch_vortag") is True, _befund_rs)
     pruefe("D", "Schritt 3: jede Art eines Befunds hat ihren Unterreiter",
            all(bw.bericht_art(t) in _br.ART_NAMEN for t in list(bw.NACHT_ART) + ["unbekannt"])
            and bw.bericht_art("unbekannt") == "weitere")
