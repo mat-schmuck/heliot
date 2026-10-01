@@ -528,6 +528,22 @@ def begriffe(einst=None) -> list:
         "und Schlagzeilen dabei. Reine Auskunft, kein Alarm, keine Kaufzeile.",
         "Eine Aktie steht vorbörslich 17 Prozent höher, nach Quartalszahlen, mit 2,6 Millionen Stück: Sie steht "
         "oben im Bericht.")
+    # Die Schwellen stehen in earnings_bericht.py auf dem Zweig fundament-phase1
+    # (Gerhard, 30.09.2026, Antworten 1 bis 5 und 12); aendert sich dort eine,
+    # gehoert dieser Eintrag mitgeaendert.
+    neu("meldungen", "Earnings-Bericht",
+        "Nach jedem Lauf der Vorabwerte, werktags von 6 bis 20 Uhr New Yorker Zeit alle 30 Minuten und zusätzlich "
+        "um 9:20 Uhr vor der Eröffnung, prüft das System die neuen Quartalszahlen. In den Bericht kommt eine Aktie mit "
+        "mindestens 20 Prozent Umsatzwachstum gegen das Vorjahresquartal, Kurs ab 15 Dollar, Börsenwert ab 700 "
+        "Millionen Dollar und einer Jahresvolatilität ab 10 Prozent, wenn sie den eingefrorenen Konsens geschlagen "
+        "hat, beim EPS um mindestens 3 Prozent oder beim Umsatz um mindestens 4 Prozent, oder wenn ihr Wachstum um "
+        "mindestens 5 Prozentpunkte schneller ist als im Quartal davor. Je Aktie stehen beide Konsenswerte, das "
+        "Wachstum gegen das Quartal davor und der Ausblick für das nächste Quartal und das Gesamtjahr gegen den "
+        "Konsens; was eine KI aus der Pressemitteilung gelesen hat, ist als KI, vorläufig markiert. Die "
+        "Jahresvolatilität ist die Schwankung der Tageskurse über 252 Handelstage, aufs Jahr hochgerechnet. Kein "
+        "Alarm, keine Kaufzeile.",
+        "Eine Firma meldet 36 Prozent Umsatzwachstum nach 30 Prozent im Quartal davor und liegt 5 Prozent über dem "
+        "Konsens: Sie steht im Bericht, markiert mit Konsens geschlagen beim Umsatz und Beschleunigung beim Umsatz.")
     neu("meldungen", "Abendbericht",
         "Der Bericht nach dem Nachtscan: Rücknahmen der schlussnahen Befunde, Marktampel samt Distribution Days und "
         "Marktbreite, Aktien im Plus an einem roten Nasdaq-Tag, neue Hochs in drei Stufen, RS ab "

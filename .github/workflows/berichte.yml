@@ -69,3 +69,31 @@ jobs:
         env:
           DATEN_TOKEN: ${{ secrets.DATEN_TOKEN }}
         run: python gapup_bericht.py --jetzt
+
+  # EARNINGS VOR DER EROEFFNUNG (Gerhard, 30.09.2026: "Bitte den zusaetzlichen
+  # Lauf vor der Eroeffnung einplanen, damit Zahlen, die kurz vor 15:30 Uhr
+  # kommen, noch mitgehen"). Der Vorabwerte-Strom laeuft um :00 und :30; eine
+  # Meldung um 09:10 New York kaeme erst um 09:30 in den Earnings-Bericht.
+  # Dieser Job stoesst deshalb werktags zwischen 09:15 und 09:24 New York einen
+  # Stromlauf auf dem Zweig fundament-phase1 an; danach legt earnings_bericht.py
+  # ab, was die Kriterien erfuellt. Ein doppelter Anstoss schadet nicht: Jede
+  # Meldung wird nur einmal bewertet.
+  earnings_vorboerse:
+    if: github.event_name == 'workflow_run'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: write
+    steps:
+      - name: Zusatzlauf der Vorabwerte vor der Eroeffnung
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          zeit=$(TZ=America/New_York date +%H%M)
+          tag=$(TZ=America/New_York date +%u)
+          if [ "$tag" -le 5 ] && (( 10#$zeit >= 915 && 10#$zeit <= 924 )); then
+            gh workflow run vorabwerte.yml --repo "$GITHUB_REPOSITORY" --ref fundament-phase1 -f modus=strom
+            echo "Zusatzlauf angestossen, $zeit New York."
+          else
+            echo "Nicht faellig, $zeit New York."
+          fi

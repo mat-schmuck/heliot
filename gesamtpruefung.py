@@ -638,6 +638,16 @@ def block_d(namen_aus_c=None):
            'workflows: ["Pattern-Scanner (Kaufpunkte)"]' in _wf["berichte.yml"]
            and "python3 gapup_bericht.py --faellig" in _wf["berichte.yml"]
            and "python gapup_bericht.py --jetzt" in _wf["berichte.yml"])
+    # Earnings-Bericht (Gerhard, 30.09.2026): laeuft auf fundament-phase1 nach
+    # jedem Stromlauf der Vorabwerte; vor der Eroeffnung stoesst berichte.yml
+    # einen Zusatzlauf an.
+    _vw = (WURZEL / ".github" / "workflows" / "vorabwerte.yml").read_text(encoding="utf-8")
+    pruefe("D", "Earnings-Bericht: Zusatzlauf vor der Eroeffnung auf fundament-phase1, der Bericht nach jedem "
+                "Stromlauf, ein Fehler haelt die Ablage der Vorabwerte nicht auf",
+           "gh workflow run vorabwerte.yml" in _wf["berichte.yml"] and "--ref fundament-phase1" in _wf["berichte.yml"]
+           and ">= 915 && 10#$zeit <= 924" in _wf["berichte.yml"] and "actions: write" in _wf["berichte.yml"]
+           and "python earnings_bericht.py --daten daten" in _vw and "continue-on-error: true" in _vw
+           and "earnings_messen" in _vw and "earnings" in dict(_br.ARTEN))
     _sd = (WURZEL / ".github" / "workflows" / "scanner_daten.yml").read_text(encoding="utf-8")
     pruefe("D", "RS-Linien-Bericht: nach dem Bau der Nachttabelle, mit Token, aus der frischen Tabelle",
            "python rslinie_bericht.py --bauen --tabelle scanner_tabelle.parquet" in _sd

@@ -7,21 +7,28 @@ name: Vorabwerte aus 8-K
 # unuebersehbar vorlaeufig im PRIVATEN Datenrepo ab; der Modus abgleich
 # ersetzt sie durch die amtliche Erstfassung, sobald der Quartalsbericht
 # im SEC-Archiv steht. Ausgeloest von cron-job.org (strom alle 30 Minuten
-# werktags 06:00 bis 20:00 New York, abgleich einmal am Tag). Braucht die
-# Secrets SEC_USER_AGENT, MISTRAL_API_KEY und DATEN_TOKEN; NTFY_TOPIC nur
-# fuer die Ausfall-Meldung.
+# werktags 06:00 bis 20:00 New York, abgleich einmal am Tag); dazu kommt
+# werktags um 09:20 New York ein Zusatzlauf, den berichte.yml auf main
+# anstoesst, damit Zahlen kurz vor der Eroeffnung noch in den Earnings-Bericht
+# gehen (Gerhard, 30.09.2026). Braucht die Secrets SEC_USER_AGENT,
+# MISTRAL_API_KEY und DATEN_TOKEN; NTFY_TOPIC nur fuer die Ausfall-Meldung.
 
 on:
   workflow_dispatch:
     inputs:
       modus:
-        description: "strom (neue 8-Ks lesen), abgleich (amtliche Werte einsetzen) oder probe (ein 8-K, schreibt nichts)"
+        description: "strom (neue 8-Ks lesen, danach der Earnings-Bericht), abgleich (amtliche Werte einsetzen), probe (ein 8-K, schreibt nichts) oder earnings_messen (Aktien je Tag im Earnings-Bericht, schreibt nichts)"
         type: choice
         options:
           - strom
           - abgleich
           - probe
+          - earnings_messen
         default: strom
+      tage:
+        description: "earnings_messen: so viele Tage zurueck"
+        required: false
+        default: "10"
       hoechstens:
         description: "strom: hoechstens so viele 8-Ks je Lauf (0 = alle)"
         required: false
@@ -77,24 +84,46 @@ jobs:
           python-version: "3.11"
       - name: Abhaengigkeiten
         if: steps.secrets.outputs.da == 'ja'
-        run: pip install beautifulsoup4 lxml pandas requests
+        run: pip install beautifulsoup4 lxml pandas pyarrow requests
       - name: Selbsttest
         if: steps.secrets.outputs.da == 'ja'
-        run: python vorabwerte_8k.py --selbsttest
+        run: |
+          python vorabwerte_8k.py --selbsttest
+          python earnings_bericht.py --selbsttest
       - name: Lauf
         if: steps.secrets.outputs.da == 'ja'
         env:
           SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
           MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          # Seit 01.10.2026 stehen die Abweichungen der amtlichen Zahlen im
+          # Reiter Berichte der App (Gerhard, 30.09.2026 nachts, Teil 4),
+          # abgelegt im privaten Datenrepo; NTFY_TOPIC bleibt fuer Stoerungen.
+          DATEN_TOKEN: ${{ secrets.DATEN_TOKEN }}
         run: |
           if [ "${{ inputs.modus }}" = "probe" ]; then
             python vorabwerte_8k.py --modus probe --cik "${{ inputs.cik }}" --accession "${{ inputs.accession }}"
+          elif [ "${{ inputs.modus }}" = "earnings_messen" ]; then
+            python earnings_bericht.py --daten daten --messen "${{ inputs.tage }}"
           else
             python vorabwerte_8k.py --daten daten --modus "${{ inputs.modus }}" --hoechstens "${{ inputs.hoechstens }}" --stunden "${{ inputs.stunden }}"
           fi
+      # EARNINGS-BERICHT (Gerhard, 30.09.2026, Antworten 1 bis 5 und 12): nach
+      # jedem Stromlauf bewertet earnings_bericht.py die neuen Vorabwerte und
+      # legt, was die Kriterien erfuellt, als EIN Bericht in den Reiter Berichte.
+      # Ein Fehler hier haelt die Ablage der Vorabwerte nicht auf; gemeldet wird
+      # er ueber ntfy wie jede Stoerung.
+      - name: Earnings-Bericht
+        if: steps.secrets.outputs.da == 'ja' && inputs.modus == 'strom'
+        continue-on-error: true
+        env:
+          SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
+          MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          DATEN_TOKEN: ${{ secrets.DATEN_TOKEN }}
+        run: python earnings_bericht.py --daten daten
       - name: Ins Datenrepo
-        if: steps.secrets.outputs.da == 'ja' && inputs.modus != 'probe'
+        if: steps.secrets.outputs.da == 'ja' && inputs.modus != 'probe' && inputs.modus != 'earnings_messen'
         run: |
           cd daten
           git config user.name "heliot-vorabwerte"
