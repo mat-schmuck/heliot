@@ -632,9 +632,22 @@ def lauf(daten, trocken=False, jetzt=None, log=print, firma_laden=None, tabelle=
     legt die aufgenommenen als EINEN Bericht ab."""
     jetzt = jetzt or dt.datetime.now(dt.timezone.utc)
     stand_pfad = os.path.join(daten, STAND)
+    erster = not os.path.exists(stand_pfad)
     stand = _json_lesen(stand_pfad, {})
     bewertet = dict(stand.get("bewertet") or {})
     neu = [e for e in vorabwerte_dateien(daten) if e.get("accession") and e["accession"] not in bewertet]
+    if erster and neu:
+        # DER ERSTE LAUF berichtet nur den laufenden Tag (New York): Ohne Stand
+        # waeren alle Vorabwerte der letzten sieben Tage neu und kaemen auf
+        # einmal in den Bericht, genau die Berichtsflut, die Gerhard nicht will.
+        # Die aelteren gelten als Ausgangsstand und werden nicht berichtet.
+        heute_ny = jetzt.astimezone(NY).date()
+        alt = [e for e in neu if (_utc(e.get("filing_utc")) or jetzt).astimezone(NY).date() < heute_ny]
+        for e in alt:
+            bewertet[e["accession"]] = {"zeit": jetzt.isoformat(), "aufgenommen": False,
+                                        "gruende": ["Ausgangsstand"], "ticker": e.get("ticker")}
+        neu = [e for e in neu if e not in alt]
+        log(f"Earnings: erster Lauf, {len(alt)} aeltere Vorabwert-Dateien als Ausgangsstand, nicht berichtet")
     log(f"Earnings: {len(neu)} neue Vorabwert-Dateien")
     if tabelle is None and neu:
         try:
@@ -944,6 +957,26 @@ def selbsttest() -> int:
              tabelle=tab, schluesse_holen=lambda t: kurse, ausblick=lambda text: g, pressetext=lambda cik, acc: "x",
              ablegen=lambda t, a, j, log: abgelegt.append((t, a)) or True, log=lambda *x: None)
         p("Die Meldung ohne Treffer kommt einmal am Tag", len(abgelegt) == 2)
+    # Der erste Lauf ohne Stand berichtet nur den laufenden Tag
+    with tempfile.TemporaryDirectory() as d:
+        os.makedirs(os.path.join(d, "vorabwerte", "2026"))
+        jetzt0 = dt.datetime.now(dt.timezone.utc)
+        for i, (e, alter) in enumerate(((_beispiel(), dt.timedelta(0)),
+                                        (_beispiel(accession="0000000001-26-000009"), dt.timedelta(days=3)))):
+            with io.open(os.path.join(d, "vorabwerte", "2026", f"{i}.json"), "w", encoding="utf-8") as h:
+                json.dump({**e, "filing_utc": (jetzt0 - alter).isoformat()}, h)
+        abgelegt = []
+        r = lauf(d, firma_laden=lambda cik: _zeilen(), tabelle=tab, schluesse_holen=lambda t: kurse,
+                 ausblick=lambda text: g, pressetext=lambda cik, acc: "x",
+                 ablegen=lambda t, a, j, log: abgelegt.append((t, a)) or True, log=lambda *x: None)
+        st = _json_lesen(os.path.join(d, STAND), {})
+        p("Erster Lauf ohne Stand: nur der laufende Tag im Bericht, aeltere als Ausgangsstand",
+          r["neu"] == 1 and r["aufgenommen"] == 1 and len(abgelegt) == 1
+          and (st.get("bewertet") or {}).get("0000000001-26-000009", {}).get("gruende") == ["Ausgangsstand"], str(r))
+        r2 = lauf(d, firma_laden=lambda cik: _zeilen(), tabelle=tab, schluesse_holen=lambda t: kurse,
+                  ausblick=lambda text: g, pressetext=lambda cik, acc: "x",
+                  ablegen=lambda t, a, j, log: abgelegt.append((t, a)) or True, log=lambda *x: None)
+        p("Danach gilt der Stand: nichts Neues, kein zweiter Bericht", r2["neu"] == 0 and len(abgelegt) == 1, str(r2))
     # Die Blacklist: nicht bewertet, nicht im Bericht, im Protokoll nur die Zahl
     import blacklist
     blacklist.setzen(["ACME"])
