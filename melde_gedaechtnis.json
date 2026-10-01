@@ -271,7 +271,12 @@
     "GEWINN|klimax_zeichen|FORM|Rectangle Top|5_kanaluebershooting": "2026-09-30",
     "SCHLUSSNAH|2026-09-30": "2026-09-30",
     "SEKTORAUF|2026-10-01": "2026-10-01",
-    "INSIDER|CRBG|pfad_a|0": "2026-10-01"
+    "INSIDER|CRBG|pfad_a|0": "2026-10-01",
+    "GEWINN|zonenwechsel|FORM|Cup & Handle (Wochenbasis)|stark": "2026-10-01",
+    "GEWINN|zonenwechsel|FORM|Fallback: 20-Tage-Hoch (Pivot)|stark": "2026-10-01",
+    "GEWINN|zonenwechsel|FORM|Rectangle Top|stark": "2026-10-01",
+    "GEWINN|zonenwechsel|HPE|1|stark": "2026-10-01",
+    "GEWINN|zonenwechsel|INTC|Fallback: MA50-R\u00fcckeroberung|stark": "2026-10-01"
   },
   "gemeldet_kp": {
     "CXW|Cup & Handle (Wochenbasis)": 31.67,
