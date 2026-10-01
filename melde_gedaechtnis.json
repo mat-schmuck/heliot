@@ -1,58 +1,7 @@
 {
   "heute_gemeldet": {
-    "tag": "2026-09-30",
-    "marken": [
-      "AMN|EMA Crossback",
-      "AMN|@35.20",
-      "DK|Fallback: MA50-R\u00fcckeroberung",
-      "DK|@69.50",
-      "FORM|Cup & Handle (Wochenbasis)",
-      "FORM|@136.70",
-      "GRAL|Cup & Handle (Wochenbasis)",
-      "GRAL|@140.89",
-      "SNX|Fallback: MA50-Pullback",
-      "SNX|@258.84",
-      "TALO|Fallback: MA50-Pullback",
-      "TALO|@16.26",
-      "TXG|Fallback: 52W-Hoch-Breakout",
-      "TXG|@92.08",
-      "TXG|Fallback: 20-Tage-Hoch (Pivot)",
-      "TXG|@92.00",
-      "ACLS|Fallback: 20-Tage-Hoch (Pivot)",
-      "ACLS|@128.89",
-      "AVT|Pocket Pivot",
-      "AVT|@102.99",
-      "NTAP|Cup & Handle (Wochenbasis)",
-      "NTAP|@210.05",
-      "SNPS|EMA Crossback",
-      "SNPS|@418.01",
-      "SNPS|Wick Play",
-      "SNPS|@418.10",
-      "HPE|Cup & Handle (Wochenbasis)",
-      "HPE|@65.66",
-      "HPE|Fallback: 52W-Hoch-Breakout",
-      "HPE|@65.72",
-      "INSW|Darvas Box",
-      "INSW|@113.15",
-      "INSW|Fallback: 52W-Hoch-Breakout",
-      "INSW|@113.25",
-      "AEO|Fallback: 20-Tage-Hoch (Pivot)",
-      "AEO|@18.22",
-      "AMN|Rectangle Top",
-      "AMN|@35.57",
-      "PARR|Fallback: MA50-R\u00fcckeroberung",
-      "PARR|@79.67",
-      "DK|Shakeout plus drei",
-      "DK|@72.14",
-      "SNOW|Wick Play",
-      "SNOW|@347.32",
-      "ZETA|Wick Play",
-      "ZETA|@30.51",
-      "TNGX|EMA Crossback",
-      "TNGX|@24.81",
-      "CDNA|Inside Day",
-      "CDNA|@65.48"
-    ]
+    "tag": "2026-10-01",
+    "marken": []
   },
   "gemeldet": {
     "INSIDER|FTK|pfad_a|1": "2026-09-16",
@@ -527,16 +476,6 @@
     "CDNA|Inside Day": 65.48,
     "BEST|CDNA|Inside Day": 65.48
   },
-  "gapgo_warten": {
-    "BE": {
-      "signal": "2026-09-29",
-      "kp": 282.18,
-      "stop": 262.86,
-      "firma": "Bloom Energy Corporation",
-      "bestaetigt": false,
-      "pruef": "2026-09-30",
-      "ohne_volumen": true
-    }
-  },
+  "gapgo_warten": {},
   "ampel_tag": "2026-09-30"
 }
