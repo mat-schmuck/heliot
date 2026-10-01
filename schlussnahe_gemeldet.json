@@ -340,5 +340,14 @@
    "zeichen": null,
    "text": "INFORMATION: VCYT; Fallback: MA50-Rückeroberung; Kurs 44.62 unter der 8-Tage-EMA 44.85; reiner Hinweis, kein Ausstiegssignal; Kurs 44,62, seit Trigger -4,0 % gleich -0,6 R"
   }
+ ],
+ "geprueft": "2026-10-01",
+ "zurueckgenommen": [
+  "TXG|Fallback: 52W-Hoch-Breakout",
+  "P|Fallback: 20-Tage-Hoch (Pivot)",
+  "P|Fallback: 52W-Hoch-Breakout",
+  "SNPS|EMA Crossback",
+  "UMAC|Fallback: MA50-Rückeroberung",
+  "UMAC|SPRING-2026-09-18"
  ]
 }

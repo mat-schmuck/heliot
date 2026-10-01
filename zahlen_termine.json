@@ -1,12 +1,10 @@
 {
- "gebaut_am": "2026-10-01 00:08 Wien",
+ "gebaut_am": "2026-10-02 00:07 Wien",
  "ohne_termin": [
-  "MU",
+  "AEO",
   "TJGC"
  ],
- "nur_nasdaq": [
-  "MU"
- ],
+ "nur_nasdaq": [],
  "uneinig": [
   "AEHR"
  ],
@@ -52,14 +50,6 @@
     "nasdaq"
    ],
    "uneinig": "Quellen uneinig: 2026-11-02 (Yahoo, hier bevorzugt) gegen 2026-10-05 (Nasdaq)"
-  },
-  "AEO": {
-   "datum": "2026-12-01",
-   "uhrzeit": "15:00",
-   "lage": "im_handel",
-   "quellen": [
-    "yahoo"
-   ]
   },
   "ALAB": {
    "datum": "2026-11-03",
@@ -622,11 +612,11 @@
    ]
   },
   "MU": {
-   "datum": "2026-09-30",
-   "uhrzeit": "",
-   "lage": "nachboerslich",
+   "datum": "2026-12-23",
+   "uhrzeit": "15:00",
+   "lage": "im_handel",
    "quellen": [
-    "nasdaq"
+    "yahoo"
    ]
   },
   "MXL": {

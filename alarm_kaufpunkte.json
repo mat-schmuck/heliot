@@ -1,10 +1,10 @@
 {
- "stand": "2026-10-01 00:01 Wien",
+ "stand": "2026-10-02 00:01 Wien",
  "aktien": [
   {
    "ticker": "DINO",
    "firma": "HF Sinclair Corporation",
-   "kurs": 107.31999969482422,
+   "kurs": 112.69999694824219,
    "punkte": [
     {
      "muster": "Shakeout plus drei",
@@ -17,11 +17,11 @@
   {
    "ticker": "NTRA",
    "firma": "Natera Inc",
-   "kurs": 413.30999755859375,
+   "kurs": 408.4700012207031,
    "punkte": [
     {
      "muster": "Wick Play",
-     "kaufpunkt": 427.5675,
+     "kaufpunkt": 427.568,
      "stop": 413.29,
      "zusatz": "Einstieg über dem Hoch der Kerze, Docht oben an Basisrand"
     }
@@ -30,7 +30,7 @@
   {
    "ticker": "QMCO",
    "firma": "Quantum Corp",
-   "kurs": 31.719999313354492,
+   "kurs": 31.885000228881836,
    "punkte": [
     {
      "muster": "Wick Play",
@@ -41,35 +41,35 @@
    ]
   },
   {
-   "ticker": "DELL",
-   "firma": "Dell Technologies Inc.",
-   "kurs": 537.9500122070312,
+   "ticker": "GRAL",
+   "firma": "GRAIL, Inc.",
+   "kurs": 132.55999755859375,
    "punkte": [
     {
-     "muster": "Shakeout plus drei",
-     "kaufpunkt": 583.495,
-     "stop": 530.45,
-     "zusatz": "Einstieg 10 Prozent über dem Tief des Abverkaufs, der 10.9 Prozent tief war; bei 5 Prozent wären es 556.97, schon erreicht"
+     "muster": "Wick Play",
+     "kaufpunkt": 151.557,
+     "stop": 136.41,
+     "zusatz": "Einstieg über dem Hoch der Kerze, Docht oben an Basisrand"
     }
    ]
   },
   {
-   "ticker": "GRAL",
-   "firma": "GRAIL, Inc.",
-   "kurs": 140.1199951171875,
+   "ticker": "HPE",
+   "firma": "Hewlett Packard Enterprise Company",
+   "kurs": 64.58000183105469,
    "punkte": [
     {
      "muster": "Wick Play",
-     "kaufpunkt": 151.5574,
-     "stop": 136.4325,
-     "zusatz": "Einstieg über dem Hoch der Kerze, Docht oben an Basisrand"
+     "kaufpunkt": 66.21,
+     "stop": 61.76,
+     "zusatz": "Einstieg über dem Hoch der Kerze, Docht unten an EMA 10, altes Hoch"
     }
    ]
   },
   {
    "ticker": "HTFL",
    "firma": "Heartflow, Inc.",
-   "kurs": 49.75,
+   "kurs": 48.90999984741211,
    "punkte": [
     {
      "muster": "Shakeout plus drei",
@@ -80,22 +80,35 @@
    ]
   },
   {
-   "ticker": "ZETA",
-   "firma": "Zeta Global Holdings Corp.",
-   "kurs": 31.56999969482422,
+   "ticker": "PSX",
+   "firma": "Phillips 66",
+   "kurs": 264.2300109863281,
    "punkte": [
     {
-     "muster": "Pocket Pivot",
-     "kaufpunkt": 32.11,
-     "stop": 29.21,
-     "zusatz": "Einstieg über dem Hoch des Pivot-Tages, also frühestens am Folgetag; Volumen war das 1.4-Fache des stärksten Abwärtstags der zehn Tage davor"
+     "muster": "Shakeout plus drei",
+     "kaufpunkt": 273.361,
+     "stop": 248.51,
+     "zusatz": "Einstieg 10 Prozent über dem Tief des Abverkaufs, der 10.3 Prozent tief war; bei 5 Prozent wären es 260.94, schon erreicht"
+    }
+   ]
+  },
+  {
+   "ticker": "SNOW",
+   "firma": "Snowflake Inc.",
+   "kurs": 341.989990234375,
+   "punkte": [
+    {
+     "muster": "Inside Day",
+     "kaufpunkt": 344.42,
+     "stop": 336.3141,
+     "zusatz": "drei steigende Tage, dann der Inside Day; enger Einstieg über seinem Hoch, konservativ wäre über 348.28 mit Stop 330.55"
     }
    ]
   },
   {
    "ticker": "CORT",
    "firma": "Corcept Therapeutics Incorporated",
-   "kurs": 115.2300033569336,
+   "kurs": 114.0250015258789,
    "punkte": [
     {
      "muster": "Wick Play",
@@ -108,7 +121,7 @@
   {
    "ticker": "HNGE",
    "firma": "Hinge Health Inc",
-   "kurs": 97.23999786376953,
+   "kurs": 97.94000244140625,
    "punkte": [
     {
      "muster": "Wick Play",
@@ -119,48 +132,9 @@
    ]
   },
   {
-   "ticker": "RDVT",
-   "firma": "Red Violet Inc",
-   "kurs": 79.01000213623047,
-   "punkte": [
-    {
-     "muster": "Wick Play",
-     "kaufpunkt": 79.5,
-     "stop": 76.49,
-     "zusatz": "Einstieg über dem Hoch der Kerze, Docht unten an EMA 10"
-    }
-   ]
-  },
-  {
-   "ticker": "GH",
-   "firma": "Guardant Health Inc",
-   "kurs": 178.36000061035156,
-   "punkte": [
-    {
-     "muster": "Inside Day",
-     "kaufpunkt": 180.3396,
-     "stop": 175.33,
-     "zusatz": "drei steigende Tage, dann der Inside Day; enger Einstieg über seinem Hoch, konservativ wäre über 180.90 mit Stop 174.54"
-    }
-   ]
-  },
-  {
-   "ticker": "TEAM",
-   "firma": "Atlassian Corporation",
-   "kurs": 179.2899932861328,
-   "punkte": [
-    {
-     "muster": "Wick Play",
-     "kaufpunkt": 179.6,
-     "stop": 168.05,
-     "zusatz": "Einstieg über dem Hoch der Kerze, Docht unten an Basisrand"
-    }
-   ]
-  },
-  {
    "ticker": "AEHR",
    "firma": "Aehr Test Systems",
-   "kurs": 99.62000274658203,
+   "kurs": 101.5999984741211,
    "punkte": [
     {
      "muster": "Wick Play",
@@ -171,61 +145,35 @@
    ]
   },
   {
-   "ticker": "XMTR",
-   "firma": "Xometry Inc",
-   "kurs": 102.8499984741211,
-   "punkte": [
-    {
-     "muster": "Inside Day",
-     "kaufpunkt": 105.34,
-     "stop": 102.65,
-     "zusatz": "drei steigende Tage, dann der Inside Day; enger Einstieg über seinem Hoch, konservativ wäre über 106.16 mit Stop 101.25"
-    }
-   ]
-  },
-  {
-   "ticker": "CXW",
-   "firma": "CoreCivic, Inc.",
-   "kurs": 32.25,
+   "ticker": "PTGX",
+   "firma": "Protagonist Therapeutics Inc",
+   "kurs": 139.19000244140625,
    "punkte": [
     {
      "muster": "Wick Play",
-     "kaufpunkt": 33.28,
-     "stop": 30.66,
-     "zusatz": "Einstieg über dem Hoch der Kerze, Docht oben an EMA 10, SMA 50"
+     "kaufpunkt": 143.78,
+     "stop": 138.38,
+     "zusatz": "Einstieg über dem Hoch der Kerze, Docht oben an EMA 10, EMA 21"
     }
    ]
   },
   {
-   "ticker": "TH",
-   "firma": "Target Hospitality Corp",
-   "kurs": 19.719999313354492,
+   "ticker": "PNTG",
+   "firma": "Pennant Group Inc",
+   "kurs": 38.790000915527344,
    "punkte": [
     {
-     "muster": "Shakeout plus drei",
-     "kaufpunkt": 20.834,
-     "stop": 18.94,
-     "zusatz": "Einstieg 10 Prozent über dem Tief des Abverkaufs, der 13.0 Prozent tief war; bei 5 Prozent wären es 19.89, schon erreicht"
-    }
-   ]
-  },
-  {
-   "ticker": "TVTX",
-   "firma": "Travere Therapeutics Inc",
-   "kurs": 58.880001068115234,
-   "punkte": [
-    {
-     "muster": "Shakeout plus drei",
-     "kaufpunkt": 64.152,
-     "stop": 58.32,
-     "zusatz": "Einstieg 10 Prozent über dem Tief des Abverkaufs, der 15.1 Prozent tief war; bei 5 Prozent wären es 61.24, schon erreicht"
+     "muster": "Wick Play",
+     "kaufpunkt": 39.92,
+     "stop": 38.05,
+     "zusatz": "Einstieg über dem Hoch der Kerze, Docht oben an EMA 10, EMA 21, SMA 50"
     }
    ]
   },
   {
    "ticker": "TALO",
    "firma": "Talos Energy, Inc.",
-   "kurs": 16.329999923706055,
+   "kurs": 16.639999389648438,
    "punkte": [
     {
      "muster": "Shakeout plus drei",
@@ -236,53 +184,79 @@
    ]
   },
   {
-   "ticker": "SENEA",
-   "firma": "Seneca Foods Corp.",
-   "kurs": 178.0,
+   "ticker": "MDB",
+   "firma": "MongoDB Inc",
+   "kurs": 351.7300109863281,
    "punkte": [
     {
-     "muster": "Shakeout plus drei",
-     "kaufpunkt": 194.876,
-     "stop": 177.16,
-     "zusatz": "Einstieg 10 Prozent über dem Tief des Abverkaufs, der 15.6 Prozent tief war; bei 5 Prozent wären es 186.02, schon erreicht"
+     "muster": "Inside Day",
+     "kaufpunkt": 355.65,
+     "stop": 342.0,
+     "zusatz": "drei steigende Tage, dann der Inside Day; enger Einstieg über seinem Hoch, konservativ wäre über 370.43 mit Stop 339.93"
     }
    ]
   },
   {
    "ticker": "RNG",
    "firma": "RingCentral, Inc.",
-   "kurs": 74.69999694824219,
+   "kurs": 78.30999755859375,
    "punkte": [
     {
-     "muster": "Wick Play",
-     "kaufpunkt": 76.22,
+     "muster": "Shakeout plus drei",
+     "kaufpunkt": 79.519,
      "stop": 72.29,
-     "zusatz": "Einstieg über dem Hoch der Kerze, Docht unten an EMA 21"
+     "zusatz": "Einstieg 10 Prozent über dem Tief des Abverkaufs, der 11.7 Prozent tief war; bei 5 Prozent wären es 75.90, schon erreicht"
     }
    ]
   },
   {
-   "ticker": "TJGC",
-   "firma": "TJGC Group Limited",
-   "kurs": 30.200000762939453,
+   "ticker": "HZO",
+   "firma": "MarineMax, Inc.",
+   "kurs": 52.33000183105469,
+   "punkte": [
+    {
+     "muster": "Pocket Pivot",
+     "kaufpunkt": 52.375,
+     "stop": 52.24,
+     "zusatz": "Einstieg über dem Hoch des Pivot-Tages, also frühestens am Folgetag; Volumen war das 1.3-Fache des stärksten Abwärtstags der zehn Tage davor"
+    }
+   ]
+  },
+  {
+   "ticker": "FSLY",
+   "firma": "Fastly, Inc.",
+   "kurs": 26.389999389648438,
    "punkte": [
     {
      "muster": "Inside Day",
-     "kaufpunkt": 35.28,
-     "stop": 31.76,
-     "zusatz": "drei steigende Tage, dann der Inside Day; enger Einstieg über seinem Hoch, konservativ wäre über 36.76 mit Stop 33.09"
+     "kaufpunkt": 26.67,
+     "stop": 25.27,
+     "zusatz": "drei steigende Tage, dann der Inside Day; enger Einstieg über seinem Hoch, konservativ wäre über 26.91 mit Stop 25.20"
     }
    ]
   },
   {
-   "ticker": "LITE",
-   "firma": "Lumentum Holdings Inc.",
-   "kurs": 971.260009765625,
+   "ticker": "AMN",
+   "firma": "AMN Healthcare Services Inc",
+   "kurs": 35.86000061035156,
    "punkte": [
     {
      "muster": "Wick Play",
-     "kaufpunkt": 1009.55,
-     "stop": 940.27,
+     "kaufpunkt": 36.5,
+     "stop": 35.175,
+     "zusatz": "Einstieg über dem Hoch der Kerze, Docht oben an Basisrand"
+    }
+   ]
+  },
+  {
+   "ticker": "BAND",
+   "firma": "Bandwidth Inc",
+   "kurs": 62.439998626708984,
+   "punkte": [
+    {
+     "muster": "Wick Play",
+     "kaufpunkt": 63.8399,
+     "stop": 59.0,
      "zusatz": "Einstieg über dem Hoch der Kerze, Docht unten an EMA 10"
     }
    ]
@@ -290,7 +264,7 @@
   {
    "ticker": "AXTI",
    "firma": "AXT Inc",
-   "kurs": 77.41000366210938,
+   "kurs": 81.80999755859375,
    "punkte": [
     {
      "muster": "Wick Play",
@@ -301,62 +275,55 @@
    ]
   },
   {
-   "ticker": "STX",
-   "firma": "Seagate Technology Holdings PLC",
-   "kurs": 922.3400268554688,
-   "punkte": [
-    {
-     "muster": "Wick Play",
-     "kaufpunkt": 932.97,
-     "stop": 870.38,
-     "zusatz": "Einstieg über dem Hoch der Kerze, Docht unten an EMA 10"
-    }
-   ]
-  },
-  {
    "ticker": "MU",
    "firma": "Micron Technology, Inc.",
-   "kurs": 1065.1099853515625,
+   "kurs": 1097.3900146484375,
    "punkte": [
     {
      "muster": "Pocket Pivot",
-     "kaufpunkt": 1083.5,
-     "stop": 1062.36,
-     "zusatz": "Einstieg über dem Hoch des Pivot-Tages, also frühestens am Folgetag; Volumen war das 1.3-Fache des stärksten Abwärtstags der zehn Tage davor"
+     "kaufpunkt": 1098.9,
+     "stop": 1022.9,
+     "zusatz": "Einstieg über dem Hoch des Pivot-Tages, also frühestens am Folgetag; Volumen war das 2.0-Fache des stärksten Abwärtstags der zehn Tage davor"
     }
    ]
   },
   {
    "ticker": "SYRE",
    "firma": "Spyre Therapeutics, Inc.",
-   "kurs": 89.02999877929688,
+   "kurs": 89.93000030517578,
    "punkte": [
     {
      "muster": "Wick Play",
-     "kaufpunkt": 95.1796,
-     "stop": 88.44,
+     "kaufpunkt": 94.16,
+     "stop": 87.2469,
      "zusatz": "Einstieg über dem Hoch der Kerze, Docht oben an EMA 21"
     }
    ]
   },
   {
-   "ticker": "SNDK",
-   "firma": "Sandisk Corporation",
-   "kurs": 1739.8900146484375,
+   "ticker": "FORM",
+   "firma": "FormFactor Inc",
+   "kurs": 148.44000244140625,
    "punkte": [
     {
-     "muster": "Wick Play",
-     "kaufpunkt": 1762.1,
-     "stop": 1659.02,
-     "zusatz": "Einstieg über dem Hoch der Kerze, Docht unten an EMA 21"
+     "muster": "Inside Day",
+     "kaufpunkt": 149.7,
+     "stop": 145.07,
+     "zusatz": "drei steigende Tage, dann der Inside Day; enger Einstieg über seinem Hoch, konservativ wäre über 150.65 mit Stop 140.14"
     }
    ]
   },
   {
    "ticker": "TNGX",
    "firma": "Tango Therapeutics, Inc.",
-   "kurs": 24.950000762939453,
+   "kurs": 24.450000762939453,
    "punkte": [
+    {
+     "muster": "Inside Day",
+     "kaufpunkt": 25.41,
+     "stop": 23.95,
+     "zusatz": "drei steigende Tage, dann der Inside Day; enger Einstieg über seinem Hoch, konservativ wäre über 25.41 mit Stop 23.82"
+    },
     {
      "muster": "Wick Play",
      "kaufpunkt": 25.51,
@@ -366,14 +333,27 @@
    ]
   },
   {
-   "ticker": "LSCC",
-   "firma": "Lattice Semiconductor Corporation",
-   "kurs": 125.62000274658203,
+   "ticker": "VSH",
+   "firma": "Vishay Intertechnology, Inc.",
+   "kurs": 34.27000045776367,
    "punkte": [
     {
      "muster": "Pocket Pivot",
-     "kaufpunkt": 128.19,
-     "stop": 124.8805,
+     "kaufpunkt": 34.42,
+     "stop": 32.3429,
+     "zusatz": "Einstieg über dem Hoch des Pivot-Tages, also frühestens am Folgetag; Volumen war das 1.2-Fache des stärksten Abwärtstags der zehn Tage davor"
+    }
+   ]
+  },
+  {
+   "ticker": "SYNA",
+   "firma": "Synaptics Incorporated",
+   "kurs": 106.1500015258789,
+   "punkte": [
+    {
+     "muster": "Pocket Pivot",
+     "kaufpunkt": 106.61,
+     "stop": 100.42,
      "zusatz": "Einstieg über dem Hoch des Pivot-Tages, also frühestens am Folgetag; Volumen war das 1.5-Fache des stärksten Abwärtstags der zehn Tage davor"
     }
    ]
@@ -381,39 +361,13 @@
   {
    "ticker": "VPG",
    "firma": "Vishay Precision Group, Inc.",
-   "kurs": 72.73999786376953,
+   "kurs": 75.08999633789062,
    "punkte": [
     {
      "muster": "Pocket Pivot",
-     "kaufpunkt": 72.91,
-     "stop": 70.2501,
+     "kaufpunkt": 75.7104,
+     "stop": 70.9704,
      "zusatz": "Einstieg über dem Hoch des Pivot-Tages, also frühestens am Folgetag; Volumen war das 1.1-Fache des stärksten Abwärtstags der zehn Tage davor"
-    }
-   ]
-  },
-  {
-   "ticker": "VCYT",
-   "firma": "Veracyte, Inc.",
-   "kurs": 46.040000915527344,
-   "punkte": [
-    {
-     "muster": "Wick Play",
-     "kaufpunkt": 47.62,
-     "stop": 44.47,
-     "zusatz": "Einstieg über dem Hoch der Kerze, Docht oben an SMA 50"
-    }
-   ]
-  },
-  {
-   "ticker": "SNPS",
-   "firma": "Synopsys, Inc.",
-   "kurs": 434.94000244140625,
-   "punkte": [
-    {
-     "muster": "Pocket Pivot",
-     "kaufpunkt": 445.57,
-     "stop": 415.24,
-     "zusatz": "Einstieg über dem Hoch des Pivot-Tages, also frühestens am Folgetag; Volumen war das 2.8-Fache des stärksten Abwärtstags der zehn Tage davor"
     }
    ]
   }
