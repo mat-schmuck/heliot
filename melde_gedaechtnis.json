@@ -299,7 +299,9 @@
     "LITE|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-01",
     "BEST|LITE|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-01",
     "UEBER|LITE|Rectangle Top": "2026-10-01",
-    "UEBER|LITE|Wick Play": "2026-10-01"
+    "UEBER|LITE|Wick Play": "2026-10-01",
+    "GAPGO|SNPS|2026-10-01": "2026-10-01",
+    "GEWINN|zonenwechsel|FROG|SPRING-2026-09-23|stark": "2026-10-01"
   },
   "gemeldet_kp": {
     "CXW|Cup & Handle (Wochenbasis)": 31.67,
@@ -514,6 +516,14 @@
     "UEBER|LITE|Rectangle Top": 985.01,
     "UEBER|LITE|Wick Play": 1009.55
   },
-  "gapgo_warten": {},
+  "gapgo_warten": {
+    "SNPS": {
+      "signal": "2026-10-01",
+      "kp": 496.96,
+      "stop": 461.99,
+      "firma": "Synopsys, Inc.",
+      "bestaetigt": false
+    }
+  },
   "ampel_tag": "2026-10-01"
 }
