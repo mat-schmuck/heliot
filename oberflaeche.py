@@ -474,7 +474,7 @@ SCANNER_ERKLAERUNGEN = {
     "termine_morgen_nach": "Zahlen am nächsten Handelstag nach Handelsschluss.",
     "termine_ohne_zeit": "Nimmt auch Aktien mit, die ihre Zahlen während des Handels bringen oder deren Tageszeit "
                          "nicht bekannt ist.",
-    "termine_umfang": "Ganzer Markt heißt alle Stammaktien des US-Markts; sonst nur die Aktien der zwei "
+    "termine_umfang": "Ganzer Markt heißt alle Stammaktien des US-Markts; sonst nur die Aktien der "
                       "Wochenlisten.",
 }
 

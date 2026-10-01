@@ -44,6 +44,7 @@ import ablaeufe
 import berichte
 import einstellungen
 import frischhalten
+import lexikon
 import listen
 import marktampel
 import nachschlagen
@@ -1436,25 +1437,28 @@ if rolle != "gast":
 # DER REITER BERICHTE (Gerhard, 29.09.2026, Teil 4) steht als zweite
 # Registerkarte, gleich hinter der Startseite; nur im vollen Zugang, weil die
 # Berichte im privaten Datenrepo liegen (Gaeste sehen nichts daraus, S4).
+# DER REITER LEXIKON (Gerhard, 29.09.2026, Teil 3 b) steht hinter dem Regelwerk,
+# vor den Einstellungen; Gaeste bekommen ihn nicht (S4).
 tab_berichte = None
+tab_lexikon = None
 tab_upload = tab_gast = tab_ablaeufe = tab_einst = None
 if rolle == "gast":
     st.markdown("## Scanner", anchors=False)
     tab_scanner = st.container()
     tab_liste = tab_scan = tab_info = None
 elif rolle == "voll":
-    (tab_liste, tab_berichte, tab_scan, tab_scanner, tab_upload, tab_gast, tab_ablaeufe, tab_info,
+    (tab_liste, tab_berichte, tab_scan, tab_scanner, tab_upload, tab_gast, tab_ablaeufe, tab_info, tab_lexikon,
      tab_einst) = st.tabs(["Liste prüfen", "Berichte", "Aktueller Scan", "Scanner", "Wochenlisten", "Gastzugang",
-                           "Abläufe", "Regelwerk", "Einstellungen"])
+                           "Abläufe", "Regelwerk", "Lexikon", "Einstellungen"])
 else:
-    tab_liste, tab_scan, tab_scanner, tab_upload, tab_info, tab_einst = st.tabs(
-        ["Liste prüfen", "Aktueller Scan", "Scanner", "Wochenlisten", "Regelwerk", "Einstellungen"])
+    tab_liste, tab_scan, tab_scanner, tab_upload, tab_info, tab_lexikon, tab_einst = st.tabs(
+        ["Liste prüfen", "Aktueller Scan", "Scanner", "Wochenlisten", "Regelwerk", "Lexikon", "Einstellungen"])
 
 # Der Link zur Startseite ganz oben in jeder Registerkarte (Antwort 11); der
 # am Ende kommt ganz unten im Skript, nach allem anderen Inhalt. Ein Gast hat
 # keine Registerkarten, nur den Scanner.
 REITER_ALLE = [r for r in (tab_liste, tab_berichte, tab_scan, tab_scanner, tab_upload, tab_gast, tab_ablaeufe,
-                           tab_info, tab_einst) if r is not None]
+                           tab_info, tab_lexikon, tab_einst) if r is not None]
 if rolle != "gast":
     for _reiter in REITER_ALLE:
         with _reiter:
@@ -2501,7 +2505,6 @@ def scanner_reiter():
         st.markdown(sa.md(satz))
     for satz in sa.stand_technik(stand, analysten_da=lese_token, nur_voll=rolle != "voll"):
         st.caption(sa.md(technik_zeile(satz)))
-    heute = sa.ny_jetzt().date()
 
     # VORLAGEN (Gerhard, 20.09.2026, S1): Die Datei liegt im privaten Datenrepo,
     # deshalb nur im vollen Zugang (S4). Laden setzt alle Bedienfelder, dann
@@ -2542,13 +2545,13 @@ def scanner_reiter():
     ids = [k for k, _name in sa.AUSWAHL]
     if st.session_state.get("sc_strategie") not in ids:
         st.session_state["sc_strategie"] = ""
+    # KEINE ERKLAERUNGEN IM SCANNER (Gerhard, 29.09.2026, Teil 3 a): "In den
+    # Feldern steht nur noch der Name des Felds, der Haken und Von-Bis, keine
+    # Beschreibungen, keine Hilfetexte." Alles Erklaerende steht im Reiter
+    # Lexikon; die Gesamtpruefung (Block I) achtet darauf.
     st.selectbox("Strategie oder Chart-Signal", ids, format_func=sa.AUSWAHL_NAMEN.get, key="sc_strategie",
                  on_change=_sc_strategie_gewaehlt, placeholder="Bitte wählen")
-    _sc_erklaerung("strategie", "Strategie oder Chart-Signal", oberflaeche.SCANNER_ERKLAERUNGEN["strategie"],
-                   frage="Was ist eine Strategie oder ein Chart-Signal?")
     k = st.session_state.get("sc_strategie") or ""
-    if sa.strategie_text(k):
-        st.markdown(sa.md(sa.strategie_text(k)))
     if sa.ist_muster(k) and sa.treffer_satz(stand, k):
         st.markdown(sa.md(sa.treffer_satz(stand, k)))
     if sa.toleranz_moeglich(k):
@@ -2556,19 +2559,11 @@ def scanner_reiter():
             st.session_state["sc_toleranz"] = "streng"
         tol = sa.toleranz_prozent()
         st.radio("Wie genau das Muster passen muss", ["streng", "toleranz"],
-                 format_func={"streng": "Streng: jede Regel des Musters erfüllt",
-                              "toleranz": f"Mit {tol} Prozent Toleranz: Schwellen dürfen um {tol} Prozent "
-                                          "verfehlt werden"}.get,
+                 format_func={"streng": "Streng", "toleranz": f"Mit {tol} Prozent Toleranz"}.get,
                  key="sc_toleranz", on_change=_sc_toleranz_geaendert, persist_state="page")
-        _sc_erklaerung("toleranz", "Wie genau das Muster passen muss", oberflaeche.SCANNER_ERKLAERUNGEN["toleranz"],
-                       frage="Was ist die Toleranz?")
-    st.checkbox(sa.handelbar_text(), key="sc_handelbar")
-    _sc_erklaerung("handelbar", "Nur handelbare Aktien", oberflaeche.SCANNER_ERKLAERUNGEN["handelbar"],
-                   frage="Was ist eine handelbare Aktie?")
+    st.checkbox("Nur handelbare Aktien", key="sc_handelbar")
     if k == "darvas":
-        st.checkbox(sa.langweile_text(), key="sc_langweilig", persist_state="page")
-        _sc_erklaerung("langweilig", "Langweilige Darvas-Boxen aussortieren",
-                       oberflaeche.SCANNER_ERKLAERUNGEN["langweilig"], frage="Was ist eine langweilige Darvas-Box?")
+        st.checkbox("Langweilige Darvas-Boxen aussortieren", key="sc_langweilig", persist_state="page")
 
     # Teil 2
     st.markdown("### Teil 2: Einstellungen", anchors=False)
@@ -2589,7 +2584,6 @@ def scanner_reiter():
                            + "; diese Merkmale zeigen und filtern deshalb nichts.")
             for f in felder:
                 an = st.checkbox(f.titel, key=_sc_schluessel(f.schluessel, "an"), persist_state="page")
-                _sc_erklaerung(f.schluessel, f.titel, f.erklaerung)
                 if not an or f.art != "bereich":
                     continue
                 for teil in ("min", "max"):
@@ -2598,30 +2592,16 @@ def scanner_reiter():
                 if f.schluessel == "rs":
                     st.checkbox("Junge Titel mit vorläufigem RS mitnehmen", key="sc_rs_vorlaeufig",
                                 persist_state="page")
-                    _sc_erklaerung("rs_vorlaeufig", "Junge Titel mit vorläufigem RS mitnehmen",
-                                   oberflaeche.SCANNER_ERKLAERUNGEN["rs_vorlaeufig"],
-                                   frage="Was ist ein vorläufiges RS?")
 
     st.markdown("#### Zahlentermine", anchors=False)
     termine_an = st.checkbox("Nach Zahlenterminen filtern", key="sc_termine_an")
-    _sc_erklaerung("termine", "Nach Zahlenterminen filtern", oberflaeche.SCANNER_ERKLAERUNGEN["termine"],
-                   frage="Was ist der Filter nach Zahlenterminen?")
     if termine_an:
-        st.caption(f"Heute ist in New York {sa.datum_lang(heute.isoformat())}; morgen heißt der nächste "
-                   f"Werktag, {sa.datum_lang(sa.naechster_handelstag(heute).isoformat())}.")
         for key, text, _plus, _lage in sa.TERMIN_TEILE:
             st.checkbox(f"Zahlen {text}", key=f"sc_termine_{key}", persist_state="page")
-            _sc_erklaerung(f"termine_{key}", f"Zahlen {text}", oberflaeche.SCANNER_ERKLAERUNGEN[f"termine_{key}"],
-                           frage=f"Was ist mit „Zahlen {text}“ gemeint?")
         st.checkbox("Auch Termine während des Handels oder ohne bekannte Tageszeit",
                     key="sc_termine_ohne_zeit", persist_state="page")
-        _sc_erklaerung("termine_ohne_zeit", "Auch Termine während des Handels oder ohne bekannte Tageszeit",
-                       oberflaeche.SCANNER_ERKLAERUNGEN["termine_ohne_zeit"],
-                       frage="Was ist mit „Auch Termine während des Handels oder ohne bekannte Tageszeit“ gemeint?")
         st.radio("Welche Aktien", [u[0] for u in sa.UMFANG], format_func=dict(sa.UMFANG).get,
                  key="sc_termine_umfang", persist_state="page")
-        _sc_erklaerung("termine_umfang", "Welche Aktien", oberflaeche.SCANNER_ERKLAERUNGEN["termine_umfang"],
-                       frage="Was ist mit „Welche Aktien“ gemeint?")
 
     gewaehlt = sum(1 for s in sektoren if st.session_state.get(_sc_sektor_schluessel(s), True))
     st.markdown("#### Sektoren", anchors=False)
@@ -2630,10 +2610,6 @@ def scanner_reiter():
         st.button("Alle Sektoren abhaken", key="sc_sektoren_keine", on_click=_sc_sektoren_setzen, args=(False,))
         for s in sektoren:
             st.checkbox(sa.sektor_name(s), key=_sc_sektor_schluessel(s), persist_state="page")
-            _sc_erklaerung(_sc_sektor_schluessel(s)[3:], sa.sektor_name(s),
-                           oberflaeche.SEKTOR_ERKLAERUNGEN.get(s, "Aktien, die die Nasdaq diesem Sektor zuordnet."),
-                           frage=(f"Was ist der Sektor {sa.sektor_name(s)}?" if s
-                                  else f"Was ist mit „{sa.OHNE_SEKTOR}“ gemeint?"))
     # NASDAQ-BRANCHEN ABWAEHLEN (Gerhard, 27.09.2026, B10): wie die Sektoren;
     # angehakt heisst dabei. Aktien ohne Branchenangabe bleiben immer drin.
     gewaehlt_b = sum(1 for b in branchen if st.session_state.get(_sc_branche_schluessel(b), True))
@@ -2647,8 +2623,6 @@ def scanner_reiter():
                   args=(False,))
         for b in branchen:
             st.checkbox(b, key=_sc_branche_schluessel(b), persist_state="page")
-            _sc_erklaerung(_sc_branche_schluessel(b)[3:], b, sa.branche_erklaerung(b, stand),
-                           frage=f"Was ist die Nasdaq-Branche {b}?")
     # Der Knopf steht am Ende von Teil 2, vor dem Scan (Antwort 70 vom 24.09.2026):
     # Er setzt Teil 1 und Teil 2 zurueck.
     st.button("Alle Einstellungen zurücksetzen", key="sc_zuruecksetzen", on_click=_sc_alles_zuruecksetzen)
@@ -3063,6 +3037,130 @@ with tab_info:
         st.markdown(sa.md(satz))
     for rw_name, rw_text in sa.template_regelwerk():
         st.markdown(f"**{sa.md(rw_name)}.** {sa.md(rw_text)}")
+
+
+# --- Lexikon ---------------------------------------------------------------
+# DER REITER LEXIKON (Gerhard, 29.09.2026, Teil 3 b): alles, was es im System
+# gibt, in einfachem Deutsch mit kurzem Beispiel, nach Kapiteln geordnet und
+# durchsuchbar, mit echten Ueberschriften fuer VoiceOver. Seit Teil 3 a stehen
+# die Erklaerungen der Scanner-Felder nur noch hier. Die Eintraege baut
+# lexikon.py aus den Registern; je Kapitel ein Unterreiter, gezeichnet wird nur
+# der geoeffnete, damit die Seite mit ueber 500 Eintraegen schnell bleibt. Die
+# Suche ueber den Unterreitern findet in allen Kapiteln. Ueberschriften: Ebene
+# 2 der Reiter, 3 das Kapitel, 4 die Gruppe oder ein Begriff ohne Gruppe, 5 ein
+# Begriff in einer Gruppe.
+LEX_TREFFER_MAX = 50
+
+
+@st.cache_data(ttl=600, show_spinner=False)
+def _lexikon_eintraege(einst_text: str, branchen_text: str) -> list:
+    """Die Eintraege, je Stand der Einstellungen und der Branchen gemerkt."""
+    import json
+    return lexikon.eintraege(json.loads(einst_text) if einst_text else None,
+                             {"branchen": json.loads(branchen_text)} if branchen_text else None)
+
+
+def _lexikon_holen() -> list:
+    """Mit den geltenden Einstellungen (Volumenhuerden) und den Nasdaq-Branchen
+    aus dem Stand der Scanner-Tabelle; faellt eines aus, gilt die Vorgabe."""
+    import json
+    try:
+        einst_text = json.dumps(_einstellungen(), sort_keys=True, default=str)
+    except Exception:  # noqa
+        einst_text = ""
+    try:
+        branchen_text = json.dumps((lade_scanner_stand() or {}).get("branchen") or [], sort_keys=True, default=str)
+    except Exception:  # noqa
+        branchen_text = ""
+    return _lexikon_eintraege(einst_text, branchen_text)
+
+
+def _lexikon_eintrag_md(e: dict, ebene: int, mit_kapitel: bool = False) -> str:
+    """Ein Eintrag: Ueberschrift, beim Suchergebnis das Kapitel, die Erklaerung
+    und das Beispiel, jeder Teil ein eigener Absatz."""
+    teile = [f"{'#' * ebene} {_md(e['begriff'])}"]
+    if mit_kapitel:
+        ort = lexikon.KAPITEL_NAMEN.get(e["kapitel"], "")
+        teile.append(_md(f"Kapitel {ort}" + (f", {e['gruppe']}" if e["gruppe"] else "") + "."))
+    teile += [_md(e["text"]), "Beispiel: " + _md(e["beispiel"])]
+    return "\n\n".join(teile)
+
+
+def _lexikon_kapitel_zeigen(eintraege: list):
+    """Ein Kapitel, je Gruppe ein einziger Markdown-Block."""
+    block, gruppe = [], None
+    for e in eintraege:
+        if e["gruppe"] != gruppe:
+            if block:
+                st.markdown("\n\n".join(block), anchors=False)
+                block = []
+            gruppe = e["gruppe"]
+            if gruppe:
+                block.append(f"#### {_md(gruppe)}")
+        block.append(_lexikon_eintrag_md(e, 5 if e["gruppe"] else 4))
+    if block:
+        st.markdown("\n\n".join(block), anchors=False)
+
+
+def _lexikon_kapitel_gewechselt():
+    """Das gewaehlte Kapitel gemerkt, wie bei den Berichten."""
+    name = st.session_state.get("lex_unterreiter")
+    kap = next((k for k, n in lexikon.KAPITEL if n == name), None)
+    if kap:
+        st.session_state["lex_kapitel"] = kap
+
+
+def _lexikon_suche_leeren():
+    st.session_state["lex_suche"] = ""
+
+
+@st.fragment
+def lexikon_reiter():
+    """Der Reiter als Fragment: Suche und Kapitelwechsel rechnen nur ihn neu."""
+    st.markdown("## Lexikon", anchors=False)
+    st.markdown("Alle Begriffe des Systems in einfachem Deutsch, jeder mit einem kurzen Beispiel, nach Kapiteln "
+                "geordnet. Die Suche findet ein Wort im Namen, in der Erklärung und im Beispiel, in allen Kapiteln.")
+    alle = _lexikon_holen()
+    st.text_input("Im Lexikon suchen", key="lex_suche", placeholder="zum Beispiel Kaufpunkt")
+    frage = str(st.session_state.get("lex_suche") or "").strip()
+    if frage:
+        treffer = lexikon.suchen(alle, frage)
+        st.markdown("### Suchergebnis", anchors=False)
+        n = len(treffer)
+        if not n:
+            st.markdown(_md(f"Zu {frage} steht nichts im Lexikon."))
+        else:
+            satz = f"1 Eintrag zu {frage}." if n == 1 else f"{n} Einträge zu {frage}."
+            if n > LEX_TREFFER_MAX:
+                satz += f" Gezeigt werden die ersten {LEX_TREFFER_MAX}; ein genauerer Begriff grenzt ein."
+            st.markdown(_md(satz))
+            st.markdown("\n\n".join(_lexikon_eintrag_md(e, 4, mit_kapitel=True)
+                                     for e in treffer[:LEX_TREFFER_MAX]), anchors=False)
+        st.button("Suche leeren", key="lex_suche_leeren", on_click=_lexikon_suche_leeren)
+    namen = [n for _k, n in lexikon.KAPITEL]
+    aktuell = st.session_state.get("lex_kapitel")
+    if aktuell not in lexikon.KAPITEL_NAMEN:
+        aktuell = lexikon.KAPITEL[0][0]
+    unterreiter = st.tabs(namen, key="lex_unterreiter", default=lexikon.KAPITEL_NAMEN[aktuell],
+                          on_change=_lexikon_kapitel_gewechselt)
+    je = lexikon.je_kapitel(alle)
+    for (kap, name), reiter in zip(lexikon.KAPITEL, unterreiter):
+        if not getattr(reiter, "open", True):
+            continue
+        with reiter:
+            startseite_link()
+            st.markdown(f"### {name}", anchors=False)
+            st.markdown(f"{len(je[kap])} Einträge.")
+            _lexikon_kapitel_zeigen(je[kap])
+            startseite_link()
+
+
+if tab_lexikon is not None:
+    with tab_lexikon:
+        # Der englische Hinweis unter dem Suchfeld bleibt stumm wie im Scanner.
+        st.html("<style>.st-key-lexikon_bereich [data-testid='InputInstructions'] {display: none;}</style>")
+        with st.container(key="lexikon_bereich"):
+            lexikon_reiter()
 
 
 # --- Ab hier nur mit vollem Zugang -----------------------------------------

@@ -174,6 +174,8 @@ def block_b():
                     "ibd_ratings",
                     # Reiter Berichte und Gap-Up-Bericht (Gerhard, 29.09.2026, Teil 4 und 5)
                     "berichte", "gapup_bericht", "rslinie_bericht",
+                    # Lexikon (Gerhard, 29.09.2026, Teil 3 b)
+                    "lexikon",
                     # Nachschlagen (Mathias, 13.09.2026)
                     "nachschlagen",
                     # Wochenputz und Anmeldung (Mathias, 13.09.2026)
@@ -4009,6 +4011,11 @@ def oberflaechen_texte(quelle=None) -> list:
     raus += [("Scanner", x) for x in sa.grenzen_saetze() + sa.chartmuster_erklaerung()]
     raus += [("Scanner", sa.handelbar_text()), ("Scanner", sa.langweile_text())]
     raus += [("Scanner", n) for _k, n in sa.UMFANG]
+    # Das Lexikon (Teil 3 b): Kapitel, Gruppen, Begriffe, Erklaerungen, Beispiele
+    import lexikon
+    raus += [("Lexikon", n) for _k, n in lexikon.KAPITEL]
+    raus += [("Lexikon", x) for e in lexikon.eintraege() for x in (e["gruppe"], e["begriff"], e["text"],
+                                                                     e["beispiel"]) if x]
     raus += [("Nachschlagen", f"{n}: {x}" if n else x) for liste in nachschlagen.abschnitt_erklaerungen().values()
              for n, x in liste]
     raus += [("Marktampel", x) for x in marktampel.REGELWERK + [marktampel.REGEL_SATZ]]
@@ -4392,9 +4399,39 @@ def templates_pruefen(pfad) -> tuple:
     return True, f"{len(sa.TEMPLATES)} Templates ganz oben, nur die Auswahl, im Regelwerk beschrieben"
 
 
+def scanner_ohne_erklaerung_pruefen(pfad) -> tuple:
+    """KEINE ERKLAERUNGEN IM SCANNER (Gerhard, 29.09.2026, Teil 3 a): "In den
+    Feldern steht nur noch der Name des Felds, der Haken und Von-Bis, keine
+    Beschreibungen, keine Hilfetexte." Erklaert wird im Reiter Lexikon. Geprueft
+    am Quelltext von scanner_reiter, _sc_templates und _sc_schnellbox: kein
+    Erklaerungsknopf, kein Erklaertext aus den Registern, keine Frage "Was ist",
+    und im Scanner nur die Beschriftungen fuer Technik und fehlende Daten.
+    Liefert (ok, Befund)."""
+    import ast as _ast
+    import re as _re
+    quelle = open(pfad, encoding="utf-8").read()
+    baum = _ast.parse(quelle)
+    namen = ("scanner_reiter", "_sc_templates", "_sc_schnellbox")
+    funktionen = {k.name: _ast.get_source_segment(quelle, k) or "" for k in baum.body
+                  if isinstance(k, _ast.FunctionDef) and k.name in namen}
+    if set(funktionen) != set(namen):
+        return False, f"Funktionen fehlen: {sorted(set(namen) - set(funktionen))}"
+    verboten = ("_sc_erklaerung(", "strategie_text(", "handelbar_text(", "langweile_text(", "branche_erklaerung(",
+                "SCANNER_ERKLAERUNGEN", "SEKTOR_ERKLAERUNGEN", ".erklaerung", "Was ist ")
+    funde = [f"{n}: {v}" for n, q in funktionen.items() for v in verboten if v in q]
+    beschriftungen = _re.findall(r"st\.caption\((.*)", funktionen["scanner_reiter"])
+    fremd = [c[:60] for c in beschriftungen if "technik_zeile" not in c and "nicht geladen" not in c]
+    if funde or fremd:
+        return False, "Erklaerungen im Scanner: " + ", ".join(funde + fremd)
+    return True, (f"kein Erklaerungsknopf und kein Erklaertext in {len(funktionen)} Funktionen des Scanners, "
+                  f"{len(beschriftungen)} Beschriftungen nur fuer Technik und fehlende Daten")
+
+
 def erklaerungsknoepfe_pruefen(pfad) -> tuple:
-    """Im Scanner steht unter JEDEM Kriterium ein Erklaerungsknopf (Mathias und
-    Gerhard, 23.09.2026). Geprueft am Quelltext von scanner_reiter, von Teil 1
+    """BIS 30.09.2026: Im Scanner stand unter JEDEM Kriterium ein
+    Erklaerungsknopf (Mathias und Gerhard, 23.09.2026). Seit Teil 3 a vom
+    29.09.2026 gilt das Gegenteil (scanner_ohne_erklaerung_pruefen); die
+    Funktion bleibt fuer den Knopf im Reiter Einstellungen stehen. Geprueft am Quelltext von scanner_reiter, von Teil 1
     bis zum Scan: Auf jedes Kontrollfeld, jede Auswahl und jede Auswahlliste folgt
     unmittelbar ein Aufruf von _sc_erklaerung. Ausgenommen sind nur die
     Kontrollfelder, die eine Gruppe aufklappen (Beschriftung beginnt mit
@@ -4560,9 +4597,27 @@ def block_i():
            "for item in items_nach_einstellung(items):" in waechter and "stumm_vermerken(" in waechter
            and waechter.count("einstellungen_nachziehen()") >= 3)
 
-    ok, zusatz = erklaerungsknoepfe_pruefen(app)
-    pruefe("I", "Unter jedem Kriterium im Scanner steht ein Erklaerungsknopf, die Schnellbox ausgenommen", ok,
+    ok, zusatz = scanner_ohne_erklaerung_pruefen(app)
+    pruefe("I", "Teil 3 a: Im Scanner stehen nur Name, Haken und Von-Bis, keine Erklaerung und kein Hilfetext", ok,
            zusatz)
+    import lexikon as _lex
+    _lx = _lex.eintraege()
+    _ln = {_lex._norm(e["begriff"]) for e in _lx} | {_lex._norm(x) for e in _lx for x in e["auch"]}
+    _kriterien = ([f.titel for f in sa.FELDER] + [n.replace("Chart-Signal: ", "") for k, n in sa.AUSWAHL if k]
+                  + [f"Sektor {sa.sektor_name(s)}" for s in sa.SEKTOREN] + [sa.OHNE_SEKTOR]
+                  + [t["name"] for t in sa.TEMPLATES] + [f"Zahlen {x}" for _k, x, _p, _l in sa.TERMIN_TEILE]
+                  + ["Nur handelbare Aktien", "Langweilige Darvas-Boxen aussortieren",
+                     "Junge Titel mit vorläufigem RS mitnehmen", "Wie genau das Muster passen muss",
+                     "Nach Zahlenterminen filtern", "Auch Termine während des Handels oder ohne bekannte Tageszeit",
+                     "Welche Aktien", "Schnellbox", "Templates bekannter Trader", "Nasdaq-Branchen"])
+    ohne = [k for k in _kriterien if _lex._norm(k) not in _ln]
+    pruefe("I", f"Teil 3 b: Jedes der {len(_kriterien)} Kriterien des Scanners steht im Lexikon, mit Erklaerung und "
+                "Beispiel", not ohne, nennen(ohne))
+    _quelle_app = app.read_text(encoding="utf-8")
+    pruefe("I", "Der Reiter Lexikon steht im vollen Zugang und ohne Passwort hinter dem Regelwerk, Gaeste haben ihn "
+                "nicht",
+           _quelle_app.count('"Regelwerk", "Lexikon", "Einstellungen"') == 2 and "tab_lexikon = None" in _quelle_app
+           and "if tab_lexikon is not None:" in _quelle_app)
     ok, zusatz = schnellbox_pruefen(app)
     pruefe("I", "Die Schnellbox steht direkt unter den Templates, schlank und mit Teil 2 verknuepft", ok, zusatz)
     ok, zusatz = templates_pruefen(app)

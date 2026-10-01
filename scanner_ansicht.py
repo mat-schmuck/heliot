@@ -432,6 +432,10 @@ HOCH_TIEF = (("1t", "den letzten Handelstag", "Tageshoch", "Tagestief"),
 # Meldung und kann schon vorbei sein (siehe nachschlagen._periode_kopf).
 PERIODEN_REV = (("0q", "laufendes Quartal"), ("1q", "nächstes Quartal"), ("0y", "laufendes Geschäftsjahr"),
                 ("1y", "nächstes Geschäftsjahr"))
+# Derselbe Zeitraum im Akkusativ fuer die Erklaerungen: "fuer das laufende
+# Quartal" (bis 01.10.2026 stand dort "fuer das laufendes Quartal").
+PERIODEN_REV_AKK = {"0q": "das laufende Quartal", "1q": "das nächste Quartal", "0y": "das laufende Geschäftsjahr",
+                    "1y": "das nächste Geschäftsjahr"}
 _FEHLT = object()
 
 
@@ -1339,7 +1343,8 @@ def _felder():
                 felder.append(F(f"rev_{richtung}_{tage}t_{k}", "revisionen",
                                 f"{wort} der Gewinnschätzung in {tage} Tagen, {name}",
                                 spalte=f"rev_{richtung}_{tage}t_{k}", einheit="", stellen=0, analysten=True,
-                                erklaerung=f"Wie viele Analysten ihre Schätzung des Gewinns je Aktie für das {name} "
+                                erklaerung=f"Wie viele Analysten ihre Schätzung des Gewinns je Aktie für "
+                                           f"{PERIODEN_REV_AKK[k]} "
                                            f"laut Yahoo in den letzten {tage} Tagen "
                                            f"{'angehoben' if richtung == 'hoch' else 'gesenkt'} haben; nur für die "
                                            "Aktien der Wochenlisten."))
@@ -1348,18 +1353,21 @@ def _felder():
                             f"Veränderung des Gewinnkonsens in {tage} Tagen, {name}", signed=True, analysten=True,
                             rechnung=_anteil(f"rev_eps_jetzt_{k}", f"rev_eps_{tage}t_{k}"),
                             quellen=(f"rev_eps_jetzt_{k}", f"rev_eps_{tage}t_{k}"),
-                            erklaerung=f"Erwarteter Gewinn je Aktie für das {name} heute gegen den Wert vor {tage} "
+                            erklaerung=f"Erwarteter Gewinn je Aktie für {PERIODEN_REV_AKK[k]} heute gegen den Wert "
+                                       f"vor {tage} "
                                        "Tagen, laut Yahoo; nur bei positivem Vergleichswert und nur für die Aktien "
                                        "der Wochenlisten."))
     for tage in sd.kk.STUFEN_FENSTER:
-        for art, titel, verb in (("hoch", "Heraufstufungen", "heraufgestuft haben"),
-                                 ("runter", "Herabstufungen", "herabgestuft haben"),
-                                 ("neu", "Erstbewertungen", "erstmals bewertet haben"),
-                                 ("ziel_rauf", "Angehobene Kursziele", "ihr Kursziel angehoben haben"),
-                                 ("ziel_runter", "Gesenkte Kursziele", "ihr Kursziel gesenkt haben")):
+        # Bis 01.10.2026 hiess es "die Aktie ... ihr Kursziel angehoben haben";
+        # das Objekt steht jetzt im Verbteil, damit jeder Satz stimmt.
+        for art, titel, verb in (("hoch", "Heraufstufungen", "die Aktie heraufgestuft haben"),
+                                 ("runter", "Herabstufungen", "die Aktie herabgestuft haben"),
+                                 ("neu", "Erstbewertungen", "die Aktie erstmals bewertet haben"),
+                                 ("ziel_rauf", "Angehobene Kursziele", "ihr Kursziel für die Aktie angehoben haben"),
+                                 ("ziel_runter", "Gesenkte Kursziele", "ihr Kursziel für die Aktie gesenkt haben")):
             felder.append(F(f"stufen_{art}_{tage}t", "revisionen", f"{titel} in {tage} Tagen",
                             spalte=f"stufen_{art}_{tage}t", einheit="", stellen=0, analysten=True,
-                            erklaerung=f"Wie viele Analysten die Aktie laut Yahoo in den letzten {tage} Tagen {verb}; "
+                            erklaerung=f"Wie viele Analysten laut Yahoo in den letzten {tage} Tagen {verb}; "
                                        "nur für die Aktien der Wochenlisten."))
     felder += [
         # Leerverkaeufe

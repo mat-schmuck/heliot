@@ -644,6 +644,13 @@ def eintrag(schluessel: str) -> dict | None:
     return next((a for a in ALARME if a["schluessel"] == schluessel), None)
 
 
+# Eintraege, die gar nicht melden: Ihr Absatz im Regelwerk und im Lexikon
+# bekommt keinen Satz zur Volumenhuerde, sonst stuende neben "eine Meldung gibt
+# es bisher nicht" eine Huerde fuer die Meldung (gefunden beim Gegenlesen des
+# Lexikons am 01.10.2026).
+OHNE_MELDUNG = ("crash",)
+
+
 def regelwerk_gruppen(einst: dict | None = None) -> list[tuple[str, str, list[tuple[str, str]]]]:
     """Das Regelwerk der Strategien, aus dem Register erzeugt (Frage 76):
     je Gruppe (Name, Einleitung, [(Strategie, Absatz)]). Eine neue Strategie
@@ -655,7 +662,8 @@ def regelwerk_gruppen(einst: dict | None = None) -> list[tuple[str, str, list[tu
         if g not in STRATEGIE_GRUPPEN:
             continue
         absaetze = [(a["name"], " ".join(t for t in ((a.get("regel") or a["erklaerung"]),
-                                                     volumen_satz(einst, a["schluessel"])) if t))
+                                                     "" if a["schluessel"] in OHNE_MELDUNG
+                                                     else volumen_satz(einst, a["schluessel"])) if t))
                     for a in ALARME if a["gruppe"] == g]
         if absaetze:
             raus.append((gname, GRUPPEN_REGEL.get(g, ""), absaetze))
