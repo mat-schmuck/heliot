@@ -174,8 +174,8 @@ def block_b():
                     "ibd_ratings",
                     # Reiter Berichte und Gap-Up-Bericht (Gerhard, 29.09.2026, Teil 4 und 5)
                     "berichte", "gapup_bericht", "rslinie_bericht",
-                    # Lexikon (Gerhard, 29.09.2026, Teil 3 b)
-                    "lexikon",
+                    # Lexikon und Quiz (Gerhard, 29.09.2026, Teil 3 b und c)
+                    "lexikon", "quiz",
                     # Nachschlagen (Mathias, 13.09.2026)
                     "nachschlagen",
                     # Wochenputz und Anmeldung (Mathias, 13.09.2026)
@@ -4016,6 +4016,10 @@ def oberflaechen_texte(quelle=None) -> list:
     raus += [("Lexikon", n) for _k, n in lexikon.KAPITEL]
     raus += [("Lexikon", x) for e in lexikon.eintraege() for x in (e["gruppe"], e["begriff"], e["text"],
                                                                      e["beispiel"]) if x]
+    # Das Quiz (Teil 3 c): Kapitel, Fragen, Antworten, Erklaerungen
+    import quiz
+    raus += [("Quiz", n) for _k, n in quiz.KAPITEL]
+    raus += [("Quiz", x) for fr in quiz.fragen() for x in [fr["frage"], fr["erklaerung"]] + fr["antworten"]]
     raus += [("Nachschlagen", f"{n}: {x}" if n else x) for liste in nachschlagen.abschnitt_erklaerungen().values()
              for n, x in liste]
     raus += [("Marktampel", x) for x in marktampel.REGELWERK + [marktampel.REGEL_SATZ]]
@@ -4614,10 +4618,17 @@ def block_i():
     pruefe("I", f"Teil 3 b: Jedes der {len(_kriterien)} Kriterien des Scanners steht im Lexikon, mit Erklaerung und "
                 "Beispiel", not ohne, nennen(ohne))
     _quelle_app = app.read_text(encoding="utf-8")
-    pruefe("I", "Der Reiter Lexikon steht im vollen Zugang und ohne Passwort hinter dem Regelwerk, Gaeste haben ihn "
-                "nicht",
-           _quelle_app.count('"Regelwerk", "Lexikon", "Einstellungen"') == 2 and "tab_lexikon = None" in _quelle_app
-           and "if tab_lexikon is not None:" in _quelle_app)
+    pruefe("I", "Die Reiter Lexikon und Quiz stehen im vollen Zugang und ohne Passwort hinter dem Regelwerk, Gaeste "
+                "haben sie nicht",
+           _quelle_app.count('"Regelwerk", "Lexikon", "Quiz",') == 2 and "tab_lexikon = tab_quiz = None" in _quelle_app
+           and "if tab_lexikon is not None:" in _quelle_app and "if tab_quiz is not None:" in _quelle_app)
+    _qr = _quelle_app.split("def quiz_reiter():", 1)[1].split("\nif tab_quiz is not None:", 1)[0] \
+        if "def quiz_reiter():" in _quelle_app else ""
+    pruefe("I", "Teil 3 c: Das Quiz mit Ergebnis je Kapitel und gesamt, Wiederholen, Ansage des Urteils, Antworten "
+                "ohne Vorauswahl, Erklaerung und Verweis ins Lexikon",
+           "quiz.auswertung(" in _qr and "Kapitel wiederholen" in _qr and "Ganzes Quiz von vorn" in _qr
+           and "_quiz_status(" in _qr and "index=None" in _qr and "Mehr im Lexikon unter" in _qr
+           and 'fr["erklaerung"]' in _qr and "Gesamt:" in _qr)
     ok, zusatz = schnellbox_pruefen(app)
     pruefe("I", "Die Schnellbox steht direkt unter den Templates, schlank und mit Teil 2 verknuepft", ok, zusatz)
     ok, zusatz = templates_pruefen(app)

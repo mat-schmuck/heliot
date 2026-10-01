@@ -400,6 +400,15 @@ def beispiel_schwellen() -> list:
                             gapup_bericht.MARKTKAP_MIN_MRD), (5.0, 0.05, 15.0, 0.7)),
         ("Sektor-Radar", (CFG["sektor_radar"]["ma_tage"], CFG["sektor_radar"]["vol_pct_schwelle"]), (10, 50.0)),
         ("Zahlen-Karenz", CFG["zahlen_karenz"]["handelstage"], 2),
+        # Dazu die Werte, gegen die Antworten im Quiz stehen: Aenderte sich einer,
+        # koennte eine falsche Antwort richtig werden (Alle 60 Sekunden und Jede
+        # Minute, Ab 6 und Ab 1).
+        ("Pruef-Takt des Waechters", b["pruef_takt_sekunden"], 2),
+        ("Power-Gap", (CFG["gap_and_go"]["gap_min"], CFG["gap_and_go"]["einstieg_grenze"]), (0.07, 0.03)),
+        ("Distribution Days und Follow-through Day",
+         (CFG["marktbreite"]["dd_verlust_pct"], CFG["marktbreite"]["dd_druck_ab"], CFG["marktbreite"]["dd_korrektur_ab"],
+          CFG["marktbreite"]["ftd_ab_tag"], CFG["marktbreite"]["ftd_gewinn_pct"]), (0.2, 4, 6, 4, 1.25)),
+        ("Trend Template RS", ps.CFG["tt_rs_min"], 70),
     ]
 
 
@@ -492,6 +501,12 @@ def selbsttest() -> int:
     eigen = eintraege({"volumen_ueber": {"rechteck": 75}})
     rt = next(e for e in eigen if e["begriff"] == "Rectangle Top")
     p("Die Volumenhuerde im Lexikon folgt den Einstellungen", "plus 75 Prozent" in rt["text"], rt["text"][-160:])
+    import gewinn_zonen as gz
+    p("Klimax: die Grenzen im Text sind die, die der Code prueft, samt Spielraum nach oben",
+      gz.klimax_zeichen_4_ma200_abstand(2.29, 1.0)[0] and not gz.klimax_zeichen_4_ma200_abstand(2.31, 1.0)[0]
+      and not gz.klimax_zeichen_4_ma200_abstand(1.69, 1.0)[0]
+      and gz.klimax_zeichen_1_klimaxlauf(100, 174, 10, 9)[0] and not gz.klimax_zeichen_1_klimaxlauf(100, 176, 10, 9)[0]
+      and "25 bis 75 Prozent" in alle_texte and "70 bis 130 Prozent" in alle_texte)
     geaendert = [n for n, ist, soll in beispiel_schwellen() if not _gleich(ist, soll)]
     p("Die Beispiele beruhen auf den geltenden Schwellen; sonst die Beispiele nachrechnen", not geaendert,
       ", ".join(geaendert))

@@ -419,12 +419,17 @@ def begriffe(einst=None) -> list:
         "sichern oder These erneuern.",
         "Ein Insider-Kauf ist seit sechs Monaten im Depot: Zeitdeckel erreicht.")
     neu("stops", "Klimax",
+        # Die oberen Grenzen mit dem Spielraum, den gewinn_zonen pruefen: der
+        # Klimaxlauf bis zum 1,5-Fachen, der Abstand zur 200-Tage-Linie bis zum
+        # 1,3-Fachen (der Selbsttest von lexikon.py rechnet es am Code nach).
         "Zeichen nach William O'Neil, dass ein Anstieg sich erschöpft. Das System kennt fünf: ein Klimaxlauf von "
-        f"{_pz(g['klimax_pct_min'])} bis {_pz(g['klimax_pct_max'])} Prozent in höchstens {int(g['klimax_tage_max'])} "
+        f"{_pz(g['klimax_pct_min'])} bis {_pz(g['klimax_pct_max'] * 1.5)} Prozent in höchstens "
+        f"{int(g['klimax_tage_max'])} "
         f"Handelstagen nach mindestens {int(g['klimax_vorlauf_wochen_min'])} Wochen Anstieg; der größte "
         "Tagesgewinn seit Beginn der Bewegung; eine Erschöpfungslücke von mindestens "
         f"{_pz(g['erschoepfungsluecke_min_pct'])} Prozent nach langem Lauf; ein Abstand von "
-        f"{_pz(g['ma200_abstand_min'])} bis {_pz(g['ma200_abstand_max'])} Prozent über der 200-Tage-Linie; ein Kurs "
+        f"{_pz(g['ma200_abstand_min'])} bis {_pz(g['ma200_abstand_max'] * 1.3)} Prozent über der 200-Tage-Linie; ein "
+        "Kurs "
         f"mindestens {_pz(g['kanal_ueberschreitung_min_pct'])} Prozent über der oberen Kanallinie. Jedes Zeichen "
         "kommt je Aktie einmal als Bericht: Verkauf in die Stärke erwägen. Drei Zeichen prüft der Wächter mit dem "
         "ersten Kurs des Tages; der größte Tagesgewinn und die Erschöpfungslücke brauchen die fertige Tageskerze "

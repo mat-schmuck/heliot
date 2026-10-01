@@ -50,6 +50,7 @@ import marktampel
 import nachschlagen
 import oberflaeche
 import pattern_scanner as ps
+import quiz
 import scanner_ansicht as sa
 import zugang
 
@@ -1438,9 +1439,10 @@ if rolle != "gast":
 # Registerkarte, gleich hinter der Startseite; nur im vollen Zugang, weil die
 # Berichte im privaten Datenrepo liegen (Gaeste sehen nichts daraus, S4).
 # DER REITER LEXIKON (Gerhard, 29.09.2026, Teil 3 b) steht hinter dem Regelwerk,
-# vor den Einstellungen; Gaeste bekommen ihn nicht (S4).
+# vor den Einstellungen, dahinter der Reiter Quiz (Teil 3 c); Gaeste bekommen
+# beide nicht (S4).
 tab_berichte = None
-tab_lexikon = None
+tab_lexikon = tab_quiz = None
 tab_upload = tab_gast = tab_ablaeufe = tab_einst = None
 if rolle == "gast":
     st.markdown("## Scanner", anchors=False)
@@ -1448,17 +1450,18 @@ if rolle == "gast":
     tab_liste = tab_scan = tab_info = None
 elif rolle == "voll":
     (tab_liste, tab_berichte, tab_scan, tab_scanner, tab_upload, tab_gast, tab_ablaeufe, tab_info, tab_lexikon,
-     tab_einst) = st.tabs(["Liste prüfen", "Berichte", "Aktueller Scan", "Scanner", "Wochenlisten", "Gastzugang",
-                           "Abläufe", "Regelwerk", "Lexikon", "Einstellungen"])
+     tab_quiz, tab_einst) = st.tabs(["Liste prüfen", "Berichte", "Aktueller Scan", "Scanner", "Wochenlisten",
+                                     "Gastzugang", "Abläufe", "Regelwerk", "Lexikon", "Quiz", "Einstellungen"])
 else:
-    tab_liste, tab_scan, tab_scanner, tab_upload, tab_info, tab_lexikon, tab_einst = st.tabs(
-        ["Liste prüfen", "Aktueller Scan", "Scanner", "Wochenlisten", "Regelwerk", "Lexikon", "Einstellungen"])
+    tab_liste, tab_scan, tab_scanner, tab_upload, tab_info, tab_lexikon, tab_quiz, tab_einst = st.tabs(
+        ["Liste prüfen", "Aktueller Scan", "Scanner", "Wochenlisten", "Regelwerk", "Lexikon", "Quiz",
+         "Einstellungen"])
 
 # Der Link zur Startseite ganz oben in jeder Registerkarte (Antwort 11); der
 # am Ende kommt ganz unten im Skript, nach allem anderen Inhalt. Ein Gast hat
 # keine Registerkarten, nur den Scanner.
 REITER_ALLE = [r for r in (tab_liste, tab_berichte, tab_scan, tab_scanner, tab_upload, tab_gast, tab_ablaeufe,
-                           tab_info, tab_lexikon, tab_einst) if r is not None]
+                           tab_info, tab_lexikon, tab_quiz, tab_einst) if r is not None]
 if rolle != "gast":
     for _reiter in REITER_ALLE:
         with _reiter:
@@ -3161,6 +3164,138 @@ if tab_lexikon is not None:
         st.html("<style>.st-key-lexikon_bereich [data-testid='InputInstructions'] {display: none;}</style>")
         with st.container(key="lexikon_bereich"):
             lexikon_reiter()
+
+
+# --- Quiz ------------------------------------------------------------------
+# DER REITER QUIZ (Gerhard, 29.09.2026, Teil 3 c): rund 100 Fragen in sieben
+# Kapiteln, je vier Antworten, eine richtig, danach eine kurze Erklaerung samt
+# Verweis ins Lexikon; Ergebnis je Kapitel und gesamt, jedes Kapitel und das
+# ganze Quiz lassen sich wiederholen. Fuer VoiceOver: je Frage eine Ueberschrift,
+# die Antworten als Optionsfeld ohne Vorauswahl, darunter der Knopf Antwort
+# pruefen. Das Urteil sagt eine Statusmeldung an, die der Screenreader von
+# selbst vorliest, wie beim Scan; sie nennt die Nummer der Frage, damit zwei
+# richtige Antworten hintereinander beide angesagt werden. Beantwortete Fragen
+# bleiben mit Urteil und Erklaerung stehen, die naechste erscheint darunter;
+# der Knopf einer beantworteten Frage bleibt ausgegraut an seinem Platz, damit
+# der Fokus nicht ins Leere faellt. Der Stand gilt fuer diese Sitzung.
+_quiz_status = st.components.v2.component(
+    "heliot_quiz_status", js=_SC_STATUS_JS.replace("heliot_scan_status", "heliot_quiz_status"))
+
+
+@st.cache_data(show_spinner=False)
+def _quiz_fragen() -> list:
+    return quiz.fragen()
+
+
+def _quiz_stand() -> dict:
+    """{"runde": {Kapitel: Zahl}, "antworten": {Kennung: gewaehlte Stelle}}."""
+    return st.session_state.setdefault("quiz_stand", {"runde": {}, "antworten": {}})
+
+
+def _quiz_urteil(fr: dict, stelle: int) -> str:
+    if stelle == fr["richtig"]:
+        return "Richtig."
+    return "Leider falsch. Richtig ist: " + fr["antworten"][fr["richtig"]] + "."
+
+
+def _quiz_pruefen(fr: dict, schluessel: str, nummer: int):
+    stelle = st.session_state.get(schluessel)
+    if stelle is None:
+        return
+    _quiz_stand()["antworten"][fr["kennung"]] = int(stelle)
+    st.session_state["quiz_ansage"] = f"Frage {nummer}: " + _quiz_urteil(fr, int(stelle))
+
+
+def _quiz_wiederholen(kap: str, ansagen: bool = True):
+    stand = _quiz_stand()
+    stand["runde"][kap] = stand["runde"].get(kap, 0) + 1
+    for fr in _quiz_fragen():
+        if fr["kapitel"] == kap:
+            stand["antworten"].pop(fr["kennung"], None)
+    if ansagen:
+        st.session_state["quiz_ansage"] = f"Das Kapitel {quiz.KAPITEL_NAMEN[kap]} beginnt von vorn."
+
+
+def _quiz_alles_neu():
+    for kap, _n in quiz.KAPITEL:
+        _quiz_wiederholen(kap, ansagen=False)
+    st.session_state["quiz_ansage"] = "Das ganze Quiz beginnt von vorn."
+
+
+def _quiz_kapitel_gewechselt():
+    """Das gewaehlte Kapitel gemerkt, wie bei Lexikon und Berichten."""
+    name = st.session_state.get("quiz_unterreiter")
+    kap = next((k for k, n in quiz.KAPITEL if n == name), None)
+    if kap:
+        st.session_state["quiz_kapitel"] = kap
+
+
+def _quiz_ergebnis_satz(richtig: int, beantwortet: int, fragen: int) -> str:
+    if not beantwortet:
+        return f"noch nicht gespielt, {fragen} Fragen"
+    if beantwortet < fragen:
+        return f"{richtig} von {beantwortet} richtig, {fragen - beantwortet} Fragen offen"
+    return f"{richtig} von {fragen} richtig"
+
+
+@st.fragment
+def quiz_reiter():
+    """Der Reiter als Fragment: Antworten und Pruefen rechnen nur ihn neu."""
+    st.markdown("## Quiz", anchors=False)
+    alle = _quiz_fragen()
+    stand = _quiz_stand()
+    auswertung = quiz.auswertung(alle, stand["antworten"])
+    st.markdown(f"{len(alle)} Fragen in {len(quiz.KAPITEL)} Kapiteln zu den Regeln des Systems. Je Frage ist eine "
+                "Antwort richtig; nach dem Prüfen stehen eine kurze Erklärung und der Eintrag im Lexikon da.")
+    st.markdown("### Ergebnis", anchors=False)
+    st.markdown("\n".join(f"{i}. {name}: {_quiz_ergebnis_satz(*auswertung[k])}"
+                          for i, (k, name) in enumerate(quiz.KAPITEL, 1)))
+    r, b, n = auswertung["gesamt"]
+    st.markdown(f"Gesamt: {r} von {b} beantworteten Fragen richtig, {n} Fragen insgesamt." if b
+                else f"Gesamt: noch keine Frage beantwortet, {n} Fragen insgesamt.")
+    st.button("Ganzes Quiz von vorn", key="quiz_alles_neu", on_click=_quiz_alles_neu)
+    _quiz_status(key="quiz_status", data={"text": st.session_state.get("quiz_ansage", "")})
+    namen = [name for _k, name in quiz.KAPITEL]
+    aktuell = st.session_state.get("quiz_kapitel")
+    if aktuell not in quiz.KAPITEL_NAMEN:
+        aktuell = quiz.KAPITEL[0][0]
+    unterreiter = st.tabs(namen, key="quiz_unterreiter", default=quiz.KAPITEL_NAMEN[aktuell],
+                          on_change=_quiz_kapitel_gewechselt)
+    je = quiz.je_kapitel(alle)
+    for (kap, name), reiter in zip(quiz.KAPITEL, unterreiter):
+        if not getattr(reiter, "open", True):
+            continue
+        with reiter:
+            startseite_link()
+            st.markdown(f"### {name}", anchors=False)
+            runde = stand["runde"].get(kap, 0)
+            fragen_kap = je[kap]
+            for nummer, fr in enumerate(fragen_kap, 1):
+                schluessel = f"quiz_{fr['kennung']}_{runde}"
+                geprueft = fr["kennung"] in stand["antworten"]
+                st.markdown(f"#### Frage {nummer} von {len(fragen_kap)}", anchors=False)
+                st.radio(_schlicht(fr["frage"]), list(range(len(fr["antworten"]))), index=None, key=schluessel,
+                         format_func=lambda i, a=fr["antworten"]: _schlicht(a[i]), disabled=geprueft)
+                st.button("Antwort prüfen", key=f"{schluessel}_pruefen", on_click=_quiz_pruefen,
+                          args=(fr, schluessel, nummer),
+                          disabled=geprueft or st.session_state.get(schluessel) is None)
+                if not geprueft:
+                    break
+                urteil = _quiz_urteil(fr, stand["antworten"][fr["kennung"]])
+                st.markdown("\n\n".join((_md(urteil), _md(fr["erklaerung"]),
+                                          _md(f"Mehr im Lexikon unter {fr['lexikon']}."))))
+            richtig, beantwortet, zahl = auswertung[kap]
+            if beantwortet == zahl:
+                st.markdown("#### Ergebnis des Kapitels", anchors=False)
+                st.markdown(f"{richtig} von {zahl} Fragen richtig.")
+                st.button("Kapitel wiederholen", key=f"quiz_wiederholen_{kap}", on_click=_quiz_wiederholen,
+                          args=(kap,))
+            startseite_link()
+
+
+if tab_quiz is not None:
+    with tab_quiz:
+        quiz_reiter()
 
 
 # --- Ab hier nur mit vollem Zugang -----------------------------------------
