@@ -75,10 +75,15 @@ FRIST = 20                           # Sekunden je Abruf
 # Sektor-Aufsteiger, Stufe 3, Zahlen voraus, Gewinnzonen und die Abweichungen
 # der amtlichen Zahlen von der Pressemitteilung (Teil 4). Der Schlussbefund um
 # 15:45 New Yorker Zeit verteilt sich nach seinen Arten auf diese Unterreiter.
+# Dazu der RS-Linien-Bericht (30.09.2026 abends, Antworten 6 und 7) und der
+# Earnings-Bericht (Antworten 1 bis 5 und 12), den earnings_bericht.py auf dem
+# Zweig fundament-phase1 nach jedem Lauf der Vorabwerte ablegt.
 ARTEN = [
     ("verkauf", "Verkaufssignale"),
     ("gapup", "Gap-Ups vorbörslich"),
+    ("earnings", "Earnings"),
     ("abend", "Abendbericht"),
+    ("rslinie", "RS-Linie auf dem Hoch"),
     ("klimax", "Klimax"),
     ("zeitdeckel", "Zeitdeckel"),
     ("stufe3", "Stufe 3"),
