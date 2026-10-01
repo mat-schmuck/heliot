@@ -1,7 +1,16 @@
 {
   "heute_gemeldet": {
     "tag": "2026-10-01",
-    "marken": []
+    "marken": [
+      "SNPS|EMA Crossback",
+      "SNPS|@445.58",
+      "SNPS|Rectangle Top",
+      "SNPS|@445.93",
+      "VICR|Cup & Handle (Wochenbasis)",
+      "VICR|@297.01",
+      "SNPS|Pocket Pivot",
+      "SNPS|@445.57"
+    ]
   },
   "gemeldet": {
     "INSIDER|FTK|pfad_a|1": "2026-09-16",
@@ -276,7 +285,11 @@
     "GEWINN|zonenwechsel|FORM|Fallback: 20-Tage-Hoch (Pivot)|stark": "2026-10-01",
     "GEWINN|zonenwechsel|FORM|Rectangle Top|stark": "2026-10-01",
     "GEWINN|zonenwechsel|HPE|1|stark": "2026-10-01",
-    "GEWINN|zonenwechsel|INTC|Fallback: MA50-R\u00fcckeroberung|stark": "2026-10-01"
+    "GEWINN|zonenwechsel|INTC|Fallback: MA50-R\u00fcckeroberung|stark": "2026-10-01",
+    "UEBER|SNPS|EMA Crossback": "2026-10-01",
+    "UEBER|SNPS|Rectangle Top": "2026-10-01",
+    "UEBER|VICR|Cup & Handle (Wochenbasis)": "2026-10-01",
+    "UEBER|SNPS|Pocket Pivot": "2026-10-01"
   },
   "gemeldet_kp": {
     "CXW|Cup & Handle (Wochenbasis)": 31.67,
@@ -481,7 +494,11 @@
     "TNGX|EMA Crossback": 24.81,
     "BEST|TNGX|EMA Crossback": 24.81,
     "CDNA|Inside Day": 65.48,
-    "BEST|CDNA|Inside Day": 65.48
+    "BEST|CDNA|Inside Day": 65.48,
+    "UEBER|SNPS|EMA Crossback": 445.58,
+    "UEBER|SNPS|Rectangle Top": 445.93,
+    "UEBER|VICR|Cup & Handle (Wochenbasis)": 297.01,
+    "UEBER|SNPS|Pocket Pivot": 445.57
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-10-01"
