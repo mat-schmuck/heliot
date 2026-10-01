@@ -87,6 +87,10 @@ jobs:
           SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
           MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          # Seit 01.10.2026 stehen die Abweichungen der amtlichen Zahlen im
+          # Reiter Berichte der App (Gerhard, 30.09.2026 nachts, Teil 4),
+          # abgelegt im privaten Datenrepo; NTFY_TOPIC bleibt fuer Stoerungen.
+          DATEN_TOKEN: ${{ secrets.DATEN_TOKEN }}
         run: |
           if [ "${{ inputs.modus }}" = "probe" ]; then
             python vorabwerte_8k.py --modus probe --cik "${{ inputs.cik }}" --accession "${{ inputs.accession }}"

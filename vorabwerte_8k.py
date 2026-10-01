@@ -652,8 +652,15 @@ def lauf_abgleich(daten, firma_laden=None, log=print, hoechstens_alter_tage=120)
     log(f"Ergebnis: {bilanz}")
     # Antwort 3: gemeldet wird nur, wenn Umsatz UND EPS abweichen; ein Bericht
     # je Lauf, laufende Nummern, Strichpunkt zwischen den Angaben.
+    # SEIT 01.10.2026 IM REITER BERICHTE der App, nicht mehr per ntfy (Gerhard,
+    # 30.09.2026 nachts, Teil 4: "Abweichungen der amtlichen Zahlen von der
+    # Pressemitteilung" in den Reiter). Scheitert die Ablage, sagt es eine
+    # Stoerungsmeldung auf ntfy, denn technische Warnungen bleiben dort.
     if meldungen:
-        ke.push("Vorabwerte: amtliche Zahlen weichen von der Pressemitteilung ab", "\n".join(meldungen))
+        import berichte
+        titel = "Vorabwerte: amtliche Zahlen weichen von der Pressemitteilung ab"
+        if not berichte.ablegen("amtlich", titel, meldungen, melder=log):
+            ke.push("Störung: Bericht nicht im Reiter Berichte", titel)
     return bilanz
 
 
