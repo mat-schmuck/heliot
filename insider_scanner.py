@@ -5,7 +5,9 @@ INSIDER-KAUF-SCANNER — Bewertungslogik (Gerhards Kapitel vom 14.08.2026)
 =========================================================================
 Erkennt bedeutsame Insider-Kaeufe (SEC Form 4, Transaktionscode "P" =
 echter Kauf am freien Markt, NICHT Zuteilung oder Optionsausuebung) ueber
-den GESAMTEN US-Markt, ab 300 Mio $ Marktkapitalisierung.
+den GESAMTEN US-Markt, ab 700 Mio $ Marktkapitalisierung (Gerhard,
+01.10.2026, Antwort 4: einheitlich mit allen anderen Berichten; bis dahin
+300 Mio $).
 
 Eigenstaendiges Kapitel, kein Zusatz zu bestehenden Mustern. Diese Datei
 ist die reine Rechnung und braucht kein Netz; die Datenbeschaffung steht
@@ -54,7 +56,7 @@ try:
     CFG_INSIDER = config.CFG["insider"]
 except Exception:                      # Modulprobe ohne config
     CFG_INSIDER = {
-        "min_marktkap": 300_000_000,
+        "min_marktkap": 700_000_000,
         "pfad_a_dollar_min": 5_000_000,
         "pfad_b_dollar_pro_person": 250_000,
         "pfad_b_min_insider": 3,
@@ -274,7 +276,7 @@ def selbsttest() -> int:
     # --- Gerhards neun Testfaelle, in der Sache unveraendert ---
     r = pruefe_insider_signal([InsiderKauf("CEO", 50_000_000, heute)],
                               marktkap=100_000_000)
-    p("Firma unter 300 Mio wird gar nicht bewertet",
+    p("Firma unter 700 Mio wird gar nicht bewertet",
       r["status"] == "firma_zu_klein", r["status"])
 
     # SEIT 01.10.2026 Gerhards neue Schwellen (Antwort 9): A ab 5 Mio Dollar,

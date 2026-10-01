@@ -1251,7 +1251,13 @@ def _lege_gleiche_preise_zusammen(items: list[dict], leise: bool = False) -> lis
     Zusammengelegt wird nur bei GLEICHEM Ticker UND gleichem Preis (auf den
     Cent). Verschiedene Preise bleiben getrennt: das sind zwei echte
     Ereignisse. Beim Volumen gilt der STRENGERE Faktor — wer VCP und Darvas
-    zugleich erfuellt, muss die VCP-Huerde nehmen."""
+    zugleich erfuellt, muss die VCP-Huerde nehmen.
+
+    SEIT 01.10.2026 AUCH ALARM-MUSTER (Gerhard, Antwort 6): "Zu EINER Meldung
+    zusammenlegen, zum Beispiel Rectangle Top + Inside Day. Eine Meldung,
+    eine Bot-Zeile, beide Muster genannt." Ein Alarm-Muster bringt seinen
+    Musterzusatz (O7, O8) mit; der zusammengelegte Kaufpunkt gilt dann als
+    Alarm-Muster im Logbuch."""
     nach_schluessel: dict[tuple, dict] = {}
     for it in items:
         schluessel = (it["ticker"].upper(), round(it["kaufpunkt"], 2))
@@ -1269,6 +1275,12 @@ def _lege_gleiche_preise_zusammen(items: list[dict], leise: bool = False) -> lis
         vorhanden["_roh"].append(dict(it))
         if it["strategie"] not in vorhanden["strategien"]:
             vorhanden["strategien"].append(it["strategie"])
+        if it.get("alarm"):
+            vorhanden["alarm"] = True
+            zusatz = str(it.get("zusatz") or "")
+            alt = str(vorhanden.get("zusatz") or "")
+            if zusatz and zusatz not in alt:
+                vorhanden["zusatz"] = f"{alt}; {zusatz}" if alt else zusatz
         # Strengere Volumenhuerde und die engere Absicherung gewinnen
         if vol_faktor(it["strategie"]) > vol_faktor(vorhanden["strategie"]):
             vorhanden["strategie"] = it["strategie"]
@@ -1289,13 +1301,11 @@ def alarm_items() -> list[dict]:
     (Gerhard, 22.09.2026, O1: ein eigener Weg neben den bestehenden
     Strategien, in einer eigenen Datei).
 
-    BEWUSST NICHT durch _lege_gleiche_preise_zusammen. So gebaut am
-    22.09.2026, als die Alarm-Muster noch Auskunft waren; seit sie scharf
-    sind (Gerhard, 29.09.2026, Teil 2), bleibt es dabei, weil seine Regeln
-    dazu nichts sagen. Liegen ein Alarm-Muster und ein Kaufpunkt der Mappe auf
-    demselben Preis, meldet nach Regel 1 nur der zuerst gepruefte
-    (heute_marken, Aktie plus Preis). Der Stop bekommt denselben Deckel wie
-    jeder eingelesene Stop."""
+    Bis 01.10.2026 bewusst NICHT zusammengelegt: Lagen ein Alarm-Muster und
+    ein Kaufpunkt der Mappe auf demselben Preis, meldete nach Regel 1 nur der
+    zuerst gepruefte. Seit Gerhards Antwort 6 vom 01.10.2026 legt
+    alarm_dazulegen sie zu EINER Meldung mit beiden Mustern zusammen. Der Stop
+    bekommt denselben Deckel wie jeder eingelesene Stop."""
     stand, aktien = alarm_muster.datei_lesen()
     items = _deckel_nachziehen(alarm_muster.eintraege(aktien))
     if items:
@@ -1306,6 +1316,23 @@ def alarm_items() -> list[dict]:
     else:
         print("Alarm-Muster: keine Kaufpunkte aus dem letzten Nachtscan.")
     return items
+
+
+def alarm_dazulegen(items: list[dict], alarm: list[dict]) -> list[dict]:
+    """Die Kaufpunkte der Alarm-Muster zu denen der Mappe (Gerhard, 01.10.2026,
+    Antwort 6): Liegen ein Alarm-Muster und ein Kaufpunkt der Mappe auf
+    demselben Preis, werden sie EIN Kaufpunkt mit beiden Mustern, also eine
+    Meldung und eine Bot-Zeile, "zum Beispiel Rectangle Top + Inside Day".
+    Zusammengelegt wird wie zwischen zwei Strategien der Mappe: gleiche Aktie,
+    gleicher Preis auf den Cent, die strengere Volumenhuerde und der hoehere
+    Stop gewinnen."""
+    roh = [r for it in items for r in (it.get("_roh") or [it])] + list(alarm or [])
+    zusammen = _lege_gleiche_preise_zusammen(roh, leise=True)
+    n = len(items) + len(alarm or []) - len(zusammen)
+    if n:
+        print(f"  {n} Alarm-Muster auf dem Preis eines anderen Kaufpunkts zusammengelegt; "
+              f"eine Meldung nennt beide Muster.")
+    return zusammen
 
 
 def einzel_frisch():
@@ -1506,7 +1533,8 @@ def stumm_vermerken(stumm: list[dict], schon_gemeldet: set, state: dict, trocken
         save_state(state)
 
 
-def einzel_kaufpunkte(ticker: str, firma: str = "", nur_muster: bool = True) -> list[dict]:
+def einzel_kaufpunkte(ticker: str, firma: str = "", nur_muster: bool = True,
+                      darvas_erlaubt: bool = True, name: str | None = None) -> list[dict]:
     """Die Kaufpunkte einer einzeln eingetragenen Aktie, SOFORT gerechnet
     (Gerhard, 22.09.2026, O11 und O13).
 
@@ -1516,20 +1544,27 @@ def einzel_kaufpunkte(ticker: str, firma: str = "", nur_muster: bool = True) -> 
     uebrigen Aktien bleiben davon unberuehrt.
 
     Dazu kommen die sechs Alarm-Muster derselben Aktie, damit auch sie ab
-    sofort gelten."""
+    sofort gelten; auf demselben Preis werden sie mit dem Muster EIN
+    Kaufpunkt (Antwort 6 vom 01.10.2026).
+
+    Dieselbe Rechnung braucht eine wieder freigegebene Aktie (Antwort 16):
+    darvas_erlaubt wie im Nachtscan nach der Darvas-Liste, und name ersetzt das
+    Kuerzel im Protokoll, das oeffentlich ist; dass eine Aktie gesperrt war,
+    ist privat."""
+    wer = name or f"Einzelaktie {ticker}"
     try:
         import pattern_scanner as ps
     except Exception as e:  # noqa: BLE001, ohne den Scanner gibt es kein Nachziehen
-        print(f"  Einzelaktie {ticker}: der Scanner ist hier nicht ladbar "
+        print(f"  {wer}: der Scanner ist hier nicht ladbar "
               f"({type(e).__name__}: {e}); sie wird ab dem nächsten Nachtscan überwacht.")
         return []
     kurse = ps.yahoo_einzeln(ticker)
     if kurse is None or len(kurse) < 60:
-        print(f"  Einzelaktie {ticker}: zu wenig Kurshistorie für Kaufpunkte.")
+        print(f"  {wer}: zu wenig Kurshistorie für Kaufpunkte.")
         return []
     items = []
     try:
-        res = ps.analyze(kurse, None, darvas_erlaubt=True, ticker=ticker)
+        res = ps.analyze(kurse, None, darvas_erlaubt=darvas_erlaubt, ticker=ticker)
         for nr, punkt in enumerate(res.get("points") or [], 1):
             strat = str(punkt.get("strategie") or "").strip()
             if not strat or punkt.get("kaufpunkt") in (None, 0):
@@ -1542,7 +1577,7 @@ def einzel_kaufpunkte(ticker: str, firma: str = "", nur_muster: bool = True) -> 
                           "stop": punkt.get("stop"), "ziel": punkt.get("ziel"),
                           "einzel": True})
     except Exception as e:  # noqa: BLE001
-        print(f"  Einzelaktie {ticker}: Musterrechnung fehlgeschlagen "
+        print(f"  {wer}: Musterrechnung fehlgeschlagen "
               f"({type(e).__name__}: {e}).")
     try:
         import chartmuster
@@ -1553,9 +1588,9 @@ def einzel_kaufpunkte(ticker: str, firma: str = "", nur_muster: bool = True) -> 
                           "stop": e.get("stop"), "ziel": None,
                           "zusatz": e.get("zusatz", ""), "alarm": True, "einzel": True})
     except Exception as e:  # noqa: BLE001
-        print(f"  Einzelaktie {ticker}: Alarm-Muster fehlgeschlagen "
+        print(f"  {wer}: Alarm-Muster fehlgeschlagen "
               f"({type(e).__name__}: {e}).")
-    return _deckel_nachziehen(items)
+    return _lege_gleiche_preise_zusammen(_deckel_nachziehen(items), leise=True)
 
 
 def einzel_nachziehen(items: list[dict], firmen: dict, gewuenscht: set,
@@ -1601,6 +1636,97 @@ def einzel_nachziehen(items: list[dict], firmen: dict, gewuenscht: set,
     if dazu:
         abruf.sort()
     return dazu, weg
+
+
+def _ohne_kuerzel_im_protokoll(kuerzel: str, rechnung):
+    """Fuehrt rechnung aus und gibt ihre Ausgaben nur ohne das Kuerzel weiter:
+    yfinance nennt bei einem Fehlschlag das Kuerzel, der Scanner womoeglich
+    auch, und das Protokoll ist oeffentlich. Die Meldungen von yfinance
+    schweigen dabei ganz."""
+    import contextlib
+    import io
+    import logging
+    import re
+    yf_log = logging.getLogger("yfinance")
+    stufe = yf_log.level
+    yf_log.setLevel(logging.CRITICAL)
+    aus = io.StringIO()
+    t = kuerzel.upper()
+    formen = {t, t.replace(".", "-"), t.replace("-", "."), blacklist.schluessel(t)}
+    muster = re.compile("|".join(rf"(?<![A-Z0-9]){re.escape(f)}(?![A-Z0-9])" for f in formen if f))
+    try:
+        with contextlib.redirect_stdout(aus), contextlib.redirect_stderr(aus):
+            return rechnung()
+    finally:
+        yf_log.setLevel(stufe)
+        for zeile in aus.getvalue().splitlines():
+            if zeile.strip() and not muster.search(zeile.upper()):
+                print(zeile)
+
+
+# FREIGEGEBEN, SOFORT UEBERWACHT (Gerhard, 01.10.2026, Antwort 16): "Sofort
+# ueberwachen. Der Waechter rechnet ihre Kaufpunkte gleich selbst, wie bei einer
+# einzeln ueberwachten Aktie, und sie kann noch am selben Tag melden." Je Lauf
+# wird eine Aktie hoechstens einmal gerechnet, auch wenn sie keinen Kaufpunkt
+# hat; sonst stuende in jedem Datentakt ein Abruf an.
+_FREIGABE_VERSUCHT: set = set()
+
+
+def freigabe_nachziehen(items: list[dict], firmen: dict, gewuenscht: set,
+                        abruf: list, ws=None, nur_muster: bool = True) -> list:
+    """Wieder freigegebene Aktien der Wochenlisten in die Wache (Antwort 16).
+
+    Der Nachtscan laesst gesperrte Aktien aus; die Mappe hat fuer sie also
+    keinen Kaufpunkt. Steht eine Aktie, die in den letzten Tagen freigegeben
+    wurde (blacklist.freigegeben), auf einer Wochenliste und hat sie keinen
+    Kaufpunkt in der Wache, rechnet der Waechter ihre Kaufpunkte selbst, wie
+    der Nachtscan: alle Strategien, die Darvas Box nur auf der Darvas-Liste,
+    dazu die Alarm-Muster. Einzeln eingetragene Aktien holt einzel_nachziehen
+    ohnehin. Ins Protokoll, das oeffentlich ist, kommen nur Zahlen: Dass eine
+    Aktie gesperrt war, ist privat. Liefert die neu ueberwachten Kuerzel."""
+    try:
+        frei = blacklist.freigegeben()
+    except Exception as e:  # noqa: BLE001, eine kaputte Liste legt die Wache nie lahm
+        print(f"  Freigaben nicht lesbar: {type(e).__name__}.")
+        return []
+    if not frei:
+        return []
+    schon = {blacklist.schluessel(i["ticker"]) for i in items}
+    kandidaten = []
+    for kuerzel, firma in listen.alle_ticker():
+        k = blacklist.schluessel(kuerzel)
+        if k in frei and k not in schon and k not in _FREIGABE_VERSUCHT:
+            kandidaten.append((kuerzel, firma))
+            _FREIGABE_VERSUCHT.add(k)
+    dazu, punkte = [], 0
+    for kuerzel, firma in kandidaten:
+        neu = _ohne_kuerzel_im_protokoll(kuerzel, lambda: einzel_kaufpunkte(
+            kuerzel, firma, nur_muster, darvas_erlaubt=listen.darf_darvas(kuerzel), name="Freigegebene Aktie"))
+        if not neu:
+            continue
+        for i in neu:
+            i["einzel"] = False
+            i["freigabe"] = True
+        items.extend(neu)
+        punkte += len(neu)
+        dazu.append(kuerzel)
+        if firma:
+            firmen.setdefault(kuerzel, firma)
+        gewuenscht.add(kuerzel)
+        if kuerzel not in abruf:
+            abruf.append(kuerzel)
+    if kandidaten:
+        print(f"Freigabe: {len(kandidaten)} wieder freigegebene Aktie(n) der Wochenlisten gerechnet, "
+              f"{len(dazu)} davon ab sofort mit {punkte} Kaufpunkt(en) in der Wache.")
+    if dazu and ws is not None:
+        try:
+            ws.dazu(dazu)
+        except Exception as e:  # noqa: BLE001
+            print(f"  (Live-Strom für {len(dazu)} freigegebene Aktie(n) nicht erweitert: "
+                  f"{type(e).__name__})")
+    if dazu:
+        abruf.sort()
+    return dazu
 
 
 # ---------------------------------------------------------------------------
@@ -3422,6 +3548,39 @@ def sektor_radar_hochgerechnet(minuten) -> list:
     return treffer
 
 
+def nachzieh_werte(offen: dict, verlaeufe: dict, kurse: dict, heute) -> tuple:
+    """21- und 50-Tage-Linie und ATR 14 in Prozent des Kurses je Kuerzel, aus
+    dem Kursverlauf der Nacht und dem Handelskurs von heute (Gerhard,
+    01.10.2026, Antwort 7: Die ATR waehlt die Nachzieh-Linie). Nur fuer
+    Kuerzel, deren Verlauf bis gestern reicht, wie bei den Klimax-Zeichen.
+    kurse: {Kuerzel: Kursdaten mit close, high, low, prev_datum}."""
+    ma21, ma50, atr = {}, {}, {}
+    for key, e in sorted(offen.items()):
+        sym = str(e.get("symbol") or "").upper()
+        q = kurse.get(sym)
+        if not q or sym in ma21:
+            continue
+        verlauf = verlaeufe.get(key)
+        daten = (verlauf or {}).get("daten") or []
+        letzter = str(daten[-1][0])[:10] if daten else None
+        vortag = q.get("prev_datum")
+        if not letzter or (vortag is not None and str(vortag) != letzter):
+            continue
+        try:
+            df = gewinnzonen_lauf._df_live(verlauf, heute, float(q["close"]), q.get("high"), q.get("low"))
+        except Exception:  # noqa: BLE001, ein kaputter Verlauf kostet nur diese Linie
+            continue
+        c = [float(x) for x in df["close"]]
+        if len(c) >= 21:
+            ma21[sym] = sum(c[-21:]) / 21.0
+        if len(c) >= 50:
+            ma50[sym] = sum(c[-50:]) / 50.0
+        a = exit_regeln.atr_prozent(df["high"].tolist(), df["low"].tolist(), c)
+        if a is not None:
+            atr[sym] = a
+    return ma21, ma50, atr
+
+
 def schlussnahe_befunde(topic, nacht, basis, ws, state, schon_gemeldet,
                         dry_run):
     """M1, VARIANTE A (Gerhard, 12.09.2026): Was nach den Regeln einen
@@ -3477,7 +3636,12 @@ def schlussnahe_befunde(topic, nacht, basis, ws, state, schon_gemeldet,
         for e in offen.values():
             seit = _handelstage_seit(e.get("einstieg_datum"), heute) or 0
             idx = max(idx, int(e.get("einstieg_index") or 0) + seit)
-        for m in positionen.pruefe_bestand(kopie, schluss, idx):
+        # DIE NACHZIEH-LINIE (Gerhard, 01.10.2026, Antwort 7): Bis dahin rief
+        # dieser Schritt das Regelwerk ohne Linien auf, Stufe C konnte um 15:45
+        # also nie melden. Jetzt mit 21- und 50-Tage-Linie und der ATR 14, die
+        # waehlt, welche gilt; die Meldung nennt die Linie.
+        ma21, ma50, atr = nachzieh_werte(offen, nacht.get("verlaeufe") or {}, kurse, heute)
+        for m in positionen.pruefe_bestand(kopie, schluss, idx, ma21=ma21, ma50=ma50, atr=atr):
             if m.get("aktion") == "teilverkauf":
                 continue                  # M2 meldet den im Handel selbst
             eintraege.append({"praefix": "REGEL", "typ": "kapitel11",
@@ -4528,9 +4692,10 @@ HEUTE_FELD = "heute_gemeldet"
 def heute_marken(t: dict) -> list[str]:
     """Woran Regel 1 einen Kaufpunkt wiedererkennt: Aktie plus Muster, je
     Muster eine Marke, und Aktie plus Preis auf den Cent. Der Preis faengt
-    zwei Wege mit verschiedenen Namen auf demselben Kaufpunkt ab, etwa ein
-    Alarm-Muster und eine Strategie der Mappe, die bewusst nicht
-    zusammengelegt werden (alarm_items)."""
+    zwei Wege mit verschiedenen Namen auf demselben Kaufpunkt ab. Ein
+    Alarm-Muster und eine Strategie der Mappe auf demselben Preis sind seit
+    01.10.2026 ein Kaufpunkt (alarm_dazulegen); die Preis-Marke bleibt fuer
+    die uebrigen Wege, etwa den Power-Gap."""
     tk = str(t.get("ticker") or "").upper()
     marken = [f"{tk}|{n}" for n in kp_namen(t)]
     kp = _zahl(t.get("kaufpunkt"))
@@ -5066,7 +5231,7 @@ def main():
     # DIE SECHS ALARM-MUSTER (Gerhard, 22.09.2026, O1): eigener Weg, eigene
     # Datei, eigene Meldung. Sie kommen NACH der Leer-Pruefung oben: Ist die
     # Mappe leer, weil der Wochenputz gelaufen ist, endet der Lauf wie bisher.
-    items += alarm_items()
+    items = alarm_dazulegen(items, alarm_items())
     tickers = [i["ticker"] for i in items]
     print(f"{len(items)} Kaufpunkte über {len(set(tickers))} Aktien werden geprüft "
           f"({datetime.now():%H:%M:%S}).")
@@ -5224,6 +5389,10 @@ def main():
     # Aktien bekommen ihn ueber ws.dazu.
     einzel_nachziehen(items, firmen, gewuenscht, abruf_ticker,
                       ws if ws_laeuft else None, nur_muster=not args.alle)
+    # FREIGEGEBENE AKTIEN (Gerhard, 01.10.2026, Antwort 16): ebenso beim Start
+    # und in jedem Datentakt.
+    freigabe_nachziehen(items, firmen, gewuenscht, abruf_ticker,
+                        ws if ws_laeuft else None, nur_muster=not args.alle)
     # ALARME JE MUSTER (23.09.2026): beim Start und in jedem Datentakt.
     einstellungen_nachziehen()
     quotes = {}              # vor dem ersten Datenabruf leer — die
@@ -5287,6 +5456,8 @@ def main():
             # ist sie im naechsten Datentakt in der Wache.
             einzel_nachziehen(items, firmen, gewuenscht, abruf_ticker,
                               ws if ws_laeuft else None, nur_muster=not args.alle)
+            freigabe_nachziehen(items, firmen, gewuenscht, abruf_ticker,
+                                ws if ws_laeuft else None, nur_muster=not args.alle)
             einstellungen_nachziehen()
 
         # Hauptquelle Yahoo (ein Abruf, kein Limit), Twelve Data als Rueckfall.

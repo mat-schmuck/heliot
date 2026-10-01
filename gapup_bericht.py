@@ -20,13 +20,20 @@ ueberwachte Aktien. Je Aktie steht dabei, ob sie auf einer Wochenliste steht.
 KRITERIEN (Teil 5):
     vorboerslicher Gap-Up ab 5 Prozent zum Schluss des Vortags;
     vorboersliches Volumen mindestens 5 Prozent des 50-Tage-Schnitts des
-    Tagesvolumens, in IBD-Sprache mindestens minus 95 Prozent ueber dem
-    50-Tage-Schnitt;
+    Tagesvolumens;
     Kurs ab 15 Dollar; Boersenwert ab 700 Millionen Dollar;
     alle, die passen, keine Obergrenze; sortiert nach vorboerslichem
     Dollarvolumen.
 Kurs und Gap rechnen mit dem vorboerslichen Kurs; der Boersenwert ist der
 der Nachttabelle, also zum Schluss des Vortags.
+
+SCHREIBWEISE DES VOLUMENS (Antwort 2 vom 01.10.2026, die einzige Ausnahme von
+der IBD-Sprache): "Im Gap-Up-Bericht steht das vorboersliche Volumen als
+'5 Prozent des Tagesschnitts', nicht als 'minus 95 Prozent'. Die Schwelle
+selbst bleibt gleich. Ueberall sonst bleibt die IBD-Schreibweise." Der
+Tagesschnitt ist der 50-Tage-Schnitt des Tagesvolumens; je Aktie steht ihr
+vorboersliches Volumen als Anteil davon, 80.000 Stueck bei einem Schnitt von
+einer Million also als 8 Prozent des Tagesschnitts.
 
 QUELLEN, am 01.10.2026 um 08:45 New Yorker Zeit gemessen:
     Yahoo liefert vorboersliche Kurse fuer den ganzen Markt gebuendelt
@@ -298,7 +305,7 @@ def volumen_pruefen(kands: list, vorboerse: dict) -> tuple:
         if not v or not schnitt:
             ohne.append(k)
             continue
-        k = dict(k, vol=v["volumen"], vol_pct=(v["volumen"] / schnitt - 1.0) * 100.0,
+        k = dict(k, vol=v["volumen"], vol_anteil=v["volumen"] / schnitt * 100.0,
                  dollar=v["volumen"] * k["kurs"])
         (gut if v["volumen"] >= VOL_MIN_ANTEIL * schnitt else wenig).append(k)
     gut.sort(key=lambda k: k["dollar"], reverse=True)
@@ -340,16 +347,22 @@ def abstand_hoch(k: dict):
     return ((1.0 + abst / 100.0) * (k["kurs"] / schluss) - 1.0) * 100.0
 
 
+def anteil_text(anteil) -> str:
+    """Das vorboersliche Volumen als Anteil am Tagesschnitt (Antwort 2 vom
+    01.10.2026): '8 Prozent des Tagesschnitts'."""
+    import nachschlagen as ns
+    return f"{ns.zahl(anteil)} Prozent des Tagesschnitts"
+
+
 def absatz(nr: int, k: dict, listen_map: dict, news: list) -> str:
     """Ein Absatz je Aktie, Strichpunkt zwischen den Angaben, Beistrich
     innerhalb (Meldungsformat), ohne Klammern und Gedankenstrich."""
     import nachschlagen as ns
-    import volumen
     z = k["zeile"]
     name = firmen_name(k)
     zeilen = [f"{nr}. {k['ticker']}, {name}; Kurs vorbörslich {ns.zahl(k['kurs'], 2)} Dollar; "
               f"Gap {ns.prozent(k['gap_pct'], 1)}"]
-    zeilen.append(f"Vorbörsliches Volumen {ns.zahl(k['vol'])} Stück, {volumen.prozent_text(k['vol_pct'], 'Prozent')}; "
+    zeilen.append(f"Vorbörsliches Volumen {ns.zahl(k['vol'])} Stück, {anteil_text(k['vol_anteil'])}; "
                   f"vorbörslich gehandelt für {ns._dollar_menge(k['dollar'])}")
     rs = _f(z.get("rs"))
     zeilen.append(f"{_wachstum(z, 'umsatz', 'Umsatz')}; {_wachstum(z, 'eps', 'Gewinn je Aktie')}; "
@@ -388,7 +401,7 @@ def bericht_bauen(jetzt, gut, wenig, ohne, zaehler, listen_map, news_map) -> tup
              if gut else "Gap-Ups vorbörslich: keine Aktie erfüllt die Kriterien")
     kopf = (f"Stand {t_wien:%H:%M} Uhr Wiener Zeit, {t_ny:%H:%M} Uhr in New York; ganzer US-Markt. "
             f"Kriterien: Gap ab {ns.zahl(GAP_MIN_PCT)} Prozent zum Schluss des Vortags; vorbörsliches Volumen "
-            f"mindestens minus 95 Prozent über dem 50-Tage-Schnitt; Kurs ab {ns.zahl(KURS_MIN)} Dollar; "
+            f"mindestens {anteil_text(VOL_MIN_ANTEIL * 100)}; Kurs ab {ns.zahl(KURS_MIN)} Dollar; "
             f"Börsenwert ab 700 Millionen Dollar; sortiert nach vorbörslichem Dollarvolumen.")
     absaetze = [kopf]
     if gut:
@@ -504,10 +517,11 @@ def selbsttest() -> int:
       and zaehler == {"mit_vorboerse": 6, "gap": 5, "kurs": 1, "marktkap": 1}, str(zaehler))
     vb = {"AAA": {"volumen": 80_000, "kurs": 108.0}, "DDD": {"volumen": 90_000, "kurs": 44.0}}
     gut, wenig, ohne = volumen_pruefen(kands, vb)
-    p("Volumen: ab minus 95 Prozent ueber dem Schnitt, ohne Nasdaq nicht pruefbar",
+    p("Volumen: ab 5 Prozent des Tagesschnitts, ohne Nasdaq nicht pruefbar",
       [k["ticker"] for k in gut] == ["AAA"] and [k["ticker"] for k in wenig] == ["DDD"]
       and [k["ticker"] for k in ohne] == ["FFF"])
-    p("Volumen in IBD-Sprache: 80.000 bei 1 Mio Schnitt sind minus 92", round(gut[0]["vol_pct"]) == -92)
+    p("Volumen als Anteil: 80.000 bei 1 Mio Schnitt sind 8 Prozent des Tagesschnitts",
+      round(gut[0]["vol_anteil"]) == 8 and anteil_text(gut[0]["vol_anteil"]) == "8 Prozent des Tagesschnitts")
     vb["DDD"] = {"volumen": 400_000, "kurs": 44.0}
     gut2, _w, _o = volumen_pruefen(kands, vb)
     p("Sortierung nach vorboerslichem Dollarvolumen", [k["ticker"] for k in gut2] == ["DDD", "AAA"],
@@ -518,13 +532,14 @@ def selbsttest() -> int:
                                     {"AAA": ["große Liste"]}, news)
     text = "\n".join(absaetze)
     p("Titel nennt die Zahl", titel == "Gap-Ups vorbörslich: 1 Aktie", titel)
-    p("Kopf nennt Zeit und Kriterien in IBD-Sprache",
+    p("Kopf nennt Zeit und Kriterien, das Volumen als Anteil am Tagesschnitt",
       absaetze[0].startswith("Stand 15:10 Uhr Wiener Zeit, 09:10 Uhr in New York; ganzer US-Markt.")
-      and "mindestens minus 95 Prozent über dem 50-Tage-Schnitt" in absaetze[0], absaetze[0])
+      and "vorbörsliches Volumen mindestens 5 Prozent des Tagesschnitts;" in absaetze[0]
+      and "minus 95" not in absaetze[0], absaetze[0])
     a1 = absaetze[1]
     p("Absatz: Nummer, Kuerzel, Name, Kurs und Gap", a1.startswith("1. AAA, Alpha Inc.; Kurs vorbörslich 108,00 Dollar; Gap plus 8,0 Prozent"), a1.split("\n")[0])
-    p("Absatz: Volumen in IBD-Sprache und Dollarvolumen",
-      "Vorbörsliches Volumen 80.000 Stück, minus 92 Prozent über dem 50-Tage-Schnitt; vorbörslich gehandelt für 8,6 Millionen Dollar" in a1,
+    p("Absatz: Volumen als Anteil am Tagesschnitt und Dollarvolumen",
+      "Vorbörsliches Volumen 80.000 Stück, 8 Prozent des Tagesschnitts; vorbörslich gehandelt für 8,6 Millionen Dollar" in a1,
       a1.split("\n")[1])
     p("Absatz: Wachstum je Quartal und RS",
       "Umsatz zum Vorjahresquartal plus 23 Prozent, davor plus 18 und plus 15 Prozent" in a1 and "RS 91" in a1, a1.split("\n")[2])

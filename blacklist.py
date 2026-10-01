@@ -23,6 +23,17 @@ aktiv false heisst abgehakt: Der Eintrag bleibt stehen und sperrt nichts.
 Geschrieben wird mit der Kennung (sha) des gelesenen Stands; hat inzwischen ein
 anderer geschrieben, wird neu gelesen und die Aenderung noch einmal angewandt.
 
+FREIGABEN (Gerhard, 01.10.2026, Antwort 16: "Sofort ueberwachen. Der Waechter
+rechnet ihre Kaufpunkte gleich selbst, wie bei einer einzeln ueberwachten
+Aktie, und sie kann noch am selben Tag melden."): Der Nachtscan laesst
+gesperrte Aktien aus, die Mappe hat fuer sie also keinen Kaufpunkt. Damit der
+Waechter weiss, wem er sie selbst rechnen muss, steht neben den Eintraegen,
+wann eine Aktie freigegeben wurde, abgehakt oder geloescht:
+    "freigaben": [{"ticker": "AAPL", "zeit": "2026-10-01T15:00:00Z"}]
+aendern() schreibt das selbst fort: Wer vorher gesperrt war und nachher nicht
+mehr, kommt dazu; wer wieder gesperrt ist, faellt heraus, ebenso alles, was
+aelter ist als FREIGABE_TAGE. freigegeben() liefert die Aktien dazu.
+
 WIRKUNG: gesperrt(ticker) fragt jedes Werkzeug. Die Liste laedt beim ersten
 Aufruf und danach hoechstens einmal je NACHLADEN_S Sekunden neu, damit eine
 Sperre im laufenden Waechter binnen einer Minute greift. Ohne Token ist sie
@@ -56,9 +67,10 @@ PFAD = "blacklist/blacklist.json"
 TOKEN_ENV = "DATEN_TOKEN"
 NACHLADEN_S = 60
 VERSUCHE = 5
+FREIGABE_TAGE = 7      # so lange steht eine Freigabe in der Datei; laenger als jede Luecke bis zum Nachtscan
 
 # Der Stand dieses Prozesses: die gesperrten Schluessel und wann geladen.
-_STAND = {"menge": set(), "eintraege": [], "zeit": 0.0, "fehler": "", "geladen": False}
+_STAND = {"menge": set(), "eintraege": [], "freigaben": [], "zeit": 0.0, "fehler": "", "geladen": False}
 _ABRUF = None          # im Selbsttest ersetzbar: (methode, url, token, koerper) -> (status, json)
 
 
@@ -82,25 +94,62 @@ def _abruf(methode, url, token, koerper=None):
     return berichte._abruf(methode, url, token, koerper)
 
 
-def datei_lesen(token: str) -> tuple:
-    """(Eintraege, sha oder None, Fehlertext). Eine fehlende Datei ist keine
-    Stoerung, sondern eine leere Liste."""
+def datei_lesen_ganz(token: str) -> tuple:
+    """(Eintraege, Freigaben, sha oder None, Fehlertext). Eine fehlende Datei
+    ist keine Stoerung, sondern eine leere Liste."""
     status, j = _abruf("GET", _url(), token)
     if status == 404:
-        return [], None, ""
+        return [], [], None, ""
     if status != 200 or not isinstance(j, dict):
-        return [], None, f"GitHub antwortete mit Code {status}"
+        return [], [], None, f"GitHub antwortete mit Code {status}"
     try:
         inhalt = base64.b64decode(j.get("content") or "").decode("utf-8")
         daten = json.loads(inhalt) if inhalt.strip() else {}
     except Exception as e:  # noqa: BLE001
-        return [], j.get("sha"), f"die Datei ist unlesbar ({type(e).__name__})"
+        return [], [], j.get("sha"), f"die Datei ist unlesbar ({type(e).__name__})"
     liste = daten.get("eintraege") if isinstance(daten, dict) else None
-    return [e for e in (liste or []) if isinstance(e, dict) and schluessel(e.get("ticker"))], j.get("sha"), ""
+    frei = daten.get("freigaben") if isinstance(daten, dict) else None
+    return ([e for e in (liste or []) if isinstance(e, dict) and schluessel(e.get("ticker"))],
+            [f for f in (frei or []) if isinstance(f, dict) and schluessel(f.get("ticker"))], j.get("sha"), "")
 
 
-def datei_text(eintraege) -> str:
-    return json.dumps({"eintraege": eintraege}, ensure_ascii=False, indent=1) + "\n"
+def datei_lesen(token: str) -> tuple:
+    """(Eintraege, sha oder None, Fehlertext); die Freigaben liest datei_lesen_ganz."""
+    liste, _frei, sha, fehler_text = datei_lesen_ganz(token)
+    return liste, sha, fehler_text
+
+
+def datei_text(eintraege, freigaben=None) -> str:
+    return json.dumps({"eintraege": eintraege, "freigaben": list(freigaben or [])}, ensure_ascii=False,
+                      indent=1) + "\n"
+
+
+def _zeit_lesen(text):
+    try:
+        return datetime.strptime(str(text), "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+    except (TypeError, ValueError):
+        return None
+
+
+def freigaben_fortschreiben(alt, neu, freigaben, jetzt=None) -> list:
+    """Die Freigaben nach einer Aenderung von alt zu neu: Wer gesperrt war und
+    jetzt nicht mehr, kommt mit der Zeit dazu; wer wieder gesperrt ist, faellt
+    heraus, ebenso alles, was aelter ist als FREIGABE_TAGE."""
+    jetzt = jetzt or datetime.now(timezone.utc)
+    gesperrt_neu = aktive(neu)
+    frei_neu = aktive(alt) - gesperrt_neu
+    grenze = jetzt.timestamp() - FREIGABE_TAGE * 86400
+    raus = []
+    for f in freigaben or []:
+        k = schluessel(f.get("ticker"))
+        z = _zeit_lesen(f.get("zeit"))
+        if k in gesperrt_neu or k in frei_neu or z is None or z.timestamp() < grenze:
+            continue
+        raus.append({"ticker": str(f.get("ticker")), "zeit": f.get("zeit")})
+    for e in alt or []:
+        if schluessel(e.get("ticker")) in frei_neu:
+            raus.append({"ticker": str(e.get("ticker")), "zeit": _jetzt_text(jetzt)})
+    return sorted(raus, key=lambda f: schluessel(f.get("ticker")))
 
 
 def aktive(eintraege) -> set:
@@ -153,18 +202,19 @@ def aendern(aenderung, token=None, nachricht="Blacklist", melder=print) -> tuple
         return False, [], f"{TOKEN_ENV} fehlt"
     letzter = ""
     for versuch in range(1, VERSUCHE + 1):
-        liste, sha, fehler = datei_lesen(token)
+        liste, frei, sha, fehler = datei_lesen_ganz(token)
         if fehler and sha is None:
             letzter = fehler
         else:
             neu = aenderung(liste)
+            frei_neu = freigaben_fortschreiben(liste, neu, frei)
             koerper = {"message": nachricht,
-                       "content": base64.b64encode(datei_text(neu).encode("utf-8")).decode("ascii")}
+                       "content": base64.b64encode(datei_text(neu, frei_neu).encode("utf-8")).decode("ascii")}
             if sha:
                 koerper["sha"] = sha
             status, _j = _abruf("PUT", _url(), token, koerper)
             if status in (200, 201):
-                _merken(neu)
+                _merken(neu, frei_neu)
                 return True, neu, ""
             letzter = f"GitHub antwortete mit Code {status}"
             if status in (401, 403, 404):
@@ -179,9 +229,9 @@ def aendern(aenderung, token=None, nachricht="Blacklist", melder=print) -> tuple
 # Abfrage (fuer jedes Werkzeug)
 # ---------------------------------------------------------------------------
 
-def _merken(eintraege):
-    _STAND.update({"menge": aktive(eintraege), "eintraege": list(eintraege), "zeit": time.monotonic(),
-                   "fehler": "", "geladen": True})
+def _merken(eintraege, freigaben=None):
+    _STAND.update({"menge": aktive(eintraege), "eintraege": list(eintraege), "freigaben": list(freigaben or []),
+                   "zeit": time.monotonic(), "fehler": "", "geladen": True})
 
 
 def nachladen(token=None, zwingend=False) -> None:
@@ -196,14 +246,14 @@ def nachladen(token=None, zwingend=False) -> None:
     if not zwingend and _STAND["fehler"] and time.monotonic() - _STAND["zeit"] < NACHLADEN_S:
         return                                 # nach einem Fehlschlag nicht in jeder Runde neu
     try:
-        liste, _sha, fehler = datei_lesen(token)
+        liste, frei, _sha, fehler = datei_lesen_ganz(token)
     except Exception as e:  # noqa: BLE001, ein Netzfehler darf kein Werkzeug stoppen
-        liste, fehler = [], f"{type(e).__name__}: {e}"
+        liste, frei, fehler = [], [], f"{type(e).__name__}: {e}"
     if fehler:
         _STAND["fehler"] = fehler
         _STAND["zeit"] = time.monotonic()
         return
-    _merken(liste)
+    _merken(liste, frei)
 
 
 def gesperrt(ticker) -> bool:
@@ -215,6 +265,19 @@ def gesperrt(ticker) -> bool:
 def gesperrte() -> set:
     nachladen()
     return set(_STAND["menge"])
+
+
+def freigegeben(jetzt=None) -> set:
+    """Die Aktien (als schluessel), die in den letzten FREIGABE_TAGE Tagen
+    freigegeben wurden und jetzt nicht gesperrt sind (Antwort 16)."""
+    nachladen()
+    grenze = (jetzt or datetime.now(timezone.utc)).timestamp() - FREIGABE_TAGE * 86400
+    raus = set()
+    for f in _STAND["freigaben"]:
+        z = _zeit_lesen(f.get("zeit"))
+        if z is not None and z.timestamp() >= grenze:
+            raus.add(schluessel(f.get("ticker")))
+    return raus - _STAND["menge"]
 
 
 def fehler() -> str:
@@ -251,14 +314,16 @@ def ohne_je_kuerzel(werte: dict) -> dict:
     return {t: v for t, v in (werte or {}).items() if schluessel(t) not in menge}
 
 
-def setzen(menge_oder_eintraege) -> None:
-    """Fuer Pruefungen: den Stand ohne Netz setzen (Kuerzel oder Eintraege)."""
+def setzen(menge_oder_eintraege, freigaben=None) -> None:
+    """Fuer Pruefungen: den Stand ohne Netz setzen (Kuerzel oder Eintraege);
+    freigaben als Kuerzel, freigegeben gerade eben, oder als Eintraege."""
     eintraege = [e if isinstance(e, dict) else {"ticker": e, "aktiv": True} for e in menge_oder_eintraege or []]
-    _merken(eintraege)
+    frei = [f if isinstance(f, dict) else {"ticker": f, "zeit": _jetzt_text()} for f in freigaben or []]
+    _merken(eintraege, frei)
 
 
 def zuruecksetzen() -> None:
-    _STAND.update({"menge": set(), "eintraege": [], "zeit": 0.0, "fehler": "", "geladen": False})
+    _STAND.update({"menge": set(), "eintraege": [], "freigaben": [], "zeit": 0.0, "fehler": "", "geladen": False})
 
 
 # ---------------------------------------------------------------------------
@@ -332,6 +397,36 @@ def selbsttest() -> int:
         p("Nach einem Fehlschlag wird nicht in jeder Runde neu gefragt", not anrufe)
         ok, _neu, f = aendern(lambda liste: liste, token="", melder=lambda *a: None)
         p("Ohne Token wird nichts geschrieben", not ok and TOKEN_ENV in f)
+        # Freigaben (Antwort 16 vom 01.10.2026)
+        t0 = datetime(2026, 10, 1, 13, 0, tzinfo=timezone.utc)
+        a = [{"ticker": "AAPL", "aktiv": True}, {"ticker": "BRK.B", "aktiv": True}, {"ticker": "X", "aktiv": False}]
+        a1 = umschalten(a, "AAPL", False)
+        f1 = freigaben_fortschreiben(a, a1, [], t0)
+        p("Freigabe: abgehakt kommt mit der Zeit in die Freigaben",
+          f1 == [{"ticker": "AAPL", "zeit": "2026-10-01T13:00:00Z"}], str(f1))
+        a2 = loeschen(loeschen(a1, "BRK-B"), "X")
+        f2 = freigaben_fortschreiben(a1, a2, f1, t0)
+        p("Freigabe: geloescht zaehlt auch, ein schon abgehakter Eintrag nicht, die alte bleibt",
+          [x["ticker"] for x in f2] == ["AAPL", "BRK.B"], str(f2))
+        f3 = freigaben_fortschreiben(a2, umschalten(a2, "AAPL", True), f2, t0)
+        p("Freigabe: wieder gesperrt faellt heraus", [x["ticker"] for x in f3] == ["BRK.B"], str(f3))
+        spaeter = datetime(2026, 10, 9, 13, 0, tzinfo=timezone.utc)
+        p("Freigabe: nach sieben Tagen faellt sie heraus",
+          freigaben_fortschreiben(a2, a2, f2, spaeter) == [], str(freigaben_fortschreiben(a2, a2, f2, spaeter)))
+        speicher.update({"inhalt": datei_text([{"ticker": "NVDA", "aktiv": True}]), "sha": "s3", "konflikt": 0})
+        _ABRUF = abruf
+        ok, neu, f = aendern(lambda liste: umschalten(liste, "NVDA", False), token="t", melder=lambda *a: None)
+        ganz = json.loads(speicher["inhalt"])
+        p("Aendern schreibt die Freigabe in die Datei und merkt sie sich",
+          ok and [x["ticker"] for x in ganz["freigaben"]] == ["NVDA"] and freigegeben() == {"NVDA"}, str(ganz))
+        ok, neu, f = aendern(lambda liste: umschalten(liste, "NVDA", True), token="t", melder=lambda *a: None)
+        p("Wieder gesperrt: keine Freigabe mehr, in der Datei und im Stand",
+          ok and json.loads(speicher["inhalt"])["freigaben"] == [] and freigegeben() == set())
+        setzen(["AAPL"], freigaben=["MSFT", "AAPL"])
+        p("freigegeben: nur, was jetzt nicht gesperrt ist", freigegeben() == {"MSFT"})
+        alt_f = [{"ticker": "OLD", "zeit": "2026-01-01T00:00:00Z"}]
+        setzen([], freigaben=alt_f)
+        p("freigegeben: eine alte Freigabe zaehlt nicht mehr", freigegeben() == set())
     finally:
         _ABRUF = None
         zuruecksetzen()

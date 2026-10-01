@@ -1502,7 +1502,9 @@ if rolle != "gast":
 # Berichte im privaten Datenrepo liegen (Gaeste sehen nichts daraus, S4).
 # DER REITER LEXIKON (Gerhard, 29.09.2026, Teil 3 b) steht hinter dem Regelwerk,
 # vor den Einstellungen, dahinter der Reiter Quiz (Teil 3 c); Gaeste bekommen
-# beide nicht (S4).
+# beide nicht (S4). SEIT 01.10.2026 (Antwort 8) sehen Gaeste das Lexikon mit den
+# Kapiteln Scanner-Einstellungen und Scanner-Kennzahlen, also zwei Registerkarten,
+# Scanner und Lexikon; das Quiz weiterhin nicht.
 # DER REITER BLACKLIST (Gerhard, 30.09.2026) steht hinter den Wochenlisten, nur
 # im vollen Zugang: Der Gast darf die Liste weder sehen noch aendern (Antwort 13).
 tab_berichte = None
@@ -1510,8 +1512,7 @@ tab_lexikon = tab_quiz = None
 tab_blacklist = None
 tab_upload = tab_gast = tab_ablaeufe = tab_einst = None
 if rolle == "gast":
-    st.markdown("## Scanner", anchors=False)
-    tab_scanner = st.container()
+    tab_scanner, tab_lexikon = st.tabs(["Scanner", "Lexikon"])
     tab_liste = tab_scan = tab_info = None
 elif rolle == "voll":
     (tab_liste, tab_berichte, tab_scan, tab_scanner, tab_upload, tab_blacklist, tab_gast, tab_ablaeufe, tab_info,
@@ -1524,14 +1525,14 @@ else:
          "Einstellungen"])
 
 # Der Link zur Startseite ganz oben in jeder Registerkarte (Antwort 11); der
-# am Ende kommt ganz unten im Skript, nach allem anderen Inhalt. Ein Gast hat
-# keine Registerkarten, nur den Scanner.
+# am Ende kommt ganz unten im Skript, nach allem anderen Inhalt, fuer Gaeste
+# vor ihrer Schranke. Gaeste haben seit 01.10.2026 die Registerkarten Scanner
+# und Lexikon (Antwort 8).
 REITER_ALLE = [r for r in (tab_liste, tab_berichte, tab_scan, tab_scanner, tab_upload, tab_blacklist, tab_gast,
                            tab_ablaeufe, tab_info, tab_lexikon, tab_quiz, tab_einst) if r is not None]
-if rolle != "gast":
-    for _reiter in REITER_ALLE:
-        with _reiter:
-            startseite_link()
+for _reiter in REITER_ALLE:
+    with _reiter:
+        startseite_link()
 
 
 @st.cache_data(ttl=60, show_spinner=False)
@@ -1590,8 +1591,9 @@ def berichte_reiter():
     30.09.2026 abends): je Berichtsart ein Unterreiter, daneben die Zahl der
     ungelesenen ohne Klammern, neueste oben, jeder Bericht mit Ueberschrift und
     Uhrzeit, jeder von Hand auf gelesen setzbar. Was gelesen ist, merkt sich
-    der Browser des Geraets. Geleert wird Montag bis Freitag um 14:00 Uhr
-    Wiener Zeit (berichte.leerung_vor)."""
+    der Browser des Geraets. Geleert wird an jedem Handelstag der New Yorker
+    Boerse um 14:00 Uhr Wiener Zeit, an US-Boersenfeiertagen nicht (Antwort 1
+    vom 01.10.2026, berichte.leerung_vor)."""
     st.markdown("## Berichte", anchors=False)
     try:
         alle, grund = _berichte_holen(), ""
@@ -1608,9 +1610,11 @@ def berichte_reiter():
     zahl = berichte.ungelesen_je_art(sicht, gelesen_menge)
     leer = berichte.uhrzeit_wien(berichte.zeit_text(berichte.leerung_vor()))
     n, u = len(sicht), sum(zahl.values())
-    st.markdown(f"Seit der Leerung am {leer} sind {n} Bericht{'e' if n != 1 else ''} eingegangen, "
-                f"{u} davon ungelesen. Geleert wird Montag bis Freitag um 14:00 Uhr Wiener Zeit; was "
-                f"gelesen ist, merkt sich dieses Gerät.")
+    # Nicht "seit der Leerung eingegangen": Der Earnings-Tagesbericht kann vor
+    # der Leerung begonnen haben und bleibt bis zum naechsten Handelstag stehen.
+    st.markdown(f"Zuletzt geleert am {leer}; im Reiter stehen {n} Bericht{'e' if n != 1 else ''}, "
+                f"{u} davon ungelesen. Geleert wird an jedem Handelstag der New Yorker Börse um 14:00 Uhr "
+                f"Wiener Zeit, an US-Börsenfeiertagen nicht; was gelesen ist, merkt sich dieses Gerät.")
     st.button("Berichte neu laden", key="berichte_neu", on_click=_berichte_holen.clear)
     arten = [k for k, _name in berichte.ARTEN]
     namen = [berichte.unterreiter_name(k, zahl[k]) for k in arten]
@@ -2749,18 +2753,155 @@ with tab_scanner:
     # weil das Feld dabei verlassen wird.
     st.html("<style>.st-key-scanner_bereich [data-testid='InputInstructions'] {display: none;}</style>")
     # Jeder Reiter beginnt mit seinem Namen als Ueberschrift der Ebene 2
-    # (Antwort 27 vom 24.09.2026); fuer Gaeste steht sie schon darueber.
-    if rolle != "gast":
-        st.markdown("## Scanner", anchors=False)
+    # (Antwort 27 vom 24.09.2026), seit 01.10.2026 auch fuer Gaeste.
+    st.markdown("## Scanner", anchors=False)
     with st.container(key="scanner_bereich"):
         scanner_reiter()
 
+# --- Lexikon ---------------------------------------------------------------
+# DER REITER LEXIKON (Gerhard, 29.09.2026, Teil 3 b): alles, was es im System
+# gibt, in einfachem Deutsch mit kurzem Beispiel, nach Kapiteln geordnet und
+# durchsuchbar, mit echten Ueberschriften fuer VoiceOver. Seit Teil 3 a stehen
+# die Erklaerungen der Scanner-Felder nur noch hier. Die Eintraege baut
+# lexikon.py aus den Registern; je Kapitel ein Unterreiter, gezeichnet wird nur
+# der geoeffnete, damit die Seite mit ueber 500 Eintraegen schnell bleibt. Die
+# Suche ueber den Unterreitern findet in allen Kapiteln. Ueberschriften: Ebene
+# 2 der Reiter, 3 das Kapitel, 4 die Gruppe oder ein Begriff ohne Gruppe, 5 ein
+# Begriff in einer Gruppe.
+LEX_TREFFER_MAX = 50
+
+
+@st.cache_data(ttl=600, show_spinner=False)
+def _lexikon_eintraege(einst_text: str, branchen_text: str) -> list:
+    """Die Eintraege, je Stand der Einstellungen und der Branchen gemerkt."""
+    import json
+    return lexikon.eintraege(json.loads(einst_text) if einst_text else None,
+                             {"branchen": json.loads(branchen_text)} if branchen_text else None)
+
+
+def _lexikon_holen() -> list:
+    """Mit den geltenden Einstellungen (Volumenhuerden) und den Nasdaq-Branchen
+    aus dem Stand der Scanner-Tabelle; faellt eines aus, gilt die Vorgabe."""
+    import json
+    try:
+        einst_text = json.dumps(_einstellungen(), sort_keys=True, default=str)
+    except Exception:  # noqa
+        einst_text = ""
+    try:
+        branchen_text = json.dumps((lade_scanner_stand() or {}).get("branchen") or [], sort_keys=True, default=str)
+    except Exception:  # noqa
+        branchen_text = ""
+    return _lexikon_eintraege(einst_text, branchen_text)
+
+
+def _lexikon_eintrag_md(e: dict, ebene: int, mit_kapitel: bool = False) -> str:
+    """Ein Eintrag: Ueberschrift, beim Suchergebnis das Kapitel, die Erklaerung
+    und das Beispiel, jeder Teil ein eigener Absatz."""
+    teile = [f"{'#' * ebene} {_md(e['begriff'])}"]
+    if mit_kapitel:
+        ort = lexikon.KAPITEL_NAMEN.get(e["kapitel"], "")
+        teile.append(_md(f"Kapitel {ort}" + (f", {e['gruppe']}" if e["gruppe"] else "") + "."))
+    teile += [_md(e["text"]), "Beispiel: " + _md(e["beispiel"])]
+    return "\n\n".join(teile)
+
+
+def _lexikon_kapitel_zeigen(eintraege: list):
+    """Ein Kapitel, je Gruppe ein einziger Markdown-Block."""
+    block, gruppe = [], None
+    for e in eintraege:
+        if e["gruppe"] != gruppe:
+            if block:
+                st.markdown("\n\n".join(block), anchors=False)
+                block = []
+            gruppe = e["gruppe"]
+            if gruppe:
+                block.append(f"#### {_md(gruppe)}")
+        block.append(_lexikon_eintrag_md(e, 5 if e["gruppe"] else 4))
+    if block:
+        st.markdown("\n\n".join(block), anchors=False)
+
+
+def _lexikon_kapitel_gewechselt():
+    """Das gewaehlte Kapitel gemerkt, wie bei den Berichten."""
+    name = st.session_state.get("lex_unterreiter")
+    kap = next((k for k, n in lexikon.KAPITEL if n == name), None)
+    if kap:
+        st.session_state["lex_kapitel"] = kap
+
+
+def _lexikon_suche_leeren():
+    st.session_state["lex_suche"] = ""
+
+
+@st.fragment
+def lexikon_reiter():
+    """Der Reiter als Fragment: Suche und Kapitelwechsel rechnen nur ihn neu.
+    Gaeste sehen nur die Kapitel Scanner-Einstellungen und Scanner-Kennzahlen
+    (Antwort 8 vom 01.10.2026), und die Suche findet nur dort."""
+    st.markdown("## Lexikon", anchors=False)
+    kapitel = lexikon.kapitel_fuer(rolle)
+    if rolle == "gast":
+        st.markdown("Die Begriffe des Scanners in einfachem Deutsch, jeder mit einem kurzen Beispiel: die "
+                    "Einstellungen und die Kennzahlen. Die Suche findet ein Wort im Namen, in der Erklärung und im "
+                    "Beispiel, in beiden Kapiteln.")
+    else:
+        st.markdown("Alle Begriffe des Systems in einfachem Deutsch, jeder mit einem kurzen Beispiel, nach Kapiteln "
+                    "geordnet. Die Suche findet ein Wort im Namen, in der Erklärung und im Beispiel, in allen "
+                    "Kapiteln.")
+    namen_je = dict(kapitel)
+    alle = [e for e in _lexikon_holen() if e["kapitel"] in namen_je]
+    st.text_input("Im Lexikon suchen", key="lex_suche", placeholder="zum Beispiel Kaufpunkt")
+    frage = str(st.session_state.get("lex_suche") or "").strip()
+    if frage:
+        treffer = lexikon.suchen(alle, frage)
+        st.markdown("### Suchergebnis", anchors=False)
+        n = len(treffer)
+        if not n:
+            st.markdown(_md(f"Zu {frage} steht nichts im Lexikon."))
+        else:
+            satz = f"1 Eintrag zu {frage}." if n == 1 else f"{n} Einträge zu {frage}."
+            if n > LEX_TREFFER_MAX:
+                satz += f" Gezeigt werden die ersten {LEX_TREFFER_MAX}; ein genauerer Begriff grenzt ein."
+            st.markdown(_md(satz))
+            st.markdown("\n\n".join(_lexikon_eintrag_md(e, 4, mit_kapitel=True)
+                                     for e in treffer[:LEX_TREFFER_MAX]), anchors=False)
+        st.button("Suche leeren", key="lex_suche_leeren", on_click=_lexikon_suche_leeren)
+    namen = [n for _k, n in kapitel]
+    aktuell = st.session_state.get("lex_kapitel")
+    if aktuell not in namen_je:
+        aktuell = kapitel[0][0]
+    unterreiter = st.tabs(namen, key="lex_unterreiter", default=namen_je[aktuell],
+                          on_change=_lexikon_kapitel_gewechselt)
+    je = lexikon.je_kapitel(alle)
+    for (kap, name), reiter in zip(kapitel, unterreiter):
+        if not getattr(reiter, "open", True):
+            continue
+        with reiter:
+            startseite_link()
+            st.markdown(f"### {name}", anchors=False)
+            st.markdown(f"{len(je[kap])} Einträge.")
+            _lexikon_kapitel_zeigen(je[kap])
+            startseite_link()
+
+
+if tab_lexikon is not None:
+    with tab_lexikon:
+        # Der englische Hinweis unter dem Suchfeld bleibt stumm wie im Scanner.
+        st.html("<style>.st-key-lexikon_bereich [data-testid='InputInstructions'] {display: none;}</style>")
+        with st.container(key="lexikon_bereich"):
+            lexikon_reiter()
+
 
 # S4 GASTZUGANG ABGESCHOTTET (Gerhard, 20.09.2026): Fuer Gaeste endet der Lauf
-# hier, hinter dem Scanner. Liste pruefen, Aktueller Scan und Regelwerk gibt es
-# fuer sie nicht (tab_liste ist None). Die Gesamtpruefung (Block H) achtet
-# darauf, dass das so bleibt.
+# hier, hinter dem Scanner und, seit 01.10.2026, dem Lexikon mit seinen zwei
+# Kapiteln (Antwort 8). Liste pruefen, Aktueller Scan und Regelwerk gibt es fuer
+# sie nicht (tab_liste ist None). Die Gesamtpruefung (Block H) achtet darauf,
+# dass das so bleibt. Der Link zur Startseite am Ende ihrer Registerkarten
+# steht deshalb hier (Antwort 11).
 if tab_liste is None:
+    for _reiter in REITER_ALLE:
+        with _reiter:
+            startseite_link()
     abmelden_zeigen()
     st.stop()
 
@@ -3123,130 +3264,6 @@ with tab_info:
         st.markdown(f"**{sa.md(rw_name)}.** {sa.md(rw_text)}")
 
 
-# --- Lexikon ---------------------------------------------------------------
-# DER REITER LEXIKON (Gerhard, 29.09.2026, Teil 3 b): alles, was es im System
-# gibt, in einfachem Deutsch mit kurzem Beispiel, nach Kapiteln geordnet und
-# durchsuchbar, mit echten Ueberschriften fuer VoiceOver. Seit Teil 3 a stehen
-# die Erklaerungen der Scanner-Felder nur noch hier. Die Eintraege baut
-# lexikon.py aus den Registern; je Kapitel ein Unterreiter, gezeichnet wird nur
-# der geoeffnete, damit die Seite mit ueber 500 Eintraegen schnell bleibt. Die
-# Suche ueber den Unterreitern findet in allen Kapiteln. Ueberschriften: Ebene
-# 2 der Reiter, 3 das Kapitel, 4 die Gruppe oder ein Begriff ohne Gruppe, 5 ein
-# Begriff in einer Gruppe.
-LEX_TREFFER_MAX = 50
-
-
-@st.cache_data(ttl=600, show_spinner=False)
-def _lexikon_eintraege(einst_text: str, branchen_text: str) -> list:
-    """Die Eintraege, je Stand der Einstellungen und der Branchen gemerkt."""
-    import json
-    return lexikon.eintraege(json.loads(einst_text) if einst_text else None,
-                             {"branchen": json.loads(branchen_text)} if branchen_text else None)
-
-
-def _lexikon_holen() -> list:
-    """Mit den geltenden Einstellungen (Volumenhuerden) und den Nasdaq-Branchen
-    aus dem Stand der Scanner-Tabelle; faellt eines aus, gilt die Vorgabe."""
-    import json
-    try:
-        einst_text = json.dumps(_einstellungen(), sort_keys=True, default=str)
-    except Exception:  # noqa
-        einst_text = ""
-    try:
-        branchen_text = json.dumps((lade_scanner_stand() or {}).get("branchen") or [], sort_keys=True, default=str)
-    except Exception:  # noqa
-        branchen_text = ""
-    return _lexikon_eintraege(einst_text, branchen_text)
-
-
-def _lexikon_eintrag_md(e: dict, ebene: int, mit_kapitel: bool = False) -> str:
-    """Ein Eintrag: Ueberschrift, beim Suchergebnis das Kapitel, die Erklaerung
-    und das Beispiel, jeder Teil ein eigener Absatz."""
-    teile = [f"{'#' * ebene} {_md(e['begriff'])}"]
-    if mit_kapitel:
-        ort = lexikon.KAPITEL_NAMEN.get(e["kapitel"], "")
-        teile.append(_md(f"Kapitel {ort}" + (f", {e['gruppe']}" if e["gruppe"] else "") + "."))
-    teile += [_md(e["text"]), "Beispiel: " + _md(e["beispiel"])]
-    return "\n\n".join(teile)
-
-
-def _lexikon_kapitel_zeigen(eintraege: list):
-    """Ein Kapitel, je Gruppe ein einziger Markdown-Block."""
-    block, gruppe = [], None
-    for e in eintraege:
-        if e["gruppe"] != gruppe:
-            if block:
-                st.markdown("\n\n".join(block), anchors=False)
-                block = []
-            gruppe = e["gruppe"]
-            if gruppe:
-                block.append(f"#### {_md(gruppe)}")
-        block.append(_lexikon_eintrag_md(e, 5 if e["gruppe"] else 4))
-    if block:
-        st.markdown("\n\n".join(block), anchors=False)
-
-
-def _lexikon_kapitel_gewechselt():
-    """Das gewaehlte Kapitel gemerkt, wie bei den Berichten."""
-    name = st.session_state.get("lex_unterreiter")
-    kap = next((k for k, n in lexikon.KAPITEL if n == name), None)
-    if kap:
-        st.session_state["lex_kapitel"] = kap
-
-
-def _lexikon_suche_leeren():
-    st.session_state["lex_suche"] = ""
-
-
-@st.fragment
-def lexikon_reiter():
-    """Der Reiter als Fragment: Suche und Kapitelwechsel rechnen nur ihn neu."""
-    st.markdown("## Lexikon", anchors=False)
-    st.markdown("Alle Begriffe des Systems in einfachem Deutsch, jeder mit einem kurzen Beispiel, nach Kapiteln "
-                "geordnet. Die Suche findet ein Wort im Namen, in der Erklärung und im Beispiel, in allen Kapiteln.")
-    alle = _lexikon_holen()
-    st.text_input("Im Lexikon suchen", key="lex_suche", placeholder="zum Beispiel Kaufpunkt")
-    frage = str(st.session_state.get("lex_suche") or "").strip()
-    if frage:
-        treffer = lexikon.suchen(alle, frage)
-        st.markdown("### Suchergebnis", anchors=False)
-        n = len(treffer)
-        if not n:
-            st.markdown(_md(f"Zu {frage} steht nichts im Lexikon."))
-        else:
-            satz = f"1 Eintrag zu {frage}." if n == 1 else f"{n} Einträge zu {frage}."
-            if n > LEX_TREFFER_MAX:
-                satz += f" Gezeigt werden die ersten {LEX_TREFFER_MAX}; ein genauerer Begriff grenzt ein."
-            st.markdown(_md(satz))
-            st.markdown("\n\n".join(_lexikon_eintrag_md(e, 4, mit_kapitel=True)
-                                     for e in treffer[:LEX_TREFFER_MAX]), anchors=False)
-        st.button("Suche leeren", key="lex_suche_leeren", on_click=_lexikon_suche_leeren)
-    namen = [n for _k, n in lexikon.KAPITEL]
-    aktuell = st.session_state.get("lex_kapitel")
-    if aktuell not in lexikon.KAPITEL_NAMEN:
-        aktuell = lexikon.KAPITEL[0][0]
-    unterreiter = st.tabs(namen, key="lex_unterreiter", default=lexikon.KAPITEL_NAMEN[aktuell],
-                          on_change=_lexikon_kapitel_gewechselt)
-    je = lexikon.je_kapitel(alle)
-    for (kap, name), reiter in zip(lexikon.KAPITEL, unterreiter):
-        if not getattr(reiter, "open", True):
-            continue
-        with reiter:
-            startseite_link()
-            st.markdown(f"### {name}", anchors=False)
-            st.markdown(f"{len(je[kap])} Einträge.")
-            _lexikon_kapitel_zeigen(je[kap])
-            startseite_link()
-
-
-if tab_lexikon is not None:
-    with tab_lexikon:
-        # Der englische Hinweis unter dem Suchfeld bleibt stumm wie im Scanner.
-        st.html("<style>.st-key-lexikon_bereich [data-testid='InputInstructions'] {display: none;}</style>")
-        with st.container(key="lexikon_bereich"):
-            lexikon_reiter()
-
-
 # --- Quiz ------------------------------------------------------------------
 # DER REITER QUIZ (Gerhard, 29.09.2026, Teil 3 c): rund 100 Fragen in sieben
 # Kapiteln, je vier Antworten, eine richtig, danach eine kurze Erklaerung samt
@@ -3519,6 +3536,11 @@ _BL_FOKUS_JS = """export default function (component) {
 """
 _bl_fokus = st.components.v2.component("heliot_bl_fokus", js=_BL_FOKUS_JS)
 BL_FELD = "Gib Kürzel oder Firmennamen der Aktie ein, die gesperrt werden soll, und drück die Eingabetaste"
+# FREIGEGEBEN HEISST SOFORT UEBERWACHT (Gerhard, 01.10.2026, Antwort 16): Der
+# Waechter rechnet die Kaufpunkte einer freigegebenen Aktie der Wochenlisten
+# selbst, wie bei einer einzeln ueberwachten (breakout_watcher.freigabe_nachziehen).
+BL_FREI_SATZ = ("Steht sie auf den Wochenlisten, rechnet der Wächter ihre Kaufpunkte im laufenden Handel "
+                "binnen einer Minute selbst, und sie kann noch am selben Tag melden.")
 
 
 def _bl_fokus_setzen(art: str, ziel: str):
@@ -3684,7 +3706,7 @@ def _bl_rueckfrage(art: str, t: str, k: str, haken: str, aktiv: bool):
     dem Knopf; so stimmt die Ansage, die Knoepfe stuenden gleich darunter."""
     if art == "frei":
         st.warning(f"{t} wieder freigeben? Die Aktie erscheint dann wieder in Alarmen, Berichten, beim "
-                   "Handels-Bot und in den Listen der App; Kaufpunkte rechnet der nächste Nachtscan.")
+                   "Handels-Bot und in den Listen der App. " + BL_FREI_SATZ)
         ja, nein = f"Ja, {t} freigeben", f"Nein, {t} gesperrt lassen"
     elif art == "sperren":
         st.warning(_bl_gehalten_satz(t) + f" {t} wieder sperren?")
@@ -3692,7 +3714,7 @@ def _bl_rueckfrage(art: str, t: str, k: str, haken: str, aktiv: bool):
     else:
         st.warning(f"{t} von der Blacklist löschen? Der Eintrag verschwindet ganz"
                    + ("; die Aktie erscheint dann wieder in Alarmen, Berichten, beim Handels-Bot und in den "
-                      "Listen der App." if aktiv else "."))
+                      "Listen der App. " + BL_FREI_SATZ if aktiv else "."))
         ja, nein = f"Ja, {t} löschen", f"Nein, {t} behalten"
     st.button(ja, key=f"bl_ja_{k}", type="primary", on_click=_bl_antwort, args=(art, t, True, haken))
     st.button(nein, key=f"bl_nein_{k}", on_click=_bl_antwort, args=(art, t, False, haken))
@@ -3704,8 +3726,9 @@ def blacklist_reiter():
     st.markdown("Eine Aktie auf der Blacklist taucht nirgends mehr auf: kein Alarm, kein Bericht, keine Zeile an den "
                 "Handels-Bot, kein Kaufpunkt im Nachtscan und keine Zeile in den Listen der App. Das gilt auch für "
                 "die Verkaufssignale einer gehaltenen Aktie. Eine neue Sperre greift im laufenden Handel binnen "
-                "einer Minute. Ein abgehakter Eintrag bleibt stehen und sperrt nichts; Kaufpunkte rechnet für eine "
-                "freigegebene Aktie der nächste Nachtscan.")
+                "einer Minute. Ein abgehakter Eintrag bleibt stehen und sperrt nichts. Für eine freigegebene Aktie "
+                "der Wochenlisten rechnet der Wächter die Kaufpunkte im laufenden Handel binnen einer Minute "
+                "selbst; sie kann noch am selben Tag melden.")
     _bl_status(key="bl_status", data={"text": st.session_state.get("bl_ansage", "")})
     _bl_fokus(key="bl_fokus_ziel", data=st.session_state.get("bl_fokus") or {})
     meldung = st.session_state.pop("bl_meldung", None)

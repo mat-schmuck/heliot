@@ -25,12 +25,26 @@ verloren.
 
 LEERUNG (Teil 4): "Der Reiter wird jeden Morgen um 14:00 Uhr (oesterreichische
 Zeit) geleert, vor dem ersten Bericht des Tages. Der Stand von gestern bleibt
-also bis dahin lesbar, auch ueber das Wochenende." Geleert wird deshalb
-Montag bis Freitag um 14:00 Wiener Zeit; ein Bericht vom Freitagabend oder aus
-der Nacht auf Samstag steht bis Montag 14:00. Die App zeigt nur, was nach der
-letzten Leerung abgelegt wurde, und jeder Schreiber wirft beim Ablegen weg,
-was davor liegt. Das Leeren betrifft nur diesen Reiter, nichts aus Logbuch,
-Wochenlisten oder Nachtscan-Daten.
+also bis dahin lesbar, auch ueber das Wochenende." Dazu Antwort 1 vom
+01.10.2026: "An US-Boersenfeiertagen wird der Reiter Berichte NICHT geleert.
+Der letzte Handelstag bleibt lesbar bis zum naechsten Handelstag um 14 Uhr,
+genau wie uebers Wochenende." Geleert wird deshalb an jedem Handelstag der New
+Yorker Boerse um 14:00 Wiener Zeit (boersentage.py rechnet die Feiertage nach
+den Regeln der NYSE); ein Bericht vom Freitagabend oder aus der Nacht auf
+Samstag steht bis Montag 14:00, vor Thanksgiving bis Freitag 14:00. Die App
+zeigt nur, was nach der letzten Leerung abgelegt wurde, und jeder Schreiber
+wirft beim Ablegen weg, was davor liegt. Das Leeren betrifft nur diesen
+Reiter, nichts aus Logbuch, Wochenlisten oder Nachtscan-Daten.
+
+LAUFEND ERGAENZTE BERICHTE (Antwort 13 vom 01.10.2026, der Earnings-
+Tagesbericht): Ein Bericht mit einem Schluessel ersetzt beim Ablegen den
+Bericht mit demselben Schluessel. Seine Kennung entsteht dann nicht aus dem
+ganzen Text, sondern aus kennung_aus: Kommt ein neuer Treffer dazu, aendert
+sie sich und der Bericht zaehlt wieder als ungelesen; aendert sich nur eine
+Zahl am Rand, bleibt er gelesen. Mit bis bleibt ein Bericht mindestens bis zu
+diesem Zeitpunkt stehen, auch ueber eine Leerung hinweg: Der Earnings-
+Tagesbericht beginnt vor der Eroeffnung, also vor der Leerung um 14:00 Uhr,
+und soll trotzdem bis zum naechsten Handelstag lesbar bleiben.
 
 GELESEN JE GERAET (Antwort 14): Welche Berichte gelesen sind, merkt sich der
 Browser des Geraets (wie das Angemeldet-Bleiben, zugang.speicher_js), nicht
@@ -52,6 +66,8 @@ import sys
 import time
 from datetime import datetime, timedelta, timezone
 
+import boersentage
+
 try:
     from zoneinfo import ZoneInfo
     WIEN = ZoneInfo("Europe/Vienna")
@@ -62,7 +78,7 @@ DATEN_REPO = "mat-schmuck/heliot-daten"
 PFAD = "berichte/berichte.json"
 TOKEN_ENV = "DATEN_TOKEN"
 TROCKEN_ENV = "BERICHTE_TROCKEN"     # 1 = nur ausgeben, nichts ablegen (Probelaeufe)
-LEERUNG_STUNDE = 14                  # Wiener Zeit, Montag bis Freitag
+LEERUNG_STUNDE = 14                  # Wiener Zeit, an jedem Handelstag der New Yorker Boerse
 VERSUCHE = 6
 FRIST = 20                           # Sekunden je Abruf
 
@@ -135,17 +151,30 @@ def uhrzeit_wien(text) -> str:
     return f"{w:%d.%m.%Y}, {w:%H:%M} Uhr"
 
 
+def leerung_am(tag) -> datetime:
+    """Der Leerungszeitpunkt an einem Tag, 14:00 Wiener Zeit, in UTC."""
+    return datetime(tag.year, tag.month, tag.day, LEERUNG_STUNDE, 0, tzinfo=WIEN).astimezone(timezone.utc)
+
+
 def leerung_vor(jetzt: datetime | None = None) -> datetime:
-    """Der letzte Leerungszeitpunkt bis jetzt: Montag bis Freitag 14:00
-    Wiener Zeit. Zurueck kommt er in UTC."""
+    """Der letzte Leerungszeitpunkt bis jetzt: 14:00 Wiener Zeit an einem
+    Handelstag der New Yorker Boerse (Antwort 1 vom 01.10.2026). Um 14:00
+    Wiener Zeit ist in New York derselbe Kalendertag, frueh am Morgen; der
+    Wiener Tag ist deshalb zugleich der New Yorker. Zurueck kommt er in UTC."""
     jetzt = (jetzt or jetzt_utc()).astimezone(WIEN)
     tag = jetzt.date()
-    for _ in range(8):
-        punkt = datetime(tag.year, tag.month, tag.day, LEERUNG_STUNDE, 0, tzinfo=WIEN)
-        if tag.weekday() < 5 and punkt <= jetzt:
-            return punkt.astimezone(timezone.utc)
+    for _ in range(15):
+        punkt = leerung_am(tag)
+        if boersentage.ist_handelstag(tag) and punkt <= jetzt:
+            return punkt
         tag = tag - timedelta(days=1)
-    raise RuntimeError("keine Leerung in den letzten acht Tagen gefunden")
+    raise RuntimeError("keine Leerung in den letzten 15 Tagen gefunden")
+
+
+def leerung_nach_handelstag(tag) -> datetime:
+    """Die Leerung am naechsten Handelstag nach dem New Yorker Tag tag, in UTC:
+    bis dahin bleibt ein Bericht dieses Tages mindestens stehen (bis)."""
+    return leerung_am(boersentage.naechster_handelstag(tag))
 
 
 def kennung(art: str, zeit: str, titel: str, absaetze) -> str:
@@ -155,35 +184,62 @@ def kennung(art: str, zeit: str, titel: str, absaetze) -> str:
     return hashlib.sha1(roh.encode("utf-8")).hexdigest()[:12]
 
 
-def bericht(art: str, titel: str, absaetze, zeit: datetime | None = None) -> dict:
+def bericht(art: str, titel: str, absaetze, zeit: datetime | None = None, schluessel: str | None = None,
+            kennung_aus=None, bis: datetime | None = None) -> dict:
     """Ein Bericht als Eintrag der Datei. absaetze ist eine Liste von Texten,
-    je Absatz einer; Zeilenumbrueche innerhalb eines Absatzes bleiben."""
+    je Absatz einer; Zeilenumbrueche innerhalb eines Absatzes bleiben.
+    schluessel, kennung_aus und bis nur fuer laufend ergaenzte Berichte (siehe
+    oben): Der Schluessel ersetzt den Bericht mit demselben Schluessel, die
+    Kennung entsteht aus kennung_aus statt aus dem Text, und bis haelt ihn
+    ueber die Leerung hinaus."""
     if art not in ART_NAMEN:
         raise ValueError(f"unbekannte Berichtsart {art!r}")
     absaetze = [str(a) for a in (absaetze or []) if str(a).strip()]
     z = zeit_text(zeit or jetzt_utc())
-    return {"id": kennung(art, z, titel, absaetze), "art": art, "titel": str(titel).strip(),
-            "zeit": z, "absaetze": absaetze}
+    if kennung_aus is None:
+        k = kennung(art, z, titel, absaetze)
+    else:
+        roh = json.dumps([art, "kennung", kennung_aus], ensure_ascii=False, sort_keys=True, default=str)
+        k = hashlib.sha1(roh.encode("utf-8")).hexdigest()[:12]
+    e = {"id": k, "art": art, "titel": str(titel).strip(), "zeit": z, "absaetze": absaetze}
+    if schluessel:
+        e["schluessel"] = str(schluessel)
+    if bis is not None:
+        e["bis"] = zeit_text(bis)
+    return e
 
 
 def gueltig(e) -> bool:
     return (isinstance(e, dict) and e.get("art") in ART_NAMEN and _KENNUNG.match(str(e.get("id") or ""))
-            and zeit_lesen(e.get("zeit")) is not None and isinstance(e.get("absaetze"), list))
+            and zeit_lesen(e.get("zeit")) is not None and isinstance(e.get("absaetze"), list)
+            and ("bis" not in e or zeit_lesen(e.get("bis")) is not None))
+
+
+def bleibt(e, grenze: datetime, jetzt: datetime) -> bool:
+    """Steht der Bericht noch im Reiter? Abgelegt nach der letzten Leerung,
+    oder sein bis liegt noch in der Zukunft (bis verlaengert nur)."""
+    if zeit_lesen(e["zeit"]) >= grenze:
+        return True
+    bis = zeit_lesen(e.get("bis")) if e.get("bis") else None
+    return bis is not None and jetzt < bis
 
 
 def sichtbar(berichte, jetzt: datetime | None = None) -> list:
-    """Was der Reiter zeigt: gueltige Berichte seit der letzten Leerung,
-    neueste oben, jede Kennung einmal."""
+    """Was der Reiter zeigt: gueltige Berichte seit der letzten Leerung oder
+    mit bis in der Zukunft, neueste oben, jede Kennung und jeder Schluessel
+    einmal (beim Schluessel gilt der neueste)."""
+    jetzt = jetzt or jetzt_utc()
     grenze = leerung_vor(jetzt)
-    gesehen, raus = set(), []
-    for e in berichte or []:
-        if not gueltig(e) or e["id"] in gesehen:
-            continue
-        if zeit_lesen(e["zeit"]) < grenze:
+    kandidaten = sorted((e for e in berichte or [] if gueltig(e) and bleibt(e, grenze, jetzt)),
+                        key=lambda e: (e["zeit"], e["id"]), reverse=True)
+    gesehen, schluessel, raus = set(), set(), []
+    for e in kandidaten:
+        if e["id"] in gesehen or (e.get("schluessel") and e["schluessel"] in schluessel):
             continue
         gesehen.add(e["id"])
+        if e.get("schluessel"):
+            schluessel.add(e["schluessel"])
         raus.append(e)
-    raus.sort(key=lambda e: (e["zeit"], e["id"]), reverse=True)
     return raus
 
 
@@ -317,15 +373,17 @@ def ablegen_viele(eintraege: list, token: str | None = None, melder=print, jetzt
         melder(f"  Bericht nicht abgelegt, weil {TOKEN_ENV} fehlt: {namen}")
         return False
     neue = {e["id"] for e in eintraege}
+    ersetzt = {e["schluessel"] for e in eintraege if e.get("schluessel")}
     letzter = ""
     for versuch in range(1, VERSUCHE + 1):
         liste, sha, fehler = datei_lesen(token)
         if fehler and sha is None:
             letzter = fehler
         else:
-            grenze = leerung_vor(jetzt)
-            behalten = [e for e in liste if gueltig(e) and zeit_lesen(e["zeit"]) >= grenze
-                        and e["id"] not in neue]
+            nun = jetzt or jetzt_utc()
+            grenze = leerung_vor(nun)
+            behalten = [e for e in liste if gueltig(e) and bleibt(e, grenze, nun) and e["id"] not in neue
+                        and not (e.get("schluessel") and e["schluessel"] in ersetzt)]
             behalten.extend(eintraege)
             koerper = {"message": "Bericht: " + ", ".join(sorted({ART_NAMEN[e["art"]] for e in eintraege})),
                        "content": base64.b64encode(datei_text(behalten).encode("utf-8")).decode("ascii")}
@@ -343,9 +401,12 @@ def ablegen_viele(eintraege: list, token: str | None = None, melder=print, jetzt
     return False
 
 
-def ablegen(art: str, titel: str, absaetze, zeit=None, token=None, melder=print) -> bool:
-    """Einen Bericht in den Reiter legen."""
-    return ablegen_eintrag(bericht(art, titel, absaetze, zeit), token=token, melder=melder)
+def ablegen(art: str, titel: str, absaetze, zeit=None, token=None, melder=print, schluessel=None,
+            kennung_aus=None, bis=None) -> bool:
+    """Einen Bericht in den Reiter legen; mit schluessel ersetzt er den
+    Bericht mit demselben Schluessel (laufend ergaenzte Berichte)."""
+    return ablegen_eintrag(bericht(art, titel, absaetze, zeit, schluessel=schluessel, kennung_aus=kennung_aus,
+                                   bis=bis), token=token, melder=melder)
 
 
 # ---------------------------------------------------------------------------
@@ -376,6 +437,20 @@ def selbsttest() -> int:
       and leerung_vor(u(2026, 10, 12, 12, 0)) == u(2026, 10, 12, 12, 0))
     p("Leerung: im Winter 14:00 Wien ist 13:00 UTC",
       leerung_vor(u(2026, 11, 4, 14, 0)) == u(2026, 11, 4, 13, 0))
+    # Antwort 1 vom 01.10.2026: an US-Boersenfeiertagen nicht leeren
+    p("Leerung: Thanksgiving wird nicht geleert, es gilt die vom Mittwoch bis Freitag 14:00",
+      leerung_vor(u(2026, 11, 26, 15, 0)) == u(2026, 11, 25, 13, 0)
+      and leerung_vor(u(2026, 11, 27, 12, 59)) == u(2026, 11, 25, 13, 0)
+      and leerung_vor(u(2026, 11, 27, 13, 0)) == u(2026, 11, 27, 13, 0))
+    p("Leerung: am Labor Day gilt die vom Freitag davor bis Dienstag 14:00",
+      leerung_vor(u(2026, 9, 7, 18, 0)) == u(2026, 9, 4, 12, 0)
+      and leerung_vor(u(2026, 9, 8, 11, 59)) == u(2026, 9, 4, 12, 0))
+    p("Leerung: Karfreitag und Wochenende, es gilt die vom Gruendonnerstag bis Ostermontag 14:00",
+      leerung_vor(u(2026, 4, 6, 11, 0)) == u(2026, 4, 2, 12, 0)
+      and leerung_vor(u(2026, 4, 6, 12, 0)) == u(2026, 4, 6, 12, 0))
+    p("Leerung am naechsten Handelstag: nach dem Mittwoch vor Thanksgiving der Freitag, nach Freitag der Montag",
+      leerung_nach_handelstag(datetime(2026, 11, 25).date()) == u(2026, 11, 27, 13, 0)
+      and leerung_nach_handelstag(datetime(2026, 10, 2).date()) == u(2026, 10, 5, 12, 0))
 
     # 2. Bericht und Kennung
     a = bericht("gapup", "Gap-Ups vorbörslich", ["1. AAA", "2. BBB"], u(2026, 10, 7, 13, 10, 5))
@@ -402,6 +477,28 @@ def selbsttest() -> int:
     p("Sichtbar: vor 14:00 steht der Bericht von gestern Nachmittag noch da, ab 14:00 nicht mehr",
       [e["id"] for e in sichtbar([b], u(2026, 10, 8, 11, 0))] == [b["id"]]
       and sichtbar([b], u(2026, 10, 8, 12, 0)) == [])
+    # Laufend ergaenzte Berichte (Antwort 13): Schluessel, Kennung, bis
+    bis = leerung_nach_handelstag(datetime(2026, 10, 7).date())
+    t1 = bericht("earnings", "Earnings vom 07.10.2026: 1 Aktie", ["1. AAA"], u(2026, 10, 7, 11, 30),
+                 schluessel="earnings-2026-10-07", kennung_aus=["acc1"], bis=bis)
+    t1b = bericht("earnings", "Earnings vom 07.10.2026: 1 Aktie", ["Stand 20:00", "1. AAA"], u(2026, 10, 7, 18, 0),
+                  schluessel="earnings-2026-10-07", kennung_aus=["acc1"], bis=bis)
+    t2 = bericht("earnings", "Earnings vom 07.10.2026: 2 Aktien", ["1. BBB", "2. AAA"], u(2026, 10, 7, 20, 30),
+                 schluessel="earnings-2026-10-07", kennung_aus=["acc1", "acc2"], bis=bis)
+    p("Tagesbericht: Schluessel und bis stehen im Eintrag, gueltig",
+      t1["schluessel"] == "earnings-2026-10-07" and t1["bis"] == "2026-10-08T12:00:00Z" and gueltig(t1), str(t1))
+    p("Tagesbericht: nur eine Zahl am Rand geaendert, dieselbe Kennung, bleibt also gelesen",
+      t1["id"] == t1b["id"])
+    p("Tagesbericht: ein neuer Treffer gibt eine neue Kennung, zaehlt wieder als ungelesen",
+      t2["id"] != t1["id"] and ungelesen_je_art([t2], {t1["id"]})["earnings"] == 1)
+    p("Tagesbericht: vor der Leerung um 14:00 abgelegt, bleibt er mit bis bis zum naechsten Handelstag stehen",
+      [e["id"] for e in sichtbar([t1], u(2026, 10, 7, 15, 0))] == [t1["id"]]
+      and [e["id"] for e in sichtbar([t1], u(2026, 10, 8, 11, 59))] == [t1["id"]]
+      and sichtbar([t1], u(2026, 10, 8, 12, 0)) == [])
+    p("Ohne bis waere derselbe Bericht um 14:00 weg",
+      sichtbar([bericht("earnings", "x", ["1. AAA"], u(2026, 10, 7, 11, 30))], u(2026, 10, 7, 12, 0)) == [])
+    p("Tagesbericht: je Schluessel steht nur der neueste da",
+      [e["id"] for e in sichtbar([t1, t2, b], u(2026, 10, 7, 21, 0))] == [t2["id"], b["id"]])
 
     # 4. Gelesen je Geraet
     w = gelesen_wert({a["id"], b["id"], "kaputt"})
@@ -481,6 +578,20 @@ def selbsttest() -> int:
         p("Sammelablage: zwei Berichte in einem Schreibgang, Kaputtes faellt weg",
           ok7 and lager["puts"] == puts + 1 and [e["id"] for e in inhalt][-2:] == [c1["id"], c2["id"]]
           and len(inhalt) == 4, str([e["titel"] for e in inhalt]))
+        # Der Tagesbericht ersetzt sich selbst und ueberlebt mit bis die Leerung
+        ok8 = ablegen_eintrag(t1, token="pruef", melder=gesagt.append, jetzt=u(2026, 10, 7, 19, 50))
+        ok9 = ablegen_eintrag(t2, token="pruef", melder=gesagt.append, jetzt=u(2026, 10, 7, 20, 30))
+        inhalt = json.loads(lager["inhalt"])["berichte"]
+        tb = [e for e in inhalt if e.get("schluessel") == "earnings-2026-10-07"]
+        p("Ablage: der Tagesbericht ersetzt den mit demselben Schluessel, die anderen bleiben",
+          ok8 and ok9 and [e["id"] for e in tb] == [t2["id"]] and len(inhalt) == 5, str([e["titel"] for e in inhalt]))
+        alt_c = bericht("klimax", "Schlussnahe Befunde", ["2. alt"], u(2026, 10, 8, 11, 0))
+        ok10 = ablegen_eintrag(alt_c, token="pruef", melder=gesagt.append, jetzt=u(2026, 10, 8, 11, 0))
+        ok11 = ablegen_eintrag(bericht("abend", "neu", ["x"], u(2026, 10, 8, 12, 30)), token="pruef",
+                               melder=gesagt.append, jetzt=u(2026, 10, 8, 12, 30))
+        inhalt = json.loads(lager["inhalt"])["berichte"]
+        p("Ablage nach der Leerung: der Tagesbericht ist mit seinem bis weg, ebenso die alten",
+          ok10 and ok11 and [e["titel"] for e in inhalt] == ["neu"], str([e["titel"] for e in inhalt]))
     finally:
         _ABRUF = None
         globals()["time"].sleep = schlaf

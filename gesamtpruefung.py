@@ -704,6 +704,7 @@ def block_d(namen_aus_c=None):
            "melder(f\"  Bot-{art}kanal nicht erreicht" in _kq
            and "{ziel}" not in _kq and "ziel}" not in _kq)
     blacklist_wege_pruefen(bw, _quelle)
+    antworten_0110_pruefen(bw, _quelle)
 
 
 def blacklist_wege_pruefen(bw, quelle_waechter):
@@ -777,6 +778,187 @@ def blacklist_wege_pruefen(bw, quelle_waechter):
                        (WURZEL / ".github" / "workflows" / d).read_text(encoding="utf-8"), b)]
     pruefe("D", "Blacklist: jeder Schritt, der sie anwendet, bekommt das Token fuer das Datenrepo",
            not _ohne_token, nennen(_ohne_token))
+
+
+def antworten_0110_pruefen(bw, quelle_waechter):
+    """Gerhards Antworten vom 01.10.2026 auf die 16 Regelfragen. Wo "wie gebaut"
+    steht (3, 5, 11, 12 und 15), bleibt es, und die bestehenden Pruefungen halten
+    es fest; hier steht, was sich geaendert hat. Der Earnings-Tagesbericht (10,
+    13 und 14) liegt auf dem Zweig fundament-phase1 und prueft sich dort im
+    Selbsttest; hier stehen die Bausteine des Reiters Berichte, die er braucht."""
+    import contextlib as _cl
+    import io as _io
+    from datetime import date as _d, datetime as _dt, timezone as _tz
+    import berichte as _br
+    import blacklist as _bl
+    import boersentage as _bt
+    import config as _cfg
+    import einstellungen as _es
+    import exit_regeln as _ex
+    import gapup_bericht as _gub
+    import insider_scanner as _isc
+    import lexikon as _lx
+    import listen as _li
+    import positionen as _po
+    import rslinie_bericht as _rl
+
+    def u(*a):
+        return _dt(*a, tzinfo=_tz.utc)
+
+    # 1 Leerung an US-Boersenfeiertagen
+    pruefe("D", "Antwort 1: an US-Boersenfeiertagen wird nicht geleert, der letzte Handelstag bleibt bis zum "
+                "naechsten Handelstag um 14 Uhr lesbar",
+           _br.leerung_vor(u(2026, 11, 26, 15, 0)) == u(2026, 11, 25, 13, 0)
+           and _br.leerung_vor(u(2026, 11, 27, 12, 59)) == u(2026, 11, 25, 13, 0)
+           and _br.leerung_vor(u(2026, 11, 27, 13, 0)) == u(2026, 11, 27, 13, 0)
+           and _br.leerung_vor(u(2026, 9, 7, 18, 0)) == u(2026, 9, 4, 12, 0)
+           and not _bt.ist_handelstag(_d(2026, 12, 25)) and _bt.ist_handelstag(_d(2026, 12, 24))
+           and sorted(_bt.feiertage(2027)) == [_d(2027, 1, 1), _d(2027, 1, 18), _d(2027, 2, 15), _d(2027, 3, 26),
+                                               _d(2027, 5, 31), _d(2027, 6, 18), _d(2027, 7, 5), _d(2027, 9, 6),
+                                               _d(2027, 11, 25), _d(2027, 12, 24)])
+    # 2 Schreibweise im Gap-Up-Bericht, und nur dort
+    _t, _a = _gub.bericht_bauen(u(2026, 10, 7, 13, 10), [], [], [],
+                                {"mit_vorboerse": 0, "gap": 0, "kurs": 0, "marktkap": 0}, {}, {})
+    pruefe("D", "Antwort 2: im Gap-Up-Bericht steht das vorboersliche Volumen als Prozent des Tagesschnitts, die "
+                "Schwelle bleibt 5 Prozent",
+           "vorbörsliches Volumen mindestens 5 Prozent des Tagesschnitts;" in _a[0] and "minus 95" not in _a[0]
+           and _gub.VOL_MIN_ANTEIL == 0.05 and _gub.anteil_text(8.0) == "8 Prozent des Tagesschnitts", _a[0][:120])
+    _ausser = []
+    for _p in sorted(WURZEL.glob("*.py")):
+        if _p.name in ("gesamtpruefung.py", "gapup_bericht.py"):
+            continue
+        _q = _p.read_text(encoding="utf-8")
+        if "des Tagesschnitts" not in _q:
+            continue
+        if _p.name == "lexikon_begriffe.py":
+            _a0 = _q.find('neu("meldungen", "Gap-Up-Bericht",')
+            _e0 = _q.find("\n    neu(", _a0 + 1)
+            if _q.count("des Tagesschnitts") == 1 and 0 <= _a0 < _q.find("des Tagesschnitts") < _e0:
+                continue
+        _ausser.append(_p.name)
+    _lex_tag = [e["begriff"] for e in _lx.eintraege() if "des Tagesschnitts" in e["text"] + e["beispiel"]]
+    pruefe("D", "Antwort 2: ueberall sonst bleibt die IBD-Schreibweise; Prozent des Tagesschnitts steht nur im "
+                "Gap-Up-Bericht und in seinem Lexikon-Eintrag",
+           not _ausser and _lex_tag == ["Gap-Up-Bericht"], f"{_ausser} {_lex_tag}")
+    # 4 Insider ab 700 Millionen
+    _kauf = [_isc.InsiderKauf("CEO", 6_000_000, _d(2026, 10, 1))]
+    _regel = next((a.get("regel", "") for a in _es.ALARME if a.get("schluessel") == "insider"), "")
+    pruefe("D", "Antwort 4: Insider-Kaeufe erst ab 700 Millionen Dollar Boersenwert, auch im Text der Einstellungen",
+           _cfg.CFG["insider"]["min_marktkap"] == 700_000_000
+           and _isc.pruefe_insider_signal(_kauf, marktkap=699_999_999)["status"] == "firma_zu_klein"
+           and _isc.pruefe_insider_signal(_kauf, marktkap=700_000_000)["status"] == "pfad_a"
+           and "ab 700 Millionen" in _regel and "300 Millionen" not in _regel, _regel[-140:])
+    # 6 Alarm-Muster und Mappe auf demselben Preis
+    _aus = _io.StringIO()
+    with _cl.redirect_stdout(_aus):
+        _m = bw._lege_gleiche_preise_zusammen(
+            [{"ticker": "AAA", "firma": "Alpha", "strategie": "Rectangle Top", "kaufpunkt": 50.0, "stop": 46.0,
+              "ziel": 60.0}], leise=True)
+        _z = bw.alarm_dazulegen(_m, [
+            {"ticker": "AAA", "firma": "Alpha", "strategie": "Inside Day", "kaufpunkt": 50.0, "stop": 47.0, "ziel": None,
+             "alarm": True, "zusatz": "Konservativer Einstieg 50,40"},
+            {"ticker": "AAA", "firma": "Alpha", "strategie": "Inside Day", "kaufpunkt": 51.0, "stop": 48.0, "ziel": None,
+             "alarm": True, "zusatz": "x"}])
+    _ein = [x for x in _z if x["kaufpunkt"] == 50.0]
+    try:
+        _text = bw.format_treffer(dict(_ein[0], kurs=50.6, ueber_pct=1.2, vol_ok=True, vol_pct=70.0, vol_noetig=1.6))
+    except Exception as _f:  # noqa: BLE001, eine Probe darf die Gesamtpruefung nie abbrechen
+        _text = f"{type(_f).__name__}: {_f}"
+    pruefe("D", "Antwort 6: Alarm-Muster und Mappe auf demselben Preis sind EIN Kaufpunkt, die Meldung nennt beide "
+                "Muster und den Musterzusatz; ein anderer Preis bleibt getrennt",
+           len(_z) == 2 and len(_ein) == 1 and _ein[0]["strategien"] == ["Rectangle Top", "Inside Day"]
+           and _ein[0]["alarm"] is True and "Rectangle Top, Inside Day" in _text
+           and "Konservativer Einstieg 50,40" in _text and _ein[0]["stop"] == 47.0, _text.replace("\n", " | ")[:160])
+    pruefe("D", "Antwort 6: der Waechter legt die Alarm-Muster zur Mappe statt sie anzuhaengen, ebenso bei einzeln "
+                "ueberwachten und freigegebenen Aktien",
+           "items = alarm_dazulegen(items, alarm_items())" in quelle_waechter
+           and "items += alarm_items()" not in quelle_waechter
+           and "return _lege_gleiche_preise_zusammen(_deckel_nachziehen(items), leise=True)" in quelle_waechter)
+    # 7 Die Nachzieh-Linie nach der ATR 14
+    def _tv():
+        return _ex.Position("T", 100.0, 0, 95.0, hoechstkurs=130.0, teilverkauft=True, aktueller_stop=100.0)
+    _r1 = _ex.pruefe_exit(_tv(), 108.0, 40, ma21=112.0, ma50=105.0, atr_pct=1.8)
+    _r2 = _ex.pruefe_exit(_tv(), 104.0, 40, ma21=112.0, ma50=105.0, atr_pct=1.8)
+    _r3 = _ex.pruefe_exit(_tv(), 108.0, 40, ma21=112.0, ma50=105.0, atr_pct=3.0)
+    pruefe("D", "Antwort 7: ruhige Bewegung, ATR 14 unter 2,5 Prozent des Kurses, zieht an der 50-Tage-Linie nach, "
+                "sonst die 21-Tage-Linie; die Verkaufsmeldung nennt die Linie",
+           _cfg.CFG["exit"]["trail_ruhig_atr_max_pct"] == 2.5 and _r1[0] == "halten" and _r2[0] == "trail_raus"
+           and "es gilt die 50-Tage-Linie" in _r2[1] and _r3[0] == "trail_raus"
+           and "es gilt die 21-Tage-Linie" in _r3[1], f"{_r2[1]} | {_r3[1]}")
+    _b = {"ZZZ|fb": dict(_po.eroeffne({}, "ZZZ", "Flat Base", 100.0, 95.0, beobachtung=True)["ZZZ"],
+                         teilverkauft=True, hoechstkurs=130.0, aktueller_stop=100.0)}
+    _mb = _po.pruefe_bestand(_b, {"ZZZ": 108.0}, 40, ma21={"ZZZ": 112.0}, ma50={"ZZZ": 105.0}, atr={"ZZZ": 3.0})
+    pruefe("D", "Antwort 7: Linien und ATR haengen am Kuerzel, die Nachzieh-Linie greift auch bei Beobachtungen",
+           len(_mb) == 1 and _mb[0]["aktion"] == "trail_raus" and _mb[0]["kuerzel"] == "ZZZ", str(_mb)[:120])
+    _ps = (WURZEL / "pattern_scanner.py").read_text(encoding="utf-8")
+    pruefe("D", "Antwort 7: Nachtscan und Waechter um 15:45 geben 21- und 50-Tage-Linie und ATR mit",
+           "bestand, kurse, heute_index, ma21=ma21, ma50=ma50, atr=atr)" in _ps
+           and "pruefe_bestand(kopie, schluss, idx, ma21=ma21, ma50=ma50, atr=atr)" in quelle_waechter
+           and "def nachzieh_werte(" in quelle_waechter)
+    # 8 Gaeste sehen zwei Kapitel des Lexikons (die Seite selbst prueft gast_abschottung in Block H)
+    pruefe("D", "Antwort 8: Gaeste sehen im Lexikon nur Scanner-Einstellungen und Scanner-Kennzahlen",
+           _lx.kapitel_fuer("gast") == (("scanner", "Scanner-Einstellungen"), ("kennzahlen", "Scanner-Kennzahlen"))
+           and _lx.kapitel_fuer("voll") == _lx.KAPITEL and _lx.kapitel_fuer(None) == _lx.KAPITEL)
+    # 9 RS-Linie: eine reicht
+    _basis = {"kurs": 50.0, "marktkap_mrd": 5.0, "rs": 90}
+    _bl.setzen([])
+    try:
+        _tr, _vb = _rl.auswahl([
+            dict(_basis, ticker="SSS", rs_linie_hoch=True, rs_linie_qqq_hoch=False, rs=95),
+            dict(_basis, ticker="QQQX", rs_linie_hoch=False, rs_linie_qqq_hoch=True),
+            dict(_basis, ticker="BBB", rs_linie_hoch=True, rs_linie_qqq_hoch=True, rs=70),
+            dict(_basis, ticker="NNN", rs_linie_hoch=False, rs_linie_qqq_hoch=False)])
+    finally:
+        _bl.zuruecksetzen()
+    pruefe("D", "Antwort 9: im RS-Linien-Bericht reicht eine der beiden Linien, beide stehen zuerst, je Aktie der "
+                "Index",
+           [z["ticker"] for z in _tr] == ["BBB", "SSS", "QQQX"]
+           and [z["index"] for z in _tr] == ["beide", "SPY", "QQQ"], str([(z["ticker"], z["index"]) for z in _tr]))
+    # 13 Bausteine des Reiters fuer den Earnings-Tagesbericht
+    _bis = _br.leerung_nach_handelstag(_d(2026, 11, 25))
+    _e1 = _br.bericht("earnings", "x", ["1. A"], u(2026, 11, 25, 12, 0), schluessel="earnings-2026-11-25",
+                      kennung_aus=["a1"], bis=_bis)
+    _e2 = _br.bericht("earnings", "x", ["Stand", "1. A"], u(2026, 11, 25, 23, 0), schluessel="earnings-2026-11-25",
+                      kennung_aus=["a1"], bis=_bis)
+    _e3 = _br.bericht("earnings", "x", ["1. B", "2. A"], u(2026, 11, 25, 23, 30), schluessel="earnings-2026-11-25",
+                      kennung_aus=["a1", "b1"], bis=_bis)
+    pruefe("D", "Antwort 13: der Reiter ersetzt einen laufend ergaenzten Bericht, ein neuer Treffer macht ihn "
+                "wieder ungelesen, und er steht bis zum naechsten Handelstag um 14 Uhr",
+           _e1["id"] == _e2["id"] != _e3["id"] and _bis == u(2026, 11, 27, 13, 0)
+           and [e["id"] for e in _br.sichtbar([_e1, _e3], u(2026, 11, 27, 12, 0))] == [_e3["id"]]
+           and _br.sichtbar([_e1], u(2026, 11, 27, 13, 0)) == [])
+    # 16 Freigegeben heisst sofort ueberwacht
+    _frei = _bl.freigaben_fortschreiben([{"ticker": "FRE", "aktiv": True}], [{"ticker": "FRE", "aktiv": False}], [],
+                                        u(2026, 10, 1, 13, 0))
+    _alt = (_li.alle_ticker, _li.darf_darvas, bw.einzel_kaufpunkte)
+    _gerufen = []
+    _bl.setzen([], freigaben=["FRE"])
+    bw._FREIGABE_VERSUCHT.clear()
+    try:
+        _li.alle_ticker = lambda *a, **k: [("FRE", "Frei AG"), ("XXX", "X AG")]
+        _li.darf_darvas = lambda t, *a, **k: False
+        bw.einzel_kaufpunkte = lambda t, f="", nm=True, darvas_erlaubt=True, name=None: (
+            _gerufen.append((t, darvas_erlaubt, name)) or [{"ticker": t, "firma": f, "strategie": "VCP",
+                                                            "kaufpunkt": 10.0, "stop": 9.5, "ziel": None,
+                                                            "einzel": True}])
+        _its, _gew, _abr = [], set(), []
+        _aus = _io.StringIO()
+        with _cl.redirect_stdout(_aus):
+            _dazu = bw.freigabe_nachziehen(_its, {}, _gew, _abr)
+            _dazu2 = bw.freigabe_nachziehen(_its, {}, _gew, _abr)
+    finally:
+        _li.alle_ticker, _li.darf_darvas, bw.einzel_kaufpunkte = _alt
+        _bl.zuruecksetzen()
+        bw._FREIGABE_VERSUCHT.clear()
+    pruefe("D", "Antwort 16: die Blacklist merkt sich, wann eine Aktie freigegeben wurde",
+           _frei == [{"ticker": "FRE", "zeit": "2026-10-01T13:00:00Z"}], str(_frei))
+    pruefe("D", "Antwort 16: eine freigegebene Aktie der Wochenlisten kommt sofort in die Wache, gerechnet wie im "
+                "Nachtscan, einmal je Lauf, im Protokoll nur Zahlen",
+           _dazu == ["FRE"] and _dazu2 == [] and _gerufen == [("FRE", False, "Freigegebene Aktie")]
+           and _its and _its[0].get("freigabe") is True and not _its[0].get("einzel") and "FRE" in _gew
+           and "FRE" in _abr and "FRE" not in _aus.getvalue(), _aus.getvalue().strip()[:120])
+    pruefe("D", "Antwort 16: der Waechter holt Freigaben beim Start und in jedem Datentakt",
+           quelle_waechter.count("freigabe_nachziehen(items, firmen, gewuenscht, abruf_ticker") == 2)
 
 
 # ---------------------------------------------------------------------------
@@ -3812,11 +3994,16 @@ def gast_abschottung(pfad) -> tuple:
     """S4 (Gerhard, 20.09.2026): "Der Gastzugang darf keinen Zugriff auf die
     GitHub-Anbindung in Streamlit bekommen. Ein Gast soll wirklich nur den
     Scanner sehen und sonst nichts von dem, was dahinter laeuft."
+    Seit Gerhards Antwort 8 vom 01.10.2026 sieht ein Gast dazu das Lexikon mit
+    den Kapiteln Scanner-Einstellungen und Scanner-Kennzahlen, das Quiz nicht.
     Geprueft wird am Quelltext:
-      * Der Zweig fuer Gaeste baut keine Registerkarten, setzt tab_liste,
-        tab_scan und tab_info auf None und legt tab_scanner an.
+      * Der Zweig fuer Gaeste baut genau die Registerkarten Scanner und
+        Lexikon, setzt tab_liste, tab_scan und tab_info auf None und laesst
+        tab_quiz unberuehrt, also None.
       * "if tab_liste is None:" mit st.stop() steht auf oberster Ebene hinter
-        "with tab_scanner:" und vor Liste pruefen, Aktueller Scan und Regelwerk.
+        "with tab_scanner:" und hinter dem Lexikon, vor Liste pruefen,
+        Aktueller Scan und Regelwerk; lexikon_reiter zeigt die Kapitel nach
+        lexikon.kapitel_fuer(rolle).
       * Das Feld des Nachschlagens (key "aktie") entsteht nur unter
         "if rolle != 'gast':".
       * _daten_token gibt den Token nur bei rolle "voll" heraus, und
@@ -3845,6 +4032,8 @@ def gast_abschottung(pfad) -> tuple:
                 gast_zweig = knoten
             if test == "tab_liste is None" and "st.stop()" in _ast.unparse(knoten):
                 stelle.setdefault("schranke", i)
+            if test == "tab_lexikon is not None":
+                stelle.setdefault("lexikon", i)
         if isinstance(knoten, _ast.With):
             ziel = _ast.unparse(knoten.items[0].context_expr)
             if ziel in ("tab_scanner", "tab_liste", "tab_scan", "tab_info"):
@@ -3853,8 +4042,10 @@ def gast_abschottung(pfad) -> tuple:
         maengel.append("kein Zweig fuer Gaeste")
     else:
         rumpf = "\n".join(_ast.unparse(s) for s in gast_zweig.body)
-        if "st.tabs(" in rumpf:
-            maengel.append("der Zweig fuer Gaeste baut Registerkarten")
+        if rumpf.count("st.tabs(") != 1 or "st.tabs(['Scanner', 'Lexikon'])" not in rumpf:
+            maengel.append("der Zweig fuer Gaeste baut nicht genau die Registerkarten Scanner und Lexikon")
+        if "tab_lexikon" not in rumpf or "tab_quiz" in rumpf:
+            maengel.append("der Zweig fuer Gaeste legt das Lexikon nicht an oder beruehrt das Quiz")
         none_gesetzt = set()
         for s in gast_zweig.body:
             if isinstance(s, _ast.Assign) and isinstance(s.value, _ast.Constant) and s.value.value is None:
@@ -3862,13 +4053,17 @@ def gast_abschottung(pfad) -> tuple:
         for name in ("tab_liste", "tab_scan", "tab_info"):
             if name not in none_gesetzt:
                 maengel.append(f"{name} ist fuer Gaeste nicht None")
-        if "tab_scanner =" not in rumpf:
+        gesetzt = {n.id for s in gast_zweig.body for n in _ast.walk(s)
+                   if isinstance(n, _ast.Name) and isinstance(n.ctx, _ast.Store)}
+        if "tab_scanner" not in gesetzt:
             maengel.append("der Zweig fuer Gaeste legt tab_scanner nicht an")
     if "schranke" not in stelle:
         maengel.append("keine Schranke 'if tab_liste is None: st.stop()'")
     else:
         if stelle.get("tab_scanner", 10 ** 9) > stelle["schranke"]:
             maengel.append("der Scanner steht hinter der Gast-Schranke")
+        if stelle.get("lexikon", 10 ** 9) > stelle["schranke"]:
+            maengel.append("das Lexikon steht hinter der Gast-Schranke")
         for ziel in ("tab_liste", "tab_scan", "tab_info"):
             if stelle.get(ziel, -1) < stelle["schranke"]:
                 maengel.append(f"'with {ziel}:' steht vor der Gast-Schranke")
@@ -3882,6 +4077,9 @@ def gast_abschottung(pfad) -> tuple:
     if not feld_geschuetzt or feld_oben:
         maengel.append("das Nachschlagen-Feld steht nicht nur unter 'if rolle != \"gast\":'")
     funktionen = {k.name: _ast.unparse(k) for k in baum.body if isinstance(k, _ast.FunctionDef)}
+    lr = funktionen.get("lexikon_reiter", "")
+    if "lexikon.kapitel_fuer(rolle)" not in lr or "lexikon.KAPITEL" in lr:
+        maengel.append("lexikon_reiter waehlt die Kapitel nicht nach der Rolle")
     dt = funktionen.get("_daten_token", "")
     if not dt or "'voll'" not in dt or "DATEN_TOKEN" not in dt:
         maengel.append("_daten_token prueft die Rolle nicht oder liest DATEN_TOKEN nicht")
@@ -3957,8 +4155,8 @@ def gast_abschottung(pfad) -> tuple:
             maengel.append(f"Einzelaktien: {name} wird nirgends gerufen")
     if maengel:
         return False, "; ".join(maengel)
-    return True, ("Gast: nur Scanner ohne Registerkarten, Schranke dahinter, Nachschlagen, Datenrepo, Uebergabe und "
-                  "Einzelaktien gesperrt")
+    return True, ("Gast: Scanner und Lexikon mit zwei Kapiteln, Schranke dahinter, Nachschlagen, Datenrepo, "
+                  "Uebergabe und Einzelaktien gesperrt")
 
 
 def scanner_bedienung_pruefen(pfad) -> tuple:
@@ -4289,9 +4487,13 @@ def _startseite_pruefen():
             unter_funktionen.append((fn.name, rumpf.count("startseite_link()")))
     alle = quelle.split("REITER_ALLE = [")[1].split("]")[0] if "REITER_ALLE = [" in quelle else ""
     fehlen = sorted(k for k in karten if k not in alle)
-    schleifen = quelle.count("for _reiter in REITER_ALLE:\n        with _reiter:\n            startseite_link()")
+    # Drei Schleifen (seit 01.10.2026, Antwort 8): oben fuer alle Rollen, am Ende
+    # fuer Gaeste vor ihrer Schranke, am Ende fuer alle anderen ganz unten.
+    import re as _re
+    schleifen = len(_re.findall(r"for _reiter in REITER_ALLE:\n( +)with _reiter:\n\1    startseite_link\(\)", quelle))
+    schranke = quelle.split("\nif tab_liste is None:\n")[1].split("\n\n")[0] if "\nif tab_liste is None:\n" in quelle else ""
     ohne = [f"{n}: {z}" for n, z in unter_funktionen if z < 2]
-    ok = (not fehlen and schleifen == 2 and not ohne and 'href="."' in quelle
+    ok = (not fehlen and schleifen == 3 and "startseite_link()" in schranke and not ohne and 'href="."' in quelle
           and quelle.count("def startseite_link(") == 1)
     return ok, (f"Karten {sorted(karten)}; fehlen in REITER_ALLE: {fehlen}; Schleifen {schleifen}; "
                 f"Unterreiter ohne zwei Links: {ohne}")

@@ -55,6 +55,21 @@ KAPITEL = (
 )
 KAPITEL_NAMEN = dict(KAPITEL)
 
+# GAESTE (Gerhard, 01.10.2026, Antwort 8): "Gaeste sehen nur die Kapitel
+# Scanner-Einstellungen und Scanner-Kennzahlen. Nicht sichtbar fuer Gaeste:
+# Grundlagen, Chartmuster und Strategien, Volumen und Formel, Relative Staerke
+# und Marktampel, Stops und Risiko, Meldungen und Berichte, Trader-Templates.
+# Das Quiz sehen Gaeste weiterhin nicht."
+GAST_KAPITEL = ("scanner", "kennzahlen")
+
+
+def kapitel_fuer(rolle) -> tuple:
+    """Die Kapitel, die eine Rolle sieht: Gaeste nur GAST_KAPITEL, alle
+    anderen alle."""
+    if rolle == "gast":
+        return tuple(k for k in KAPITEL if k[0] in GAST_KAPITEL)
+    return KAPITEL
+
 # Die Gruppen des Registers, die Kaufsignale sind; die Meldungen zu offenen
 # Positionen und die weiteren Auskuenfte erklaeren die Begriffe selbst.
 STRATEGIE_GRUPPEN = ("kauf", "ausweich", "alarm", "weitere")
@@ -374,7 +389,8 @@ def beispiel_schwellen() -> list:
         ("Stop auf Einstand", (ex["breakeven_ab_r"], ex["breakeven_ab_pct"]), (2.0, 0.10)),
         ("Teilverkauf", (ex["teilverkauf_ab_pct"], ex["teilverkauf_anteil"]), (0.20, 0.50)),
         ("Halteregel", (ex["schnellstarter_pct"], ex["schnellstarter_tage"], ex["halteregel_tage"]), (0.20, 15, 40)),
-        ("Nachzieh-Linie", ex["trail_ma_schnell"], 21),
+        ("Nachzieh-Linie", (ex["trail_ma_schnell"], ex["trail_ma_langsam"], ex["trail_ruhig_atr_max_pct"]),
+         (21, 50, 2.5)),
         ("Gewinnzonen", (g["zone_leicht_max_r"], g["zone_mittel_min_pct"], g["zone_stark_min_r"]), (2.0, 0.20, 3.0)),
         ("Klimax", (g["klimax_pct_min"], g["ma200_abstand_min"], g["ma200_abstand_max"]), (0.25, 0.70, 1.00)),
         ("Zeitdeckel", (g["zeitdeckel_tage_zahlen"], g["zeitdeckel_monate_insider"], g["zeitdeckel_monate_standard"]),

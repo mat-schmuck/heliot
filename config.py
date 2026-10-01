@@ -208,9 +208,12 @@ CFG = {
     # Person) entfallen." Bis dahin galt fuer A min(5 % der Marktkap,
     # 25 Mio $), fuer B 2 % der Marktkap je Person in 10 Handelstagen. Nur
     # Kaeufe, keine Verkaeufe (Antwort 10). Die Mindestgroesse der Firma
-    # nennt die Antwort nicht; sie bleibt.
+    # nannte die Antwort nicht; sie blieb bei 300 Millionen Dollar, bis
+    # Gerhard am 01.10.2026 (Antwort 4) sie angehoben hat: "Auf 700 Millionen
+    # Dollar angehoben, einheitlich mit allen anderen Berichten. Die 300
+    # Millionen entfallen."
     "insider": {
-        "min_marktkap": 300_000_000,        # kleinere Firmen sind Rauschen
+        "min_marktkap": 700_000_000,        # Antwort 4 vom 01.10.2026
         "pfad_a_dollar_min": 5_000_000,
         "pfad_b_dollar_pro_person": 250_000,
         "pfad_b_min_insider": 3,
@@ -390,6 +393,13 @@ CFG = {
         "halteregel_tage": 40,        # acht Wochen ab Ausbruch
         "trail_ma_schnell": 21,       # Stufe C, zügige Bewegungen
         "trail_ma_langsam": 50,       # Stufe C, ruhige Bewegungen
+        # RUHIGE BEWEGUNG (Gerhard, 01.10.2026, Antwort 7, eigene
+        # Festlegung): "Ruhige Bewegung = ATR(14) unter 2,5 Prozent des
+        # Kurses. Dann wird an der 50-Tage-Linie nachgezogen, sonst wie
+        # bisher an der 21-Tage-Linie." Die ATR nach Wilder wie die
+        # Kennzahl ATR 14 des Scanners, in Prozent des letzten Kurses.
+        "trail_ruhig_atr_max_pct": 2.5,
+        "trail_atr_tage": 14,
     },
     # --- Kapitel 12: Meldungen der Gewinnseite ----------------------------
     # STRAFFUNGS-MELDUNGEN ABGESCHALTET (Gerhards Wunsch über Mathias,

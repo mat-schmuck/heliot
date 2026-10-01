@@ -1174,7 +1174,7 @@ def exit_durchgang(loaded: dict) -> list[dict]:
     if not offen:
         return []
 
-    kurse, ma21, ma50 = {}, {}, {}
+    kurse, ma21, ma50, atr = {}, {}, {}, {}
     heute_index = 0
     # SEIT KAPITEL 12 (28.08.2026): Beobachtungen heissen 'TICKER|Zusatz',
     # der Kurs haengt am Symbol-Feld. Gebraucht werden die Kurse aller
@@ -1189,6 +1189,12 @@ def exit_durchgang(loaded: dict) -> list[dict]:
             ma21[ticker] = float(df["close"].tail(21).mean())
         if len(df) >= 50:
             ma50[ticker] = float(df["close"].tail(50).mean())
+        # Die ATR 14 waehlt die Nachzieh-Linie (Gerhard, 01.10.2026, Antwort 7)
+        if "high" in df.columns and "low" in df.columns:
+            a = exit_regeln.atr_prozent(df["high"].tolist(), df["low"].tolist(),
+                                        df["close"].tolist())
+            if a is not None:
+                atr[ticker] = a
         heute_index = max(heute_index, len(df))
 
     # Einstiegs-Index nachtragen, wo er noch fehlt: Beim Eroeffnen ueber
@@ -1201,7 +1207,7 @@ def exit_durchgang(loaded: dict) -> list[dict]:
                 e["einstieg_index"] = int(len(vorher))
 
     meldungen = positionen.pruefe_bestand(
-        bestand, kurse, heute_index, ma21=ma21, ma50=ma50)
+        bestand, kurse, heute_index, ma21=ma21, ma50=ma50, atr=atr)
     positionen.speichern(bestand)
     noch_offen = sum(1 for e in bestand.values() if e.get("status") == "offen")
     print(f"Exit-Regelwerk: {len(offen)} offene Position(en) geprueft, "

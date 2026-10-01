@@ -278,7 +278,7 @@ def fragen() -> list:
         "RS-Linie")
     neu(k, "Was zeigt eine RS-Linie auf dem 52-Wochen-Hoch?", "Führungsstärke, oft noch vor dem Kurs",
         ("Ein Verkaufssignal", "Eine schwache Aktie", "Einen Zahlentermin"),
-        "Der RS-Linien-Bericht nennt jeden Abend die Aktien, deren Linie gegen SPY und QQQ zugleich auf dem Hoch steht.",
+        "Der RS-Linien-Bericht nennt jeden Abend die Aktien, deren Linie gegen SPY oder QQQ auf dem Hoch steht.",
         "RS-Linie auf dem 52-Wochen-Hoch")
     neu(k, "Wann ist die Marktampel rot?", "Wenn mindestens ein Index unter seiner SMA 50 schließt",
         ("Wenn beide Indizes an einem Tag fallen", "Bei jedem Distribution Day", "Wenn mehr Aktien fallen als steigen"),
@@ -348,9 +348,11 @@ def fragen() -> list:
         "zurück; alles wird verkauft",
         ("Kauf und Verkauf am selben Tag", "Ein Kurs, der um den Kaufpunkt pendelt", "Ein Fehlkauf ohne Stop"),
         "Ein dicker Gewinn darf nicht ganz verpuffen.", "Round Trip")
-    neu(k, "Über welche Linie läuft der Rest nach dem Teilverkauf?", f"Über die {int(ex['trail_ma_schnell'])}-Tage-Linie",
-        ("Über die 200-Tage-Linie", "Über die 5-Tage-Linie", "Über gar keine Linie"),
-        "Schließt der Kurs darunter, wird der Rest verkauft.", "Nachzieh-Linie")
+    neu(k, f"Wann läuft der Rest nach dem Teilverkauf über die {int(ex['trail_ma_langsam'])}-Tage-Linie?",
+        f"Bei ruhiger Bewegung, einer ATR 14 unter {lb._z(ex['trail_ruhig_atr_max_pct'], 1)} Prozent des Kurses",
+        ("Immer, nach jedem Teilverkauf", "Erst ab plus 50 Prozent Gewinn", "Nur an Freitagen"),
+        f"Sonst gilt die {int(ex['trail_ma_schnell'])}-Tage-Linie; die Verkaufsmeldung nennt, welche Linie gilt.",
+        "Nachzieh-Linie")
     neu(k, "Wann ist eine Position in der starken Gewinnzone?",
         f"Ab {lb._z(g['zone_stark_min_r'])}R oder mit einem Klimax-Zeichen",
         ("Ab plus 5 Prozent", "Ab 1R", "Erst ab plus 100 Prozent"),

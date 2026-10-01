@@ -23,9 +23,10 @@ Befunde der Pruefung, die das Lexikon so beschreibt, wie der Code es tut:
   * Die Ausstiegsregeln pruefen den Stop am Schlusskurs (exit_regeln:
     "Nur ein SCHLUSSKURS darunter loest aus, kein Docht"); der Handels-Bot
     legt nach dem Kauf zusaetzlich eine Stop-Loss-Order zum Stop (bot_kanal).
-  * Die Nachzieh-Linie ist im Betrieb immer die 21-Tage-Linie: pruefe_exit
-    wird nirgends mit trail_schnell=False gerufen, die 50-Tage-Linie fuer
-    ruhige Bewegungen ist nicht angebunden.
+  * Die Nachzieh-Linie waehlt seit Gerhards Antwort 7 vom 01.10.2026 die
+    ATR 14: unter 2,5 Prozent des Kurses die 50-Tage-Linie, sonst die
+    21-Tage-Linie (exit_regeln.nachzieh_tage). Bis dahin galt im Betrieb
+    immer die 21-Tage-Linie.
   * Die Halteregel haengt im Betrieb nicht am Markt: markt_im_aufwaertstrend
     bleibt bei allen Aufrufen auf seiner Vorgabe True.
   * Darvas-Positionen haben weder Teilverkauf noch Gewinnzonen noch
@@ -183,7 +184,9 @@ def begriffe(einst=None) -> list:
         "Eine Aktie auf der Blacklist taucht nirgends mehr auf: kein Alarm, kein Bericht, keine Zeile an den "
         "Handels-Bot, kein Kaufpunkt im Nachtscan und keine Zeile in den Listen der App; auch die Verkaufssignale "
         "einer gehaltenen Aktie entfallen. Eingetragen wird im Reiter Blacklist mit Kürzel oder Firmenname, eine neue "
-        "Sperre greift im Handel binnen einer Minute. Ein abgehakter Eintrag bleibt stehen und sperrt nichts.",
+        "Sperre greift im Handel binnen einer Minute. Ein abgehakter Eintrag bleibt stehen und sperrt nichts. Wird "
+        "eine Aktie der Wochenlisten freigegeben, rechnet der Wächter ihre Kaufpunkte gleich selbst, und sie kann "
+        "noch am selben Tag melden.",
         "Man setzt eine Aktie am Dienstag um 16 Uhr auf die Blacklist: Ab spätestens 16:01 Uhr meldet der Wächter "
         "sie nicht mehr, und der Nachtscan rechnet ihr keine Kaufpunkte mehr.")
     neu("grundlagen", "Nachtscan",
@@ -316,9 +319,10 @@ def begriffe(einst=None) -> list:
         "Der Markt fällt um 3 Prozent, die Aktie nur um 1 Prozent: Ihre RS-Linie steigt.")
     neu("rs", "RS-Linie auf dem 52-Wochen-Hoch",
         "Die RS-Linie steht so hoch wie seit einem Jahr nicht. Der RS-Linien-Bericht nennt jeden Abend alle Aktien, "
-        "deren Linie gegen SPY und gegen QQQ zugleich auf dem Hoch steht, ab "
+        "deren Linie gegen SPY oder gegen QQQ auf dem Hoch steht, ab "
         f"{_z(rslinie_bericht.KURS_MIN, 0)} Dollar Kurs und {_z(rslinie_bericht.MARKTKAP_MIN_MRD * 1000, 0)} "
-        "Millionen Dollar Börsenwert; neu ist, wer am Vortag noch nicht auf dem Hoch stand.",
+        "Millionen Dollar Börsenwert. Bei jeder Aktie steht, gegen welchen Index, SPY, QQQ oder beide; die mit "
+        "beiden stehen zuerst. Neu ist, wer am Vortag mit keiner der beiden Linien auf dem Hoch stand.",
         "Eine Aktie steht 3 Prozent unter ihrem Kurshoch, ihre RS-Linie aber auf dem 52-Wochen-Hoch: Sie hält sich "
         "besser als der Markt.")
     neu("rs", "Mansfield RS",
@@ -394,10 +398,13 @@ def begriffe(einst=None) -> list:
         "Teilverkauf; dort wandert nur der Stop mit jeder neuen, höheren Box.",
         "Einstieg 50 Dollar: Bei 60 Dollar wird die Hälfte verkauft.")
     neu("stops", "Nachzieh-Linie",
-        f"Stufe C der Ausstiegsregeln: Nach dem Teilverkauf läuft der Rest über die {int(ex['trail_ma_schnell'])}-"
-        f"Tage-Linie. Schließt der Kurs darunter, wird der Rest verkauft.",
-        f"Nach dem Teilverkauf schließt die Aktie unter ihrer {int(ex['trail_ma_schnell'])}-Tage-Linie: Der Rest "
-        "wird verkauft.")
+        f"Stufe C der Ausstiegsregeln: Nach dem Teilverkauf läuft der Rest über eine gleitende Linie. Bei ruhiger "
+        f"Bewegung, einer ATR 14 unter {_z(ex['trail_ruhig_atr_max_pct'], 1)} Prozent des Kurses, ist es die "
+        f"{int(ex['trail_ma_langsam'])}-Tage-Linie, sonst die {int(ex['trail_ma_schnell'])}-Tage-Linie; die "
+        "Verkaufsmeldung nennt, welche gilt. Schließt der Kurs darunter, wird der Rest verkauft. Die Schwelle der "
+        "ATR ist eine eigene Festlegung.",
+        f"Nach dem Teilverkauf hat die Aktie eine ATR 14 von 1,8 Prozent des Kurses und schließt unter ihrer "
+        f"{int(ex['trail_ma_langsam'])}-Tage-Linie: Der Rest wird verkauft.")
     neu("stops", "Halteregel",
         f"Steigt eine Aktie binnen {int(ex['schnellstarter_tage'])} Handelstagen nach dem Einstieg um "
         f"{_pz(ex['schnellstarter_pct'])} Prozent, wird sie {int(ex['halteregel_tage'])} Handelstage ab dem "
@@ -471,7 +478,9 @@ def begriffe(einst=None) -> list:
         "Die Meldung aufs Handy, wenn ein Kaufpunkt mit bestätigtem Volumen reißt, dazu je Kaufpunkt eine Kaufzeile "
         "an den Bot. Oben stehen Kürzel, Firma und Muster, darunter Kaufpunkt, Kurs und Volumen, dann Stop, Risk und "
         "Ziel, zuletzt die Lage zu den EMA-Linien, RS und Ratings. Reißen bei einer Aktie mehrere Kaufpunkte "
-        "zugleich, stehen sie in einer Meldung mit Unternummern.",
+        "zugleich, stehen sie in einer Meldung mit Unternummern. Liegen zwei Muster auf demselben Preis, auch ein "
+        "Alarm-Muster und ein Kaufpunkt der Mappe, ist das ein Kaufpunkt: eine Meldung, die beide Muster nennt, und "
+        "eine Kaufzeile.",
         "Eine Aktie reißt ihr Rectangle Top: Kaufpunkt 50,01 Dollar, Kurs 50,30 Dollar, Volumen bestätigt; Stop 46 "
         "Dollar, Risk 8 Prozent.")
     neu("meldungen", "Regel 1, einmal am Tag",
@@ -512,8 +521,9 @@ def begriffe(einst=None) -> list:
     neu("meldungen", "Reiter Berichte",
         "Alle Berichte stehen nur in der App, nicht auf dem Handy: je Berichtsart ein Unterreiter, daneben die Zahl "
         "der ungelesenen. Jeder Bericht lässt sich von Hand auf gelesen setzen; was gelesen ist, merkt sich jedes "
-        f"Gerät für sich. Geleert wird Montag bis Freitag um {berichte.LEERUNG_STUNDE}:00 Uhr Wiener Zeit; der Stand "
-        "vom Vortag und vom Wochenende bleibt bis dahin lesbar. Auf dem Handy bleiben die Kaufmeldungen samt "
+        f"Gerät für sich. Geleert wird an jedem Handelstag der New Yorker Börse um {berichte.LEERUNG_STUNDE}:00 "
+        "Uhr Wiener Zeit; der Stand des letzten Handelstags bleibt über das Wochenende und über "
+        "US-Börsenfeiertage bis dahin lesbar. Auf dem Handy bleiben die Kaufmeldungen samt "
         "übersprungen, Red to Green, der Power-Gap am Lückentag und Störungen. Die Unterreiter: "
         + ", ".join(arten) + ".",
         f"Der Abendbericht der Nacht steht morgens im Unterreiter Abendbericht, bis er um {berichte.LEERUNG_STUNDE}:00 "
@@ -527,20 +537,27 @@ def begriffe(einst=None) -> list:
     neu("meldungen", "Gap-Up-Bericht",
         "Jeden Handelstag 20 Minuten vor der US-Eröffnung, meist um 15:10 Uhr Wiener Zeit: alle Aktien des ganzen "
         f"Markts mit einer vorbörslichen Lücke ab {_z(gapup_bericht.GAP_MIN_PCT, 0)} Prozent, vorbörslichem Volumen "
-        f"von mindestens minus {_z(100 - gapup_bericht.VOL_MIN_ANTEIL * 100, 0)} Prozent über dem 50-Tage-Schnitt, "
+        f"von mindestens {_z(gapup_bericht.VOL_MIN_ANTEIL * 100, 0)} Prozent des Tagesschnitts, "
         "Kurs ab "
         f"{_z(gapup_bericht.KURS_MIN, 0)} Dollar und Börsenwert ab "
         f"{_z(gapup_bericht.MARKTKAP_MIN_MRD * 1000, 0)} Millionen Dollar, sortiert nach vorbörslichem Dollarvolumen. "
         "Je Aktie stehen Kurs, Lücke, Volumen, Wachstum, RS, Abstand zum Hoch, Sektor, Wochenlisten, Zahlentermin "
-        "und Schlagzeilen dabei. Reine Auskunft, kein Alarm, keine Kaufzeile.",
+        "und Schlagzeilen dabei. Der Tagesschnitt ist das durchschnittliche Tagesvolumen der letzten 50 "
+        "Handelstage; nur in diesem Bericht steht das Volumen als Anteil daran und nicht in Prozent über dem "
+        "Schnitt. Reine Auskunft, kein Alarm, keine Kaufzeile.",
         "Eine Aktie steht vorbörslich 17 Prozent höher, nach Quartalszahlen, mit 2,6 Millionen Stück: Sie steht "
         "oben im Bericht.")
     # Die Schwellen stehen in earnings_bericht.py auf dem Zweig fundament-phase1
     # (Gerhard, 30.09.2026, Antworten 1 bis 5 und 12); aendert sich dort eine,
     # gehoert dieser Eintrag mitgeaendert.
     neu("meldungen", "Earnings-Bericht",
-        "Nach jedem Lauf der Vorabwerte, werktags von 6 bis 20 Uhr New Yorker Zeit alle 30 Minuten und zusätzlich "
-        "um 9:20 Uhr vor der Eröffnung, prüft das System die neuen Quartalszahlen. In den Bericht kommt eine Aktie mit "
+        "Je Handelstag ein Tagesbericht, der laufend ergänzt wird. Nach jedem Lauf der Vorabwerte, werktags von 6 "
+        "bis 20 Uhr New Yorker Zeit alle 30 Minuten und zusätzlich um 9:20 Uhr vor der Eröffnung, prüft das System "
+        "die neuen Quartalszahlen; neue Treffer stehen oben mit der Uhrzeit, und der Bericht zählt dann wieder als "
+        "ungelesen. Aktien, die beide Bedingungen erfüllen, stehen innerhalb eines Laufs zuerst und sind markiert. "
+        "Nach dem letzten Lauf des Abends steht an jedem Handelstag eine Meldung da, auch ohne Treffer: wie viele "
+        "Quartalszahlen gelesen wurden und dass keine Aktie die Kriterien erfüllt hat. In den Bericht kommt eine "
+        "Aktie mit "
         "mindestens 20 Prozent Umsatzwachstum gegen das Vorjahresquartal, Kurs ab 15 Dollar, Börsenwert ab 700 "
         "Millionen Dollar und einer Jahresvolatilität ab 10 Prozent, wenn sie den eingefrorenen Konsens geschlagen "
         "hat, beim EPS um mindestens 3 Prozent oder beim Umsatz um mindestens 4 Prozent, oder wenn ihr Wachstum um "
@@ -550,7 +567,7 @@ def begriffe(einst=None) -> list:
         "Jahresvolatilität ist die Schwankung der Tageskurse über 252 Handelstage, aufs Jahr hochgerechnet. Kein "
         "Alarm, keine Kaufzeile.",
         "Eine Firma meldet 36 Prozent Umsatzwachstum nach 30 Prozent im Quartal davor und liegt 5 Prozent über dem "
-        "Konsens: Sie steht im Bericht, markiert mit Konsens geschlagen beim Umsatz und Beschleunigung beim Umsatz.")
+        "Konsens: Sie steht oben im Tagesbericht, markiert mit beide Bedingungen erfüllt.")
     neu("meldungen", "Abendbericht",
         "Der Bericht nach dem Nachtscan: Rücknahmen der schlussnahen Befunde, Marktampel samt Distribution Days und "
         "Marktbreite, Aktien im Plus an einem roten Nasdaq-Tag, neue Hochs in drei Stufen, RS ab "

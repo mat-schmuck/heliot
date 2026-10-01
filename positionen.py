@@ -147,12 +147,24 @@ def zurueckschreiben(eintrag, pos):
 
 
 def pruefe_bestand(bestand, kurse, heute_index, ma21=None, ma50=None,
-                   markt_im_aufwaertstrend=True):
+                   markt_im_aufwaertstrend=True, atr=None):
     """Alle offenen Positionen gegen das Exit-Regelwerk pruefen.
 
-    kurse: {Symbol: Schlusskurs}. ma21/ma50: {Symbol: Wert} oder None.
-    Rueckgabe: Liste der Meldungen, je eine je ausgeloester Regel."""
-    ma21, ma50 = ma21 or {}, ma50 or {}
+    kurse: {Symbol: Schlusskurs}. ma21/ma50: {Symbol: Wert} oder None;
+    atr: {Symbol: ATR 14 in Prozent des Kurses} oder None, sie waehlt die
+    Nachzieh-Linie (Gerhard, 01.10.2026, Antwort 7).
+    Rueckgabe: Liste der Meldungen, je eine je ausgeloester Regel.
+
+    DIE LINIEN HAENGEN AM KUERZEL (Befund 01.10.2026): Gesucht wurde bis dahin
+    nur unter dem Schluessel des Eintrags. Beobachtungen heissen seit dem
+    28.08.2026 'TICKER|Zusatz', die Linien aber kommen je Kuerzel; die
+    Nachzieh-Linie hat deshalb bei keiner Beobachtung je gegriffen. Jetzt
+    zuerst der Schluessel, dann das Kuerzel."""
+    ma21, ma50, atr = ma21 or {}, ma50 or {}, atr or {}
+
+    def _wert(tafel, schluessel, kuerzel):
+        w = tafel.get(schluessel)
+        return w if w is not None else tafel.get(kuerzel)
     meldungen = []
     for symbol, e in bestand.items():
         if e.get("status") != "offen":
@@ -161,14 +173,16 @@ def pruefe_bestand(bestand, kurse, heute_index, ma21=None, ma50=None,
         # 'TICKER|Zusatz' verschluesselt, weil ein Ticker mehrere
         # Kaufpunkte zugleich tragen kann (ASC|1 und ASC|2 am 19.08.).
         # Der Kurs haengt am echten Symbol, nicht am Schluessel.
-        kurs = kurse.get(e.get("symbol", symbol))
+        kuerzel = e.get("symbol", symbol)
+        kurs = kurse.get(kuerzel)
         if kurs is None:
             continue
         pos = als_position(e)
         aktion, grund, pos = exit_regeln.pruefe_exit(
             pos, float(kurs), heute_index,
-            ma21=ma21.get(symbol), ma50=ma50.get(symbol),
-            markt_im_aufwaertstrend=markt_im_aufwaertstrend)
+            ma21=_wert(ma21, symbol, kuerzel), ma50=_wert(ma50, symbol, kuerzel),
+            markt_im_aufwaertstrend=markt_im_aufwaertstrend,
+            atr_pct=_wert(atr, symbol, kuerzel))
         zurueckschreiben(e, pos)
         if aktion != "halten":
             e["verlauf"].append({"datum": date.today().isoformat(),
@@ -276,6 +290,34 @@ def selbsttest() -> int:
     pruefe("Der Meldetext nennt sie ausdrücklich",
            melde_text(m[0]).startswith("BEOBACHTUNG:"),
            melde_text(m[0])[:60])
+
+    # Die Nachzieh-Linie einer Beobachtung: Linien und ATR haengen am
+    # Kuerzel, der Eintrag heisst 'TICKER|Zusatz' (Befund 01.10.2026)
+    b5 = {"FFF|fb": dict(eroeffne({}, "FFF", "Flat Base", 100.0, 95.0,
+                                  beobachtung=True)["FFF"],
+                         teilverkauft=True, hoechstkurs=130.0,
+                         aktueller_stop=100.0)}
+    m = pruefe_bestand(b5, {"FFF": 108.0}, heute_index=40,
+                       ma21={"FFF": 112.0}, ma50={"FFF": 105.0},
+                       atr={"FFF": 3.1})
+    pruefe("Beobachtung: die Nachzieh-Linie greift ueber das Kuerzel",
+           len(m) == 1 and m[0]["aktion"] == "trail_raus"
+           and m[0]["kuerzel"] == "FFF" and "21-Tage-Linie" in m[0]["grund"],
+           m[0]["grund"] if m else "nichts")
+    b6 = {"GGG|fb": dict(eroeffne({}, "GGG", "Flat Base", 100.0, 95.0,
+                                  beobachtung=True)["GGG"],
+                         teilverkauft=True, hoechstkurs=130.0,
+                         aktueller_stop=100.0)}
+    m = pruefe_bestand(b6, {"GGG": 108.0}, heute_index=40,
+                       ma21={"GGG": 112.0}, ma50={"GGG": 105.0},
+                       atr={"GGG": 1.9})
+    pruefe("Beobachtung in ruhiger Bewegung: ueber der 50-Tage-Linie bleibt sie",
+           not m and b6["GGG|fb"]["status"] == "offen")
+    pruefe("Der Meldetext nennt die Linie",
+           "es gilt die 21-Tage-Linie" in melde_text(pruefe_bestand(
+               b5 | {"FFF|fb": dict(b5["FFF|fb"], status="offen")},
+               {"FFF": 108.0}, 41, ma21={"FFF": 112.0},
+               ma50={"FFF": 105.0}, atr={"FFF": 3.1})[0]))
 
     # Datei hin und zurück
     import tempfile

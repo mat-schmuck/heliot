@@ -47,6 +47,14 @@ ueber MA21 und MA50), O'Neil und IBD (20 bis 25 % Gewinnmitnahme,
 8-Wochen-Halteregel, Round-Trip-Verbot), Bulkowski, Darvas, Weinstein.
 Alles Ausgangswerte fuer die Messung, keine gemessenen Optima.
 
+DIE NACHZIEH-LINIE (Gerhard, 01.10.2026, Antwort 7, eigene Festlegung):
+"Ruhige Bewegung = ATR(14) unter 2,5 Prozent des Kurses. Dann wird an der
+50-Tage-Linie nachgezogen, sonst wie bisher an der 21-Tage-Linie. In der
+Verkaufsmeldung bitte nennen, welche Linie gilt." Bis dahin zog Stufe C im
+Betrieb immer an der 21-Tage-Linie nach; die 50-Tage-Linie war nicht
+angebunden. Ohne ATR, etwa bei zu kurzer Kurshistorie, gilt wie bisher die
+21-Tage-Linie, und die Meldung sagt das.
+
 Aufruf:
     python exit_regeln.py --selbsttest
 """
@@ -245,14 +253,68 @@ def ist_round_trip(pos, schlusskurs):
 
 
 # ---------------------------------------------------------------------------
+# Stufe C: die Nachzieh-Linie (Gerhard, 01.10.2026, Antwort 7)
+# ---------------------------------------------------------------------------
+
+def atr_prozent(highs, lows, closes, tage=None):
+    """Die ATR 14 nach Wilder in Prozent des letzten Kurses; None, wenn die
+    Kurse nicht reichen. Gerechnet von kennzahlen_technik.atr, derselben
+    Rechnung wie die Kennzahl ATR 14 des Scanners: Im System gibt es eine
+    ATR, nicht zwei."""
+    import kennzahlen_technik
+    tage = int(tage or CFG["trail_atr_tage"])
+    try:
+        closes = [float(x) for x in closes]
+        highs = [float(x) for x in highs]
+        lows = [float(x) for x in lows]
+    except (TypeError, ValueError):
+        return None
+    if not closes or not closes[-1] > 0:
+        return None
+    wert = kennzahlen_technik.atr(highs, lows, closes, tage)
+    return None if wert is None else wert / closes[-1] * 100.0
+
+
+def ruhige_bewegung(atr_pct):
+    """True bei einer ATR 14 unter 2,5 Prozent des Kurses, None ohne ATR."""
+    if atr_pct is None:
+        return None
+    return atr_pct < CFG["trail_ruhig_atr_max_pct"]
+
+
+def nachzieh_tage(atr_pct):
+    """Die Linie, an der nachgezogen wird: 50 Tage bei ruhiger Bewegung,
+    sonst und ohne ATR wie bisher 21 Tage."""
+    return int(CFG["trail_ma_langsam"] if ruhige_bewegung(atr_pct) else CFG["trail_ma_schnell"])
+
+
+def nachzieh_grund(atr_pct):
+    """Welche Linie gilt und warum, fuer die Verkaufsmeldung (Antwort 7). In
+    der Schreibweise der Zeile, in der er steht (positionen.melde_text)."""
+    tage = nachzieh_tage(atr_pct)
+    if atr_pct is None:
+        return f"es gilt die {tage}-Tage-Linie, ATR 14 unbekannt"
+    grenze = f"{CFG['trail_ruhig_atr_max_pct']:g}"
+    if ruhige_bewegung(atr_pct):
+        return (f"es gilt die {tage}-Tage-Linie, ruhige Bewegung mit ATR 14 bei {atr_pct:.2f} % des Kurses, "
+                f"unter {grenze} %")
+    return (f"es gilt die {tage}-Tage-Linie, ATR 14 bei {atr_pct:.2f} % des Kurses, ab {grenze} % keine ruhige "
+            f"Bewegung")
+
+
+# ---------------------------------------------------------------------------
 # Alles zusammen
 # ---------------------------------------------------------------------------
 
 def pruefe_exit(pos, schlusskurs, aktueller_index, ma21=None, ma50=None,
                 neuer_struktur_punkt=None, markt_im_aufwaertstrend=True,
-                trail_schnell=True):
+                trail_schnell=None, atr_pct=None):
     """Eine offene Position gegen ALLE Regeln pruefen, in der richtigen
     Reihenfolge.
+
+    Die Nachzieh-Linie waehlt die ATR 14 in Prozent des Kurses (atr_pct,
+    Antwort 7 vom 01.10.2026); trail_schnell True oder False legt sie
+    stattdessen fest, auf 21 oder 50 Tage.
 
     Rueckgabe: (aktion, begruendung, Position). Die Aktion ist eine von
       'halten', 'stop_raus', 'round_trip_raus', 'teilverkauf',
@@ -299,12 +361,20 @@ def pruefe_exit(pos, schlusskurs, aktueller_index, ma21=None, ma50=None,
                     f"+{gewinn*100:.1f} % erreicht, "
                     f"{CFG['teilverkauf_anteil']*100:.0f} % verkaufen", pos)
 
-    # 6. Stufe C: den Rest ueber die gleitende Linie trailen.
-    trail_ma = ma21 if trail_schnell else ma50
-    tage = (CFG["trail_ma_schnell"] if trail_schnell
-            else CFG["trail_ma_langsam"])
+    # 6. Stufe C: den Rest an der Nachzieh-Linie trailen; welche Linie
+    #    gilt, entscheidet die ATR 14 (Antwort 7 vom 01.10.2026).
+    if trail_schnell is None:
+        tage = nachzieh_tage(atr_pct)
+    else:
+        tage = int(CFG["trail_ma_schnell"] if trail_schnell
+                   else CFG["trail_ma_langsam"])
+    trail_ma = ma50 if tage == int(CFG["trail_ma_langsam"]) else ma21
     if pos.teilverkauft and trail_ma is not None and schlusskurs < trail_ma:
-        return "trail_raus", f"Schluss unter dem {tage}-Tage-Schnitt", pos
+        grund = (f"Schluss {schlusskurs:.2f} unter der {tage}-Tage-Linie "
+                 f"{trail_ma:.2f}")
+        if trail_schnell is None:
+            grund += "; " + nachzieh_grund(atr_pct)
+        return "trail_raus", grund, pos
 
     return "halten", "keine Exit-Bedingung erfüllt", pos
 
@@ -446,6 +516,42 @@ def selbsttest() -> int:
     pruefe("Exakt plus 20 Prozent löst den Teilverkauf aus",
            aktion == "teilverkauf",
            f"120/100-1 = {120.0/100.0-1!r}")
+
+    # 9b — die Nachzieh-Linie nach der ATR 14 (Antwort 7 vom 01.10.2026)
+    def _tv(name):
+        return Position(name, 100.0, 0, 95.0, hoechstkurs=130.0,
+                        teilverkauft=True, aktueller_stop=100.0)
+    aktion, grund, _ = pruefe_exit(_tv("RUHIG"), 108.0, 40, ma21=112.0,
+                                   ma50=105.0, atr_pct=1.8)
+    pruefe("Ruhige Bewegung, ATR unter 2,5 Prozent: es gilt die 50-Tage-Linie, "
+           "ueber ihr wird gehalten", aktion == "halten", f"{aktion}; {grund}")
+    aktion, grund, _ = pruefe_exit(_tv("RUHIG2"), 104.0, 40, ma21=112.0,
+                                   ma50=105.0, atr_pct=1.8)
+    pruefe("Ruhige Bewegung: unter der 50-Tage-Linie raus, die Meldung nennt "
+           "die Linie und die ATR",
+           aktion == "trail_raus" and grund.startswith(
+               "Schluss 104.00 unter der 50-Tage-Linie 105.00; es gilt die "
+               "50-Tage-Linie, ruhige Bewegung mit ATR 14 bei 1.80 % des "
+               "Kurses, unter 2.5 %"), grund)
+    aktion, grund, _ = pruefe_exit(_tv("UNRUHIG"), 108.0, 40, ma21=112.0,
+                                   ma50=105.0, atr_pct=2.5)
+    pruefe("ATR genau 2,5 Prozent ist keine ruhige Bewegung: 21-Tage-Linie",
+           aktion == "trail_raus" and "unter der 21-Tage-Linie 112.00; es gilt "
+           "die 21-Tage-Linie, ATR 14 bei 2.50 % des Kurses, ab 2.5 % keine "
+           "ruhige Bewegung" in grund, grund)
+    aktion, grund, _ = pruefe_exit(_tv("OHNE"), 108.0, 40, ma21=112.0,
+                                   ma50=105.0)
+    pruefe("Ohne ATR wie bisher die 21-Tage-Linie, und die Meldung sagt das",
+           aktion == "trail_raus" and grund.endswith(
+               "es gilt die 21-Tage-Linie, ATR 14 unbekannt"), grund)
+    hoch = [101.0 + i % 3 for i in range(40)]
+    tief = [99.0 - i % 3 for i in range(40)]
+    schluss = [100.0] * 40
+    a = atr_prozent(hoch, tief, schluss)
+    pruefe("ATR 14 in Prozent des Kurses, nach Wilder wie die Kennzahl",
+           a is not None and 2.0 < a < 7.0, f"{a}")
+    pruefe("ATR braucht 15 Kurse", atr_prozent(hoch[:14], tief[:14],
+                                               schluss[:14]) is None)
 
     # 10 — jedes Muster hat einen Bruchpunkt
     fehlend = [s for s in ("Darvas Box", "Rectangle Top", "VCP",
