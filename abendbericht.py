@@ -268,9 +268,11 @@ def rs_linien_hochs(rs, gedaechtnis, heute, cfg=None):
             [f"{i}. {z}" for i, z in enumerate(obwohl, 1)], g)
 
 
-def ruecknahmen(schlussnah, befunde_nacht, handelstag):
+def ruecknahmen(schlussnah, befunde_nacht, handelstag, gesperrt=None):
     """M6: Welche schlussnahen Befunde gelten mit dem echten Schluss nicht
-    mehr? Rueckgabe (zeilen, bestaetigt, zurueckgenommen)."""
+    mehr? Rueckgabe (zeilen, bestaetigt, zurueckgenommen). gesperrt(Befund)
+    sagt, ob seine Aktie auf der Blacklist steht: Dann steht keine Zeile da,
+    die Buchfuehrung (bestaetigt, zurueckgenommen) bleibt vollstaendig."""
     if not isinstance(schlussnah, dict) or str(schlussnah.get("handelstag") or "") != str(handelstag):
         return [], [], []
     if schlussnah.get("geprueft"):
@@ -292,6 +294,8 @@ def ruecknahmen(schlussnah, befunde_nacht, handelstag):
             best.append(s)
         else:
             zurueck.append(s)
+            if gesperrt is not None and gesperrt(s):
+                continue
             zeilen.append(f"RUECKNAHME: {lesbar(s.get('text') or s.get('titel') or s.get('symbol'))}; "
                           f"mit dem Schlusskurs nicht mehr gueltig")
     return [f"{i}. {z}" for i, z in enumerate(zeilen, 1)], best, zurueck
@@ -311,6 +315,28 @@ def sektor_kurz(sek):
     return zeilen
 
 
+def ohne_gesperrte(rs):
+    """DIE BLACKLIST (Gerhard, 30.09.2026, Antworten 8 und 13): Das RS-Universum
+    ohne die gesperrten Aktien, fuer jede Liste des Berichts. Die RS-Werte der
+    anderen bleiben, wie sie sind; gerechnet sind sie gegen den ganzen Markt."""
+    import blacklist
+    menge = blacklist.gesperrte()
+    if not menge or not isinstance(rs, dict):
+        return rs
+    rs = dict(rs)
+    for feld in ("listen", "aktien"):
+        if isinstance(rs.get(feld), dict):
+            rs[feld] = {t: e for t, e in rs[feld].items() if blacklist.schluessel(t) not in menge}
+    return rs
+
+
+def befund_gesperrt(befund) -> bool:
+    """Steht die Aktie eines schlussnahen Befunds auf der Blacklist? Der
+    Ausstieg traegt das echte Kuerzel, die anderen den Beobachtungsschluessel."""
+    import blacklist
+    return blacklist.gesperrt(befund.get("kuerzel") or befund.get("symbol") or befund.get("key"))
+
+
 # ---------------------------------------------------------------------------
 # Bauen und senden
 # ---------------------------------------------------------------------------
@@ -319,6 +345,7 @@ def bauen(rs, sek, gruen, gedaechtnis, schlussnah, befunde_nacht, heute, holen_a
     """Rueckgabe (titel, absaetze, prioritaet, gedaechtnis_neu, zurueckgenommen).
     ampel: der Inhalt von marktampel.json (Etappe 3), oder None."""
     cfg = cfg or CFGA
+    rs = ohne_gesperrte(rs)
     handelstag = str(rs.get("handelstag") or heute.isoformat())
     titel = f"Abendbericht {_datum_de(handelstag)}, Bericht, kein Kaufsignal"
     absaetze = []
@@ -340,7 +367,7 @@ def bauen(rs, sek, gruen, gedaechtnis, schlussnah, befunde_nacht, heute, holen_a
     absaetze.append("; ".join(kopf))
 
     # M6 zuerst: Was zurueckgenommen wird, ist das Dringlichste.
-    rz, best, zurueck = ruecknahmen(schlussnah, befunde_nacht, handelstag)
+    rz, best, zurueck = ruecknahmen(schlussnah, befunde_nacht, handelstag, gesperrt=befund_gesperrt)
     if rz:
         absaetze.append("Ruecknahmen der schlussnahen Befunde von 15:45:\n" + "\n".join(rz))
     elif isinstance(schlussnah, dict) and str(schlussnah.get("handelstag") or "") == handelstag \

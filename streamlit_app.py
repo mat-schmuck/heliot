@@ -42,6 +42,7 @@ import streamlit as st
 
 import ablaeufe
 import berichte
+import blacklist
 import einstellungen
 import frischhalten
 import lexikon
@@ -624,6 +625,62 @@ def _ablauf_token() -> str:
     if globals().get("rolle") != "voll":
         return ""
     return (_secret("ABLAUF_TOKEN") or "").strip()
+
+
+# --- Blacklist: Lesen fuer die Anzeigen -------------------------------------
+# DIE BLACKLIST (Gerhard, 30.09.2026, Antworten 8 und 13) gilt auch in der App:
+# Eine gesperrte Aktie steht nicht im Aktuellen Scan, nicht unter den Treffern
+# des Scanners und nicht im Ergebnis von Liste pruefen; beim Nachschlagen und
+# bei den einzeln ueberwachten Aktien steht ein Hinweis. Gelesen wird nur im
+# vollen Zugang, wie die Berichte: Der Gast sieht die Liste nicht, und sein
+# Scanner zeigt ungefiltert, was er findet; filterte er, liessen fehlende
+# Treffer auf die Liste schliessen (Frage an Mathias, 01.10.2026).
+@st.cache_data(ttl=60, show_spinner=False)
+def _bl_holen() -> list:
+    """Die Eintraege aus dem privaten Datenrepo; ein Fehlschlag wirft und
+    landet nicht im Speicher."""
+    token = _daten_token()
+    if not token:
+        raise LookupError("kein Token für das Datenrepo")
+    liste, _sha, grund = blacklist.datei_lesen(token)
+    if grund:
+        raise LookupError(grund)
+    return liste
+
+
+def _bl_eintraege() -> tuple:
+    """(Eintraege, technischer Grund oder None); ohne vollen Zugang leer."""
+    if globals().get("rolle") != "voll":
+        return [], None
+    try:
+        return _bl_holen(), None
+    except Exception as e:  # noqa
+        return [], str(e) or type(e).__name__
+
+
+def _bl_menge() -> set:
+    """Die gesperrten Aktien als blacklist.schluessel; ohne vollen Zugang leer."""
+    return blacklist.aktive(_bl_eintraege()[0])
+
+
+def _bl_gesperrt(ticker) -> bool:
+    return blacklist.schluessel(ticker) in _bl_menge()
+
+
+def _bl_ohne(tab, spalte: str):
+    """(Tabelle ohne die gesperrten Aktien, Zahl der ausgeblendeten)."""
+    menge = _bl_menge()
+    if not menge or tab is None or spalte not in getattr(tab, "columns", ()):
+        return tab, 0
+    maske = tab[spalte].astype(str).map(blacklist.schluessel).isin(menge)
+    if not maske.any():
+        return tab, 0
+    return tab[~maske].reset_index(drop=True), int(maske.sum())
+
+
+def _bl_ausgeblendet_satz(zahl: int) -> str:
+    return ("Eine Aktie der Blacklist ist ausgeblendet." if zahl == 1
+            else f"{zahl} Aktien der Blacklist sind ausgeblendet.")
 
 
 @st.cache_resource(show_spinner=False)
@@ -1290,7 +1347,8 @@ def einzel_liste_zeigen():
     st.markdown(("Eine Aktie ist" if len(zeilen) == 1 else f"{nachschlagen.zahl(len(zeilen))} Aktien sind")
                 + " einzeln eingetragen; weitere kommen beim Nachschlagen dazu. " + EINZEL_HINWEIS)
     for t, firma, wann in zeilen:
-        st.markdown(t + (f", {firma}" if firma else "") + _einzel_eingetragen(wann))
+        st.markdown(t + (f", {firma}" if firma else "") + _einzel_eingetragen(wann)
+                    + ("; steht auf der Blacklist und wird deshalb nicht überwacht" if _bl_gesperrt(t) else ""))
         if st.button(f"{t} nicht mehr überwachen", key=f"einzel_liste_aus_{t}"):
             st.session_state["einzel_meldung_liste"] = _einzel_setzen(t, firma, False)
             st.rerun()
@@ -1339,6 +1397,10 @@ if nachschlag_eingabe:
         else:
             st.markdown("Nichts gefunden. Prüfe bitte Kürzel oder Namen.")
     else:
+        if _bl_gesperrt(nachschlag_ticker):
+            st.warning(f"{nachschlag_ticker} steht auf der Blacklist: kein Alarm, kein Bericht, keine Zeile an den "
+                       "Handels-Bot und keine Zeile in den Listen der App. Freigeben lässt sie sich im Reiter "
+                       "Blacklist.")
         with st.spinner(f"Hole Kurs, Volumen und Chartmuster für {nachschlag_ticker}"):
             try:
                 nachschlag_live_werte = nachschlag_live(nachschlag_ticker)
@@ -1441,17 +1503,21 @@ if rolle != "gast":
 # DER REITER LEXIKON (Gerhard, 29.09.2026, Teil 3 b) steht hinter dem Regelwerk,
 # vor den Einstellungen, dahinter der Reiter Quiz (Teil 3 c); Gaeste bekommen
 # beide nicht (S4).
+# DER REITER BLACKLIST (Gerhard, 30.09.2026) steht hinter den Wochenlisten, nur
+# im vollen Zugang: Der Gast darf die Liste weder sehen noch aendern (Antwort 13).
 tab_berichte = None
 tab_lexikon = tab_quiz = None
+tab_blacklist = None
 tab_upload = tab_gast = tab_ablaeufe = tab_einst = None
 if rolle == "gast":
     st.markdown("## Scanner", anchors=False)
     tab_scanner = st.container()
     tab_liste = tab_scan = tab_info = None
 elif rolle == "voll":
-    (tab_liste, tab_berichte, tab_scan, tab_scanner, tab_upload, tab_gast, tab_ablaeufe, tab_info, tab_lexikon,
-     tab_quiz, tab_einst) = st.tabs(["Liste prüfen", "Berichte", "Aktueller Scan", "Scanner", "Wochenlisten",
-                                     "Gastzugang", "Abläufe", "Regelwerk", "Lexikon", "Quiz", "Einstellungen"])
+    (tab_liste, tab_berichte, tab_scan, tab_scanner, tab_upload, tab_blacklist, tab_gast, tab_ablaeufe, tab_info,
+     tab_lexikon, tab_quiz, tab_einst) = st.tabs(["Liste prüfen", "Berichte", "Aktueller Scan", "Scanner",
+                                                  "Wochenlisten", "Blacklist", "Gastzugang", "Abläufe",
+                                                  "Regelwerk", "Lexikon", "Quiz", "Einstellungen"])
 else:
     tab_liste, tab_scan, tab_scanner, tab_upload, tab_info, tab_lexikon, tab_quiz, tab_einst = st.tabs(
         ["Liste prüfen", "Aktueller Scan", "Scanner", "Wochenlisten", "Regelwerk", "Lexikon", "Quiz",
@@ -1460,8 +1526,8 @@ else:
 # Der Link zur Startseite ganz oben in jeder Registerkarte (Antwort 11); der
 # am Ende kommt ganz unten im Skript, nach allem anderen Inhalt. Ein Gast hat
 # keine Registerkarten, nur den Scanner.
-REITER_ALLE = [r for r in (tab_liste, tab_berichte, tab_scan, tab_scanner, tab_upload, tab_gast, tab_ablaeufe,
-                           tab_info, tab_lexikon, tab_quiz, tab_einst) if r is not None]
+REITER_ALLE = [r for r in (tab_liste, tab_berichte, tab_scan, tab_scanner, tab_upload, tab_blacklist, tab_gast,
+                           tab_ablaeufe, tab_info, tab_lexikon, tab_quiz, tab_einst) if r is not None]
 if rolle != "gast":
     for _reiter in REITER_ALLE:
         with _reiter:
@@ -2155,6 +2221,8 @@ def _sc_scannen(vergleich: dict) -> dict:
         erg["hinweise"].append("Die Analystendaten ließen sich nicht laden; die Merkmale dazu zeigen und filtern "
                                "deshalb nichts.")
         erg["technik"].append(analysten_grund)
+    # DIE BLACKLIST (Gerhard, 30.09.2026): nur im vollen Zugang, siehe _bl_eintraege.
+    tabelle, erg["blacklist"] = _bl_ohne(tabelle, "ticker")
     sektoren = sa.sektoren_in(tabelle)
     heute = sa.ny_jetzt().date()
     einstellung = _sc_einstellung(sektoren)
@@ -2246,6 +2314,8 @@ def _sc_ergebnis_zeigen(erg: dict, geaendert: bool):
     st.markdown(sa.md(satz + "."))
     teile = sa.einstellungs_teile(ausw["einstellung"], erg.get("sektor_tabelle"))
     st.markdown(sa.md("Eingestellt: " + ("; ".join(teile) if teile else "nichts, die Liste zeigt den ganzen Markt") + "."))
+    if erg.get("blacklist"):
+        st.caption(_bl_ausgeblendet_satz(erg["blacklist"]))
     for hinweis in list(erg.get("hinweise") or []) + list(ausw["hinweise"]):
         st.warning(sa.md(hinweis))
     for grund in erg.get("technik") or []:
@@ -2838,6 +2908,11 @@ with tab_liste:
         tickers = [t.strip().upper() for t in manuell.replace(";", ",").split(",") if t.strip()]
 
     tickers = list(dict.fromkeys([t for t in tickers if t]))  # Duplikate raus
+    # DIE BLACKLIST (Gerhard, 30.09.2026): gesperrte Aktien rechnet die Liste nicht.
+    lp_gesperrt = [t for t in tickers if _bl_gesperrt(t)]
+    if lp_gesperrt:
+        tickers = [t for t in tickers if t not in lp_gesperrt]
+        st.info("Ausgelassen, weil auf der Blacklist: " + ", ".join(lp_gesperrt) + ".")
 
     if tickers:
         st.info(f"{len(tickers)} Kürzel erkannt. Für jede Aktie werden die Kurse von Yahoo geholt; "
@@ -2876,6 +2951,12 @@ with tab_scan:
     else:
         if scan_info:
             st.caption(f"Stand: {scan_info}.")
+        # DIE BLACKLIST (Gerhard, 30.09.2026): Der Nachtscan laesst gesperrte
+        # Aktien schon aus; hier faellt heraus, was seither gesperrt wurde, auch
+        # aus der Datei zum Herunterladen.
+        df_scan, scan_ausgeblendet = _bl_ohne(df_scan, "Ticker")
+        if scan_ausgeblendet:
+            st.caption(_bl_ausgeblendet_satz(scan_ausgeblendet))
         # R1 bis R3 (Gerhard, 12.09.2026, ergaenzt am selben Abend): der
         # Bezug steht in der App. Die Spalte heisst aus Bestandsgruenden
         # weiter "RS Nasdaq", gerechnet wird gegen den ganzen US-Markt
@@ -2955,7 +3036,7 @@ with tab_scan:
             scan_endung = next(x[2] for x in sa.FORMATE if x[0] == scan_fmt)
             st.download_button(
                 "Nachtscan als Datei herunterladen",
-                data=(scan_roh if scan_fmt == "xlsx"
+                data=(scan_roh if scan_fmt == "xlsx" and not scan_ausgeblendet
                       else lambda: sa.tabelle_datei(df_scan, scan_fmt, "Chart-Screening-Tool, Nachtscan",
                                                     [f"Stand: {scan_info}" if scan_info else ""],
                                                     blatt="Kaufpunkte")[0]),
@@ -3386,6 +3467,231 @@ with tab_upload:
     # vollen Zugang
     if rolle == "voll":
         einzel_liste_zeigen()
+
+
+# --- Blacklist (Registerkarte) ----------------------------------------------
+# DER REITER BLACKLIST (Gerhard, 30.09.2026, ueber Mathias; Antworten 8 und 13
+# vom selben Abend): ein Eingabefeld fuer Kuerzel oder Firmenname, gesucht wie
+# beim Nachschlagen; eingetragen wird erst mit dem Knopf, das ist die
+# Bestaetigung. Je Eintrag eine Ueberschrift, damit der Screenreader von Aktie
+# zu Aktie springt, ein Kontrollfeld gesperrt und ein Knopf zum Loeschen.
+# Abhaken und Loeschen fragen zurueck; die Rueckfrage steht gleich unter dem
+# Eintrag, eine Statusmeldung sagt sie an wie beim Quiz. Haelt der Bot die
+# Aktie womoeglich, steht das VOR dem Speichern da. Der Bot meldet seinen
+# Bestand nicht; als gehalten gilt deshalb, wofuer in positionen.json ein
+# Eintrag offen ist, denn mit einer Beobachtung ging eine Kaufzeile an den Bot
+# (Frage an Mathias, 01.10.2026). Geschrieben wird in das private Datenrepo
+# (blacklist.aendern); die Werkzeuge lesen den neuen Stand binnen einer Minute.
+_bl_status = st.components.v2.component(
+    "heliot_bl_status", js=_SC_STATUS_JS.replace("heliot_scan_status", "heliot_bl_status"))
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def _bl_rs() -> dict:
+    """Das RS-Universum fuer die Suche nach Kuerzel oder Firmenname."""
+    return nachschlagen.lade_datei("rs_universum.json")
+
+
+@st.cache_data(ttl=300, show_spinner=False)
+def _bl_offen() -> dict:
+    """{Schluessel: [offene Eintraege aus positionen.json]}, Beobachtungen und
+    von Hand gefuehrte Positionen."""
+    raus = {}
+    for e in (nachschlagen.lade_datei("positionen.json") or {}).values():
+        if isinstance(e, dict) and e.get("status") == "offen" and e.get("symbol"):
+            raus.setdefault(blacklist.schluessel(e.get("symbol")), []).append(e)
+    return raus
+
+
+def _bl_gehalten_satz(ticker: str) -> str:
+    """Der Hinweis vor dem Speichern; leer, wenn fuer die Aktie nichts offen ist."""
+    offen = _bl_offen().get(blacklist.schluessel(ticker)) or []
+    if not offen:
+        return ""
+    beob = [e for e in offen if e.get("beobachtung")]
+    if beob:
+        tage = sorted(str(e.get("einstieg_datum") or "")[:10] for e in beob if e.get("einstieg_datum"))
+        seit = f" seit dem {nachschlagen.datum_text(tage[0])}" if tage else ""
+        grund = f"Für {ticker} ist{seit} eine Beobachtung offen, also ging eine Kaufzeile an den Handels-Bot."
+    else:
+        grund = f"{ticker} steht als offene Position im Bestand."
+    return (f"Achtung: Der Handels-Bot hält {ticker} womöglich. {grund} Auf der Blacklist kommt für die Aktie auch "
+            "kein Verkaufssignal mehr, weder im Reiter Berichte noch an den Bot.")
+
+
+def _bl_seit_text(e: dict) -> str:
+    """Eingetragen am ... um ... Uhr Wiener Zeit."""
+    from zoneinfo import ZoneInfo
+    try:
+        utc = datetime.fromisoformat(str(e.get("seit") or "").replace("Z", "+00:00"))
+        wien = utc.astimezone(ZoneInfo("Europe/Vienna"))
+    except (TypeError, ValueError):
+        return ""
+    return f"Eingetragen am {wien:%d.%m.%Y} um {wien:%H:%M} Uhr Wiener Zeit."
+
+
+def _bl_schreiben(aenderung, nachricht: str, erfolg_satz: str) -> bool:
+    """Eine Aenderung ins Datenrepo; Meldung und Ansage fuer den naechsten Lauf."""
+    ok, _neu, grund = blacklist.aendern(aenderung, token=_daten_token(), nachricht=nachricht,
+                                        melder=lambda *_a: None)
+    _bl_holen.clear()
+    if ok:
+        st.session_state["bl_meldung"] = ("ok", erfolg_satz, None)
+        st.session_state["bl_ansage"] = erfolg_satz
+    else:
+        satz = "Die Blacklist ließ sich nicht speichern; versuche es bitte gleich noch einmal."
+        st.session_state["bl_meldung"] = ("fehler", satz, grund)
+        st.session_state["bl_ansage"] = satz
+    return ok
+
+
+def _bl_eintragen(ticker: str, name: str):
+    if _bl_schreiben(lambda liste: blacklist.eintragen(liste, ticker, name), f"Blacklist: {ticker} gesperrt",
+                     f"{ticker} steht jetzt auf der Blacklist."):
+        st.session_state["bl_eingabe"] = ""
+        st.session_state.pop("bl_wahl", None)
+
+
+def _bl_haken_geaendert(ticker: str, schluessel: str):
+    """Abhaken fragt immer zurueck, Anhaken nur, wenn der Bot die Aktie
+    womoeglich haelt; sonst gilt die Sperre sofort."""
+    if not st.session_state.get(schluessel):
+        st.session_state["bl_frage"] = ("frei", ticker)
+        st.session_state["bl_ansage"] = (f"Rückfrage: {ticker} wieder freigeben? Die Knöpfe Ja und Nein stehen "
+                                         "gleich darunter.")
+    elif _bl_gehalten_satz(ticker):
+        st.session_state["bl_frage"] = ("sperren", ticker)
+        st.session_state["bl_ansage"] = (f"Rückfrage: {ticker} wieder sperren? Der Hinweis und die Knöpfe Ja und "
+                                         "Nein stehen gleich darunter.")
+    else:
+        _bl_schreiben(lambda liste: blacklist.umschalten(liste, ticker, True), f"Blacklist: {ticker} wieder gesperrt",
+                      f"{ticker} ist wieder gesperrt.")
+
+
+def _bl_loeschen_fragen(ticker: str):
+    st.session_state["bl_frage"] = ("loeschen", ticker)
+    st.session_state["bl_ansage"] = (f"Rückfrage: {ticker} von der Blacklist löschen? Die Knöpfe Ja und Nein "
+                                     "stehen gleich darunter.")
+
+
+def _bl_antwort(art: str, ticker: str, ja: bool, schluessel: str):
+    st.session_state.pop("bl_frage", None)
+    if art == "frei":
+        if ja:
+            _bl_schreiben(lambda liste: blacklist.umschalten(liste, ticker, False),
+                          f"Blacklist: {ticker} freigegeben", f"{ticker} ist freigegeben.")
+        else:
+            st.session_state[schluessel] = True
+            st.session_state["bl_ansage"] = f"{ticker} bleibt gesperrt."
+    elif art == "sperren":
+        if ja:
+            _bl_schreiben(lambda liste: blacklist.umschalten(liste, ticker, True),
+                          f"Blacklist: {ticker} wieder gesperrt", f"{ticker} ist wieder gesperrt.")
+        else:
+            st.session_state[schluessel] = False
+            st.session_state["bl_ansage"] = f"{ticker} bleibt freigegeben."
+    elif ja:
+        _bl_schreiben(lambda liste: blacklist.loeschen(liste, ticker), f"Blacklist: {ticker} gelöscht",
+                      f"{ticker} ist von der Blacklist gelöscht.")
+    else:
+        st.session_state["bl_ansage"] = f"{ticker} bleibt auf der Blacklist."
+
+
+def _bl_suche(eintraege: list):
+    """Das Eingabefeld und, sobald etwas gefunden ist, der Knopf zum Eintragen."""
+    st.markdown("### Aktie sperren", anchors=False)
+    eingabe = (st.text_input("Gib ein Kürzel oder einen Firmennamen ein und drück die Eingabetaste", key="bl_eingabe",
+                             placeholder="Zum Beispiel AAOI oder Apple") or "").strip()
+    if not eingabe:
+        return
+    rs = _bl_rs()
+    ticker, kandidaten = nachschlagen.finde(eingabe, rs)
+    if ticker is None and not kandidaten:
+        st.markdown("Nichts gefunden. Prüfe bitte Kürzel oder Namen.")
+        return
+    namen = {k: n for k, n in kandidaten}
+    if ticker is None:
+        ticker = st.radio("Mehrere Aktien passen. Welche soll auf die Blacklist?", [k for k, _n in kandidaten],
+                          index=None, key="bl_wahl", format_func=lambda k: _schlicht(f"{k}, {namen.get(k, '')}"))
+        if ticker is None:
+            return
+    e_rs = nachschlagen.eintraege(rs).get(ticker, {})
+    name = namen.get(ticker) or nachschlagen.firmenname(e_rs.get("name") or e_rs.get("firma")) or ""
+    vorhanden = blacklist.finden(eintraege, ticker)
+    if vorhanden is not None and vorhanden.get("aktiv", True):
+        st.markdown(f"{ticker}" + (f", {name}," if name else "") + " steht schon auf der Blacklist.")
+        return
+    st.markdown(f"Gefunden: {ticker}" + (f", {name}." if name else "; im US-Markt unbekannt, gesperrt wird "
+                                                                   "trotzdem, falls das Kürzel auftaucht."))
+    gehalten = _bl_gehalten_satz(ticker)
+    if gehalten:
+        st.warning(gehalten)
+    st.button(f"{ticker} auf die Blacklist setzen", key="bl_eintragen", type="primary", on_click=_bl_eintragen,
+              args=(ticker, name))
+
+
+def blacklist_reiter():
+    """Der Reiter: Erklaerung, Eintragen, die Liste mit Haken und Loeschen."""
+    st.markdown("## Blacklist", anchors=False)
+    st.markdown("Eine Aktie auf der Blacklist taucht nirgends mehr auf: kein Alarm, kein Bericht, keine Zeile an den "
+                "Handels-Bot, kein Kaufpunkt im Nachtscan und keine Zeile in den Listen der App. Das gilt auch für "
+                "die Verkaufssignale einer gehaltenen Aktie. Eine neue Sperre greift im laufenden Handel binnen "
+                "einer Minute. Ein abgehakter Eintrag bleibt stehen und sperrt nichts; Kaufpunkte rechnet für eine "
+                "freigegebene Aktie der nächste Nachtscan.")
+    _bl_status(key="bl_status", data={"text": st.session_state.get("bl_ansage", "")})
+    meldung = st.session_state.pop("bl_meldung", None)
+    if meldung:
+        _sc_meldung_zeigen(meldung)
+    eintraege, grund = _bl_eintraege()
+    if grund:
+        fehler("Die Blacklist ist gerade nicht lesbar; versuche es bitte später noch einmal.", grund,
+               kennung="bl_unlesbar")
+        return
+    _bl_suche(eintraege)
+    st.markdown("### Auf der Blacklist", anchors=False)
+    if not eintraege:
+        st.markdown("Die Blacklist ist leer.")
+        return
+    gesperrt_zahl = len(blacklist.aktive(eintraege))
+    st.markdown(("Eine Aktie steht" if len(eintraege) == 1 else f"{len(eintraege)} Aktien stehen")
+                + f" auf der Blacklist, gesperrt {gesperrt_zahl}, abgehakt {len(eintraege) - gesperrt_zahl}.")
+    frage = st.session_state.get("bl_frage")
+    for e in eintraege:
+        t = str(e.get("ticker") or "")
+        k = blacklist.schluessel(t)
+        aktiv = bool(e.get("aktiv", True))
+        st.markdown(f"#### {t}" + (f", {e['name']}" if e.get("name") else ""), anchors=False)
+        haken = f"bl_haken_{k}"
+        if not (frage and frage[1] == t and frage[0] in ("frei", "sperren")):
+            st.session_state[haken] = aktiv
+        st.checkbox(f"{t} gesperrt", key=haken, on_change=_bl_haken_geaendert, args=(t, haken))
+        seit = _bl_seit_text(e)
+        if seit:
+            st.caption(seit)
+        st.button(f"{t} löschen", key=f"bl_loeschen_{k}", on_click=_bl_loeschen_fragen, args=(t,))
+        if frage and frage[1] == t:
+            if frage[0] == "frei":
+                st.warning(f"{t} wieder freigeben? Die Aktie erscheint dann wieder in Alarmen, Berichten, beim "
+                           "Handels-Bot und in den Listen der App; Kaufpunkte rechnet der nächste Nachtscan.")
+                ja, nein = f"Ja, {t} freigeben", f"Nein, {t} gesperrt lassen"
+            elif frage[0] == "sperren":
+                st.warning(_bl_gehalten_satz(t) + f" {t} wieder sperren?")
+                ja, nein = f"Ja, {t} sperren", f"Nein, {t} frei lassen"
+            else:
+                st.warning(f"{t} von der Blacklist löschen? Der Eintrag verschwindet ganz"
+                           + ("; die Aktie erscheint dann wieder in Alarmen, Berichten, beim Handels-Bot und in den "
+                              "Listen der App." if aktiv else "."))
+                ja, nein = f"Ja, {t} löschen", f"Nein, {t} behalten"
+            st.button(ja, key=f"bl_ja_{k}", type="primary", on_click=_bl_antwort, args=(frage[0], t, True, haken))
+            st.button(nein, key=f"bl_nein_{k}", on_click=_bl_antwort, args=(frage[0], t, False, haken))
+
+
+if tab_blacklist is not None:
+    with tab_blacklist:
+        # Der englische Hinweis unter dem Eingabefeld bleibt stumm wie im Lexikon.
+        st.html("<style>.st-key-blacklist_bereich [data-testid='InputInstructions'] {display: none;}</style>")
+        with st.container(key="blacklist_bereich"):
+            blacklist_reiter()
 
 
 # --- Gastzugang (Mathias, 13.09.2026) ---------------------------------------

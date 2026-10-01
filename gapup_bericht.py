@@ -407,6 +407,19 @@ def bericht_bauen(jetzt, gut, wenig, ohne, zaehler, listen_map, news_map) -> tup
     return titel, absaetze
 
 
+def ohne_gesperrte(zeilen: dict, melder=print) -> dict:
+    """DIE BLACKLIST (Gerhard, 30.09.2026, Antworten 8 und 13): Gesperrte Aktien
+    fallen vor dem ersten Abruf heraus; ins Protokoll nur die Zahl, das
+    Protokoll ist oeffentlich."""
+    import blacklist
+    raus = blacklist.ohne_je_kuerzel(zeilen)
+    if blacklist.fehler():
+        melder(f"  ACHTUNG: Blacklist nicht lesbar ({blacklist.fehler()}); es ist keine Aktie gesperrt.")
+    elif len(raus) != len(zeilen):
+        melder(f"  Blacklist: {len(zeilen) - len(raus)} Aktie(n) gesperrt.")
+    return raus
+
+
 def bauen(jetzt=None, tabelle_pfad=None, melder=print) -> tuple:
     """Rechnet den Bericht; (Titel, Absaetze)."""
     jetzt = jetzt or datetime.now(timezone.utc)
@@ -416,6 +429,7 @@ def bauen(jetzt=None, tabelle_pfad=None, melder=print) -> tuple:
         t = str(z.get("ticker") or "").upper().strip()
         if t:
             zeilen[t] = z
+    zeilen = ohne_gesperrte(zeilen, melder)
     t0 = time.time()
     quotes = yahoo_vorboerse(sorted(zeilen), melder)
     melder(f"  Yahoo: {len(quotes)} von {len(zeilen)} Aktien in {time.time() - t0:.1f} s.")

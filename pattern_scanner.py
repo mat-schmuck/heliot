@@ -1643,6 +1643,22 @@ def main():
     tickers = listen.alle_ticker(haupt=args.csv, darvas=darvas_pfad)
     darvas_erlaubte = {t.upper() for t, _ in listen.darvas_liste(darvas_pfad)}
     print(listen.uebersicht(haupt=args.csv, darvas=darvas_pfad))
+    # DIE BLACKLIST (Gerhard, 30.09.2026, Antworten 8 und 13): Eine gesperrte
+    # Aktie wird gar nicht erst geladen. Damit bekommt sie keinen Kaufpunkt in
+    # der Mappe, keinen Platz in der Fokusliste, keinen Eintrag im Logbuch,
+    # keine Pruefung im Exit-Regelwerk und keine Zeile im Abendbericht. Die
+    # Wartelisten (Shakeout, Power-Gap) bleiben unberuehrt; gibt jemand die
+    # Aktie wieder frei, ist sie mit dem naechsten Nachtscan zurueck. Ins
+    # Protokoll nur die Zahl, das Protokoll ist oeffentlich.
+    import blacklist
+    vor_blacklist = len(tickers)
+    tickers = blacklist.ohne(tickers)
+    if blacklist.fehler():
+        print(f"  ACHTUNG: Blacklist nicht lesbar ({blacklist.fehler()}); "
+              f"der Nachtscan sperrt keine Aktie.")
+    elif vor_blacklist != len(tickers):
+        print(f"Blacklist: {vor_blacklist - len(tickers)} Aktie(n) der Listen gesperrt, "
+              f"nicht gescannt.")
     # MARKTAMPEL (Gerhards Freigabe 31.08.2026, Baustein 4): einmal je
     # Nachtscan berechnen, BEVOR die erste Logbuch-Zeile entsteht —
     # trigger_logbuch haengt die Farbe an jede Zeile. Die Ampel

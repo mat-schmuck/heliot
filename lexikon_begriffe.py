@@ -179,6 +179,13 @@ def begriffe(einst=None) -> list:
         "einer Minute auf und rechnet ihre Kaufpunkte selbst; der Wochenputz beendet die Überwachung.",
         "Man schlägt am Dienstag eine Aktie nach und drückt den Knopf: Ab dann meldet der Wächter auch ihre "
         "Kaufpunkte, bis zum Freitag.")
+    neu("grundlagen", "Blacklist",
+        "Eine Aktie auf der Blacklist taucht nirgends mehr auf: kein Alarm, kein Bericht, keine Zeile an den "
+        "Handels-Bot, kein Kaufpunkt im Nachtscan und keine Zeile in den Listen der App; auch die Verkaufssignale "
+        "einer gehaltenen Aktie entfallen. Eingetragen wird im Reiter Blacklist mit Kürzel oder Firmenname, eine neue "
+        "Sperre greift im Handel binnen einer Minute. Ein abgehakter Eintrag bleibt stehen und sperrt nichts.",
+        "Man setzt eine Aktie am Dienstag um 16 Uhr auf die Blacklist: Ab spätestens 16:01 Uhr meldet der Wächter "
+        "sie nicht mehr, und der Nachtscan rechnet ihr keine Kaufpunkte mehr.")
     neu("grundlagen", "Nachtscan",
         "Der nächtliche Lauf, Sonntag bis Freitag um 18:00 Uhr New Yorker Zeit, meist Mitternacht Wiener Zeit. Er "
         "rechnet für alle Aktien der Wochenlisten Muster, Kaufpunkte und Stops, schreibt die Mappe der Kaufpunkte "

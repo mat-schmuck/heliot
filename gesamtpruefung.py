@@ -204,6 +204,8 @@ def block_b():
                     "alarm_muster",
                     # Die Signale als JSON fuer den degirobot (23.09.2026)
                     "bot_kanal",
+                    # Die Blacklist (Gerhard, 30.09.2026, Antworten 8 und 13)
+                    "blacklist",
                     # Katalog der EODHD-Daten (Gerhard, 20.09.2026, S11)
                     "eodhd_katalog"]
     for name in mit_schalter:
@@ -701,6 +703,80 @@ def block_d(namen_aus_c=None):
     pruefe("D", "Bot: der Kanalname steht in keiner Meldung und keinem Protokoll",
            "melder(f\"  Bot-{art}kanal nicht erreicht" in _kq
            and "{ziel}" not in _kq and "ziel}" not in _kq)
+    blacklist_wege_pruefen(bw, _quelle)
+
+
+def blacklist_wege_pruefen(bw, quelle_waechter):
+    """DIE BLACKLIST (Gerhard, 30.09.2026, Antworten 8 und 13): EINE Liste fuer
+    Nachtscan, Waechter, Berichte, Bot und App; sie sperrt alles, auch die
+    Verkaufssignale einer gehaltenen Aktie. Ins oeffentliche Protokoll kommen
+    nur Zahlen, nie ein Kuerzel der Liste. Geprueft ohne Netz mit einer
+    gesetzten Liste; der Bot steht in seinem eigenen Selbsttest."""
+    import contextlib as _cl
+    import io as _io
+    from datetime import date as _dbl
+    import abendbericht as _abb
+    import blacklist as _bl
+    import gapup_bericht as _gub
+    import rslinie_bericht as _rlb
+    _bl.setzen(["AAA", "BRK-B"])
+    try:
+        _aus = _io.StringIO()
+        with _cl.redirect_stdout(_aus):
+            _kurse = bw.blacklist_anwenden({"AAA": {"close": 1.0}, "BRK.B": {"close": 2.0}, "CCC": {"close": 3.0}})
+            _ohne = bw.ohne_gesperrte(["AAA", "CCC", "BRK-B"])
+        pruefe("D", "Blacklist: der Waechter nimmt gesperrte Aktien aus den Kursen, im Protokoll nur die Zahl",
+               list(_kurse) == ["CCC"] and _ohne == ["CCC"] and "2 Aktie(n) gesperrt" in _aus.getvalue()
+               and "AAA" not in _aus.getvalue() and "BRK" not in _aus.getvalue(), _aus.getvalue().strip()[:90])
+        _gesagt = []
+        _zeilen = _gub.ohne_gesperrte({"AAA": {}, "CCC": {}}, melder=_gesagt.append)
+        pruefe("D", "Blacklist: der Gap-Up-Bericht rechnet ohne gesperrte Aktien, im Protokoll nur die Zahl",
+               list(_zeilen) == ["CCC"] and _gesagt == ["  Blacklist: 1 Aktie(n) gesperrt."], str(_gesagt))
+        _rl, _vortag = _rlb.auswahl([{"ticker": t, "rs_linie_hoch": True, "rs_linie_qqq_hoch": True, "kurs": 50.0,
+                                      "marktkap_mrd": 5.0, "rs": 90} for t in ("AAA", "BRK.B", "CCC")])
+        pruefe("D", "Blacklist: der RS-Linien-Bericht ohne gesperrte Aktien", [z["ticker"] for z in _rl] == ["CCC"],
+               str([z["ticker"] for z in _rl]))
+        _rs = {"status": "ok", "handelstag": "2026-10-01", "markt": {"pct": -1.0, "rot": True},
+               "listen": {t: {"rs": 97, "pct": 1.0, "kurs": 10.0, "kurs_52w_hoch": True, "linie_spy_hoch": True,
+                              "abst_52w_hoch_pct": 0.0} for t in ("AAA", "CCC")},
+               "aktien": {"BRK-B": {"rs": 99, "abst_52w_hoch_pct": -1.0}, "DDD": {"rs": 98, "abst_52w_hoch_pct": -2.0}}}
+        _sn = {"handelstag": "2026-10-01", "befunde": [
+            {"typ": "kapitel11", "symbol": "AAA|fb", "kuerzel": "AAA", "key": "AAA|fb", "text": "REGEL: AAA; Stop"},
+            {"typ": "klimax_zeichen", "symbol": "CCC", "key": "CCC|1", "zeichen": "x", "text": "INFORMATION: CCC"}]}
+        _t, _absaetze, _p, _g, _zurueck, _best = _abb.bauen(_rs, {}, {}, {}, _sn, [], _dbl(2026, 10, 1),
+                                                            holen_allzeit=lambda t: None)
+        _text = "\n".join(_absaetze)
+        pruefe("D", "Blacklist: der Abendbericht ohne gesperrte Aktien, auch ohne ihre Ruecknahme; die Buchfuehrung "
+                    "der Ruecknahmen bleibt vollstaendig",
+               "AAA" not in _text and "BRK" not in _text and "CCC" in _text and "DDD" in _text and len(_zurueck) == 2,
+               _text[:90])
+    finally:
+        _bl.zuruecksetzen()
+    _ps = (WURZEL / "pattern_scanner.py").read_text(encoding="utf-8")
+    _a, _b, _c = (_ps.find("tickers = listen.alle_ticker(haupt=args.csv"), _ps.find("tickers = blacklist.ohne(tickers)"),
+                  _ps.find("lade_yahoo_sammelabruf(alle_ticker)"))
+    pruefe("D", "Blacklist: der Nachtscan laedt gesperrte Aktien gar nicht erst",
+           0 < _a < _b < _c and _ps.count("blacklist.ohne(") == 1)
+    pruefe("D", "Blacklist: der Waechter filtert jeden Datenabruf direkt nach der Handelstag-Pruefung, und die "
+                "Protokollzeilen mit Kuerzeln lassen gesperrte aus",
+           "quotes, veraltete_quotes = pruefe_handelstag(quotes)\n            # DIE BLACKLIST" in quelle_waechter
+           and quelle_waechter.count("quotes = blacklist_anwenden(quotes, topic, args.dry_run)") == 1
+           and "fehlend = sorted(ohne_gesperrte(gewuenscht - set(quotes)))" in quelle_waechter
+           and "ohne = ohne_gesperrte(ws.ohne_meldung())" in quelle_waechter
+           and "sichtbar = ohne_gesperrte(haengend) if laut else []" in quelle_waechter)
+    _bk = (WURZEL / "bot_kanal.py").read_text(encoding="utf-8")
+    pruefe("D", "Blacklist: der Bot-Kanal sperrt Kauf- und Verkaufszeilen selbst noch einmal",
+           _bk.count("if _gesperrt(") == 2 and "blacklist.gesperrt(ticker)" in _bk)
+
+    def _schritt(text, befehl):
+        return next((t for t in text.split("\n      - name:") if befehl in t), "")
+    _wege = {"scanner.yml": "python pattern_scanner.py", "watcher.yml": "python breakout_watcher.py",
+             "berichte.yml": "python gapup_bericht.py --jetzt", "scanner_daten.yml": "python rslinie_bericht.py --bauen"}
+    _ohne_token = [d for d, b in _wege.items()
+                   if "DATEN_TOKEN: ${{ secrets.DATEN_TOKEN }}" not in _schritt(
+                       (WURZEL / ".github" / "workflows" / d).read_text(encoding="utf-8"), b)]
+    pruefe("D", "Blacklist: jeder Schritt, der sie anwendet, bekommt das Token fuer das Datenrepo",
+           not _ohne_token, nennen(_ohne_token))
 
 
 # ---------------------------------------------------------------------------
@@ -4639,6 +4715,29 @@ def block_i():
            "quiz.auswertung(" in _qr and "Kapitel wiederholen" in _qr and "Ganzes Quiz von vorn" in _qr
            and "_quiz_status(" in _qr and "index=None" in _qr and "Mehr im Lexikon unter" in _qr
            and 'fr["erklaerung"]' in _qr and "Gesamt:" in _qr)
+    _bl_teil = _quelle_app.split("def blacklist_reiter():", 1)[1].split("\n# --- Gastzugang", 1)[0] \
+        if "def blacklist_reiter():" in _quelle_app else ""
+    _stopp = _quelle_app.find("if tab_upload is None:\n    st.stop()")
+    pruefe("I", "Der Reiter Blacklist steht nur im vollen Zugang hinter den Wochenlisten, hinter der Schranke fuer "
+                "Gaeste; die Liste liest nur der volle Zugang",
+           _quelle_app.count('"Wochenlisten", "Blacklist", "Gastzugang",') == 1 and "tab_blacklist = None" in _quelle_app
+           and 0 < _stopp < _quelle_app.find("if tab_blacklist is not None:")
+           and "tab_upload, tab_blacklist, tab_gast," in _quelle_app.split("REITER_ALLE = [", 1)[1].split("]", 1)[0]
+           and 'if globals().get("rolle") != "voll":\n        return [], None' in _quelle_app)
+    pruefe("I", "Blacklist: Eingabe fuer Kuerzel oder Firmenname, Eintragen erst mit dem Knopf, Hinweis auf eine "
+                "offene Beobachtung vor dem Speichern, je Eintrag Ueberschrift, Kontrollfeld und Loeschen, Rueckfrage "
+                "beim Abhaken und Loeschen, Ansage",
+           "nachschlagen.finde(eingabe, rs)" in _quelle_app and "auf die Blacklist setzen" in _quelle_app
+           and "_bl_gehalten_satz(ticker)" in _quelle_app and 'st.markdown(f"#### {t}"' in _bl_teil
+           and "st.checkbox(f\"{t} gesperrt\"" in _bl_teil and 'f"{t} löschen"' in _bl_teil
+           and '("frei", ticker)' in _quelle_app and '("loeschen", ticker)' in _quelle_app
+           and "_bl_status(" in _bl_teil)
+    pruefe("I", "Blacklist: ausgeblendet im Aktuellen Scan samt Datei, unter den Treffern des Scanners und in Liste "
+                "pruefen; Hinweis beim Nachschlagen und bei den einzeln ueberwachten Aktien",
+           '_bl_ohne(df_scan, "Ticker")' in _quelle_app and '_bl_ohne(tabelle, "ticker")' in _quelle_app
+           and 'scan_fmt == "xlsx" and not scan_ausgeblendet' in _quelle_app and "lp_gesperrt" in _quelle_app
+           and "if _bl_gesperrt(nachschlag_ticker):" in _quelle_app
+           and "steht auf der Blacklist und wird deshalb nicht überwacht" in _quelle_app)
     ok, zusatz = schnellbox_pruefen(app)
     pruefe("I", "Die Schnellbox steht direkt unter den Templates, schlank und mit Teil 2 verknuepft", ok, zusatz)
     ok, zusatz = templates_pruefen(app)

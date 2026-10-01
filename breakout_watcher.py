@@ -70,6 +70,7 @@ import einstellungen   # Alarme je Muster abwaehlbar (Mathias und Gerhard, 23.09
 import listen          # Wochenlisten und die einzeln eingetragenen Aktien (O11 bis O13)
 import bot_kanal       # Die Signale als JSON für den degirobot (Vertrag KANAL.md)
 import berichte        # Der Reiter Berichte der App (Gerhard, 29.09.2026, Teil 4)
+import blacklist       # Gesperrte Aktien fuer das ganze System (Gerhard, 30.09.2026)
 import gewinnzonen_lauf  # Kapitel 12: Nachtbefunde zum Handelsstart mit heutigen Kursen nachrechnen
 import gewinn_zonen as gz  # Kapitel 12: Klimax-Katalog fuer die schlussnahen Befunde (M1, 12.09.2026)
 from config import CFG, hoechstens, mind_erreicht, pruefe_config
@@ -1383,6 +1384,59 @@ def einstellungen_nachziehen():
         print("Alarme: alle Muster und Strategien eingeschaltet." if not namen
               else "Alarme abgewählt: " + ", ".join(namen) + ".")
     _EINST["daten"], _EINST["aus"] = neu, aus
+
+
+# ---------------------------------------------------------------------------
+# DIE BLACKLIST (Gerhard, 30.09.2026, Antworten 8 und 13)
+# ---------------------------------------------------------------------------
+# Eine gesperrte Aktie faellt in jedem Datenabruf aus den Kursen. Damit prueft
+# der Waechter sie auf keinem Weg: kein Ausbruch, kein Alarm-Muster, kein Red
+# to Green, kein Power-Gap, kein Nachtbefund, kein Insider-Kauf, kein Ausstieg
+# und kein schlussnaher Befund, keine Zeile an den Bot. Das gilt ausdruecklich
+# auch fuer die Verkaufssignale einer gehaltenen Aktie ("meine bewusste
+# Entscheidung"). Abgerufen werden ihre Kurse weiter, damit eine wieder
+# freigegebene Aktie im naechsten Datenabruf zurueck ist; eine neue Sperre
+# greift ebenso im naechsten Datenabruf, also binnen einer Minute. Ins
+# Protokoll kommt nur die Zahl, nie ein Kuerzel: Das Protokoll ist
+# oeffentlich, die Liste privat.
+_BLACKLIST = {"zahl": None, "stoerung": False, "grund": ""}
+
+
+def ohne_gesperrte(namen) -> list:
+    """Kuerzel ohne die gesperrten, fuer jede Protokollzeile, die Kuerzel nennt."""
+    menge = blacklist.gesperrte()
+    return [t for t in namen if blacklist.schluessel(t) not in menge]
+
+
+def blacklist_anwenden(kurse: dict, topic=None, trocken: bool = False) -> dict:
+    """Die Kurse ohne die gesperrten Aktien. Die Liste wird in jedem Datenabruf
+    frisch gelesen, eine neue Sperre greift also spaetestens im naechsten (TAKT).
+    Ist sie nicht lesbar, sagt es EINE Stoerungsmeldung je Lauf auf ntfy, wie bei
+    den Berichten."""
+    blacklist.nachladen(zwingend=True)
+    menge = blacklist.gesperrte()
+    grund = blacklist.fehler()
+    if grund != _BLACKLIST["grund"]:
+        _BLACKLIST["grund"] = grund
+        if grund:
+            print(f"Achtung: Blacklist nicht lesbar ({grund}); "
+                  + ("es gilt der zuletzt geladene Stand." if blacklist.geladen()
+                     else "der Wächter sperrt bis dahin keine Aktie."))
+    if grund and topic and not trocken and not _BLACKLIST["stoerung"]:
+        if sende(topic, "Störung: Blacklist nicht lesbar",
+                 ["Die Blacklist ließ sich nicht aus dem privaten Datenrepo laden. "
+                  + ("Es gilt der zuletzt geladene Stand." if blacklist.geladen()
+                     else "Bis das gelingt, sperrt der Wächter keine Aktie.")
+                  + " Der Wächter versucht es jede Minute wieder."], "default"):
+            _BLACKLIST["stoerung"] = True
+    raus = {t: q for t, q in kurse.items() if blacklist.schluessel(t) not in menge} if menge else kurse
+    weg = len(kurse) - len(raus)
+    if weg != _BLACKLIST["zahl"]:
+        _BLACKLIST["zahl"] = weg
+        if menge:
+            print(f"Blacklist: {len(menge)} Aktie(n) gesperrt, {weg} davon in diesem Abruf; "
+                  f"sie werden nicht geprüft.")
+    return raus
 
 
 def alarm_an(schluessel: str) -> bool:
@@ -5258,6 +5312,12 @@ def main():
             # volles Tagesvolumen wuerde hochgerechnet fast jede
             # Volumenbestaetigung erschleichen (Fehlerdurchlauf 28.07.2026).
             quotes, veraltete_quotes = pruefe_handelstag(quotes)
+            # DIE BLACKLIST (Gerhard, 30.09.2026, Antworten 8 und 13): Eine
+            # gesperrte Aktie faellt hier heraus, siehe blacklist_anwenden.
+            # Zwischen zwei Abrufen rechnet der Waechter auf basis, also auf
+            # demselben Stand ohne sie.
+            quotes = blacklist_anwenden(quotes, topic, args.dry_run)
+            veraltete_quotes = blacklist.ohne_je_kuerzel(veraltete_quotes)
             if veraltete_quotes and not quotes:
                 datum = next(iter(veraltete_quotes.values())).get("bar_datum")
                 print(f"FEHLER: Keine einzige Kurszeile von heute (jüngste ist vom "
@@ -5308,7 +5368,7 @@ def main():
                 if st["neustarts"]:
                     print(f"  ({st['neustarts']} Verbindungsabrisse bisher, "
                           f"jeweils selbsttätig neu aufgebaut.)")
-                ohne = ws.ohne_meldung()
+                ohne = ohne_gesperrte(ws.ohne_meldung())
                 if ohne:
                     print(f"  Hinweis: {len(ohne)} Aktien haben noch gar "
                           f"nichts geschickt (sie laufen über die "
@@ -5323,16 +5383,18 @@ def main():
         # frisch war — je Quelle mit eigener Schwelle.
         haengend = [t for t in KURSE.stale_liste() if t in gewuenscht]
         if haengend:
-            if laut:
-                print(f"Achtung: {len(haengend)} Kurse gelten als hängend und werden "
+            sichtbar = ohne_gesperrte(haengend) if laut else []
+            if sichtbar:
+                print(f"Achtung: {len(sichtbar)} Kurse gelten als hängend und werden "
                       f"NICHT für Auslöser verwendet: "
-                      + ", ".join(sorted(haengend)[:15]))
+                      + ", ".join(sorted(sichtbar)[:15]))
             for t in haengend:
                 quotes.pop(t, None)
 
         if laut:
             gruen_zaehlen(quotes)         # R9: ein Abruf je Minute
-            print(f"{len(gewuenscht & set(quotes))} von {len(gewuenscht)} "
+            frei = set(ohne_gesperrte(gewuenscht))
+            print(f"{len(frei & set(quotes))} von {len(frei)} "
                   f"Kaufpunkt-Quotes erhalten ({len(quotes)} Aktien gesamt).")
         if not quotes:
             # In der Dauerwache ist ein Aussetzer kein Todesurteil — der
@@ -5345,7 +5407,7 @@ def main():
             # Unvollstaendige Abfragen NICHT stillschweigend hinnehmen: Fuer die
             # fehlenden Aktien kann kein Breakout erkannt werden, und ohne
             # Hinweis sieht der Lauf trotzdem erfolgreich aus.
-            fehlend = sorted(gewuenscht - set(quotes))
+            fehlend = sorted(ohne_gesperrte(gewuenscht - set(quotes)))
             if fehlend and laut:
                 print(f"\nACHTUNG: {len(fehlend)} Aktien konnten NICHT geprüft werden:")
                 print("  " + ", ".join(fehlend))

@@ -60,10 +60,14 @@ def auswahl(zeilen: list) -> tuple:
     """(Treffer, Vortag bekannt). Treffer sind Zeilen der Nachttabelle mit
     beiden Linien auf dem Hoch, Kurs und Boersenwert ueber der Grenze; je
     Treffer das Feld neu."""
+    import blacklist
+    gesperrt = blacklist.gesperrte()      # Gerhard, 30.09.2026, Antworten 8 und 13
     raus = []
     vortag_bekannt = False
     for z in zeilen:
         if not (_ja(z.get("rs_linie_hoch")) and _ja(z.get("rs_linie_qqq_hoch"))):
+            continue
+        if blacklist.schluessel(z.get("ticker")) in gesperrt:
             continue
         kurs, mk = _f(z.get("kurs")), _f(z.get("marktkap_mrd"))
         if kurs is None or kurs < KURS_MIN or mk is None or mk < MARKTKAP_MIN_MRD:

@@ -190,6 +190,19 @@ def senden(art: str, zeile: str, titel: str | None = None, melder=print) -> bool
     return False
 
 
+def _gesperrt(ticker, art: str, melder) -> bool:
+    """DIE BLACKLIST SPERRT AUCH DEN BOT (Gerhard, 30.09.2026, Antworten 8 und
+    13): keine Kauf- und keine Verkaufszeile fuer eine gesperrte Aktie, auch
+    nicht fuer eine gehaltene. Der Waechter laesst gesperrte Aktien schon gar
+    nicht erst pruefen; das hier ist das Netz fuer jeden Sendeweg. Ins
+    Protokoll kommt kein Kuerzel, das Protokoll ist oeffentlich."""
+    import blacklist
+    if not blacklist.gesperrt(ticker):
+        return False
+    melder(f"  Bot-{art}: eine Aktie der Blacklist, nicht gesendet.")
+    return True
+
+
 def sende_kauf(treffer: list[dict], tag=None, melder=print,
                feld: str = "kaufpunkt") -> int:
     """Je Treffer eine Kaufzeile. Rueckgabe: Zahl der gesendeten Zeilen.
@@ -200,6 +213,8 @@ def sende_kauf(treffer: list[dict], tag=None, melder=print,
         return 0
     raus = 0
     for t in treffer:
+        if _gesperrt(t.get("ticker"), "Kaufkanal", melder):
+            continue
         # DIE SECHS ALARM-MUSTER GEHEN MIT (Gerhard, 29.09.2026, Teil 2: "Sie
         # laufen in den Bot-Kanal"). Bis 30.09.2026 hielt sie hier ein Netz
         # als Auskunft zurueck (O10).
@@ -229,6 +244,8 @@ def sende_verkauf(eintraege: list[dict], tag=None, melder=print) -> int:
         return 0
     raus = 0
     for e in eintraege:
+        if _gesperrt(e.get("ticker"), "Verkaufskanal", melder):
+            continue
         zeile = verkauf_zeile(e.get("ticker"), e.get("firma"), e.get("anteil", 1), tag)
         if zeile is None:
             melder("  Bot-Verkaufskanal: Eintrag ohne Kürzel, nicht gesendet.")
@@ -383,6 +400,24 @@ def selbsttest() -> int:
                             melder=lambda *_a: None)
         pruefe("Verkauf: gesendet und halber Anteil",
                raus == 1 and json.loads(gesehen[0]["rumpf"])["anteil"] == 0.5)
+
+        # Die Blacklist sperrt Kauf und Verkauf (Gerhard, Antworten 8 und 13)
+        import blacklist
+        blacklist.setzen(["FFF"])
+        try:
+            gesehen.clear()
+            gesagt = []
+            raus = (sende_kauf([{"ticker": "FFF", "firma": "F", "kaufpunkt": 10.0, "stop": 9.0},
+                                {"ticker": "GGG", "firma": "G", "kaufpunkt": 10.0, "stop": 9.0}],
+                               tag, melder=gesagt.append)
+                    + sende_verkauf([{"ticker": "fff", "firma": "F", "anteil": 1}], tag, melder=gesagt.append))
+            pruefe("Blacklist: keine Kauf- und keine Verkaufszeile, die andere Aktie geht hinaus",
+                   raus == 1 and len(gesehen) == 1 and json.loads(gesehen[0]["rumpf"])["ticker"] == "GGG",
+                   str(raus))
+            pruefe("Blacklist: das Protokoll nennt kein Kürzel",
+                   len(gesagt) == 2 and not any("FFF" in s.upper() for s in gesagt), str(gesagt))
+        finally:
+            blacklist.zuruecksetzen()
 
         # Fehlschlag mit Wiederholung
         versuche = []
