@@ -45,7 +45,9 @@
       "SNPS|Gap and Go",
       "SNPS|@496.96",
       "MXL|Fallback: 20-Tage-Hoch (Pivot)",
-      "MXL|@96.23"
+      "MXL|@96.23",
+      "NTAP|Cup & Handle (Wochenbasis)",
+      "NTAP|@216.82"
     ]
   },
   "gemeldet": {
@@ -105,8 +107,8 @@
     "BEST|PNTG|Rectangle Top": "2026-09-28",
     "MAZE|Fallback: MA50-R\u00fcckeroberung": "2026-09-28",
     "BEST|MAZE|Fallback: MA50-R\u00fcckeroberung": "2026-09-28",
-    "NTAP|Cup & Handle (Wochenbasis)": "2026-09-28",
-    "BEST|NTAP|Cup & Handle (Wochenbasis)": "2026-09-28",
+    "NTAP|Cup & Handle (Wochenbasis)": "2026-10-02",
+    "BEST|NTAP|Cup & Handle (Wochenbasis)": "2026-10-02",
     "NTAP|Wick Play": "2026-09-28",
     "BEST|NTAP|Wick Play": "2026-09-28",
     "UEBER|AEO|EMA Crossback": "2026-09-28",
@@ -445,8 +447,8 @@
     "BEST|PNTG|Rectangle Top": 40.85,
     "MAZE|Fallback: MA50-R\u00fcckeroberung": 27.29,
     "BEST|MAZE|Fallback: MA50-R\u00fcckeroberung": 27.29,
-    "NTAP|Cup & Handle (Wochenbasis)": 203.92,
-    "BEST|NTAP|Cup & Handle (Wochenbasis)": 203.92,
+    "NTAP|Cup & Handle (Wochenbasis)": 216.82,
+    "BEST|NTAP|Cup & Handle (Wochenbasis)": 216.82,
     "NTAP|Wick Play": 204.01,
     "BEST|NTAP|Wick Play": 204.01,
     "VCYT|Fallback: MA50-R\u00fcckeroberung": 46.47,
@@ -653,7 +655,7 @@
     "SYNA": {
       "signal": "2026-10-02",
       "kp": 121.99,
-      "stop": 119.93,
+      "stop": 119.9,
       "firma": "Synaptics Incorporated",
       "bestaetigt": false
     }
