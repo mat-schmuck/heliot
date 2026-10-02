@@ -447,7 +447,12 @@
     "QMCO|Wick Play": "2026-10-02",
     "BEST|QMCO|Wick Play": "2026-10-02",
     "INSIDER|GME|beide|3": "2026-10-02",
-    "INSIDER|SLBT|pfad_a|1": "2026-10-02"
+    "INSIDER|SLBT|pfad_a|1": "2026-10-02",
+    "GEWINN|zonenwechsel|MTSI|Fallback: MA50-Pullback|stark": "2026-10-02",
+    "GEWINN|zonenwechsel|MTSI|Fallback: MA50-R\u00fcckeroberung|mittel": "2026-10-02",
+    "GEWINN|zonenwechsel|NTAP|EMA Crossback|stark": "2026-10-02",
+    "GEWINN|zonenwechsel|SITM|Fallback: MA50-Pullback|stark": "2026-10-02",
+    "GEWINN|zonenwechsel|TWIN|EMA Crossback|stark": "2026-10-02"
   },
   "gemeldet_kp": {
     "CXW|Cup & Handle (Wochenbasis)": 31.67,
