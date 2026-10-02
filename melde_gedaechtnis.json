@@ -407,7 +407,9 @@
     "GAPGOIN|SNPS|2026-10-01": "2026-10-02",
     "MXL|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-02",
     "BEST|MXL|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-02",
-    "UEBER|CRDO|EMA Crossback": "2026-10-02"
+    "UEBER|CRDO|EMA Crossback": "2026-10-02",
+    "TEIL|SITM|Fallback: MA50-R\u00fcckeroberung": "2026-10-02",
+    "TEIL|SITM|Fallback: MA50-Pullback": "2026-10-02"
   },
   "gemeldet_kp": {
     "CXW|Cup & Handle (Wochenbasis)": 31.67,
