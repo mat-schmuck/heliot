@@ -43,7 +43,9 @@
       "ARW|Fallback: 52W-Hoch-Breakout",
       "ARW|@237.57",
       "SNPS|Gap and Go",
-      "SNPS|@496.96"
+      "SNPS|@496.96",
+      "MXL|Fallback: 20-Tage-Hoch (Pivot)",
+      "MXL|@96.23"
     ]
   },
   "gemeldet": {
@@ -398,7 +400,9 @@
     "TEIL|VECO|EMA Crossback": "2026-10-02",
     "TEIL|ALNT|Rectangle Top": "2026-10-02",
     "GEWINN|zonenwechsel|BHE|EMA Crossback|mittel": "2026-10-02",
-    "GAPGOIN|SNPS|2026-10-01": "2026-10-02"
+    "GAPGOIN|SNPS|2026-10-01": "2026-10-02",
+    "MXL|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-02",
+    "BEST|MXL|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-02"
   },
   "gemeldet_kp": {
     "CXW|Cup & Handle (Wochenbasis)": 31.67,
@@ -641,13 +645,15 @@
     "UEBER|VSH|Pocket Pivot": 34.42,
     "UEBER|SYNA|Pocket Pivot": 106.61,
     "ARW|Fallback: 52W-Hoch-Breakout": 237.57,
-    "BEST|ARW|Fallback: 52W-Hoch-Breakout": 237.57
+    "BEST|ARW|Fallback: 52W-Hoch-Breakout": 237.57,
+    "MXL|Fallback: 20-Tage-Hoch (Pivot)": 96.23,
+    "BEST|MXL|Fallback: 20-Tage-Hoch (Pivot)": 96.23
   },
   "gapgo_warten": {
     "SYNA": {
       "signal": "2026-10-02",
       "kp": 121.99,
-      "stop": 120.09,
+      "stop": 119.93,
       "firma": "Synaptics Incorporated",
       "bestaetigt": false
     }
