@@ -312,6 +312,13 @@ KLANG_JS = r"""export default function (component) {
 # Design Zukunft
 # ---------------------------------------------------------------------------
 
+# OPTIONSFELDER (Befund 02.10.2026, Gerhard: im Quiz sahen alle Antworten aus,
+# als waeren sie angekreuzt): Bei Kontrollfeldern ist "label>span+div" das
+# Kaestchen selbst, bei Optionsfeldern aber die ganze Zeile aus Kreis und Text.
+# Der Kreis behielt deshalb die Farben des hellen Grunddesigns, eine weisse
+# Scheibe, und die sieht auf dunklem Grund ausgefuellt aus. Seither faerbt das
+# Design den Kreis selbst: leer ein Ring in Cyan, gewaehlt ein Kreis im
+# Verlauf mit weissem Punkt, dazu der Text der Wahl fett.
 DESIGN_ZUKUNFT = r"""
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Space+Grotesk:wght@400;500;700&display=swap');
 :root{--hz-cyan:#00e5ff;--hz-violett:#8a6bff;--hz-magenta:#ff4fd8;--hz-text:#e3edff;--hz-leise:#9fb7d9;
@@ -406,10 +413,17 @@ input::placeholder,textarea::placeholder{color:rgba(159,183,217,.7) !important}
 [role="listbox"]{background:#0b1230 !important;border:1px solid var(--hz-rand) !important}
 [role="option"]{color:#eaf8ff !important}
 [role="option"]:hover,[role="option"][data-focused]{background:rgba(0,229,255,.15) !important}
-[data-testid="stCheckbox"] label>span+div,[data-testid="stRadio"] label>span+div{background:rgba(6,12,32,.85) !important;
+[data-testid="stCheckbox"] label>span+div{background:rgba(6,12,32,.85) !important;
   border-color:var(--hz-cyan) !important;box-shadow:0 0 8px rgba(0,229,255,.35)}
-[data-testid="stCheckbox"] label[data-selected="true"]>span+div,[data-testid="stRadio"] label[data-selected="true"]>span+div{
+[data-testid="stCheckbox"] label[data-selected="true"]>span+div{
   background:linear-gradient(135deg,#00c6ff,#7b5cff) !important;border-color:transparent !important}
+[data-testid="stRadioOption"]>span+div>div>div:first-child{background:var(--hz-cyan) !important;
+  box-shadow:0 0 6px rgba(0,229,255,.45) !important}
+[data-testid="stRadioOption"]>span+div>div>div:first-child>div{background:#0b1230 !important}
+[data-testid="stRadioOption"][data-selected="true"]>span+div>div>div:first-child{
+  background:linear-gradient(135deg,#00c6ff,#7b5cff) !important}
+[data-testid="stRadioOption"][data-selected="true"]>span+div>div>div:first-child>div{background:#ffffff !important}
+[data-testid="stRadioOption"][data-selected="true"] p{color:#ffffff !important;font-weight:700 !important}
 [data-testid="stAlertContainer"]{background:rgba(10,20,48,.72) !important;border:1px solid var(--hz-rand) !important;
   border-radius:16px !important;backdrop-filter:blur(8px);animation:hz-einblenden .5s ease both}
 [data-testid="stAlertContainer"] p{color:var(--hz-text) !important}
@@ -571,6 +585,12 @@ def selbsttest() -> int:
       "<" not in DESIGN_ZUKUNFT and "<" not in AMPEL_CSS)
     p("Das Design erzeugt keinen Text, jeder content ist leer",
       all(x.startswith('""') for x in DESIGN_ZUKUNFT.split("content:")[1:]))
+    p("Optionsfelder: der Kreis traegt die Wahl, leer ein Ring, die Zeile wird nicht eingefaerbt",
+      '[data-testid="stRadio"] label>span+div' not in DESIGN_ZUKUNFT
+      and '[data-testid="stRadio"] label[data-selected="true"]>span+div' not in DESIGN_ZUKUNFT
+      and '[data-testid="stRadioOption"]>span+div>div>div:first-child>div{background:#0b1230' in DESIGN_ZUKUNFT
+      and '[data-testid="stRadioOption"][data-selected="true"]>span+div>div>div:first-child>div{background:#ffffff'
+      in DESIGN_ZUKUNFT)
     print(f"ERGEBNIS: {len(fehler)} FEHLGESCHLAGEN" if fehler else "ERGEBNIS: alles bestanden")
     return 1 if fehler else 0
 
