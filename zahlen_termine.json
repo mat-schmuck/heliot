@@ -1,5 +1,5 @@
 {
- "gebaut_am": "2026-10-02 00:07 Wien",
+ "gebaut_am": "2026-10-03 00:07 Wien",
  "ohne_termin": [
   "AEO",
   "TJGC"
@@ -388,9 +388,9 @@
    ]
   },
   "FTNT": {
-   "datum": "2026-11-04",
-   "uhrzeit": "15:00",
-   "lage": "im_handel",
+   "datum": "2026-10-28",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich",
    "quellen": [
     "yahoo"
    ]
@@ -511,14 +511,6 @@
    "datum": "2026-11-05",
    "uhrzeit": "15:00",
    "lage": "im_handel",
-   "quellen": [
-    "yahoo"
-   ]
-  },
-  "INSW": {
-   "datum": "2026-11-05",
-   "uhrzeit": "07:00",
-   "lage": "vorboerslich",
    "quellen": [
     "yahoo"
    ]
@@ -731,14 +723,6 @@
     "yahoo"
    ]
   },
-  "PARR": {
-   "datum": "2026-11-03",
-   "uhrzeit": "15:00",
-   "lage": "im_handel",
-   "quellen": [
-    "yahoo"
-   ]
-  },
   "PENG": {
    "datum": "2026-10-06",
    "uhrzeit": "16:00",
@@ -750,14 +734,6 @@
   },
   "PLSE": {
    "datum": "2026-11-05",
-   "uhrzeit": "15:00",
-   "lage": "im_handel",
-   "quellen": [
-    "yahoo"
-   ]
-  },
-  "PNTG": {
-   "datum": "2026-11-04",
    "uhrzeit": "15:00",
    "lage": "im_handel",
    "quellen": [

@@ -350,5 +350,17 @@
    "zeichen": "2_groesster_tagesgewinn",
    "text": "INFORMATION: VSH; EMA Crossback; Klimax-Zeichen 2 groesster tagesgewinn (+10,5 %); Verkauf in die Stärke erwägen; Kurs 37,88, seit Trigger +16,3 % gleich 4,3 R"
   }
+ ],
+ "geprueft": "2026-10-02",
+ "zurueckgenommen": [
+  "NBR|Rectangle Top",
+  "ACLS|EMA Crossback",
+  "KEYS|1",
+  "KEYS|Fallback: 20-Tage-Hoch (Pivot)",
+  "P|Fallback: 20-Tage-Hoch (Pivot)",
+  "P|Fallback: 52W-Hoch-Breakout",
+  "UCTT|Fallback: 20-Tage-Hoch (Pivot)",
+  "UCTT|Fallback: MA50-Rückeroberung",
+  "VIAV|Fallback: 20-Tage-Hoch (Pivot)"
  ]
 }
