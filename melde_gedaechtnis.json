@@ -61,7 +61,10 @@
       "SONO|Cup & Handle (Wochenbasis)",
       "SONO|@18.26",
       "QMCO|HTF Innen-Einstieg",
-      "QMCO|@33.19"
+      "QMCO|@33.19",
+      "QMCO|Cup & Handle (Wochenbasis)",
+      "QMCO|High & Tight Flag",
+      "QMCO|@34.69"
     ]
   },
   "gemeldet": {
@@ -434,7 +437,11 @@
     "BEST|SONO|Cup & Handle (Wochenbasis)": "2026-10-02",
     "QMCO|HTF Innen-Einstieg": "2026-10-02",
     "BEST|QMCO|HTF Innen-Einstieg": "2026-10-02",
-    "TEIL|MTRN|EMA Crossback": "2026-10-02"
+    "TEIL|MTRN|EMA Crossback": "2026-10-02",
+    "QMCO|Cup & Handle (Wochenbasis)": "2026-10-02",
+    "QMCO|High & Tight Flag": "2026-10-02",
+    "BEST|QMCO|Cup & Handle (Wochenbasis)": "2026-10-02",
+    "BEST|QMCO|High & Tight Flag": "2026-10-02"
   },
   "gemeldet_kp": {
     "CXW|Cup & Handle (Wochenbasis)": 31.67,
@@ -691,7 +698,11 @@
     "SONO|Cup & Handle (Wochenbasis)": 18.26,
     "BEST|SONO|Cup & Handle (Wochenbasis)": 18.26,
     "QMCO|HTF Innen-Einstieg": 33.19,
-    "BEST|QMCO|HTF Innen-Einstieg": 33.19
+    "BEST|QMCO|HTF Innen-Einstieg": 33.19,
+    "QMCO|Cup & Handle (Wochenbasis)": 34.69,
+    "QMCO|High & Tight Flag": 34.69,
+    "BEST|QMCO|Cup & Handle (Wochenbasis)": 34.69,
+    "BEST|QMCO|High & Tight Flag": 34.69
   },
   "gapgo_warten": {
     "SYNA": {
