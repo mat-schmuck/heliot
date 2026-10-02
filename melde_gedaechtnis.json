@@ -393,7 +393,8 @@
     "ARW|Fallback: 52W-Hoch-Breakout": "2026-10-02",
     "BEST|ARW|Fallback: 52W-Hoch-Breakout": "2026-10-02",
     "TEIL|ACLS|EMA Crossback": "2026-10-02",
-    "TEIL|VECO|EMA Crossback": "2026-10-02"
+    "TEIL|VECO|EMA Crossback": "2026-10-02",
+    "TEIL|ALNT|Rectangle Top": "2026-10-02"
   },
   "gemeldet_kp": {
     "CXW|Cup & Handle (Wochenbasis)": 31.67,
@@ -650,7 +651,7 @@
     "SYNA": {
       "signal": "2026-10-02",
       "kp": 121.99,
-      "stop": 120.35,
+      "stop": 120.1,
       "firma": "Synaptics Incorporated",
       "bestaetigt": false
     }
