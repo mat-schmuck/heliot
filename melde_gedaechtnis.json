@@ -64,7 +64,9 @@
       "QMCO|@33.19",
       "QMCO|Cup & Handle (Wochenbasis)",
       "QMCO|High & Tight Flag",
-      "QMCO|@34.69"
+      "QMCO|@34.69",
+      "QMCO|Wick Play",
+      "QMCO|@34.78"
     ]
   },
   "gemeldet": {
@@ -441,7 +443,9 @@
     "QMCO|Cup & Handle (Wochenbasis)": "2026-10-02",
     "QMCO|High & Tight Flag": "2026-10-02",
     "BEST|QMCO|Cup & Handle (Wochenbasis)": "2026-10-02",
-    "BEST|QMCO|High & Tight Flag": "2026-10-02"
+    "BEST|QMCO|High & Tight Flag": "2026-10-02",
+    "QMCO|Wick Play": "2026-10-02",
+    "BEST|QMCO|Wick Play": "2026-10-02"
   },
   "gemeldet_kp": {
     "CXW|Cup & Handle (Wochenbasis)": 31.67,
@@ -702,7 +706,9 @@
     "QMCO|Cup & Handle (Wochenbasis)": 34.69,
     "QMCO|High & Tight Flag": 34.69,
     "BEST|QMCO|Cup & Handle (Wochenbasis)": 34.69,
-    "BEST|QMCO|High & Tight Flag": 34.69
+    "BEST|QMCO|High & Tight Flag": 34.69,
+    "QMCO|Wick Play": 34.78,
+    "BEST|QMCO|Wick Play": 34.78
   },
   "gapgo_warten": {
     "SYNA": {
