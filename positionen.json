@@ -16149,5 +16149,32 @@
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
   "wedge_drop_gemeldet": false
+ },
+ "ARW|Fallback: 52W-Hoch-Breakout": {
+  "symbol": "ARW",
+  "firma": "Arrow Electronics Inc",
+  "strategie": "Fallback: 52W-Hoch-Breakout",
+  "einstieg": 237.57,
+  "einstieg_datum": "2026-10-02",
+  "einstieg_index": 0,
+  "struktur_stop": 220.72,
+  "aktueller_stop": 220.72,
+  "stop_quelle": "struktur",
+  "hoechstkurs": 237.57,
+  "teilverkauft": false,
+  "halteregel_aktiv": false,
+  "beobachtung": true,
+  "status": "offen",
+  "verlauf": [],
+  "klasse": "standard",
+  "musterziel": null,
+  "zone": null,
+  "zone_gemeldet": null,
+  "ziel_gemeldet": false,
+  "klimax_gemeldet": [],
+  "weinstein_gemeldet": false,
+  "zahlen_hinweis_gemeldet": false,
+  "sektor_hinweis_gemeldet": false,
+  "wedge_drop_gemeldet": false
  }
 }

@@ -37,7 +37,11 @@
       "VSH|Pocket Pivot",
       "VSH|@34.42",
       "SYNA|Pocket Pivot",
-      "SYNA|@106.61"
+      "SYNA|@106.61",
+      "FORM|Cup & Handle (Wochenbasis)",
+      "FORM|@150.66",
+      "ARW|Fallback: 52W-Hoch-Breakout",
+      "ARW|@237.57"
     ]
   },
   "gemeldet": {
@@ -122,8 +126,8 @@
     "BEST|MU|Rectangle Top": "2026-09-29",
     "DOCN|EMA Crossback": "2026-09-29",
     "BEST|DOCN|EMA Crossback": "2026-09-29",
-    "FORM|Cup & Handle (Wochenbasis)": "2026-09-29",
-    "BEST|FORM|Cup & Handle (Wochenbasis)": "2026-09-29",
+    "FORM|Cup & Handle (Wochenbasis)": "2026-10-02",
+    "BEST|FORM|Cup & Handle (Wochenbasis)": "2026-10-02",
     "ICHR|EMA Crossback": "2026-09-29",
     "BEST|ICHR|EMA Crossback": "2026-09-29",
     "RDVT|Cup & Handle (Wochenbasis)": "2026-09-29",
@@ -385,7 +389,9 @@
     "UEBER|VSH|Pocket Pivot": "2026-10-02",
     "UEBER|SYNA|Pocket Pivot": "2026-10-02",
     "GAPGO|SYNA|2026-10-02": "2026-10-02",
-    "TEIL|OKTA|Cup & Handle (Wochenbasis)": "2026-10-02"
+    "TEIL|OKTA|Cup & Handle (Wochenbasis)": "2026-10-02",
+    "ARW|Fallback: 52W-Hoch-Breakout": "2026-10-02",
+    "BEST|ARW|Fallback: 52W-Hoch-Breakout": "2026-10-02"
   },
   "gemeldet_kp": {
     "CXW|Cup & Handle (Wochenbasis)": 31.67,
@@ -448,8 +454,8 @@
     "BEST|MU|Rectangle Top": 1035.83,
     "DOCN|EMA Crossback": 138.41,
     "BEST|DOCN|EMA Crossback": 138.41,
-    "FORM|Cup & Handle (Wochenbasis)": 133.07,
-    "BEST|FORM|Cup & Handle (Wochenbasis)": 133.07,
+    "FORM|Cup & Handle (Wochenbasis)": 150.66,
+    "BEST|FORM|Cup & Handle (Wochenbasis)": 150.66,
     "ICHR|EMA Crossback": 59.76,
     "BEST|ICHR|EMA Crossback": 59.76,
     "RDVT|Cup & Handle (Wochenbasis)": 77.37,
@@ -626,7 +632,9 @@
     "UEBER|SYNA|Fallback: 20-Tage-Hoch (Pivot)": 106.62,
     "UEBER|VECO|Fallback: 20-Tage-Hoch (Pivot)": 53.31,
     "UEBER|VSH|Pocket Pivot": 34.42,
-    "UEBER|SYNA|Pocket Pivot": 106.61
+    "UEBER|SYNA|Pocket Pivot": 106.61,
+    "ARW|Fallback: 52W-Hoch-Breakout": 237.57,
+    "BEST|ARW|Fallback: 52W-Hoch-Breakout": 237.57
   },
   "gapgo_warten": {
     "SNPS": {
@@ -640,7 +648,7 @@
     "SYNA": {
       "signal": "2026-10-02",
       "kp": 121.99,
-      "stop": 121.27,
+      "stop": 120.35,
       "firma": "Synaptics Incorporated",
       "bestaetigt": false
     }
