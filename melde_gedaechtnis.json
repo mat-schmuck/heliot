@@ -55,7 +55,9 @@
       "HTFL|HTF Innen-Einstieg",
       "HTFL|@49.58",
       "AVT|Fallback: 20-Tage-Hoch (Pivot)",
-      "AVT|@104.59"
+      "AVT|@104.59",
+      "NTAP|Fallback: 52W-Hoch-Breakout",
+      "NTAP|@217.03"
     ]
   },
   "gemeldet": {
@@ -422,7 +424,8 @@
     "BEST|HTFL|HTF Innen-Einstieg": "2026-10-02",
     "AVT|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-02",
     "BEST|AVT|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-02",
-    "TEIL|ASX|1": "2026-10-02"
+    "TEIL|ASX|1": "2026-10-02",
+    "UEBER|NTAP|Fallback: 52W-Hoch-Breakout": "2026-10-02"
   },
   "gemeldet_kp": {
     "CXW|Cup & Handle (Wochenbasis)": 31.67,
@@ -674,7 +677,8 @@
     "HTFL|HTF Innen-Einstieg": 49.58,
     "BEST|HTFL|HTF Innen-Einstieg": 49.58,
     "AVT|Fallback: 20-Tage-Hoch (Pivot)": 104.59,
-    "BEST|AVT|Fallback: 20-Tage-Hoch (Pivot)": 104.59
+    "BEST|AVT|Fallback: 20-Tage-Hoch (Pivot)": 104.59,
+    "UEBER|NTAP|Fallback: 52W-Hoch-Breakout": 217.03
   },
   "gapgo_warten": {
     "SYNA": {
