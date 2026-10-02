@@ -1,71 +1,177 @@
 {
- "stand": "2026-10-01",
+ "stand": "2026-10-02",
  "funde": [
+  {
+   "ticker": "ADRX",
+   "status": "beide",
+   "marktkap": 2086898048.0,
+   "stichtag": "2026-10-02",
+   "zeilen": [
+    "ADRX; Großkauf und Cluster; Marktwert 2,1 Mrd $",
+    "Größter Einzelkauf 10,1 Mio $ am 28.09.; George Simeon, Direktor",
+    "5 Insider über der Schwelle von 250 Tsd $:",
+    "  George Simeon, Direktor; 27,2 Mio $",
+    "  SR ONE CAPITAL MANAGEMENT, LLC, Insider; 27,2 Mio $",
+    "  GORDON CARL L, Direktor; 16,1 Mio $",
+    "  ORBIMED ADVISORS LLC, Direktor; 16,1 Mio $",
+    "  Chimovits Erez, Direktor; 1,0 Mio $"
+   ],
+   "kennung": "ADRX|beide|5"
+  },
+  {
+   "ticker": "BBD",
+   "status": "beide",
+   "marktkap": 37168009216.0,
+   "stichtag": "2026-10-02",
+   "zeilen": [
+    "BBD; Großkauf und Cluster; Marktwert 37,2 Mrd $",
+    "Größter Einzelkauf 5,6 Mio $ am 18.09.; de Oliveira Andre Luis Duarte, Executive Officer",
+    "22 Insider über der Schwelle von 250 Tsd $:",
+    "  de Oliveira Andre Luis Duarte, Executive Officer; 5,6 Mio $",
+    "  Alvarez Denise Aguiar, Direktor; 2,3 Mio $",
+    "  Paris Roberto de Jesus, Executive Officer; 1,7 Mio $",
+    "  Fernandes Oswaldo Tadeu, Executive Officer; 1,4 Mio $",
+    "  Ramalho Miranda Jose Augusto, Executive Officer; 1,1 Mio $",
+    "  Machado Silvana Rosa, Executive Officer; 1,1 Mio $",
+    "  Marcilio Juliano Ribeiro, Executive Officer; 1,1 Mio $",
+    "  Favarao Vinicius Urias, Executive Officer; 1,1 Mio $",
+    "  de Souza Cintia Scovine Barcelos, Executive Officer; 1,1 Mio $",
+    "  Tescarolo Marcos Valerio, Executive Officer; 1,0 Mio $",
+    "  Bueno Julio Cesar, Executive Officer; 1,0 Mio $",
+    "  Di Marcello Francesco, Executive Officer; 1,0 Mio $",
+    "  Pedras Carlos Henrique Villela, Executive Officer; 1,0 Mio $",
+    "  de Oliveira Tulio Xavier, Executive Officer; 997 Tsd $",
+    "  Mantarro Renata Geiser, Executive Officer; 985 Tsd $",
+    "  Freiberger Fernando, Executive Officer; 891 Tsd $",
+    "  da Cunha Paulo Roberto Simoes, Direktor; 843 Tsd $",
+    "  Alvarez Rubens Aguiar, Direktor; 843 Tsd $",
+    "  Pavarina Denise Pauli, Direktor; 843 Tsd $",
+    "  Panico Alexandre, Executive Officer; 784 Tsd $",
+    "  Caffarelli Paulo Rogerio, Direktor; 562 Tsd $",
+    "  Nunes Regina Helena Jorge, Direktor; 562 Tsd $"
+   ],
+   "kennung": "BBD|beide|22"
+  },
+  {
+   "ticker": "COUR",
+   "status": "pfad_a",
+   "marktkap": 1343152000.0,
+   "stichtag": "2026-10-02",
+   "zeilen": [
+    "COUR; Großkauf; Marktwert 1,3 Mrd $",
+    "Größter Einzelkauf 6,7 Mio $ am 25.09.; Pale Fire Capital SE, Insider"
+   ],
+   "kennung": "COUR|pfad_a|1"
+  },
   {
    "ticker": "CRBG",
    "status": "pfad_a",
-   "marktkap": 14877657088.0,
-   "stichtag": "2026-10-01",
+   "marktkap": 15004702720.0,
+   "stichtag": "2026-10-02",
    "zeilen": [
-    "CRBG; Großkauf; Marktwert 14,9 Mrd $",
+    "CRBG; Großkauf; Marktwert 15,0 Mrd $",
     "Größter Einzelkauf 25,1 Mio $ am 28.09.; NIPPON LIFE INSURANCE CO, Insider"
    ],
-   "kennung": "CRBG|pfad_a|0"
+   "kennung": "CRBG|pfad_a|1"
+  },
+  {
+   "ticker": "CX",
+   "status": "pfad_a",
+   "marktkap": 13563752448.0,
+   "stichtag": "2026-10-02",
+   "zeilen": [
+    "CX; Großkauf; Marktwert 13,6 Mrd $",
+    "Größter Einzelkauf 6,9 Mio $ am 25.09.; Zambrano Lozano Rogelio, Direktor"
+   ],
+   "kennung": "CX|pfad_a|1"
   },
   {
    "ticker": "GME",
    "status": "pfad_a",
-   "marktkap": 12294689792.0,
-   "stichtag": "2026-10-01",
+   "marktkap": 12163519488.0,
+   "stichtag": "2026-10-02",
    "zeilen": [
-    "GME; Großkauf; Marktwert 12,3 Mrd $",
+    "GME; Großkauf; Marktwert 12,2 Mrd $",
     "Größter Einzelkauf 26,4 Mio $ am 21.09.; Cohen Ryan, President, CEO and Chairman"
    ],
-   "kennung": "GME|pfad_a|0"
+   "kennung": "GME|pfad_a|2"
+  },
+  {
+   "ticker": "GPI",
+   "status": "pfad_a",
+   "marktkap": 3060435200.0,
+   "stichtag": "2026-10-02",
+   "zeilen": [
+    "GPI; Großkauf; Marktwert 3,1 Mrd $",
+    "Größter Einzelkauf 10,5 Mio $ am 24.09.; Conifer Management, L.L.C., Insider"
+   ],
+   "kennung": "GPI|pfad_a|1"
   },
   {
    "ticker": "GRAB",
    "status": "pfad_a",
-   "marktkap": 12703492096.0,
-   "stichtag": "2026-10-01",
+   "marktkap": 12764861440.0,
+   "stichtag": "2026-10-02",
    "zeilen": [
-    "GRAB; Großkauf; Marktwert 12,7 Mrd $",
+    "GRAB; Großkauf; Marktwert 12,8 Mrd $",
     "Größter Einzelkauf 29,9 Mio $ am 21.09.; Tan Anthony Ping Yeow, Chief Executive Officer"
    ],
-   "kennung": "GRAB|pfad_a|0"
+   "kennung": "GRAB|pfad_a|2"
   },
   {
    "ticker": "GSAT",
    "status": "pfad_a",
-   "marktkap": 10748578816.0,
-   "stichtag": "2026-10-01",
+   "marktkap": 10738213888.0,
+   "stichtag": "2026-10-02",
    "zeilen": [
     "GSAT; Großkauf; Marktwert 10,7 Mrd $",
     "Größter Einzelkauf 29,8 Mio $ am 18.09.; Monroe James III, Direktor"
    ],
-   "kennung": "GSAT|pfad_a|0"
+   "kennung": "GSAT|pfad_a|1"
+  },
+  {
+   "ticker": "GSHD",
+   "status": "pfad_a",
+   "marktkap": 1685055744.0,
+   "stichtag": "2026-10-02",
+   "zeilen": [
+    "GSHD; Großkauf; Marktwert 1,7 Mrd $",
+    "Größter Einzelkauf 7,1 Mio $ am 22.09.; Durable Capital Partners LP, Insider"
+   ],
+   "kennung": "GSHD|pfad_a|1"
+  },
+  {
+   "ticker": "KOD",
+   "status": "pfad_a",
+   "marktkap": 6188157440.0,
+   "stichtag": "2026-10-02",
+   "zeilen": [
+    "KOD; Großkauf; Marktwert 6,2 Mrd $",
+    "Größter Einzelkauf 20,2 Mio $ am 28.09.; BAKER BROS. ADVISORS LP, Direktor"
+   ],
+   "kennung": "KOD|pfad_a|1"
   },
   {
    "ticker": "LEN",
    "status": "pfad_a",
-   "marktkap": 19847350272.0,
-   "stichtag": "2026-10-01",
+   "marktkap": 19779899392.0,
+   "stichtag": "2026-10-02",
    "zeilen": [
     "LEN; Großkauf; Marktwert 19,8 Mrd $",
     "Größter Einzelkauf 52,1 Mio $ am 30.09.; BERKSHIRE HATHAWAY INC, Insider"
    ],
-   "kennung": "LEN|pfad_a|0"
+   "kennung": "LEN|pfad_a|1"
   },
   {
    "ticker": "LEN, LEN.B",
    "status": "pfad_a",
-   "marktkap": 19847350272.0,
-   "stichtag": "2026-10-01",
+   "marktkap": 19779899392.0,
+   "stichtag": "2026-10-02",
    "zeilen": [
     "LEN, LEN.B; Großkauf; Marktwert 19,8 Mrd $",
     "Größter Einzelkauf 93,1 Mio $ am 18.09.; BERKSHIRE HATHAWAY INC, Insider"
    ],
-   "kennung": "LEN, LEN.B|pfad_a|0"
+   "kennung": "LEN, LEN.B|pfad_a|1"
   }
  ]
 }
