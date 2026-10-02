@@ -1,22 +1,7 @@
 {
   "heute_gemeldet": {
-    "tag": "2026-10-01",
-    "marken": [
-      "SNPS|EMA Crossback",
-      "SNPS|@445.58",
-      "SNPS|Rectangle Top",
-      "SNPS|@445.93",
-      "VICR|Cup & Handle (Wochenbasis)",
-      "VICR|@297.01",
-      "SNPS|Pocket Pivot",
-      "SNPS|@445.57",
-      "LITE|Fallback: 20-Tage-Hoch (Pivot)",
-      "LITE|@1026.77",
-      "LITE|Rectangle Top",
-      "LITE|@985.01",
-      "LITE|Wick Play",
-      "LITE|@1009.55"
-    ]
+    "tag": "2026-10-02",
+    "marken": []
   },
   "gemeldet": {
     "INSIDER|FTK|pfad_a|1": "2026-09-16",
@@ -526,7 +511,8 @@
       "kp": 496.96,
       "stop": 461.99,
       "firma": "Synopsys, Inc.",
-      "bestaetigt": false
+      "bestaetigt": false,
+      "pruef": "2026-10-02"
     }
   },
   "ampel_tag": "2026-10-01"
