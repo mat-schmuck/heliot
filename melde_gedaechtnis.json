@@ -47,7 +47,9 @@
       "MXL|Fallback: 20-Tage-Hoch (Pivot)",
       "MXL|@96.23",
       "NTAP|Cup & Handle (Wochenbasis)",
-      "NTAP|@216.82"
+      "NTAP|@216.82",
+      "CRDO|EMA Crossback",
+      "CRDO|@211.06"
     ]
   },
   "gemeldet": {
@@ -404,7 +406,8 @@
     "GEWINN|zonenwechsel|BHE|EMA Crossback|mittel": "2026-10-02",
     "GAPGOIN|SNPS|2026-10-01": "2026-10-02",
     "MXL|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-02",
-    "BEST|MXL|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-02"
+    "BEST|MXL|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-02",
+    "UEBER|CRDO|EMA Crossback": "2026-10-02"
   },
   "gemeldet_kp": {
     "CXW|Cup & Handle (Wochenbasis)": 31.67,
@@ -649,7 +652,8 @@
     "ARW|Fallback: 52W-Hoch-Breakout": 237.57,
     "BEST|ARW|Fallback: 52W-Hoch-Breakout": 237.57,
     "MXL|Fallback: 20-Tage-Hoch (Pivot)": 96.23,
-    "BEST|MXL|Fallback: 20-Tage-Hoch (Pivot)": 96.23
+    "BEST|MXL|Fallback: 20-Tage-Hoch (Pivot)": 96.23,
+    "UEBER|CRDO|EMA Crossback": 211.06
   },
   "gapgo_warten": {
     "SYNA": {
