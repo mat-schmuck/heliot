@@ -243,7 +243,7 @@
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
-  "zone_gemeldet": "mittel"
+  "zone_gemeldet": "stark"
  },
  "SU|2": {
   "symbol": "SU",
@@ -1237,7 +1237,7 @@
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
   "wedge_drop_gemeldet": false,
-  "zone_gemeldet": "leicht"
+  "zone_gemeldet": "mittel"
  },
  "CMBT|1": {
   "symbol": "CMBT",
@@ -3764,7 +3764,7 @@
   "klasse": "standard",
   "musterziel": null,
   "zone": "mittel",
-  "zone_gemeldet": "leicht",
+  "zone_gemeldet": "mittel",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [],
   "weinstein_gemeldet": false,
@@ -3845,7 +3845,7 @@
   "klasse": "standard",
   "musterziel": null,
   "zone": "mittel",
-  "zone_gemeldet": "leicht",
+  "zone_gemeldet": "stark",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [],
   "weinstein_gemeldet": false,
@@ -6291,7 +6291,7 @@
   "klasse": "standard",
   "musterziel": 183.26,
   "zone": "mittel",
-  "zone_gemeldet": "leicht",
+  "zone_gemeldet": "mittel",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [],
   "weinstein_gemeldet": false,
@@ -9904,7 +9904,7 @@
   "klasse": "standard",
   "musterziel": null,
   "zone": "stark",
-  "zone_gemeldet": "leicht",
+  "zone_gemeldet": "mittel",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [],
   "weinstein_gemeldet": false,
@@ -10848,7 +10848,7 @@
   "klasse": "standard",
   "musterziel": null,
   "zone": "stark",
-  "zone_gemeldet": "leicht",
+  "zone_gemeldet": "stark",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
    "4_ma200_abstand"
@@ -11054,7 +11054,7 @@
   "klasse": "standard",
   "musterziel": 325.77,
   "zone": "stark",
-  "zone_gemeldet": "leicht",
+  "zone_gemeldet": "stark",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
    "4_ma200_abstand"
@@ -14879,7 +14879,7 @@
   "klasse": "standard",
   "musterziel": null,
   "zone": "stark",
-  "zone_gemeldet": "leicht",
+  "zone_gemeldet": "stark",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
    "4_ma200_abstand"
@@ -14908,7 +14908,7 @@
   "klasse": "standard",
   "musterziel": null,
   "zone": "stark",
-  "zone_gemeldet": "leicht",
+  "zone_gemeldet": "stark",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
    "4_ma200_abstand"
@@ -15374,7 +15374,7 @@
   "klasse": "standard",
   "musterziel": null,
   "zone": "stark",
-  "zone_gemeldet": "leicht",
+  "zone_gemeldet": "stark",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
    "5_kanaluebershooting"

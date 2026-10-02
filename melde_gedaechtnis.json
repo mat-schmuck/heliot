@@ -302,7 +302,18 @@
     "INSIDER|GRAB|pfad_a|2": "2026-10-02",
     "INSIDER|GSAT|pfad_a|1": "2026-10-02",
     "INSIDER|KOD|pfad_a|1": "2026-10-02",
-    "INSIDER|LEN|pfad_a|1": "2026-10-02"
+    "INSIDER|LEN|pfad_a|1": "2026-10-02",
+    "GEWINN|zonenwechsel|AVT|EMA Crossback|stark": "2026-10-02",
+    "GEWINN|zonenwechsel|ECO|1|mittel": "2026-10-02",
+    "GEWINN|zonenwechsel|MTSI|Fallback: MA50-Pullback|mittel": "2026-10-02",
+    "GEWINN|zonenwechsel|P|Fallback: 20-Tage-Hoch (Pivot)|stark": "2026-10-02",
+    "GEWINN|zonenwechsel|P|Fallback: 52W-Hoch-Breakout|stark": "2026-10-02",
+    "GEWINN|zonenwechsel|SMTC|Rectangle Top|mittel": "2026-10-02",
+    "GEWINN|zonenwechsel|SNPS|EMA Crossback|stark": "2026-10-02",
+    "GEWINN|zonenwechsel|TWIN|EMA Crossback|mittel": "2026-10-02",
+    "GEWINN|zonenwechsel|TWLO|1|stark": "2026-10-02",
+    "GEWINN|zonenwechsel|TWLO|Cup & Handle (Wochenbasis)|stark": "2026-10-02",
+    "GEWINN|zonenwechsel|TWLO|Fallback: 20-Tage-Hoch (Pivot)|stark": "2026-10-02"
   },
   "gemeldet_kp": {
     "CXW|Cup & Handle (Wochenbasis)": 31.67,
