@@ -314,7 +314,8 @@
     "GEWINN|zonenwechsel|TWLO|1|stark": "2026-10-02",
     "GEWINN|zonenwechsel|TWLO|Cup & Handle (Wochenbasis)|stark": "2026-10-02",
     "GEWINN|zonenwechsel|TWLO|Fallback: 20-Tage-Hoch (Pivot)|stark": "2026-10-02",
-    "INSIDER|GSHD|pfad_a|1": "2026-10-02"
+    "INSIDER|GSHD|pfad_a|1": "2026-10-02",
+    "GEWINN|zonenwechsel|SITM|Fallback: MA50-Pullback|mittel": "2026-10-02"
   },
   "gemeldet_kp": {
     "CXW|Cup & Handle (Wochenbasis)": 31.67,
