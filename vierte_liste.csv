@@ -1,1 +1,66 @@
 No.,Ticker,Company,Sector,Industry,Country,Market Cap,P/E,Price,Change,Volume
+1,MU,"Micron Technology, Inc.",Technology,,,,,,,
+2,AMD,"Advanced Micro Devices, Inc.",Technology,,,,,,,
+3,INTC,Intel Corporation,Technology,,,,,,,
+4,DELL,Dell Technologies Inc.,Technology,,,,,,,
+5,PANW,"Palo Alto Networks, Inc.",Technology,,,,,,,
+6,CRWD,Crowdstrike Holdings Inc,Technology,Software - Infrastructure,USA,243338.10,6656.86,237.65,-3.28%,19469030
+7,SNDK,Sandisk Corporation,Technology,,,,,,,
+8,MRVL,"Marvell Technology, Inc.",Technology,,,,,,,
+9,FTNT,"Fortinet, Inc.",Technology,,,,,,,
+10,SNOW,Snowflake Inc.,Technology,,,,,,,
+11,DDOG,"Datadog, Inc.",Technology,,,,,,,
+12,HPE,Hewlett Packard Enterprise Company,Technology,,,,,,,
+13,BE,Bloom Energy Corporation,Industrials,,,,,,,
+14,MRNA,"Moderna, Inc.",Healthcare,,,,,,,
+15,NBIS,Nebius Group N.V.,Communication Services,,,,,,,
+16,ALAB,"Astera Labs, Inc.",Technology,,,,,,,
+17,TEAM,Atlassian Corporation,Technology,,,,,,,
+18,TWLO,Twilio Inc,Technology,Software - Infrastructure,USA,37447.78,33.93,243.84,-0.97%,4057103
+19,P,"Everpure, Inc.",Technology,,,,,,,
+20,CRDO,Credo Technology Group Holding Ltd,Technology,,,,,,,
+21,OKTA,"Okta, Inc.",Technology,,,,,,,
+22,RBRK,Rubrik Inc,Technology,Software - Infrastructure,USA,22121.46,,106.71,-1.04%,5144556
+23,SMTC,Semtech Corp,Technology,Semiconductors,USA,17265.24,122.97,185.00,3.82%,6071928
+24,SIMO,Silicon Motion Technology Corp ADR,Technology,Semiconductors,Hong Kong,9227.25,31.91,272.11,7.43%,873457
+25,MXL,MaxLinear Inc,Technology,Semiconductors,USA,7357.03,,81.12,8.17%,4913203
+26,GTLB,GitLab Inc.,Technology,,,,,,,
+27,HNGE,Hinge Health Inc,Healthcare,Health Information Services,USA,7657.90,73.08,94.90,0.19%,4866296
+28,MAAS,Maase Inc.,Technology,,,,,,,
+29,QLYS,"Qualys, Inc.",Technology,,,,,,,
+30,KOD,Kodiak Sciences Inc,Healthcare,,,,,,,
+31,XMTR,Xometry Inc,Industrials,Industrial Distribution,USA,5570.70,,97.18,2.02%,1682220
+32,BB,BlackBerry Limited,Technology,,,,,,,
+33,NSIT,"Insight Enterprises, Inc.",Technology,,,,,,,
+34,AEHR,Aehr Test Systems,Technology,,,,,,,
+35,OUST,Ouster Inc,Technology,Electronic Components,USA,2527.54,,35.05,0.29%,2468493
+36,PGEN,"Precigen, Inc.",Healthcare,,,,,,,
+37,ASST,"Strive, Inc.",Financial,,,,,,,
+38,PURR,Hyperliquid Strategies Inc,Financial,,,,,,,
+39,PENG,Penguin Solutions Inc,Technology,Information Technology Services,USA,2731.24,33.82,53.30,1.43%,2290546
+40,FIVN,"Five9, Inc.",Technology,,,,,,,
+41,AMC,"AMC Entertainment Holdings, Inc.",Communication Services,,,,,,,
+42,SLS,"SELLAS Life Sciences Group, Inc.",Healthcare,,,,,,,
+43,NEO,"NeoGenomics, Inc.",Healthcare,,,,,,,
+44,SDGR,"Schrodinger, Inc.",Healthcare,,,,,,,
+45,BFLY,"Butterfly Network, Inc.",Healthcare,,,,,,,
+46,CLOV,"Clover Health Investments, Corp.",Healthcare,,,,,,,
+47,PRCH,"Porch Group, Inc.",Financial,,,,,,,
+48,LIFE,Ethos Technologies Inc.,Financial,,,,,,,
+49,BAND,Bandwidth Inc,Technology,Software - Infrastructure,USA,1616.44,,50.23,-0.55%,1271361
+50,URGN,UroGen Pharma Ltd.,Healthcare,,,,,,,
+51,MRVI,"Maravai LifeSciences Holdings, Inc.",Healthcare,,,,,,,
+52,ABSI,Absci Corporation,Healthcare,,,,,,,
+53,FTRE,Fortrea Holdings Inc.,Healthcare,,,,,,,
+54,AMPL,"Amplitude, Inc.",Technology,,,,,,,
+55,AMBQ,"Ambiq Micro, Inc.",Technology,,,,,,,
+56,ETON,Eton Pharmaceuticals Inc,Healthcare,Drug Manufacturers - Specialty & Generic,USA,1586.36,146.75,55.50,-2.75%,891702
+57,NUTX,Nutex Health Inc.,Healthcare,,,,,,,
+58,FCEL,"FuelCell Energy, Inc.",Industrials,,,,,,,
+59,QMCO,Quantum Corp,Technology,Computer Hardware,USA,988.80,,25.09,0.60%,1874028
+60,RXT,"Rackspace Technology, Inc.",Technology,,,,,,,
+61,BLZE,"Backblaze, Inc.",Technology,,,,,,,
+62,PAYS,"Paysign, Inc.",Technology,,,,,,,
+63,TJGC,TJGC Group Limited,Communication Services,,,,,,,
+64,FRD,Friedman Industries Inc.,Basic Materials,,,,,,,
+65,SDEV,Stablecoin Development Corporation,Financial,,,,,,,
