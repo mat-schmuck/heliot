@@ -21,10 +21,10 @@
   {
    "ticker": "BBD",
    "status": "beide",
-   "marktkap": 38121033728.0,
+   "marktkap": 38650494976.0,
    "stichtag": "2026-10-02",
    "zeilen": [
-    "BBD; Großkauf und Cluster; Marktwert 38,1 Mrd $",
+    "BBD; Großkauf und Cluster; Marktwert 38,7 Mrd $",
     "Größter Einzelkauf 5,6 Mio $ am 18.09.; de Oliveira Andre Luis Duarte, Executive Officer",
     "22 Insider über der Schwelle von 250 Tsd $:",
     "  de Oliveira Andre Luis Duarte, Executive Officer; 5,6 Mio $",
@@ -55,7 +55,7 @@
   {
    "ticker": "COUR",
    "status": "pfad_a",
-   "marktkap": 1340508032.0,
+   "marktkap": 1327287936.0,
    "stichtag": "2026-10-02",
    "zeilen": [
     "COUR; Großkauf; Marktwert 1,3 Mrd $",
@@ -66,7 +66,7 @@
   {
    "ticker": "CRBG",
    "status": "pfad_a",
-   "marktkap": 15249876992.0,
+   "marktkap": 15169638400.0,
    "stichtag": "2026-10-02",
    "zeilen": [
     "CRBG; Großkauf; Marktwert 15,2 Mrd $",
@@ -77,10 +77,10 @@
   {
    "ticker": "CX",
    "status": "pfad_a",
-   "marktkap": 13700833280.0,
+   "marktkap": 13751335936.0,
    "stichtag": "2026-10-02",
    "zeilen": [
-    "CX; Großkauf; Marktwert 13,7 Mrd $",
+    "CX; Großkauf; Marktwert 13,8 Mrd $",
     "Größter Einzelkauf 6,9 Mio $ am 25.09.; Zambrano Lozano Rogelio, Direktor"
    ],
    "kennung": "CX|pfad_a|1"
@@ -88,10 +88,10 @@
   {
    "ticker": "GME",
    "status": "beide",
-   "marktkap": 12322436096.0,
+   "marktkap": 12461174784.0,
    "stichtag": "2026-10-02",
    "zeilen": [
-    "GME; Großkauf und Cluster; Marktwert 12,3 Mrd $",
+    "GME; Großkauf und Cluster; Marktwert 12,5 Mrd $",
     "Größter Einzelkauf 26,4 Mio $ am 21.09.; Cohen Ryan, President, CEO and Chairman",
     "3 Insider über der Schwelle von 250 Tsd $:",
     "  Cohen Ryan, President, CEO and Chairman; 37,0 Mio $",
@@ -103,7 +103,7 @@
   {
    "ticker": "GPI",
    "status": "pfad_a",
-   "marktkap": 3013342464.0,
+   "marktkap": 2978648576.0,
    "stichtag": "2026-10-02",
    "zeilen": [
     "GPI; Großkauf; Marktwert 3,0 Mrd $",
@@ -114,10 +114,10 @@
   {
    "ticker": "GRAB",
    "status": "pfad_a",
-   "marktkap": 12703492096.0,
+   "marktkap": 12601209856.0,
    "stichtag": "2026-10-02",
    "zeilen": [
-    "GRAB; Großkauf; Marktwert 12,7 Mrd $",
+    "GRAB; Großkauf; Marktwert 12,6 Mrd $",
     "Größter Einzelkauf 29,9 Mio $ am 21.09.; Tan Anthony Ping Yeow, Chief Executive Officer"
    ],
    "kennung": "GRAB|pfad_a|2"
@@ -125,7 +125,7 @@
   {
    "ticker": "GSAT",
    "status": "pfad_a",
-   "marktkap": 10786799616.0,
+   "marktkap": 10782265344.0,
    "stichtag": "2026-10-02",
    "zeilen": [
     "GSAT; Großkauf; Marktwert 10,8 Mrd $",
@@ -136,7 +136,7 @@
   {
    "ticker": "GSHD",
    "status": "pfad_a",
-   "marktkap": 1627159808.0,
+   "marktkap": 1626445056.0,
    "stichtag": "2026-10-02",
    "zeilen": [
     "GSHD; Großkauf; Marktwert 1,6 Mrd $",
@@ -147,10 +147,10 @@
   {
    "ticker": "KOD",
    "status": "pfad_a",
-   "marktkap": 5649537536.0,
+   "marktkap": 5936131072.0,
    "stichtag": "2026-10-02",
    "zeilen": [
-    "KOD; Großkauf; Marktwert 5,6 Mrd $",
+    "KOD; Großkauf; Marktwert 5,9 Mrd $",
     "Größter Einzelkauf 20,2 Mio $ am 28.09.; BAKER BROS. ADVISORS LP, Direktor"
    ],
    "kennung": "KOD|pfad_a|1"
@@ -158,10 +158,10 @@
   {
    "ticker": "LEN",
    "status": "pfad_a",
-   "marktkap": 19298109440.0,
+   "marktkap": 19225839616.0,
    "stichtag": "2026-10-02",
    "zeilen": [
-    "LEN; Großkauf; Marktwert 19,3 Mrd $",
+    "LEN; Großkauf; Marktwert 19,2 Mrd $",
     "Größter Einzelkauf 52,1 Mio $ am 30.09.; BERKSHIRE HATHAWAY INC, Insider"
    ],
    "kennung": "LEN|pfad_a|1"
@@ -169,10 +169,10 @@
   {
    "ticker": "LEN, LEN.B",
    "status": "pfad_a",
-   "marktkap": 19298109440.0,
+   "marktkap": 19225839616.0,
    "stichtag": "2026-10-02",
    "zeilen": [
-    "LEN, LEN.B; Großkauf; Marktwert 19,3 Mrd $",
+    "LEN, LEN.B; Großkauf; Marktwert 19,2 Mrd $",
     "Größter Einzelkauf 93,1 Mio $ am 18.09.; BERKSHIRE HATHAWAY INC, Insider"
    ],
    "kennung": "LEN, LEN.B|pfad_a|1"
@@ -180,10 +180,10 @@
   {
    "ticker": "SLBT",
    "status": "pfad_a",
-   "marktkap": 887850880.0,
+   "marktkap": 880392832.0,
    "stichtag": "2026-10-02",
    "zeilen": [
-    "SLBT; Großkauf; Marktwert 887,9 Mio $",
+    "SLBT; Großkauf; Marktwert 880,4 Mio $",
     "Größter Einzelkauf 10329,9 Mrd $ am 29.09.; Wang Ching-Dong, Chief Executive Officer"
    ],
    "kennung": "SLBT|pfad_a|1"
