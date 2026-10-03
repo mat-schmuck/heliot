@@ -1,63 +1,51 @@
 No.,Ticker,Company,Sector,Industry,Country,Market Cap,P/E,Price,Change,Volume
-1,CDNA,Caredx Inc,Healthcare,Diagnostics & Research,USA,2784.85,25.95,53.83,-0.83%,1384015
-2,DINO,HF Sinclair Corporation,Energy,,,,,,,
-3,ETON,Eton Pharmaceuticals Inc,Healthcare,Drug Manufacturers - Specialty & Generic,USA,1586.36,146.75,55.50,-2.75%,891702
-4,HALO,"Halozyme Therapeutics, Inc.",Healthcare,,,,,,,
-5,NET,"Cloudflare, Inc.",Technology,,,,,,,
-6,NTRA,Natera Inc,Healthcare,Diagnostics & Research,USA,53245.42,,369.39,0.84%,3718175
-7,P,"Everpure, Inc.",Technology,,,,,,,
-8,QMCO,Quantum Corp,Technology,Computer Hardware,USA,988.80,,25.09,0.60%,1874028
-9,TWST,Twist Bioscience Corp,Healthcare,Biotechnology,USA,10993.36,,166.99,7.35%,3073852
-10,ADPT,Adaptive Biotechnologies Corp,Healthcare,Diagnostics & Research,USA,4566.04,,28.61,0.21%,2985539
-11,BLFS,"BioLife Solutions, Inc.",Healthcare,,,,,,,
-12,CRWD,Crowdstrike Holdings Inc,Technology,Software - Infrastructure,USA,243338.10,6656.86,237.65,-3.28%,19469030
-13,DELL,Dell Technologies Inc.,Technology,,,,,,,
-14,DK,Delek US Holdings Inc,Energy,Oil & Gas Refining & Marketing,USA,4783.46,21.96,78.12,-4.21%,11555091
-15,FEIM,"Frequency Electronics, Inc.",Technology,,,,,,,
-16,GRAL,"GRAIL, Inc.",Healthcare,,,,,,,
-17,HPE,Hewlett Packard Enterprise Company,Technology,,,,,,,
-18,HTFL,"Heartflow, Inc.",Healthcare,,,,,,,
-19,PSX,Phillips 66,Energy,,,,,,,
-20,RBRK,Rubrik Inc,Technology,Software - Infrastructure,USA,22121.46,,106.71,-1.04%,5144556
+1,GRAL,"GRAIL, Inc.",Healthcare,,,,,,,
+2,HPE,Hewlett Packard Enterprise Company,Technology,,,,,,,
+3,P,"Everpure, Inc.",Technology,,,,,,,
+4,QMCO,Quantum Corp,Technology,Computer Hardware,USA,988.80,,25.09,0.60%,1874028
+5,XNCR,"Xencor, Inc.",Healthcare,,,,,,,
+6,ZETA,Zeta Global Holdings Corp.,Technology,,,,,,,
+7,CRWD,Crowdstrike Holdings Inc,Technology,Software - Infrastructure,USA,243338.10,6656.86,237.65,-3.28%,19469030
+8,DELL,Dell Technologies Inc.,Technology,,,,,,,
+9,ETON,Eton Pharmaceuticals Inc,Healthcare,Drug Manufacturers - Specialty & Generic,USA,1586.36,146.75,55.50,-2.75%,891702
+10,HTFL,"Heartflow, Inc.",Healthcare,,,,,,,
+11,LIND,Lindblad Expeditions Holdings Inc.,Consumer Cyclical,,,,,,,
+12,LITE,Lumentum Holdings Inc.,Technology,,,,,,,
+13,NET,"Cloudflare, Inc.",Technology,,,,,,,
+14,SMTC,Semtech Corp,Technology,Semiconductors,USA,17265.24,122.97,185.00,3.82%,6071928
+15,TWLO,Twilio Inc,Technology,Software - Infrastructure,USA,37447.78,33.93,243.84,-0.97%,4057103
+16,AVT,Avnet Inc,Technology,Electronics & Computer Distribution,USA,7888.85,24.09,96.12,3.22%,2685009
+17,BLFS,"BioLife Solutions, Inc.",Healthcare,,,,,,,
+18,FEIM,"Frequency Electronics, Inc.",Technology,,,,,,,
+19,RBRK,Rubrik Inc,Technology,Software - Infrastructure,USA,22121.46,,106.71,-1.04%,5144556
+20,S,SentinelOne Inc,Technology,Software - Infrastructure,USA,7834.59,,22.51,-2.93%,13017108
 21,SNOW,Snowflake Inc.,Technology,,,,,,,
-22,TWLO,Twilio Inc,Technology,Software - Infrastructure,USA,37447.78,33.93,243.84,-0.97%,4057103
-23,ZETA,Zeta Global Holdings Corp.,Technology,,,,,,,
-24,INSW,International Seaways Inc,Energy,Oil & Gas Midstream,USA,5505.41,7.10,111.15,0.56%,1799720
-25,NTAP,"NetApp, Inc.",Technology,,,,,,,
-26,PARR,"Par Pacific Holdings, Inc.",Energy,,,,,,,
-27,PSNL,Personalis Inc,Healthcare,Diagnostics & Research,USA,1751.52,,16.40,1.05%,3180446
-28,S,SentinelOne Inc,Technology,Software - Infrastructure,USA,7834.59,,22.51,-2.93%,13017108
-29,UMAC,Unusual Machines Inc,Technology,Computer Hardware,USA,1157.99,,23.18,-2.93%,2534198
-30,AMD,"Advanced Micro Devices, Inc.",Technology,,,,,,,
-31,AVT,Avnet Inc,Technology,Electronics & Computer Distribution,USA,7888.85,24.09,96.12,3.22%,2685009
-32,CORT,Corcept Therapeutics Incorporated,Healthcare,,,,,,,
+22,ARW,Arrow Electronics Inc,Technology,Electronics & Computer Distribution,USA,11164.07,14.01,219.31,2.00%,1088967
+23,GTLB,GitLab Inc.,Technology,,,,,,,
+24,SN,"SharkNinja, Inc.",Consumer Cyclical,,,,,,,
+25,TEAM,Atlassian Corporation,Technology,,,,,,,
+26,AMD,"Advanced Micro Devices, Inc.",Technology,,,,,,,
+27,ESTC,Elastic N.V.,Technology,,,,,,,
+28,MTRN,Materion Corporation,Basic Materials,,,,,,,
+29,SCSC,"ScanSource, Inc.",Technology,,,,,,,
+30,SNX,TD SYNNEX Corporation,Technology,,,,,,,
+31,DT,"Dynatrace, Inc.",Technology,,,,,,,
+32,FTNT,"Fortinet, Inc.",Technology,,,,,,,
 33,HNGE,Hinge Health Inc,Healthcare,Health Information Services,USA,7657.90,73.08,94.90,0.19%,4866296
 34,PANW,"Palo Alto Networks, Inc.",Technology,,,,,,,
 35,RDVT,Red Violet Inc,Technology,Software - Application,USA,1218.61,67.24,75.94,-1.53%,289673
-36,SN,"SharkNinja, Inc.",Consumer Cyclical,,,,,,,
-37,URGN,UroGen Pharma Ltd,Healthcare,Biotechnology,USA,2114.08,,43.25,-1.59%,703082
-38,ARX,Accelerant Holdings,Financial,,,,,,,
-39,FTNT,"Fortinet, Inc.",Technology,,,,,,,
-40,GH,Guardant Health Inc,Healthcare,Diagnostics & Research,USA,24072.11,,179.38,-2.03%,3080785
-41,TEAM,Atlassian Corporation,Technology,,,,,,,
-42,AEHR,Aehr Test Systems,Technology,,,,,,,
-43,GTLB,GitLab Inc.,Technology,,,,,,,
-44,NESR,National Energy Services Reunited Corp,Energy,Oil & Gas Equipment & Services,USA,3285.75,35.79,32.58,0.28%,3245526
-45,PTGX,Protagonist Therapeutics Inc,Healthcare,Biotechnology,USA,9253.28,137.88,143.00,-0.49%,1837204
-46,ROKU,"Roku, Inc.",Communication Services,,,,,,,
-47,WHD,"Cactus, Inc.",Energy,,,,,,,
-48,XMTR,Xometry Inc,Industrials,Industrial Distribution,USA,5570.70,,97.18,2.02%,1682220
-49,CXW,"CoreCivic, Inc.",Industrials,,,,,,,
-50,OSCR,"Oscar Health, Inc.",Healthcare,,,,,,,
-51,PNTG,Pennant Group Inc,Healthcare,Medical Care Facilities,USA,1383.89,43.69,39.62,-1.02%,799321
-52,SNX,TD SYNNEX Corporation,Technology,,,,,,,
-53,TH,Target Hospitality Corp,Industrials,Specialty Business Services,USA,2111.02,,21.19,2.07%,4948753
-54,TVTX,Travere Therapeutics Inc,Healthcare,Biotechnology,USA,5915.83,,62.76,-3.06%,2235858
-55,GKOS,Glaukos Corp,Healthcare,Medical Devices,USA,9662.16,,163.81,1.48%,1464537
-56,TALO,"Talos Energy, Inc.",Energy,,,,,,,
-57,FROG,JFrog Ltd,Technology,Software - Application,USA,11443.59,,92.81,-1.24%,1962447
-58,MDB,MongoDB Inc,Technology,Software - Infrastructure,USA,30898.19,541.29,383.56,-2.51%,1291560
-59,SENEA,Seneca Foods Corp.,Consumer Defensive,,,,,,,
-60,AXGN,Axogen Inc,Healthcare,Medical Devices,USA,2595.04,,44.23,-2.33%,1124697
-61,ATRO,Astronics Corp,Industrials,Aerospace & Defense,USA,2821.36,34.82,65.71,1.19%,2055272
-62,IMNM,"Immunome, Inc.",Healthcare,,,,,,,
+36,GH,Guardant Health Inc,Healthcare,Diagnostics & Research,USA,24072.11,,179.38,-2.03%,3080785
+37,GKOS,Glaukos Corp,Healthcare,Medical Devices,USA,9662.16,,163.81,1.48%,1464537
+38,MATX,"Matson, Inc.",Industrials,,,,,,,
+39,XMTR,Xometry Inc,Industrials,Industrial Distribution,USA,5570.70,,97.18,2.02%,1682220
+40,GEO,Geo Group Inc,Industrials,,,,,,,
+41,ROKU,"Roku, Inc.",Communication Services,,,,,,,
+42,FROG,JFrog Ltd,Technology,Software - Application,USA,11443.59,,92.81,-1.24%,1962447
+43,OSCR,"Oscar Health, Inc.",Healthcare,,,,,,,
+44,TVTX,Travere Therapeutics Inc,Healthcare,Biotechnology,USA,5915.83,,62.76,-3.06%,2235858
+45,BWIN,"The Baldwin Insurance Group, Inc.",Financial,,,,,,,
+46,DJCO,Daily Journal Corp.,Technology,,,,,,,
+47,KMX,CarMax Inc,Consumer Cyclical,,,,,,,
+48,SLAB,"Silicon Laboratories, Inc.",Technology,,,,,,,
+49,RELY,"Remitly Global, Inc.",Technology,,,,,,,
+50,AXGN,Axogen Inc,Healthcare,Medical Devices,USA,2595.04,,44.23,-2.33%,1124697
