@@ -6,7 +6,7 @@
   "zone_max": 209.52999877929688,
   "spring_low": 206.5500030517578,
   "spring_volumen": 1675610.0,
-  "tage_gewartet": 13
+  "tage_gewartet": 14
  },
  "UCTT": {
   "spring_index": 500,
@@ -15,7 +15,7 @@
   "zone_max": 69.31999969482422,
   "spring_low": 68.2699966430664,
   "spring_volumen": 1314643.0,
-  "tage_gewartet": 12
+  "tage_gewartet": 13
  },
  "AVT": {
   "spring_index": 500,
@@ -24,7 +24,7 @@
   "zone_max": 93.37000274658203,
   "spring_low": 92.66999816894531,
   "spring_volumen": 2665078.0,
-  "tage_gewartet": 12
+  "tage_gewartet": 13
  },
  "MRNA": {
   "spring_index": 500,
@@ -33,7 +33,7 @@
   "zone_max": 176.66000366210938,
   "spring_low": 168.3000030517578,
   "spring_volumen": 23782086.0,
-  "tage_gewartet": 9
+  "tage_gewartet": 10
  },
  "ICHR": {
   "spring_index": 500,
@@ -42,7 +42,7 @@
   "zone_max": 56.60100173950195,
   "spring_low": 56.0,
   "spring_volumen": 381200.0,
-  "tage_gewartet": 5
+  "tage_gewartet": 6
  },
  "SIMO": {
   "spring_index": 499,
@@ -51,7 +51,7 @@
   "zone_max": 275.0,
   "spring_low": 269.3399963378906,
   "spring_volumen": 413317.0,
-  "tage_gewartet": 4
+  "tage_gewartet": 5
  },
  "FROG": {
   "spring_index": 500,
@@ -60,7 +60,7 @@
   "zone_max": 89.16000366210938,
   "spring_low": 87.08999633789062,
   "spring_volumen": 1386814.0,
-  "tage_gewartet": 3
+  "tage_gewartet": 4
  },
  "S": {
   "spring_index": 500,
@@ -69,7 +69,7 @@
   "zone_max": 23.950000762939453,
   "spring_low": 23.43000030517578,
   "spring_volumen": 8958453.0,
-  "tage_gewartet": 1
+  "tage_gewartet": 2
  },
  "VSH": {
   "spring_index": 500,
@@ -78,7 +78,7 @@
   "zone_max": 34.040000915527344,
   "spring_low": 32.342899322509766,
   "spring_volumen": 3456496.0,
-  "tage_gewartet": 1
+  "tage_gewartet": 2
  },
  "STX": {
   "spring_index": 500,
@@ -87,6 +87,15 @@
   "zone_max": 801.8900146484375,
   "spring_low": 791.75,
   "spring_volumen": 13521412.0,
+  "tage_gewartet": 1
+ },
+ "VSXY": {
+  "spring_index": 500,
+  "spring_datum": "2026-10-02",
+  "zone_min": 88.56999969482422,
+  "zone_max": 88.56999969482422,
+  "spring_low": 88.09500122070312,
+  "spring_volumen": 1677900.0,
   "tage_gewartet": 0
  }
 }
