@@ -19,7 +19,9 @@
       "RXO|Rectangle Top",
       "RXO|@23.97",
       "SNPS|Fallback: 20-Tage-Hoch (Pivot)",
-      "SNPS|@500.04"
+      "SNPS|@500.04",
+      "SDEV|Fallback: 20-Tage-Hoch (Pivot)",
+      "SDEV|@7.66"
     ]
   },
   "gemeldet": {
@@ -90,7 +92,8 @@
     "BEST|SNPS|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-05",
     "R2GX|NTAP|2026-10-05": "2026-10-05",
     "TEIL|SNPS|EMA Crossback": "2026-10-05",
-    "GAPGO|RXO|2026-10-05": "2026-10-05"
+    "GAPGO|RXO|2026-10-05": "2026-10-05",
+    "UEBER|SDEV|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-05"
   },
   "gemeldet_kp": {
     "GEO|Rectangle Top": 32.29,
@@ -108,7 +111,8 @@
     "UEBER|RXO|EMA Crossback": 24.04,
     "UEBER|RXO|Rectangle Top": 23.97,
     "SNPS|Fallback: 20-Tage-Hoch (Pivot)": 500.04,
-    "BEST|SNPS|Fallback: 20-Tage-Hoch (Pivot)": 500.04
+    "BEST|SNPS|Fallback: 20-Tage-Hoch (Pivot)": 500.04,
+    "UEBER|SDEV|Fallback: 20-Tage-Hoch (Pivot)": 7.66
   },
   "gapgo_warten": {
     "SYNA": {
@@ -118,6 +122,13 @@
       "firma": "Synaptics Incorporated",
       "bestaetigt": false,
       "pruef": "2026-10-05"
+    },
+    "RXO": {
+      "signal": "2026-10-05",
+      "kp": 29.29,
+      "stop": 28.51,
+      "firma": "RXO, Inc.",
+      "bestaetigt": false
     }
   },
   "ampel_tag": "2026-10-05"
