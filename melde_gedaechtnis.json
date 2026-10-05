@@ -25,7 +25,12 @@
       "GEO|Cup & Handle (Wochenbasis)",
       "GEO|@33.16",
       "SDGR|HTF Innen-Einstieg",
-      "SDGR|@31.15"
+      "SDGR|@31.15",
+      "SDGR|Cup & Handle (Wochenbasis)",
+      "SDGR|High & Tight Flag",
+      "SDGR|@32.46",
+      "SDGR|Wick Play",
+      "SDGR|@32.55"
     ]
   },
   "gemeldet": {
@@ -104,7 +109,13 @@
     "BEST|GEO|Cup & Handle (Wochenbasis)": "2026-10-05",
     "SDGR|HTF Innen-Einstieg": "2026-10-05",
     "BEST|SDGR|HTF Innen-Einstieg": "2026-10-05",
-    "TEIL|COHU|Cup & Handle (Wochenbasis)": "2026-10-05"
+    "TEIL|COHU|Cup & Handle (Wochenbasis)": "2026-10-05",
+    "SDGR|Cup & Handle (Wochenbasis)": "2026-10-05",
+    "SDGR|High & Tight Flag": "2026-10-05",
+    "BEST|SDGR|Cup & Handle (Wochenbasis)": "2026-10-05",
+    "BEST|SDGR|High & Tight Flag": "2026-10-05",
+    "SDGR|Wick Play": "2026-10-05",
+    "BEST|SDGR|Wick Play": "2026-10-05"
   },
   "gemeldet_kp": {
     "GEO|Rectangle Top": 32.29,
@@ -127,7 +138,13 @@
     "GEO|Cup & Handle (Wochenbasis)": 33.16,
     "BEST|GEO|Cup & Handle (Wochenbasis)": 33.16,
     "SDGR|HTF Innen-Einstieg": 31.15,
-    "BEST|SDGR|HTF Innen-Einstieg": 31.15
+    "BEST|SDGR|HTF Innen-Einstieg": 31.15,
+    "SDGR|Cup & Handle (Wochenbasis)": 32.46,
+    "SDGR|High & Tight Flag": 32.46,
+    "BEST|SDGR|Cup & Handle (Wochenbasis)": 32.46,
+    "BEST|SDGR|High & Tight Flag": 32.46,
+    "SDGR|Wick Play": 32.55,
+    "BEST|SDGR|Wick Play": 32.55
   },
   "gapgo_warten": {
     "SYNA": {
