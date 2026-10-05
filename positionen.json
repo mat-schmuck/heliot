@@ -3009,7 +3009,7 @@
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
   "wedge_drop_gemeldet": false,
-  "zone_gemeldet": "leicht"
+  "zone_gemeldet": "mittel"
  },
  "SMMT|1": {
   "symbol": "SMMT",
@@ -3804,7 +3804,7 @@
   "klasse": "standard",
   "musterziel": 26.99,
   "zone": "stark",
-  "zone_gemeldet": "leicht",
+  "zone_gemeldet": "mittel",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
    "2_groesster_tagesgewinn"
@@ -3889,7 +3889,7 @@
   "klasse": "standard",
   "musterziel": 103.63,
   "zone": "stark",
-  "zone_gemeldet": "leicht",
+  "zone_gemeldet": "mittel",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
    "2_groesster_tagesgewinn"
@@ -4026,7 +4026,7 @@
   "klasse": "standard",
   "musterziel": 332.31,
   "zone": "mittel",
-  "zone_gemeldet": "leicht",
+  "zone_gemeldet": "mittel",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [],
   "weinstein_gemeldet": false,
@@ -4475,7 +4475,7 @@
   "klasse": "standard",
   "musterziel": 241.99,
   "zone": "stark",
-  "zone_gemeldet": "leicht",
+  "zone_gemeldet": "mittel",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
    "2_groesster_tagesgewinn"
@@ -5051,7 +5051,7 @@
   "klasse": "standard",
   "musterziel": null,
   "zone": "mittel",
-  "zone_gemeldet": "leicht",
+  "zone_gemeldet": "mittel",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
    "5_kanaluebershooting"
@@ -5781,7 +5781,7 @@
   "klasse": "standard",
   "musterziel": null,
   "zone": "mittel",
-  "zone_gemeldet": "leicht",
+  "zone_gemeldet": "mittel",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
    "2_groesster_tagesgewinn"
@@ -8309,7 +8309,7 @@
   "klasse": "standard",
   "musterziel": null,
   "zone": "mittel",
-  "zone_gemeldet": "leicht",
+  "zone_gemeldet": "mittel",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [],
   "weinstein_gemeldet": false,
@@ -8588,7 +8588,7 @@
   "klasse": "standard",
   "musterziel": null,
   "zone": "stark",
-  "zone_gemeldet": "mittel",
+  "zone_gemeldet": "stark",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [],
   "weinstein_gemeldet": false,
@@ -10175,7 +10175,7 @@
   "klasse": "standard",
   "musterziel": 116.61,
   "zone": "mittel",
-  "zone_gemeldet": "leicht",
+  "zone_gemeldet": "mittel",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [],
   "weinstein_gemeldet": false,
@@ -11719,7 +11719,7 @@
   "klasse": "standard",
   "musterziel": null,
   "zone": "stark",
-  "zone_gemeldet": "leicht",
+  "zone_gemeldet": "mittel",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
    "2_groesster_tagesgewinn"
@@ -12415,7 +12415,7 @@
   "klasse": "standard",
   "musterziel": null,
   "zone": "stark",
-  "zone_gemeldet": "leicht",
+  "zone_gemeldet": "mittel",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
    "2_groesster_tagesgewinn"
@@ -12961,7 +12961,7 @@
   "klasse": "standard",
   "musterziel": null,
   "zone": "stark",
-  "zone_gemeldet": "leicht",
+  "zone_gemeldet": "mittel",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [],
   "weinstein_gemeldet": false,
@@ -13311,7 +13311,7 @@
   "klasse": "standard",
   "musterziel": 220.46,
   "zone": "mittel",
-  "zone_gemeldet": "leicht",
+  "zone_gemeldet": "mittel",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
    "2_groesster_tagesgewinn"
@@ -13394,7 +13394,7 @@
   "klasse": "standard",
   "musterziel": null,
   "zone": "stark",
-  "zone_gemeldet": "leicht",
+  "zone_gemeldet": "mittel",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [],
   "weinstein_gemeldet": false,
@@ -13450,7 +13450,7 @@
   "klasse": "standard",
   "musterziel": null,
   "zone": "stark",
-  "zone_gemeldet": "leicht",
+  "zone_gemeldet": "mittel",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [],
   "weinstein_gemeldet": false,
@@ -13919,7 +13919,7 @@
   "klasse": "standard",
   "musterziel": null,
   "zone": "stark",
-  "zone_gemeldet": "leicht",
+  "zone_gemeldet": "stark",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
    "2_groesster_tagesgewinn"
@@ -14808,7 +14808,7 @@
   "klasse": "standard",
   "musterziel": null,
   "zone": "stark",
-  "zone_gemeldet": "leicht",
+  "zone_gemeldet": "stark",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
    "2_groesster_tagesgewinn"
