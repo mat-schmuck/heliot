@@ -1,5 +1,5 @@
 {
- "gebaut_am": "2026-10-05 00:08 Wien",
+ "gebaut_am": "2026-10-06 00:18 Wien",
  "ohne_termin": [
   "MAAS",
   "SDEV",
@@ -469,8 +469,8 @@
    ]
   },
   "FTRE": {
-   "datum": "2026-11-05",
-   "uhrzeit": "07:00",
+   "datum": "2026-10-29",
+   "uhrzeit": "08:00",
    "lage": "vorboerslich",
    "quellen": [
     "yahoo"
@@ -517,7 +517,7 @@
    ]
   },
   "HNGE": {
-   "datum": "2026-11-03",
+   "datum": "2026-11-02",
    "uhrzeit": "15:00",
    "lage": "im_handel",
    "quellen": [
@@ -1086,9 +1086,9 @@
    ]
   },
   "TEAM": {
-   "datum": "2026-10-29",
-   "uhrzeit": "16:00",
-   "lage": "nachboerslich",
+   "datum": "2026-11-05",
+   "uhrzeit": "15:00",
+   "lage": "im_handel",
    "quellen": [
     "yahoo"
    ]
@@ -1102,14 +1102,6 @@
    ]
   },
   "TNGX": {
-   "datum": "2026-11-04",
-   "uhrzeit": "07:00",
-   "lage": "vorboerslich",
-   "quellen": [
-    "yahoo"
-   ]
-  },
-  "TRMD": {
    "datum": "2026-11-04",
    "uhrzeit": "07:00",
    "lage": "vorboerslich",
@@ -1150,9 +1142,9 @@
    ]
   },
   "UCTT": {
-   "datum": "2026-11-03",
-   "uhrzeit": "15:00",
-   "lage": "im_handel",
+   "datum": "2026-10-27",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich",
    "quellen": [
     "yahoo"
    ]
@@ -1214,7 +1206,7 @@
    ]
   },
   "VPG": {
-   "datum": "2026-11-03",
+   "datum": "2026-11-04",
    "uhrzeit": "07:00",
    "lage": "vorboerslich",
    "quellen": [
