@@ -46,7 +46,11 @@
     "GEWINN|zonenwechsel|TWIN|Rectangle Top|mittel": "2026-10-05",
     "GEWINN|zonenwechsel|VSH|EMA Crossback|stark": "2026-10-05",
     "TEIL|SEI|SPRING-2026-09-14": "2026-10-05",
-    "GEWINN|klimax_zeichen|KOD|INS-2026-10-02|5_kanaluebershooting": "2026-10-05"
+    "GEWINN|klimax_zeichen|KOD|INS-2026-10-02|5_kanaluebershooting": "2026-10-05",
+    "GEWINN|zonenwechsel|COHU|Fallback: 20-Tage-Hoch (Pivot)|mittel": "2026-10-05",
+    "GEWINN|zonenwechsel|FTK|Fallback: MA50-R\u00fcckeroberung|mittel": "2026-10-05",
+    "GEWINN|zonenwechsel|SIMO|SPRING-2026-09-23|mittel": "2026-10-05",
+    "GEWINN|zonenwechsel|SIMO|SPRING-2026-09-25|mittel": "2026-10-05"
   },
   "gemeldet_kp": {},
   "gapgo_warten": {
