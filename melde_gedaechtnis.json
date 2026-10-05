@@ -1,7 +1,20 @@
 {
   "heute_gemeldet": {
     "tag": "2026-10-05",
-    "marken": []
+    "marken": [
+      "GEO|Rectangle Top",
+      "GEO|@32.29",
+      "GEO|Fallback: MA50-Pullback",
+      "GEO|@31.37",
+      "TRMD|Fallback: 52W-Hoch-Breakout",
+      "TRMD|@40.04",
+      "TRMD|Fallback: 20-Tage-Hoch (Pivot)",
+      "TRMD|@40.01",
+      "WDC|Wick Play",
+      "WDC|@427.81",
+      "LIFE|Wick Play",
+      "LIFE|@34.66"
+    ]
   },
   "gemeldet": {
     "INSIDER|FTK|pfad_a|1": "2026-09-16",
@@ -52,9 +65,34 @@
     "GEWINN|zonenwechsel|SIMO|SPRING-2026-09-23|mittel": "2026-10-05",
     "GEWINN|zonenwechsel|SIMO|SPRING-2026-09-25|mittel": "2026-10-05",
     "TEIL|COHU|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-05",
-    "TEIL|BBD|INS-2026-10-02": "2026-10-05"
+    "TEIL|BBD|INS-2026-10-02": "2026-10-05",
+    "GEO|Rectangle Top": "2026-10-05",
+    "BEST|GEO|Rectangle Top": "2026-10-05",
+    "GEO|Fallback: MA50-Pullback": "2026-10-05",
+    "BEST|GEO|Fallback: MA50-Pullback": "2026-10-05",
+    "TRMD|Fallback: 52W-Hoch-Breakout": "2026-10-05",
+    "BEST|TRMD|Fallback: 52W-Hoch-Breakout": "2026-10-05",
+    "TRMD|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-05",
+    "BEST|TRMD|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-05",
+    "WDC|Wick Play": "2026-10-05",
+    "BEST|WDC|Wick Play": "2026-10-05",
+    "LIFE|Wick Play": "2026-10-05",
+    "BEST|LIFE|Wick Play": "2026-10-05"
   },
-  "gemeldet_kp": {},
+  "gemeldet_kp": {
+    "GEO|Rectangle Top": 32.29,
+    "BEST|GEO|Rectangle Top": 32.29,
+    "GEO|Fallback: MA50-Pullback": 31.37,
+    "BEST|GEO|Fallback: MA50-Pullback": 31.37,
+    "TRMD|Fallback: 52W-Hoch-Breakout": 40.04,
+    "BEST|TRMD|Fallback: 52W-Hoch-Breakout": 40.04,
+    "TRMD|Fallback: 20-Tage-Hoch (Pivot)": 40.01,
+    "BEST|TRMD|Fallback: 20-Tage-Hoch (Pivot)": 40.01,
+    "WDC|Wick Play": 427.81,
+    "BEST|WDC|Wick Play": 427.81,
+    "LIFE|Wick Play": 34.66,
+    "BEST|LIFE|Wick Play": 34.66
+  },
   "gapgo_warten": {
     "SYNA": {
       "signal": "2026-10-02",
@@ -65,5 +103,5 @@
       "pruef": "2026-10-05"
     }
   },
-  "ampel_tag": "2026-10-02"
+  "ampel_tag": "2026-10-05"
 }
