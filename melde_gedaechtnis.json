@@ -115,7 +115,8 @@
     "BEST|SDGR|Cup & Handle (Wochenbasis)": "2026-10-05",
     "BEST|SDGR|High & Tight Flag": "2026-10-05",
     "SDGR|Wick Play": "2026-10-05",
-    "BEST|SDGR|Wick Play": "2026-10-05"
+    "BEST|SDGR|Wick Play": "2026-10-05",
+    "TEIL|TXG|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-05"
   },
   "gemeldet_kp": {
     "GEO|Rectangle Top": 32.29,
