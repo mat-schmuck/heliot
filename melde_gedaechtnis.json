@@ -30,7 +30,11 @@
       "SDGR|High & Tight Flag",
       "SDGR|@32.46",
       "SDGR|Wick Play",
-      "SDGR|@32.55"
+      "SDGR|@32.55",
+      "AZTA|Cup & Handle (Wochenbasis)",
+      "AZTA|@42.01",
+      "AZTA|Fallback: 52W-Hoch-Breakout",
+      "AZTA|@42.04"
     ]
   },
   "gemeldet": {
@@ -116,7 +120,11 @@
     "BEST|SDGR|High & Tight Flag": "2026-10-05",
     "SDGR|Wick Play": "2026-10-05",
     "BEST|SDGR|Wick Play": "2026-10-05",
-    "TEIL|TXG|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-05"
+    "TEIL|TXG|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-05",
+    "AZTA|Cup & Handle (Wochenbasis)": "2026-10-05",
+    "BEST|AZTA|Cup & Handle (Wochenbasis)": "2026-10-05",
+    "AZTA|Fallback: 52W-Hoch-Breakout": "2026-10-05",
+    "BEST|AZTA|Fallback: 52W-Hoch-Breakout": "2026-10-05"
   },
   "gemeldet_kp": {
     "GEO|Rectangle Top": 32.29,
@@ -145,7 +153,11 @@
     "BEST|SDGR|Cup & Handle (Wochenbasis)": 32.46,
     "BEST|SDGR|High & Tight Flag": 32.46,
     "SDGR|Wick Play": 32.55,
-    "BEST|SDGR|Wick Play": 32.55
+    "BEST|SDGR|Wick Play": 32.55,
+    "AZTA|Cup & Handle (Wochenbasis)": 42.01,
+    "BEST|AZTA|Cup & Handle (Wochenbasis)": 42.01,
+    "AZTA|Fallback: 52W-Hoch-Breakout": 42.04,
+    "BEST|AZTA|Fallback: 52W-Hoch-Breakout": 42.04
   },
   "gapgo_warten": {
     "SYNA": {
