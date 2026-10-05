@@ -16653,5 +16653,32 @@
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
   "wedge_drop_gemeldet": false
+ },
+ "GEO|Cup & Handle (Wochenbasis)": {
+  "symbol": "GEO",
+  "firma": "Geo Group Inc",
+  "strategie": "Cup & Handle (Wochenbasis)",
+  "einstieg": 33.16,
+  "einstieg_datum": "2026-10-05",
+  "einstieg_index": 0,
+  "struktur_stop": 29.85,
+  "aktueller_stop": 29.85,
+  "stop_quelle": "struktur",
+  "hoechstkurs": 33.16,
+  "teilverkauft": false,
+  "halteregel_aktiv": false,
+  "beobachtung": true,
+  "status": "offen",
+  "verlauf": [],
+  "klasse": "standard",
+  "musterziel": 47.74,
+  "zone": null,
+  "zone_gemeldet": null,
+  "ziel_gemeldet": false,
+  "klimax_gemeldet": [],
+  "weinstein_gemeldet": false,
+  "zahlen_hinweis_gemeldet": false,
+  "sektor_hinweis_gemeldet": false,
+  "wedge_drop_gemeldet": false
  }
 }

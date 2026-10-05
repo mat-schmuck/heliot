@@ -23,7 +23,9 @@
       "SDEV|Fallback: 20-Tage-Hoch (Pivot)",
       "SDEV|@7.66",
       "GEO|Cup & Handle (Wochenbasis)",
-      "GEO|@33.16"
+      "GEO|@33.16",
+      "SDGR|HTF Innen-Einstieg",
+      "SDGR|@31.15"
     ]
   },
   "gemeldet": {
@@ -99,7 +101,9 @@
     "TEIL|MXL|Cup & Handle (Wochenbasis)": "2026-10-05",
     "TEIL|MXL|SPRING-2026-09-28": "2026-10-05",
     "GEO|Cup & Handle (Wochenbasis)": "2026-10-05",
-    "BEST|GEO|Cup & Handle (Wochenbasis)": "2026-10-05"
+    "BEST|GEO|Cup & Handle (Wochenbasis)": "2026-10-05",
+    "SDGR|HTF Innen-Einstieg": "2026-10-05",
+    "BEST|SDGR|HTF Innen-Einstieg": "2026-10-05"
   },
   "gemeldet_kp": {
     "GEO|Rectangle Top": 32.29,
@@ -120,7 +124,9 @@
     "BEST|SNPS|Fallback: 20-Tage-Hoch (Pivot)": 500.04,
     "UEBER|SDEV|Fallback: 20-Tage-Hoch (Pivot)": 7.66,
     "GEO|Cup & Handle (Wochenbasis)": 33.16,
-    "BEST|GEO|Cup & Handle (Wochenbasis)": 33.16
+    "BEST|GEO|Cup & Handle (Wochenbasis)": 33.16,
+    "SDGR|HTF Innen-Einstieg": 31.15,
+    "BEST|SDGR|HTF Innen-Einstieg": 31.15
   },
   "gapgo_warten": {
     "SYNA": {
@@ -134,7 +140,7 @@
     "RXO": {
       "signal": "2026-10-05",
       "kp": 29.29,
-      "stop": 28.49,
+      "stop": 28.02,
       "firma": "RXO, Inc.",
       "bestaetigt": false
     }
