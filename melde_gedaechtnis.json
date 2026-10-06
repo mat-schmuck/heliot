@@ -49,7 +49,25 @@
       "S|Inside Day",
       "S|@25.51",
       "NEO|Shakeout plus drei",
-      "NEO|@19.51"
+      "NEO|@19.51",
+      "FTRE|Cup & Handle (Wochenbasis)",
+      "FTRE|@21.21",
+      "FTRE|Fallback: 52W-Hoch-Breakout",
+      "FTRE|@21.41",
+      "GRAL|Cup & Handle (Wochenbasis)",
+      "GRAL|@156.50",
+      "GRAL|Fallback: 52W-Hoch-Breakout",
+      "GRAL|@156.65",
+      "OKTA|Fallback: 52W-Hoch-Breakout",
+      "OKTA|@219.90",
+      "BB|Rectangle Top",
+      "BB|@9.29",
+      "BB|Fallback: 20-Tage-Hoch (Pivot)",
+      "BB|@9.38",
+      "GTLB|Fallback: 20-Tage-Hoch (Pivot)",
+      "GTLB|@51.77",
+      "CCL|Fallback: 20-Tage-Hoch (Pivot)",
+      "CCL|@25.95"
     ]
   },
   "gemeldet": {
@@ -222,7 +240,21 @@
     "S|Inside Day": "2026-10-06",
     "BEST|S|Inside Day": "2026-10-06",
     "NEO|Shakeout plus drei": "2026-10-06",
-    "BEST|NEO|Shakeout plus drei": "2026-10-06"
+    "BEST|NEO|Shakeout plus drei": "2026-10-06",
+    "UEBER|FTRE|Cup & Handle (Wochenbasis)": "2026-10-06",
+    "UEBER|FTRE|Fallback: 52W-Hoch-Breakout": "2026-10-06",
+    "UEBER|GRAL|Cup & Handle (Wochenbasis)": "2026-10-06",
+    "UEBER|GRAL|Fallback: 52W-Hoch-Breakout": "2026-10-06",
+    "OKTA|Fallback: 52W-Hoch-Breakout": "2026-10-06",
+    "BEST|OKTA|Fallback: 52W-Hoch-Breakout": "2026-10-06",
+    "BB|Rectangle Top": "2026-10-06",
+    "BEST|BB|Rectangle Top": "2026-10-06",
+    "BB|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-06",
+    "BEST|BB|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-06",
+    "GTLB|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-06",
+    "BEST|GTLB|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-06",
+    "CCL|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-06",
+    "BEST|CCL|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-06"
   },
   "gemeldet_kp": {
     "GEO|Rectangle Top": 32.29,
@@ -305,7 +337,21 @@
     "S|Inside Day": 25.51,
     "BEST|S|Inside Day": 25.51,
     "NEO|Shakeout plus drei": 19.514,
-    "BEST|NEO|Shakeout plus drei": 19.514
+    "BEST|NEO|Shakeout plus drei": 19.514,
+    "UEBER|FTRE|Cup & Handle (Wochenbasis)": 21.21,
+    "UEBER|FTRE|Fallback: 52W-Hoch-Breakout": 21.41,
+    "UEBER|GRAL|Cup & Handle (Wochenbasis)": 156.5,
+    "UEBER|GRAL|Fallback: 52W-Hoch-Breakout": 156.65,
+    "OKTA|Fallback: 52W-Hoch-Breakout": 219.9,
+    "BEST|OKTA|Fallback: 52W-Hoch-Breakout": 219.9,
+    "BB|Rectangle Top": 9.29,
+    "BEST|BB|Rectangle Top": 9.29,
+    "BB|Fallback: 20-Tage-Hoch (Pivot)": 9.38,
+    "BEST|BB|Fallback: 20-Tage-Hoch (Pivot)": 9.38,
+    "GTLB|Fallback: 20-Tage-Hoch (Pivot)": 51.77,
+    "BEST|GTLB|Fallback: 20-Tage-Hoch (Pivot)": 51.77,
+    "CCL|Fallback: 20-Tage-Hoch (Pivot)": 25.95,
+    "BEST|CCL|Fallback: 20-Tage-Hoch (Pivot)": 25.95
   },
   "gapgo_warten": {
     "RXO": {
