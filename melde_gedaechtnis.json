@@ -82,7 +82,9 @@
       "FCEL|Wick Play",
       "FCEL|@18.28",
       "PENG|Inside Day",
-      "PENG|@61.94"
+      "PENG|@61.94",
+      "PENG|Fallback: 20-Tage-Hoch (Pivot)",
+      "PENG|@62.33"
     ]
   },
   "gemeldet": {
@@ -286,7 +288,9 @@
     "UEBER|FCEL|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-06",
     "UEBER|FCEL|Wick Play": "2026-10-06",
     "PENG|Inside Day": "2026-10-06",
-    "BEST|PENG|Inside Day": "2026-10-06"
+    "BEST|PENG|Inside Day": "2026-10-06",
+    "PENG|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-06",
+    "BEST|PENG|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-06"
   },
   "gemeldet_kp": {
     "GEO|Rectangle Top": 32.29,
@@ -396,7 +400,9 @@
     "UEBER|FCEL|Fallback: 20-Tage-Hoch (Pivot)": 18.88,
     "UEBER|FCEL|Wick Play": 18.28,
     "PENG|Inside Day": 61.94,
-    "BEST|PENG|Inside Day": 61.94
+    "BEST|PENG|Inside Day": 61.94,
+    "PENG|Fallback: 20-Tage-Hoch (Pivot)": 62.33,
+    "BEST|PENG|Fallback: 20-Tage-Hoch (Pivot)": 62.33
   },
   "gapgo_warten": {
     "RXO": {
