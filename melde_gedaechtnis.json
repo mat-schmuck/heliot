@@ -70,7 +70,9 @@
       "CCL|@25.95",
       "BFLY|Fallback: 20-Tage-Hoch (Pivot)",
       "BFLY|Fallback: 52W-Hoch-Breakout",
-      "BFLY|@10.06"
+      "BFLY|@10.06",
+      "GH|Fallback: 52W-Hoch-Breakout",
+      "GH|@187.88"
     ]
   },
   "gemeldet": {
@@ -264,7 +266,9 @@
     "BEST|BFLY|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-06",
     "BEST|BFLY|Fallback: 52W-Hoch-Breakout": "2026-10-06",
     "TEIL|MTSI|EMA Crossback": "2026-10-06",
-    "R2GX|TWLO|2026-10-06": "2026-10-06"
+    "R2GX|TWLO|2026-10-06": "2026-10-06",
+    "GH|Fallback: 52W-Hoch-Breakout": "2026-10-06",
+    "BEST|GH|Fallback: 52W-Hoch-Breakout": "2026-10-06"
   },
   "gemeldet_kp": {
     "GEO|Rectangle Top": 32.29,
@@ -365,7 +369,9 @@
     "BFLY|Fallback: 20-Tage-Hoch (Pivot)": 10.06,
     "BFLY|Fallback: 52W-Hoch-Breakout": 10.06,
     "BEST|BFLY|Fallback: 20-Tage-Hoch (Pivot)": 10.06,
-    "BEST|BFLY|Fallback: 52W-Hoch-Breakout": 10.06
+    "BEST|BFLY|Fallback: 52W-Hoch-Breakout": 10.06,
+    "GH|Fallback: 52W-Hoch-Breakout": 187.88,
+    "BEST|GH|Fallback: 52W-Hoch-Breakout": 187.88
   },
   "gapgo_warten": {
     "RXO": {
