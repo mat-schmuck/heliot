@@ -1,14 +1,12 @@
 {
- "gebaut_am": "2026-10-06 00:18 Wien",
+ "gebaut_am": "2026-10-07 00:10 Wien",
  "ohne_termin": [
   "MAAS",
   "SDEV",
   "TJGC"
  ],
  "nur_nasdaq": [],
- "uneinig": [
-  "AEHR"
- ],
+ "uneinig": [],
  "aktien": {
   "AAOI": {
    "datum": "2026-11-05",
@@ -55,10 +53,8 @@
    "uhrzeit": "15:00",
    "lage": "im_handel",
    "quellen": [
-    "yahoo",
-    "nasdaq"
-   ],
-   "uneinig": "Quellen uneinig: 2026-11-02 (Yahoo, hier bevorzugt) gegen 2026-10-05 (Nasdaq)"
+    "yahoo"
+   ]
   },
   "ALAB": {
    "datum": "2026-11-03",
@@ -500,14 +496,6 @@
     "yahoo"
    ]
   },
-  "GRAL": {
-   "datum": "2026-11-11",
-   "uhrzeit": "15:00",
-   "lage": "im_handel",
-   "quellen": [
-    "yahoo"
-   ]
-  },
   "GTLB": {
    "datum": "2026-12-01",
    "uhrzeit": "15:00",
@@ -712,14 +700,6 @@
    "datum": "2026-11-10",
    "uhrzeit": "07:00",
    "lage": "vorboerslich",
-   "quellen": [
-    "yahoo"
-   ]
-  },
-  "NEO": {
-   "datum": "2026-10-27",
-   "uhrzeit": "16:00",
-   "lage": "nachboerslich",
    "quellen": [
     "yahoo"
    ]
@@ -1126,14 +1106,6 @@
    ]
   },
   "TVTX": {
-   "datum": "2026-10-29",
-   "uhrzeit": "16:00",
-   "lage": "nachboerslich",
-   "quellen": [
-    "yahoo"
-   ]
-  },
-  "TWLO": {
    "datum": "2026-10-29",
    "uhrzeit": "16:00",
    "lage": "nachboerslich",

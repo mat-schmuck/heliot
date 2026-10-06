@@ -762,5 +762,29 @@
    "zeichen": null,
    "text": "INFORMATION: WDC; Wick Play; Kurs 409.79 unter der 8-Tage-EMA 437.39; reiner Hinweis, kein Ausstiegssignal; Kurs 409,79, seit Trigger -4,2 % gleich -0,6 R"
   }
+ ],
+ "geprueft": "2026-10-06",
+ "zurueckgenommen": [
+  "TWST|Fallback: 52W-Hoch-Breakout",
+  "TWST|Fallback: 20-Tage-Hoch (Pivot)",
+  "VICR|Cup & Handle (Wochenbasis)",
+  "TXG|Fallback: 52W-Hoch-Breakout",
+  "TXG|Fallback: 20-Tage-Hoch (Pivot)",
+  "TWST|Cup & Handle (Wochenbasis)",
+  "PRE|Rectangle Top",
+  "TEM|HTF Innen-Einstieg",
+  "ADPT|Cup & Handle (Wochenbasis)",
+  "TEM|High & Tight Flag",
+  "TEM|Cup & Handle (Wochenbasis)",
+  "PSNL|SPRING-2026-09-25",
+  "AEHR|Fallback: 20-Tage-Hoch (Pivot)",
+  "DOCN|EMA Crossback",
+  "LITE|Fallback: 20-Tage-Hoch (Pivot)",
+  "LITE|Rectangle Top",
+  "MRNA|Fallback: 20-Tage-Hoch (Pivot)",
+  "RNG|Cup & Handle (Wochenbasis)",
+  "RNG|Darvas Box + High & Tight Flag",
+  "TXG|Fallback: 20-Tage-Hoch (Pivot)",
+  "TXG|Fallback: 52W-Hoch-Breakout"
  ]
 }
