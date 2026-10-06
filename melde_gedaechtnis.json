@@ -124,7 +124,9 @@
     "TEIL|MTSI|Fallback: MA50-Pullback": "2026-10-06",
     "TEIL|TWST|Cup & Handle (Wochenbasis)": "2026-10-06",
     "GEWINN|zonenwechsel|FTRE|Rectangle Top|mittel": "2026-10-06",
-    "GEWINN|zonenwechsel|PSNL|SPRING-2026-09-25|mittel": "2026-10-06"
+    "GEWINN|zonenwechsel|PSNL|SPRING-2026-09-25|mittel": "2026-10-06",
+    "TEIL|CRWD|Fallback: 52W-Hoch-Breakout": "2026-10-06",
+    "TEIL|GRAL|Cup & Handle (Wochenbasis)": "2026-10-06"
   },
   "gemeldet_kp": {
     "GEO|Rectangle Top": 32.29,
