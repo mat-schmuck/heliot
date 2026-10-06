@@ -6050,7 +6050,8 @@
   "zone_gemeldet": "mittel",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
-   "5_kanaluebershooting"
+   "5_kanaluebershooting",
+   "4_ma200_abstand"
   ],
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
@@ -6708,7 +6709,8 @@
   "zone_gemeldet": "mittel",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
-   "5_kanaluebershooting"
+   "5_kanaluebershooting",
+   "4_ma200_abstand"
   ],
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
@@ -9545,7 +9547,8 @@
   "zone_gemeldet": "leicht",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
-   "5_kanaluebershooting"
+   "5_kanaluebershooting",
+   "4_ma200_abstand"
   ],
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
