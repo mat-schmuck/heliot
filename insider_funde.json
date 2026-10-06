@@ -1,11 +1,11 @@
 {
- "stand": "2026-10-05",
+ "stand": "2026-10-06",
  "funde": [
   {
    "ticker": "ADRX",
    "status": "beide",
    "marktkap": 2034565248.0,
-   "stichtag": "2026-10-05",
+   "stichtag": "2026-10-06",
    "zeilen": [
     "ADRX; Großkauf und Cluster; Marktwert 2,0 Mrd $",
     "Größter Einzelkauf 10,1 Mio $ am 28.09.; George Simeon, Direktor",
@@ -22,7 +22,7 @@
    "ticker": "COUR",
    "status": "pfad_a",
    "marktkap": 1483337600.0,
-   "stichtag": "2026-10-05",
+   "stichtag": "2026-10-06",
    "zeilen": [
     "COUR; Großkauf; Marktwert 1,5 Mrd $",
     "Größter Einzelkauf 6,7 Mio $ am 25.09.; Pale Fire Capital SE, Insider"
@@ -33,7 +33,7 @@
    "ticker": "CRBG",
    "status": "pfad_a",
    "marktkap": 15530577920.0,
-   "stichtag": "2026-10-05",
+   "stichtag": "2026-10-06",
    "zeilen": [
     "CRBG; Großkauf; Marktwert 15,5 Mrd $",
     "Größter Einzelkauf 25,1 Mio $ am 28.09.; NIPPON LIFE INSURANCE CO, Insider"
@@ -44,7 +44,7 @@
    "ticker": "CX",
    "status": "pfad_a",
    "marktkap": 13765766144.0,
-   "stichtag": "2026-10-05",
+   "stichtag": "2026-10-06",
    "zeilen": [
     "CX; Großkauf; Marktwert 13,8 Mrd $",
     "Größter Einzelkauf 6,9 Mio $ am 25.09.; Zambrano Lozano Rogelio, Direktor"
@@ -53,24 +53,20 @@
   },
   {
    "ticker": "GME",
-   "status": "beide",
+   "status": "pfad_a",
    "marktkap": 12733604864.0,
-   "stichtag": "2026-10-05",
+   "stichtag": "2026-10-06",
    "zeilen": [
-    "GME; Großkauf und Cluster; Marktwert 12,7 Mrd $",
-    "Größter Einzelkauf 26,4 Mio $ am 21.09.; Cohen Ryan, President, CEO and Chairman",
-    "3 Insider über der Schwelle von 250 Tsd $:",
-    "  Cohen Ryan, President, CEO and Chairman; 54,0 Mio $",
-    "  Attal Alain, Direktor; 402 Tsd $",
-    "  Turner Nat, Direktor; 255 Tsd $"
+    "GME; Großkauf; Marktwert 12,7 Mrd $",
+    "Größter Einzelkauf 17,1 Mio $ am 02.10.; Cohen Ryan, President, CEO and Chairman"
    ],
-   "kennung": "GME|beide|3"
+   "kennung": "GME|pfad_a|2"
   },
   {
    "ticker": "GPI",
    "status": "pfad_a",
    "marktkap": 2878502144.0,
-   "stichtag": "2026-10-05",
+   "stichtag": "2026-10-06",
    "zeilen": [
     "GPI; Großkauf; Marktwert 2,9 Mrd $",
     "Größter Einzelkauf 10,5 Mio $ am 24.09.; Conifer Management, L.L.C., Insider"
@@ -78,21 +74,10 @@
    "kennung": "GPI|pfad_a|1"
   },
   {
-   "ticker": "GRAB",
-   "status": "pfad_a",
-   "marktkap": 12969426944.0,
-   "stichtag": "2026-10-05",
-   "zeilen": [
-    "GRAB; Großkauf; Marktwert 13,0 Mrd $",
-    "Größter Einzelkauf 29,9 Mio $ am 21.09.; Tan Anthony Ping Yeow, Chief Executive Officer"
-   ],
-   "kennung": "GRAB|pfad_a|2"
-  },
-  {
    "ticker": "GSHD",
    "status": "pfad_a",
    "marktkap": 1650747008.0,
-   "stichtag": "2026-10-05",
+   "stichtag": "2026-10-06",
    "zeilen": [
     "GSHD; Großkauf; Marktwert 1,7 Mrd $",
     "Größter Einzelkauf 7,1 Mio $ am 22.09.; Durable Capital Partners LP, Insider"
@@ -103,7 +88,7 @@
    "ticker": "KOD",
    "status": "pfad_a",
    "marktkap": 5895907328.0,
-   "stichtag": "2026-10-05",
+   "stichtag": "2026-10-06",
    "zeilen": [
     "KOD; Großkauf; Marktwert 5,9 Mrd $",
     "Größter Einzelkauf 20,2 Mio $ am 28.09.; BAKER BROS. ADVISORS LP, Direktor"
@@ -114,29 +99,18 @@
    "ticker": "LEN",
    "status": "pfad_a",
    "marktkap": 17932234752.0,
-   "stichtag": "2026-10-05",
+   "stichtag": "2026-10-06",
    "zeilen": [
     "LEN; Großkauf; Marktwert 17,9 Mrd $",
-    "Größter Einzelkauf 52,1 Mio $ am 30.09.; BERKSHIRE HATHAWAY INC, Insider"
+    "Größter Einzelkauf 67,5 Mio $ am 02.10.; BERKSHIRE HATHAWAY INC, Insider"
    ],
    "kennung": "LEN|pfad_a|1"
-  },
-  {
-   "ticker": "LEN, LEN.B",
-   "status": "pfad_a",
-   "marktkap": 17932234752.0,
-   "stichtag": "2026-10-05",
-   "zeilen": [
-    "LEN, LEN.B; Großkauf; Marktwert 17,9 Mrd $",
-    "Größter Einzelkauf 37,7 Mio $ am 21.09.; BERKSHIRE HATHAWAY INC, Insider"
-   ],
-   "kennung": "LEN, LEN.B|pfad_a|1"
   },
   {
    "ticker": "SLBT",
    "status": "pfad_a",
    "marktkap": 891608000.0,
-   "stichtag": "2026-10-05",
+   "stichtag": "2026-10-06",
    "zeilen": [
     "SLBT; Großkauf; Marktwert 891,6 Mio $",
     "Größter Einzelkauf 10329,9 Mrd $ am 29.09.; Wang Ching-Dong, Chief Executive Officer"
