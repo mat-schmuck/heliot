@@ -243,7 +243,7 @@
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
-  "zone_gemeldet": "mittel"
+  "zone_gemeldet": "stark"
  },
  "SU|2": {
   "symbol": "SU",
@@ -4683,7 +4683,7 @@
   "klasse": "standard",
   "musterziel": null,
   "zone": "mittel",
-  "zone_gemeldet": "leicht",
+  "zone_gemeldet": "mittel",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [],
   "weinstein_gemeldet": false,
@@ -6047,7 +6047,7 @@
   "klasse": "standard",
   "musterziel": 418.55,
   "zone": "stark",
-  "zone_gemeldet": "mittel",
+  "zone_gemeldet": "stark",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
    "5_kanaluebershooting",
@@ -6706,7 +6706,7 @@
   "klasse": "standard",
   "musterziel": null,
   "zone": "stark",
-  "zone_gemeldet": "mittel",
+  "zone_gemeldet": "stark",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
    "5_kanaluebershooting",
@@ -6912,7 +6912,7 @@
   "klasse": "standard",
   "musterziel": null,
   "zone": "stark",
-  "zone_gemeldet": "leicht",
+  "zone_gemeldet": "stark",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
    "4_ma200_abstand",
@@ -7048,7 +7048,7 @@
   "klasse": "standard",
   "musterziel": null,
   "zone": "stark",
-  "zone_gemeldet": "mittel",
+  "zone_gemeldet": "stark",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
    "4_ma200_abstand",
@@ -7117,7 +7117,7 @@
   "klasse": "standard",
   "musterziel": null,
   "zone": "mittel",
-  "zone_gemeldet": "leicht",
+  "zone_gemeldet": "stark",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
    "2_groesster_tagesgewinn"
@@ -8399,7 +8399,7 @@
   "klasse": "standard",
   "musterziel": null,
   "zone": "stark",
-  "zone_gemeldet": "leicht",
+  "zone_gemeldet": "stark",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [],
   "weinstein_gemeldet": false,
@@ -9544,7 +9544,7 @@
   "klasse": "standard",
   "musterziel": null,
   "zone": "stark",
-  "zone_gemeldet": "leicht",
+  "zone_gemeldet": "stark",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
    "5_kanaluebershooting",
@@ -9865,7 +9865,7 @@
   "klasse": "standard",
   "musterziel": null,
   "zone": "stark",
-  "zone_gemeldet": "leicht",
+  "zone_gemeldet": "stark",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
    "5_kanaluebershooting",
@@ -10511,7 +10511,7 @@
   "klasse": "standard",
   "musterziel": null,
   "zone": "mittel",
-  "zone_gemeldet": "leicht",
+  "zone_gemeldet": "mittel",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
    "5_kanaluebershooting"
@@ -10540,7 +10540,7 @@
   "klasse": "standard",
   "musterziel": 159.53,
   "zone": "stark",
-  "zone_gemeldet": "leicht",
+  "zone_gemeldet": "stark",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
    "4_ma200_abstand"
@@ -10569,7 +10569,7 @@
   "klasse": "standard",
   "musterziel": null,
   "zone": "stark",
-  "zone_gemeldet": "leicht",
+  "zone_gemeldet": "stark",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
    "4_ma200_abstand"
@@ -10920,7 +10920,7 @@
   "klasse": "standard",
   "musterziel": null,
   "zone": "stark",
-  "zone_gemeldet": "leicht",
+  "zone_gemeldet": "stark",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
    "4_ma200_abstand"
@@ -11133,7 +11133,7 @@
   "klasse": "standard",
   "musterziel": 325.77,
   "zone": "stark",
-  "zone_gemeldet": "leicht",
+  "zone_gemeldet": "stark",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
    "4_ma200_abstand"
@@ -11290,7 +11290,7 @@
   "klasse": "standard",
   "musterziel": 107.58,
   "zone": "stark",
-  "zone_gemeldet": "leicht",
+  "zone_gemeldet": "mittel",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
    "2_groesster_tagesgewinn"
@@ -11803,7 +11803,7 @@
   "klasse": "standard",
   "musterziel": null,
   "zone": "stark",
-  "zone_gemeldet": "leicht",
+  "zone_gemeldet": "stark",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [],
   "weinstein_gemeldet": false,
@@ -11837,7 +11837,7 @@
   "klasse": "standard",
   "musterziel": null,
   "zone": "stark",
-  "zone_gemeldet": "leicht",
+  "zone_gemeldet": "stark",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
    "5_kanaluebershooting"
@@ -11920,7 +11920,7 @@
   "klasse": "standard",
   "musterziel": 195.12,
   "zone": "stark",
-  "zone_gemeldet": "leicht",
+  "zone_gemeldet": "stark",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
    "5_kanaluebershooting",
@@ -12064,7 +12064,7 @@
   "klasse": "standard",
   "musterziel": 81.71,
   "zone": "mittel",
-  "zone_gemeldet": "leicht",
+  "zone_gemeldet": "mittel",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [],
   "weinstein_gemeldet": false,
@@ -12792,7 +12792,7 @@
   "klasse": "standard",
   "musterziel": 89.16,
   "zone": "stark",
-  "zone_gemeldet": "mittel",
+  "zone_gemeldet": "stark",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
    "2_groesster_tagesgewinn"
@@ -13120,7 +13120,7 @@
   "klasse": "standard",
   "musterziel": null,
   "zone": "stark",
-  "zone_gemeldet": "leicht",
+  "zone_gemeldet": "mittel",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
    "5_kanaluebershooting"
@@ -13268,7 +13268,7 @@
   "klasse": "standard",
   "musterziel": null,
   "zone": "stark",
-  "zone_gemeldet": "leicht",
+  "zone_gemeldet": "stark",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [],
   "weinstein_gemeldet": false,
@@ -13434,7 +13434,7 @@
   "klasse": "standard",
   "musterziel": null,
   "zone": "mittel",
-  "zone_gemeldet": "leicht",
+  "zone_gemeldet": "mittel",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
    "2_groesster_tagesgewinn"
@@ -13600,7 +13600,7 @@
   "klasse": "standard",
   "musterziel": null,
   "zone": "stark",
-  "zone_gemeldet": "leicht",
+  "zone_gemeldet": "mittel",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [],
   "weinstein_gemeldet": false,
@@ -15857,7 +15857,7 @@
   "klasse": "insider",
   "musterziel": null,
   "zone": "stark",
-  "zone_gemeldet": "leicht",
+  "zone_gemeldet": "stark",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
    "5_kanaluebershooting"
