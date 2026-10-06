@@ -74,7 +74,13 @@
       "GH|Fallback: 52W-Hoch-Breakout",
       "GH|@187.88",
       "FN|Fallback: 20-Tage-Hoch (Pivot)",
-      "FN|@468.01"
+      "FN|@468.01",
+      "FCEL|EMA Crossback",
+      "FCEL|@18.19",
+      "FCEL|Fallback: 20-Tage-Hoch (Pivot)",
+      "FCEL|@18.88",
+      "FCEL|Wick Play",
+      "FCEL|@18.28"
     ]
   },
   "gemeldet": {
@@ -273,7 +279,10 @@
     "BEST|GH|Fallback: 52W-Hoch-Breakout": "2026-10-06",
     "TEIL|DIOD|SPRING-2026-09-21": "2026-10-06",
     "FN|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-06",
-    "BEST|FN|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-06"
+    "BEST|FN|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-06",
+    "UEBER|FCEL|EMA Crossback": "2026-10-06",
+    "UEBER|FCEL|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-06",
+    "UEBER|FCEL|Wick Play": "2026-10-06"
   },
   "gemeldet_kp": {
     "GEO|Rectangle Top": 32.29,
@@ -378,7 +387,10 @@
     "GH|Fallback: 52W-Hoch-Breakout": 187.88,
     "BEST|GH|Fallback: 52W-Hoch-Breakout": 187.88,
     "FN|Fallback: 20-Tage-Hoch (Pivot)": 468.01,
-    "BEST|FN|Fallback: 20-Tage-Hoch (Pivot)": 468.01
+    "BEST|FN|Fallback: 20-Tage-Hoch (Pivot)": 468.01,
+    "UEBER|FCEL|EMA Crossback": 18.19,
+    "UEBER|FCEL|Fallback: 20-Tage-Hoch (Pivot)": 18.88,
+    "UEBER|FCEL|Wick Play": 18.28
   },
   "gapgo_warten": {
     "RXO": {
