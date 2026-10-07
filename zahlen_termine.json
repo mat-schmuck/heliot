@@ -1,5 +1,5 @@
 {
- "gebaut_am": "2026-10-07 00:10 Wien",
+ "gebaut_am": "2026-10-08 00:07 Wien",
  "ohne_termin": [
   "MAAS",
   "SDEV",
@@ -561,7 +561,7 @@
    ]
   },
   "INTC": {
-   "datum": "2026-10-22",
+   "datum": "2026-10-29",
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
@@ -809,12 +809,11 @@
    ]
   },
   "PENG": {
-   "datum": "2026-10-06",
-   "uhrzeit": "16:00",
-   "lage": "nachboerslich",
+   "datum": "2027-01-05",
+   "uhrzeit": "15:00",
+   "lage": "im_handel",
    "quellen": [
-    "yahoo",
-    "nasdaq"
+    "yahoo"
    ]
   },
   "PGEN": {
@@ -1174,7 +1173,8 @@
    "uhrzeit": "08:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "VPG": {
