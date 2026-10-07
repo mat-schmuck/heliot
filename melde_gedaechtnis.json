@@ -216,7 +216,9 @@
     "GEWINN|zonenwechsel|DIOD|Fallback: MA50-R\u00fcckeroberung|mittel": "2026-10-07",
     "GEWINN|zonenwechsel|MTSI|Fallback: MA50-R\u00fcckeroberung|stark": "2026-10-07",
     "TEIL|PENG|Inside Day": "2026-10-07",
-    "UEBER|PENG|Cup & Handle (Wochenbasis)": "2026-10-07"
+    "UEBER|PENG|Cup & Handle (Wochenbasis)": "2026-10-07",
+    "GEWINN|zonenwechsel|AMD|Rectangle Top|mittel": "2026-10-07",
+    "GEWINN|zonenwechsel|GAP|1|mittel": "2026-10-07"
   },
   "gemeldet_kp": {
     "GEO|Rectangle Top": 32.29,
