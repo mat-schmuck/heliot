@@ -10059,11 +10059,18 @@
   "aktueller_stop": 56.1,
   "stop_quelle": "struktur",
   "hoechstkurs": 64.21,
-  "teilverkauft": false,
+  "teilverkauft": true,
   "halteregel_aktiv": false,
   "beobachtung": true,
   "status": "offen",
-  "verlauf": [],
+  "verlauf": [
+   {
+    "datum": "2026-10-07",
+    "aktion": "teilverkauf",
+    "grund": "+24.1 % im Handel erreicht (M2)",
+    "kurs": 67.24
+   }
+  ],
   "klasse": "standard",
   "musterziel": null,
   "zone": "leicht",
@@ -15138,11 +15145,18 @@
   "aktueller_stop": 55.64,
   "stop_quelle": "struktur",
   "hoechstkurs": 64.21,
-  "teilverkauft": false,
+  "teilverkauft": true,
   "halteregel_aktiv": false,
   "beobachtung": true,
   "status": "offen",
-  "verlauf": [],
+  "verlauf": [
+   {
+    "datum": "2026-10-07",
+    "aktion": "teilverkauf",
+    "grund": "+20.8 % im Handel erreicht (M2)",
+    "kurs": 67.24
+   }
+  ],
   "klasse": "standard",
   "musterziel": null,
   "zone": "leicht",
