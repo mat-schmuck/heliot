@@ -199,7 +199,15 @@
     "GEWINN|klimax_zeichen|LITE|Rectangle Top|5_kanaluebershooting": "2026-10-06",
     "GEWINN|klimax_zeichen|TXG|Fallback: 20-Tage-Hoch (Pivot)|4_ma200_abstand": "2026-10-06",
     "GEWINN|klimax_zeichen|TXG|Fallback: 52W-Hoch-Breakout|4_ma200_abstand": "2026-10-06",
-    "SCHLUSSNAH|2026-10-06": "2026-10-06"
+    "SCHLUSSNAH|2026-10-06": "2026-10-06",
+    "SEKTORAUF|2026-10-07": "2026-10-07",
+    "GEWINN|zonenwechsel|AMD|Fallback: 20-Tage-Hoch (Pivot)|mittel": "2026-10-07",
+    "GEWINN|zonenwechsel|BE|EMA Crossback|mittel": "2026-10-07",
+    "GEWINN|zonenwechsel|CDNA|Cup & Handle (Wochenbasis)|stark": "2026-10-07",
+    "GEWINN|zonenwechsel|FTNT|Fallback: MA50-R\u00fcckeroberung|stark": "2026-10-07",
+    "GEWINN|zonenwechsel|FTNT|Rectangle Top|mittel": "2026-10-07",
+    "GEWINN|zonenwechsel|GNRC|EMA Crossback|stark": "2026-10-07",
+    "GEWINN|zonenwechsel|NTAP|EMA Crossback|stark": "2026-10-07"
   },
   "gemeldet_kp": {
     "GEO|Rectangle Top": 32.29,
