@@ -218,7 +218,13 @@
     "TEIL|PENG|Inside Day": "2026-10-07",
     "UEBER|PENG|Cup & Handle (Wochenbasis)": "2026-10-07",
     "GEWINN|zonenwechsel|AMD|Rectangle Top|mittel": "2026-10-07",
-    "GEWINN|zonenwechsel|GAP|1|mittel": "2026-10-07"
+    "GEWINN|zonenwechsel|GAP|1|mittel": "2026-10-07",
+    "GEWINN|klimax_zeichen|FN|Fallback: 20-Tage-Hoch (Pivot)|5_kanaluebershooting": "2026-10-07",
+    "GEWINN|weinstein|FSLY|SPRING-2026-09-04|": "2026-10-07",
+    "GEWINN|klimax_zeichen|PENG|EMA Crossback|4_ma200_abstand": "2026-10-07",
+    "GEWINN|klimax_zeichen|PENG|Fallback: 20-Tage-Hoch (Pivot)|4_ma200_abstand": "2026-10-07",
+    "GEWINN|klimax_zeichen|PENG|Inside Day|4_ma200_abstand": "2026-10-07",
+    "SCHLUSSNAH|2026-10-07": "2026-10-07"
   },
   "gemeldet_kp": {
     "GEO|Rectangle Top": 32.29,
