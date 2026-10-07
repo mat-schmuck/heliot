@@ -211,7 +211,8 @@
     "TEIL|PENG|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-07",
     "TEIL|PENG|EMA Crossback": "2026-10-07",
     "GEWINN|zonenwechsel|DIOD|Fallback: MA50-R\u00fcckeroberung|mittel": "2026-10-07",
-    "GEWINN|zonenwechsel|MTSI|Fallback: MA50-R\u00fcckeroberung|stark": "2026-10-07"
+    "GEWINN|zonenwechsel|MTSI|Fallback: MA50-R\u00fcckeroberung|stark": "2026-10-07",
+    "TEIL|PENG|Inside Day": "2026-10-07"
   },
   "gemeldet_kp": {
     "GEO|Rectangle Top": 32.29,
