@@ -226,7 +226,8 @@
     "GEWINN|zonenwechsel|PENG|EMA Crossback|stark": "2026-10-08",
     "GEWINN|zonenwechsel|PENG|Fallback: 20-Tage-Hoch (Pivot)|stark": "2026-10-08",
     "GEWINN|zonenwechsel|PENG|Inside Day|stark": "2026-10-08",
-    "TEIL|ECO|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-08"
+    "TEIL|ECO|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-08",
+    "GEWINN|zonenwechsel|PSIX|1|mittel": "2026-10-08"
   },
   "gemeldet_kp": {
     "GEO|Rectangle Top": 32.29,
