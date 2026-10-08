@@ -1,7 +1,10 @@
 {
   "heute_gemeldet": {
     "tag": "2026-10-08",
-    "marken": []
+    "marken": [
+      "WOLF|EMA Crossback",
+      "WOLF|@32.31"
+    ]
   },
   "gemeldet": {
     "INSIDER|FTK|pfad_a|1": "2026-09-16",
@@ -229,7 +232,9 @@
     "TEIL|ECO|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-08",
     "GEWINN|zonenwechsel|PSIX|1|mittel": "2026-10-08",
     "TEIL|PSIX|1": "2026-10-08",
-    "TEIL|ECO|Fallback: 52W-Hoch-Breakout": "2026-10-08"
+    "TEIL|ECO|Fallback: 52W-Hoch-Breakout": "2026-10-08",
+    "WOLF|EMA Crossback": "2026-10-08",
+    "BEST|WOLF|EMA Crossback": "2026-10-08"
   },
   "gemeldet_kp": {
     "GEO|Rectangle Top": 32.29,
@@ -331,8 +336,10 @@
     "UEBER|FCEL|Wick Play": 18.28,
     "PENG|Inside Day": 61.94,
     "BEST|PENG|Inside Day": 61.94,
-    "UEBER|PENG|Cup & Handle (Wochenbasis)": 64.59
+    "UEBER|PENG|Cup & Handle (Wochenbasis)": 64.59,
+    "WOLF|EMA Crossback": 32.31,
+    "BEST|WOLF|EMA Crossback": 32.31
   },
   "gapgo_warten": {},
-  "ampel_tag": "2026-10-07"
+  "ampel_tag": "2026-10-08"
 }
