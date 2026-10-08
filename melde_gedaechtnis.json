@@ -235,7 +235,11 @@
     "TEIL|ECO|Fallback: 52W-Hoch-Breakout": "2026-10-08",
     "WOLF|EMA Crossback": "2026-10-08",
     "BEST|WOLF|EMA Crossback": "2026-10-08",
-    "GEWINN|zonenwechsel|ECO|Fallback: 52W-Hoch-Breakout|stark": "2026-10-08"
+    "GEWINN|zonenwechsel|ECO|Fallback: 52W-Hoch-Breakout|stark": "2026-10-08",
+    "GEWINN|klimax_zeichen|ECO|1|4_ma200_abstand": "2026-10-08",
+    "GEWINN|klimax_zeichen|ECO|Fallback: 20-Tage-Hoch (Pivot)|4_ma200_abstand": "2026-10-08",
+    "GEWINN|klimax_zeichen|ECO|Fallback: 52W-Hoch-Breakout|4_ma200_abstand": "2026-10-08",
+    "SCHLUSSNAH|2026-10-08": "2026-10-08"
   },
   "gemeldet_kp": {
     "GEO|Rectangle Top": 32.29,
