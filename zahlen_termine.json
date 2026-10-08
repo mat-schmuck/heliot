@@ -1,5 +1,5 @@
 {
- "gebaut_am": "2026-10-08 00:07 Wien",
+ "gebaut_am": "2026-10-09 00:10 Wien",
  "ohne_termin": [
   "MAAS",
   "SDEV",
@@ -201,7 +201,7 @@
    ]
   },
   "BFLY": {
-   "datum": "2026-10-30",
+   "datum": "2026-10-29",
    "uhrzeit": "08:00",
    "lage": "vorboerslich",
    "quellen": [
@@ -481,9 +481,9 @@
    ]
   },
   "GH": {
-   "datum": "2026-10-28",
-   "uhrzeit": "16:00",
-   "lage": "nachboerslich",
+   "datum": "2026-11-05",
+   "uhrzeit": "15:00",
+   "lage": "im_handel",
    "quellen": [
     "yahoo"
    ]
@@ -629,7 +629,8 @@
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "MATX": {
@@ -961,7 +962,7 @@
    ]
   },
   "SIMO": {
-   "datum": "2026-10-29",
+   "datum": "2026-10-28",
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
@@ -1202,9 +1203,9 @@
    ]
   },
   "WDC": {
-   "datum": "2026-11-05",
-   "uhrzeit": "15:00",
-   "lage": "im_handel",
+   "datum": "2026-10-22",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich",
    "quellen": [
     "yahoo"
    ]

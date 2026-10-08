@@ -1,23 +1,49 @@
 {
- "stand": "2026-10-08 00:01 Wien",
+ "stand": "2026-10-09 00:02 Wien",
  "aktien": [
   {
-   "ticker": "ZETA",
-   "firma": "Zeta Global Holdings Corp.",
-   "kurs": 33.7400016784668,
+   "ticker": "HPE",
+   "firma": "Hewlett Packard Enterprise Company",
+   "kurs": 71.0,
    "punkte": [
     {
-     "muster": "Pocket Pivot",
-     "kaufpunkt": 33.84,
-     "stop": 32.42,
-     "zusatz": "Einstieg über dem Hoch des Pivot-Tages, also frühestens am Folgetag; Volumen war das 1.2-Fache des stärksten Abwärtstags der zehn Tage davor"
+     "muster": "Inside Day",
+     "kaufpunkt": 72.4,
+     "stop": 69.82,
+     "zusatz": "drei steigende Tage, dann der Inside Day; enger Einstieg über seinem Hoch, konservativ wäre über 73.28 mit Stop 69.79"
+    }
+   ]
+  },
+  {
+   "ticker": "QMCO",
+   "firma": "Quantum Corp",
+   "kurs": 29.18000030517578,
+   "punkte": [
+    {
+     "muster": "Wick Play",
+     "kaufpunkt": 32.6499,
+     "stop": 29.39,
+     "zusatz": "Einstieg über dem Hoch der Kerze, Docht oben an EMA 10"
+    }
+   ]
+  },
+  {
+   "ticker": "XNCR",
+   "firma": "Xencor, Inc.",
+   "kurs": 24.5,
+   "punkte": [
+    {
+     "muster": "Wick Play",
+     "kaufpunkt": 24.66,
+     "stop": 22.56,
+     "zusatz": "Einstieg über dem Hoch der Kerze, Docht unten an Basisrand"
     }
    ]
   },
   {
    "ticker": "DELL",
    "firma": "Dell Technologies Inc.",
-   "kurs": 578.9600219726562,
+   "kurs": 574.5499877929688,
    "punkte": [
     {
      "muster": "Three Weeks Tight",
@@ -30,7 +56,7 @@
   {
    "ticker": "HTFL",
    "firma": "Heartflow, Inc.",
-   "kurs": 49.36000061035156,
+   "kurs": 47.630001068115234,
    "punkte": [
     {
      "muster": "Wick Play",
@@ -56,7 +82,7 @@
   {
    "ticker": "SNOW",
    "firma": "Snowflake Inc.",
-   "kurs": 332.8500061035156,
+   "kurs": 343.3999938964844,
    "punkte": [
     {
      "muster": "Wick Play",
@@ -67,35 +93,9 @@
    ]
   },
   {
-   "ticker": "GTLB",
-   "firma": "GitLab Inc.",
-   "kurs": 51.9900016784668,
-   "punkte": [
-    {
-     "muster": "Inside Day",
-     "kaufpunkt": 52.53,
-     "stop": 51.32,
-     "zusatz": "drei steigende Tage, dann der Inside Day; enger Einstieg über seinem Hoch, konservativ wäre über 53.38 mit Stop 50.85"
-    }
-   ]
-  },
-  {
-   "ticker": "SN",
-   "firma": "SharkNinja, Inc.",
-   "kurs": 185.19000244140625,
-   "punkte": [
-    {
-     "muster": "Pocket Pivot",
-     "kaufpunkt": 185.97,
-     "stop": 182.06,
-     "zusatz": "Einstieg über dem Hoch des Pivot-Tages, also frühestens am Folgetag; Volumen war das 1.2-Fache des stärksten Abwärtstags der zehn Tage davor"
-    }
-   ]
-  },
-  {
    "ticker": "AMD",
    "firma": "Advanced Micro Devices, Inc.",
-   "kurs": 645.8599853515625,
+   "kurs": 620.6799926757812,
    "punkte": [
     {
      "muster": "Wick Play",
@@ -106,22 +106,22 @@
    ]
   },
   {
-   "ticker": "FTNT",
-   "firma": "Fortinet, Inc.",
-   "kurs": 189.27999877929688,
+   "ticker": "DT",
+   "firma": "Dynatrace, Inc.",
+   "kurs": 61.119998931884766,
    "punkte": [
     {
-     "muster": "Inside Day",
-     "kaufpunkt": 192.23,
-     "stop": 188.0416,
-     "zusatz": "drei steigende Tage, dann der Inside Day; enger Einstieg über seinem Hoch, konservativ wäre über 192.41 mit Stop 186.50"
+     "muster": "Pocket Pivot",
+     "kaufpunkt": 61.38,
+     "stop": 59.87,
+     "zusatz": "Einstieg über dem Hoch des Pivot-Tages, also frühestens am Folgetag; Volumen war das 1.2-Fache des stärksten Abwärtstags der zehn Tage davor"
     }
    ]
   },
   {
    "ticker": "HNGE",
    "firma": "Hinge Health Inc",
-   "kurs": 97.86000061035156,
+   "kurs": 98.0,
    "punkte": [
     {
      "muster": "Wick Play",
@@ -132,61 +132,35 @@
    ]
   },
   {
-   "ticker": "MATX",
-   "firma": "Matson, Inc.",
-   "kurs": 222.9199981689453,
+   "ticker": "AMLX",
+   "firma": "Amylyx Pharmaceuticals, Inc.",
+   "kurs": 27.200000762939453,
    "punkte": [
     {
      "muster": "Wick Play",
-     "kaufpunkt": 232.53,
-     "stop": 224.29,
-     "zusatz": "Einstieg über dem Hoch der Kerze, Docht unten an EMA 10, EMA 21"
-    }
-   ]
-  },
-  {
-   "ticker": "TVTX",
-   "firma": "Travere Therapeutics Inc",
-   "kurs": 53.439998626708984,
-   "punkte": [
-    {
-     "muster": "Wick Play",
-     "kaufpunkt": 58.7,
-     "stop": 55.86,
+     "kaufpunkt": 27.63,
+     "stop": 26.06,
      "zusatz": "Einstieg über dem Hoch der Kerze, Docht unten an Basisrand"
     }
    ]
   },
   {
-   "ticker": "RELY",
-   "firma": "Remitly Global, Inc.",
-   "kurs": 22.93000030517578,
+   "ticker": "HZO",
+   "firma": "MarineMax, Inc.",
+   "kurs": 52.43000030517578,
    "punkte": [
     {
      "muster": "Inside Day",
-     "kaufpunkt": 23.36,
-     "stop": 22.87,
-     "zusatz": "drei steigende Tage, dann der Inside Day; enger Einstieg über seinem Hoch, konservativ wäre über 23.60 mit Stop 22.67"
-    }
-   ]
-  },
-  {
-   "ticker": "AMLX",
-   "firma": "Amylyx Pharmaceuticals, Inc.",
-   "kurs": 27.43000030517578,
-   "punkte": [
-    {
-     "muster": "Wick Play",
-     "kaufpunkt": 28.599,
-     "stop": 27.0,
-     "zusatz": "Einstieg über dem Hoch der Kerze, Docht unten an Basisrand"
+     "kaufpunkt": 52.49,
+     "stop": 52.425,
+     "zusatz": "drei steigende Tage, dann der Inside Day; enger Einstieg über seinem Hoch, konservativ wäre über 52.49 mit Stop 52.37"
     }
    ]
   },
   {
    "ticker": "KOD",
    "firma": "Kodiak Sciences Inc",
-   "kurs": 91.08000183105469,
+   "kurs": 94.26000213623047,
    "punkte": [
     {
      "muster": "Shakeout plus drei",
@@ -197,22 +171,35 @@
    ]
   },
   {
-   "ticker": "MU",
-   "firma": "Micron Technology, Inc.",
-   "kurs": 1088.0,
+   "ticker": "FORM",
+   "firma": "FormFactor Inc",
+   "kurs": 137.1300048828125,
    "punkte": [
     {
-     "muster": "Pocket Pivot",
-     "kaufpunkt": 1089.2,
-     "stop": 1011.42,
-     "zusatz": "Einstieg über dem Hoch des Pivot-Tages, also frühestens am Folgetag; Volumen war das 1.1-Fache des stärksten Abwärtstags der zehn Tage davor"
+     "muster": "Wick Play",
+     "kaufpunkt": 143.735,
+     "stop": 134.54,
+     "zusatz": "Einstieg über dem Hoch der Kerze, Docht oben an EMA 10"
+    }
+   ]
+  },
+  {
+   "ticker": "MRVL",
+   "firma": "Marvell Technology, Inc.",
+   "kurs": 274.6600036621094,
+   "punkte": [
+    {
+     "muster": "Wick Play",
+     "kaufpunkt": 283.99,
+     "stop": 265.79,
+     "zusatz": "Einstieg über dem Hoch der Kerze, Docht unten an EMA 10"
     }
    ]
   },
   {
    "ticker": "MXL",
    "firma": "MaxLinear Inc",
-   "kurs": 107.36000061035156,
+   "kurs": 93.69999694824219,
    "punkte": [
     {
      "muster": "Wick Play",
@@ -223,35 +210,61 @@
    ]
   },
   {
-   "ticker": "RVMD",
-   "firma": "Revolution Medicines, Inc.",
-   "kurs": 200.8699951171875,
+   "ticker": "ONTO",
+   "firma": "Onto Innovation Inc.",
+   "kurs": 292.6700134277344,
    "punkte": [
     {
      "muster": "Wick Play",
-     "kaufpunkt": 210.37,
-     "stop": 201.83,
-     "zusatz": "Einstieg über dem Hoch der Kerze, Docht unten an EMA 10, EMA 21, SMA 50"
+     "kaufpunkt": 305.91,
+     "stop": 288.16,
+     "zusatz": "Einstieg über dem Hoch der Kerze, Docht oben an EMA 10"
     }
    ]
   },
   {
-   "ticker": "SYRE",
-   "firma": "Spyre Therapeutics, Inc.",
-   "kurs": 80.8499984741211,
+   "ticker": "LRCX",
+   "firma": "Lam Research Corporation",
+   "kurs": 320.5899963378906,
    "punkte": [
     {
      "muster": "Wick Play",
-     "kaufpunkt": 95.11,
-     "stop": 89.49,
-     "zusatz": "Einstieg über dem Hoch der Kerze, Docht unten an EMA 10, EMA 21"
+     "kaufpunkt": 331.89,
+     "stop": 316.68,
+     "zusatz": "Einstieg über dem Hoch der Kerze, Docht oben an EMA 10"
+    }
+   ]
+  },
+  {
+   "ticker": "AMAT",
+   "firma": "Applied Materials, Inc.",
+   "kurs": 509.57000732421875,
+   "punkte": [
+    {
+     "muster": "Wick Play",
+     "kaufpunkt": 523.44,
+     "stop": 502.65,
+     "zusatz": "Einstieg über dem Hoch der Kerze, Docht oben an EMA 10"
+    }
+   ]
+  },
+  {
+   "ticker": "PENG",
+   "firma": "Penguin Solutions Inc",
+   "kurs": 71.56999969482422,
+   "punkte": [
+    {
+     "muster": "Inside Day",
+     "kaufpunkt": 75.63,
+     "stop": 70.0701,
+     "zusatz": "drei steigende Tage, dann der Inside Day; enger Einstieg über seinem Hoch, konservativ wäre über 76.10 mit Stop 68.49"
     }
    ]
   },
   {
    "ticker": "SIMO",
    "firma": "Silicon Motion Technology Corp ADR",
-   "kurs": 285.7799987792969,
+   "kurs": 261.8900146484375,
    "punkte": [
     {
      "muster": "Wick Play",
@@ -264,64 +277,77 @@
   {
    "ticker": "ALAB",
    "firma": "Astera Labs, Inc.",
-   "kurs": 382.25,
+   "kurs": 347.04998779296875,
    "punkte": [
     {
      "muster": "Wick Play",
      "kaufpunkt": 388.24,
-     "stop": 360.2201,
+     "stop": 360.22,
      "zusatz": "Einstieg über dem Hoch der Kerze, Docht unten an EMA 10"
     }
    ]
   },
   {
-   "ticker": "CAMT",
-   "firma": "Camtek Ltd.",
-   "kurs": 152.1999969482422,
+   "ticker": "ICHR",
+   "firma": "Ichor Holdings",
+   "kurs": 58.83000183105469,
    "punkte": [
     {
      "muster": "Wick Play",
-     "kaufpunkt": 168.9,
-     "stop": 161.7,
-     "zusatz": "Einstieg über dem Hoch der Kerze, Docht oben an Basisrand"
+     "kaufpunkt": 61.73,
+     "stop": 57.62,
+     "zusatz": "Einstieg über dem Hoch der Kerze, Docht oben an EMA 10, EMA 21, SMA 50, SMA 200"
     }
    ]
   },
   {
    "ticker": "COHR",
    "firma": "Coherent Corp.",
-   "kurs": 334.55999755859375,
+   "kurs": 302.3500061035156,
    "punkte": [
     {
      "muster": "Wick Play",
-     "kaufpunkt": 338.42,
+     "kaufpunkt": 338.46,
      "stop": 316.85,
      "zusatz": "Einstieg über dem Hoch der Kerze, Docht unten an EMA 10"
     }
    ]
   },
   {
-   "ticker": "MAAS",
-   "firma": "Maase Inc.",
-   "kurs": 12.399999618530273,
+   "ticker": "ACN",
+   "firma": "Accenture plc",
+   "kurs": 208.36000061035156,
    "punkte": [
     {
-     "muster": "Wick Play",
-     "kaufpunkt": 13.96,
-     "stop": 12.57,
-     "zusatz": "Einstieg über dem Hoch der Kerze, Docht unten an Basisrand"
+     "muster": "Shakeout plus drei",
+     "kaufpunkt": 211.838,
+     "stop": 192.58,
+     "zusatz": "Einstieg 10 Prozent über dem Tief des Abverkaufs, der 15.4 Prozent tief war; bei 5 Prozent wären es 202.21, schon erreicht"
+    }
+   ]
+  },
+  {
+   "ticker": "FN",
+   "firma": "Fabrinet",
+   "kurs": 487.3299865722656,
+   "punkte": [
+    {
+     "muster": "Inside Day",
+     "kaufpunkt": 497.95,
+     "stop": 475.52,
+     "zusatz": "drei steigende Tage, dann der Inside Day; enger Einstieg über seinem Hoch, konservativ wäre über 500.00 mit Stop 467.67"
     }
    ]
   },
   {
    "ticker": "QLYS",
    "firma": "Qualys, Inc.",
-   "kurs": 194.75,
+   "kurs": 193.86000061035156,
    "punkte": [
     {
      "muster": "Wick Play",
-     "kaufpunkt": 204.51,
-     "stop": 195.78,
+     "kaufpunkt": 201.85,
+     "stop": 187.21,
      "zusatz": "Einstieg über dem Hoch der Kerze, Docht oben an altes Hoch"
     }
    ]
@@ -331,12 +357,6 @@
    "firma": "AMC Entertainment Holdings, Inc.",
    "kurs": 2.880000114440918,
    "punkte": [
-    {
-     "muster": "Inside Day",
-     "kaufpunkt": 2.9599,
-     "stop": 2.85,
-     "zusatz": "drei steigende Tage, dann der Inside Day; enger Einstieg über seinem Hoch, konservativ wäre über 2.96 mit Stop 2.80"
-    },
     {
      "muster": "Shakeout plus drei",
      "kaufpunkt": 2.97,
@@ -348,7 +368,7 @@
   {
    "ticker": "PRCH",
    "firma": "Porch Group, Inc.",
-   "kurs": 17.309999465942383,
+   "kurs": 17.530000686645508,
    "punkte": [
     {
      "muster": "Wick Play",
@@ -361,7 +381,7 @@
   {
    "ticker": "LIFE",
    "firma": "Ethos Technologies Inc.",
-   "kurs": 35.0,
+   "kurs": 36.220001220703125,
    "punkte": [
     {
      "muster": "IPO Base",
@@ -374,13 +394,26 @@
   {
    "ticker": "NUTX",
    "firma": "Nutex Health Inc.",
-   "kurs": 213.02000427246094,
+   "kurs": 205.00999450683594,
    "punkte": [
     {
      "muster": "Wick Play",
      "kaufpunkt": 222.1,
      "stop": 210.685,
      "zusatz": "Einstieg über dem Hoch der Kerze, Docht oben an EMA 10"
+    }
+   ]
+  },
+  {
+   "ticker": "FRD",
+   "firma": "Friedman Industries Inc.",
+   "kurs": 41.849998474121094,
+   "punkte": [
+    {
+     "muster": "Inside Day",
+     "kaufpunkt": 42.73,
+     "stop": 41.4501,
+     "zusatz": "drei steigende Tage, dann der Inside Day; enger Einstieg über seinem Hoch, konservativ wäre über 43.02 mit Stop 41.10"
     }
    ]
   }

@@ -1,7 +1,15 @@
 {
- "gebaut_am": "2026-10-07T22:08:04",
- "handelstag": "2026-10-07",
+ "gebaut_am": "2026-10-08T22:10:41",
+ "handelstag": "2026-10-08",
  "geladen": 36,
  "unfertig": [],
- "treffer": []
+ "treffer": [
+  {
+   "etf": "SMH",
+   "name": "Semiconductors",
+   "richtung": "runter",
+   "volumen_pct": 55.1,
+   "kurs": 607.27
+  }
+ ]
 }
