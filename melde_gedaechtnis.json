@@ -1,7 +1,20 @@
 {
   "heute_gemeldet": {
     "tag": "2026-10-09",
-    "marken": []
+    "marken": [
+      "CLOV|Rectangle Top",
+      "CLOV|@4.85",
+      "SNOW|Rectangle Top",
+      "SNOW|@345.13",
+      "TEAM|Cup & Handle (Wochenbasis)",
+      "TEAM|@203.90",
+      "PENG|Fallback: 20-Tage-Hoch (Pivot)",
+      "PENG|@76.11",
+      "AAOI|Fallback: MA50-R\u00fcckeroberung",
+      "AAOI|@114.07",
+      "PENG|Inside Day",
+      "PENG|@75.63"
+    ]
   },
   "gemeldet": {
     "INSIDER|FTK|pfad_a|1": "2026-09-16",
@@ -189,8 +202,8 @@
     "UEBER|FCEL|EMA Crossback": "2026-10-06",
     "UEBER|FCEL|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-06",
     "UEBER|FCEL|Wick Play": "2026-10-06",
-    "PENG|Inside Day": "2026-10-06",
-    "BEST|PENG|Inside Day": "2026-10-06",
+    "PENG|Inside Day": "2026-10-09",
+    "BEST|PENG|Inside Day": "2026-10-09",
     "INSIDER|BORR|pfad_a|1": "2026-10-06",
     "GEWINN|zonenwechsel|MTSI|EMA Crossback|stark": "2026-10-06",
     "GEWINN|zonenwechsel|PBF|1|stark": "2026-10-06",
@@ -243,7 +256,17 @@
     "GEWINN|zonenwechsel|ECO|Fallback: 20-Tage-Hoch (Pivot)|stark": "2026-10-09",
     "GEWINN|zonenwechsel|ECPG|1|mittel": "2026-10-09",
     "GEWINN|zonenwechsel|MPC|Fallback: 20-Tage-Hoch (Pivot)|stark": "2026-10-09",
-    "GEWINN|zonenwechsel|MPC|Fallback: 52W-Hoch-Breakout|stark": "2026-10-09"
+    "GEWINN|zonenwechsel|MPC|Fallback: 52W-Hoch-Breakout|stark": "2026-10-09",
+    "CLOV|Rectangle Top": "2026-10-09",
+    "BEST|CLOV|Rectangle Top": "2026-10-09",
+    "SNOW|Rectangle Top": "2026-10-09",
+    "BEST|SNOW|Rectangle Top": "2026-10-09",
+    "TEAM|Cup & Handle (Wochenbasis)": "2026-10-09",
+    "BEST|TEAM|Cup & Handle (Wochenbasis)": "2026-10-09",
+    "PENG|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-09",
+    "BEST|PENG|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-09",
+    "AAOI|Fallback: MA50-R\u00fcckeroberung": "2026-10-09",
+    "BEST|AAOI|Fallback: MA50-R\u00fcckeroberung": "2026-10-09"
   },
   "gemeldet_kp": {
     "GEO|Rectangle Top": 32.29,
@@ -343,12 +366,22 @@
     "UEBER|FCEL|EMA Crossback": 18.19,
     "UEBER|FCEL|Fallback: 20-Tage-Hoch (Pivot)": 18.88,
     "UEBER|FCEL|Wick Play": 18.28,
-    "PENG|Inside Day": 61.94,
-    "BEST|PENG|Inside Day": 61.94,
+    "PENG|Inside Day": 75.63,
+    "BEST|PENG|Inside Day": 75.63,
     "UEBER|PENG|Cup & Handle (Wochenbasis)": 64.59,
     "WOLF|EMA Crossback": 32.31,
-    "BEST|WOLF|EMA Crossback": 32.31
+    "BEST|WOLF|EMA Crossback": 32.31,
+    "CLOV|Rectangle Top": 4.85,
+    "BEST|CLOV|Rectangle Top": 4.85,
+    "SNOW|Rectangle Top": 345.13,
+    "BEST|SNOW|Rectangle Top": 345.13,
+    "TEAM|Cup & Handle (Wochenbasis)": 203.9,
+    "BEST|TEAM|Cup & Handle (Wochenbasis)": 203.9,
+    "PENG|Fallback: 20-Tage-Hoch (Pivot)": 76.11,
+    "BEST|PENG|Fallback: 20-Tage-Hoch (Pivot)": 76.11,
+    "AAOI|Fallback: MA50-R\u00fcckeroberung": 114.07,
+    "BEST|AAOI|Fallback: MA50-R\u00fcckeroberung": 114.07
   },
   "gapgo_warten": {},
-  "ampel_tag": "2026-10-08"
+  "ampel_tag": "2026-10-09"
 }
