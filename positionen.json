@@ -914,7 +914,7 @@
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
   "wedge_drop_gemeldet": false,
-  "zone_gemeldet": "leicht"
+  "zone_gemeldet": "mittel"
  },
  "GAP|1": {
   "symbol": "GAP",
@@ -1239,7 +1239,7 @@
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
   "wedge_drop_gemeldet": false,
-  "zone_gemeldet": "mittel"
+  "zone_gemeldet": "stark"
  },
  "CMBT|1": {
   "symbol": "CMBT",
@@ -5135,7 +5135,7 @@
   "klasse": "standard",
   "musterziel": null,
   "zone": "stark",
-  "zone_gemeldet": "leicht",
+  "zone_gemeldet": "stark",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
    "5_kanaluebershooting",
@@ -5539,7 +5539,7 @@
   "klasse": "standard",
   "musterziel": null,
   "zone": "stark",
-  "zone_gemeldet": "leicht",
+  "zone_gemeldet": "stark",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
    "4_ma200_abstand"
@@ -6343,7 +6343,7 @@
   "klasse": "standard",
   "musterziel": null,
   "zone": "stark",
-  "zone_gemeldet": "leicht",
+  "zone_gemeldet": "stark",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
    "4_ma200_abstand"
