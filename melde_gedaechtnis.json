@@ -13,7 +13,13 @@
       "AAOI|Fallback: MA50-R\u00fcckeroberung",
       "AAOI|@114.07",
       "PENG|Inside Day",
-      "PENG|@75.63"
+      "PENG|@75.63",
+      "CLOV|EMA Crossback",
+      "CLOV|@4.61",
+      "SNOW|Fallback: 20-Tage-Hoch (Pivot)",
+      "SNOW|@349.01",
+      "SNOW|Wick Play",
+      "SNOW|@349.10"
     ]
   },
   "gemeldet": {
@@ -266,7 +272,14 @@
     "PENG|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-09",
     "BEST|PENG|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-09",
     "AAOI|Fallback: MA50-R\u00fcckeroberung": "2026-10-09",
-    "BEST|AAOI|Fallback: MA50-R\u00fcckeroberung": "2026-10-09"
+    "BEST|AAOI|Fallback: MA50-R\u00fcckeroberung": "2026-10-09",
+    "UEBER|CLOV|EMA Crossback": "2026-10-09",
+    "GAPGO|CLOV|2026-10-09": "2026-10-09",
+    "GAPGO|PENG|2026-10-09": "2026-10-09",
+    "SNOW|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-09",
+    "BEST|SNOW|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-09",
+    "SNOW|Wick Play": "2026-10-09",
+    "BEST|SNOW|Wick Play": "2026-10-09"
   },
   "gemeldet_kp": {
     "GEO|Rectangle Top": 32.29,
@@ -380,8 +393,28 @@
     "PENG|Fallback: 20-Tage-Hoch (Pivot)": 76.11,
     "BEST|PENG|Fallback: 20-Tage-Hoch (Pivot)": 76.11,
     "AAOI|Fallback: MA50-R\u00fcckeroberung": 114.07,
-    "BEST|AAOI|Fallback: MA50-R\u00fcckeroberung": 114.07
+    "BEST|AAOI|Fallback: MA50-R\u00fcckeroberung": 114.07,
+    "UEBER|CLOV|EMA Crossback": 4.61,
+    "SNOW|Fallback: 20-Tage-Hoch (Pivot)": 349.01,
+    "BEST|SNOW|Fallback: 20-Tage-Hoch (Pivot)": 349.01,
+    "SNOW|Wick Play": 349.1,
+    "BEST|SNOW|Wick Play": 349.1
   },
-  "gapgo_warten": {},
+  "gapgo_warten": {
+    "CLOV": {
+      "signal": "2026-10-09",
+      "kp": 5.19,
+      "stop": 4.68,
+      "firma": "Clover Health Investments, Corp.",
+      "bestaetigt": false
+    },
+    "PENG": {
+      "signal": "2026-10-09",
+      "kp": 78.58,
+      "stop": 71.56,
+      "firma": "Penguin Solutions Inc",
+      "bestaetigt": false
+    }
+  },
   "ampel_tag": "2026-10-09"
 }
