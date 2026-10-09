@@ -403,8 +403,8 @@
   "gapgo_warten": {
     "CLOV": {
       "signal": "2026-10-09",
-      "kp": 5.21,
-      "stop": 4.69,
+      "kp": 5.22,
+      "stop": 4.7,
       "firma": "Clover Health Investments, Corp.",
       "bestaetigt": false
     },
