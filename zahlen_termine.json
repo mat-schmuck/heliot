@@ -1,5 +1,5 @@
 {
- "gebaut_am": "2026-10-09 00:10 Wien",
+ "gebaut_am": "2026-10-10 00:12 Wien",
  "ohne_termin": [
   "MAAS",
   "SDEV",
@@ -573,7 +573,8 @@
    "uhrzeit": "08:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "KLAC": {
@@ -694,7 +695,8 @@
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "NBIS": {
@@ -898,9 +900,9 @@
    ]
   },
   "RNG": {
-   "datum": "2026-11-05",
-   "uhrzeit": "15:00",
-   "lage": "im_handel",
+   "datum": "2026-10-22",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich",
    "quellen": [
     "yahoo"
    ]
@@ -1207,7 +1209,8 @@
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "WOLF": {

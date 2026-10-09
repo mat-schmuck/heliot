@@ -578,5 +578,14 @@
    "zeichen": null,
    "text": "INFORMATION: VSH; Shakeout-Spring; Kurs 34.13 unter der 8-Tage-EMA 35.16; reiner Hinweis, kein Ausstiegssignal; Kurs 34,13, seit Trigger +0,3 % gleich 0,1 R"
   }
+ ],
+ "geprueft": "2026-10-09",
+ "zurueckgenommen": [
+  "FIVE|2",
+  "GPI|INS-2026-10-02",
+  "NVGS|Cup & Handle (Wochenbasis)",
+  "NVGS|Fallback: 52W-Hoch-Breakout",
+  "STM|EMA Crossback",
+  "STM|Fallback: 20-Tage-Hoch (Pivot)"
  ]
 }

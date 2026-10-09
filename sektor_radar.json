@@ -1,15 +1,15 @@
 {
- "gebaut_am": "2026-10-08T22:10:41",
- "handelstag": "2026-10-08",
+ "gebaut_am": "2026-10-09T22:13:00",
+ "handelstag": "2026-10-09",
  "geladen": 36,
  "unfertig": [],
  "treffer": [
   {
-   "etf": "SMH",
-   "name": "Semiconductors",
-   "richtung": "runter",
-   "volumen_pct": 55.1,
-   "kurs": 607.27
+   "etf": "IBB",
+   "name": "Biotech large",
+   "richtung": "hoch",
+   "volumen_pct": 51.0,
+   "kurs": 206.49
   }
  ]
 }

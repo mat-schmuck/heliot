@@ -1,5 +1,11 @@
 {
- "stand": "2026-10-08",
+ "stand": "2026-10-09",
  "liste": 157,
- "aktien": []
+ "aktien": [
+  {
+   "ticker": "BLFS",
+   "firma": "BioLife Solutions, Inc.",
+   "grund": "2 der letzten 5 Handelstage ohne Umsatz oder ohne Kursspanne"
+  }
+ ]
 }
