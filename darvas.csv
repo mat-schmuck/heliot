@@ -1,51 +1,39 @@
 No.,Ticker,Company,Sector,Industry,Country,Market Cap,P/E,Price,Change,Volume
-1,GRAL,"GRAIL, Inc.",Healthcare,,,,,,,
-2,HPE,Hewlett Packard Enterprise Company,Technology,,,,,,,
-3,P,"Everpure, Inc.",Technology,,,,,,,
-4,QMCO,Quantum Corp,Technology,Computer Hardware,USA,988.80,,25.09,0.60%,1874028
-5,XNCR,"Xencor, Inc.",Healthcare,,,,,,,
-6,ZETA,Zeta Global Holdings Corp.,Technology,,,,,,,
-7,CRWD,Crowdstrike Holdings Inc,Technology,Software - Infrastructure,USA,243338.10,6656.86,237.65,-3.28%,19469030
-8,DELL,Dell Technologies Inc.,Technology,,,,,,,
-9,ETON,Eton Pharmaceuticals Inc,Healthcare,Drug Manufacturers - Specialty & Generic,USA,1586.36,146.75,55.50,-2.75%,891702
-10,HTFL,"Heartflow, Inc.",Healthcare,,,,,,,
-11,LIND,Lindblad Expeditions Holdings Inc.,Consumer Cyclical,,,,,,,
-12,LITE,Lumentum Holdings Inc.,Technology,,,,,,,
-13,NET,"Cloudflare, Inc.",Technology,,,,,,,
-14,SMTC,Semtech Corp,Technology,Semiconductors,USA,17265.24,122.97,185.00,3.82%,6071928
-15,TWLO,Twilio Inc,Technology,Software - Infrastructure,USA,37447.78,33.93,243.84,-0.97%,4057103
-16,AVT,Avnet Inc,Technology,Electronics & Computer Distribution,USA,7888.85,24.09,96.12,3.22%,2685009
-17,BLFS,"BioLife Solutions, Inc.",Healthcare,,,,,,,
-18,FEIM,"Frequency Electronics, Inc.",Technology,,,,,,,
-19,RBRK,Rubrik Inc,Technology,Software - Infrastructure,USA,22121.46,,106.71,-1.04%,5144556
-20,S,SentinelOne Inc,Technology,Software - Infrastructure,USA,7834.59,,22.51,-2.93%,13017108
-21,SNOW,Snowflake Inc.,Technology,,,,,,,
-22,ARW,Arrow Electronics Inc,Technology,Electronics & Computer Distribution,USA,11164.07,14.01,219.31,2.00%,1088967
-23,GTLB,GitLab Inc.,Technology,,,,,,,
-24,SN,"SharkNinja, Inc.",Consumer Cyclical,,,,,,,
-25,TEAM,Atlassian Corporation,Technology,,,,,,,
-26,AMD,"Advanced Micro Devices, Inc.",Technology,,,,,,,
-27,ESTC,Elastic N.V.,Technology,,,,,,,
-28,MTRN,Materion Corporation,Basic Materials,,,,,,,
-29,SCSC,"ScanSource, Inc.",Technology,,,,,,,
-30,SNX,TD SYNNEX Corporation,Technology,,,,,,,
-31,DT,"Dynatrace, Inc.",Technology,,,,,,,
-32,FTNT,"Fortinet, Inc.",Technology,,,,,,,
-33,HNGE,Hinge Health Inc,Healthcare,Health Information Services,USA,7657.90,73.08,94.90,0.19%,4866296
-34,PANW,"Palo Alto Networks, Inc.",Technology,,,,,,,
-35,RDVT,Red Violet Inc,Technology,Software - Application,USA,1218.61,67.24,75.94,-1.53%,289673
-36,GH,Guardant Health Inc,Healthcare,Diagnostics & Research,USA,24072.11,,179.38,-2.03%,3080785
-37,GKOS,Glaukos Corp,Healthcare,Medical Devices,USA,9662.16,,163.81,1.48%,1464537
-38,MATX,"Matson, Inc.",Industrials,,,,,,,
-39,XMTR,Xometry Inc,Industrials,Industrial Distribution,USA,5570.70,,97.18,2.02%,1682220
-40,GEO,Geo Group Inc,Industrials,,,,,,,
-41,ROKU,"Roku, Inc.",Communication Services,,,,,,,
-42,FROG,JFrog Ltd,Technology,Software - Application,USA,11443.59,,92.81,-1.24%,1962447
-43,OSCR,"Oscar Health, Inc.",Healthcare,,,,,,,
-44,TVTX,Travere Therapeutics Inc,Healthcare,Biotechnology,USA,5915.83,,62.76,-3.06%,2235858
-45,BWIN,"The Baldwin Insurance Group, Inc.",Financial,,,,,,,
-46,DJCO,Daily Journal Corp.,Technology,,,,,,,
-47,KMX,CarMax Inc,Consumer Cyclical,,,,,,,
-48,SLAB,"Silicon Laboratories, Inc.",Technology,,,,,,,
-49,RELY,"Remitly Global, Inc.",Technology,,,,,,,
-50,AXGN,Axogen Inc,Healthcare,Medical Devices,USA,2595.04,,44.23,-2.33%,1124697
+1,ADPT,Adaptive Biotechnologies Corporation,Healthcare,,,,,,,
+2,ARW,Arrow Electronics Inc,Technology,Electronics & Computer Distribution,USA,11164.07,14.01,219.31,2.00%,1088967
+3,AVT,Avnet Inc,Technology,Electronics & Computer Distribution,USA,7888.85,24.09,96.12,3.22%,2685009
+4,CDNA,"CareDx, Inc.",Healthcare,,,,,,,
+5,CHYM,"Chime Financial, Inc.",Technology,,,,,,,
+6,COHU,"Cohu, Inc.",Technology,,,,,,,
+7,DINO,HF Sinclair Corporation,Energy,,,,,,,
+8,DJCO,Daily Journal Corp.,Technology,,,,,,,
+9,DK,"Delek US Holdings, Inc.",Energy,,,,,,,
+10,ESTC,Elastic N.V.,Technology,,,,,,,
+11,FEIM,"Frequency Electronics, Inc.",Technology,,,,,,,
+12,FROG,JFrog Ltd,Technology,Software - Application,USA,11443.59,,92.81,-1.24%,1962447
+13,GCT,GigaCloud Technology Inc,Technology,,,,,,,
+14,GEO,Geo Group Inc,Industrials,,,,,,,
+15,GH,Guardant Health Inc,Healthcare,Diagnostics & Research,USA,24072.11,,179.38,-2.03%,3080785
+16,HALO,"Halozyme Therapeutics, Inc.",Healthcare,,,,,,,
+17,HNGE,Hinge Health Inc,Healthcare,Health Information Services,USA,7657.90,73.08,94.90,0.19%,4866296
+18,HTFL,"Heartflow, Inc.",Healthcare,,,,,,,
+19,HUM,Humana Inc.,Healthcare,,,,,,,
+20,KEYS,Keysight Technologies Inc.,Technology,,,,,,,
+21,LIFE,Ethos Technologies Inc.,Financial,,,,,,,
+22,LIND,Lindblad Expeditions Holdings Inc.,Consumer Cyclical,,,,,,,
+23,LITE,Lumentum Holdings Inc.,Technology,,,,,,,
+24,MATX,"Matson, Inc.",Industrials,,,,,,,
+25,MTRN,Materion Corporation,Basic Materials,,,,,,,
+26,NTAP,"NetApp, Inc.",Technology,,,,,,,
+27,NTRA,"Natera, Inc.",Healthcare,,,,,,,
+28,QMCO,Quantum Corp,Technology,Computer Hardware,USA,988.80,,25.09,0.60%,1874028
+29,RDVT,Red Violet Inc,Technology,Software - Application,USA,1218.61,67.24,75.94,-1.53%,289673
+30,REPX,"Riley Exploration Permian, Inc.",Energy,,,,,,,
+31,SLAB,"Silicon Laboratories, Inc.",Technology,,,,,,,
+32,SMTC,Semtech Corp,Technology,Semiconductors,USA,17265.24,122.97,185.00,3.82%,6071928
+33,SN,"SharkNinja, Inc.",Consumer Cyclical,,,,,,,
+34,SNX,TD SYNNEX Corporation,Technology,,,,,,,
+35,TVTX,Travere Therapeutics Inc,Healthcare,Biotechnology,USA,5915.83,,62.76,-3.06%,2235858
+36,TWST,Twist Bioscience Corporation,Healthcare,,,,,,,
+37,XMTR,Xometry Inc,Industrials,Industrial Distribution,USA,5570.70,,97.18,2.02%,1682220
+38,ZBRA,Zebra Technologies Corporation,Technology,,,,,,,
