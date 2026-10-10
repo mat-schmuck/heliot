@@ -1,11 +1,11 @@
 {
- "stand": "2026-10-09",
+ "stand": "2026-10-10",
  "funde": [
   {
    "ticker": "ADRX",
    "status": "beide",
-   "marktkap": 1914947840.0,
-   "stichtag": "2026-10-09",
+   "marktkap": 1898927744.0,
+   "stichtag": "2026-10-10",
    "zeilen": [
     "ADRX; Großkauf und Cluster; Marktwert 1,9 Mrd $",
     "Größter Einzelkauf 10,1 Mio $ am 28.09.; George Simeon, Direktor",
@@ -21,8 +21,8 @@
   {
    "ticker": "BORR",
    "status": "pfad_a",
-   "marktkap": 1476233344.0,
-   "stichtag": "2026-10-09",
+   "marktkap": 1474690944.0,
+   "stichtag": "2026-10-10",
    "zeilen": [
     "BORR; Großkauf; Marktwert 1,5 Mrd $",
     "Größter Einzelkauf 6,4 Mio $ am 06.10.; Troim Tor Olav, Direktor"
@@ -30,45 +30,23 @@
    "kennung": "BORR|pfad_a|1"
   },
   {
-   "ticker": "COUR",
-   "status": "pfad_a",
-   "marktkap": 1490496640.0,
-   "stichtag": "2026-10-09",
-   "zeilen": [
-    "COUR; Großkauf; Marktwert 1,5 Mrd $",
-    "Größter Einzelkauf 6,7 Mio $ am 25.09.; Pale Fire Capital SE, Insider"
-   ],
-   "kennung": "COUR|pfad_a|1"
-  },
-  {
    "ticker": "CRBG",
    "status": "pfad_a",
-   "marktkap": 15136073728.0,
-   "stichtag": "2026-10-09",
+   "marktkap": 15196252160.0,
+   "stichtag": "2026-10-10",
    "zeilen": [
-    "CRBG; Großkauf; Marktwert 15,1 Mrd $",
+    "CRBG; Großkauf; Marktwert 15,2 Mrd $",
     "Größter Einzelkauf 25,1 Mio $ am 28.09.; NIPPON LIFE INSURANCE CO, Insider"
    ],
    "kennung": "CRBG|pfad_a|1"
   },
   {
-   "ticker": "CX",
-   "status": "pfad_a",
-   "marktkap": 13686403072.0,
-   "stichtag": "2026-10-09",
-   "zeilen": [
-    "CX; Großkauf; Marktwert 13,7 Mrd $",
-    "Größter Einzelkauf 6,9 Mio $ am 25.09.; Zambrano Lozano Rogelio, Direktor"
-   ],
-   "kennung": "CX|pfad_a|1"
-  },
-  {
    "ticker": "GME",
    "status": "pfad_a",
-   "marktkap": 13301168128.0,
-   "stichtag": "2026-10-09",
+   "marktkap": 13399545856.0,
+   "stichtag": "2026-10-10",
    "zeilen": [
-    "GME; Großkauf; Marktwert 13,3 Mrd $",
+    "GME; Großkauf; Marktwert 13,4 Mrd $",
     "Größter Einzelkauf 17,1 Mio $ am 02.10.; Cohen Ryan, President, CEO and Chairman"
    ],
    "kennung": "GME|pfad_a|2"
@@ -76,10 +54,10 @@
   {
    "ticker": "GPI",
    "status": "pfad_a",
-   "marktkap": 2736568064.0,
-   "stichtag": "2026-10-09",
+   "marktkap": 2766075392.0,
+   "stichtag": "2026-10-10",
    "zeilen": [
-    "GPI; Großkauf; Marktwert 2,7 Mrd $",
+    "GPI; Großkauf; Marktwert 2,8 Mrd $",
     "Größter Einzelkauf 8,4 Mio $ am 28.09.; Conifer Management, L.L.C., Insider"
    ],
    "kennung": "GPI|pfad_a|1"
@@ -87,10 +65,10 @@
   {
    "ticker": "KOD",
    "status": "pfad_a",
-   "marktkap": 6235922944.0,
-   "stichtag": "2026-10-09",
+   "marktkap": 6276775424.0,
+   "stichtag": "2026-10-10",
    "zeilen": [
-    "KOD; Großkauf; Marktwert 6,2 Mrd $",
+    "KOD; Großkauf; Marktwert 6,3 Mrd $",
     "Größter Einzelkauf 20,2 Mio $ am 28.09.; BAKER BROS. ADVISORS LP, Direktor"
    ],
    "kennung": "KOD|pfad_a|1"
@@ -98,10 +76,10 @@
   {
    "ticker": "LEN",
    "status": "pfad_a",
-   "marktkap": 18095882240.0,
-   "stichtag": "2026-10-09",
+   "marktkap": 18244569088.0,
+   "stichtag": "2026-10-10",
    "zeilen": [
-    "LEN; Großkauf; Marktwert 18,1 Mrd $",
+    "LEN; Großkauf; Marktwert 18,2 Mrd $",
     "Größter Einzelkauf 67,5 Mio $ am 02.10.; BERKSHIRE HATHAWAY INC, Insider"
    ],
    "kennung": "LEN|pfad_a|1"
@@ -109,10 +87,10 @@
   {
    "ticker": "SLBT",
    "status": "pfad_a",
-   "marktkap": 852354816.0,
-   "stichtag": "2026-10-09",
+   "marktkap": 846747200.0,
+   "stichtag": "2026-10-10",
    "zeilen": [
-    "SLBT; Großkauf; Marktwert 852,4 Mio $",
+    "SLBT; Großkauf; Marktwert 846,7 Mio $",
     "Größter Einzelkauf 10329,9 Mrd $ am 29.09.; Wang Ching-Dong, Chief Executive Officer"
    ],
    "kennung": "SLBT|pfad_a|1"
