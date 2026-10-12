@@ -41,7 +41,9 @@
       "RELL|Wick Play",
       "RELL|@21.05",
       "RELL|EMA Crossback",
-      "RELL|@21.45"
+      "RELL|@21.45",
+      "PENG|Fallback: 20-Tage-Hoch (Pivot)",
+      "PENG|@78.76"
     ]
   },
   "gemeldet": {
@@ -123,7 +125,9 @@
     "RELL|Wick Play": "2026-10-12",
     "BEST|RELL|Wick Play": "2026-10-12",
     "RELL|EMA Crossback": "2026-10-12",
-    "BEST|RELL|EMA Crossback": "2026-10-12"
+    "BEST|RELL|EMA Crossback": "2026-10-12",
+    "PENG|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-12",
+    "BEST|PENG|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-12"
   },
   "gemeldet_kp": {
     "GCT|Cup & Handle (Wochenbasis)": 57.41,
@@ -165,7 +169,9 @@
     "RELL|Wick Play": 21.05,
     "BEST|RELL|Wick Play": 21.05,
     "RELL|EMA Crossback": 21.45,
-    "BEST|RELL|EMA Crossback": 21.45
+    "BEST|RELL|EMA Crossback": 21.45,
+    "PENG|Fallback: 20-Tage-Hoch (Pivot)": 78.76,
+    "BEST|PENG|Fallback: 20-Tage-Hoch (Pivot)": 78.76
   },
   "gapgo_warten": {
     "CLOV": {
