@@ -867,5 +867,27 @@
    "zeichen": null,
    "text": "INFORMATION: TWIN; Rectangle Top; Kurs 26.47 unter der 8-Tage-EMA 26.81; reiner Hinweis, kein Ausstiegssignal; Kurs 26,47, seit Trigger +7,8 % gleich 0,8 R"
   }
+ ],
+ "geprueft": "2026-10-12",
+ "zurueckgenommen": [
+  "BE|EMA Crossback",
+  "MXL|Fallback: MA50-Rückeroberung",
+  "MXL|Fallback: 20-Tage-Hoch (Pivot)",
+  "GPI|INS-2026-10-02",
+  "LEN|INS-2026-10-02",
+  "ALNT|Fallback: 20-Tage-Hoch (Pivot)",
+  "ALNT|Fallback: MA50-Pullback",
+  "ALNT|Rectangle Top",
+  "CRDO|SPRING-2026-10-09",
+  "GTLB|Fallback: 20-Tage-Hoch (Pivot)",
+  "IMOS|VCP",
+  "MNDY|2",
+  "OUST|Fallback: MA50-Pullback",
+  "OUST|Fallback: MA50-Rückeroberung",
+  "SIMO|Rectangle Top",
+  "SMTC|Cup & Handle (Wochenbasis)",
+  "SMTC|EMA Crossback",
+  "SMTC|Fallback: 20-Tage-Hoch (Pivot)",
+  "SMTC|Rectangle Top"
  ]
 }
