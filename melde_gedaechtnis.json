@@ -43,7 +43,8 @@
       "RELL|EMA Crossback",
       "RELL|@21.45",
       "PENG|Fallback: 20-Tage-Hoch (Pivot)",
-      "PENG|@78.76"
+      "PENG|@78.76",
+      "PENG|Gap and Go"
     ]
   },
   "gemeldet": {
@@ -127,7 +128,8 @@
     "RELL|EMA Crossback": "2026-10-12",
     "BEST|RELL|EMA Crossback": "2026-10-12",
     "PENG|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-12",
-    "BEST|PENG|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-12"
+    "BEST|PENG|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-12",
+    "GAPGOIN|PENG|2026-10-09": "2026-10-12"
   },
   "gemeldet_kp": {
     "GCT|Cup & Handle (Wochenbasis)": 57.41,
@@ -179,14 +181,6 @@
       "kp": 5.22,
       "stop": 4.7,
       "firma": "Clover Health Investments, Corp.",
-      "bestaetigt": false,
-      "pruef": "2026-10-12"
-    },
-    "PENG": {
-      "signal": "2026-10-09",
-      "kp": 78.76,
-      "stop": 71.56,
-      "firma": "Penguin Solutions Inc",
       "bestaetigt": false,
       "pruef": "2026-10-12"
     }
