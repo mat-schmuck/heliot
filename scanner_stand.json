@@ -1,5 +1,5 @@
 {
- "gebaut_am": "2026-10-11T22:08:54+00:00",
+ "gebaut_am": "2026-10-12T12:43:08+00:00",
  "handelstag": "2026-10-09",
  "status": "ok",
  "toleranz": 0.05,
@@ -10,10 +10,10 @@
    "eintraege": 13436,
    "geprueft": 5365,
    "raus": 22,
-   "ohne_eintrag": 58
+   "ohne_eintrag": 59
   },
   "rs": {
-   "stand": "2026-10-11T22:05:57",
+   "stand": "2026-10-12T12:39:15",
    "status": "ok"
   },
   "markttiefs": {
@@ -47,11 +47,11 @@
   },
   "kurse": {
    "status": "ok",
-   "mit_kursen": 5343,
-   "ohne_kurse": 0,
-   "aktuell": 5342,
-   "abdeckung": 0.9998,
-   "archiv_zeilen": 3704895
+   "mit_kursen": 5342,
+   "ohne_kurse": 1,
+   "aktuell": 5341,
+   "abdeckung": 0.9996,
+   "archiv_zeilen": 3699581
   },
   "markt": {
    "status": "ok",
@@ -60,53 +60,53 @@
   },
   "eroeffnungsvolumen": {
    "status": "ok",
-   "aktien": 4956,
+   "aktien": 4955,
    "bloecke": 54,
    "fehler": 0
   },
   "screener": {
    "status": "ok",
-   "anzahl": 7004
+   "anzahl": 7010
   },
   "kalender": {
    "status": "ok",
-   "tage": 8,
-   "eintraege": 241,
-   "mit_eps_konsens": 213
+   "tage": 9,
+   "eintraege": 380,
+   "mit_eps_konsens": 342
   },
   "zahlen_rueckblick": {
    "status": "ok",
    "tage": 100,
-   "mit_zahlen": 4620
+   "mit_zahlen": 4618
   },
   "fundament": {
    "status": "ok",
-   "firmen": 4904,
-   "zuordnung": 5030
+   "firmen": 4903,
+   "zuordnung": 5029
   },
   "konsens": {
    "dateien": [
-    "2026-10-07_0901Z.jsonl.gz",
     "2026-10-07_1930Z.jsonl.gz",
     "2026-10-08_0900Z.jsonl.gz",
     "2026-10-08_1930Z.jsonl.gz",
     "2026-10-09_0901Z.jsonl.gz",
-    "2026-10-09_1930Z.jsonl.gz"
+    "2026-10-09_1930Z.jsonl.gz",
+    "2026-10-12_0900Z.jsonl.gz"
    ],
    "unlesbar": [],
-   "firmen": 5638,
-   "neuester": "2026-10-09T19:30:41Z",
-   "aeltester": "2026-10-07T09:01:00Z",
+   "firmen": 5636,
+   "neuester": "2026-10-12T09:00:39Z",
+   "aeltester": "2026-10-07T19:30:58Z",
    "status": "ok",
-   "mit_konsens": 4180
+   "mit_konsens": 4178
   },
   "analysten": {
    "status": "ok",
-   "abgerufen": 779,
-   "fehler": 1,
+   "abgerufen": 786,
+   "fehler": 0,
    "abgebrochen": false,
-   "mit_analysten": 3212,
-   "mit_stand": 4601
+   "mit_analysten": 3213,
+   "mit_stand": 4604
   },
   "revisionen": {
    "status": "ok",
@@ -123,9 +123,9 @@
    "tage": 20,
    "erster_tag": "2026-09-14",
    "letzter_tag": "2026-10-09",
-   "abdeckung_letzter_tag": 0.9921,
+   "abdeckung_letzter_tag": 0.992,
    "hinweis": null,
-   "mit_anteil": 5301,
+   "mit_anteil": 5300,
    "median_pct": 52.1,
    "fehlend": {}
   },
@@ -134,8 +134,8 @@
    "zuordnung_stand": "2026-09-21",
    "zuordnung_eintraege": 13436,
    "ebene": "gics_unterbranche",
-   "aktien": 5343,
-   "mit_gruppe": 5192,
+   "aktien": 5342,
+   "mit_gruppe": 5191,
    "unbekannt": 151,
    "gruppen_heute": 165,
    "stichtage": {
@@ -146,20 +146,20 @@
    "abdeckung": {
     "0": {
      "tag": "2026-10-09",
-     "basis": 5054,
-     "mit_rohwert": 5054,
+     "basis": 5053,
+     "mit_rohwert": 5053,
      "anteil": 1.0
     },
     "15": {
      "tag": "2026-09-18",
-     "basis": 5034,
-     "mit_rohwert": 5033,
+     "basis": 5033,
+     "mit_rohwert": 5032,
      "anteil": 0.9998
     },
     "30": {
      "tag": "2026-08-27",
-     "basis": 5014,
-     "mit_rohwert": 5014,
+     "basis": 5013,
+     "mit_rohwert": 5013,
      "anteil": 1.0
     }
    },
@@ -168,9 +168,9 @@
   "kennzahlen": {
    "status": "ok",
    "technik_handelstag": "2026-10-09",
-   "fundament_stand": "2026-10-11T22:05:59",
-   "mit_technik": 5278,
-   "mit_fundament": 4920
+   "fundament_stand": "2026-10-12T12:39:21",
+   "mit_technik": 5277,
+   "mit_fundament": 4919
   }
  },
  "hinweise": [],
@@ -386,7 +386,7 @@
   },
   {
    "gruppe": "Computer Software",
-   "aktien": 310,
+   "aktien": 311,
    "teile": [
     "Computer Software: Prepackaged Software",
     "Computer Software: Programming Data Processing"
@@ -527,7 +527,7 @@
   },
   {
    "gruppe": "Finance: Consumer Services",
-   "aktien": 159,
+   "aktien": 161,
    "teile": [
     "Finance: Consumer Services"
    ]
@@ -674,7 +674,7 @@
   },
   {
    "gruppe": "Marine Transportation",
-   "aktien": 67,
+   "aktien": 68,
    "teile": [
     "Marine Transportation"
    ]
@@ -1066,7 +1066,7 @@
   },
   {
    "gruppe": "RETAIL: Building Materials",
-   "aktien": 16,
+   "aktien": 17,
    "teile": [
     "RETAIL: Building Materials"
    ]
@@ -1313,6 +1313,6 @@
    "handelbar": 20
   }
  },
- "zeilen": 5343,
- "dauer_s": 1748.4
+ "zeilen": 5342,
+ "dauer_s": 1575.8
 }
