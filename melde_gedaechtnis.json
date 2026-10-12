@@ -33,7 +33,11 @@
       "NTSK|Fallback: 20-Tage-Hoch (Pivot)",
       "NTSK|@20.85",
       "APPN|EMA Crossback",
-      "APPN|@40.18"
+      "APPN|@40.18",
+      "VEEV|Cup & Handle (Wochenbasis)",
+      "VEEV|@297.46",
+      "VEEV|Pocket Pivot",
+      "VEEV|@297.45"
     ]
   },
   "gemeldet": {
@@ -106,7 +110,11 @@
     "NTSK|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-12",
     "BEST|NTSK|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-12",
     "APPN|EMA Crossback": "2026-10-12",
-    "BEST|APPN|EMA Crossback": "2026-10-12"
+    "BEST|APPN|EMA Crossback": "2026-10-12",
+    "VEEV|Cup & Handle (Wochenbasis)": "2026-10-12",
+    "BEST|VEEV|Cup & Handle (Wochenbasis)": "2026-10-12",
+    "VEEV|Pocket Pivot": "2026-10-12",
+    "BEST|VEEV|Pocket Pivot": "2026-10-12"
   },
   "gemeldet_kp": {
     "GCT|Cup & Handle (Wochenbasis)": 57.41,
@@ -140,7 +148,11 @@
     "NTSK|Fallback: 20-Tage-Hoch (Pivot)": 20.85,
     "BEST|NTSK|Fallback: 20-Tage-Hoch (Pivot)": 20.85,
     "APPN|EMA Crossback": 40.18,
-    "BEST|APPN|EMA Crossback": 40.18
+    "BEST|APPN|EMA Crossback": 40.18,
+    "VEEV|Cup & Handle (Wochenbasis)": 297.46,
+    "BEST|VEEV|Cup & Handle (Wochenbasis)": 297.46,
+    "VEEV|Pocket Pivot": 297.45,
+    "BEST|VEEV|Pocket Pivot": 297.45
   },
   "gapgo_warten": {
     "CLOV": {
