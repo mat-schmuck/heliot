@@ -37,7 +37,9 @@
       "VEEV|Cup & Handle (Wochenbasis)",
       "VEEV|@297.46",
       "VEEV|Pocket Pivot",
-      "VEEV|@297.45"
+      "VEEV|@297.45",
+      "RELL|Wick Play",
+      "RELL|@21.05"
     ]
   },
   "gemeldet": {
@@ -115,7 +117,9 @@
     "BEST|VEEV|Cup & Handle (Wochenbasis)": "2026-10-12",
     "VEEV|Pocket Pivot": "2026-10-12",
     "BEST|VEEV|Pocket Pivot": "2026-10-12",
-    "TEIL|BORR|INS-2026-10-06": "2026-10-12"
+    "TEIL|BORR|INS-2026-10-06": "2026-10-12",
+    "RELL|Wick Play": "2026-10-12",
+    "BEST|RELL|Wick Play": "2026-10-12"
   },
   "gemeldet_kp": {
     "GCT|Cup & Handle (Wochenbasis)": 57.41,
@@ -153,7 +157,9 @@
     "VEEV|Cup & Handle (Wochenbasis)": 297.46,
     "BEST|VEEV|Cup & Handle (Wochenbasis)": 297.46,
     "VEEV|Pocket Pivot": 297.45,
-    "BEST|VEEV|Pocket Pivot": 297.45
+    "BEST|VEEV|Pocket Pivot": 297.45,
+    "RELL|Wick Play": 21.05,
+    "BEST|RELL|Wick Play": 21.05
   },
   "gapgo_warten": {
     "CLOV": {
