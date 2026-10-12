@@ -6836,13 +6836,19 @@
   "teilverkauft": true,
   "halteregel_aktiv": false,
   "beobachtung": true,
-  "status": "offen",
+  "status": "geschlossen",
   "verlauf": [
    {
     "datum": "2026-09-30",
     "aktion": "teilverkauf",
     "grund": "+20.2 % im Handel erreicht (M2)",
     "kurs": 423.1799
+   },
+   {
+    "datum": "2026-10-12",
+    "aktion": "stop_raus",
+    "grund": "Schluss 400.71 unter Stop 406.79",
+    "kurs": 400.71
    }
   ],
   "klasse": "standard",
@@ -6857,7 +6863,11 @@
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
-  "wedge_drop_gemeldet": false
+  "wedge_drop_gemeldet": false,
+  "schluss_datum": "2026-10-12",
+  "schluss_grund": "Schluss 400.71 unter Stop 406.79",
+  "schluss_kurs": 400.71,
+  "ergebnis_pct": 13.8
  },
  "FRPT|Rectangle Top": {
   "symbol": "FRPT",
@@ -8791,8 +8801,15 @@
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
-  "status": "offen",
-  "verlauf": [],
+  "status": "geschlossen",
+  "verlauf": [
+   {
+    "datum": "2026-10-12",
+    "aktion": "stop_raus",
+    "grund": "Schluss 21.67 unter Stop 22.32",
+    "kurs": 21.67
+   }
+  ],
   "klasse": "standard",
   "musterziel": null,
   "zone": "leicht",
@@ -8802,7 +8819,11 @@
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
-  "wedge_drop_gemeldet": false
+  "wedge_drop_gemeldet": false,
+  "schluss_datum": "2026-10-12",
+  "schluss_grund": "Schluss 21.67 unter Stop 22.32",
+  "schluss_kurs": 21.67,
+  "ergebnis_pct": 0.7
  },
  "QMCO|Fallback: 20-Tage-Hoch (Pivot)": {
   "symbol": "QMCO",
@@ -13779,8 +13800,15 @@
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
-  "status": "offen",
-  "verlauf": [],
+  "status": "geschlossen",
+  "verlauf": [
+   {
+    "datum": "2026-10-12",
+    "aktion": "stop_raus",
+    "grund": "Schluss 154.18 unter Stop 154.61",
+    "kurs": 154.18
+   }
+  ],
   "klasse": "standard",
   "musterziel": null,
   "zone": "leicht",
@@ -13790,7 +13818,11 @@
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
-  "wedge_drop_gemeldet": false
+  "wedge_drop_gemeldet": false,
+  "schluss_datum": "2026-10-12",
+  "schluss_grund": "Schluss 154.18 unter Stop 154.61",
+  "schluss_kurs": 154.18,
+  "ergebnis_pct": 3.01
  },
  "TEM|High & Tight Flag": {
   "symbol": "TEM",
