@@ -26,7 +26,22 @@
     "INSIDER|GSHD|pfad_a|1": "2026-10-02",
     "INSIDER|GME|beide|3": "2026-10-02",
     "INSIDER|SLBT|pfad_a|1": "2026-10-02",
-    "INSIDER|BORR|pfad_a|1": "2026-10-06"
+    "INSIDER|BORR|pfad_a|1": "2026-10-06",
+    "SEKTORAUF|2026-10-12": "2026-10-12",
+    "GEWINN|zonenwechsel|CRWD|1|stark": "2026-10-12",
+    "GEWINN|zonenwechsel|CRWD|Fallback: 20-Tage-Hoch (Pivot)|stark": "2026-10-12",
+    "GEWINN|zonenwechsel|ESTC|EMA Crossback|stark": "2026-10-12",
+    "GEWINN|zonenwechsel|FROG|SPRING-2026-09-23|stark": "2026-10-12",
+    "GEWINN|zonenwechsel|FTNT|Fallback: MA50-R\u00fcckeroberung|stark": "2026-10-12",
+    "GEWINN|zonenwechsel|FTNT|Rectangle Top|mittel": "2026-10-12",
+    "GEWINN|zonenwechsel|HHH|Rectangle Top|mittel": "2026-10-12",
+    "GEWINN|zonenwechsel|MTSI|EMA Crossback|mittel": "2026-10-12",
+    "GEWINN|zonenwechsel|NTRA|Cup & Handle (Wochenbasis) + Darvas Box|mittel": "2026-10-12",
+    "GEWINN|zonenwechsel|PSIX|1|mittel": "2026-10-12",
+    "GEWINN|zonenwechsel|RBRK|Cup & Handle (Wochenbasis)|stark": "2026-10-12",
+    "GEWINN|zonenwechsel|RBRK|Fallback: 52W-Hoch-Breakout|stark": "2026-10-12",
+    "GEWINN|zonenwechsel|XMTR|Fallback: MA50-R\u00fcckeroberung|stark": "2026-10-12",
+    "GEWINN|zonenwechsel|XMTR|Rectangle Top|mittel": "2026-10-12"
   },
   "gemeldet_kp": {},
   "gapgo_warten": {
