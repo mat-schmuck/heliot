@@ -1,7 +1,34 @@
 {
   "heute_gemeldet": {
     "tag": "2026-10-12",
-    "marken": []
+    "marken": [
+      "GCT|Cup & Handle (Wochenbasis)",
+      "GCT|@57.41",
+      "GCT|Fallback: 52W-Hoch-Breakout",
+      "GCT|@57.46",
+      "NTNX|Cup & Handle (Wochenbasis)",
+      "NTNX|@74.67",
+      "NTNX|Fallback: 52W-Hoch-Breakout",
+      "NTNX|@74.73",
+      "SHOP|Cup & Handle (Wochenbasis)",
+      "SHOP|@171.05",
+      "CCI|Fallback: 20-Tage-Hoch (Pivot)",
+      "CCI|@79.80",
+      "DAC|Fallback: 20-Tage-Hoch (Pivot)",
+      "DAC|@171.10",
+      "ESTC|Fallback: 20-Tage-Hoch (Pivot)",
+      "ESTC|@98.61",
+      "FIGS|Fallback: 20-Tage-Hoch (Pivot)",
+      "FIGS|@15.90",
+      "VIA|Fallback: 20-Tage-Hoch (Pivot)",
+      "VIA|@32.62",
+      "GCT|Pocket Pivot",
+      "GCT|@57.40",
+      "NTNX|Pocket Pivot",
+      "NTNX|@74.66",
+      "CCI|Pocket Pivot",
+      "CCI|@79.79"
+    ]
   },
   "gemeldet": {
     "INSIDER|FTK|pfad_a|1": "2026-09-16",
@@ -41,9 +68,62 @@
     "GEWINN|zonenwechsel|RBRK|Cup & Handle (Wochenbasis)|stark": "2026-10-12",
     "GEWINN|zonenwechsel|RBRK|Fallback: 52W-Hoch-Breakout|stark": "2026-10-12",
     "GEWINN|zonenwechsel|XMTR|Fallback: MA50-R\u00fcckeroberung|stark": "2026-10-12",
-    "GEWINN|zonenwechsel|XMTR|Rectangle Top|mittel": "2026-10-12"
+    "GEWINN|zonenwechsel|XMTR|Rectangle Top|mittel": "2026-10-12",
+    "GCT|Cup & Handle (Wochenbasis)": "2026-10-12",
+    "BEST|GCT|Cup & Handle (Wochenbasis)": "2026-10-12",
+    "GCT|Fallback: 52W-Hoch-Breakout": "2026-10-12",
+    "BEST|GCT|Fallback: 52W-Hoch-Breakout": "2026-10-12",
+    "NTNX|Cup & Handle (Wochenbasis)": "2026-10-12",
+    "BEST|NTNX|Cup & Handle (Wochenbasis)": "2026-10-12",
+    "NTNX|Fallback: 52W-Hoch-Breakout": "2026-10-12",
+    "BEST|NTNX|Fallback: 52W-Hoch-Breakout": "2026-10-12",
+    "SHOP|Cup & Handle (Wochenbasis)": "2026-10-12",
+    "BEST|SHOP|Cup & Handle (Wochenbasis)": "2026-10-12",
+    "CCI|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-12",
+    "BEST|CCI|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-12",
+    "DAC|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-12",
+    "BEST|DAC|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-12",
+    "ESTC|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-12",
+    "BEST|ESTC|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-12",
+    "FIGS|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-12",
+    "BEST|FIGS|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-12",
+    "VIA|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-12",
+    "BEST|VIA|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-12",
+    "GCT|Pocket Pivot": "2026-10-12",
+    "BEST|GCT|Pocket Pivot": "2026-10-12",
+    "NTNX|Pocket Pivot": "2026-10-12",
+    "BEST|NTNX|Pocket Pivot": "2026-10-12",
+    "CCI|Pocket Pivot": "2026-10-12",
+    "BEST|CCI|Pocket Pivot": "2026-10-12"
   },
-  "gemeldet_kp": {},
+  "gemeldet_kp": {
+    "GCT|Cup & Handle (Wochenbasis)": 57.41,
+    "BEST|GCT|Cup & Handle (Wochenbasis)": 57.41,
+    "GCT|Fallback: 52W-Hoch-Breakout": 57.46,
+    "BEST|GCT|Fallback: 52W-Hoch-Breakout": 57.46,
+    "NTNX|Cup & Handle (Wochenbasis)": 74.67,
+    "BEST|NTNX|Cup & Handle (Wochenbasis)": 74.67,
+    "NTNX|Fallback: 52W-Hoch-Breakout": 74.73,
+    "BEST|NTNX|Fallback: 52W-Hoch-Breakout": 74.73,
+    "SHOP|Cup & Handle (Wochenbasis)": 171.05,
+    "BEST|SHOP|Cup & Handle (Wochenbasis)": 171.05,
+    "CCI|Fallback: 20-Tage-Hoch (Pivot)": 79.8,
+    "BEST|CCI|Fallback: 20-Tage-Hoch (Pivot)": 79.8,
+    "DAC|Fallback: 20-Tage-Hoch (Pivot)": 171.1,
+    "BEST|DAC|Fallback: 20-Tage-Hoch (Pivot)": 171.1,
+    "ESTC|Fallback: 20-Tage-Hoch (Pivot)": 98.61,
+    "BEST|ESTC|Fallback: 20-Tage-Hoch (Pivot)": 98.61,
+    "FIGS|Fallback: 20-Tage-Hoch (Pivot)": 15.9,
+    "BEST|FIGS|Fallback: 20-Tage-Hoch (Pivot)": 15.9,
+    "VIA|Fallback: 20-Tage-Hoch (Pivot)": 32.62,
+    "BEST|VIA|Fallback: 20-Tage-Hoch (Pivot)": 32.62,
+    "GCT|Pocket Pivot": 57.4,
+    "BEST|GCT|Pocket Pivot": 57.4,
+    "NTNX|Pocket Pivot": 74.66,
+    "BEST|NTNX|Pocket Pivot": 74.66,
+    "CCI|Pocket Pivot": 79.79,
+    "BEST|CCI|Pocket Pivot": 79.79
+  },
   "gapgo_warten": {
     "CLOV": {
       "signal": "2026-10-09",
@@ -62,5 +142,5 @@
       "pruef": "2026-10-12"
     }
   },
-  "ampel_tag": "2026-10-09"
+  "ampel_tag": "2026-10-12"
 }
