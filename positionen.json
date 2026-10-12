@@ -18250,11 +18250,18 @@
   "aktueller_stop": 3.82,
   "stop_quelle": "deckel",
   "hoechstkurs": 4.78000020980835,
-  "teilverkauft": false,
+  "teilverkauft": true,
   "halteregel_aktiv": false,
   "beobachtung": true,
   "status": "offen",
-  "verlauf": [],
+  "verlauf": [
+   {
+    "datum": "2026-10-12",
+    "aktion": "teilverkauf",
+    "grund": "+21.2 % im Handel erreicht (M2)",
+    "kurs": 5.14
+   }
+  ],
   "klasse": "insider",
   "musterziel": null,
   "zone": "leicht",
