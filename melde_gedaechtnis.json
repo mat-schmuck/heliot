@@ -1,57 +1,7 @@
 {
   "heute_gemeldet": {
-    "tag": "2026-10-12",
-    "marken": [
-      "GCT|Cup & Handle (Wochenbasis)",
-      "GCT|@57.41",
-      "GCT|Fallback: 52W-Hoch-Breakout",
-      "GCT|@57.46",
-      "NTNX|Cup & Handle (Wochenbasis)",
-      "NTNX|@74.67",
-      "NTNX|Fallback: 52W-Hoch-Breakout",
-      "NTNX|@74.73",
-      "SHOP|Cup & Handle (Wochenbasis)",
-      "SHOP|@171.05",
-      "CCI|Fallback: 20-Tage-Hoch (Pivot)",
-      "CCI|@79.80",
-      "DAC|Fallback: 20-Tage-Hoch (Pivot)",
-      "DAC|@171.10",
-      "ESTC|Fallback: 20-Tage-Hoch (Pivot)",
-      "ESTC|@98.61",
-      "FIGS|Fallback: 20-Tage-Hoch (Pivot)",
-      "FIGS|@15.90",
-      "VIA|Fallback: 20-Tage-Hoch (Pivot)",
-      "VIA|@32.62",
-      "GCT|Pocket Pivot",
-      "GCT|@57.40",
-      "NTNX|Pocket Pivot",
-      "NTNX|@74.66",
-      "CCI|Pocket Pivot",
-      "CCI|@79.79",
-      "DAC|Fallback: 52W-Hoch-Breakout",
-      "DAC|@171.26",
-      "NTSK|Fallback: 20-Tage-Hoch (Pivot)",
-      "NTSK|@20.85",
-      "APPN|EMA Crossback",
-      "APPN|@40.18",
-      "VEEV|Cup & Handle (Wochenbasis)",
-      "VEEV|@297.46",
-      "VEEV|Pocket Pivot",
-      "VEEV|@297.45",
-      "RELL|Wick Play",
-      "RELL|@21.05",
-      "RELL|EMA Crossback",
-      "RELL|@21.45",
-      "PENG|Fallback: 20-Tage-Hoch (Pivot)",
-      "PENG|@78.76",
-      "PENG|Gap and Go",
-      "PENG|Wick Play",
-      "PENG|@78.85",
-      "FIGS|Fallback: 52W-Hoch-Breakout",
-      "FIGS|@17.50",
-      "VEON|Fallback: 20-Tage-Hoch (Pivot)",
-      "VEON|@78.84"
-    ]
+    "tag": "2026-10-13",
+    "marken": []
   },
   "gemeldet": {
     "INSIDER|FTK|pfad_a|1": "2026-09-16",
@@ -184,23 +134,6 @@
     "VEON|Fallback: 20-Tage-Hoch (Pivot)": 78.84,
     "BEST|VEON|Fallback: 20-Tage-Hoch (Pivot)": 78.84
   },
-  "gapgo_warten": {
-    "CLOV": {
-      "signal": "2026-10-09",
-      "kp": 5.22,
-      "stop": 4.7,
-      "firma": "Clover Health Investments, Corp.",
-      "bestaetigt": false,
-      "pruef": "2026-10-12"
-    },
-    "PENG": {
-      "signal": "2026-10-09",
-      "kp": 78.76,
-      "stop": 71.56,
-      "firma": "Penguin Solutions Inc",
-      "bestaetigt": false,
-      "pruef": "2026-10-12"
-    }
-  },
+  "gapgo_warten": {},
   "ampel_tag": "2026-10-12"
 }
