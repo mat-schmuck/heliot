@@ -474,5 +474,16 @@
    "zeichen": "hoch",
    "text": "INFORMATION: Sektor-Radar TAN (Solar) dreht nach oben; Volumen hochgerechnet plus 216 % über dem 50-Tage-Schnitt; Kurs 44.45"
   }
+ ],
+ "geprueft": "2026-10-13",
+ "zurueckgenommen": [
+  "MTRN|EMA Crossback",
+  "GPI|INS-2026-10-02",
+  "LEN|INS-2026-10-02",
+  "COHU|Fallback: 20-Tage-Hoch (Pivot)",
+  "LGND|EMA Crossback",
+  "MXL|Fallback: 20-Tage-Hoch (Pivot)",
+  "MXL|Fallback: MA50-Rückeroberung",
+  "TAN"
  ]
 }

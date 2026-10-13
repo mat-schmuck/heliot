@@ -1,839 +1,797 @@
 {
- "gebaut_am": "2026-10-13 00:07 Wien",
+ "gebaut_am": "2026-10-14 00:09 Wien",
  "universum": 213,
  "aktien": {
+  "ARW": {
+   "firma": "Arrow Electronics Inc",
+   "vortagesschluss": 231.75,
+   "v50": 573439.4,
+   "rs_rating": 93,
+   "ueber_52w_tief_pct": 127.7
+  },
+  "AVT": {
+   "firma": "Avnet Inc",
+   "vortagesschluss": 99.6,
+   "v50": 1327690.7,
+   "rs_rating": 94,
+   "ueber_52w_tief_pct": 125.1
+  },
   "CDNA": {
    "firma": "CareDx, Inc.",
-   "vortagesschluss": 63.12,
-   "v50": 1286612.8,
+   "vortagesschluss": 65.43,
+   "v50": 1258048.0,
    "rs_rating": 99,
-   "ueber_52w_tief_pct": 352.5
+   "ueber_52w_tief_pct": 366.4
   },
   "CHYM": {
    "firma": "Chime Financial, Inc.",
-   "vortagesschluss": 30.45,
-   "v50": 8044630.5,
-   "rs_rating": 95,
-   "ueber_52w_tief_pct": 91.8
-  },
-  "COHU": {
-   "firma": "Cohu, Inc.",
-   "vortagesschluss": 65.21,
-   "v50": 987544.0,
-   "rs_rating": 95,
-   "ueber_52w_tief_pct": 229.0
+   "vortagesschluss": 29.9,
+   "v50": 8054796.5,
+   "rs_rating": 93,
+   "ueber_52w_tief_pct": 88.3
   },
   "DINO": {
    "firma": "HF Sinclair Corporation",
-   "vortagesschluss": 122.91,
-   "v50": 2637858.8,
+   "vortagesschluss": 128.23,
+   "v50": 2608428.6,
    "rs_rating": 99,
-   "ueber_52w_tief_pct": 168.9
+   "ueber_52w_tief_pct": 180.5
   },
   "DK": {
    "firma": "Delek US Holdings, Inc.",
-   "vortagesschluss": 77.33,
-   "v50": 2093147.6,
+   "vortagesschluss": 80.75,
+   "v50": 2109139.9,
    "rs_rating": 97,
-   "ueber_52w_tief_pct": 199.1
+   "ueber_52w_tief_pct": 212.4
   },
   "ESTC": {
    "firma": "Elastic N.V.",
-   "vortagesschluss": 95.52,
-   "v50": 2434058.9,
-   "rs_rating": 96,
-   "ueber_52w_tief_pct": 127.2
+   "vortagesschluss": 94.32,
+   "v50": 2415607.9,
+   "rs_rating": 95,
+   "ueber_52w_tief_pct": 124.3
   },
   "FROG": {
    "firma": "JFrog Ltd",
-   "vortagesschluss": 99.02,
-   "v50": 1887888.0,
+   "vortagesschluss": 99.28,
+   "v50": 1884221.0,
    "rs_rating": 94,
-   "ueber_52w_tief_pct": 190.8
+   "ueber_52w_tief_pct": 191.6
   },
   "GCT": {
    "firma": "GigaCloud Technology Inc",
-   "vortagesschluss": 57.74,
-   "v50": 669686.6,
-   "rs_rating": 98,
-   "ueber_52w_tief_pct": 127.4
+   "vortagesschluss": 57.03,
+   "v50": 670819.4,
+   "rs_rating": 97,
+   "ueber_52w_tief_pct": 124.6
   },
   "GEO": {
    "firma": "Geo Group Inc",
-   "vortagesschluss": 31.73,
-   "v50": 2419387.3,
+   "vortagesschluss": 32.19,
+   "v50": 2431989.4,
    "rs_rating": 94,
-   "ueber_52w_tief_pct": 153.6
-  },
-  "HALO": {
-   "firma": "Halozyme Therapeutics, Inc.",
-   "vortagesschluss": 111.08,
-   "v50": 2323247.2,
-   "rs_rating": 99,
-   "ueber_52w_tief_pct": 81.4
+   "ueber_52w_tief_pct": 157.3
   },
   "HNGE": {
    "firma": "Hinge Health Inc",
-   "vortagesschluss": 104.82,
-   "v50": 1898166.8,
-   "rs_rating": 95,
-   "ueber_52w_tief_pct": 248.5
+   "vortagesschluss": 105.14,
+   "v50": 1882324.2,
+   "rs_rating": 96,
+   "ueber_52w_tief_pct": 249.5
   },
   "HTFL": {
    "firma": "Heartflow, Inc.",
-   "vortagesschluss": 50.56,
-   "v50": 2001715.2,
+   "vortagesschluss": 50.32,
+   "v50": 2014474.4,
    "rs_rating": 99,
-   "ueber_52w_tief_pct": 151.2
+   "ueber_52w_tief_pct": 150.0
   },
   "HUM": {
    "firma": "Humana Inc.",
-   "vortagesschluss": 433.5,
-   "v50": 1232879.4,
-   "rs_rating": 94,
-   "ueber_52w_tief_pct": 165.8
+   "vortagesschluss": 420.38,
+   "v50": 1242801.5,
+   "rs_rating": 93,
+   "ueber_52w_tief_pct": 157.7
   },
   "KEYS": {
    "firma": "Keysight Technologies Inc.",
-   "vortagesschluss": 377.7,
-   "v50": 1215729.0,
+   "vortagesschluss": 370.22,
+   "v50": 1222491.3,
    "rs_rating": 91,
-   "ueber_52w_tief_pct": 137.9
+   "ueber_52w_tief_pct": 130.7
   },
   "LIND": {
    "firma": "Lindblad Expeditions Holdings Inc.",
-   "vortagesschluss": 36.23,
-   "v50": 906995.4,
+   "vortagesschluss": 36.37,
+   "v50": 881847.0,
    "rs_rating": 98,
-   "ueber_52w_tief_pct": 218.6
+   "ueber_52w_tief_pct": 219.9
   },
   "MATX": {
    "firma": "Matson, Inc.",
-   "vortagesschluss": 227.68,
-   "v50": 282859.9,
-   "rs_rating": 92,
-   "ueber_52w_tief_pct": 161.8
+   "vortagesschluss": 235.22,
+   "v50": 282840.0,
+   "rs_rating": 93,
+   "ueber_52w_tief_pct": 165.8
   },
   "NTAP": {
    "firma": "NetApp, Inc.",
-   "vortagesschluss": 239.18,
-   "v50": 2571684.7,
-   "rs_rating": 98,
-   "ueber_52w_tief_pct": 155.3
+   "vortagesschluss": 239.01,
+   "v50": 2579580.1,
+   "rs_rating": 99,
+   "ueber_52w_tief_pct": 155.1
   },
   "NTRA": {
    "firma": "Natera, Inc.",
-   "vortagesschluss": 397.77,
-   "v50": 1577956.9,
-   "rs_rating": 99,
-   "ueber_52w_tief_pct": 136.8
+   "vortagesschluss": 395.655,
+   "v50": 1577465.1,
+   "rs_rating": 98,
+   "ueber_52w_tief_pct": 134.0
   },
   "RDVT": {
    "firma": "Red Violet Inc",
-   "vortagesschluss": 80.17,
-   "v50": 241051.6,
-   "rs_rating": 95,
-   "ueber_52w_tief_pct": 140.0
+   "vortagesschluss": 78.56,
+   "v50": 238575.9,
+   "rs_rating": 96,
+   "ueber_52w_tief_pct": 135.2
   },
   "REPX": {
    "firma": "Riley Exploration Permian, Inc.",
-   "vortagesschluss": 46.26,
-   "v50": 271770.9,
-   "rs_rating": 95,
-   "ueber_52w_tief_pct": 92.1
+   "vortagesschluss": 47.75,
+   "v50": 272330.4,
+   "rs_rating": 97,
+   "ueber_52w_tief_pct": 98.3
   },
   "SN": {
    "firma": "SharkNinja, Inc.",
-   "vortagesschluss": 189.98,
-   "v50": 1820502.6,
+   "vortagesschluss": 188.8,
+   "v50": 1797981.1,
    "rs_rating": 97,
-   "ueber_52w_tief_pct": 128.6
+   "ueber_52w_tief_pct": 127.1
   },
   "SNX": {
    "firma": "TD SYNNEX Corporation",
-   "vortagesschluss": 273.06,
-   "v50": 799815.7,
-   "rs_rating": 92,
-   "ueber_52w_tief_pct": 92.0
+   "vortagesschluss": 276.04,
+   "v50": 800431.8,
+   "rs_rating": 93,
+   "ueber_52w_tief_pct": 94.1
   },
   "XMTR": {
    "firma": "Xometry Inc",
-   "vortagesschluss": 107.96,
-   "v50": 714927.8,
-   "rs_rating": 95,
-   "ueber_52w_tief_pct": 201.1
+   "vortagesschluss": 107.9,
+   "v50": 707803.5,
+   "rs_rating": 94,
+   "ueber_52w_tief_pct": 200.9
   },
   "ZBRA": {
    "firma": "Zebra Technologies Corporation",
-   "vortagesschluss": 388.12,
-   "v50": 639402.9,
+   "vortagesschluss": 386.57,
+   "v50": 622257.3,
    "rs_rating": 98,
-   "ueber_52w_tief_pct": 95.0
+   "ueber_52w_tief_pct": 94.2
+  },
+  "AMD": {
+   "firma": "Advanced Micro Devices, Inc.",
+   "vortagesschluss": 605.53,
+   "v50": 21215674.4,
+   "rs_rating": 95,
+   "ueber_52w_tief_pct": 221.7
   },
   "AMPL": {
    "firma": "Amplitude, Inc.",
-   "vortagesschluss": 15.53,
-   "v50": 1966351.6,
+   "vortagesschluss": 15.61,
+   "v50": 1918807.8,
    "rs_rating": 99,
-   "ueber_52w_tief_pct": 181.9
+   "ueber_52w_tief_pct": 183.3
   },
   "AMRX": {
    "firma": "Amneal Pharmaceuticals, Inc.",
-   "vortagesschluss": 20.03,
-   "v50": 2426322.3,
-   "rs_rating": 96,
-   "ueber_52w_tief_pct": 109.5
-  },
-  "ANET": {
-   "firma": "Arista Networks, Inc.",
-   "vortagesschluss": 210.88,
-   "v50": 5827860.6,
-   "rs_rating": 93,
-   "ueber_52w_tief_pct": 84.1
+   "vortagesschluss": 19.57,
+   "v50": 2475485.0,
+   "rs_rating": 95,
+   "ueber_52w_tief_pct": 104.7
   },
   "ANF": {
    "firma": "Abercrombie & Fitch Company",
-   "vortagesschluss": 145.91,
-   "v50": 1679525.6,
-   "rs_rating": 97,
-   "ueber_52w_tief_pct": 122.9
+   "vortagesschluss": 150.88,
+   "v50": 1679483.8,
+   "rs_rating": 99,
+   "ueber_52w_tief_pct": 130.5
   },
   "AOUT": {
    "firma": "American Outdoor Brands, Inc.",
-   "vortagesschluss": 16.44,
-   "v50": 188086.4,
-   "rs_rating": 95,
-   "ueber_52w_tief_pct": 162.7
+   "vortagesschluss": 17.01,
+   "v50": 188970.0,
+   "rs_rating": 96,
+   "ueber_52w_tief_pct": 171.8
   },
   "APPN": {
    "firma": "Appian Corporation",
-   "vortagesschluss": 38.93,
-   "v50": 875853.2,
-   "rs_rating": 96,
-   "ueber_52w_tief_pct": 109.0
+   "vortagesschluss": 38.71,
+   "v50": 869705.1,
+   "rs_rating": 97,
+   "ueber_52w_tief_pct": 107.8
   },
   "ARX": {
    "firma": "Accelerant Holdings",
    "vortagesschluss": 19.77,
-   "v50": 3873698.3,
+   "v50": 3847874.9,
    "rs_rating": 97,
    "ueber_52w_tief_pct": 115.4
   },
   "ASX": {
    "firma": "ASE Technology Holding Co., Ltd.",
-   "vortagesschluss": 47.53,
-   "v50": 6703475.1,
-   "rs_rating": 96,
-   "ueber_52w_tief_pct": 329.4
+   "vortagesschluss": 47.6,
+   "v50": 6669945.2,
+   "rs_rating": 95,
+   "ueber_52w_tief_pct": 324.6
   },
   "ATRC": {
    "firma": "AtriCure, Inc.",
-   "vortagesschluss": 57.28,
-   "v50": 1107891.4,
-   "rs_rating": 98,
-   "ueber_52w_tief_pct": 125.9
+   "vortagesschluss": 56.87,
+   "v50": 1097225.9,
+   "rs_rating": 99,
+   "ueber_52w_tief_pct": 124.3
   },
   "AVTR": {
    "firma": "Avantor, Inc.",
-   "vortagesschluss": 15.49,
-   "v50": 7820399.3,
+   "vortagesschluss": 15.55,
+   "v50": 7732606.6,
    "rs_rating": 94,
-   "ueber_52w_tief_pct": 113.2
+   "ueber_52w_tief_pct": 114.0
   },
   "AZTA": {
    "firma": "Azenta, Inc.",
-   "vortagesschluss": 37.77,
-   "v50": 974359.3,
-   "rs_rating": 94,
-   "ueber_52w_tief_pct": 137.1
+   "vortagesschluss": 37.87,
+   "v50": 967246.1,
+   "rs_rating": 93,
+   "ueber_52w_tief_pct": 137.7
   },
   "BUUU": {
    "firma": "BUUU Group Limited",
-   "vortagesschluss": 41.085,
-   "v50": 92529.7,
+   "vortagesschluss": 42.32,
+   "v50": 92281.8,
    "rs_rating": 99,
-   "ueber_52w_tief_pct": 620.8
+   "ueber_52w_tief_pct": 642.5
   },
   "CAI": {
    "firma": "Caris Life Sciences, Inc.",
-   "vortagesschluss": 29.69,
-   "v50": 5333180.1,
-   "rs_rating": 92,
-   "ueber_52w_tief_pct": 109.2
+   "vortagesschluss": 29.53,
+   "v50": 5305612.5,
+   "rs_rating": 93,
+   "ueber_52w_tief_pct": 108.1
   },
   "CON": {
    "firma": "Concentra Group Holdings Parent, Inc.",
    "vortagesschluss": 37.54,
-   "v50": 969196.6,
+   "v50": 974750.9,
    "rs_rating": 96,
    "ueber_52w_tief_pct": 102.4
   },
   "CRL": {
    "firma": "Charles River Laboratories International, Inc.",
-   "vortagesschluss": 301.86,
-   "v50": 974120.9,
+   "vortagesschluss": 299.02,
+   "v50": 977026.3,
    "rs_rating": 96,
-   "ueber_52w_tief_pct": 106.5
+   "ueber_52w_tief_pct": 104.5
   },
   "CRWD": {
    "firma": "Crowdstrike Holdings Inc",
-   "vortagesschluss": 263.01,
-   "v50": 9885031.1,
-   "rs_rating": 96,
-   "ueber_52w_tief_pct": 207.0
+   "vortagesschluss": 261.21,
+   "v50": 9806263.7,
+   "rs_rating": 97,
+   "ueber_52w_tief_pct": 204.9
   },
   "DAC": {
    "firma": "Danaos Corporation",
-   "vortagesschluss": 169.39,
-   "v50": 140992.2,
-   "rs_rating": 97,
-   "ueber_52w_tief_pct": 102.7
+   "vortagesschluss": 164.93,
+   "v50": 143324.1,
+   "rs_rating": 96,
+   "ueber_52w_tief_pct": 97.1
   },
   "DDOG": {
    "firma": "Datadog, Inc.",
-   "vortagesschluss": 287.29,
-   "v50": 4035436.0,
+   "vortagesschluss": 283.34,
+   "v50": 3971948.1,
    "rs_rating": 94,
-   "ueber_52w_tief_pct": 193.1
+   "ueber_52w_tief_pct": 189.1
   },
   "DELL": {
    "firma": "Dell Technologies Inc.",
-   "vortagesschluss": 576.76,
-   "v50": 7725703.0,
-   "rs_rating": 97,
-   "ueber_52w_tief_pct": 423.3
+   "vortagesschluss": 572.47,
+   "v50": 7740341.7,
+   "rs_rating": 98,
+   "ueber_52w_tief_pct": 419.4
   },
   "DT": {
    "firma": "Dynatrace, Inc.",
-   "vortagesschluss": 65.25,
-   "v50": 7076539.2,
-   "rs_rating": 98,
-   "ueber_52w_tief_pct": 106.3
+   "vortagesschluss": 64.47,
+   "v50": 7174826.1,
+   "rs_rating": 97,
+   "ueber_52w_tief_pct": 103.8
   },
   "FFIV": {
    "firma": "F5, Inc.",
-   "vortagesschluss": 473.49,
-   "v50": 542659.0,
-   "rs_rating": 93,
-   "ueber_52w_tief_pct": 111.6
+   "vortagesschluss": 476.24,
+   "v50": 535969.4,
+   "rs_rating": 94,
+   "ueber_52w_tief_pct": 112.8
   },
   "FIGS": {
    "firma": "FIGS, Inc.",
-   "vortagesschluss": 17.74,
-   "v50": 3220058.4,
+   "vortagesschluss": 18.0,
+   "v50": 3252209.6,
    "rs_rating": 98,
-   "ueber_52w_tief_pct": 162.0
+   "ueber_52w_tief_pct": 158.6
   },
   "FIVN": {
    "firma": "Five9, Inc.",
-   "vortagesschluss": 35.67,
-   "v50": 2291362.2,
+   "vortagesschluss": 35.41,
+   "v50": 2255834.9,
    "rs_rating": 98,
-   "ueber_52w_tief_pct": 168.4
+   "ueber_52w_tief_pct": 166.4
   },
   "FLXS": {
    "firma": "Flexsteel Industries, Inc.",
-   "vortagesschluss": 87.19,
-   "v50": 82662.7,
+   "vortagesschluss": 87.09,
+   "v50": 82424.9,
    "rs_rating": 96,
-   "ueber_52w_tief_pct": 156.4
+   "ueber_52w_tief_pct": 156.1
   },
   "FSLY": {
    "firma": "Fastly, Inc.",
-   "vortagesschluss": 26.43,
-   "v50": 6994468.4,
-   "rs_rating": 94,
-   "ueber_52w_tief_pct": 241.7
+   "vortagesschluss": 27.09,
+   "v50": 6988253.8,
+   "rs_rating": 97,
+   "ueber_52w_tief_pct": 250.2
   },
   "FTNT": {
    "firma": "Fortinet, Inc.",
-   "vortagesschluss": 192.94,
-   "v50": 4208675.7,
+   "vortagesschluss": 190.76,
+   "v50": 4145875.6,
    "rs_rating": 95,
-   "ueber_52w_tief_pct": 162.3
+   "ueber_52w_tief_pct": 159.4
   },
   "FTRE": {
    "firma": "Fortrea Holdings Inc.",
-   "vortagesschluss": 21.0,
-   "v50": 1466691.8,
-   "rs_rating": 93,
-   "ueber_52w_tief_pct": 145.6
+   "vortagesschluss": 20.92,
+   "v50": 1420317.9,
+   "rs_rating": 92,
+   "ueber_52w_tief_pct": 144.7
   },
   "GIBO": {
    "firma": "GIBO Holdings Limited",
-   "vortagesschluss": 57.775,
-   "v50": 26571.8,
-   "rs_rating": 91,
-   "ueber_52w_tief_pct": 4522.0
+   "vortagesschluss": 56.0,
+   "v50": 28109.8,
+   "rs_rating": 92,
+   "ueber_52w_tief_pct": 4380.0
   },
   "GTLB": {
    "firma": "GitLab Inc.",
-   "vortagesschluss": 56.01,
-   "v50": 4817758.4,
-   "rs_rating": 98,
-   "ueber_52w_tief_pct": 199.0
+   "vortagesschluss": 51.95,
+   "v50": 4933551.8,
+   "rs_rating": 97,
+   "ueber_52w_tief_pct": 177.4
   },
   "HAE": {
    "firma": "Haemonetics Corporation",
-   "vortagesschluss": 122.06,
-   "v50": 759075.2,
+   "vortagesschluss": 121.72,
+   "v50": 754419.1,
    "rs_rating": 99,
-   "ueber_52w_tief_pct": 153.4
+   "ueber_52w_tief_pct": 150.7
   },
   "HPE": {
    "firma": "Hewlett Packard Enterprise Company",
-   "vortagesschluss": 70.33,
-   "v50": 21381450.1,
+   "vortagesschluss": 68.81,
+   "v50": 21522855.0,
    "rs_rating": 98,
-   "ueber_52w_tief_pct": 254.5
+   "ueber_52w_tief_pct": 246.8
   },
   "HURN": {
    "firma": "Huron Consulting Group Inc.",
-   "vortagesschluss": 173.23,
-   "v50": 236152.8,
-   "rs_rating": 92,
-   "ueber_52w_tief_pct": 104.1
+   "vortagesschluss": 176.33,
+   "v50": 233815.0,
+   "rs_rating": 93,
+   "ueber_52w_tief_pct": 107.7
   },
   "HZO": {
    "firma": "MarineMax, Inc.",
-   "vortagesschluss": 52.33,
-   "v50": 874919.3,
+   "vortagesschluss": 52.39,
+   "v50": 888041.1,
    "rs_rating": 99,
-   "ueber_52w_tief_pct": 144.3
+   "ueber_52w_tief_pct": 144.6
   },
   "IBTA": {
    "firma": "Ibotta, Inc.",
-   "vortagesschluss": 42.96,
-   "v50": 259655.4,
+   "vortagesschluss": 43.28,
+   "v50": 258287.1,
    "rs_rating": 96,
-   "ueber_52w_tief_pct": 124.9
+   "ueber_52w_tief_pct": 126.6
   },
   "ILMN": {
    "firma": "Illumina Inc",
-   "vortagesschluss": 276.67,
-   "v50": 2954082.8,
+   "vortagesschluss": 271.175,
+   "v50": 2939722.1,
    "rs_rating": 98,
-   "ueber_52w_tief_pct": 214.4
+   "ueber_52w_tief_pct": 208.2
   },
   "IMOS": {
    "firma": "ChipMOS TECHNOLOGIES INC.",
-   "vortagesschluss": 75.19,
-   "v50": 91925.2,
-   "rs_rating": 95,
-   "ueber_52w_tief_pct": 290.8
+   "vortagesschluss": 72.24,
+   "v50": 92313.0,
+   "rs_rating": 93,
+   "ueber_52w_tief_pct": 275.5
   },
   "ITGR": {
    "firma": "Integer Holdings Corporation",
-   "vortagesschluss": 126.52,
-   "v50": 1144651.5,
-   "rs_rating": 96,
-   "ueber_52w_tief_pct": 104.1
+   "vortagesschluss": 126.59,
+   "v50": 946334.2,
+   "rs_rating": 95,
+   "ueber_52w_tief_pct": 104.2
   },
   "KOD": {
    "firma": "Kodiak Sciences Inc",
-   "vortagesschluss": 99.26,
-   "v50": 1892172.0,
+   "vortagesschluss": 91.63,
+   "v50": 1911304.8,
    "rs_rating": 99,
-   "ueber_52w_tief_pct": 807.3
-  },
-  "KRSA": {
-   "firma": "Korsana Biosciences, Inc.",
-   "vortagesschluss": 34.04,
-   "v50": 42269.1,
-   "rs_rating": 97,
-   "ueber_52w_tief_pct": 373.5
+   "ueber_52w_tief_pct": 737.6
   },
   "KRT": {
    "firma": "Karat Packaging Inc.",
-   "vortagesschluss": 54.49,
-   "v50": 169937.6,
+   "vortagesschluss": 53.86,
+   "v50": 170906.2,
    "rs_rating": 99,
-   "ueber_52w_tief_pct": 164.4
+   "ueber_52w_tief_pct": 161.3
   },
   "MGNI": {
    "firma": "Magnite, Inc.",
-   "vortagesschluss": 25.08,
-   "v50": 2488783.2,
-   "rs_rating": 95,
-   "ueber_52w_tief_pct": 131.8
+   "vortagesschluss": 25.32,
+   "v50": 2494779.4,
+   "rs_rating": 96,
+   "ueber_52w_tief_pct": 134.0
   },
   "MRNA": {
    "firma": "Moderna, Inc.",
-   "vortagesschluss": 213.74,
-   "v50": 22085692.2,
+   "vortagesschluss": 216.25,
+   "v50": 22251810.5,
    "rs_rating": 99,
-   "ueber_52w_tief_pct": 859.3
+   "ueber_52w_tief_pct": 870.6
   },
   "MRVL": {
    "firma": "Marvell Technology, Inc.",
-   "vortagesschluss": 265.86,
-   "v50": 21629850.0,
-   "rs_rating": 96,
-   "ueber_52w_tief_pct": 276.1
+   "vortagesschluss": 268.725,
+   "v50": 21579804.1,
+   "rs_rating": 97,
+   "ueber_52w_tief_pct": 280.1
+  },
+  "MTW": {
+   "firma": "Manitowoc Company, Inc.",
+   "vortagesschluss": 22.55,
+   "v50": 450740.0,
+   "rs_rating": 99,
+   "ueber_52w_tief_pct": 127.1
   },
   "NET": {
    "firma": "Cloudflare, Inc.",
-   "vortagesschluss": 350.87,
-   "v50": 3417429.7,
-   "rs_rating": 96,
-   "ueber_52w_tief_pct": 120.9
+   "vortagesschluss": 347.7,
+   "v50": 3390437.5,
+   "rs_rating": 97,
+   "ueber_52w_tief_pct": 118.9
   },
   "NIQ": {
    "firma": "NIQ Global Intelligence plc",
-   "vortagesschluss": 18.17,
-   "v50": 1504382.7,
+   "vortagesschluss": 18.31,
+   "v50": 1500596.7,
    "rs_rating": 95,
-   "ueber_52w_tief_pct": 129.1
+   "ueber_52w_tief_pct": 130.9
   },
   "NSIT": {
    "firma": "Insight Enterprises, Inc.",
-   "vortagesschluss": 166.1,
-   "v50": 366156.8,
-   "rs_rating": 98,
-   "ueber_52w_tief_pct": 161.1
+   "vortagesschluss": 175.87,
+   "v50": 357300.5,
+   "rs_rating": 99,
+   "ueber_52w_tief_pct": 176.4
   },
   "NTNX": {
    "firma": "Nutanix, Inc.",
-   "vortagesschluss": 74.14,
-   "v50": 2607921.4,
-   "rs_rating": 94,
-   "ueber_52w_tief_pct": 118.0
+   "vortagesschluss": 72.88,
+   "v50": 2612811.5,
+   "rs_rating": 93,
+   "ueber_52w_tief_pct": 114.3
   },
   "NTSK": {
    "firma": "Netskope, Inc.",
-   "vortagesschluss": 20.64,
-   "v50": 5963467.3,
-   "rs_rating": 93,
-   "ueber_52w_tief_pct": 169.3
+   "vortagesschluss": 21.15,
+   "v50": 6042195.4,
+   "rs_rating": 95,
+   "ueber_52w_tief_pct": 175.9
   },
   "OKTA": {
    "firma": "Okta, Inc.",
-   "vortagesschluss": 227.08,
-   "v50": 3637376.9,
+   "vortagesschluss": 226.53,
+   "v50": 3636914.1,
    "rs_rating": 99,
-   "ueber_52w_tief_pct": 262.4
+   "ueber_52w_tief_pct": 261.5
   },
-  "OMER": {
-   "firma": "Omeros Corporation",
-   "vortagesschluss": 19.63,
-   "v50": 1785697.8,
-   "rs_rating": 99,
-   "ueber_52w_tief_pct": 383.5
+  "OSPN": {
+   "firma": "OneSpan Inc.",
+   "vortagesschluss": 18.2,
+   "v50": 487424.5,
+   "rs_rating": 91,
+   "ueber_52w_tief_pct": 80.7
   },
   "P": {
    "firma": "Everpure, Inc.",
-   "vortagesschluss": 155.31,
-   "v50": 5312460.2,
+   "vortagesschluss": 156.97,
+   "v50": 5341918.8,
    "rs_rating": 99,
-   "ueber_52w_tief_pct": 173.5
+   "ueber_52w_tief_pct": 176.5
   },
   "PANW": {
    "firma": "Palo Alto Networks, Inc.",
-   "vortagesschluss": 403.83,
-   "v50": 6028855.2,
+   "vortagesschluss": 397.03,
+   "v50": 5952235.7,
    "rs_rating": 95,
-   "ueber_52w_tief_pct": 189.3
+   "ueber_52w_tief_pct": 184.5
   },
   "PAYC": {
    "firma": "Paycom Software, Inc.",
-   "vortagesschluss": 235.01,
-   "v50": 783147.2,
+   "vortagesschluss": 236.65,
+   "v50": 772887.8,
    "rs_rating": 97,
-   "ueber_52w_tief_pct": 124.0
+   "ueber_52w_tief_pct": 125.6
   },
   "PAYS": {
    "firma": "Paysign, Inc.",
-   "vortagesschluss": 15.17,
-   "v50": 830837.8,
+   "vortagesschluss": 15.48,
+   "v50": 835164.4,
    "rs_rating": 99,
-   "ueber_52w_tief_pct": 392.5
+   "ueber_52w_tief_pct": 402.6
   },
   "PENG": {
    "firma": "Penguin Solutions Inc",
-   "vortagesschluss": 79.155,
-   "v50": 2479647.6,
-   "rs_rating": 93,
-   "ueber_52w_tief_pct": 393.5
+   "vortagesschluss": 78.2,
+   "v50": 2513665.5,
+   "rs_rating": 94,
+   "ueber_52w_tief_pct": 387.5
   },
   "PKOH": {
    "firma": "Park-Ohio Holdings Corp.",
-   "vortagesschluss": 48.32,
-   "v50": 88088.8,
+   "vortagesschluss": 49.26,
+   "v50": 87502.8,
    "rs_rating": 97,
-   "ueber_52w_tief_pct": 167.6
-  },
-  "PLSE": {
-   "firma": "Pulse Biosciences, Inc",
-   "vortagesschluss": 52.45,
-   "v50": 538982.2,
-   "rs_rating": 99,
-   "ueber_52w_tief_pct": 317.6
+   "ueber_52w_tief_pct": 172.8
   },
   "PLTR": {
    "firma": "Palantir Technologies Inc.",
-   "vortagesschluss": 209.0,
-   "v50": 33712683.2,
-   "rs_rating": 95,
-   "ueber_52w_tief_pct": 96.5
+   "vortagesschluss": 208.67,
+   "v50": 32540537.8,
+   "rs_rating": 96,
+   "ueber_52w_tief_pct": 96.2
   },
   "PRCH": {
    "firma": "Porch Group, Inc.",
-   "vortagesschluss": 17.69,
-   "v50": 1418572.0,
-   "rs_rating": 95,
-   "ueber_52w_tief_pct": 178.1
+   "vortagesschluss": 17.22,
+   "v50": 1375081.2,
+   "rs_rating": 94,
+   "ueber_52w_tief_pct": 170.8
   },
   "PRLB": {
    "firma": "Proto Labs, Inc. Common stock",
-   "vortagesschluss": 91.6,
-   "v50": 213349.5,
-   "rs_rating": 95,
-   "ueber_52w_tief_pct": 103.1
+   "vortagesschluss": 91.82,
+   "v50": 209667.8,
+   "rs_rating": 96,
+   "ueber_52w_tief_pct": 103.6
   },
   "PUBM": {
    "firma": "PubMatic, Inc.",
-   "vortagesschluss": 18.52,
-   "v50": 766486.5,
+   "vortagesschluss": 18.89,
+   "v50": 767975.3,
    "rs_rating": 98,
-   "ueber_52w_tief_pct": 201.1
+   "ueber_52w_tief_pct": 207.2
   },
   "RBRK": {
    "firma": "Rubrik Inc",
-   "vortagesschluss": 120.01,
-   "v50": 3419452.9,
-   "rs_rating": 97,
-   "ueber_52w_tief_pct": 184.0
-  },
-  "RCMT": {
-   "firma": "RCM Technologies, Inc.",
-   "vortagesschluss": 40.99,
-   "v50": 84564.1,
-   "rs_rating": 99,
-   "ueber_52w_tief_pct": 137.5
+   "vortagesschluss": 118.47,
+   "v50": 3417553.0,
+   "rs_rating": 98,
+   "ueber_52w_tief_pct": 180.4
   },
   "RELL": {
    "firma": "Richardson Electronics, Ltd.",
-   "vortagesschluss": 20.74,
-   "v50": 236856.4,
+   "vortagesschluss": 21.28,
+   "v50": 244585.7,
    "rs_rating": 96,
-   "ueber_52w_tief_pct": 121.3
-  },
-  "RIGL": {
-   "firma": "Rigel Pharmaceuticals, Inc.",
-   "vortagesschluss": 48.81,
-   "v50": 279946.3,
-   "rs_rating": 93,
-   "ueber_52w_tief_pct": 95.6
+   "ueber_52w_tief_pct": 127.1
   },
   "RNG": {
    "firma": "RingCentral, Inc.",
-   "vortagesschluss": 78.17,
-   "v50": 1556430.1,
+   "vortagesschluss": 78.69,
+   "v50": 1554027.3,
    "rs_rating": 99,
-   "ueber_52w_tief_pct": 223.8
+   "ueber_52w_tief_pct": 226.0
   },
   "RVTY": {
    "firma": "Revvity, Inc.",
-   "vortagesschluss": 155.61,
-   "v50": 1891673.0,
+   "vortagesschluss": 155.08,
+   "v50": 1867645.7,
    "rs_rating": 98,
-   "ueber_52w_tief_pct": 91.6
+   "ueber_52w_tief_pct": 90.9
   },
   "RXO": {
    "firma": "RXO, Inc.",
-   "vortagesschluss": 28.69,
-   "v50": 2484895.4,
+   "vortagesschluss": 28.6,
+   "v50": 2551743.1,
    "rs_rating": 93,
-   "ueber_52w_tief_pct": 175.2
-  },
-  "S": {
-   "firma": "SentinelOne, Inc.",
-   "vortagesschluss": 25.66,
-   "v50": 8333101.3,
-   "rs_rating": 96,
-   "ueber_52w_tief_pct": 117.3
+   "ueber_52w_tief_pct": 174.3
   },
   "SCSC": {
    "firma": "ScanSource, Inc.",
-   "vortagesschluss": 60.67,
-   "v50": 295208.1,
-   "rs_rating": 94,
-   "ueber_52w_tief_pct": 79.7
+   "vortagesschluss": 61.97,
+   "v50": 296538.6,
+   "rs_rating": 95,
+   "ueber_52w_tief_pct": 83.6
   },
   "SHOP": {
    "firma": "Shopify Inc.",
-   "vortagesschluss": 179.22,
-   "v50": 9839334.1,
+   "vortagesschluss": 176.52,
+   "v50": 9794991.2,
    "rs_rating": 93,
-   "ueber_52w_tief_pct": 90.7
+   "ueber_52w_tief_pct": 87.8
   },
   "SILC": {
    "firma": "Silicom Ltd",
-   "vortagesschluss": 55.42,
-   "v50": 176520.7,
+   "vortagesschluss": 54.81,
+   "v50": 176465.2,
    "rs_rating": 97,
-   "ueber_52w_tief_pct": 315.4
+   "ueber_52w_tief_pct": 310.9
   },
   "SMTI": {
    "firma": "Sanara MedTech Inc.",
-   "vortagesschluss": 35.15,
-   "v50": 262130.7,
+   "vortagesschluss": 35.14,
+   "v50": 257821.4,
    "rs_rating": 97,
-   "ueber_52w_tief_pct": 119.0
+   "ueber_52w_tief_pct": 118.9
   },
   "SNOW": {
    "firma": "Snowflake Inc.",
-   "vortagesschluss": 360.37,
-   "v50": 4807032.2,
+   "vortagesschluss": 357.76,
+   "v50": 4729487.6,
    "rs_rating": 97,
-   "ueber_52w_tief_pct": 204.6
+   "ueber_52w_tief_pct": 202.4
   },
   "SSL": {
    "firma": "Sasol Ltd.",
-   "vortagesschluss": 15.3,
-   "v50": 1603522.4,
+   "vortagesschluss": 15.58,
+   "v50": 1615181.2,
    "rs_rating": 97,
-   "ueber_52w_tief_pct": 192.0
+   "ueber_52w_tief_pct": 197.3
   },
   "SVRN": {
    "firma": "SVRN, Inc.",
-   "vortagesschluss": 48.49,
-   "v50": 139908.7,
-   "rs_rating": 99,
-   "ueber_52w_tief_pct": 1454.2
+   "vortagesschluss": 38.61,
+   "v50": 142118.6,
+   "rs_rating": 98,
+   "ueber_52w_tief_pct": 1137.5
   },
   "TEAM": {
    "firma": "Atlassian Corporation",
-   "vortagesschluss": 207.75,
-   "v50": 4053044.2,
+   "vortagesschluss": 208.04,
+   "v50": 4036034.6,
    "rs_rating": 98,
-   "ueber_52w_tief_pct": 270.9
+   "ueber_52w_tief_pct": 271.4
   },
   "TJGC": {
    "firma": "TJGC Group Limited",
-   "vortagesschluss": 33.23,
-   "v50": 1299411.5,
+   "vortagesschluss": 32.75,
+   "v50": 1292312.1,
    "rs_rating": 99,
-   "ueber_52w_tief_pct": 2174.5
+   "ueber_52w_tief_pct": 2141.6
   },
   "TWIN": {
    "firma": "Twin Disc, Incorporated",
-   "vortagesschluss": 26.25,
-   "v50": 93311.2,
-   "rs_rating": 95,
-   "ueber_52w_tief_pct": 86.0
+   "vortagesschluss": 26.79,
+   "v50": 92993.4,
+   "rs_rating": 96,
+   "ueber_52w_tief_pct": 89.9
   },
   "U": {
    "firma": "Unity Software Inc.",
-   "vortagesschluss": 46.68,
-   "v50": 11278429.2,
-   "rs_rating": 94,
-   "ueber_52w_tief_pct": 178.2
+   "vortagesschluss": 46.63,
+   "v50": 11114615.1,
+   "rs_rating": 95,
+   "ueber_52w_tief_pct": 177.9
   },
   "VEEV": {
    "firma": "Veeva Systems Inc.",
-   "vortagesschluss": 295.85,
-   "v50": 1716543.2,
+   "vortagesschluss": 301.63,
+   "v50": 1709417.7,
    "rs_rating": 95,
-   "ueber_52w_tief_pct": 99.8
+   "ueber_52w_tief_pct": 103.7
   },
   "VEON": {
    "firma": "VEON Ltd.",
-   "vortagesschluss": 80.81,
-   "v50": 146131.7,
+   "vortagesschluss": 80.86,
+   "v50": 146040.3,
    "rs_rating": 99,
-   "ueber_52w_tief_pct": 89.7
+   "ueber_52w_tief_pct": 89.8
   },
   "VIA": {
    "firma": "Via Transportation, Inc.",
-   "vortagesschluss": 32.48,
-   "v50": 785387.0,
-   "rs_rating": 92,
-   "ueber_52w_tief_pct": 150.8
+   "vortagesschluss": 32.11,
+   "v50": 777265.9,
+   "rs_rating": 91,
+   "ueber_52w_tief_pct": 148.0
   },
   "VREX": {
    "firma": "Varex Imaging Corporation",
-   "vortagesschluss": 18.48,
-   "v50": 975072.8,
+   "vortagesschluss": 18.47,
+   "v50": 968760.2,
    "rs_rating": 98,
-   "ueber_52w_tief_pct": 103.3
+   "ueber_52w_tief_pct": 103.2
   },
   "WEYS": {
    "firma": "Weyco Group, Inc.",
-   "vortagesschluss": 52.43,
-   "v50": 29365.9,
-   "rs_rating": 98,
-   "ueber_52w_tief_pct": 92.4
-  },
-  "XNCR": {
-   "firma": "Xencor, Inc.",
-   "vortagesschluss": 25.04,
-   "v50": 1365930.6,
-   "rs_rating": 99,
-   "ueber_52w_tief_pct": 141.3
+   "vortagesschluss": 52.73,
+   "v50": 29129.0,
+   "rs_rating": 97,
+   "ueber_52w_tief_pct": 93.5
   },
   "ZETA": {
    "firma": "Zeta Global Holdings Corp.",
-   "vortagesschluss": 33.51,
-   "v50": 7681509.2,
+   "vortagesschluss": 33.8,
+   "v50": 7637521.3,
    "rs_rating": 98,
-   "ueber_52w_tief_pct": 133.3
+   "ueber_52w_tief_pct": 135.3
   },
   "PCRX": {
    "firma": "Pacira BioSciences, Inc.",
-   "vortagesschluss": 36.35,
-   "v50": 1285253.4,
-   "rs_rating": 99,
-   "ueber_52w_tief_pct": 93.4
-  },
-  "PCVX": {
-   "firma": "Vaxcyte, Inc.",
-   "vortagesschluss": 70.65,
-   "v50": 2011234.8,
-   "rs_rating": 94,
-   "ueber_52w_tief_pct": 77.2
+   "vortagesschluss": 36.31,
+   "v50": 1306361.7,
+   "rs_rating": 98,
+   "ueber_52w_tief_pct": 93.1
   },
   "PTC": {
    "firma": "PTC Inc.",
-   "vortagesschluss": 194.39,
-   "v50": 2434084.6,
+   "vortagesschluss": 193.96,
+   "v50": 2463291.9,
    "rs_rating": 93,
-   "ueber_52w_tief_pct": 79.2
+   "ueber_52w_tief_pct": 78.8
   },
   "QLYS": {
    "firma": "Qualys, Inc.",
-   "vortagesschluss": 196.77,
-   "v50": 724515.9,
+   "vortagesschluss": 198.11,
+   "v50": 719063.0,
    "rs_rating": 96,
-   "ueber_52w_tief_pct": 164.1
+   "ueber_52w_tief_pct": 165.9
   },
   "AMC": {
    "firma": "AMC Entertainment Holdings, Inc.",
-   "vortagesschluss": 3.0,
-   "v50": 25105853.6,
-   "rs_rating": 97,
-   "ueber_52w_tief_pct": 222.6
+   "vortagesschluss": 3.06,
+   "v50": 24344984.0,
+   "rs_rating": 96,
+   "ueber_52w_tief_pct": 229.0
   },
-  "BFLY": {
-   "firma": "Butterfly Network, Inc.",
-   "vortagesschluss": 8.55,
-   "v50": 5645351.4,
-   "rs_rating": 94,
-   "ueber_52w_tief_pct": 350.0
+  "SLS": {
+   "firma": "SELLAS Life Sciences Group, Inc.",
+   "vortagesschluss": 12.41,
+   "v50": 6315337.0,
+   "rs_rating": 91,
+   "ueber_52w_tief_pct": 792.8
   },
   "CLOV": {
    "firma": "Clover Health Investments, Corp.",
-   "vortagesschluss": 4.78,
-   "v50": 4406719.2,
-   "rs_rating": 92,
-   "ueber_52w_tief_pct": 202.5
+   "vortagesschluss": 4.81,
+   "v50": 4404591.9,
+   "rs_rating": 93,
+   "ueber_52w_tief_pct": 204.4
   },
   "FRD": {
    "firma": "Friedman Industries Inc.",
-   "vortagesschluss": 42.42,
-   "v50": 68786.0,
+   "vortagesschluss": 42.91,
+   "v50": 68420.6,
    "rs_rating": 96,
-   "ueber_52w_tief_pct": 156.3
+   "ueber_52w_tief_pct": 159.3
   }
  }
 }
