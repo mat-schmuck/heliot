@@ -1,5 +1,5 @@
 {
- "stand": "2026-10-12",
+ "stand": "2026-10-13",
  "gelesen": [
   "0000001750-26-000100",
   "0000001750-26-000102",
@@ -22390,36 +22390,13 @@
   "CTTH": [
    {
     "insider": "CTT PHARMACEUTICAL HOLDINGS, INC.",
-    "wert_dollar": 187.0,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "CEO"
-   },
-   {
-    "insider": "CTT PHARMACEUTICAL HOLDINGS, INC.",
     "wert_dollar": 203.5,
     "datum": "2026-10-06",
     "transaktionscode": "P",
     "rolle": "CEO"
    }
   ],
-  "CLPR": [
-   {
-    "insider": "Bistricer Jacob",
-    "wert_dollar": 246225.0,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Chief Operating Officer"
-   }
-  ],
   "DLHC": [
-   {
-    "insider": "Mink Brook Asset Management LLC",
-    "wert_dollar": 208.176,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
    {
     "insider": "Mink Brook Asset Management LLC",
     "wert_dollar": 736666.3,
@@ -22431,36 +22408,13 @@
   "TPL": [
    {
     "insider": "HORIZON KINETICS ASSET MANAGEMENT LLC",
-    "wert_dollar": 340.12,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "HORIZON KINETICS ASSET MANAGEMENT LLC",
     "wert_dollar": 1363.84,
     "datum": "2026-09-29",
     "transaktionscode": "P",
     "rolle": "Insider"
    }
   ],
-  "RCG": [
-   {
-    "insider": "HORIZON KINETICS ASSET MANAGEMENT LLC",
-    "wert_dollar": 2298.2400000000002,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   }
-  ],
   "JCTC": [
-   {
-    "insider": "AJB Investment Fund II, LP",
-    "wert_dollar": 1353.73,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
    {
     "insider": "AJB Investment Fund II, LP",
     "wert_dollar": 807.5899999999999,
@@ -22537,13 +22491,6 @@
   "AFCG": [
    {
     "insider": "TANNENBAUM LEONARD M",
-    "wert_dollar": 38102.61,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "TANNENBAUM LEONARD M",
     "wert_dollar": 143890.79,
     "datum": "2026-09-29",
     "transaktionscode": "P",
@@ -22569,13 +22516,6 @@
   "DLPN": [
    {
     "insider": "O'Dowd William IV",
-    "wert_dollar": 4884.0,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Chief Executive Officer"
-   },
-   {
-    "insider": "O'Dowd William IV",
     "wert_dollar": 4855.5,
     "datum": "2026-10-05",
     "transaktionscode": "P",
@@ -22583,13 +22523,6 @@
    }
   ],
   "GF": [
-   {
-    "insider": "Saba Capital Management, L.P.",
-    "wert_dollar": 13648.560000000001,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
    {
     "insider": "Saba Capital Management, L.P.",
     "wert_dollar": 21132.440000000002,
@@ -22680,83 +22613,6 @@
    }
   ],
   "GPI": [
-   {
-    "insider": "Conifer Management, L.L.C.",
-    "wert_dollar": 3008121.256,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "Conifer Management, L.L.C.",
-    "wert_dollar": 402665.252,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "Conifer Management, L.L.C.",
-    "wert_dollar": 8345118.748199999,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "Conifer Management, L.L.C.",
-    "wert_dollar": 8414173.006199999,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "Conifer Management, L.L.C.",
-    "wert_dollar": 3769875.5346000004,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "Conifer Management, L.L.C.",
-    "wert_dollar": 4728398.4426,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "Conifer Management, L.L.C.",
-    "wert_dollar": 632953.9758,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "Conifer Management, L.L.C.",
-    "wert_dollar": 1915109.4662,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "Conifer Management, L.L.C.",
-    "wert_dollar": 233929.7802,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "Conifer Management, L.L.C.",
-    "wert_dollar": 1002610.7363999999,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "Conifer Management, L.L.C.",
-    "wert_dollar": 57580.592000000004,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
    {
     "insider": "Conifer Management, L.L.C.",
     "wert_dollar": 664722.1035,
@@ -22914,22 +22770,6 @@
     "rolle": "President, CEO and Chairman"
    }
   ],
-  "INBX": [
-   {
-    "insider": "Lappe Mark",
-    "wert_dollar": 148320.45,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Chief Executive Officer"
-   },
-   {
-    "insider": "Lappe Mark",
-    "wert_dollar": 305106.0,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Chief Executive Officer"
-   }
-  ],
   "GRCE": [
    {
     "insider": "Opaleye Management Inc.",
@@ -22970,20 +22810,6 @@
    }
   ],
   "CRBG": [
-   {
-    "insider": "NIPPON LIFE INSURANCE CO",
-    "wert_dollar": 25122557.506800003,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "NIPPON LIFE INSURANCE CO",
-    "wert_dollar": 2397058.7048000004,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
    {
     "insider": "NIPPON LIFE INSURANCE CO",
     "wert_dollar": 7300934.1958,
@@ -23141,13 +22967,6 @@
     "datum": "2026-10-07",
     "transaktionscode": "P",
     "rolle": "Direktor"
-   },
-   {
-    "insider": "Gon Cesar Nivaldo",
-    "wert_dollar": 24310.68,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Chief Executive Officer"
    }
   ],
   "BUKS": [
@@ -23182,23 +23001,7 @@
     "rolle": "Insider"
    }
   ],
-  "KBDC": [
-   {
-    "insider": "ROBO JAMES L",
-    "wert_dollar": 1912657.915,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   }
-  ],
   "PHIO": [
-   {
-    "insider": "Plott Ronald Todd",
-    "wert_dollar": 5150.0,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
    {
     "insider": "Plott Ronald Todd",
     "wert_dollar": 5200.0,
@@ -23212,13 +23015,6 @@
     "insider": "SEID PAUL",
     "wert_dollar": 149.35000000000002,
     "datum": "2026-09-30",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "SEID PAUL",
-    "wert_dollar": 798.25,
-    "datum": "2026-09-28",
     "transaktionscode": "P",
     "rolle": "Direktor"
    },
@@ -23238,13 +23034,6 @@
    }
   ],
   "MXF": [
-   {
-    "insider": "Saba Capital Management, L.P.",
-    "wert_dollar": 85718.42,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
    {
     "insider": "Saba Capital Management, L.P.",
     "wert_dollar": 25242.82,
@@ -23288,15 +23077,6 @@
     "rolle": "Insider"
    }
   ],
-  "PLAY": [
-   {
-    "insider": "Hatton Cory",
-    "wert_dollar": 25999.600000000002,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Interim CFO"
-   }
-  ],
   "PODC": [
    {
     "insider": "MERRIMAN D JONATHAN",
@@ -23307,13 +23087,6 @@
    }
   ],
   "LILA": [
-   {
-    "insider": "MALONE JOHN C",
-    "wert_dollar": 162299.6655,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
    {
     "insider": "MALONE JOHN C",
     "wert_dollar": 10469.9904,
@@ -23339,24 +23112,10 @@
   "BPRE": [
    {
     "insider": "Ruddy Jordan B.",
-    "wert_dollar": 29975.28,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "President"
-   },
-   {
-    "insider": "Ruddy Jordan B.",
     "wert_dollar": 29988.0,
     "datum": "2026-09-30",
     "transaktionscode": "P",
     "rolle": "President"
-   },
-   {
-    "insider": "KAMFAR RAMIN",
-    "wert_dollar": 1696011.7359,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
    },
    {
     "insider": "KAMFAR RAMIN",
@@ -23429,30 +23188,7 @@
     "rolle": "Direktor"
    }
   ],
-  "CULP": [
-   {
-    "insider": "CULP ROBERT GEORGE IV",
-    "wert_dollar": 11514.4,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "President & CEO"
-   }
-  ],
   "BBD": [
-   {
-    "insider": "Di Marcello Francesco",
-    "wert_dollar": 1002519.9999999999,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Executive Officer"
-   },
-   {
-    "insider": "Di Marcello Francesco",
-    "wert_dollar": 883.0,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Executive Officer"
-   },
    {
     "insider": "Di Marcello Francesco",
     "wert_dollar": 175.6,
@@ -23469,13 +23205,6 @@
    }
   ],
   "PRTA": [
-   {
-    "insider": "SCULLY WILLIAM P",
-    "wert_dollar": 889872.2999999999,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
    {
     "insider": "SCULLY WILLIAM P",
     "wert_dollar": 1405674.0,
@@ -23506,34 +23235,6 @@
    }
   ],
   "NYAX": [
-   {
-    "insider": "Nechmad Yair",
-    "wert_dollar": 357680.0,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "CEO, Co Founder & Chairman"
-   },
-   {
-    "insider": "Nechmad Yair",
-    "wert_dollar": 45486.5,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "CEO, Co Founder & Chairman"
-   },
-   {
-    "insider": "Nechmad Yair",
-    "wert_dollar": 247807.1424,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "CEO, Co Founder & Chairman"
-   },
-   {
-    "insider": "Nechmad Yair",
-    "wert_dollar": 435871.431,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "CEO, Co Founder & Chairman"
-   },
    {
     "insider": "Nechmad Yair",
     "wert_dollar": 851110.7,
@@ -23584,24 +23285,6 @@
     "datum": "2026-09-29",
     "transaktionscode": "P",
     "rolle": "President and CEO"
-   }
-  ],
-  "UTI": [
-   {
-    "insider": "DEVINCENZI ROBERT THOMAS",
-    "wert_dollar": 19677.5,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   }
-  ],
-  "FTHY": [
-   {
-    "insider": "HOUSEY WILLIAM A JR",
-    "wert_dollar": 32162.5,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Insider"
    }
   ],
   "UXIN": [
@@ -23699,13 +23382,6 @@
    }
   ],
   "LEN": [
-   {
-    "insider": "BERKSHIRE HATHAWAY INC",
-    "wert_dollar": 426191.99999999994,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
    {
     "insider": "BERKSHIRE HATHAWAY INC",
     "wert_dollar": 1007083.55,
@@ -23873,35 +23549,10 @@
   "QTEX": [
    {
     "insider": "Ben-Noon Dagi Shahar",
-    "wert_dollar": 119543.17319999999,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Chief Executive Officer"
-   },
-   {
-    "insider": "Ben-Noon Dagi Shahar",
     "wert_dollar": 30362.27,
     "datum": "2026-10-09",
     "transaktionscode": "P",
     "rolle": "Chief Executive Officer"
-   }
-  ],
-  "OVLY": [
-   {
-    "insider": "Leonard Daniel J",
-    "wert_dollar": 4253.75,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   }
-  ],
-  "DTIL": [
-   {
-    "insider": "Frankel Stanley",
-    "wert_dollar": 6000.0,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
    }
   ],
   "VRA": [
@@ -23922,23 +23573,7 @@
     "rolle": "Insider"
    }
   ],
-  "SNES": [
-   {
-    "insider": "Edell Michael",
-    "wert_dollar": 1288.8,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Chief Executive Officer"
-   }
-  ],
   "AHRT": [
-   {
-    "insider": "Wittman Lori",
-    "wert_dollar": 17835.0,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
    {
     "insider": "Wimbush Frederick Blair",
     "wert_dollar": 2946.8624,
@@ -23961,146 +23596,7 @@
     "rolle": "Direktor"
    }
   ],
-  "SWZ": [
-   {
-    "insider": "Dakos Andrew",
-    "wert_dollar": 5760.0,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "President and CEO"
-   },
-   {
-    "insider": "Dakos Andrew",
-    "wert_dollar": 51929.99999999999,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "President and CEO"
-   },
-   {
-    "insider": "SELL MORITZ A",
-    "wert_dollar": 11530.0,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   }
-  ],
-  "PAM": [
-   {
-    "insider": "Mindlin Damian Miguel",
-    "wert_dollar": 4400396.685,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Vicepresident"
-   },
-   {
-    "insider": "Mindlin Damian Miguel",
-    "wert_dollar": 1164420.0,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Vicepresident"
-   }
-  ],
-  "ADRX": [
-   {
-    "insider": "George Simeon",
-    "wert_dollar": 10074081.0,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "George Simeon",
-    "wert_dollar": 7051838.0,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "George Simeon",
-    "wert_dollar": 10074081.0,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "SR ONE CAPITAL MANAGEMENT, LLC",
-    "wert_dollar": 10074081.0,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "SR ONE CAPITAL MANAGEMENT, LLC",
-    "wert_dollar": 7051838.0,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "SR ONE CAPITAL MANAGEMENT, LLC",
-    "wert_dollar": 10074081.0,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "Chimovits Erez",
-    "wert_dollar": 1045772.0,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "GORDON CARL L",
-    "wert_dollar": 5104233.0,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "GORDON CARL L",
-    "wert_dollar": 1045772.0,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "GORDON CARL L",
-    "wert_dollar": 9999995.0,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "ORBIMED ADVISORS LLC",
-    "wert_dollar": 5104233.0,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "ORBIMED ADVISORS LLC",
-    "wert_dollar": 1045772.0,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "ORBIMED ADVISORS LLC",
-    "wert_dollar": 9999995.0,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   }
-  ],
   "MOALX": [
-   {
-    "insider": "Shuman Gregory M.",
-    "wert_dollar": 19999.999239999997,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
    {
     "insider": "English Christopher T.",
     "wert_dollar": 49999.99676,
@@ -24118,22 +23614,6 @@
     "rolle": "Direktor"
    }
   ],
-  "TPYTX": [
-   {
-    "insider": "Tarica Andrew",
-    "wert_dollar": 12862.504299999999,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "Swell Michael",
-    "wert_dollar": 15243.738299999999,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   }
-  ],
   "ASGI": [
    {
     "insider": "Baird Gordon A",
@@ -24145,44 +23625,9 @@
   ],
   "FUL": [
    {
-    "insider": "HANDLEY THOMAS W",
-    "wert_dollar": 98820.0,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "Rasmussen Trangsrud Teresa J",
-    "wert_dollar": 75494.3154,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "Rasmussen Trangsrud Teresa J",
-    "wert_dollar": 24490.0,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "FLORNESS DANIEL L",
-    "wert_dollar": 100160.20000000001,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
     "insider": "Lauber Charles T",
     "wert_dollar": 99984.538,
     "datum": "2026-09-29",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "Zaheer Srilata",
-    "wert_dollar": 98120.0,
-    "datum": "2026-09-28",
     "transaktionscode": "P",
     "rolle": "Direktor"
    },
@@ -24215,24 +23660,6 @@
     "rolle": "Direktor"
    }
   ],
-  "BFS": [
-   {
-    "insider": "Friedman Joel Albert",
-    "wert_dollar": 3706.0,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Exec VP, CAO & Treasurer"
-   }
-  ],
-  "LBSR": [
-   {
-    "insider": "O'HEERON PETE",
-    "wert_dollar": 3909.7896,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "COB, Secretary, Treasurer"
-   }
-  ],
   "MNSO": [
    {
     "insider": "Zhang Jingjing Eason",
@@ -24243,13 +23670,6 @@
    }
   ],
   "KWY": [
-   {
-    "insider": "Horowitz Joshua",
-    "wert_dollar": 25202.0769,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
    {
     "insider": "Horowitz Joshua",
     "wert_dollar": 7919.34,
@@ -24290,142 +23710,7 @@
     "rolle": "Co-Chief Investment Officer"
    }
   ],
-  "PMPEX": [
-   {
-    "insider": "Hartt Steven Knut",
-    "wert_dollar": 9999.99136,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "Samson Ethan Isaac",
-    "wert_dollar": 14499.99968,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "Woolley Peter Scott",
-    "wert_dollar": 149999.99248000002,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   }
-  ],
   "KOD": [
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 16130.2362,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 270051.3738,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 83081.1894,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 1392152.5112,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 329510.559,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 5524214.091899999,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 392466.6525,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 6578388.644,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 520774.54799999995,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 8729261.9431,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 569816.488,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 9553556.712,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 441924.9552,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 7407798.4228,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 1053915.1595,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 17666310.144,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
    {
     "insider": "BAKER BROS. ADVISORS LP",
     "wert_dollar": 52145.859899999996,
@@ -24467,426 +23752,6 @@
     "datum": "2026-09-29",
     "transaktionscode": "P",
     "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 42402.003,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 711146.7019999999,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 1353.71,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 22535.289999999997,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 70461.5184,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 1181824.5852,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 32411.2636,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 544172.2797,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 4911.719999999999,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 82694.04,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 82964.8896,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 1390229.0436,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 27446.242199999997,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 459115.5426,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 84891.71160000001,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 1422180.111,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 136796.6864,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 2293144.4535999997,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 3194.6850000000004,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 53326.665,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 8350.902199999999,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 140477.05779999998,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 97042.11839999999,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 1626016.7807999998,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 620399.368,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 10400546.2656,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 556050.2278999999,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 9320566.020599999,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 199612.1232,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 3346812.7391999997,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 52396.1024,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 878001.9776,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 164292.7832,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 2754030.188,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 15299.8389,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 256067.6741,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 30860.8204,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 516773.7796,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 21538.040699999998,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 361114.4394,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 10529.534399999999,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 176745.756,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 160740.6318,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 2693905.4148000004,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 75487.4208,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 1265129.1414,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 1204597.0592999998,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 20194464.1794,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 343172.87919999997,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 5753115.010199999,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 338554.28219999996,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 5675092.897799999,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 145291.05240000002,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 2436192.6411,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 281025.945,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 4710486.5,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 223312.15759999998,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 3743808.19,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 233268.6889,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "BAKER BROS. ADVISORS LP",
-    "wert_dollar": 3910412.9051,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
    }
   ],
   "BBASX": [
@@ -24908,13 +23773,6 @@
   "FLNA": [
    {
     "insider": "Barry Richard",
-    "wert_dollar": 78196.44,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "President & CEO"
-   },
-   {
-    "insider": "Barry Richard",
     "wert_dollar": 186131.7,
     "datum": "2026-09-29",
     "transaktionscode": "P",
@@ -24929,13 +23787,6 @@
    }
   ],
   "LPCN": [
-   {
-    "insider": "Higuchi John W.",
-    "wert_dollar": 27131.760000000002,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
    {
     "insider": "Higuchi John W.",
     "wert_dollar": 19429.55,
@@ -25342,22 +24193,6 @@
     "datum": "2026-10-07",
     "transaktionscode": "P",
     "rolle": "Chief Executive Officer"
-   }
-  ],
-  "ARBE": [
-   {
-    "insider": "CRIST EUGENE SCOTT",
-    "wert_dollar": 30.25,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "CRIST EUGENE SCOTT",
-    "wert_dollar": 30250.0,
-    "datum": "2026-09-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
    }
   ],
   "CSWC": [
@@ -26854,71 +25689,42 @@
   "Cohen Ryan": "President, CEO and Chairman",
   "NIPPON LIFE INSURANCE CO": "Insider",
   "Guicardi Neto Bruno": "Pres. of N. Am. /Europe Ops",
-  "ROBO JAMES L": "Direktor",
   "SEID PAUL": "Direktor",
   "Daly Joseph Patrick": "Direktor",
   "MERRIMAN D JONATHAN": "Direktor",
   "MALONE JOHN C": "Insider",
   "MacDonald Ryan S": "Direktor",
-  "CULP ROBERT GEORGE IV": "President & CEO",
   "BERKSHIRE HATHAWAY INC": "Insider",
   "SCULLY WILLIAM P": "Insider",
-  "GORDON CARL L": "Direktor",
-  "ORBIMED ADVISORS LLC": "Direktor",
   "Altman Peter": "President and CEO",
-  "DEVINCENZI ROBERT THOMAS": "Direktor",
   "Nechmad Yair": "CEO, Co Founder & Chairman",
-  "HOUSEY WILLIAM A JR": "Insider",
   "Pittas Aristeidis P": "Direktor",
   "Clark Anthony S.": "Direktor",
   "Lerner Neil": "Chief Accounting Officer",
-  "Lappe Mark": "Chief Executive Officer",
   "GOLDENTREE ASSET MANAGEMENT LP": "Insider",
-  "Hatton Cory": "Interim CFO",
   "Ben-Noon Dagi Shahar": "Chief Executive Officer",
-  "Leonard Daniel J": "Direktor",
   "KAMFAR RAMIN": "Direktor",
   "Brockman Ivan": "Direktor",
   "Pale Fire Capital SE": "Insider",
-  "Edell Michael": "Chief Executive Officer",
-  "Wittman Lori": "Direktor",
-  "Dakos Andrew": "President and CEO",
-  "George Simeon": "Direktor",
-  "SR ONE CAPITAL MANAGEMENT, LLC": "Insider",
-  "Shuman Gregory M.": "Insider",
   "HADEN PATRICK C": "Direktor",
-  "Tarica Andrew": "Direktor",
   "Baird Gordon A": "Direktor",
-  "HANDLEY THOMAS W": "Direktor",
-  "Rasmussen Trangsrud Teresa J": "Direktor",
-  "FLORNESS DANIEL L": "Direktor",
   "Lauber Charles T": "Direktor",
   "Zaheer Srilata": "Direktor",
   "Catelani Michael": "President, COO, & CFO",
-  "Friedman Joel Albert": "Exec VP, CAO & Treasurer",
   "Dai Kun": "Chief Executive Officer",
-  "O'HEERON PETE": "COB, Secretary, Treasurer",
   "Zhang Jingjing Eason": "VP and Chief Financial Officer",
-  "Bistricer Jacob": "Chief Operating Officer",
   "Horowitz Joshua": "Direktor",
-  "Chimovits Erez": "Direktor",
   "Fitzgerald John Taylor Maloney": "President and CEO",
   "Hansen Kent A": "CFO & EVP",
   "CLARK CHRISTOPHER D": "President",
   "Losyev Sergey": "Co-Chief Investment Officer",
   "Di Marcello Francesco": "Executive Officer",
-  "Hartt Steven Knut": "Insider",
   "BAKER BROS. ADVISORS LP": "Direktor",
-  "Samson Ethan Isaac": "Insider",
-  "Woolley Peter Scott": "Insider",
-  "Frankel Stanley": "Direktor",
   "BROWN BROTHERS HARRIMAN & CO": "Insider",
   "Barry Richard": "President & CEO",
   "Ruddy Jordan B.": "President",
   "Higuchi John W.": "Direktor",
   "Plott Ronald Todd": "Direktor",
-  "SELL MORITZ A": "Direktor",
-  "Swell Michael": "Direktor",
   "AMG New York Holdings Corp.": "Insider",
   "Happe Michael J": "Direktor",
   "Martin Celine Christine": "Direktor",
@@ -26927,7 +25733,6 @@
   "Kelly Thomas Patrick": "Chief Financial Officer",
   "MORTIMER IAN": "PRESIDENT & CEO",
   "BERNAU JAMES W": "President",
-  "CRIST EUGENE SCOTT": "Direktor",
   "Thomas William R III": "Direktor",
   "Finke Thomas M": "Direktor",
   "Nickerson Phillip Anson": "Vice President of Exploration",
@@ -26986,7 +25791,6 @@
   "Smith Edgar R. III": "Direktor",
   "Fisher Danina": "Direktor",
   "Garcia Cuellar Maria Regina": "Direktor",
-  "Mindlin Damian Miguel": "Vicepresident",
   "RICCARDI CHRIS": "Direktor",
   "SOUTHPORT ACQUISITION SPONSOR II LLC": "Insider",
   "SPENCER JEB S.": "CEO and CFO",
