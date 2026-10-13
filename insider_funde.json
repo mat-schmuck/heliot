@@ -4,7 +4,7 @@
   {
    "ticker": "BORR",
    "status": "pfad_a",
-   "marktkap": 1490116480.0,
+   "marktkap": 1480861184.0,
    "stichtag": "2026-10-13",
    "zeilen": [
     "BORR; Großkauf; Marktwert 1,5 Mrd $",
@@ -15,10 +15,10 @@
   {
    "ticker": "CRBG",
    "status": "pfad_a",
-   "marktkap": 15394753536.0,
+   "marktkap": 15334575104.0,
    "stichtag": "2026-10-13",
    "zeilen": [
-    "CRBG; Großkauf; Marktwert 15,4 Mrd $",
+    "CRBG; Großkauf; Marktwert 15,3 Mrd $",
     "Größter Einzelkauf 20,9 Mio $ am 07.10.; NIPPON LIFE INSURANCE CO, Insider"
    ],
    "kennung": "CRBG|pfad_a|1"
@@ -26,10 +26,10 @@
   {
    "ticker": "GME",
    "status": "pfad_a",
-   "marktkap": 13840984064.0,
+   "marktkap": 13732516864.0,
    "stichtag": "2026-10-13",
    "zeilen": [
-    "GME; Großkauf; Marktwert 13,8 Mrd $",
+    "GME; Großkauf; Marktwert 13,7 Mrd $",
     "Größter Einzelkauf 17,1 Mio $ am 02.10.; Cohen Ryan, President, CEO and Chairman"
    ],
    "kennung": "GME|pfad_a|2"
@@ -37,7 +37,7 @@
   {
    "ticker": "GPI",
    "status": "pfad_a",
-   "marktkap": 2750457344.0,
+   "marktkap": 2761068032.0,
    "stichtag": "2026-10-13",
    "zeilen": [
     "GPI; Großkauf; Marktwert 2,8 Mrd $",
@@ -48,10 +48,10 @@
   {
    "ticker": "LEN",
    "status": "pfad_a",
-   "marktkap": 17868687360.0,
+   "marktkap": 17823485952.0,
    "stichtag": "2026-10-13",
    "zeilen": [
-    "LEN; Großkauf; Marktwert 17,9 Mrd $",
+    "LEN; Großkauf; Marktwert 17,8 Mrd $",
     "Größter Einzelkauf 67,5 Mio $ am 02.10.; BERKSHIRE HATHAWAY INC, Insider"
    ],
    "kennung": "LEN|pfad_a|1"
@@ -59,10 +59,10 @@
   {
    "ticker": "SLBT",
    "status": "pfad_a",
-   "marktkap": 857401664.0,
+   "marktkap": 857962368.0,
    "stichtag": "2026-10-13",
    "zeilen": [
-    "SLBT; Großkauf; Marktwert 857,4 Mio $",
+    "SLBT; Großkauf; Marktwert 858,0 Mio $",
     "Größter Einzelkauf 10329,9 Mrd $ am 29.09.; Wang Ching-Dong, Chief Executive Officer"
    ],
    "kennung": "SLBT|pfad_a|1"
