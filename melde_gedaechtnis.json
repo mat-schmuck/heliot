@@ -17,7 +17,9 @@
       "AMC|EMA Crossback",
       "AMC|@3.06",
       "CCI|Cup & Handle (Wochenbasis)",
-      "CCI|@81.30"
+      "CCI|@81.30",
+      "PKOH|Rectangle Top",
+      "PKOH|@48.11"
     ]
   },
   "gemeldet": {
@@ -121,7 +123,10 @@
     "AMC|EMA Crossback": "2026-10-13",
     "BEST|AMC|EMA Crossback": "2026-10-13",
     "CCI|Cup & Handle (Wochenbasis)": "2026-10-13",
-    "BEST|CCI|Cup & Handle (Wochenbasis)": "2026-10-13"
+    "BEST|CCI|Cup & Handle (Wochenbasis)": "2026-10-13",
+    "PKOH|Rectangle Top": "2026-10-13",
+    "BEST|PKOH|Rectangle Top": "2026-10-13",
+    "TEIL|FIGS|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-13"
   },
   "gemeldet_kp": {
     "GCT|Cup & Handle (Wochenbasis)": 57.41,
@@ -183,7 +188,9 @@
     "AMC|EMA Crossback": 3.06,
     "BEST|AMC|EMA Crossback": 3.06,
     "CCI|Cup & Handle (Wochenbasis)": 81.3,
-    "BEST|CCI|Cup & Handle (Wochenbasis)": 81.3
+    "BEST|CCI|Cup & Handle (Wochenbasis)": 81.3,
+    "PKOH|Rectangle Top": 48.11,
+    "BEST|PKOH|Rectangle Top": 48.11
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-10-13"
