@@ -23,7 +23,9 @@
       "HURN|Cup & Handle (Wochenbasis)",
       "HURN|@173.80",
       "HURN|Pocket Pivot",
-      "HURN|@173.79"
+      "HURN|@173.79",
+      "HQI|Rectangle Top",
+      "HQI|@17.49"
     ]
   },
   "gemeldet": {
@@ -134,7 +136,9 @@
     "HURN|Cup & Handle (Wochenbasis)": "2026-10-13",
     "BEST|HURN|Cup & Handle (Wochenbasis)": "2026-10-13",
     "HURN|Pocket Pivot": "2026-10-13",
-    "BEST|HURN|Pocket Pivot": "2026-10-13"
+    "BEST|HURN|Pocket Pivot": "2026-10-13",
+    "HQI|Rectangle Top": "2026-10-13",
+    "BEST|HQI|Rectangle Top": "2026-10-13"
   },
   "gemeldet_kp": {
     "GCT|Cup & Handle (Wochenbasis)": 57.41,
@@ -202,7 +206,9 @@
     "HURN|Cup & Handle (Wochenbasis)": 173.8,
     "BEST|HURN|Cup & Handle (Wochenbasis)": 173.8,
     "HURN|Pocket Pivot": 173.79,
-    "BEST|HURN|Pocket Pivot": 173.79
+    "BEST|HURN|Pocket Pivot": 173.79,
+    "HQI|Rectangle Top": 17.49,
+    "BEST|HQI|Rectangle Top": 17.49
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-10-13"
