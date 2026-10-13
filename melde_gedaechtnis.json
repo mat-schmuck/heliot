@@ -89,7 +89,8 @@
     "GEWINN|klimax_zeichen|CCI|Fallback: 20-Tage-Hoch (Pivot)|5_kanaluebershooting": "2026-10-13",
     "GEWINN|zonenwechsel|GTLB|Fallback: 20-Tage-Hoch (Pivot)|stark": "2026-10-13",
     "GEWINN|zonenwechsel|SU|2|mittel": "2026-10-13",
-    "GEWINN|zonenwechsel|ECPG|1|mittel": "2026-10-13"
+    "GEWINN|zonenwechsel|ECPG|1|mittel": "2026-10-13",
+    "GEWINN|zonenwechsel|LGND|EMA Crossback|mittel": "2026-10-13"
   },
   "gemeldet_kp": {
     "GCT|Cup & Handle (Wochenbasis)": 57.41,
