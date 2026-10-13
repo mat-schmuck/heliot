@@ -84,7 +84,9 @@
     "BEST|VEON|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-12",
     "GEWINN|zonenwechsel|GME|INS-2026-09-22|stark": "2026-10-12",
     "GEWINN|klimax_zeichen|GTLB|Fallback: 20-Tage-Hoch (Pivot)|4_ma200_abstand": "2026-10-12",
-    "SCHLUSSNAH|2026-10-12": "2026-10-12"
+    "SCHLUSSNAH|2026-10-12": "2026-10-12",
+    "SEKTORAUF|2026-10-13": "2026-10-13",
+    "GEWINN|klimax_zeichen|CCI|Fallback: 20-Tage-Hoch (Pivot)|5_kanaluebershooting": "2026-10-13"
   },
   "gemeldet_kp": {
     "GCT|Cup & Handle (Wochenbasis)": 57.41,
