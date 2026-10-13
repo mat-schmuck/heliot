@@ -13,7 +13,11 @@
       "AOUT|Inside Day",
       "AOUT|@16.51",
       "DT|Pocket Pivot",
-      "DT|@65.28"
+      "DT|@65.28",
+      "AMC|EMA Crossback",
+      "AMC|@3.06",
+      "CCI|Cup & Handle (Wochenbasis)",
+      "CCI|@81.30"
     ]
   },
   "gemeldet": {
@@ -113,7 +117,11 @@
     "AOUT|Inside Day": "2026-10-13",
     "BEST|AOUT|Inside Day": "2026-10-13",
     "DT|Pocket Pivot": "2026-10-13",
-    "BEST|DT|Pocket Pivot": "2026-10-13"
+    "BEST|DT|Pocket Pivot": "2026-10-13",
+    "AMC|EMA Crossback": "2026-10-13",
+    "BEST|AMC|EMA Crossback": "2026-10-13",
+    "CCI|Cup & Handle (Wochenbasis)": "2026-10-13",
+    "BEST|CCI|Cup & Handle (Wochenbasis)": "2026-10-13"
   },
   "gemeldet_kp": {
     "GCT|Cup & Handle (Wochenbasis)": 57.41,
@@ -171,7 +179,11 @@
     "AOUT|Inside Day": 16.51,
     "BEST|AOUT|Inside Day": 16.51,
     "DT|Pocket Pivot": 65.285,
-    "BEST|DT|Pocket Pivot": 65.285
+    "BEST|DT|Pocket Pivot": 65.285,
+    "AMC|EMA Crossback": 3.06,
+    "BEST|AMC|EMA Crossback": 3.06,
+    "CCI|Cup & Handle (Wochenbasis)": 81.3,
+    "BEST|CCI|Cup & Handle (Wochenbasis)": 81.3
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-10-13"
