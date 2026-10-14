@@ -5,7 +5,9 @@
       "HALO|Cup & Handle (Wochenbasis)",
       "HALO|@109.67",
       "CRL|Rectangle Top",
-      "CRL|@297.09"
+      "CRL|@297.09",
+      "FTRE|Shakeout plus drei",
+      "FTRE|@21.76"
     ]
   },
   "gemeldet": {
@@ -138,7 +140,9 @@
     "HALO|Cup & Handle (Wochenbasis)": "2026-10-14",
     "BEST|HALO|Cup & Handle (Wochenbasis)": "2026-10-14",
     "CRL|Rectangle Top": "2026-10-14",
-    "BEST|CRL|Rectangle Top": "2026-10-14"
+    "BEST|CRL|Rectangle Top": "2026-10-14",
+    "FTRE|Shakeout plus drei": "2026-10-14",
+    "BEST|FTRE|Shakeout plus drei": "2026-10-14"
   },
   "gemeldet_kp": {
     "GCT|Cup & Handle (Wochenbasis)": 57.41,
@@ -212,7 +216,9 @@
     "HALO|Cup & Handle (Wochenbasis)": 109.67,
     "BEST|HALO|Cup & Handle (Wochenbasis)": 109.67,
     "CRL|Rectangle Top": 297.09,
-    "BEST|CRL|Rectangle Top": 297.09
+    "BEST|CRL|Rectangle Top": 297.09,
+    "FTRE|Shakeout plus drei": 21.758,
+    "BEST|FTRE|Shakeout plus drei": 21.758
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-10-14"
