@@ -1,11 +1,11 @@
 {
- "stand": "2026-10-13",
+ "stand": "2026-10-14",
  "funde": [
   {
    "ticker": "BORR",
    "status": "pfad_a",
-   "marktkap": 1480861184.0,
-   "stichtag": "2026-10-13",
+   "marktkap": 1468551424.0,
+   "stichtag": "2026-10-14",
    "zeilen": [
     "BORR; Großkauf; Marktwert 1,5 Mrd $",
     "Größter Einzelkauf 11,8 Mio $ am 09.10.; Troim Tor Olav, Direktor"
@@ -15,10 +15,10 @@
   {
    "ticker": "CRBG",
    "status": "pfad_a",
-   "marktkap": 15334575104.0,
-   "stichtag": "2026-10-13",
+   "marktkap": 15151675392.0,
+   "stichtag": "2026-10-14",
    "zeilen": [
-    "CRBG; Großkauf; Marktwert 15,3 Mrd $",
+    "CRBG; Großkauf; Marktwert 15,2 Mrd $",
     "Größter Einzelkauf 20,9 Mio $ am 07.10.; NIPPON LIFE INSURANCE CO, Insider"
    ],
    "kennung": "CRBG|pfad_a|1"
@@ -26,46 +26,24 @@
   {
    "ticker": "GME",
    "status": "pfad_a",
-   "marktkap": 13732516864.0,
-   "stichtag": "2026-10-13",
+   "marktkap": 13957020672.0,
+   "stichtag": "2026-10-14",
    "zeilen": [
-    "GME; Großkauf; Marktwert 13,7 Mrd $",
-    "Größter Einzelkauf 17,1 Mio $ am 02.10.; Cohen Ryan, President, CEO and Chairman"
+    "GME; Großkauf; Marktwert 14,0 Mrd $",
+    "Größter Einzelkauf 21,0 Mio $ am 13.10.; Cohen Ryan, President, CEO and Chairman"
    ],
    "kennung": "GME|pfad_a|2"
   },
   {
-   "ticker": "GPI",
-   "status": "pfad_a",
-   "marktkap": 2761068032.0,
-   "stichtag": "2026-10-13",
-   "zeilen": [
-    "GPI; Großkauf; Marktwert 2,8 Mrd $",
-    "Größter Einzelkauf 6,9 Mio $ am 29.09.; Conifer Management, L.L.C., Insider"
-   ],
-   "kennung": "GPI|pfad_a|1"
-  },
-  {
    "ticker": "LEN",
    "status": "pfad_a",
-   "marktkap": 17823485952.0,
-   "stichtag": "2026-10-13",
+   "marktkap": 17246578688.0,
+   "stichtag": "2026-10-14",
    "zeilen": [
-    "LEN; Großkauf; Marktwert 17,8 Mrd $",
+    "LEN; Großkauf; Marktwert 17,2 Mrd $",
     "Größter Einzelkauf 67,5 Mio $ am 02.10.; BERKSHIRE HATHAWAY INC, Insider"
    ],
    "kennung": "LEN|pfad_a|1"
-  },
-  {
-   "ticker": "SLBT",
-   "status": "pfad_a",
-   "marktkap": 857962368.0,
-   "stichtag": "2026-10-13",
-   "zeilen": [
-    "SLBT; Großkauf; Marktwert 858,0 Mio $",
-    "Größter Einzelkauf 10329,9 Mrd $ am 29.09.; Wang Ching-Dong, Chief Executive Officer"
-   ],
-   "kennung": "SLBT|pfad_a|1"
   }
  ]
 }
