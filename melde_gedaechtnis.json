@@ -126,7 +126,9 @@
     "GEWINN|zonenwechsel|CBRL|Fallback: MA50-R\u00fcckeroberung|mittel": "2026-10-14",
     "GEWINN|zonenwechsel|DK|Fallback: MA50-R\u00fcckeroberung|mittel": "2026-10-14",
     "GEWINN|zonenwechsel|MPC|Fallback: 20-Tage-Hoch (Pivot)|stark": "2026-10-14",
-    "GEWINN|zonenwechsel|MPC|Fallback: 52W-Hoch-Breakout|stark": "2026-10-14"
+    "GEWINN|zonenwechsel|MPC|Fallback: 52W-Hoch-Breakout|stark": "2026-10-14",
+    "GEWINN|zonenwechsel|PSIX|2|mittel": "2026-10-14",
+    "GEWINN|zonenwechsel|STNG|Rectangle Top|mittel": "2026-10-14"
   },
   "gemeldet_kp": {
     "GCT|Cup & Handle (Wochenbasis)": 57.41,
