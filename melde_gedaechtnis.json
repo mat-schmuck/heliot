@@ -1,7 +1,12 @@
 {
   "heute_gemeldet": {
     "tag": "2026-10-14",
-    "marken": []
+    "marken": [
+      "HALO|Cup & Handle (Wochenbasis)",
+      "HALO|@109.67",
+      "CRL|Rectangle Top",
+      "CRL|@297.09"
+    ]
   },
   "gemeldet": {
     "INSIDER|FTK|pfad_a|1": "2026-09-16",
@@ -129,7 +134,11 @@
     "GEWINN|zonenwechsel|MPC|Fallback: 52W-Hoch-Breakout|stark": "2026-10-14",
     "GEWINN|zonenwechsel|PSIX|2|mittel": "2026-10-14",
     "GEWINN|zonenwechsel|STNG|Rectangle Top|mittel": "2026-10-14",
-    "R2GX|GTLB|2026-10-14": "2026-10-14"
+    "R2GX|GTLB|2026-10-14": "2026-10-14",
+    "HALO|Cup & Handle (Wochenbasis)": "2026-10-14",
+    "BEST|HALO|Cup & Handle (Wochenbasis)": "2026-10-14",
+    "CRL|Rectangle Top": "2026-10-14",
+    "BEST|CRL|Rectangle Top": "2026-10-14"
   },
   "gemeldet_kp": {
     "GCT|Cup & Handle (Wochenbasis)": 57.41,
@@ -199,7 +208,11 @@
     "HURN|Pocket Pivot": 173.79,
     "BEST|HURN|Pocket Pivot": 173.79,
     "HQI|Rectangle Top": 17.49,
-    "BEST|HQI|Rectangle Top": 17.49
+    "BEST|HQI|Rectangle Top": 17.49,
+    "HALO|Cup & Handle (Wochenbasis)": 109.67,
+    "BEST|HALO|Cup & Handle (Wochenbasis)": 109.67,
+    "CRL|Rectangle Top": 297.09,
+    "BEST|CRL|Rectangle Top": 297.09
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-10-14"
