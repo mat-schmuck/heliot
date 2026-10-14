@@ -7,7 +7,9 @@
       "CRL|Rectangle Top",
       "CRL|@297.09",
       "FTRE|Shakeout plus drei",
-      "FTRE|@21.76"
+      "FTRE|@21.76",
+      "HALO|Fallback: 52W-Hoch-Breakout",
+      "HALO|@116.97"
     ]
   },
   "gemeldet": {
@@ -142,7 +144,9 @@
     "CRL|Rectangle Top": "2026-10-14",
     "BEST|CRL|Rectangle Top": "2026-10-14",
     "FTRE|Shakeout plus drei": "2026-10-14",
-    "BEST|FTRE|Shakeout plus drei": "2026-10-14"
+    "BEST|FTRE|Shakeout plus drei": "2026-10-14",
+    "HALO|Fallback: 52W-Hoch-Breakout": "2026-10-14",
+    "BEST|HALO|Fallback: 52W-Hoch-Breakout": "2026-10-14"
   },
   "gemeldet_kp": {
     "GCT|Cup & Handle (Wochenbasis)": 57.41,
@@ -218,7 +222,9 @@
     "CRL|Rectangle Top": 297.09,
     "BEST|CRL|Rectangle Top": 297.09,
     "FTRE|Shakeout plus drei": 21.758,
-    "BEST|FTRE|Shakeout plus drei": 21.758
+    "BEST|FTRE|Shakeout plus drei": 21.758,
+    "HALO|Fallback: 52W-Hoch-Breakout": 116.97,
+    "BEST|HALO|Fallback: 52W-Hoch-Breakout": 116.97
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-10-14"
