@@ -1,32 +1,7 @@
 {
   "heute_gemeldet": {
-    "tag": "2026-10-13",
-    "marken": [
-      "DT|Cup & Handle (Wochenbasis)",
-      "DT|@65.30",
-      "FIGS|Cup & Handle (Wochenbasis)",
-      "FIGS|@17.99",
-      "FIGS|Fallback: 52W-Hoch-Breakout",
-      "FIGS|@18.00",
-      "SSL|Cup & Handle (Wochenbasis)",
-      "SSL|@15.41",
-      "AOUT|Inside Day",
-      "AOUT|@16.51",
-      "DT|Pocket Pivot",
-      "DT|@65.28",
-      "AMC|EMA Crossback",
-      "AMC|@3.06",
-      "CCI|Cup & Handle (Wochenbasis)",
-      "CCI|@81.30",
-      "PKOH|Rectangle Top",
-      "PKOH|@48.11",
-      "HURN|Cup & Handle (Wochenbasis)",
-      "HURN|@173.80",
-      "HURN|Pocket Pivot",
-      "HURN|@173.79",
-      "HQI|Rectangle Top",
-      "HQI|@17.49"
-    ]
+    "tag": "2026-10-14",
+    "marken": []
   },
   "gemeldet": {
     "INSIDER|FTK|pfad_a|1": "2026-09-16",
@@ -145,7 +120,8 @@
     "GEWINN|zonenwechsel|HNGE|Rectangle Top|mittel": "2026-10-13",
     "GEWINN|zonenwechsel|PBF|1|stark": "2026-10-13",
     "GEWINN|zonenwechsel|PBF|2|stark": "2026-10-13",
-    "SCHLUSSNAH|2026-10-13": "2026-10-13"
+    "SCHLUSSNAH|2026-10-13": "2026-10-13",
+    "SEKTORAUF|2026-10-14": "2026-10-14"
   },
   "gemeldet_kp": {
     "GCT|Cup & Handle (Wochenbasis)": 57.41,
