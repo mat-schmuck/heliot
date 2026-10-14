@@ -1,15 +1,29 @@
 {
- "gebaut_am": "2026-10-13T22:12:22",
- "handelstag": "2026-10-13",
+ "gebaut_am": "2026-10-14T22:12:48",
+ "handelstag": "2026-10-14",
  "geladen": 36,
  "unfertig": [],
  "treffer": [
   {
    "etf": "TAN",
    "name": "Solar",
-   "richtung": "hoch",
-   "volumen_pct": 359.4,
-   "kurs": 44.38
+   "richtung": "runter",
+   "volumen_pct": 85.1,
+   "kurs": 42.64
+  },
+  {
+   "etf": "OIH",
+   "name": "Oil Services",
+   "richtung": "runter",
+   "volumen_pct": 74.7,
+   "kurs": 382.36
+  },
+  {
+   "etf": "PAVE",
+   "name": "Infrastructure",
+   "richtung": "runter",
+   "volumen_pct": 67.7,
+   "kurs": 52.82
   }
  ]
 }

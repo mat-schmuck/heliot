@@ -1210,5 +1210,38 @@
    "zeichen": null,
    "text": "INFORMATION: XMTR; Rectangle Top; Kurs 96.20 unter der 8-Tage-EMA 104.85; reiner Hinweis, kein Ausstiegssignal; Kurs 96,20, seit Trigger -1,9 % gleich -0,2 R"
   }
+ ],
+ "geprueft": "2026-10-14",
+ "zurueckgenommen": [
+  "MTSI|Fallback: MA50-Rückeroberung",
+  "MTSI|Fallback: MA50-Pullback",
+  "MTSI|EMA Crossback",
+  "LEN|INS-2026-09-29",
+  "LEN|INS-2026-10-02",
+  "AMC|EMA Crossback",
+  "APPN|EMA Crossback",
+  "ASST|1",
+  "BB|Rectangle Top",
+  "BE|EMA Crossback",
+  "BE|Fallback: 20-Tage-Hoch (Pivot)",
+  "CRWD|1",
+  "CRWD|2",
+  "CRWD|Fallback: 20-Tage-Hoch (Pivot)",
+  "KOD|INS-2026-10-02",
+  "KOD|INS-2026-10-02",
+  "LITE|Rectangle Top",
+  "MRVL|Fallback: 20-Tage-Hoch (Pivot)",
+  "MRVL|Rectangle Top",
+  "MTRN|EMA Crossback",
+  "MU|1",
+  "PSIX|1",
+  "PSIX|2",
+  "RBRK|Cup & Handle (Wochenbasis)",
+  "S|Cup & Handle (Wochenbasis)",
+  "XMTR|EMA Crossback",
+  "XMTR|Fallback: 20-Tage-Hoch (Pivot)",
+  "XMTR|Fallback: 52W-Hoch-Breakout",
+  "XMTR|Fallback: MA50-Rückeroberung",
+  "XMTR|Rectangle Top"
  ]
 }

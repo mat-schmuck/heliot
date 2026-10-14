@@ -87,7 +87,7 @@
   "struktur_stop": 324.77,
   "aktueller_stop": 345.11,
   "stop_quelle": "struktur",
-  "hoechstkurs": 456.4599914550781,
+  "hoechstkurs": 459.7799987792969,
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
@@ -115,7 +115,7 @@
   "struktur_stop": 132.79,
   "aktueller_stop": 134.17,
   "stop_quelle": "struktur",
-  "hoechstkurs": 153.74000549316406,
+  "hoechstkurs": 154.19000244140625,
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
@@ -234,7 +234,7 @@
   ],
   "klasse": "standard",
   "musterziel": 285.11,
-  "zone": "mittel",
+  "zone": "leicht",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
    "2_groesster_tagesgewinn",
@@ -255,7 +255,7 @@
   "struktur_stop": 61.12,
   "aktueller_stop": 61.12,
   "stop_quelle": "struktur",
-  "hoechstkurs": 75.19999694824219,
+  "hoechstkurs": 75.88999938964844,
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
@@ -886,7 +886,7 @@
   "verlauf": [],
   "klasse": "standard",
   "musterziel": 58.47,
-  "zone": "stark",
+  "zone": "mittel",
   "ziel_gemeldet": true,
   "klimax_gemeldet": [
    "2_groesster_tagesgewinn",
@@ -896,7 +896,7 @@
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
   "wedge_drop_gemeldet": false,
-  "zone_gemeldet": "stark"
+  "zone_gemeldet": "mittel"
  },
  "ECPG|1": {
   "symbol": "ECPG",
@@ -916,7 +916,7 @@
   "verlauf": [],
   "klasse": "standard",
   "musterziel": 99.94,
-  "zone": "stark",
+  "zone": "mittel",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
    "2_groesster_tagesgewinn"
@@ -1198,8 +1198,15 @@
   "teilverkauft": false,
   "halteregel_aktiv": true,
   "beobachtung": true,
-  "status": "offen",
-  "verlauf": [],
+  "status": "geschlossen",
+  "verlauf": [
+   {
+    "datum": "2026-10-14",
+    "aktion": "stop_raus",
+    "grund": "Schluss 24.68 unter Stop 24.69",
+    "kurs": 24.68
+   }
+  ],
   "klasse": "standard",
   "musterziel": null,
   "zone": "stark",
@@ -1212,7 +1219,11 @@
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
   "wedge_drop_gemeldet": false,
-  "zone_gemeldet": "stark"
+  "zone_gemeldet": "stark",
+  "schluss_datum": "2026-10-14",
+  "schluss_grund": "Schluss 24.68 unter Stop 24.69",
+  "schluss_kurs": 24.68,
+  "ergebnis_pct": -0.04
  },
  "ECO|1": {
   "symbol": "ECO",
@@ -1300,7 +1311,7 @@
   "struktur_stop": 98.71,
   "aktueller_stop": 98.71,
   "stop_quelle": "struktur",
-  "hoechstkurs": 115.22,
+  "hoechstkurs": 116.82,
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
@@ -1308,7 +1319,7 @@
   "verlauf": [],
   "klasse": "standard",
   "musterziel": 130.56,
-  "zone": "leicht",
+  "zone": "stark",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [],
   "weinstein_gemeldet": false,
@@ -1335,7 +1346,7 @@
   "verlauf": [],
   "klasse": "standard",
   "musterziel": 1077.98,
-  "zone": "leicht",
+  "zone": "stark",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [],
   "weinstein_gemeldet": false,
@@ -1496,7 +1507,7 @@
   "struktur_stop": 134.17,
   "aktueller_stop": 134.17,
   "stop_quelle": "struktur",
-  "hoechstkurs": 153.74000549316406,
+  "hoechstkurs": 154.19000244140625,
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
@@ -1788,13 +1799,19 @@
   "teilverkauft": true,
   "halteregel_aktiv": true,
   "beobachtung": true,
-  "status": "offen",
+  "status": "geschlossen",
   "verlauf": [
    {
     "datum": "2026-09-23",
     "aktion": "teilverkauf",
     "grund": "+20.2 % im Handel erreicht (M2)",
     "kurs": 256.715
+   },
+   {
+    "datum": "2026-10-14",
+    "aktion": "trail_raus",
+    "grund": "Schluss 249.29 unter der 21-Tage-Linie 259.51; es gilt die 21-Tage-Linie, ATR 14 bei 4.69 % des Kurses, ab 2.5 % keine ruhige Bewegung",
+    "kurs": 249.29
    }
   ],
   "klasse": "standard",
@@ -1809,7 +1826,11 @@
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
   "wedge_drop_gemeldet": false,
-  "zone_gemeldet": "mittel"
+  "zone_gemeldet": "mittel",
+  "schluss_datum": "2026-10-14",
+  "schluss_grund": "Schluss 249.29 unter der 21-Tage-Linie 259.51; es gilt die 21-Tage-Linie, ATR 14 bei 4.69 % des Kurses, ab 2.5 % keine ruhige Bewegung",
+  "schluss_kurs": 249.29,
+  "ergebnis_pct": 16.76
  },
  "IOT|1": {
   "symbol": "IOT",
@@ -2009,7 +2030,7 @@
   "struktur_stop": 198.24,
   "aktueller_stop": 199.57,
   "stop_quelle": "struktur",
-  "hoechstkurs": 229.41000366210938,
+  "hoechstkurs": 232.8300018310547,
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
@@ -2167,7 +2188,7 @@
   "struktur_stop": 167.08,
   "aktueller_stop": 168.98,
   "stop_quelle": "struktur",
-  "hoechstkurs": 195.1300048828125,
+  "hoechstkurs": 196.3800048828125,
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
@@ -2252,13 +2273,19 @@
   "teilverkauft": true,
   "halteregel_aktiv": true,
   "beobachtung": true,
-  "status": "offen",
+  "status": "geschlossen",
   "verlauf": [
    {
     "datum": "2026-10-08",
     "aktion": "teilverkauf",
     "grund": "+23.9 % im Handel erreicht (M2)",
     "kurs": 50.5
+   },
+   {
+    "datum": "2026-10-14",
+    "aktion": "trail_raus",
+    "grund": "Schluss 46.60 unter der 21-Tage-Linie 46.93; es gilt die 21-Tage-Linie, ATR 14 bei 6.50 % des Kurses, ab 2.5 % keine ruhige Bewegung",
+    "kurs": 46.605
    }
   ],
   "klasse": "standard",
@@ -2270,7 +2297,11 @@
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
   "wedge_drop_gemeldet": false,
-  "zone_gemeldet": "mittel"
+  "zone_gemeldet": "mittel",
+  "schluss_datum": "2026-10-14",
+  "schluss_grund": "Schluss 46.60 unter der 21-Tage-Linie 46.93; es gilt die 21-Tage-Linie, ATR 14 bei 6.50 % des Kurses, ab 2.5 % keine ruhige Bewegung",
+  "schluss_kurs": 46.605,
+  "ergebnis_pct": 14.31
  },
  "RBLX|1": {
   "symbol": "RBLX",
@@ -2485,8 +2516,15 @@
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
-  "status": "offen",
-  "verlauf": [],
+  "status": "geschlossen",
+  "verlauf": [
+   {
+    "datum": "2026-10-14",
+    "aktion": "stop_raus",
+    "grund": "Schluss 914.13 unter Stop 932.25",
+    "kurs": 914.13
+   }
+  ],
   "klasse": "standard",
   "musterziel": 1165.68,
   "zone": "leicht",
@@ -2496,7 +2534,11 @@
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
   "wedge_drop_gemeldet": false,
-  "zone_gemeldet": "leicht"
+  "zone_gemeldet": "leicht",
+  "schluss_datum": "2026-10-14",
+  "schluss_grund": "Schluss 914.13 unter Stop 932.25",
+  "schluss_kurs": 914.13,
+  "ergebnis_pct": -10.96
  },
  "AGMB|1": {
   "symbol": "AGMB",
@@ -2580,7 +2622,7 @@
   "verlauf": [],
   "klasse": "standard",
   "musterziel": 41.24,
-  "zone": "stark",
+  "zone": "leicht",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [],
   "weinstein_gemeldet": false,
@@ -2863,13 +2905,19 @@
   "teilverkauft": true,
   "halteregel_aktiv": false,
   "beobachtung": true,
-  "status": "offen",
+  "status": "geschlossen",
   "verlauf": [
    {
     "datum": "2026-10-02",
     "aktion": "teilverkauf",
     "grund": "+20.1 % im Handel erreicht (M2)",
     "kurs": 47.67
+   },
+   {
+    "datum": "2026-10-14",
+    "aktion": "trail_raus",
+    "grund": "Schluss 44.33 unter der 21-Tage-Linie 44.63; es gilt die 21-Tage-Linie, ATR 14 bei 4.23 % des Kurses, ab 2.5 % keine ruhige Bewegung",
+    "kurs": 44.33
    }
   ],
   "klasse": "standard",
@@ -2883,7 +2931,11 @@
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
   "wedge_drop_gemeldet": false,
-  "zone_gemeldet": "mittel"
+  "zone_gemeldet": "mittel",
+  "schluss_datum": "2026-10-14",
+  "schluss_grund": "Schluss 44.33 unter der 21-Tage-Linie 44.63; es gilt die 21-Tage-Linie, ATR 14 bei 4.23 % des Kurses, ab 2.5 % keine ruhige Bewegung",
+  "schluss_kurs": 44.33,
+  "ergebnis_pct": 11.66
  },
  "LITE|3": {
   "symbol": "LITE",
@@ -3049,7 +3101,7 @@
   "verlauf": [],
   "klasse": "standard",
   "musterziel": 360.47,
-  "zone": "mittel",
+  "zone": "leicht",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
    "5_kanaluebershooting"
@@ -3058,7 +3110,7 @@
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
   "wedge_drop_gemeldet": false,
-  "zone_gemeldet": "mittel"
+  "zone_gemeldet": "leicht"
  },
  "SMMT|1": {
   "symbol": "SMMT",
@@ -3138,13 +3190,19 @@
   "teilverkauft": true,
   "halteregel_aktiv": true,
   "beobachtung": true,
-  "status": "offen",
+  "status": "geschlossen",
   "verlauf": [
    {
     "datum": "2026-09-23",
     "aktion": "teilverkauf",
     "grund": "+20.5 % im Handel erreicht (M2)",
     "kurs": 255.125
+   },
+   {
+    "datum": "2026-10-14",
+    "aktion": "trail_raus",
+    "grund": "Schluss 249.29 unter der 21-Tage-Linie 259.51; es gilt die 21-Tage-Linie, ATR 14 bei 4.69 % des Kurses, ab 2.5 % keine ruhige Bewegung",
+    "kurs": 249.29
    }
   ],
   "klasse": "standard",
@@ -3159,7 +3217,11 @@
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
   "wedge_drop_gemeldet": false,
-  "zone_gemeldet": "stark"
+  "zone_gemeldet": "stark",
+  "schluss_datum": "2026-10-14",
+  "schluss_grund": "Schluss 249.29 unter der 21-Tage-Linie 259.51; es gilt die 21-Tage-Linie, ATR 14 bei 4.69 % des Kurses, ab 2.5 % keine ruhige Bewegung",
+  "schluss_kurs": 249.29,
+  "ergebnis_pct": 17.76
  },
  "OSCR|3": {
   "symbol": "OSCR",
@@ -3369,13 +3431,19 @@
   "teilverkauft": true,
   "halteregel_aktiv": true,
   "beobachtung": true,
-  "status": "offen",
+  "status": "geschlossen",
   "verlauf": [
    {
     "datum": "2026-10-13",
     "aktion": "teilverkauf",
     "grund": "+20.1 % im Handel erreicht (M2)",
     "kurs": 51.93
+   },
+   {
+    "datum": "2026-10-14",
+    "aktion": "trail_raus",
+    "grund": "Schluss 46.60 unter der 21-Tage-Linie 46.93; es gilt die 21-Tage-Linie, ATR 14 bei 6.50 % des Kurses, ab 2.5 % keine ruhige Bewegung",
+    "kurs": 46.605
    }
   ],
   "klasse": "standard",
@@ -3387,7 +3455,11 @@
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
   "wedge_drop_gemeldet": false,
-  "zone_gemeldet": "mittel"
+  "zone_gemeldet": "mittel",
+  "schluss_datum": "2026-10-14",
+  "schluss_grund": "Schluss 46.60 unter der 21-Tage-Linie 46.93; es gilt die 21-Tage-Linie, ATR 14 bei 6.50 % des Kurses, ab 2.5 % keine ruhige Bewegung",
+  "schluss_kurs": 46.605,
+  "ergebnis_pct": 7.78
  },
  "ATKR|1": {
   "symbol": "ATKR",
@@ -3399,7 +3471,7 @@
   "struktur_stop": 84.74,
   "aktueller_stop": 84.96,
   "stop_quelle": "struktur",
-  "hoechstkurs": 94.87999725341797,
+  "hoechstkurs": 94.93000030517578,
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
@@ -3896,7 +3968,7 @@
   "verlauf": [],
   "klasse": "standard",
   "musterziel": 259.87,
-  "zone": "stark",
+  "zone": "leicht",
   "zone_gemeldet": "leicht",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [],
@@ -4171,13 +4243,19 @@
   "teilverkauft": true,
   "halteregel_aktiv": true,
   "beobachtung": true,
-  "status": "offen",
+  "status": "geschlossen",
   "verlauf": [
    {
     "datum": "2026-10-02",
     "aktion": "teilverkauf",
     "grund": "+20.2 % im Handel erreicht (M2)",
     "kurs": 310.44
+   },
+   {
+    "datum": "2026-10-14",
+    "aktion": "stop_raus",
+    "grund": "Schluss 255.78 unter Stop 258.34",
+    "kurs": 255.78
    }
   ],
   "klasse": "standard",
@@ -4191,7 +4269,11 @@
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
-  "wedge_drop_gemeldet": false
+  "wedge_drop_gemeldet": false,
+  "schluss_datum": "2026-10-14",
+  "schluss_grund": "Schluss 255.78 unter Stop 258.34",
+  "schluss_kurs": 255.78,
+  "ergebnis_pct": -0.99
  },
  "OOMA|Rectangle Top": {
   "symbol": "OOMA",
@@ -5189,9 +5271,9 @@
   "einstieg_datum": "2026-09-14",
   "einstieg_index": 500,
   "struktur_stop": 37.64,
-  "aktueller_stop": 39.51,
+  "aktueller_stop": 40.78,
   "stop_quelle": "struktur",
-  "hoechstkurs": 43.28,
+  "hoechstkurs": 44.42,
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
@@ -5216,9 +5298,9 @@
   "einstieg_datum": "2026-09-14",
   "einstieg_index": 500,
   "struktur_stop": 38.88,
-  "aktueller_stop": 40.81,
+  "aktueller_stop": 42.13,
   "stop_quelle": "struktur",
-  "hoechstkurs": 43.28,
+  "hoechstkurs": 44.42,
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
@@ -5318,7 +5400,7 @@
   "struktur_stop": 60.84,
   "aktueller_stop": 61.53,
   "stop_quelle": "struktur",
-  "hoechstkurs": 66.16000366210938,
+  "hoechstkurs": 68.0999984741211,
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
@@ -5564,7 +5646,7 @@
   "struktur_stop": 368.21,
   "aktueller_stop": 385.21,
   "stop_quelle": "struktur",
-  "hoechstkurs": 476.9800109863281,
+  "hoechstkurs": 484.9200134277344,
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
@@ -5923,8 +6005,15 @@
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
-  "status": "offen",
-  "verlauf": [],
+  "status": "geschlossen",
+  "verlauf": [
+   {
+    "datum": "2026-10-14",
+    "aktion": "stop_raus",
+    "grund": "Schluss 239.34 unter Stop 261.71",
+    "kurs": 239.34
+   }
+  ],
   "klasse": "standard",
   "musterziel": null,
   "zone": "leicht",
@@ -5936,7 +6025,11 @@
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
-  "wedge_drop_gemeldet": false
+  "wedge_drop_gemeldet": false,
+  "schluss_datum": "2026-10-14",
+  "schluss_grund": "Schluss 239.34 unter Stop 261.71",
+  "schluss_kurs": 239.34,
+  "ergebnis_pct": -8.55
  },
  "INTC|EMA Crossback": {
   "symbol": "INTC",
@@ -6000,7 +6093,7 @@
   "verlauf": [],
   "klasse": "standard",
   "musterziel": 124.35,
-  "zone": "mittel",
+  "zone": "leicht",
   "zone_gemeldet": "leicht",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [],
@@ -6196,13 +6289,19 @@
   "teilverkauft": true,
   "halteregel_aktiv": true,
   "beobachtung": true,
-  "status": "offen",
+  "status": "geschlossen",
   "verlauf": [
    {
     "datum": "2026-09-24",
     "aktion": "teilverkauf",
     "grund": "+20.0 % im Handel erreicht (M2)",
     "kurs": 411.89
+   },
+   {
+    "datum": "2026-10-14",
+    "aktion": "trail_raus",
+    "grund": "Schluss 394.75 unter der 21-Tage-Linie 395.94; es gilt die 21-Tage-Linie, ATR 14 bei 3.96 % des Kurses, ab 2.5 % keine ruhige Bewegung",
+    "kurs": 394.75
    }
   ],
   "klasse": "standard",
@@ -6217,7 +6316,11 @@
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
-  "wedge_drop_gemeldet": false
+  "wedge_drop_gemeldet": false,
+  "schluss_datum": "2026-10-14",
+  "schluss_grund": "Schluss 394.75 unter der 21-Tage-Linie 395.94; es gilt die 21-Tage-Linie, ATR 14 bei 3.96 % des Kurses, ab 2.5 % keine ruhige Bewegung",
+  "schluss_kurs": 394.75,
+  "ergebnis_pct": 15.02
  },
  "CXW|Fallback: 52W-Hoch-Breakout": {
   "symbol": "CXW",
@@ -6271,8 +6374,15 @@
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
-  "status": "offen",
-  "verlauf": [],
+  "status": "geschlossen",
+  "verlauf": [
+   {
+    "datum": "2026-10-14",
+    "aktion": "stop_raus",
+    "grund": "Schluss 249.29 unter Stop 258.30",
+    "kurs": 249.29
+   }
+  ],
   "klasse": "standard",
   "musterziel": null,
   "zone": "leicht",
@@ -6284,7 +6394,11 @@
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
-  "wedge_drop_gemeldet": false
+  "wedge_drop_gemeldet": false,
+  "schluss_datum": "2026-10-14",
+  "schluss_grund": "Schluss 249.29 unter Stop 258.30",
+  "schluss_kurs": 249.29,
+  "ergebnis_pct": 4.14
  },
  "GH|Fallback: 52W-Hoch-Breakout": {
   "symbol": "GH",
@@ -6388,7 +6502,7 @@
   "struktur_stop": 380.84,
   "aktueller_stop": 398.04,
   "stop_quelle": "struktur",
-  "hoechstkurs": 476.9800109863281,
+  "hoechstkurs": 484.9200134277344,
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
@@ -6850,7 +6964,7 @@
   "struktur_stop": 22.96,
   "aktueller_stop": 22.96,
   "stop_quelle": "struktur",
-  "hoechstkurs": 26.139999389648438,
+  "hoechstkurs": 26.3700008392334,
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
@@ -6885,8 +6999,8 @@
   "verlauf": [],
   "klasse": "standard",
   "musterziel": 190.69,
-  "zone": "mittel",
-  "zone_gemeldet": "mittel",
+  "zone": "leicht",
+  "zone_gemeldet": "leicht",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
    "2_groesster_tagesgewinn"
@@ -6953,7 +7067,7 @@
   "struktur_stop": 55.59,
   "aktueller_stop": 55.59,
   "stop_quelle": "struktur",
-  "hoechstkurs": 66.16000366210938,
+  "hoechstkurs": 68.0999984741211,
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
@@ -7068,7 +7182,7 @@
   "struktur_stop": null,
   "aktueller_stop": 201.48,
   "stop_quelle": "deckel",
-  "hoechstkurs": 223.865,
+  "hoechstkurs": 224.44000244140625,
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
@@ -7076,7 +7190,7 @@
   "verlauf": [],
   "klasse": "insider",
   "musterziel": null,
-  "zone": "leicht",
+  "zone": "stark",
   "zone_gemeldet": "leicht",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [],
@@ -7358,13 +7472,19 @@
   "teilverkauft": true,
   "halteregel_aktiv": true,
   "beobachtung": true,
-  "status": "offen",
+  "status": "geschlossen",
   "verlauf": [
    {
     "datum": "2026-10-06",
     "aktion": "teilverkauf",
     "grund": "+20.3 % im Handel erreicht (M2)",
     "kurs": 109.63
+   },
+   {
+    "datum": "2026-10-14",
+    "aktion": "trail_raus",
+    "grund": "Schluss 95.15 unter der 21-Tage-Linie 103.09; es gilt die 21-Tage-Linie, ATR 14 bei 6.09 % des Kurses, ab 2.5 % keine ruhige Bewegung",
+    "kurs": 95.15
    }
   ],
   "klasse": "standard",
@@ -7378,7 +7498,11 @@
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
-  "wedge_drop_gemeldet": false
+  "wedge_drop_gemeldet": false,
+  "schluss_datum": "2026-10-14",
+  "schluss_grund": "Schluss 95.15 unter der 21-Tage-Linie 103.09; es gilt die 21-Tage-Linie, ATR 14 bei 6.09 % des Kurses, ab 2.5 % keine ruhige Bewegung",
+  "schluss_kurs": 95.15,
+  "ergebnis_pct": 4.39
  },
  "CLMT|Fallback: 20-Tage-Hoch (Pivot)": {
   "symbol": "CLMT",
@@ -7630,8 +7754,15 @@
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
-  "status": "offen",
-  "verlauf": [],
+  "status": "geschlossen",
+  "verlauf": [
+   {
+    "datum": "2026-10-14",
+    "aktion": "stop_raus",
+    "grund": "Schluss 239.34 unter Stop 255.46",
+    "kurs": 239.34
+   }
+  ],
   "klasse": "standard",
   "musterziel": null,
   "zone": "leicht",
@@ -7643,7 +7774,11 @@
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
-  "wedge_drop_gemeldet": false
+  "wedge_drop_gemeldet": false,
+  "schluss_datum": "2026-10-14",
+  "schluss_grund": "Schluss 239.34 unter Stop 255.46",
+  "schluss_kurs": 239.34,
+  "ergebnis_pct": -15.68
  },
  "CGON|Fallback: MA50-Pullback": {
   "symbol": "CGON",
@@ -8258,7 +8393,7 @@
   "verlauf": [],
   "klasse": "standard",
   "musterziel": null,
-  "zone": "stark",
+  "zone": "leicht",
   "zone_gemeldet": "leicht",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [],
@@ -8592,8 +8727,15 @@
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
-  "status": "offen",
-  "verlauf": [],
+  "status": "geschlossen",
+  "verlauf": [
+   {
+    "datum": "2026-10-14",
+    "aktion": "stop_raus",
+    "grund": "Schluss 95.15 unter Stop 101.66",
+    "kurs": 95.15
+   }
+  ],
   "klasse": "standard",
   "musterziel": null,
   "zone": "leicht",
@@ -8605,7 +8747,11 @@
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
-  "wedge_drop_gemeldet": false
+  "wedge_drop_gemeldet": false,
+  "schluss_datum": "2026-10-14",
+  "schluss_grund": "Schluss 95.15 unter Stop 101.66",
+  "schluss_kurs": 95.15,
+  "ergebnis_pct": -3.62
  },
  "SITM|Fallback: MA50-Rückeroberung": {
   "symbol": "SITM",
@@ -9263,8 +9409,8 @@
   ],
   "klasse": "standard",
   "musterziel": null,
-  "zone": "stark",
-  "zone_gemeldet": "stark",
+  "zone": "mittel",
+  "zone_gemeldet": "mittel",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
    "2_groesster_tagesgewinn"
@@ -10066,8 +10212,15 @@
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
-  "status": "offen",
-  "verlauf": [],
+  "status": "geschlossen",
+  "verlauf": [
+   {
+    "datum": "2026-10-14",
+    "aktion": "stop_raus",
+    "grund": "Schluss 896.33 unter Stop 951.61",
+    "kurs": 896.33
+   }
+  ],
   "klasse": "standard",
   "musterziel": 1118.74,
   "zone": "leicht",
@@ -10079,7 +10232,11 @@
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
-  "wedge_drop_gemeldet": false
+  "wedge_drop_gemeldet": false,
+  "schluss_datum": "2026-10-14",
+  "schluss_grund": "Schluss 896.33 unter Stop 951.61",
+  "schluss_kurs": 896.33,
+  "ergebnis_pct": -5.81
  },
  "TH|Cup & Handle (Wochenbasis)": {
   "symbol": "TH",
@@ -10402,7 +10559,7 @@
   ],
   "klasse": "standard",
   "musterziel": null,
-  "zone": "mittel",
+  "zone": "leicht",
   "zone_gemeldet": "leicht",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
@@ -10427,13 +10584,19 @@
   "teilverkauft": true,
   "halteregel_aktiv": true,
   "beobachtung": true,
-  "status": "offen",
+  "status": "geschlossen",
   "verlauf": [
    {
     "datum": "2026-10-07",
     "aktion": "teilverkauf",
     "grund": "+24.1 % im Handel erreicht (M2)",
     "kurs": 67.24
+   },
+   {
+    "datum": "2026-10-14",
+    "aktion": "stop_raus",
+    "grund": "Schluss 67.59 unter Stop 70.89",
+    "kurs": 67.59
    }
   ],
   "klasse": "standard",
@@ -10448,7 +10611,11 @@
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
-  "wedge_drop_gemeldet": false
+  "wedge_drop_gemeldet": false,
+  "schluss_datum": "2026-10-14",
+  "schluss_grund": "Schluss 67.59 unter Stop 70.89",
+  "schluss_kurs": 67.59,
+  "ergebnis_pct": 24.7
  },
  "SEI|Fallback: 20-Tage-Hoch (Pivot)": {
   "symbol": "SEI",
@@ -11063,8 +11230,15 @@
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
-  "status": "offen",
-  "verlauf": [],
+  "status": "geschlossen",
+  "verlauf": [
+   {
+    "datum": "2026-10-14",
+    "aktion": "stop_raus",
+    "grund": "Schluss 113.90 unter Stop 115.12",
+    "kurs": 113.9
+   }
+  ],
   "klasse": "standard",
   "musterziel": 159.53,
   "zone": "leicht",
@@ -11076,7 +11250,11 @@
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
-  "wedge_drop_gemeldet": false
+  "wedge_drop_gemeldet": false,
+  "schluss_datum": "2026-10-14",
+  "schluss_grund": "Schluss 113.90 unter Stop 115.12",
+  "schluss_kurs": 113.9,
+  "ergebnis_pct": 4.49
  },
  "RBRK|Fallback: 52W-Hoch-Breakout": {
   "symbol": "RBRK",
@@ -11202,7 +11380,7 @@
   "einstieg_datum": "2026-09-21",
   "einstieg_index": 253,
   "struktur_stop": 16.12,
-  "aktueller_stop": 18.77,
+  "aktueller_stop": 19.18,
   "stop_quelle": "struktur",
   "hoechstkurs": 21.15,
   "teilverkauft": false,
@@ -11541,7 +11719,7 @@
   "struktur_stop": 159.01,
   "aktueller_stop": 176.67,
   "stop_quelle": "struktur",
-  "hoechstkurs": 225.0,
+  "hoechstkurs": 226.3000030517578,
   "teilverkauft": false,
   "halteregel_aktiv": true,
   "beobachtung": true,
@@ -11629,8 +11807,8 @@
   ],
   "klasse": "standard",
   "musterziel": 83.84,
-  "zone": "stark",
-  "zone_gemeldet": "stark",
+  "zone": "mittel",
+  "zone_gemeldet": "mittel",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [],
   "weinstein_gemeldet": false,
@@ -11884,8 +12062,15 @@
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
-  "status": "offen",
-  "verlauf": [],
+  "status": "geschlossen",
+  "verlauf": [
+   {
+    "datum": "2026-10-14",
+    "aktion": "stop_raus",
+    "grund": "Schluss 95.15 unter Stop 98.05",
+    "kurs": 95.15
+   }
+  ],
   "klasse": "standard",
   "musterziel": 107.58,
   "zone": "mittel",
@@ -11897,7 +12082,11 @@
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
-  "wedge_drop_gemeldet": false
+  "wedge_drop_gemeldet": false,
+  "schluss_datum": "2026-10-14",
+  "schluss_grund": "Schluss 95.15 unter Stop 98.05",
+  "schluss_kurs": 95.15,
+  "ergebnis_pct": -2.96
  },
  "NTSK|Cup & Handle (Wochenbasis)": {
   "symbol": "NTSK",
@@ -12166,8 +12355,8 @@
   "verlauf": [],
   "klasse": "insider",
   "musterziel": null,
-  "zone": "stark",
-  "zone_gemeldet": "stark",
+  "zone": "leicht",
+  "zone_gemeldet": "leicht",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
    "5_kanaluebershooting"
@@ -12218,8 +12407,15 @@
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
-  "status": "offen",
-  "verlauf": [],
+  "status": "geschlossen",
+  "verlauf": [
+   {
+    "datum": "2026-10-14",
+    "aktion": "stop_raus",
+    "grund": "Schluss 570.82 unter Stop 592.68",
+    "kurs": 570.82
+   }
+  ],
   "klasse": "standard",
   "musterziel": 777.39,
   "zone": "leicht",
@@ -12229,7 +12425,11 @@
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
-  "wedge_drop_gemeldet": false
+  "wedge_drop_gemeldet": false,
+  "schluss_datum": "2026-10-14",
+  "schluss_grund": "Schluss 570.82 unter Stop 592.68",
+  "schluss_kurs": 570.82,
+  "ergebnis_pct": -7.44
  },
  "GCT|Fallback: 20-Tage-Hoch (Pivot)": {
   "symbol": "GCT",
@@ -12241,7 +12441,7 @@
   "struktur_stop": 48.73,
   "aktueller_stop": 50.05,
   "stop_quelle": "struktur",
-  "hoechstkurs": 57.74,
+  "hoechstkurs": 57.75,
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
@@ -12356,8 +12556,8 @@
   "verlauf": [],
   "klasse": "standard",
   "musterziel": null,
-  "zone": "stark",
-  "zone_gemeldet": "stark",
+  "zone": "leicht",
+  "zone_gemeldet": "leicht",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [],
   "weinstein_gemeldet": false,
@@ -12769,8 +12969,15 @@
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
-  "status": "offen",
-  "verlauf": [],
+  "status": "geschlossen",
+  "verlauf": [
+   {
+    "datum": "2026-10-14",
+    "aktion": "stop_raus",
+    "grund": "Schluss 211.91 unter Stop 218.55",
+    "kurs": 211.915
+   }
+  ],
   "klasse": "standard",
   "musterziel": null,
   "zone": "stark",
@@ -12782,7 +12989,11 @@
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
-  "wedge_drop_gemeldet": false
+  "wedge_drop_gemeldet": false,
+  "schluss_datum": "2026-10-14",
+  "schluss_grund": "Schluss 211.91 unter Stop 218.55",
+  "schluss_kurs": 211.915,
+  "ergebnis_pct": -3.63
  },
  "DIOD|Fallback: 20-Tage-Hoch (Pivot)": {
   "symbol": "DIOD",
@@ -13069,8 +13280,8 @@
   "verlauf": [],
   "klasse": "standard",
   "musterziel": 88.55,
-  "zone": "mittel",
-  "zone_gemeldet": "mittel",
+  "zone": "leicht",
+  "zone_gemeldet": "leicht",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [],
   "weinstein_gemeldet": false,
@@ -13190,8 +13401,8 @@
   "verlauf": [],
   "klasse": "standard",
   "musterziel": 96.37,
-  "zone": "stark",
-  "zone_gemeldet": "stark",
+  "zone": "leicht",
+  "zone_gemeldet": "leicht",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [],
   "weinstein_gemeldet": false,
@@ -13531,8 +13742,8 @@
   "verlauf": [],
   "klasse": "standard",
   "musterziel": 89.16,
-  "zone": "stark",
-  "zone_gemeldet": "stark",
+  "zone": "mittel",
+  "zone_gemeldet": "mittel",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
    "2_groesster_tagesgewinn"
@@ -13752,9 +13963,9 @@
   "einstieg_datum": "2026-09-24",
   "einstieg_index": 500,
   "struktur_stop": 17.42,
-  "aktueller_stop": 17.42,
+  "aktueller_stop": 19.35,
   "stop_quelle": "struktur",
-  "hoechstkurs": 21.11,
+  "hoechstkurs": 21.34000015258789,
   "teilverkauft": true,
   "halteregel_aktiv": false,
   "beobachtung": true,
@@ -13769,7 +13980,7 @@
   ],
   "klasse": "standard",
   "musterziel": 21.32,
-  "zone": "leicht",
+  "zone": "mittel",
   "zone_gemeldet": "leicht",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [],
@@ -13792,8 +14003,15 @@
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
-  "status": "offen",
-  "verlauf": [],
+  "status": "geschlossen",
+  "verlauf": [
+   {
+    "datum": "2026-10-14",
+    "aktion": "stop_raus",
+    "grund": "Schluss 95.15 unter Stop 105.03",
+    "kurs": 95.15
+   }
+  ],
   "klasse": "standard",
   "musterziel": null,
   "zone": "leicht",
@@ -13803,7 +14021,11 @@
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
-  "wedge_drop_gemeldet": false
+  "wedge_drop_gemeldet": false,
+  "schluss_datum": "2026-10-14",
+  "schluss_grund": "Schluss 95.15 unter Stop 105.03",
+  "schluss_kurs": 95.15,
+  "ergebnis_pct": -12.43
  },
  "ARGX|Fallback: MA50-Pullback": {
   "symbol": "ARGX",
@@ -13823,7 +14045,7 @@
   "verlauf": [],
   "klasse": "standard",
   "musterziel": null,
-  "zone": "leicht",
+  "zone": "stark",
   "zone_gemeldet": "leicht",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [],
@@ -14260,8 +14482,8 @@
   "verlauf": [],
   "klasse": "standard",
   "musterziel": null,
-  "zone": "mittel",
-  "zone_gemeldet": "mittel",
+  "zone": "leicht",
+  "zone_gemeldet": "leicht",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [],
   "weinstein_gemeldet": false,
@@ -14541,8 +14763,15 @@
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
-  "status": "offen",
-  "verlauf": [],
+  "status": "geschlossen",
+  "verlauf": [
+   {
+    "datum": "2026-10-14",
+    "aktion": "stop_raus",
+    "grund": "Schluss 224.26 unter Stop 224.50",
+    "kurs": 224.26
+   }
+  ],
   "klasse": "standard",
   "musterziel": null,
   "zone": "leicht",
@@ -14554,7 +14783,11 @@
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
-  "wedge_drop_gemeldet": false
+  "wedge_drop_gemeldet": false,
+  "schluss_datum": "2026-10-14",
+  "schluss_grund": "Schluss 224.26 unter Stop 224.50",
+  "schluss_kurs": 224.26,
+  "ergebnis_pct": -2.69
  },
  "TSEM|Fallback: MA50-Rückeroberung": {
   "symbol": "TSEM",
@@ -14930,8 +15163,8 @@
   "verlauf": [],
   "klasse": "standard",
   "musterziel": null,
-  "zone": "stark",
-  "zone_gemeldet": "stark",
+  "zone": "mittel",
+  "zone_gemeldet": "mittel",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
    "2_groesster_tagesgewinn"
@@ -15039,7 +15272,7 @@
   "struktur_stop": 50.56,
   "aktueller_stop": 50.56,
   "stop_quelle": "struktur",
-  "hoechstkurs": 61.25,
+  "hoechstkurs": 62.720001220703125,
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
@@ -15237,7 +15470,7 @@
   "einstieg_datum": "2026-09-28",
   "einstieg_index": 500,
   "struktur_stop": 185.03,
-  "aktueller_stop": 216.77,
+  "aktueller_stop": 216.8,
   "stop_quelle": "struktur",
   "hoechstkurs": 239.18,
   "teilverkauft": false,
@@ -15459,8 +15692,15 @@
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
-  "status": "offen",
-  "verlauf": [],
+  "status": "geschlossen",
+  "verlauf": [
+   {
+    "datum": "2026-10-14",
+    "aktion": "stop_raus",
+    "grund": "Schluss 245.28 unter Stop 252.53",
+    "kurs": 245.28
+   }
+  ],
   "klasse": "standard",
   "musterziel": 292.68,
   "zone": "leicht",
@@ -15470,7 +15710,11 @@
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
-  "wedge_drop_gemeldet": false
+  "wedge_drop_gemeldet": false,
+  "schluss_datum": "2026-10-14",
+  "schluss_grund": "Schluss 245.28 unter Stop 252.53",
+  "schluss_kurs": 245.28,
+  "ergebnis_pct": -2.87
  },
  "DOCN|EMA Crossback": {
   "symbol": "DOCN",
@@ -15809,8 +16053,15 @@
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
-  "status": "offen",
-  "verlauf": [],
+  "status": "geschlossen",
+  "verlauf": [
+   {
+    "datum": "2026-10-14",
+    "aktion": "stop_raus",
+    "grund": "Schluss 95.15 unter Stop 96.67",
+    "kurs": 95.15
+   }
+  ],
   "klasse": "standard",
   "musterziel": null,
   "zone": "leicht",
@@ -15820,7 +16071,11 @@
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
-  "wedge_drop_gemeldet": false
+  "wedge_drop_gemeldet": false,
+  "schluss_datum": "2026-10-14",
+  "schluss_grund": "Schluss 95.15 unter Stop 96.67",
+  "schluss_kurs": 95.15,
+  "ergebnis_pct": -8.41
  },
  "AAON|Fallback: MA50-Pullback": {
   "symbol": "AAON",
@@ -15950,8 +16205,8 @@
   ],
   "klasse": "standard",
   "musterziel": null,
-  "zone": "stark",
-  "zone_gemeldet": "stark",
+  "zone": "mittel",
+  "zone_gemeldet": "mittel",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
    "4_ma200_abstand",
@@ -16010,12 +16265,19 @@
   "struktur_stop": 122.21,
   "aktueller_stop": 146.54,
   "stop_quelle": "struktur",
-  "hoechstkurs": 156.97000122070312,
+  "hoechstkurs": 156.97,
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
-  "status": "offen",
-  "verlauf": [],
+  "status": "geschlossen",
+  "verlauf": [
+   {
+    "datum": "2026-10-14",
+    "aktion": "stop_raus",
+    "grund": "Schluss 141.49 unter Stop 146.54",
+    "kurs": 141.49
+   }
+  ],
   "klasse": "standard",
   "musterziel": null,
   "zone": "stark",
@@ -16028,7 +16290,11 @@
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
-  "wedge_drop_gemeldet": false
+  "wedge_drop_gemeldet": false,
+  "schluss_datum": "2026-10-14",
+  "schluss_grund": "Schluss 141.49 unter Stop 146.54",
+  "schluss_kurs": 141.49,
+  "ergebnis_pct": 7.56
  },
  "P|Fallback: 20-Tage-Hoch (Pivot)": {
   "symbol": "P",
@@ -16038,9 +16304,9 @@
   "einstieg_datum": "2026-09-29",
   "einstieg_index": 501,
   "struktur_stop": 118.28,
-  "aktueller_stop": 141.36,
+  "aktueller_stop": 141.83,
   "stop_quelle": "struktur",
-  "hoechstkurs": 156.97000122070312,
+  "hoechstkurs": 156.97,
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
@@ -16134,7 +16400,7 @@
   "struktur_stop": 102.33,
   "aktueller_stop": 104.04,
   "stop_quelle": "struktur",
-  "hoechstkurs": 112.37000274658203,
+  "hoechstkurs": 112.8499984741211,
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
@@ -16142,7 +16408,7 @@
   "verlauf": [],
   "klasse": "standard",
   "musterziel": null,
-  "zone": "stark",
+  "zone": "leicht",
   "zone_gemeldet": "leicht",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [],
@@ -16188,7 +16454,7 @@
   "struktur_stop": 51.56,
   "aktueller_stop": 52.57,
   "stop_quelle": "struktur",
-  "hoechstkurs": 61.25,
+  "hoechstkurs": 62.720001220703125,
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
@@ -16326,8 +16592,15 @@
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
-  "status": "offen",
-  "verlauf": [],
+  "status": "geschlossen",
+  "verlauf": [
+   {
+    "datum": "2026-10-14",
+    "aktion": "stop_raus",
+    "grund": "Schluss 44.33 unter Stop 44.57",
+    "kurs": 44.33
+   }
+  ],
   "klasse": "standard",
   "musterziel": null,
   "zone": "leicht",
@@ -16339,7 +16612,11 @@
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
-  "wedge_drop_gemeldet": false
+  "wedge_drop_gemeldet": false,
+  "schluss_datum": "2026-10-14",
+  "schluss_grund": "Schluss 44.33 unter Stop 44.57",
+  "schluss_kurs": 44.33,
+  "ergebnis_pct": -2.72
  },
  "AEO|Rectangle Top": {
   "symbol": "AEO",
@@ -16405,7 +16682,7 @@
   "struktur_stop": 33.99,
   "aktueller_stop": 34.14,
   "stop_quelle": "struktur",
-  "hoechstkurs": 36.84000015258789,
+  "hoechstkurs": 37.65999984741211,
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
@@ -16413,7 +16690,7 @@
   "verlauf": [],
   "klasse": "standard",
   "musterziel": null,
-  "zone": "leicht",
+  "zone": "stark",
   "zone_gemeldet": "leicht",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [],
@@ -16440,7 +16717,7 @@
   "verlauf": [],
   "klasse": "standard",
   "musterziel": null,
-  "zone": "stark",
+  "zone": "mittel",
   "zone_gemeldet": "mittel",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
@@ -16593,8 +16870,15 @@
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
-  "status": "offen",
-  "verlauf": [],
+  "status": "geschlossen",
+  "verlauf": [
+   {
+    "datum": "2026-10-14",
+    "aktion": "stop_raus",
+    "grund": "Schluss 63.11 unter Stop 66.22",
+    "kurs": 63.11
+   }
+  ],
   "klasse": "standard",
   "musterziel": 83.4,
   "zone": "stark",
@@ -16604,7 +16888,11 @@
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
-  "wedge_drop_gemeldet": false
+  "wedge_drop_gemeldet": false,
+  "schluss_datum": "2026-10-14",
+  "schluss_grund": "Schluss 63.11 unter Stop 66.22",
+  "schluss_kurs": 63.11,
+  "ergebnis_pct": -3.88
  },
  "HPE|Fallback: 52W-Hoch-Breakout": {
   "symbol": "HPE",
@@ -16620,8 +16908,15 @@
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
-  "status": "offen",
-  "verlauf": [],
+  "status": "geschlossen",
+  "verlauf": [
+   {
+    "datum": "2026-10-14",
+    "aktion": "stop_raus",
+    "grund": "Schluss 63.11 unter Stop 68.41",
+    "kurs": 63.11
+   }
+  ],
   "klasse": "standard",
   "musterziel": null,
   "zone": "stark",
@@ -16631,7 +16926,11 @@
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
-  "wedge_drop_gemeldet": false
+  "wedge_drop_gemeldet": false,
+  "schluss_datum": "2026-10-14",
+  "schluss_grund": "Schluss 63.11 unter Stop 68.41",
+  "schluss_kurs": 63.11,
+  "ergebnis_pct": -3.97
  },
  "AEO|Fallback: 20-Tage-Hoch (Pivot)": {
   "symbol": "AEO",
@@ -16670,7 +16969,7 @@
   "struktur_stop": 32.23,
   "aktueller_stop": 32.38,
   "stop_quelle": "struktur",
-  "hoechstkurs": 36.84000015258789,
+  "hoechstkurs": 37.65999984741211,
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
@@ -16678,7 +16977,7 @@
   "verlauf": [],
   "klasse": "standard",
   "musterziel": 38.89,
-  "zone": "leicht",
+  "zone": "stark",
   "zone_gemeldet": "leicht",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [],
@@ -16705,7 +17004,7 @@
   "verlauf": [],
   "klasse": "standard",
   "musterziel": null,
-  "zone": "stark",
+  "zone": "leicht",
   "zone_gemeldet": "leicht",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [],
@@ -16981,8 +17280,8 @@
   "verlauf": [],
   "klasse": "insider",
   "musterziel": null,
-  "zone": "stark",
-  "zone_gemeldet": "stark",
+  "zone": "leicht",
+  "zone_gemeldet": "leicht",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [],
   "weinstein_gemeldet": false,
@@ -17085,8 +17384,15 @@
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
-  "status": "offen",
-  "verlauf": [],
+  "status": "geschlossen",
+  "verlauf": [
+   {
+    "datum": "2026-10-14",
+    "aktion": "stop_raus",
+    "grund": "Schluss 81.09 unter Stop 87.59",
+    "kurs": 81.09
+   }
+  ],
   "klasse": "insider",
   "musterziel": null,
   "zone": "leicht",
@@ -17099,7 +17405,11 @@
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
-  "wedge_drop_gemeldet": false
+  "wedge_drop_gemeldet": false,
+  "schluss_datum": "2026-10-14",
+  "schluss_grund": "Schluss 81.09 unter Stop 87.59",
+  "schluss_kurs": 81.09,
+  "ergebnis_pct": -16.68
  },
  "LEN|INS-2026-10-02": {
   "symbol": "LEN",
@@ -17238,7 +17548,7 @@
   "verlauf": [],
   "klasse": "standard",
   "musterziel": 281.42,
-  "zone": "stark",
+  "zone": "leicht",
   "zone_gemeldet": "leicht",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
@@ -17290,8 +17600,15 @@
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
-  "status": "offen",
-  "verlauf": [],
+  "status": "geschlossen",
+  "verlauf": [
+   {
+    "datum": "2026-10-14",
+    "aktion": "stop_raus",
+    "grund": "Schluss 22.82 unter Stop 23.86",
+    "kurs": 22.82
+   }
+  ],
   "klasse": "standard",
   "musterziel": 34.29,
   "zone": "leicht",
@@ -17301,7 +17618,11 @@
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
-  "wedge_drop_gemeldet": false
+  "wedge_drop_gemeldet": false,
+  "schluss_datum": "2026-10-14",
+  "schluss_grund": "Schluss 22.82 unter Stop 23.86",
+  "schluss_kurs": 22.82,
+  "ergebnis_pct": -7.61
  },
  "S|Fallback: 52W-Hoch-Breakout": {
   "symbol": "S",
@@ -17536,7 +17857,7 @@
   "verlauf": [],
   "klasse": "standard",
   "musterziel": 25.64,
-  "zone": "stark",
+  "zone": "leicht",
   "zone_gemeldet": "leicht",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [],
@@ -17639,7 +17960,7 @@
   "verlauf": [],
   "klasse": "insider",
   "musterziel": null,
-  "zone": "stark",
+  "zone": "leicht",
   "zone_gemeldet": "leicht",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [],
@@ -17750,7 +18071,7 @@
   "struktur_stop": 31.26,
   "aktueller_stop": 34.66,
   "stop_quelle": "struktur",
-  "hoechstkurs": 39.61000061035156,
+  "hoechstkurs": 39.61,
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
@@ -17758,7 +18079,7 @@
   "verlauf": [],
   "klasse": "standard",
   "musterziel": null,
-  "zone": "stark",
+  "zone": "leicht",
   "zone_gemeldet": "leicht",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [],
@@ -18052,8 +18373,15 @@
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
-  "status": "offen",
-  "verlauf": [],
+  "status": "geschlossen",
+  "verlauf": [
+   {
+    "datum": "2026-10-14",
+    "aktion": "stop_raus",
+    "grund": "Schluss 16.44 unter Stop 16.82",
+    "kurs": 16.44
+   }
+  ],
   "klasse": "standard",
   "musterziel": null,
   "zone": "leicht",
@@ -18063,7 +18391,11 @@
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
-  "wedge_drop_gemeldet": false
+  "wedge_drop_gemeldet": false,
+  "schluss_datum": "2026-10-14",
+  "schluss_grund": "Schluss 16.44 unter Stop 16.82",
+  "schluss_kurs": 16.44,
+  "ergebnis_pct": -5.95
  },
  "PRCH|Rectangle Top": {
   "symbol": "PRCH",
@@ -18073,7 +18405,7 @@
   "einstieg_datum": "2026-10-06",
   "einstieg_index": 501,
   "struktur_stop": 15.75,
-  "aktueller_stop": 15.76,
+  "aktueller_stop": 15.99,
   "stop_quelle": "struktur",
   "hoechstkurs": 17.69,
   "teilverkauft": false,
@@ -18144,8 +18476,15 @@
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
-  "status": "offen",
-  "verlauf": [],
+  "status": "geschlossen",
+  "verlauf": [
+   {
+    "datum": "2026-10-14",
+    "aktion": "stop_raus",
+    "grund": "Schluss 245.28 unter Stop 252.01",
+    "kurs": 245.28
+   }
+  ],
   "klasse": "standard",
   "musterziel": null,
   "zone": "stark",
@@ -18155,7 +18494,11 @@
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
-  "wedge_drop_gemeldet": false
+  "wedge_drop_gemeldet": false,
+  "schluss_datum": "2026-10-14",
+  "schluss_grund": "Schluss 245.28 unter Stop 252.01",
+  "schluss_kurs": 245.28,
+  "ergebnis_pct": -12.4
  },
  "ALAB|Fallback: 20-Tage-Hoch (Pivot)": {
   "symbol": "ALAB",
@@ -18318,7 +18661,7 @@
   "verlauf": [],
   "klasse": "standard",
   "musterziel": null,
-  "zone": "stark",
+  "zone": "leicht",
   "zone_gemeldet": "leicht",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [],
@@ -18341,8 +18684,15 @@
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
-  "status": "offen",
-  "verlauf": [],
+  "status": "geschlossen",
+  "verlauf": [
+   {
+    "datum": "2026-10-14",
+    "aktion": "stop_raus",
+    "grund": "Schluss 8.23 unter Stop 8.37",
+    "kurs": 8.23
+   }
+  ],
   "klasse": "standard",
   "musterziel": 10.86,
   "zone": "leicht",
@@ -18352,7 +18702,11 @@
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
-  "wedge_drop_gemeldet": false
+  "wedge_drop_gemeldet": false,
+  "schluss_datum": "2026-10-14",
+  "schluss_grund": "Schluss 8.23 unter Stop 8.37",
+  "schluss_kurs": 8.23,
+  "ergebnis_pct": -11.41
  },
  "BB|Fallback: 20-Tage-Hoch (Pivot)": {
   "symbol": "BB",
@@ -18439,7 +18793,7 @@
   "verlauf": [],
   "klasse": "standard",
   "musterziel": null,
-  "zone": "stark",
+  "zone": "leicht",
   "zone_gemeldet": "leicht",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [],
@@ -18540,8 +18894,8 @@
   ],
   "klasse": "standard",
   "musterziel": null,
-  "zone": "stark",
-  "zone_gemeldet": "stark",
+  "zone": "mittel",
+  "zone_gemeldet": "mittel",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [
    "4_ma200_abstand",
@@ -18715,7 +19069,7 @@
   "einstieg_datum": "2026-10-09",
   "einstieg_index": 501,
   "struktur_stop": 310.62,
-  "aktueller_stop": 310.62,
+  "aktueller_stop": 311.94,
   "stop_quelle": "struktur",
   "hoechstkurs": 368.89,
   "teilverkauft": false,
@@ -18829,8 +19183,15 @@
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
-  "status": "offen",
-  "verlauf": [],
+  "status": "geschlossen",
+  "verlauf": [
+   {
+    "datum": "2026-10-14",
+    "aktion": "stop_raus",
+    "grund": "Schluss 335.08 unter Stop 335.11",
+    "kurs": 335.08
+   }
+  ],
   "klasse": "standard",
   "musterziel": null,
   "zone": "leicht",
@@ -18840,7 +19201,11 @@
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
-  "wedge_drop_gemeldet": false
+  "wedge_drop_gemeldet": false,
+  "schluss_datum": "2026-10-14",
+  "schluss_grund": "Schluss 335.08 unter Stop 335.11",
+  "schluss_kurs": 335.08,
+  "ergebnis_pct": -4.02
  },
  "CRDO|SPRING-2026-10-09": {
   "symbol": "CRDO",
@@ -18890,7 +19255,7 @@
   "struktur_stop": 51.67,
   "aktueller_stop": 52.44,
   "stop_quelle": "struktur",
-  "hoechstkurs": 57.74,
+  "hoechstkurs": 57.75,
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
@@ -18917,7 +19282,7 @@
   "struktur_stop": 53.38,
   "aktueller_stop": 54.17,
   "stop_quelle": "struktur",
-  "hoechstkurs": 57.74,
+  "hoechstkurs": 57.75,
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
@@ -18975,8 +19340,15 @@
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
-  "status": "offen",
-  "verlauf": [],
+  "status": "geschlossen",
+  "verlauf": [
+   {
+    "datum": "2026-10-14",
+    "aktion": "stop_raus",
+    "grund": "Schluss 69.85 unter Stop 70.66",
+    "kurs": 69.85
+   }
+  ],
   "klasse": "standard",
   "musterziel": null,
   "zone": "leicht",
@@ -18986,7 +19358,11 @@
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
-  "wedge_drop_gemeldet": false
+  "wedge_drop_gemeldet": false,
+  "schluss_datum": "2026-10-14",
+  "schluss_grund": "Schluss 69.85 unter Stop 70.66",
+  "schluss_kurs": 69.85,
+  "ergebnis_pct": -6.53
  },
  "SHOP|Cup & Handle (Wochenbasis)": {
   "symbol": "SHOP",
@@ -19052,7 +19428,7 @@
   "einstieg_datum": "2026-10-12",
   "einstieg_index": 500,
   "struktur_stop": 153.99,
-  "aktueller_stop": 155.36,
+  "aktueller_stop": 155.5,
   "stop_quelle": "struktur",
   "hoechstkurs": 171.1,
   "teilverkauft": false,
@@ -19108,7 +19484,7 @@
   "struktur_stop": 14.31,
   "aktueller_stop": 15.9,
   "stop_quelle": "struktur",
-  "hoechstkurs": 18.0,
+  "hoechstkurs": 18.63,
   "teilverkauft": true,
   "halteregel_aktiv": false,
   "beobachtung": true,
@@ -19123,7 +19499,7 @@
   ],
   "klasse": "standard",
   "musterziel": null,
-  "zone": "leicht",
+  "zone": "stark",
   "zone_gemeldet": "leicht",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [],
@@ -19140,7 +19516,7 @@
   "einstieg_datum": "2026-10-12",
   "einstieg_index": 272,
   "struktur_stop": 29.36,
-  "aktueller_stop": 29.36,
+  "aktueller_stop": 30.15,
   "stop_quelle": "struktur",
   "hoechstkurs": 32.62,
   "teilverkauft": false,
@@ -19169,7 +19545,7 @@
   "struktur_stop": 55.3,
   "aktueller_stop": 55.3,
   "stop_quelle": "struktur",
-  "hoechstkurs": 57.74,
+  "hoechstkurs": 57.75,
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
@@ -19290,7 +19666,7 @@
   "struktur_stop": 267.72,
   "aktueller_stop": 278.4,
   "stop_quelle": "struktur",
-  "hoechstkurs": 301.6300048828125,
+  "hoechstkurs": 301.63,
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
@@ -19317,7 +19693,7 @@
   "struktur_stop": 284.0,
   "aktueller_stop": 284.0,
   "stop_quelle": "struktur",
-  "hoechstkurs": 301.6300048828125,
+  "hoechstkurs": 301.63,
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
@@ -19344,7 +19720,7 @@
   "struktur_stop": 19.38,
   "aktueller_stop": 19.38,
   "stop_quelle": "struktur",
-  "hoechstkurs": 21.280000686645508,
+  "hoechstkurs": 21.28,
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
@@ -19434,8 +19810,15 @@
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
-  "status": "offen",
-  "verlauf": [],
+  "status": "geschlossen",
+  "verlauf": [
+   {
+    "datum": "2026-10-14",
+    "aktion": "stop_raus",
+    "grund": "Schluss 67.59 unter Stop 70.97",
+    "kurs": 67.59
+   }
+  ],
   "klasse": "standard",
   "musterziel": null,
   "zone": "stark",
@@ -19445,7 +19828,11 @@
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
-  "wedge_drop_gemeldet": false
+  "wedge_drop_gemeldet": false,
+  "schluss_datum": "2026-10-14",
+  "schluss_grund": "Schluss 67.59 unter Stop 70.97",
+  "schluss_kurs": 67.59,
+  "ergebnis_pct": -14.28
  },
  "FIGS|Fallback: 52W-Hoch-Breakout": {
   "symbol": "FIGS",
@@ -19457,7 +19844,7 @@
   "struktur_stop": 16.26,
   "aktueller_stop": 17.84,
   "stop_quelle": "struktur",
-  "hoechstkurs": 18.0,
+  "hoechstkurs": 18.63,
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
@@ -19465,7 +19852,7 @@
   "verlauf": [],
   "klasse": "standard",
   "musterziel": null,
-  "zone": "leicht",
+  "zone": "stark",
   "zone_gemeldet": "leicht",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [],
@@ -19482,7 +19869,7 @@
   "einstieg_datum": "2026-10-13",
   "einstieg_index": 501,
   "struktur_stop": 58.77,
-  "aktueller_stop": 59.67,
+  "aktueller_stop": 59.68,
   "stop_quelle": "struktur",
   "hoechstkurs": 65.3,
   "teilverkauft": false,
@@ -19511,7 +19898,7 @@
   "struktur_stop": 16.2,
   "aktueller_stop": 17.28,
   "stop_quelle": "struktur",
-  "hoechstkurs": 18.0,
+  "hoechstkurs": 18.63,
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
@@ -19519,7 +19906,7 @@
   "verlauf": [],
   "klasse": "standard",
   "musterziel": 26.3,
-  "zone": "leicht",
+  "zone": "stark",
   "zone_gemeldet": "leicht",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [],
@@ -19538,7 +19925,7 @@
   "struktur_stop": 13.87,
   "aktueller_stop": 14.22,
   "stop_quelle": "struktur",
-  "hoechstkurs": 15.58,
+  "hoechstkurs": 15.630000114440918,
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
@@ -19563,9 +19950,9 @@
   "einstieg_datum": "2026-10-13",
   "einstieg_index": 501,
   "struktur_stop": 16.14,
-  "aktueller_stop": 16.14,
+  "aktueller_stop": 16.51,
   "stop_quelle": "struktur",
-  "hoechstkurs": 17.010000228881836,
+  "hoechstkurs": 17.510000228881836,
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
@@ -19573,7 +19960,7 @@
   "verlauf": [],
   "klasse": "standard",
   "musterziel": null,
-  "zone": "leicht",
+  "zone": "mittel",
   "zone_gemeldet": "leicht",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [],
@@ -19596,8 +19983,15 @@
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
-  "status": "offen",
-  "verlauf": [],
+  "status": "geschlossen",
+  "verlauf": [
+   {
+    "datum": "2026-10-14",
+    "aktion": "stop_raus",
+    "grund": "Schluss 63.58 unter Stop 64.16",
+    "kurs": 63.58
+   }
+  ],
   "klasse": "standard",
   "musterziel": null,
   "zone": "leicht",
@@ -19607,7 +20001,11 @@
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
-  "wedge_drop_gemeldet": false
+  "wedge_drop_gemeldet": false,
+  "schluss_datum": "2026-10-14",
+  "schluss_grund": "Schluss 63.58 unter Stop 64.16",
+  "schluss_kurs": 63.58,
+  "ergebnis_pct": -2.61
  },
  "AMC|EMA Crossback": {
   "symbol": "AMC",
@@ -19671,7 +20069,7 @@
   "einstieg_datum": "2026-10-13",
   "einstieg_index": 501,
   "struktur_stop": 43.61,
-  "aktueller_stop": 43.61,
+  "aktueller_stop": 43.8,
   "stop_quelle": "struktur",
   "hoechstkurs": 49.26,
   "teilverkauft": false,
@@ -19698,9 +20096,9 @@
   "einstieg_datum": "2026-10-13",
   "einstieg_index": 501,
   "struktur_stop": 156.42,
-  "aktueller_stop": 160.35,
+  "aktueller_stop": 160.38,
   "stop_quelle": "deckel",
-  "hoechstkurs": 176.3300018310547,
+  "hoechstkurs": 176.33,
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
@@ -19727,7 +20125,7 @@
   "struktur_stop": 168.0,
   "aktueller_stop": 168.0,
   "stop_quelle": "struktur",
-  "hoechstkurs": 176.3300018310547,
+  "hoechstkurs": 176.33,
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
@@ -19777,11 +20175,11 @@
   "strategie": "Rectangle Top",
   "einstieg": 297.09,
   "einstieg_datum": "2026-10-14",
-  "einstieg_index": 0,
+  "einstieg_index": 501,
   "struktur_stop": 280.9,
   "aktueller_stop": 280.9,
   "stop_quelle": "struktur",
-  "hoechstkurs": 297.09,
+  "hoechstkurs": 302.0,
   "teilverkauft": false,
   "halteregel_aktiv": false,
   "beobachtung": true,
@@ -19789,8 +20187,8 @@
   "verlauf": [],
   "klasse": "standard",
   "musterziel": 313.26,
-  "zone": null,
-  "zone_gemeldet": null,
+  "zone": "leicht",
+  "zone_gemeldet": "leicht",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [],
   "weinstein_gemeldet": false,
@@ -19804,7 +20202,7 @@
   "strategie": "Shakeout plus drei",
   "einstieg": 21.758,
   "einstieg_datum": "2026-10-14",
-  "einstieg_index": 0,
+  "einstieg_index": 501,
   "struktur_stop": 19.78,
   "aktueller_stop": 19.78,
   "stop_quelle": "struktur",
@@ -19816,8 +20214,35 @@
   "verlauf": [],
   "klasse": "standard",
   "musterziel": null,
-  "zone": null,
-  "zone_gemeldet": null,
+  "zone": "leicht",
+  "zone_gemeldet": "leicht",
+  "ziel_gemeldet": false,
+  "klimax_gemeldet": [],
+  "weinstein_gemeldet": false,
+  "zahlen_hinweis_gemeldet": false,
+  "sektor_hinweis_gemeldet": false,
+  "wedge_drop_gemeldet": false
+ },
+ "AVT|SPRING-2026-10-14": {
+  "symbol": "AVT",
+  "firma": "Avnet Inc",
+  "strategie": "Shakeout-Spring",
+  "einstieg": 95.26,
+  "einstieg_datum": "2026-10-14",
+  "einstieg_index": 0,
+  "struktur_stop": 94.79,
+  "aktueller_stop": 94.79,
+  "stop_quelle": "struktur",
+  "hoechstkurs": 95.8499984741211,
+  "teilverkauft": false,
+  "halteregel_aktiv": false,
+  "beobachtung": true,
+  "status": "offen",
+  "verlauf": [],
+  "klasse": "standard",
+  "musterziel": 95.26,
+  "zone": "mittel",
+  "zone_gemeldet": "mittel",
   "ziel_gemeldet": false,
   "klimax_gemeldet": [],
   "weinstein_gemeldet": false,
