@@ -128,7 +128,8 @@
     "GEWINN|zonenwechsel|MPC|Fallback: 20-Tage-Hoch (Pivot)|stark": "2026-10-14",
     "GEWINN|zonenwechsel|MPC|Fallback: 52W-Hoch-Breakout|stark": "2026-10-14",
     "GEWINN|zonenwechsel|PSIX|2|mittel": "2026-10-14",
-    "GEWINN|zonenwechsel|STNG|Rectangle Top|mittel": "2026-10-14"
+    "GEWINN|zonenwechsel|STNG|Rectangle Top|mittel": "2026-10-14",
+    "R2GX|GTLB|2026-10-14": "2026-10-14"
   },
   "gemeldet_kp": {
     "GCT|Cup & Handle (Wochenbasis)": 57.41,
@@ -201,5 +202,5 @@
     "BEST|HQI|Rectangle Top": 17.49
   },
   "gapgo_warten": {},
-  "ampel_tag": "2026-10-13"
+  "ampel_tag": "2026-10-14"
 }
