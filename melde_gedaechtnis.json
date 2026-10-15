@@ -45,7 +45,9 @@
       "VEON|Fallback: 20-Tage-Hoch (Pivot)",
       "VEON|@82.10",
       "PCOR|Fallback: 20-Tage-Hoch (Pivot)",
-      "PCOR|@58.01"
+      "PCOR|@58.01",
+      "RXO|Cup & Handle (Wochenbasis)",
+      "RXO|@29.16"
     ]
   },
   "gemeldet": {
@@ -231,7 +233,9 @@
     "GEWINN|zonenwechsel|FIGS|Cup & Handle (Wochenbasis)|stark": "2026-10-15",
     "GEWINN|zonenwechsel|FIGS|Fallback: 20-Tage-Hoch (Pivot)|stark": "2026-10-15",
     "GEWINN|zonenwechsel|FIGS|Fallback: 52W-Hoch-Breakout|stark": "2026-10-15",
-    "SCHLUSSNAH|2026-10-15": "2026-10-15"
+    "SCHLUSSNAH|2026-10-15": "2026-10-15",
+    "RXO|Cup & Handle (Wochenbasis)": "2026-10-15",
+    "BEST|RXO|Cup & Handle (Wochenbasis)": "2026-10-15"
   },
   "gemeldet_kp": {
     "GCT|Cup & Handle (Wochenbasis)": 57.41,
@@ -346,7 +350,9 @@
     "VEON|Fallback: 52W-Hoch-Breakout": 82.17,
     "BEST|VEON|Fallback: 52W-Hoch-Breakout": 82.17,
     "PCOR|Fallback: 20-Tage-Hoch (Pivot)": 58.01,
-    "BEST|PCOR|Fallback: 20-Tage-Hoch (Pivot)": 58.01
+    "BEST|PCOR|Fallback: 20-Tage-Hoch (Pivot)": 58.01,
+    "RXO|Cup & Handle (Wochenbasis)": 29.16,
+    "BEST|RXO|Cup & Handle (Wochenbasis)": 29.16
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-10-15"
