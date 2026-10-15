@@ -13,7 +13,9 @@
       "SLAB|Fallback: MA50-Pullback",
       "SLAB|@221.18",
       "PCRX|Cup & Handle (Wochenbasis)",
-      "PCRX|@36.48"
+      "PCRX|@36.48",
+      "HURN|Cup & Handle (Wochenbasis)",
+      "HURN|@178.19"
     ]
   },
   "gemeldet": {
@@ -121,8 +123,8 @@
     "PKOH|Rectangle Top": "2026-10-13",
     "BEST|PKOH|Rectangle Top": "2026-10-13",
     "TEIL|FIGS|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-13",
-    "HURN|Cup & Handle (Wochenbasis)": "2026-10-13",
-    "BEST|HURN|Cup & Handle (Wochenbasis)": "2026-10-13",
+    "HURN|Cup & Handle (Wochenbasis)": "2026-10-15",
+    "BEST|HURN|Cup & Handle (Wochenbasis)": "2026-10-15",
     "HURN|Pocket Pivot": "2026-10-13",
     "BEST|HURN|Pocket Pivot": "2026-10-13",
     "HQI|Rectangle Top": "2026-10-13",
@@ -232,8 +234,8 @@
     "BEST|CCI|Cup & Handle (Wochenbasis)": 81.3,
     "PKOH|Rectangle Top": 48.11,
     "BEST|PKOH|Rectangle Top": 48.11,
-    "HURN|Cup & Handle (Wochenbasis)": 173.8,
-    "BEST|HURN|Cup & Handle (Wochenbasis)": 173.8,
+    "HURN|Cup & Handle (Wochenbasis)": 178.19,
+    "BEST|HURN|Cup & Handle (Wochenbasis)": 178.19,
     "HURN|Pocket Pivot": 173.79,
     "BEST|HURN|Pocket Pivot": 173.79,
     "HQI|Rectangle Top": 17.49,
