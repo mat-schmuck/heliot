@@ -6,7 +6,7 @@
   "zone_max": 89.16000366210938,
   "spring_low": 87.08999633789062,
   "spring_volumen": 1386814.0,
-  "tage_gewartet": 14
+  "tage_gewartet": 15
  },
  "GTLB": {
   "spring_index": 499,
@@ -15,16 +15,7 @@
   "zone_max": 51.29999923706055,
   "spring_low": 49.689998626708984,
   "spring_volumen": 3208565.0,
-  "tage_gewartet": 9
- },
- "GEO": {
-  "spring_index": 500,
-  "spring_datum": "2026-10-08",
-  "zone_min": 29.56999969482422,
-  "zone_max": 30.040000915527344,
-  "spring_low": 29.545000076293945,
-  "spring_volumen": 3991492.0,
-  "tage_gewartet": 6
+  "tage_gewartet": 10
  },
  "BUUU": {
   "spring_index": 290,
@@ -33,6 +24,69 @@
   "zone_max": 38.900001525878906,
   "spring_low": 37.58000183105469,
   "spring_volumen": 47600.0,
-  "tage_gewartet": 4
+  "tage_gewartet": 5
+ },
+ "ESTC": {
+  "spring_index": 500,
+  "spring_datum": "2026-10-15",
+  "zone_min": 94.44000244140625,
+  "zone_max": 96.06999969482422,
+  "spring_low": 90.25499725341797,
+  "spring_volumen": 4181049.0,
+  "tage_gewartet": 0
+ },
+ "LITE": {
+  "spring_index": 500,
+  "spring_datum": "2026-10-15",
+  "zone_min": 832.1099853515625,
+  "zone_max": 854.6199951171875,
+  "spring_low": 800.0,
+  "spring_volumen": 7564592.0,
+  "tage_gewartet": 0
+ },
+ "XMTR": {
+  "spring_index": 500,
+  "spring_datum": "2026-10-15",
+  "zone_min": 96.3499984741211,
+  "zone_max": 98.70999908447266,
+  "spring_low": 92.01000213623047,
+  "spring_volumen": 801236.0,
+  "tage_gewartet": 0
+ },
+ "ASST": {
+  "spring_index": 500,
+  "spring_datum": "2026-10-15",
+  "zone_min": 23.399999618530273,
+  "zone_max": 23.799999237060547,
+  "spring_low": 22.479999542236328,
+  "spring_volumen": 12390444.0,
+  "tage_gewartet": 0
+ },
+ "NTNX": {
+  "spring_index": 500,
+  "spring_datum": "2026-10-15",
+  "zone_min": 68.80000305175781,
+  "zone_max": 68.80000305175781,
+  "spring_low": 67.19999694824219,
+  "spring_volumen": 3385405.0,
+  "tage_gewartet": 0
+ },
+ "PRCH": {
+  "spring_index": 500,
+  "spring_datum": "2026-10-15",
+  "zone_min": 16.440000534057617,
+  "zone_max": 16.7549991607666,
+  "spring_low": 16.200000762939453,
+  "spring_volumen": 2163092.0,
+  "tage_gewartet": 0
+ },
+ "SVRN": {
+  "spring_index": 500,
+  "spring_datum": "2026-10-15",
+  "zone_min": 32.20000076293945,
+  "zone_max": 32.20000076293945,
+  "spring_low": 32.099998474121094,
+  "spring_volumen": 85427.0,
+  "tage_gewartet": 0
  }
 }

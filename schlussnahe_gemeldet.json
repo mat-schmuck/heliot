@@ -575,5 +575,20 @@
    "zeichen": "hoch",
    "text": "INFORMATION: Sektor-Radar ITB (Home Construction) dreht nach oben; Volumen hochgerechnet plus 77 % über dem 50-Tage-Schnitt; Kurs 86.68"
   }
+ ],
+ "geprueft": "2026-10-15",
+ "zurueckgenommen": [
+  "PENG|EMA Crossback",
+  "AVT|EMA Crossback",
+  "AVT|Rectangle Top",
+  "AVT|SPRING-2026-10-14",
+  "GEO|Cup & Handle (Wochenbasis)",
+  "GEO|Fallback: MA50-Pullback",
+  "GEO|Rectangle Top",
+  "OKTA|Cup & Handle (Wochenbasis)",
+  "P|Fallback: 20-Tage-Hoch (Pivot)",
+  "RELL|EMA Crossback",
+  "RELL|Wick Play",
+  "ITB"
  ]
 }

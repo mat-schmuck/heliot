@@ -1,5 +1,5 @@
 {
- "gebaut_am": "2026-10-15 00:12 Wien",
+ "gebaut_am": "2026-10-16 00:13 Wien",
  "ohne_termin": [
   "ANL",
   "BNR",
@@ -9,6 +9,7 @@
   "MAAS",
   "SAIH",
   "SDEV",
+  "SSL",
   "SVRN",
   "TJGC"
  ],
@@ -224,7 +225,8 @@
    "uhrzeit": "08:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "AZTA": {
@@ -358,7 +360,7 @@
    ]
   },
   "COHU": {
-   "datum": "2026-10-29",
+   "datum": "2026-10-28",
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
@@ -398,7 +400,7 @@
    ]
   },
   "CSTL": {
-   "datum": "2026-11-02",
+   "datum": "2026-11-05",
    "uhrzeit": "15:00",
    "lage": "im_handel",
    "quellen": [
@@ -414,7 +416,7 @@
    ]
   },
   "DDOG": {
-   "datum": "2026-11-05",
+   "datum": "2026-11-04",
    "uhrzeit": "07:00",
    "lage": "vorboerslich",
    "quellen": [
@@ -434,7 +436,8 @@
    "uhrzeit": "08:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "DJCO": {
@@ -572,7 +575,8 @@
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "FTRE": {
@@ -868,7 +872,7 @@
    ]
   },
   "MRVI": {
-   "datum": "2026-11-05",
+   "datum": "2026-11-04",
    "uhrzeit": "15:00",
    "lage": "im_handel",
    "quellen": [
@@ -934,8 +938,8 @@
   },
   "NIQ": {
    "datum": "2026-11-12",
-   "uhrzeit": "15:00",
-   "lage": "im_handel",
+   "uhrzeit": "07:00",
+   "lage": "vorboerslich",
    "quellen": [
     "yahoo"
    ]
@@ -1121,7 +1125,8 @@
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "PINS": {
@@ -1185,7 +1190,8 @@
    "uhrzeit": "08:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "PSNL": {
@@ -1394,7 +1400,8 @@
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "SLAB": {
@@ -1468,14 +1475,6 @@
    "quellen": [
     "yahoo",
     "nasdaq"
-   ]
-  },
-  "SSL": {
-   "datum": "2027-02-22",
-   "uhrzeit": "07:00",
-   "lage": "vorboerslich",
-   "quellen": [
-    "yahoo"
    ]
   },
   "TEAM": {
@@ -1612,7 +1611,8 @@
    "uhrzeit": "08:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "XMTR": {
