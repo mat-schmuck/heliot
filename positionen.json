@@ -19483,7 +19483,9 @@
   "zone": "stark",
   "zone_gemeldet": "leicht",
   "ziel_gemeldet": false,
-  "klimax_gemeldet": [],
+  "klimax_gemeldet": [
+   "5_kanaluebershooting"
+  ],
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
@@ -19836,7 +19838,9 @@
   "zone": "stark",
   "zone_gemeldet": "leicht",
   "ziel_gemeldet": false,
-  "klimax_gemeldet": [],
+  "klimax_gemeldet": [
+   "5_kanaluebershooting"
+  ],
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
@@ -19890,7 +19894,9 @@
   "zone": "stark",
   "zone_gemeldet": "leicht",
   "ziel_gemeldet": false,
-  "klimax_gemeldet": [],
+  "klimax_gemeldet": [
+   "5_kanaluebershooting"
+  ],
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
