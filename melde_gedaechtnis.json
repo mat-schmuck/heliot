@@ -225,7 +225,12 @@
     "BEST|VEON|Fallback: 52W-Hoch-Breakout": "2026-10-15",
     "PCOR|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-15",
     "BEST|PCOR|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-15",
-    "GEWINN|klimax_zeichen|FIGS|Cup & Handle (Wochenbasis)|5_kanaluebershooting": "2026-10-15"
+    "GEWINN|klimax_zeichen|FIGS|Cup & Handle (Wochenbasis)|5_kanaluebershooting": "2026-10-15",
+    "GEWINN|zonenwechsel|AMN|EMA Crossback|stark": "2026-10-15",
+    "GEWINN|zonenwechsel|AMN|Rectangle Top|mittel": "2026-10-15",
+    "GEWINN|zonenwechsel|FIGS|Cup & Handle (Wochenbasis)|stark": "2026-10-15",
+    "GEWINN|zonenwechsel|FIGS|Fallback: 20-Tage-Hoch (Pivot)|stark": "2026-10-15",
+    "GEWINN|zonenwechsel|FIGS|Fallback: 52W-Hoch-Breakout|stark": "2026-10-15"
   },
   "gemeldet_kp": {
     "GCT|Cup & Handle (Wochenbasis)": 57.41,
