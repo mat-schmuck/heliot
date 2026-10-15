@@ -31,7 +31,9 @@
       "RVTY|Cup & Handle (Wochenbasis)",
       "RVTY|@152.27",
       "GWRE|Fallback: 20-Tage-Hoch (Pivot)",
-      "GWRE|@171.43"
+      "GWRE|@171.43",
+      "GWRE|Fallback: MA50-R\u00fcckeroberung",
+      "GWRE|@167.49"
     ]
   },
   "gemeldet": {
@@ -201,7 +203,8 @@
     "RVTY|Cup & Handle (Wochenbasis)": "2026-10-15",
     "BEST|RVTY|Cup & Handle (Wochenbasis)": "2026-10-15",
     "GWRE|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-15",
-    "BEST|GWRE|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-15"
+    "BEST|GWRE|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-15",
+    "UEBER|GWRE|Fallback: MA50-R\u00fcckeroberung": "2026-10-15"
   },
   "gemeldet_kp": {
     "GCT|Cup & Handle (Wochenbasis)": 57.41,
@@ -307,7 +310,8 @@
     "RVTY|Cup & Handle (Wochenbasis)": 152.27,
     "BEST|RVTY|Cup & Handle (Wochenbasis)": 152.27,
     "GWRE|Fallback: 20-Tage-Hoch (Pivot)": 171.43,
-    "BEST|GWRE|Fallback: 20-Tage-Hoch (Pivot)": 171.43
+    "BEST|GWRE|Fallback: 20-Tage-Hoch (Pivot)": 171.43,
+    "UEBER|GWRE|Fallback: MA50-R\u00fcckeroberung": 167.49
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-10-15"
