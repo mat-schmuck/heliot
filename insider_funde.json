@@ -1,13 +1,13 @@
 {
- "stand": "2026-10-14",
+ "stand": "2026-10-15",
  "funde": [
   {
    "ticker": "BORR",
    "status": "pfad_a",
-   "marktkap": 1468551424.0,
-   "stichtag": "2026-10-14",
+   "marktkap": 1423786240.0,
+   "stichtag": "2026-10-15",
    "zeilen": [
-    "BORR; Großkauf; Marktwert 1,5 Mrd $",
+    "BORR; Großkauf; Marktwert 1,4 Mrd $",
     "Größter Einzelkauf 11,8 Mio $ am 09.10.; Troim Tor Olav, Direktor"
    ],
    "kennung": "BORR|pfad_a|1"
@@ -15,8 +15,8 @@
   {
    "ticker": "CRBG",
    "status": "pfad_a",
-   "marktkap": 15151675392.0,
-   "stichtag": "2026-10-14",
+   "marktkap": 15182879744.0,
+   "stichtag": "2026-10-15",
    "zeilen": [
     "CRBG; Großkauf; Marktwert 15,2 Mrd $",
     "Größter Einzelkauf 20,9 Mio $ am 07.10.; NIPPON LIFE INSURANCE CO, Insider"
@@ -26,10 +26,10 @@
   {
    "ticker": "GME",
    "status": "pfad_a",
-   "marktkap": 13957020672.0,
-   "stichtag": "2026-10-14",
+   "marktkap": 14100803584.0,
+   "stichtag": "2026-10-15",
    "zeilen": [
-    "GME; Großkauf; Marktwert 14,0 Mrd $",
+    "GME; Großkauf; Marktwert 14,1 Mrd $",
     "Größter Einzelkauf 21,0 Mio $ am 13.10.; Cohen Ryan, President, CEO and Chairman"
    ],
    "kennung": "GME|pfad_a|2"
@@ -37,10 +37,10 @@
   {
    "ticker": "LEN",
    "status": "pfad_a",
-   "marktkap": 17246578688.0,
-   "stichtag": "2026-10-14",
+   "marktkap": 18426562560.0,
+   "stichtag": "2026-10-15",
    "zeilen": [
-    "LEN; Großkauf; Marktwert 17,2 Mrd $",
+    "LEN; Großkauf; Marktwert 18,4 Mrd $",
     "Größter Einzelkauf 67,5 Mio $ am 02.10.; BERKSHIRE HATHAWAY INC, Insider"
    ],
    "kennung": "LEN|pfad_a|1"
