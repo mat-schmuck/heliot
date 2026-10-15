@@ -4,7 +4,7 @@
   {
    "ticker": "BORR",
    "status": "pfad_a",
-   "marktkap": 1423786240.0,
+   "marktkap": 1403732992.0,
    "stichtag": "2026-10-15",
    "zeilen": [
     "BORR; Großkauf; Marktwert 1,4 Mrd $",
@@ -15,10 +15,10 @@
   {
    "ticker": "CRBG",
    "status": "pfad_a",
-   "marktkap": 15182879744.0,
+   "marktkap": 15347947520.0,
    "stichtag": "2026-10-15",
    "zeilen": [
-    "CRBG; Großkauf; Marktwert 15,2 Mrd $",
+    "CRBG; Großkauf; Marktwert 15,3 Mrd $",
     "Größter Einzelkauf 20,9 Mio $ am 07.10.; NIPPON LIFE INSURANCE CO, Insider"
    ],
    "kennung": "CRBG|pfad_a|1"
@@ -26,7 +26,7 @@
   {
    "ticker": "GME",
    "status": "pfad_a",
-   "marktkap": 14100803584.0,
+   "marktkap": 14136118272.0,
    "stichtag": "2026-10-15",
    "zeilen": [
     "GME; Großkauf; Marktwert 14,1 Mrd $",
@@ -37,10 +37,10 @@
   {
    "ticker": "LEN",
    "status": "pfad_a",
-   "marktkap": 18426562560.0,
+   "marktkap": 18482470912.0,
    "stichtag": "2026-10-15",
    "zeilen": [
-    "LEN; Großkauf; Marktwert 18,4 Mrd $",
+    "LEN; Großkauf; Marktwert 18,5 Mrd $",
     "Größter Einzelkauf 67,5 Mio $ am 02.10.; BERKSHIRE HATHAWAY INC, Insider"
    ],
    "kennung": "LEN|pfad_a|1"
