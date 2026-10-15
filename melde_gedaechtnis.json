@@ -1,18 +1,7 @@
 {
   "heute_gemeldet": {
-    "tag": "2026-10-14",
-    "marken": [
-      "HALO|Cup & Handle (Wochenbasis)",
-      "HALO|@109.67",
-      "CRL|Rectangle Top",
-      "CRL|@297.09",
-      "FTRE|Shakeout plus drei",
-      "FTRE|@21.76",
-      "HALO|Fallback: 52W-Hoch-Breakout",
-      "HALO|@116.97",
-      "IBTA|Cup & Handle (Wochenbasis)",
-      "IBTA|@43.89"
-    ]
+    "tag": "2026-10-15",
+    "marken": []
   },
   "gemeldet": {
     "INSIDER|FTK|pfad_a|1": "2026-09-16",
@@ -152,7 +141,8 @@
     "GEWINN|klimax_zeichen|KOD|INS-2026-10-02|4_ma200_abstand": "2026-10-14",
     "SCHLUSSNAH|2026-10-14": "2026-10-14",
     "IBTA|Cup & Handle (Wochenbasis)": "2026-10-14",
-    "BEST|IBTA|Cup & Handle (Wochenbasis)": "2026-10-14"
+    "BEST|IBTA|Cup & Handle (Wochenbasis)": "2026-10-14",
+    "SEKTORAUF|2026-10-15": "2026-10-15"
   },
   "gemeldet_kp": {
     "GCT|Cup & Handle (Wochenbasis)": 57.41,
