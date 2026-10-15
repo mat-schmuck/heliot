@@ -7462,47 +7462,28 @@
   "symbol": "XMTR",
   "firma": "Xometry Inc",
   "strategie": "Fallback: MA50-Rückeroberung",
-  "einstieg": 91.15,
-  "einstieg_datum": "2026-09-16",
-  "einstieg_index": 501,
-  "struktur_stop": 85.25,
-  "aktueller_stop": 91.15,
+  "einstieg": 95.76,
+  "einstieg_datum": "2026-10-15",
+  "einstieg_index": 0,
+  "struktur_stop": 89.57,
+  "aktueller_stop": 89.57,
   "stop_quelle": "struktur",
-  "hoechstkurs": 111.07,
-  "teilverkauft": true,
-  "halteregel_aktiv": true,
+  "hoechstkurs": 95.76,
+  "teilverkauft": false,
+  "halteregel_aktiv": false,
   "beobachtung": true,
-  "status": "geschlossen",
-  "verlauf": [
-   {
-    "datum": "2026-10-06",
-    "aktion": "teilverkauf",
-    "grund": "+20.3 % im Handel erreicht (M2)",
-    "kurs": 109.63
-   },
-   {
-    "datum": "2026-10-14",
-    "aktion": "trail_raus",
-    "grund": "Schluss 95.15 unter der 21-Tage-Linie 103.09; es gilt die 21-Tage-Linie, ATR 14 bei 6.09 % des Kurses, ab 2.5 % keine ruhige Bewegung",
-    "kurs": 95.15
-   }
-  ],
+  "status": "offen",
+  "verlauf": [],
   "klasse": "standard",
   "musterziel": null,
-  "zone": "mittel",
-  "zone_gemeldet": "mittel",
+  "zone": null,
+  "zone_gemeldet": null,
   "ziel_gemeldet": false,
-  "klimax_gemeldet": [
-   "2_groesster_tagesgewinn"
-  ],
+  "klimax_gemeldet": [],
   "weinstein_gemeldet": false,
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
-  "wedge_drop_gemeldet": false,
-  "schluss_datum": "2026-10-14",
-  "schluss_grund": "Schluss 95.15 unter der 21-Tage-Linie 103.09; es gilt die 21-Tage-Linie, ATR 14 bei 6.09 % des Kurses, ab 2.5 % keine ruhige Bewegung",
-  "schluss_kurs": 95.15,
-  "ergebnis_pct": 4.39
+  "wedge_drop_gemeldet": false
  },
  "CLMT|Fallback: 20-Tage-Hoch (Pivot)": {
   "symbol": "CLMT",
