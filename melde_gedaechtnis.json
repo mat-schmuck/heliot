@@ -9,7 +9,9 @@
       "W|Wick Play",
       "W|@107.99",
       "SSL|Cup & Handle (Wochenbasis)",
-      "SSL|@15.80"
+      "SSL|@15.80",
+      "SLAB|Fallback: MA50-Pullback",
+      "SLAB|@221.18"
     ]
   },
   "gemeldet": {
@@ -159,7 +161,9 @@
     "W|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-15",
     "BEST|W|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-15",
     "W|Wick Play": "2026-10-15",
-    "BEST|W|Wick Play": "2026-10-15"
+    "BEST|W|Wick Play": "2026-10-15",
+    "SLAB|Fallback: MA50-Pullback": "2026-10-15",
+    "BEST|SLAB|Fallback: MA50-Pullback": "2026-10-15"
   },
   "gemeldet_kp": {
     "GCT|Cup & Handle (Wochenbasis)": 57.41,
@@ -245,7 +249,9 @@
     "W|Fallback: 20-Tage-Hoch (Pivot)": 108.69,
     "BEST|W|Fallback: 20-Tage-Hoch (Pivot)": 108.69,
     "W|Wick Play": 107.99,
-    "BEST|W|Wick Play": 107.99
+    "BEST|W|Wick Play": 107.99,
+    "SLAB|Fallback: MA50-Pullback": 221.18,
+    "BEST|SLAB|Fallback: MA50-Pullback": 221.18
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-10-15"
