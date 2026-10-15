@@ -11,7 +11,9 @@
       "SSL|Cup & Handle (Wochenbasis)",
       "SSL|@15.80",
       "SLAB|Fallback: MA50-Pullback",
-      "SLAB|@221.18"
+      "SLAB|@221.18",
+      "PCRX|Cup & Handle (Wochenbasis)",
+      "PCRX|@36.48"
     ]
   },
   "gemeldet": {
@@ -163,7 +165,9 @@
     "W|Wick Play": "2026-10-15",
     "BEST|W|Wick Play": "2026-10-15",
     "SLAB|Fallback: MA50-Pullback": "2026-10-15",
-    "BEST|SLAB|Fallback: MA50-Pullback": "2026-10-15"
+    "BEST|SLAB|Fallback: MA50-Pullback": "2026-10-15",
+    "PCRX|Cup & Handle (Wochenbasis)": "2026-10-15",
+    "BEST|PCRX|Cup & Handle (Wochenbasis)": "2026-10-15"
   },
   "gemeldet_kp": {
     "GCT|Cup & Handle (Wochenbasis)": 57.41,
@@ -251,7 +255,9 @@
     "W|Wick Play": 107.99,
     "BEST|W|Wick Play": 107.99,
     "SLAB|Fallback: MA50-Pullback": 221.18,
-    "BEST|SLAB|Fallback: MA50-Pullback": 221.18
+    "BEST|SLAB|Fallback: MA50-Pullback": 221.18,
+    "PCRX|Cup & Handle (Wochenbasis)": 36.48,
+    "BEST|PCRX|Cup & Handle (Wochenbasis)": 36.48
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-10-15"
