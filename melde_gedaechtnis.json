@@ -7,7 +7,9 @@
       "W|Fallback: 20-Tage-Hoch (Pivot)",
       "W|@108.69",
       "W|Wick Play",
-      "W|@107.99"
+      "W|@107.99",
+      "SSL|Cup & Handle (Wochenbasis)",
+      "SSL|@15.80"
     ]
   },
   "gemeldet": {
@@ -102,8 +104,8 @@
     "BEST|DT|Cup & Handle (Wochenbasis)": "2026-10-13",
     "FIGS|Cup & Handle (Wochenbasis)": "2026-10-13",
     "BEST|FIGS|Cup & Handle (Wochenbasis)": "2026-10-13",
-    "SSL|Cup & Handle (Wochenbasis)": "2026-10-13",
-    "BEST|SSL|Cup & Handle (Wochenbasis)": "2026-10-13",
+    "SSL|Cup & Handle (Wochenbasis)": "2026-10-15",
+    "BEST|SSL|Cup & Handle (Wochenbasis)": "2026-10-15",
     "AOUT|Inside Day": "2026-10-13",
     "BEST|AOUT|Inside Day": "2026-10-13",
     "DT|Pocket Pivot": "2026-10-13",
@@ -210,8 +212,8 @@
     "BEST|DT|Cup & Handle (Wochenbasis)": 65.3,
     "FIGS|Cup & Handle (Wochenbasis)": 17.99,
     "BEST|FIGS|Cup & Handle (Wochenbasis)": 17.99,
-    "SSL|Cup & Handle (Wochenbasis)": 15.41,
-    "BEST|SSL|Cup & Handle (Wochenbasis)": 15.41,
+    "SSL|Cup & Handle (Wochenbasis)": 15.8,
+    "BEST|SSL|Cup & Handle (Wochenbasis)": 15.8,
     "AOUT|Inside Day": 16.51,
     "BEST|AOUT|Inside Day": 16.51,
     "DT|Pocket Pivot": 65.285,
