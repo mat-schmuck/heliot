@@ -33,7 +33,11 @@
       "GWRE|Fallback: 20-Tage-Hoch (Pivot)",
       "GWRE|@171.43",
       "GWRE|Fallback: MA50-R\u00fcckeroberung",
-      "GWRE|@167.49"
+      "GWRE|@167.49",
+      "VEEV|Cup & Handle (Wochenbasis)",
+      "VEEV|@309.33",
+      "VEEV|Wick Play",
+      "VEEV|@309.42"
     ]
   },
   "gemeldet": {
@@ -99,8 +103,8 @@
     "BEST|NTSK|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-12",
     "APPN|EMA Crossback": "2026-10-12",
     "BEST|APPN|EMA Crossback": "2026-10-12",
-    "VEEV|Cup & Handle (Wochenbasis)": "2026-10-12",
-    "BEST|VEEV|Cup & Handle (Wochenbasis)": "2026-10-12",
+    "VEEV|Cup & Handle (Wochenbasis)": "2026-10-15",
+    "BEST|VEEV|Cup & Handle (Wochenbasis)": "2026-10-15",
     "VEEV|Pocket Pivot": "2026-10-12",
     "BEST|VEEV|Pocket Pivot": "2026-10-12",
     "TEIL|BORR|INS-2026-10-06": "2026-10-12",
@@ -204,7 +208,9 @@
     "BEST|RVTY|Cup & Handle (Wochenbasis)": "2026-10-15",
     "GWRE|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-15",
     "BEST|GWRE|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-15",
-    "UEBER|GWRE|Fallback: MA50-R\u00fcckeroberung": "2026-10-15"
+    "UEBER|GWRE|Fallback: MA50-R\u00fcckeroberung": "2026-10-15",
+    "VEEV|Wick Play": "2026-10-15",
+    "BEST|VEEV|Wick Play": "2026-10-15"
   },
   "gemeldet_kp": {
     "GCT|Cup & Handle (Wochenbasis)": 57.41,
@@ -239,8 +245,8 @@
     "BEST|NTSK|Fallback: 20-Tage-Hoch (Pivot)": 20.85,
     "APPN|EMA Crossback": 40.18,
     "BEST|APPN|EMA Crossback": 40.18,
-    "VEEV|Cup & Handle (Wochenbasis)": 297.46,
-    "BEST|VEEV|Cup & Handle (Wochenbasis)": 297.46,
+    "VEEV|Cup & Handle (Wochenbasis)": 309.33,
+    "BEST|VEEV|Cup & Handle (Wochenbasis)": 309.33,
     "VEEV|Pocket Pivot": 297.45,
     "BEST|VEEV|Pocket Pivot": 297.45,
     "RELL|Wick Play": 21.05,
@@ -311,7 +317,9 @@
     "BEST|RVTY|Cup & Handle (Wochenbasis)": 152.27,
     "GWRE|Fallback: 20-Tage-Hoch (Pivot)": 171.43,
     "BEST|GWRE|Fallback: 20-Tage-Hoch (Pivot)": 171.43,
-    "UEBER|GWRE|Fallback: MA50-R\u00fcckeroberung": 167.49
+    "UEBER|GWRE|Fallback: MA50-R\u00fcckeroberung": 167.49,
+    "VEEV|Wick Play": 309.42,
+    "BEST|VEEV|Wick Play": 309.42
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-10-15"
