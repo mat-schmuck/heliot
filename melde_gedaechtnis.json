@@ -25,7 +25,9 @@
       "APPN|Fallback: 20-Tage-Hoch (Pivot)",
       "APPN|@40.99",
       "PSNL|Fallback: MA50-R\u00fcckeroberung",
-      "PSNL|@16.05"
+      "PSNL|@16.05",
+      "CON|Fallback: 20-Tage-Hoch (Pivot)",
+      "CON|@38.17"
     ]
   },
   "gemeldet": {
@@ -189,7 +191,9 @@
     "APPN|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-15",
     "BEST|APPN|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-15",
     "PSNL|Fallback: MA50-R\u00fcckeroberung": "2026-10-15",
-    "BEST|PSNL|Fallback: MA50-R\u00fcckeroberung": "2026-10-15"
+    "BEST|PSNL|Fallback: MA50-R\u00fcckeroberung": "2026-10-15",
+    "CON|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-15",
+    "BEST|CON|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-15"
   },
   "gemeldet_kp": {
     "GCT|Cup & Handle (Wochenbasis)": 57.41,
@@ -289,7 +293,9 @@
     "APPN|Fallback: 20-Tage-Hoch (Pivot)": 40.99,
     "BEST|APPN|Fallback: 20-Tage-Hoch (Pivot)": 40.99,
     "PSNL|Fallback: MA50-R\u00fcckeroberung": 16.05,
-    "BEST|PSNL|Fallback: MA50-R\u00fcckeroberung": 16.05
+    "BEST|PSNL|Fallback: MA50-R\u00fcckeroberung": 16.05,
+    "CON|Fallback: 20-Tage-Hoch (Pivot)": 38.17,
+    "BEST|CON|Fallback: 20-Tage-Hoch (Pivot)": 38.17
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-10-15"
