@@ -19,7 +19,9 @@
       "XMTR|Fallback: MA50-R\u00fcckeroberung",
       "XMTR|@95.76",
       "PCRX|Fallback: 52W-Hoch-Breakout",
-      "PCRX|@36.51"
+      "PCRX|@36.51",
+      "PCOR|Fallback: MA50-R\u00fcckeroberung",
+      "PCOR|@56.56"
     ]
   },
   "gemeldet": {
@@ -177,7 +179,9 @@
     "XMTR|Fallback: MA50-R\u00fcckeroberung": "2026-10-15",
     "BEST|XMTR|Fallback: MA50-R\u00fcckeroberung": "2026-10-15",
     "PCRX|Fallback: 52W-Hoch-Breakout": "2026-10-15",
-    "BEST|PCRX|Fallback: 52W-Hoch-Breakout": "2026-10-15"
+    "BEST|PCRX|Fallback: 52W-Hoch-Breakout": "2026-10-15",
+    "PCOR|Fallback: MA50-R\u00fcckeroberung": "2026-10-15",
+    "BEST|PCOR|Fallback: MA50-R\u00fcckeroberung": "2026-10-15"
   },
   "gemeldet_kp": {
     "GCT|Cup & Handle (Wochenbasis)": 57.41,
@@ -271,7 +275,9 @@
     "XMTR|Fallback: MA50-R\u00fcckeroberung": 95.76,
     "BEST|XMTR|Fallback: MA50-R\u00fcckeroberung": 95.76,
     "PCRX|Fallback: 52W-Hoch-Breakout": 36.51,
-    "BEST|PCRX|Fallback: 52W-Hoch-Breakout": 36.51
+    "BEST|PCRX|Fallback: 52W-Hoch-Breakout": 36.51,
+    "PCOR|Fallback: MA50-R\u00fcckeroberung": 56.56,
+    "BEST|PCOR|Fallback: MA50-R\u00fcckeroberung": 56.56
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-10-15"
