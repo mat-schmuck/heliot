@@ -230,7 +230,8 @@
     "GEWINN|zonenwechsel|AMN|Rectangle Top|mittel": "2026-10-15",
     "GEWINN|zonenwechsel|FIGS|Cup & Handle (Wochenbasis)|stark": "2026-10-15",
     "GEWINN|zonenwechsel|FIGS|Fallback: 20-Tage-Hoch (Pivot)|stark": "2026-10-15",
-    "GEWINN|zonenwechsel|FIGS|Fallback: 52W-Hoch-Breakout|stark": "2026-10-15"
+    "GEWINN|zonenwechsel|FIGS|Fallback: 52W-Hoch-Breakout|stark": "2026-10-15",
+    "SCHLUSSNAH|2026-10-15": "2026-10-15"
   },
   "gemeldet_kp": {
     "GCT|Cup & Handle (Wochenbasis)": 57.41,
