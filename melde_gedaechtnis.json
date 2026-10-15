@@ -37,7 +37,9 @@
       "VEEV|Cup & Handle (Wochenbasis)",
       "VEEV|@309.33",
       "VEEV|Wick Play",
-      "VEEV|@309.42"
+      "VEEV|@309.42",
+      "FTRE|Pocket Pivot",
+      "FTRE|@22.15"
     ]
   },
   "gemeldet": {
@@ -210,7 +212,9 @@
     "BEST|GWRE|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-15",
     "UEBER|GWRE|Fallback: MA50-R\u00fcckeroberung": "2026-10-15",
     "VEEV|Wick Play": "2026-10-15",
-    "BEST|VEEV|Wick Play": "2026-10-15"
+    "BEST|VEEV|Wick Play": "2026-10-15",
+    "FTRE|Pocket Pivot": "2026-10-15",
+    "BEST|FTRE|Pocket Pivot": "2026-10-15"
   },
   "gemeldet_kp": {
     "GCT|Cup & Handle (Wochenbasis)": 57.41,
@@ -319,7 +323,9 @@
     "BEST|GWRE|Fallback: 20-Tage-Hoch (Pivot)": 171.43,
     "UEBER|GWRE|Fallback: MA50-R\u00fcckeroberung": 167.49,
     "VEEV|Wick Play": 309.42,
-    "BEST|VEEV|Wick Play": 309.42
+    "BEST|VEEV|Wick Play": 309.42,
+    "FTRE|Pocket Pivot": 22.15,
+    "BEST|FTRE|Pocket Pivot": 22.15
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-10-15"
