@@ -39,7 +39,11 @@
       "VEEV|Wick Play",
       "VEEV|@309.42",
       "FTRE|Pocket Pivot",
-      "FTRE|@22.15"
+      "FTRE|@22.15",
+      "VEON|Fallback: 52W-Hoch-Breakout",
+      "VEON|@82.17",
+      "VEON|Fallback: 20-Tage-Hoch (Pivot)",
+      "VEON|@82.10"
     ]
   },
   "gemeldet": {
@@ -119,8 +123,8 @@
     "BEST|PENG|Wick Play": "2026-10-12",
     "FIGS|Fallback: 52W-Hoch-Breakout": "2026-10-12",
     "BEST|FIGS|Fallback: 52W-Hoch-Breakout": "2026-10-12",
-    "VEON|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-12",
-    "BEST|VEON|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-12",
+    "VEON|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-15",
+    "BEST|VEON|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-15",
     "GEWINN|zonenwechsel|GME|INS-2026-09-22|stark": "2026-10-12",
     "GEWINN|klimax_zeichen|GTLB|Fallback: 20-Tage-Hoch (Pivot)|4_ma200_abstand": "2026-10-12",
     "SCHLUSSNAH|2026-10-12": "2026-10-12",
@@ -214,7 +218,9 @@
     "VEEV|Wick Play": "2026-10-15",
     "BEST|VEEV|Wick Play": "2026-10-15",
     "FTRE|Pocket Pivot": "2026-10-15",
-    "BEST|FTRE|Pocket Pivot": "2026-10-15"
+    "BEST|FTRE|Pocket Pivot": "2026-10-15",
+    "VEON|Fallback: 52W-Hoch-Breakout": "2026-10-15",
+    "BEST|VEON|Fallback: 52W-Hoch-Breakout": "2026-10-15"
   },
   "gemeldet_kp": {
     "GCT|Cup & Handle (Wochenbasis)": 57.41,
@@ -261,8 +267,8 @@
     "BEST|PENG|Wick Play": 78.85,
     "FIGS|Fallback: 52W-Hoch-Breakout": 17.5,
     "BEST|FIGS|Fallback: 52W-Hoch-Breakout": 17.5,
-    "VEON|Fallback: 20-Tage-Hoch (Pivot)": 78.84,
-    "BEST|VEON|Fallback: 20-Tage-Hoch (Pivot)": 78.84,
+    "VEON|Fallback: 20-Tage-Hoch (Pivot)": 82.1,
+    "BEST|VEON|Fallback: 20-Tage-Hoch (Pivot)": 82.1,
     "DT|Cup & Handle (Wochenbasis)": 65.3,
     "BEST|DT|Cup & Handle (Wochenbasis)": 65.3,
     "FIGS|Cup & Handle (Wochenbasis)": 17.99,
@@ -325,7 +331,9 @@
     "VEEV|Wick Play": 309.42,
     "BEST|VEEV|Wick Play": 309.42,
     "FTRE|Pocket Pivot": 22.15,
-    "BEST|FTRE|Pocket Pivot": 22.15
+    "BEST|FTRE|Pocket Pivot": 22.15,
+    "VEON|Fallback: 52W-Hoch-Breakout": 82.17,
+    "BEST|VEON|Fallback: 52W-Hoch-Breakout": 82.17
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-10-15"

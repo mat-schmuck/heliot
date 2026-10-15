@@ -20581,5 +20581,32 @@
   "zahlen_hinweis_gemeldet": false,
   "sektor_hinweis_gemeldet": false,
   "wedge_drop_gemeldet": false
+ },
+ "FTRE|Pocket Pivot": {
+  "symbol": "FTRE",
+  "firma": "Fortrea Holdings Inc.",
+  "strategie": "Pocket Pivot",
+  "einstieg": 22.15,
+  "einstieg_datum": "2026-10-15",
+  "einstieg_index": 0,
+  "struktur_stop": 20.25,
+  "aktueller_stop": 20.25,
+  "stop_quelle": "struktur",
+  "hoechstkurs": 22.15,
+  "teilverkauft": false,
+  "halteregel_aktiv": false,
+  "beobachtung": true,
+  "status": "offen",
+  "verlauf": [],
+  "klasse": "standard",
+  "musterziel": null,
+  "zone": null,
+  "zone_gemeldet": null,
+  "ziel_gemeldet": false,
+  "klimax_gemeldet": [],
+  "weinstein_gemeldet": false,
+  "zahlen_hinweis_gemeldet": false,
+  "sektor_hinweis_gemeldet": false,
+  "wedge_drop_gemeldet": false
  }
 }
