@@ -29,7 +29,13 @@
       "APPN|Cup & Handle (Wochenbasis)",
       "APPN|@44.07",
       "APPN|EMA Crossback",
-      "APPN|@44.05"
+      "APPN|@44.05",
+      "SPOT|EMA Crossback",
+      "SPOT|@533.80",
+      "ZETA|Fallback: 52W-Hoch-Breakout",
+      "ZETA|@34.95",
+      "ZETA|Fallback: 20-Tage-Hoch (Pivot)",
+      "ZETA|@34.93"
     ]
   },
   "gemeldet": {
@@ -244,7 +250,13 @@
     "W|Pocket Pivot": "2026-10-16",
     "BEST|W|Pocket Pivot": "2026-10-16",
     "APPN|Cup & Handle (Wochenbasis)": "2026-10-16",
-    "BEST|APPN|Cup & Handle (Wochenbasis)": "2026-10-16"
+    "BEST|APPN|Cup & Handle (Wochenbasis)": "2026-10-16",
+    "SPOT|EMA Crossback": "2026-10-16",
+    "BEST|SPOT|EMA Crossback": "2026-10-16",
+    "ZETA|Fallback: 52W-Hoch-Breakout": "2026-10-16",
+    "BEST|ZETA|Fallback: 52W-Hoch-Breakout": "2026-10-16",
+    "ZETA|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-16",
+    "BEST|ZETA|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-16"
   },
   "gemeldet_kp": {
     "GCT|Cup & Handle (Wochenbasis)": 57.41,
@@ -379,7 +391,13 @@
     "W|Pocket Pivot": 112.93,
     "BEST|W|Pocket Pivot": 112.93,
     "APPN|Cup & Handle (Wochenbasis)": 44.07,
-    "BEST|APPN|Cup & Handle (Wochenbasis)": 44.07
+    "BEST|APPN|Cup & Handle (Wochenbasis)": 44.07,
+    "SPOT|EMA Crossback": 533.8,
+    "BEST|SPOT|EMA Crossback": 533.8,
+    "ZETA|Fallback: 52W-Hoch-Breakout": 34.95,
+    "BEST|ZETA|Fallback: 52W-Hoch-Breakout": 34.95,
+    "ZETA|Fallback: 20-Tage-Hoch (Pivot)": 34.93,
+    "BEST|ZETA|Fallback: 20-Tage-Hoch (Pivot)": 34.93
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-10-16"
