@@ -21,7 +21,11 @@
       "VRNS|Pocket Pivot",
       "VRNS|@47.51",
       "CON|Fallback: 52W-Hoch-Breakout",
-      "CON|@39.26"
+      "CON|@39.26",
+      "W|Fallback: 20-Tage-Hoch (Pivot)",
+      "W|@112.94",
+      "W|Pocket Pivot",
+      "W|@112.93"
     ]
   },
   "gemeldet": {
@@ -166,8 +170,8 @@
     "GEWINN|zonenwechsel|FTRE|Rectangle Top|mittel": "2026-10-15",
     "W|Rectangle Top": "2026-10-15",
     "BEST|W|Rectangle Top": "2026-10-15",
-    "W|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-15",
-    "BEST|W|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-15",
+    "W|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-16",
+    "BEST|W|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-16",
     "W|Wick Play": "2026-10-15",
     "BEST|W|Wick Play": "2026-10-15",
     "SLAB|Fallback: MA50-Pullback": "2026-10-15",
@@ -232,7 +236,9 @@
     "VRNS|Pocket Pivot": "2026-10-16",
     "BEST|VRNS|Pocket Pivot": "2026-10-16",
     "CON|Fallback: 52W-Hoch-Breakout": "2026-10-16",
-    "BEST|CON|Fallback: 52W-Hoch-Breakout": "2026-10-16"
+    "BEST|CON|Fallback: 52W-Hoch-Breakout": "2026-10-16",
+    "W|Pocket Pivot": "2026-10-16",
+    "BEST|W|Pocket Pivot": "2026-10-16"
   },
   "gemeldet_kp": {
     "GCT|Cup & Handle (Wochenbasis)": 57.41,
@@ -315,8 +321,8 @@
     "BEST|IBTA|Cup & Handle (Wochenbasis)": 43.89,
     "W|Rectangle Top": 107.93,
     "BEST|W|Rectangle Top": 107.93,
-    "W|Fallback: 20-Tage-Hoch (Pivot)": 108.69,
-    "BEST|W|Fallback: 20-Tage-Hoch (Pivot)": 108.69,
+    "W|Fallback: 20-Tage-Hoch (Pivot)": 112.94,
+    "BEST|W|Fallback: 20-Tage-Hoch (Pivot)": 112.94,
     "W|Wick Play": 107.99,
     "BEST|W|Wick Play": 107.99,
     "SLAB|Fallback: MA50-Pullback": 221.18,
@@ -363,7 +369,9 @@
     "VRNS|Pocket Pivot": 47.5077,
     "BEST|VRNS|Pocket Pivot": 47.5077,
     "CON|Fallback: 52W-Hoch-Breakout": 39.26,
-    "BEST|CON|Fallback: 52W-Hoch-Breakout": 39.26
+    "BEST|CON|Fallback: 52W-Hoch-Breakout": 39.26,
+    "W|Pocket Pivot": 112.93,
+    "BEST|W|Pocket Pivot": 112.93
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-10-16"
