@@ -19,7 +19,9 @@
       "MATX|Pocket Pivot",
       "MATX|@237.76",
       "VRNS|Pocket Pivot",
-      "VRNS|@47.51"
+      "VRNS|@47.51",
+      "CON|Fallback: 52W-Hoch-Breakout",
+      "CON|@39.26"
     ]
   },
   "gemeldet": {
@@ -228,7 +230,9 @@
     "MATX|Pocket Pivot": "2026-10-16",
     "BEST|MATX|Pocket Pivot": "2026-10-16",
     "VRNS|Pocket Pivot": "2026-10-16",
-    "BEST|VRNS|Pocket Pivot": "2026-10-16"
+    "BEST|VRNS|Pocket Pivot": "2026-10-16",
+    "CON|Fallback: 52W-Hoch-Breakout": "2026-10-16",
+    "BEST|CON|Fallback: 52W-Hoch-Breakout": "2026-10-16"
   },
   "gemeldet_kp": {
     "GCT|Cup & Handle (Wochenbasis)": 57.41,
@@ -357,7 +361,9 @@
     "MATX|Pocket Pivot": 237.7575,
     "BEST|MATX|Pocket Pivot": 237.7575,
     "VRNS|Pocket Pivot": 47.5077,
-    "BEST|VRNS|Pocket Pivot": 47.5077
+    "BEST|VRNS|Pocket Pivot": 47.5077,
+    "CON|Fallback: 52W-Hoch-Breakout": 39.26,
+    "BEST|CON|Fallback: 52W-Hoch-Breakout": 39.26
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-10-16"
