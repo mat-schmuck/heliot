@@ -35,7 +35,9 @@
       "ZETA|Fallback: 52W-Hoch-Breakout",
       "ZETA|@34.95",
       "ZETA|Fallback: 20-Tage-Hoch (Pivot)",
-      "ZETA|@34.93"
+      "ZETA|@34.93",
+      "OKTA|Cup & Handle (Wochenbasis)",
+      "OKTA|@179.45"
     ]
   },
   "gemeldet": {
@@ -256,7 +258,9 @@
     "ZETA|Fallback: 52W-Hoch-Breakout": "2026-10-16",
     "BEST|ZETA|Fallback: 52W-Hoch-Breakout": "2026-10-16",
     "ZETA|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-16",
-    "BEST|ZETA|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-16"
+    "BEST|ZETA|Fallback: 20-Tage-Hoch (Pivot)": "2026-10-16",
+    "OKTA|Cup & Handle (Wochenbasis)": "2026-10-16",
+    "BEST|OKTA|Cup & Handle (Wochenbasis)": "2026-10-16"
   },
   "gemeldet_kp": {
     "GCT|Cup & Handle (Wochenbasis)": 57.41,
@@ -397,7 +401,9 @@
     "ZETA|Fallback: 52W-Hoch-Breakout": 34.95,
     "BEST|ZETA|Fallback: 52W-Hoch-Breakout": 34.95,
     "ZETA|Fallback: 20-Tage-Hoch (Pivot)": 34.93,
-    "BEST|ZETA|Fallback: 20-Tage-Hoch (Pivot)": 34.93
+    "BEST|ZETA|Fallback: 20-Tage-Hoch (Pivot)": 34.93,
+    "OKTA|Cup & Handle (Wochenbasis)": 179.45,
+    "BEST|OKTA|Cup & Handle (Wochenbasis)": 179.45
   },
   "gapgo_warten": {},
   "ampel_tag": "2026-10-16"
