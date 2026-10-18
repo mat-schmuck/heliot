@@ -6,7 +6,7 @@
   "zone_max": 51.29999923706055,
   "spring_low": 49.689998626708984,
   "spring_volumen": 3208565.0,
-  "tage_gewartet": 11
+  "tage_gewartet": 12
  },
  "BUUU": {
   "spring_index": 290,
@@ -15,7 +15,7 @@
   "zone_max": 38.900001525878906,
   "spring_low": 37.58000183105469,
   "spring_volumen": 47600.0,
-  "tage_gewartet": 6
+  "tage_gewartet": 7
  },
  "PRCH": {
   "spring_index": 500,
@@ -24,7 +24,7 @@
   "zone_max": 16.7549991607666,
   "spring_low": 16.200000762939453,
   "spring_volumen": 2163092.0,
-  "tage_gewartet": 1
+  "tage_gewartet": 2
  },
  "SVRN": {
   "spring_index": 500,
@@ -33,6 +33,6 @@
   "zone_max": 32.20000076293945,
   "spring_low": 32.099998474121094,
   "spring_volumen": 85427.0,
-  "tage_gewartet": 1
+  "tage_gewartet": 2
  }
 }

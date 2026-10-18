@@ -1,5 +1,11 @@
 {
- "stand": "2026-10-16",
+ "stand": "2026-10-18",
  "liste": 213,
- "aktien": []
+ "aktien": [
+  {
+   "ticker": "TJGC",
+   "firma": "TJGC Group Limited",
+   "grund": "2 der letzten 5 Handelstage ohne Umsatz oder ohne Kursspanne"
+  }
+ ]
 }

@@ -1,5 +1,5 @@
 {
- "gebaut_am": "2026-10-17 00:14 Wien",
+ "gebaut_am": "2026-10-19 00:11 Wien",
  "ohne_termin": [
   "ANL",
   "BNR",
@@ -9,7 +9,6 @@
   "MAAS",
   "SAIH",
   "SDEV",
-  "SSL",
   "SVRN",
   "TJGC"
  ],
@@ -1492,6 +1491,14 @@
    "quellen": [
     "yahoo",
     "nasdaq"
+   ]
+  },
+  "SSL": {
+   "datum": "2027-02-22",
+   "uhrzeit": "07:00",
+   "lage": "vorboerslich",
+   "quellen": [
+    "yahoo"
    ]
   },
   "TEAM": {
