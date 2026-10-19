@@ -1,14 +1,16 @@
 {
- "gebaut_am": "2026-10-19 00:11 Wien",
+ "gebaut_am": "2026-10-20 00:13 Wien",
  "ohne_termin": [
   "ANL",
   "BNR",
   "BUUU",
+  "CBZ",
   "GIBO",
   "KRSA",
   "MAAS",
   "SAIH",
   "SDEV",
+  "SSL",
   "SVRN",
   "TJGC"
  ],
@@ -16,7 +18,6 @@
  "uneinig": [
   "HURN",
   "ITGR",
-  "NSIT",
   "VRNS"
  ],
  "aktien": {
@@ -311,14 +312,6 @@
    "datum": "2026-11-04",
    "uhrzeit": "15:00",
    "lage": "im_handel",
-   "quellen": [
-    "yahoo"
-   ]
-  },
-  "CBZ": {
-   "datum": "2026-10-28",
-   "uhrzeit": "08:00",
-   "lage": "vorboerslich",
    "quellen": [
     "yahoo"
    ]
@@ -959,10 +952,8 @@
    "uhrzeit": "07:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo",
-    "nasdaq"
-   ],
-   "uneinig": "Quellen uneinig: 2026-11-05 (Yahoo, hier bevorzugt) gegen 2026-10-29 (Nasdaq)"
+    "yahoo"
+   ]
   },
   "NTAP": {
    "datum": "2026-12-01",
@@ -1175,9 +1166,9 @@
    ]
   },
   "PRCH": {
-   "datum": "2026-11-04",
-   "uhrzeit": "15:00",
-   "lage": "im_handel",
+   "datum": "2026-10-28",
+   "uhrzeit": "16:00",
+   "lage": "nachboerslich",
    "quellen": [
     "yahoo"
    ]
@@ -1217,7 +1208,7 @@
    ]
   },
   "PTC": {
-   "datum": "2026-11-11",
+   "datum": "2026-11-04",
    "uhrzeit": "15:00",
    "lage": "im_handel",
    "quellen": [
@@ -1491,14 +1482,6 @@
    "quellen": [
     "yahoo",
     "nasdaq"
-   ]
-  },
-  "SSL": {
-   "datum": "2027-02-22",
-   "uhrzeit": "07:00",
-   "lage": "vorboerslich",
-   "quellen": [
-    "yahoo"
    ]
   },
   "TEAM": {
