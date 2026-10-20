@@ -1,7 +1,15 @@
 {
- "gebaut_am": "2026-10-19T22:13:48",
- "handelstag": "2026-10-19",
+ "gebaut_am": "2026-10-20T22:13:18",
+ "handelstag": "2026-10-20",
  "geladen": 36,
  "unfertig": [],
- "treffer": []
+ "treffer": [
+  {
+   "etf": "FINX",
+   "name": "Fintech",
+   "richtung": "hoch",
+   "volumen_pct": 169.5,
+   "kurs": 24.69
+  }
+ ]
 }
