@@ -1,6 +1,6 @@
 {
- "gebaut_am": "2026-10-20T22:14:20+00:00",
- "handelstag": "2026-10-20",
+ "gebaut_am": "2026-10-21T22:11:48+00:00",
+ "handelstag": "2026-10-21",
  "status": "ok",
  "toleranz": 0.05,
  "quellen": {
@@ -8,12 +8,12 @@
    "status": "ok",
    "stand": "2026-09-21",
    "eintraege": 13436,
-   "geprueft": 5363,
+   "geprueft": 5365,
    "raus": 22,
-   "ohne_eintrag": 67
+   "ohne_eintrag": 69
   },
   "rs": {
-   "stand": "2026-10-20T22:10:26",
+   "stand": "2026-10-21T22:07:45",
    "status": "ok"
   },
   "markttiefs": {
@@ -32,52 +32,52 @@
   },
   "termine_vergangen": {
    "status": "ok",
-   "tage": 72,
-   "ticker": 4680
+   "tage": 73,
+   "ticker": 4691
   },
   "crash_regime": {
    "status": "ok",
    "scharf": false,
-   "rueckgang_pct": -1.3
+   "rueckgang_pct": -0.8
   },
   "eroeffnung": {
    "status": "ok",
-   "kandidaten": 78,
-   "mit_eroeffnung": 78
+   "kandidaten": 81,
+   "mit_eroeffnung": 81
   },
   "kurse": {
    "status": "ok",
    "mit_kursen": 5341,
-   "ohne_kurse": 0,
-   "aktuell": 5272,
-   "abdeckung": 0.9871,
-   "archiv_zeilen": 3708110
+   "ohne_kurse": 2,
+   "aktuell": 5279,
+   "abdeckung": 0.988,
+   "archiv_zeilen": 3708731
   },
   "markt": {
    "status": "ok",
-   "spy_veraenderung_pct": 0.34,
-   "qqq_veraenderung_pct": -0.1
+   "spy_veraenderung_pct": 0.53,
+   "qqq_veraenderung_pct": 1.05
   },
   "eroeffnungsvolumen": {
    "status": "ok",
-   "aktien": 4982,
+   "aktien": 4934,
    "bloecke": 53,
    "fehler": 0
   },
   "screener": {
    "status": "ok",
-   "anzahl": 6986
+   "anzahl": 6956
   },
   "kalender": {
    "status": "ok",
-   "tage": 9,
-   "eintraege": 1160,
-   "mit_eps_konsens": 1038
+   "tage": 8,
+   "eintraege": 1120,
+   "mit_eps_konsens": 994
   },
   "zahlen_rueckblick": {
    "status": "ok",
    "tage": 100,
-   "mit_zahlen": 4606
+   "mit_zahlen": 4614
   },
   "fundament": {
    "status": "ok",
@@ -86,26 +86,26 @@
   },
   "konsens": {
    "dateien": [
-    "2026-10-16_0900Z.jsonl.gz",
-    "2026-10-16_1930Z.jsonl.gz",
     "2026-10-19_0900Z.jsonl.gz",
     "2026-10-19_1930Z.jsonl.gz",
     "2026-10-20_0900Z.jsonl.gz",
-    "2026-10-20_1930Z.jsonl.gz"
+    "2026-10-20_1930Z.jsonl.gz",
+    "2026-10-21_0900Z.jsonl.gz",
+    "2026-10-21_1930Z.jsonl.gz"
    ],
    "unlesbar": [],
-   "firmen": 5633,
-   "neuester": "2026-10-20T19:30:48Z",
-   "aeltester": "2026-10-16T19:30:42Z",
+   "firmen": 5631,
+   "neuester": "2026-10-21T19:30:45Z",
+   "aeltester": "2026-10-19T09:00:57Z",
    "status": "ok",
-   "mit_konsens": 4169
+   "mit_konsens": 4168
   },
   "analysten": {
    "status": "ok",
-   "abgerufen": 754,
+   "abgerufen": 748,
    "fehler": 0,
    "abgebrochen": false,
-   "mit_analysten": 3204,
+   "mit_analysten": 3205,
    "mit_stand": 4605
   },
   "revisionen": {
@@ -121,12 +121,12 @@
    "fenster": 20,
    "mindest_abdeckung": 0.95,
    "tage": 20,
-   "erster_tag": "2026-09-23",
-   "letzter_tag": "2026-10-20",
-   "abdeckung_letzter_tag": 0.9916,
+   "erster_tag": "2026-09-24",
+   "letzter_tag": "2026-10-21",
+   "abdeckung_letzter_tag": 0.9914,
    "hinweis": null,
-   "mit_anteil": 5296,
-   "median_pct": 50.4,
+   "mit_anteil": 5297,
+   "median_pct": 52.7,
    "fehlend": {}
   },
   "gruppen_rs": {
@@ -139,42 +139,42 @@
    "unbekannt": 160,
    "gruppen_heute": 165,
    "stichtage": {
-    "heute": "2026-10-20",
-    "vor_3_wochen": "2026-09-29",
-    "vor_6_wochen": "2026-09-08"
+    "heute": "2026-10-21",
+    "vor_3_wochen": "2026-09-30",
+    "vor_6_wochen": "2026-09-09"
    },
    "abdeckung": {
     "0": {
-     "tag": "2026-10-20",
+     "tag": "2026-10-21",
      "basis": 5063,
-     "mit_rohwert": 5013,
-     "anteil": 0.9901
+     "mit_rohwert": 5021,
+     "anteil": 0.9917
     },
     "15": {
-     "tag": "2026-09-29",
-     "basis": 5038,
-     "mit_rohwert": 5036,
+     "tag": "2026-09-30",
+     "basis": 5039,
+     "mit_rohwert": 5037,
      "anteil": 0.9996
     },
     "30": {
-     "tag": "2026-09-08",
-     "basis": 5018,
-     "mit_rohwert": 5011,
-     "anteil": 0.9986
+     "tag": "2026-09-09",
+     "basis": 5017,
+     "mit_rohwert": 5015,
+     "anteil": 0.9996
     }
    },
    "hinweise": []
   },
   "kennzahlen": {
    "status": "ok",
-   "technik_handelstag": "2026-10-20",
-   "fundament_stand": "2026-10-20T22:10:31",
+   "technik_handelstag": "2026-10-21",
+   "fundament_stand": "2026-10-21T22:07:50",
    "mit_technik": 5278,
    "mit_fundament": 4926
   }
  },
  "hinweise": [],
- "universum": 5341,
+ "universum": 5343,
  "branchen": [
   {
    "gruppe": "Accident &Health Insurance",
@@ -527,7 +527,7 @@
   },
   {
    "gruppe": "Finance: Consumer Services",
-   "aktien": 159,
+   "aktien": 161,
    "teile": [
     "Finance: Consumer Services"
    ]
@@ -1017,7 +1017,7 @@
   },
   {
    "gruppe": "Real Estate",
-   "aktien": 55,
+   "aktien": 56,
    "teile": [
     "Real Estate"
    ]
@@ -1108,7 +1108,7 @@
   },
   {
    "gruppe": "Specialty Chemicals",
-   "aktien": 7,
+   "aktien": 6,
    "teile": [
     "Specialty Chemicals"
    ]
@@ -1209,66 +1209,66 @@
   "darvas": {
    "name": "Darvas Box",
    "toleranz_moeglich": true,
-   "streng": 105,
-   "nur_toleranz": 0,
-   "handelbar": 55,
-   "handelbar_langweilig": 15
+   "streng": 104,
+   "nur_toleranz": 2,
+   "handelbar": 58,
+   "handelbar_langweilig": 14
   },
   "trend_template": {
    "name": "Minervini Trend Template",
    "toleranz_moeglich": true,
-   "streng": 561,
-   "nur_toleranz": 38,
-   "handelbar": 387
+   "streng": 593,
+   "nur_toleranz": 28,
+   "handelbar": 406
   },
   "vcp": {
    "name": "VCP",
    "toleranz_moeglich": true,
-   "streng": 13,
-   "nur_toleranz": 1,
-   "handelbar": 8
+   "streng": 14,
+   "nur_toleranz": 0,
+   "handelbar": 9
   },
   "cup_handle": {
    "name": "Cup & Handle",
    "toleranz_moeglich": true,
-   "streng": 504,
-   "nur_toleranz": 100,
-   "handelbar": 422
+   "streng": 499,
+   "nur_toleranz": 104,
+   "handelbar": 420
   },
   "cup_woche": {
    "name": "Cup & Handle, Wochenbasis",
    "toleranz_moeglich": true,
-   "streng": 504,
-   "nur_toleranz": 99,
-   "handelbar": 421
+   "streng": 499,
+   "nur_toleranz": 103,
+   "handelbar": 419
   },
   "rectangle": {
    "name": "Rectangle Top",
    "toleranz_moeglich": true,
-   "streng": 2198,
-   "nur_toleranz": 82,
-   "handelbar": 1103
+   "streng": 2200,
+   "nur_toleranz": 78,
+   "handelbar": 1100
   },
   "htf": {
    "name": "High & Tight Flag",
    "toleranz_moeglich": true,
-   "streng": 10,
-   "nur_toleranz": 3,
+   "streng": 7,
+   "nur_toleranz": 4,
    "handelbar": 4
   },
   "htf_innen": {
    "name": "HTF Innen-Einstieg",
    "toleranz_moeglich": true,
    "streng": 5,
-   "nur_toleranz": 2,
-   "handelbar": 1
+   "nur_toleranz": 3,
+   "handelbar": 2
   },
   "ema_crossback": {
    "name": "EMA Crossback",
    "toleranz_moeglich": false,
-   "streng": 228,
+   "streng": 218,
    "nur_toleranz": 0,
-   "handelbar": 134
+   "handelbar": 109
   },
   "earnings_pullback": {
    "name": "Earnings-Pullback",
@@ -1280,16 +1280,16 @@
   "power_gap": {
    "name": "Power-Gap",
    "toleranz_moeglich": false,
-   "streng": 3,
+   "streng": 1,
    "nur_toleranz": 0,
-   "handelbar": 2
+   "handelbar": 0
   },
   "shakeout_spring": {
    "name": "Shakeout-Spring",
    "toleranz_moeglich": false,
-   "streng": 3,
+   "streng": 6,
    "nur_toleranz": 0,
-   "handelbar": 1
+   "handelbar": 4
   },
   "crash_support": {
    "name": "Crash-Support",
@@ -1301,18 +1301,18 @@
   "hoch_52w": {
    "name": "Neues 52-Wochen-Hoch",
    "toleranz_moeglich": false,
-   "streng": 101,
+   "streng": 100,
    "nur_toleranz": 0,
-   "handelbar": 78
+   "handelbar": 75
   },
   "hoch_allzeit": {
    "name": "Neues Allzeithoch",
    "toleranz_moeglich": false,
-   "streng": 31,
+   "streng": 27,
    "nur_toleranz": 0,
-   "handelbar": 27
+   "handelbar": 25
   }
  },
  "zeilen": 5341,
- "dauer_s": 1954.5
+ "dauer_s": 1969.9
 }
