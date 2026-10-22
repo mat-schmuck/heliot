@@ -1,13 +1,13 @@
 {
- "stand": "2026-10-21",
+ "stand": "2026-10-22",
  "funde": [
   {
    "ticker": "APLD",
    "status": "pfad_a",
-   "marktkap": 6344081920.0,
-   "stichtag": "2026-10-21",
+   "marktkap": 5742422016.0,
+   "stichtag": "2026-10-22",
    "zeilen": [
-    "APLD; Großkauf; Marktwert 6,3 Mrd $",
+    "APLD; Großkauf; Marktwert 5,7 Mrd $",
     "Größter Einzelkauf 5,7 Mio $ am 16.10.; Zhang Jason Gechen, President"
    ],
    "kennung": "APLD|pfad_a|2"
@@ -15,8 +15,8 @@
   {
    "ticker": "BORR",
    "status": "pfad_a",
-   "marktkap": 1301923712.0,
-   "stichtag": "2026-10-21",
+   "marktkap": 1266444800.0,
+   "stichtag": "2026-10-22",
    "zeilen": [
     "BORR; Großkauf; Marktwert 1,3 Mrd $",
     "Größter Einzelkauf 11,8 Mio $ am 09.10.; Troim Tor Olav, Direktor"
@@ -26,21 +26,21 @@
   {
    "ticker": "CRBG",
    "status": "pfad_a",
-   "marktkap": 15735631872.0,
-   "stichtag": "2026-10-21",
+   "marktkap": 15686596608.0,
+   "stichtag": "2026-10-22",
    "zeilen": [
     "CRBG; Großkauf; Marktwert 15,7 Mrd $",
-    "Größter Einzelkauf 20,9 Mio $ am 07.10.; NIPPON LIFE INSURANCE CO, Insider"
+    "Größter Einzelkauf 20,5 Mio $ am 14.10.; NIPPON LIFE INSURANCE CO, Insider"
    ],
    "kennung": "CRBG|pfad_a|1"
   },
   {
    "ticker": "GME",
    "status": "pfad_a",
-   "marktkap": 13263331328.0,
-   "stichtag": "2026-10-21",
+   "marktkap": 12541036544.0,
+   "stichtag": "2026-10-22",
    "zeilen": [
-    "GME; Großkauf; Marktwert 13,3 Mrd $",
+    "GME; Großkauf; Marktwert 12,5 Mrd $",
     "Größter Einzelkauf 21,0 Mio $ am 13.10.; Cohen Ryan, President, CEO and Chairman"
    ],
    "kennung": "GME|pfad_a|1"
@@ -48,10 +48,10 @@
   {
    "ticker": "IAM",
    "status": "pfad_a",
-   "marktkap": 748932608.0,
-   "stichtag": "2026-10-21",
+   "marktkap": 710537920.0,
+   "stichtag": "2026-10-22",
    "zeilen": [
-    "IAM; Großkauf; Marktwert 748,9 Mio $",
+    "IAM; Großkauf; Marktwert 710,5 Mio $",
     "Größter Einzelkauf 11,5 Mio $ am 16.10.; Rachlin Evan Lockwood, Direktor"
    ],
    "kennung": "IAM|pfad_a|1"
@@ -59,10 +59,10 @@
   {
    "ticker": "PAM",
    "status": "pfad_a",
-   "marktkap": 4176805632.0,
-   "stichtag": "2026-10-21",
+   "marktkap": 4125346048.0,
+   "stichtag": "2026-10-22",
    "zeilen": [
-    "PAM; Großkauf; Marktwert 4,2 Mrd $",
+    "PAM; Großkauf; Marktwert 4,1 Mrd $",
     "Größter Einzelkauf 35,1 Mio $ am 15.10.; Mindlin Marcos Marcelo, Direktor"
    ],
    "kennung": "PAM|pfad_a|1"
@@ -70,10 +70,10 @@
   {
    "ticker": "PEP",
    "status": "pfad_a",
-   "marktkap": 183561224192.0,
-   "stichtag": "2026-10-21",
+   "marktkap": 188603367424.0,
+   "stichtag": "2026-10-22",
    "zeilen": [
-    "PEP; Großkauf; Marktwert 183,6 Mrd $",
+    "PEP; Großkauf; Marktwert 188,6 Mrd $",
     "Größter Einzelkauf 10,8 Mio $ am 14.10.; POHLAD ROBERT C, Direktor"
    ],
    "kennung": "PEP|pfad_a|1"
