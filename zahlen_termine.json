@@ -1,37 +1,64 @@
 {
- "gebaut_am": "2026-10-22 00:10 Wien",
+ "gebaut_am": "2026-10-23 00:11 Wien",
  "ohne_termin": [
   "ANL",
+  "BE",
   "BNR",
   "BUUU",
   "GIBO",
   "KRSA",
   "MAAS",
+  "MXL",
+  "RNG",
   "SAIH",
   "SDEV",
   "SSL",
   "SVRN",
   "TJGC"
  ],
- "nur_nasdaq": [],
+ "nur_nasdaq": [
+  "BE",
+  "MXL",
+  "RNG"
+ ],
  "uneinig": [
+  "ADPT",
   "AEHR",
   "ALAB",
+  "AMC",
   "AMD",
+  "AMPL",
   "ANET",
+  "ARW",
   "ATRC",
   "BDSX",
   "BLZE",
+  "CAI",
+  "CHYM",
+  "CLOV",
+  "FSLY",
+  "HALO",
   "HNGE",
   "HURN",
   "IBTA",
   "ITGR",
   "LIFE",
   "MATX",
+  "MGNI",
+  "MRVI",
+  "MTW",
+  "OESX",
   "OUST",
+  "PAYC",
   "PCOR",
+  "PLSE",
   "PLTR",
+  "PTC",
+  "RDVT",
+  "REPX",
   "SBAC",
+  "SDGR",
+  "SEZL",
   "VRNS",
   "WEYS"
  ],
@@ -49,8 +76,10 @@
    "uhrzeit": "15:00",
    "lage": "im_handel",
    "quellen": [
-    "yahoo"
-   ]
+    "yahoo",
+    "nasdaq"
+   ],
+   "uneinig": "Tageszeit uneinig: Nasdaq nachboerslich, Yahoo im_handel"
   },
   "ADSK": {
    "datum": "2026-11-27",
@@ -93,7 +122,8 @@
    "uhrzeit": "15:00",
    "lage": "im_handel",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "AMBQ": {
@@ -105,12 +135,14 @@
    ]
   },
   "AMC": {
-   "datum": "2026-10-22",
+   "datum": "2026-10-29",
    "uhrzeit": "08:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo"
-   ]
+    "yahoo",
+    "nasdaq"
+   ],
+   "uneinig": "Quellen uneinig: 2026-10-29 (Yahoo, hier bevorzugt) gegen 2026-11-04 (Nasdaq)"
   },
   "AMD": {
    "datum": "2026-11-03",
@@ -127,8 +159,10 @@
    "uhrzeit": "15:00",
    "lage": "im_handel",
    "quellen": [
-    "yahoo"
-   ]
+    "yahoo",
+    "nasdaq"
+   ],
+   "uneinig": "Quellen uneinig: 2026-11-05 (Yahoo, hier bevorzugt) gegen 2026-11-04 (Nasdaq)"
   },
   "AMRX": {
    "datum": "2026-11-03",
@@ -199,13 +233,14 @@
    ]
   },
   "ARW": {
-   "datum": "2026-10-29",
-   "uhrzeit": "08:00",
+   "datum": "2026-11-05",
+   "uhrzeit": "07:00",
    "lage": "vorboerslich",
    "quellen": [
     "yahoo",
     "nasdaq"
-   ]
+   ],
+   "uneinig": "Quellen uneinig: 2026-11-05 (Yahoo, hier bevorzugt) gegen 2026-10-29 (Nasdaq)"
   },
   "ARX": {
    "datum": "2026-11-11",
@@ -247,7 +282,8 @@
    "uhrzeit": "07:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "AVTR": {
@@ -285,21 +321,20 @@
    ]
   },
   "BDSX": {
-   "datum": "2026-11-03",
+   "datum": "2026-11-05",
    "uhrzeit": "15:00",
    "lage": "im_handel",
    "quellen": [
     "yahoo",
     "nasdaq"
    ],
-   "uneinig": "Quellen uneinig: 2026-11-03 (Yahoo, hier bevorzugt) gegen 2026-11-02 (Nasdaq)"
+   "uneinig": "Quellen uneinig: 2026-11-05 (Yahoo, hier bevorzugt) gegen 2026-11-02 (Nasdaq)"
   },
   "BE": {
    "datum": "2026-10-22",
-   "uhrzeit": "16:00",
+   "uhrzeit": "",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo",
     "nasdaq"
    ]
   },
@@ -344,8 +379,10 @@
    "uhrzeit": "15:00",
    "lage": "im_handel",
    "quellen": [
-    "yahoo"
-   ]
+    "yahoo",
+    "nasdaq"
+   ],
+   "uneinig": "Tageszeit uneinig: Nasdaq nachboerslich, Yahoo im_handel"
   },
   "CBZ": {
    "datum": "2027-02-24",
@@ -356,12 +393,11 @@
    ]
   },
   "CCI": {
-   "datum": "2026-10-21",
-   "uhrzeit": "16:00",
-   "lage": "nachboerslich",
+   "datum": "2027-02-03",
+   "uhrzeit": "15:00",
+   "lage": "im_handel",
    "quellen": [
-    "yahoo",
-    "nasdaq"
+    "yahoo"
    ]
   },
   "CDNA": {
@@ -378,8 +414,10 @@
    "uhrzeit": "15:00",
    "lage": "im_handel",
    "quellen": [
-    "yahoo"
-   ]
+    "yahoo",
+    "nasdaq"
+   ],
+   "uneinig": "Tageszeit uneinig: Nasdaq nachboerslich, Yahoo im_handel"
   },
   "CIEN": {
    "datum": "2026-12-10",
@@ -394,8 +432,10 @@
    "uhrzeit": "15:00",
    "lage": "im_handel",
    "quellen": [
-    "yahoo"
-   ]
+    "yahoo",
+    "nasdaq"
+   ],
+   "uneinig": "Tageszeit uneinig: Nasdaq nachboerslich, Yahoo im_handel"
   },
   "COHU": {
    "datum": "2026-10-28",
@@ -427,7 +467,8 @@
    "uhrzeit": "07:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "CRWD": {
@@ -459,7 +500,8 @@
    "uhrzeit": "07:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "DELL": {
@@ -607,8 +649,10 @@
    "uhrzeit": "15:00",
    "lage": "im_handel",
    "quellen": [
-    "yahoo"
-   ]
+    "yahoo",
+    "nasdaq"
+   ],
+   "uneinig": "Tageszeit uneinig: Nasdaq nachboerslich, Yahoo im_handel"
   },
   "FTNT": {
    "datum": "2026-10-28",
@@ -693,20 +737,22 @@
    ]
   },
   "HALO": {
-   "datum": "2026-11-02",
+   "datum": "2026-11-05",
    "uhrzeit": "15:00",
    "lage": "im_handel",
    "quellen": [
     "yahoo",
     "nasdaq"
-   ]
+   ],
+   "uneinig": "Quellen uneinig: 2026-11-05 (Yahoo, hier bevorzugt) gegen 2026-11-02 (Nasdaq)"
   },
   "HBB": {
    "datum": "2026-11-04",
    "uhrzeit": "15:00",
    "lage": "im_handel",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "HNGE": {
@@ -889,7 +935,8 @@
    "uhrzeit": "15:00",
    "lage": "im_handel",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "MGNI": {
@@ -897,8 +944,10 @@
    "uhrzeit": "15:00",
    "lage": "im_handel",
    "quellen": [
-    "yahoo"
-   ]
+    "yahoo",
+    "nasdaq"
+   ],
+   "uneinig": "Tageszeit uneinig: Nasdaq nachboerslich, Yahoo im_handel"
   },
   "MMS": {
    "datum": "2026-11-20",
@@ -929,8 +978,10 @@
    "uhrzeit": "15:00",
    "lage": "im_handel",
    "quellen": [
-    "yahoo"
-   ]
+    "yahoo",
+    "nasdaq"
+   ],
+   "uneinig": "Tageszeit uneinig: Nasdaq nachboerslich, Yahoo im_handel"
   },
   "MRVL": {
    "datum": "2026-12-01",
@@ -945,7 +996,8 @@
    "uhrzeit": "07:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "MTW": {
@@ -953,8 +1005,10 @@
    "uhrzeit": "15:00",
    "lage": "im_handel",
    "quellen": [
-    "yahoo"
-   ]
+    "yahoo",
+    "nasdaq"
+   ],
+   "uneinig": "Tageszeit uneinig: Nasdaq nachboerslich, Yahoo im_handel"
   },
   "MU": {
    "datum": "2026-12-23",
@@ -966,10 +1020,9 @@
   },
   "MXL": {
    "datum": "2026-10-22",
-   "uhrzeit": "16:00",
+   "uhrzeit": "",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo",
     "nasdaq"
    ]
   },
@@ -1054,12 +1107,14 @@
    ]
   },
   "OESX": {
-   "datum": "2026-11-04",
+   "datum": "2026-11-05",
    "uhrzeit": "07:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo"
-   ]
+    "yahoo",
+    "nasdaq"
+   ],
+   "uneinig": "Quellen uneinig: 2026-11-05 (Yahoo, hier bevorzugt) gegen 2026-11-04 (Nasdaq)"
   },
   "OKTA": {
    "datum": "2026-12-01",
@@ -1125,8 +1180,10 @@
    "uhrzeit": "15:00",
    "lage": "im_handel",
    "quellen": [
-    "yahoo"
-   ]
+    "yahoo",
+    "nasdaq"
+   ],
+   "uneinig": "Tageszeit uneinig: Nasdaq nachboerslich, Yahoo im_handel"
   },
   "PAYS": {
    "datum": "2026-11-09",
@@ -1202,7 +1259,8 @@
    "uhrzeit": "15:00",
    "lage": "im_handel",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "PLSE": {
@@ -1210,8 +1268,10 @@
    "uhrzeit": "15:00",
    "lage": "im_handel",
    "quellen": [
-    "yahoo"
-   ]
+    "yahoo",
+    "nasdaq"
+   ],
+   "uneinig": "Quellen uneinig: 2026-11-05 (Yahoo, hier bevorzugt) gegen 2026-11-04 (Nasdaq)"
   },
   "PLTR": {
    "datum": "2026-11-02",
@@ -1272,8 +1332,10 @@
    "uhrzeit": "15:00",
    "lage": "im_handel",
    "quellen": [
-    "yahoo"
-   ]
+    "yahoo",
+    "nasdaq"
+   ],
+   "uneinig": "Tageszeit uneinig: Nasdaq nachboerslich, Yahoo im_handel"
   },
   "PUBM": {
    "datum": "2026-11-09",
@@ -1321,7 +1383,8 @@
    "uhrzeit": "15:00",
    "lage": "im_handel",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "RDVT": {
@@ -1329,8 +1392,10 @@
    "uhrzeit": "15:00",
    "lage": "im_handel",
    "quellen": [
-    "yahoo"
-   ]
+    "yahoo",
+    "nasdaq"
+   ],
+   "uneinig": "Tageszeit uneinig: Nasdaq nachboerslich, Yahoo im_handel"
   },
   "RELL": {
    "datum": "2027-01-06",
@@ -1345,7 +1410,8 @@
    "uhrzeit": "15:00",
    "lage": "im_handel",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "REPX": {
@@ -1353,8 +1419,10 @@
    "uhrzeit": "15:00",
    "lage": "im_handel",
    "quellen": [
-    "yahoo"
-   ]
+    "yahoo",
+    "nasdaq"
+   ],
+   "uneinig": "Tageszeit uneinig: Nasdaq nachboerslich, Yahoo im_handel"
   },
   "RIGL": {
    "datum": "2026-11-03",
@@ -1367,10 +1435,9 @@
   },
   "RNG": {
    "datum": "2026-10-22",
-   "uhrzeit": "16:00",
+   "uhrzeit": "",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo",
     "nasdaq"
    ]
   },
@@ -1438,16 +1505,20 @@
    "uhrzeit": "15:00",
    "lage": "im_handel",
    "quellen": [
-    "yahoo"
-   ]
+    "yahoo",
+    "nasdaq"
+   ],
+   "uneinig": "Tageszeit uneinig: Nasdaq nachboerslich, Yahoo im_handel"
   },
   "SEZL": {
    "datum": "2026-11-04",
    "uhrzeit": "15:00",
    "lage": "im_handel",
    "quellen": [
-    "yahoo"
-   ]
+    "yahoo",
+    "nasdaq"
+   ],
+   "uneinig": "Tageszeit uneinig: Nasdaq nachboerslich, Yahoo im_handel"
   },
   "SHOP": {
    "datum": "2026-11-03",
@@ -1514,7 +1585,8 @@
    "uhrzeit": "07:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "SNDK": {
@@ -1544,7 +1616,7 @@
   },
   "SPOT": {
    "datum": "2026-10-22",
-   "uhrzeit": "08:00",
+   "uhrzeit": "06:00",
    "lage": "vorboerslich",
    "quellen": [
     "yahoo",
@@ -1589,7 +1661,8 @@
    "uhrzeit": "07:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "TWST": {
@@ -1671,7 +1744,8 @@
    "uhrzeit": "07:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "WEYS": {
@@ -1707,7 +1781,8 @@
    "uhrzeit": "15:00",
    "lage": "im_handel",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "ZBRA": {
