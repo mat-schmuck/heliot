@@ -1,15 +1,29 @@
 {
- "gebaut_am": "2026-10-22T22:12:14",
- "handelstag": "2026-10-22",
+ "gebaut_am": "2026-10-23T22:08:22",
+ "handelstag": "2026-10-23",
  "geladen": 36,
  "unfertig": [],
  "treffer": [
   {
+   "etf": "SKYY",
+   "name": "Cloud",
+   "richtung": "hoch",
+   "volumen_pct": 153.1,
+   "kurs": 167.36
+  },
+  {
    "etf": "OIH",
    "name": "Oil Services",
-   "richtung": "runter",
-   "volumen_pct": 129.1,
-   "kurs": 377.0
+   "richtung": "hoch",
+   "volumen_pct": 118.8,
+   "kurs": 397.36
+  },
+  {
+   "etf": "HACK",
+   "name": "Cybersecurity",
+   "richtung": "hoch",
+   "volumen_pct": 51.0,
+   "kurs": 127.83
   }
  ]
 }
