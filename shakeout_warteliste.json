@@ -6,7 +6,7 @@
   "zone_max": 38.900001525878906,
   "spring_low": 37.58000183105469,
   "spring_volumen": 47600.0,
-  "tage_gewartet": 12
+  "tage_gewartet": 13
  },
  "PRCH": {
   "spring_index": 500,
@@ -15,7 +15,7 @@
   "zone_max": 16.7549991607666,
   "spring_low": 16.200000762939453,
   "spring_volumen": 2163092.0,
-  "tage_gewartet": 7
+  "tage_gewartet": 8
  },
  "MTW": {
   "spring_index": 500,
@@ -24,7 +24,7 @@
   "zone_max": 21.5,
   "spring_low": 21.049999237060547,
   "spring_volumen": 250103.0,
-  "tage_gewartet": 3
+  "tage_gewartet": 4
  },
  "FTNT": {
   "spring_index": 500,
@@ -33,7 +33,7 @@
   "zone_max": 173.88999938964844,
   "spring_low": 166.22000122070312,
   "spring_volumen": 3064033.0,
-  "tage_gewartet": 2
+  "tage_gewartet": 3
  },
  "NUTX": {
   "spring_index": 500,
@@ -42,7 +42,7 @@
   "zone_max": 200.0,
   "spring_low": 194.22999572753906,
   "spring_volumen": 129670.0,
-  "tage_gewartet": 1
+  "tage_gewartet": 2
  },
  "SVRN": {
   "spring_index": 500,
@@ -51,7 +51,7 @@
   "zone_max": 32.20000076293945,
   "spring_low": 31.010000228881836,
   "spring_volumen": 75467.0,
-  "tage_gewartet": 1
+  "tage_gewartet": 2
  },
  "FEIM": {
   "spring_index": 500,
@@ -60,7 +60,7 @@
   "zone_max": 62.33000183105469,
   "spring_low": 60.68000030517578,
   "spring_volumen": 195395.0,
-  "tage_gewartet": 0
+  "tage_gewartet": 1
  },
  "FRD": {
   "spring_index": 500,
@@ -69,6 +69,6 @@
   "zone_max": 41.15999984741211,
   "spring_low": 40.040000915527344,
   "spring_volumen": 44010.0,
-  "tage_gewartet": 0
+  "tage_gewartet": 1
  }
 }

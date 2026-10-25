@@ -1,5 +1,5 @@
 {
- "gebaut_am": "2026-10-24 00:08 Wien",
+ "gebaut_am": "2026-10-25 23:11 Wien",
  "ohne_termin": [
   "ANL",
   "BNR",
@@ -9,10 +9,13 @@
   "MAAS",
   "SAIH",
   "SDEV",
+  "SSL",
   "SVRN",
   "TJGC"
  ],
- "nur_nasdaq": [],
+ "nur_nasdaq": [
+  "SDEV"
+ ],
  "uneinig": [
   "ADPT",
   "AEHR",
@@ -549,7 +552,8 @@
    "uhrzeit": "07:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "DT": {
@@ -824,7 +828,8 @@
    "uhrzeit": "07:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "HURN": {
@@ -1002,7 +1007,8 @@
    "uhrzeit": "07:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "MRVI": {
@@ -1387,9 +1393,9 @@
    ]
   },
   "PURR": {
-   "datum": "2026-11-16",
-   "uhrzeit": "07:00",
-   "lage": "vorboerslich",
+   "datum": "2026-11-05",
+   "uhrzeit": "15:00",
+   "lage": "im_handel",
    "quellen": [
     "yahoo"
    ]
@@ -1544,6 +1550,14 @@
     "nasdaq"
    ]
   },
+  "SDEV": {
+   "datum": "2026-11-06",
+   "uhrzeit": "",
+   "lage": "unbekannt",
+   "quellen": [
+    "nasdaq"
+   ]
+  },
   "SDGR": {
    "datum": "2026-11-04",
    "uhrzeit": "15:00",
@@ -1666,14 +1680,6 @@
     "yahoo"
    ]
   },
-  "SSL": {
-   "datum": "2027-02-22",
-   "uhrzeit": "07:00",
-   "lage": "vorboerslich",
-   "quellen": [
-    "yahoo"
-   ]
-  },
   "TEAM": {
    "datum": "2026-11-05",
    "uhrzeit": "15:00",
@@ -1769,7 +1775,8 @@
    "uhrzeit": "07:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "VIA": {

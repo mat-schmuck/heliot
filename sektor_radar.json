@@ -1,5 +1,5 @@
 {
- "gebaut_am": "2026-10-23T22:08:22",
+ "gebaut_am": "2026-10-25T22:12:01",
  "handelstag": "2026-10-23",
  "geladen": 36,
  "unfertig": [],
@@ -15,14 +15,14 @@
    "etf": "OIH",
    "name": "Oil Services",
    "richtung": "hoch",
-   "volumen_pct": 118.8,
+   "volumen_pct": 119.2,
    "kurs": 397.36
   },
   {
    "etf": "HACK",
    "name": "Cybersecurity",
    "richtung": "hoch",
-   "volumen_pct": 51.0,
+   "volumen_pct": 51.2,
    "kurs": 127.83
   }
  ]
