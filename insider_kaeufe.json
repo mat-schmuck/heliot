@@ -1,5 +1,5 @@
 {
- "stand": "2026-10-23",
+ "stand": "2026-10-26",
  "gelesen": [
   "0000001750-26-000100",
   "0000001750-26-000102",
@@ -645,6 +645,8 @@
   "0000080424-26-000223",
   "0000080424-26-000224",
   "0000080424-26-000225",
+  "0000080424-26-000260",
+  "0000080424-26-000261",
   "0000080661-26-000312",
   "0000080661-26-000317",
   "0000080661-26-000319",
@@ -669,6 +671,7 @@
   "0000080661-26-000361",
   "0000080661-26-000363",
   "0000080661-26-000365",
+  "0000080661-26-000369",
   "0000086312-26-000165",
   "0000086312-26-000166",
   "0000086312-26-000168",
@@ -1484,6 +1487,8 @@
   "0000821026-26-000126",
   "0000821026-26-000128",
   "0000821026-26-000131",
+  "0000821026-26-000136",
+  "0000821026-26-000138",
   "0000821189-26-000169",
   "0000821189-26-000171",
   "0000821189-26-000174",
@@ -2465,6 +2470,14 @@
   "0000923120-26-000020",
   "0000923120-26-000021",
   "0000923120-26-000022",
+  "0000923120-26-000023",
+  "0000923120-26-000024",
+  "0000923120-26-000025",
+  "0000923120-26-000026",
+  "0000923120-26-000027",
+  "0000923120-26-000028",
+  "0000923120-26-000029",
+  "0000923120-26-000030",
   "0000923380-26-000008",
   "0000923401-26-000004",
   "0000923401-26-000007",
@@ -3139,6 +3152,14 @@
   "0001021771-26-000113",
   "0001022079-26-000089",
   "0001022079-26-000090",
+  "0001022079-26-000109",
+  "0001022079-26-000110",
+  "0001022079-26-000111",
+  "0001022079-26-000112",
+  "0001022079-26-000113",
+  "0001022079-26-000114",
+  "0001022079-26-000115",
+  "0001022079-26-000116",
   "0001022408-26-000080",
   "0001022408-26-000086",
   "0001022408-26-000088",
@@ -3473,6 +3494,7 @@
   "0001049521-26-000072",
   "0001049521-26-000083",
   "0001049521-26-000084",
+  "0001049521-26-000085",
   "0001050797-26-000142",
   "0001050797-26-000143",
   "0001050797-26-000144",
@@ -3580,6 +3602,8 @@
   "0001062993-26-005508",
   "0001062993-26-005522",
   "0001062993-26-005533",
+  "0001062993-26-005547",
+  "0001062993-26-005549",
   "0001065088-26-000184",
   "0001065088-26-000186",
   "0001065088-26-000188",
@@ -9404,6 +9428,7 @@
   "0001193125-26-430730",
   "0001193125-26-430731",
   "0001193125-26-430732",
+  "0001193125-26-431207",
   "0001193202-26-000011",
   "0001193202-26-000012",
   "0001193210-26-000025",
@@ -11259,6 +11284,8 @@
   "0001225208-26-008479",
   "0001225208-26-008483",
   "0001225208-26-008484",
+  "0001225208-26-008493",
+  "0001225208-26-008494",
   "0001225760-26-000010",
   "0001225765-26-000003",
   "0001225817-26-000008",
@@ -11359,6 +11386,7 @@
   "0001231919-26-001469",
   "0001231919-26-001477",
   "0001231919-26-001485",
+  "0001231919-26-001497",
   "0001232142-26-000008",
   "0001232377-26-000014",
   "0001232523-26-000002",
@@ -11721,6 +11749,7 @@
   "0001280263-26-000073",
   "0001280263-26-000075",
   "0001280263-26-000077",
+  "0001280628-26-000016",
   "0001280910-26-000002",
   "0001281076-26-000005",
   "0001281197-26-000006",
@@ -12169,6 +12198,7 @@
   "0001334944-26-000034",
   "0001334945-26-000005",
   "0001335253-26-000006",
+  "0001335253-26-000007",
   "0001336063-26-000006",
   "0001336063-26-000008",
   "0001336063-26-000010",
@@ -12262,6 +12292,7 @@
   "0001343352-26-000023",
   "0001343352-26-000025",
   "0001343600-26-000013",
+  "0001343600-26-000015",
   "0001343811-26-000003",
   "0001344017-26-000004",
   "0001344017-26-000006",
@@ -12586,6 +12617,8 @@
   "0001398344-26-018631",
   "0001398344-26-018632",
   "0001398344-26-018633",
+  "0001398344-26-018733",
+  "0001398344-26-018736",
   "0001398836-26-000005",
   "0001399401-26-000008",
   "0001400253-26-000010",
@@ -14987,6 +15020,18 @@
   "0001493152-26-048219",
   "0001493152-26-048221",
   "0001493152-26-048244",
+  "0001493152-26-048309",
+  "0001493152-26-048310",
+  "0001493152-26-048311",
+  "0001493152-26-048312",
+  "0001493152-26-048313",
+  "0001493152-26-048314",
+  "0001493152-26-048315",
+  "0001493152-26-048317",
+  "0001493152-26-048319",
+  "0001493152-26-048321",
+  "0001493152-26-048422",
+  "0001493152-26-048460",
   "0001493839-26-000005",
   "0001493848-26-000005",
   "0001494259-26-000064",
@@ -18527,6 +18572,7 @@
   "0001628280-26-067095",
   "0001628280-26-067097",
   "0001628280-26-067099",
+  "0001628280-26-067128",
   "0001628328-26-000009",
   "0001628369-26-000120",
   "0001628369-26-000122",
@@ -18711,6 +18757,7 @@
   "0001646649-26-000032",
   "0001646649-26-000033",
   "0001646649-26-000034",
+  "0001646649-26-000035",
   "0001646989-26-000001",
   "0001647430-26-000012",
   "0001647486-26-000006",
@@ -19582,6 +19629,7 @@
   "0001702399-26-000010",
   "0001702455-26-000010",
   "0001702824-26-000016",
+  "0001702938-26-000004",
   "0001702969-26-000012",
   "0001702981-26-000003",
   "0001703326-26-000002",
@@ -19806,6 +19854,7 @@
   "0001717718-26-000008",
   "0001718133-26-000004",
   "0001718133-26-000005",
+  "0001718133-26-000006",
   "0001718156-26-000003",
   "0001718217-26-000002",
   "0001718892-26-000007",
@@ -20108,6 +20157,7 @@
   "0001749355-26-000006",
   "0001749416-26-000010",
   "0001749723-26-000141",
+  "0001749928-26-000007",
   "0001750052-26-000042",
   "0001750052-26-000044",
   "0001750052-26-000046",
@@ -20564,6 +20614,7 @@
   "0001778564-26-000185",
   "0001778564-26-000187",
   "0001778564-26-000189",
+  "0001778564-26-000191",
   "0001778610-26-000022",
   "0001778610-26-000024",
   "0001778623-26-000009",
@@ -20864,6 +20915,7 @@
   "0001801661-26-000114",
   "0001801661-26-000123",
   "0001801661-26-000124",
+  "0001801661-26-000126",
   "0001801670-26-000003",
   "0001801730-26-000016",
   "0001801730-26-000018",
@@ -21412,6 +21464,7 @@
   "0001833511-26-000036",
   "0001833511-26-000038",
   "0001833511-26-000040",
+  "0001833511-26-000042",
   "0001833552-26-000014",
   "0001833552-26-000016",
   "0001833552-26-000018",
@@ -23094,6 +23147,12 @@
   "0001976408-26-000891",
   "0001976408-26-000892",
   "0001976408-26-000898",
+  "0001976408-26-000900",
+  "0001976408-26-000901",
+  "0001976408-26-000902",
+  "0001976408-26-000904",
+  "0001976408-26-000905",
+  "0001976408-26-000907",
   "0001976540-26-000008",
   "0001976572-26-000005",
   "0001976684-26-000011",
@@ -23268,6 +23327,7 @@
   "0001990106-26-000019",
   "0001990106-26-000021",
   "0001990106-26-000023",
+  "0001990106-26-000026",
   "0001990127-26-000008",
   "0001990482-26-000010",
   "0001990547-26-000023",
@@ -23688,6 +23748,7 @@
   "0002021896-26-000010",
   "0002021913-26-000010",
   "0002022050-26-000009",
+  "0002022050-26-000011",
   "0002022060-26-000005",
   "0002022145-26-000006",
   "0002022345-26-000002",
@@ -24547,6 +24608,7 @@
   "0002082900-26-000006",
   "0002082930-26-000014",
   "0002082930-26-000016",
+  "0002082930-26-000018",
   "0002083068-26-000004",
   "0002083093-26-000002",
   "0002083093-26-000004",
@@ -25385,8 +25447,11 @@
   "0002158778-26-000004",
   "0002159146-26-000005",
   "0002160029-26-000004",
+  "0002160363-26-000003",
+  "0002160363-26-000004",
   "0002160413-26-000004",
   "0002160652-26-000004",
+  "0002160813-26-000005",
   "0002161365-26-000008"
  ],
  "kaeufe": {
@@ -25400,20 +25465,6 @@
    }
   ],
   "JCTC": [
-   {
-    "insider": "AJB Investment Fund II, LP",
-    "wert_dollar": 2399.5299999999997,
-    "datum": "2026-10-09",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "AJB Investment Fund II, LP",
-    "wert_dollar": 606.32,
-    "datum": "2026-10-09",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
    {
     "insider": "AJB Investment Fund II, LP",
     "wert_dollar": 14524.999999999998,
@@ -25504,13 +25555,6 @@
   "GF": [
    {
     "insider": "Saba Capital Management, L.P.",
-    "wert_dollar": 6013.799999999999,
-    "datum": "2026-10-09",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "Saba Capital Management, L.P.",
     "wert_dollar": 31992.0,
     "datum": "2026-10-12",
     "transaktionscode": "P",
@@ -25585,13 +25629,6 @@
   "GRCE": [
    {
     "insider": "Opaleye Management Inc.",
-    "wert_dollar": 10918.164,
-    "datum": "2026-10-09",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "Opaleye Management Inc.",
     "wert_dollar": 14574.3,
     "datum": "2026-10-12",
     "transaktionscode": "P",
@@ -25627,13 +25664,6 @@
    }
   ],
   "CRBG": [
-   {
-    "insider": "NIPPON LIFE INSURANCE CO",
-    "wert_dollar": 11473644.975,
-    "datum": "2026-10-09",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
    {
     "insider": "NIPPON LIFE INSURANCE CO",
     "wert_dollar": 4938651.738,
@@ -25708,34 +25738,6 @@
   "LCU": [
    {
     "insider": "Alford Tony L",
-    "wert_dollar": 19950.0,
-    "datum": "2026-10-09",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "Alford Tony L",
-    "wert_dollar": 2090.0,
-    "datum": "2026-10-09",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "SHARMAN MARK BRADY",
-    "wert_dollar": 13895.0,
-    "datum": "2026-10-09",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "SHARMAN MARK BRADY",
-    "wert_dollar": 15102.150000000001,
-    "datum": "2026-10-09",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "Alford Tony L",
     "wert_dollar": 3840.0,
     "datum": "2026-10-12",
     "transaktionscode": "P",
@@ -25759,15 +25761,6 @@
     "insider": "Alford Tony L",
     "wert_dollar": 4200.0,
     "datum": "2026-10-23",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   }
-  ],
-  "CINT": [
-   {
-    "insider": "Martins Fernando Matt Borges",
-    "wert_dollar": 406.56,
-    "datum": "2026-10-09",
     "transaktionscode": "P",
     "rolle": "Direktor"
    }
@@ -25796,13 +25789,6 @@
    }
   ],
   "BPRE": [
-   {
-    "insider": "KAMFAR RAMIN",
-    "wert_dollar": 2253171.1048,
-    "datum": "2026-10-09",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
    {
     "insider": "KAMFAR RAMIN",
     "wert_dollar": 2060257.7576,
@@ -25872,6 +25858,27 @@
     "datum": "2026-10-21",
     "transaktionscode": "P",
     "rolle": "Direktor"
+   },
+   {
+    "insider": "Ruddy Jordan B.",
+    "wert_dollar": 24986.736,
+    "datum": "2026-10-21",
+    "transaktionscode": "P",
+    "rolle": "President"
+   },
+   {
+    "insider": "KAMFAR RAMIN",
+    "wert_dollar": 758028.788,
+    "datum": "2026-10-22",
+    "transaktionscode": "P",
+    "rolle": "Direktor"
+   },
+   {
+    "insider": "KAMFAR RAMIN",
+    "wert_dollar": 1368062.61,
+    "datum": "2026-10-23",
+    "transaktionscode": "P",
+    "rolle": "Direktor"
    }
   ],
   "PRTA": [
@@ -25891,13 +25898,6 @@
    }
   ],
   "UXIN": [
-   {
-    "insider": "Dai Kun",
-    "wert_dollar": 10180.650599999999,
-    "datum": "2026-10-09",
-    "transaktionscode": "P",
-    "rolle": "Chief Executive Officer"
-   },
    {
     "insider": "Dai Kun",
     "wert_dollar": 11265.1,
@@ -25953,25 +25953,16 @@
     "datum": "2026-10-22",
     "transaktionscode": "P",
     "rolle": "Chief Executive Officer"
-   }
-  ],
-  "QVCG": [
+   },
    {
-    "insider": "GOLDENTREE ASSET MANAGEMENT LP",
-    "wert_dollar": 16697200.0,
-    "datum": "2026-10-09",
+    "insider": "Dai Kun",
+    "wert_dollar": 5083.2,
+    "datum": "2026-10-23",
     "transaktionscode": "P",
-    "rolle": "Insider"
+    "rolle": "Chief Executive Officer"
    }
   ],
   "QTEX": [
-   {
-    "insider": "Ben-Noon Dagi Shahar",
-    "wert_dollar": 30362.27,
-    "datum": "2026-10-09",
-    "transaktionscode": "P",
-    "rolle": "Chief Executive Officer"
-   },
    {
     "insider": "Ben-Noon Dagi Shahar",
     "wert_dollar": 20998.57,
@@ -25997,111 +25988,6 @@
    }
   ],
   "WVVI": [
-   {
-    "insider": "Hazlett John Walter",
-    "wert_dollar": 3919.7999999999997,
-    "datum": "2026-10-09",
-    "transaktionscode": "P",
-    "rolle": "Chief Financial Officer"
-   },
-   {
-    "insider": "Hazlett John Walter",
-    "wert_dollar": 614.25,
-    "datum": "2026-10-09",
-    "transaktionscode": "P",
-    "rolle": "Chief Financial Officer"
-   },
-   {
-    "insider": "Hazlett John Walter",
-    "wert_dollar": 1174.04,
-    "datum": "2026-10-09",
-    "transaktionscode": "P",
-    "rolle": "Chief Financial Officer"
-   },
-   {
-    "insider": "Hazlett John Walter",
-    "wert_dollar": 1477.5,
-    "datum": "2026-10-09",
-    "transaktionscode": "P",
-    "rolle": "Chief Financial Officer"
-   },
-   {
-    "insider": "Hazlett John Walter",
-    "wert_dollar": 672.0,
-    "datum": "2026-10-09",
-    "transaktionscode": "P",
-    "rolle": "Chief Financial Officer"
-   },
-   {
-    "insider": "Hazlett John Walter",
-    "wert_dollar": 200.0,
-    "datum": "2026-10-09",
-    "transaktionscode": "P",
-    "rolle": "Chief Financial Officer"
-   },
-   {
-    "insider": "Hazlett John Walter",
-    "wert_dollar": 590.816,
-    "datum": "2026-10-09",
-    "transaktionscode": "P",
-    "rolle": "Chief Financial Officer"
-   },
-   {
-    "insider": "Hazlett John Walter",
-    "wert_dollar": 349.73999999999995,
-    "datum": "2026-10-09",
-    "transaktionscode": "P",
-    "rolle": "Chief Financial Officer"
-   },
-   {
-    "insider": "Hazlett John Walter",
-    "wert_dollar": 202.0,
-    "datum": "2026-10-09",
-    "transaktionscode": "P",
-    "rolle": "Chief Financial Officer"
-   },
-   {
-    "insider": "Hazlett John Walter",
-    "wert_dollar": 254.77199999999996,
-    "datum": "2026-10-09",
-    "transaktionscode": "P",
-    "rolle": "Chief Financial Officer"
-   },
-   {
-    "insider": "Hazlett John Walter",
-    "wert_dollar": 510.0,
-    "datum": "2026-10-09",
-    "transaktionscode": "P",
-    "rolle": "Chief Financial Officer"
-   },
-   {
-    "insider": "Hazlett John Walter",
-    "wert_dollar": 1293.55,
-    "datum": "2026-10-09",
-    "transaktionscode": "P",
-    "rolle": "Chief Financial Officer"
-   },
-   {
-    "insider": "Hazlett John Walter",
-    "wert_dollar": 1242.0,
-    "datum": "2026-10-09",
-    "transaktionscode": "P",
-    "rolle": "Chief Financial Officer"
-   },
-   {
-    "insider": "Hazlett John Walter",
-    "wert_dollar": 2926.0,
-    "datum": "2026-10-09",
-    "transaktionscode": "P",
-    "rolle": "Chief Financial Officer"
-   },
-   {
-    "insider": "Hazlett John Walter",
-    "wert_dollar": 669.9,
-    "datum": "2026-10-09",
-    "transaktionscode": "P",
-    "rolle": "Chief Financial Officer"
-   },
    {
     "insider": "Hazlett John Walter",
     "wert_dollar": 4108.2,
@@ -26138,13 +26024,6 @@
    }
   ],
   "EP": [
-   {
-    "insider": "Mulacek Phil E",
-    "wert_dollar": 18088.9572,
-    "datum": "2026-10-09",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
    {
     "insider": "Mulacek Phil E",
     "wert_dollar": 64225.5708,
@@ -26205,13 +26084,6 @@
    }
   ],
   "BORR": [
-   {
-    "insider": "Troim Tor Olav",
-    "wert_dollar": 11843500.0,
-    "datum": "2026-10-09",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
    {
     "insider": "Troim Tor Olav",
     "wert_dollar": 7401600.0,
@@ -26317,15 +26189,6 @@
     "rolle": "Insider"
    }
   ],
-  "NEOG": [
-   {
-    "insider": "Nassif Mikheal",
-    "wert_dollar": 6034.75,
-    "datum": "2026-10-09",
-    "transaktionscode": "P",
-    "rolle": "CEO"
-   }
-  ],
   "CRT": [
    {
     "insider": "OLIVER ERIC L",
@@ -26343,13 +26206,6 @@
    }
   ],
   "NMCO": [
-   {
-    "insider": "Hamilton Michael S.",
-    "wert_dollar": 26106.0,
-    "datum": "2026-10-09",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
    {
     "insider": "BANK OF AMERICA CORP /DE/",
     "wert_dollar": 131.47500000000002,
@@ -26383,13 +26239,6 @@
   ],
   "IMSR": [
    {
-    "insider": "BUCKMAN FREDERICK W",
-    "wert_dollar": 39336.0,
-    "datum": "2026-10-09",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
     "insider": "Irish Simon",
     "wert_dollar": 50818.3,
     "datum": "2026-10-13",
@@ -26400,15 +26249,6 @@
     "insider": "Pardee Charles G",
     "wert_dollar": 22125.0,
     "datum": "2026-10-14",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   }
-  ],
-  "HBIA.PK": [
-   {
-    "insider": "Slattery Thomas M.",
-    "wert_dollar": 47000.0,
-    "datum": "2026-10-09",
     "transaktionscode": "P",
     "rolle": "Direktor"
    }
@@ -26436,23 +26276,7 @@
     "rolle": "Insider"
    }
   ],
-  "SAR": [
-   {
-    "insider": "Oberbeck Christian L",
-    "wert_dollar": 222450.0,
-    "datum": "2026-10-09",
-    "transaktionscode": "P",
-    "rolle": "CEO and Director"
-   }
-  ],
   "API": [
-   {
-    "insider": "Zhao Bin",
-    "wert_dollar": 21617.478000000003,
-    "datum": "2026-10-09",
-    "transaktionscode": "P",
-    "rolle": "Chief Executive Officer"
-   },
    {
     "insider": "Zhao Bin",
     "wert_dollar": 36746.2629,
@@ -26517,15 +26341,6 @@
     "rolle": "Chief Executive Officer"
    }
   ],
-  "CTNT": [
-   {
-    "insider": "Liu Huan",
-    "wert_dollar": 330000.0,
-    "datum": "2026-10-09",
-    "transaktionscode": "P",
-    "rolle": "See Remarks"
-   }
-  ],
   "RTSN": [
    {
     "insider": "Keller Eric L.",
@@ -26552,13 +26367,6 @@
    }
   ],
   "AVO": [
-   {
-    "insider": "Gonzalez Luis A",
-    "wert_dollar": 347653.64,
-    "datum": "2026-10-09",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
    {
     "insider": "Gonzalez Luis A",
     "wert_dollar": 247131.72,
@@ -26609,33 +26417,6 @@
     "insider": "Hassen Tyler Lewis",
     "wert_dollar": 55150.0,
     "datum": "2026-10-16",
-    "transaktionscode": "P",
-    "rolle": "Chief Executive Officer"
-   }
-  ],
-  "TEO": [
-   {
-    "insider": "Heine Martin Andres",
-    "wert_dollar": 18662.7,
-    "datum": "2026-10-09",
-    "transaktionscode": "P",
-    "rolle": "See Remarks"
-   }
-  ],
-  "ONMD": [
-   {
-    "insider": "Yu Jeffrey",
-    "wert_dollar": 249998.04,
-    "datum": "2026-10-09",
-    "transaktionscode": "P",
-    "rolle": "Chief Medical Officer"
-   }
-  ],
-  "TDIC": [
-   {
-    "insider": "Seto Wai Yue",
-    "wert_dollar": 600000.0,
-    "datum": "2026-10-09",
     "transaktionscode": "P",
     "rolle": "Chief Executive Officer"
    }
@@ -26705,15 +26486,6 @@
     "datum": "2026-10-22",
     "transaktionscode": "P",
     "rolle": "Chief Executive Officer"
-   }
-  ],
-  "NUAI": [
-   {
-    "insider": "MCCARTHY KENT C",
-    "wert_dollar": 1192350.0,
-    "datum": "2026-10-09",
-    "transaktionscode": "P",
-    "rolle": "Insider"
    }
   ],
   "DOLE": [
@@ -27099,15 +26871,6 @@
     "datum": "2026-10-16",
     "transaktionscode": "P",
     "rolle": "President"
-   }
-  ],
-  "ELTP": [
-   {
-    "insider": "Dash Barry H",
-    "wert_dollar": 25979.999999999996,
-    "datum": "2026-10-09",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
    }
   ],
   "FNGR": [
@@ -27854,6 +27617,20 @@
     "datum": "2026-10-20",
     "transaktionscode": "P",
     "rolle": "Insider"
+   },
+   {
+    "insider": "Gator Capital Management, LLC",
+    "wert_dollar": 11692.1068,
+    "datum": "2026-10-23",
+    "transaktionscode": "P",
+    "rolle": "Insider"
+   },
+   {
+    "insider": "Pilecki Derek Steven",
+    "wert_dollar": 11692.1068,
+    "datum": "2026-10-23",
+    "transaktionscode": "P",
+    "rolle": "Insider"
    }
   ],
   "ANIX": [
@@ -27881,6 +27658,13 @@
     "datum": "2026-10-21",
     "transaktionscode": "P",
     "rolle": "Insider"
+   },
+   {
+    "insider": "Spence John Yogi",
+    "wert_dollar": 16500.0,
+    "datum": "2026-10-23",
+    "transaktionscode": "P",
+    "rolle": "Vice President"
    }
   ],
   "VKI": [
@@ -27966,6 +27750,13 @@
     "insider": "Equels Thomas K",
     "wert_dollar": 5093.75,
     "datum": "2026-10-22",
+    "transaktionscode": "P",
+    "rolle": "CEO & President"
+   },
+   {
+    "insider": "Equels Thomas K",
+    "wert_dollar": 5068.0,
+    "datum": "2026-10-23",
     "transaktionscode": "P",
     "rolle": "CEO & President"
    }
@@ -28135,42 +27926,29 @@
   "MacDonald Ryan S": "Direktor",
   "SCULLY WILLIAM P": "Insider",
   "Pittas Aristeidis P": "Direktor",
-  "GOLDENTREE ASSET MANAGEMENT LP": "Insider",
   "Ben-Noon Dagi Shahar": "Chief Executive Officer",
   "KAMFAR RAMIN": "Direktor",
   "Dai Kun": "Chief Executive Officer",
   "Elsztain Alejandro Gustavo": "Direktor",
-  "SHARMAN MARK BRADY": "Direktor",
   "Lin Yi-Chien": "Insider",
-  "Martins Fernando Matt Borges": "Direktor",
   "Mulacek Phil E": "Direktor",
   "ADAR1 Capital Management, LLC": "Insider",
   "Troim Tor Olav": "Direktor",
   "Rusnak Paul P.": "Insider",
   "Epstein David R": "Direktor",
   "Alford Tony L": "Direktor",
-  "Nassif Mikheal": "CEO",
   "OLIVER ERIC L": "Insider",
-  "Hamilton Michael S.": "Insider",
   "Bortz Robert Edward III": "President",
   "Hazlett John Walter": "Chief Financial Officer",
-  "BUCKMAN FREDERICK W": "Direktor",
-  "Slattery Thomas M.": "Direktor",
   "Tether Global Investments Fund, S.I.C.A.F., S.A.": "Insider",
-  "Oberbeck Christian L": "CEO and Director",
   "Zhao Bin": "Chief Executive Officer",
-  "Liu Huan": "See Remarks",
   "Keller Eric L.": "CHIEF EXECUTIVE OFFICER",
   "BERGER FRANKLIN M": "Direktor",
   "Gonzalez Luis A": "Direktor",
   "BANK OF AMERICA CORP /DE/": "Insider",
   "Hassen Tyler Lewis": "Chief Executive Officer",
-  "Heine Martin Andres": "See Remarks",
-  "Yu Jeffrey": "Chief Medical Officer",
-  "Seto Wai Yue": "Chief Executive Officer",
   "Irish Simon": "Chief Executive Officer",
   "Qiu Wenbin": "Chief Executive Officer",
-  "MCCARTHY KENT C": "Insider",
   "Pale Fire Capital SE": "Insider",
   "Lappe Mark": "Chief Executive Officer",
   "Setcavage Rebecca": "Insider",
@@ -28202,7 +27980,6 @@
   "Malik Muhammad Shahbaz": "Senior VP, BAS",
   "Cummins Wes": "CEO; Chairman",
   "Zhang Jason Gechen": "President",
-  "Dash Barry H": "Direktor",
   "KAHN JOLIE": "CEO",
   "Polimeni Christopher Vincent": "CFO",
   "Rachlin Evan Lockwood": "Direktor",
@@ -28248,7 +28025,7 @@
   "Young Wendy B.": "Direktor",
   "PAUL STEVEN M": "Direktor",
   "MARAGANORE JOHN": "Direktor",
-  "Spence John Yogi": "Insider",
+  "Spence John Yogi": "Vice President",
   "Jones Nathaniel T.": "Vice President",
   "RAN ASSAF": "President and CEO",
   "Equels Thomas K": "CEO & President",
