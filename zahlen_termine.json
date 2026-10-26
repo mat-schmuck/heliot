@@ -1,9 +1,10 @@
 {
- "gebaut_am": "2026-10-25 23:11 Wien",
+ "gebaut_am": "2026-10-26 23:15 Wien",
  "ohne_termin": [
   "ANL",
   "BNR",
   "BUUU",
+  "FLXS",
   "GIBO",
   "KRSA",
   "MAAS",
@@ -14,6 +15,7 @@
   "TJGC"
  ],
  "nur_nasdaq": [
+  "FLXS",
   "SDEV"
  ],
  "uneinig": [
@@ -22,10 +24,10 @@
   "AFRM",
   "ALAB",
   "ALNT",
+  "AMC",
   "AMD",
   "AMPL",
   "ANET",
-  "ARW",
   "ATRC",
   "BDSX",
   "BLZE",
@@ -36,7 +38,6 @@
   "CSTL",
   "ETON",
   "FIGS",
-  "FIVN",
   "FROG",
   "FSLY",
   "GH",
@@ -61,6 +62,8 @@
   "PLTR",
   "PSIX",
   "PTC",
+  "PURR",
+  "QLYS",
   "RDVT",
   "RELY",
   "REPX",
@@ -69,9 +72,11 @@
   "SEZL",
   "TEAM",
   "TRUP",
+  "TVTX",
   "TXG",
   "VRNS",
-  "WEYS"
+  "WEYS",
+  "ZETA"
  ],
  "aktien": {
   "ABSI": {
@@ -155,7 +160,8 @@
    "quellen": [
     "yahoo",
     "nasdaq"
-   ]
+   ],
+   "uneinig": "Tageszeit uneinig: Nasdaq nachboerslich, Yahoo im_handel"
   },
   "AMD": {
    "datum": "2026-11-03",
@@ -253,8 +259,7 @@
    "quellen": [
     "yahoo",
     "nasdaq"
-   ],
-   "uneinig": "Quellen uneinig: 2026-11-05 (Yahoo, hier bevorzugt) gegen 2026-10-29 (Nasdaq)"
+   ]
   },
   "ARX": {
    "datum": "2026-11-11",
@@ -627,21 +632,19 @@
    "uneinig": "Tageszeit uneinig: Nasdaq nachboerslich, Yahoo im_handel"
   },
   "FIVN": {
-   "datum": "2026-11-09",
+   "datum": "2026-11-05",
    "uhrzeit": "15:00",
    "lage": "im_handel",
    "quellen": [
     "yahoo",
     "nasdaq"
-   ],
-   "uneinig": "Quellen uneinig: 2026-11-09 (Yahoo, hier bevorzugt) gegen 2026-11-05 (Nasdaq)"
+   ]
   },
   "FLXS": {
    "datum": "2026-10-26",
-   "uhrzeit": "16:00",
+   "uhrzeit": "",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo",
     "nasdaq"
    ]
   },
@@ -1316,7 +1319,7 @@
     "yahoo",
     "nasdaq"
    ],
-   "uneinig": "Quellen uneinig: 2026-11-05 (Yahoo, hier bevorzugt) gegen 2026-11-04 (Nasdaq)"
+   "uneinig": "Tageszeit uneinig: Nasdaq nachboerslich, Yahoo im_handel"
   },
   "PLTR": {
    "datum": "2026-11-02",
@@ -1397,17 +1400,20 @@
    "uhrzeit": "15:00",
    "lage": "im_handel",
    "quellen": [
-    "yahoo"
-   ]
+    "yahoo",
+    "nasdaq"
+   ],
+   "uneinig": "Tageszeit uneinig: Nasdaq nachboerslich, Yahoo im_handel"
   },
   "QLYS": {
-   "datum": "2026-11-03",
+   "datum": "2026-11-09",
    "uhrzeit": "15:00",
    "lage": "im_handel",
    "quellen": [
     "yahoo",
     "nasdaq"
-   ]
+   ],
+   "uneinig": "Quellen uneinig: 2026-11-09 (Yahoo, hier bevorzugt) gegen 2026-11-03 (Nasdaq)"
   },
   "QMCO": {
    "datum": "2026-11-09",
@@ -1709,13 +1715,14 @@
    "uneinig": "Tageszeit uneinig: Nasdaq nachboerslich, Yahoo im_handel"
   },
   "TVTX": {
-   "datum": "2026-10-29",
-   "uhrzeit": "16:00",
-   "lage": "nachboerslich",
+   "datum": "2026-11-02",
+   "uhrzeit": "15:00",
+   "lage": "im_handel",
    "quellen": [
     "yahoo",
     "nasdaq"
-   ]
+   ],
+   "uneinig": "Quellen uneinig: 2026-11-02 (Yahoo, hier bevorzugt) gegen 2026-10-29 (Nasdaq)"
   },
   "TWIN": {
    "datum": "2026-11-04",
@@ -1727,7 +1734,7 @@
    ]
   },
   "TWST": {
-   "datum": "2026-11-16",
+   "datum": "2026-11-12",
    "uhrzeit": "07:00",
    "lage": "vorboerslich",
    "quellen": [
@@ -1861,13 +1868,14 @@
    ]
   },
   "ZETA": {
-   "datum": "2026-11-03",
+   "datum": "2026-11-09",
    "uhrzeit": "15:00",
    "lage": "im_handel",
    "quellen": [
     "yahoo",
     "nasdaq"
-   ]
+   ],
+   "uneinig": "Quellen uneinig: 2026-11-09 (Yahoo, hier bevorzugt) gegen 2026-11-03 (Nasdaq)"
   },
   "ZS": {
    "datum": "2026-11-24",
