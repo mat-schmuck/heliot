@@ -4,7 +4,7 @@
   {
    "ticker": "APLD",
    "status": "pfad_a",
-   "marktkap": 5876893696.0,
+   "marktkap": 5899573248.0,
    "stichtag": "2026-10-27",
    "zeilen": [
     "APLD; Großkauf; Marktwert 5,9 Mrd $",
@@ -15,7 +15,7 @@
   {
    "ticker": "BORR",
    "status": "pfad_a",
-   "marktkap": 1258668544.0,
+   "marktkap": 1264884736.0,
    "stichtag": "2026-10-27",
    "zeilen": [
     "BORR; Großkauf; Marktwert 1,3 Mrd $",
@@ -26,10 +26,10 @@
   {
    "ticker": "CRBG",
    "status": "pfad_a",
-   "marktkap": 15744546816.0,
+   "marktkap": 15762378752.0,
    "stichtag": "2026-10-27",
    "zeilen": [
-    "CRBG; Großkauf; Marktwert 15,7 Mrd $",
+    "CRBG; Großkauf; Marktwert 15,8 Mrd $",
     "Größter Einzelkauf 20,5 Mio $ am 14.10.; NIPPON LIFE INSURANCE CO, Insider"
    ],
    "kennung": "CRBG|pfad_a|1"
@@ -37,10 +37,10 @@
   {
    "ticker": "DOLE",
    "status": "pfad_a",
-   "marktkap": 1250162304.0,
+   "marktkap": 1246856192.0,
    "stichtag": "2026-10-27",
    "zeilen": [
-    "DOLE; Großkauf; Marktwert 1,3 Mrd $",
+    "DOLE; Großkauf; Marktwert 1,2 Mrd $",
     "Größter Einzelkauf 5,8 Mio $ am 21.10.; Pale Fire Capital SE, Insider"
    ],
    "kennung": "DOLE|pfad_a|1"
@@ -48,7 +48,7 @@
   {
    "ticker": "GME",
    "status": "pfad_a",
-   "marktkap": 11820457984.0,
+   "marktkap": 11785143296.0,
    "stichtag": "2026-10-27",
    "zeilen": [
     "GME; Großkauf; Marktwert 11,8 Mrd $",
@@ -57,12 +57,34 @@
    "kennung": "GME|pfad_a|1"
   },
   {
-   "ticker": "PAM",
+   "ticker": "LRN",
    "status": "pfad_a",
-   "marktkap": 4083535104.0,
+   "marktkap": 3291955200.0,
    "stichtag": "2026-10-27",
    "zeilen": [
-    "PAM; Großkauf; Marktwert 4,1 Mrd $",
+    "LRN; Großkauf; Marktwert 3,3 Mrd $",
+    "Größter Einzelkauf 7,1 Mio $ am 26.10.; Haggart Dylan G., Direktor"
+   ],
+   "kennung": "LRN|pfad_a|1"
+  },
+  {
+   "ticker": "LYCA",
+   "status": "pfad_a",
+   "marktkap": 1360189056.0,
+   "stichtag": "2026-10-27",
+   "zeilen": [
+    "LYCA; Großkauf; Marktwert 1,4 Mrd $",
+    "Größter Einzelkauf 35,0 Mio $ am 26.10.; Venrock Healthcare Capital Partners III, L.P., Insider"
+   ],
+   "kennung": "LYCA|pfad_a|1"
+  },
+  {
+   "ticker": "PAM",
+   "status": "pfad_a",
+   "marktkap": 4041188096.0,
+   "stichtag": "2026-10-27",
+   "zeilen": [
+    "PAM; Großkauf; Marktwert 4,0 Mrd $",
     "Größter Einzelkauf 35,1 Mio $ am 15.10.; Mindlin Marcos Marcelo, Direktor"
    ],
    "kennung": "PAM|pfad_a|1"
@@ -70,10 +92,10 @@
   {
    "ticker": "PEP",
    "status": "pfad_a",
-   "marktkap": 180808482816.0,
+   "marktkap": 181925937152.0,
    "stichtag": "2026-10-27",
    "zeilen": [
-    "PEP; Großkauf; Marktwert 180,8 Mrd $",
+    "PEP; Großkauf; Marktwert 181,9 Mrd $",
     "Größter Einzelkauf 10,8 Mio $ am 14.10.; POHLAD ROBERT C, Direktor"
    ],
    "kennung": "PEP|pfad_a|1"
