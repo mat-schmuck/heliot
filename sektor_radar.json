@@ -1,7 +1,15 @@
 {
- "gebaut_am": "2026-10-26T22:15:34",
- "handelstag": "2026-10-26",
+ "gebaut_am": "2026-10-27T22:12:03",
+ "handelstag": "2026-10-27",
  "geladen": 36,
  "unfertig": [],
- "treffer": []
+ "treffer": [
+  {
+   "etf": "TAN",
+   "name": "Solar",
+   "richtung": "hoch",
+   "volumen_pct": 115.6,
+   "kurs": 42.02
+  }
+ ]
 }

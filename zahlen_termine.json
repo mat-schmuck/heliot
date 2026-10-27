@@ -1,21 +1,18 @@
 {
- "gebaut_am": "2026-10-26 23:15 Wien",
+ "gebaut_am": "2026-10-27 23:11 Wien",
  "ohne_termin": [
   "ANL",
   "BNR",
   "BUUU",
-  "FLXS",
   "GIBO",
   "KRSA",
   "MAAS",
   "SAIH",
   "SDEV",
-  "SSL",
   "SVRN",
   "TJGC"
  ],
  "nur_nasdaq": [
-  "FLXS",
   "SDEV"
  ],
  "uneinig": [
@@ -28,9 +25,11 @@
   "AMD",
   "AMPL",
   "ANET",
+  "ASST",
   "ATRC",
   "BDSX",
   "BLZE",
+  "BWIN",
   "CAI",
   "CHYM",
   "CLOV",
@@ -38,6 +37,7 @@
   "CSTL",
   "ETON",
   "FIGS",
+  "FRD",
   "FROG",
   "FSLY",
   "GH",
@@ -56,17 +56,20 @@
   "NUTX",
   "OUST",
   "PAYC",
+  "PAYS",
   "PCOR",
   "PCRX",
   "PLSE",
   "PLTR",
   "PSIX",
   "PTC",
+  "PUBM",
   "PURR",
   "QLYS",
   "RDVT",
   "RELY",
   "REPX",
+  "RXT",
   "SBAC",
   "SDGR",
   "SEZL",
@@ -194,7 +197,7 @@
   },
   "AMT": {
    "datum": "2026-10-27",
-   "uhrzeit": "08:00",
+   "uhrzeit": "07:00",
    "lage": "vorboerslich",
    "quellen": [
     "yahoo",
@@ -274,8 +277,10 @@
    "uhrzeit": "07:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo"
-   ]
+    "yahoo",
+    "nasdaq"
+   ],
+   "uneinig": "Quellen uneinig: 2026-11-10 (Yahoo, hier bevorzugt) gegen 2026-11-09 (Nasdaq)"
   },
   "ASX": {
    "datum": "2026-10-29",
@@ -385,13 +390,14 @@
    ]
   },
   "BWIN": {
-   "datum": "2026-11-03",
-   "uhrzeit": "15:00",
-   "lage": "im_handel",
+   "datum": "2026-10-27",
+   "uhrzeit": "09:00",
+   "lage": "vorboerslich",
    "quellen": [
     "yahoo",
     "nasdaq"
-   ]
+   ],
+   "uneinig": "Quellen uneinig: 2026-10-27 (Yahoo, hier bevorzugt) gegen 2026-11-03 (Nasdaq)"
   },
   "CAI": {
    "datum": "2026-11-04",
@@ -641,11 +647,11 @@
    ]
   },
   "FLXS": {
-   "datum": "2026-10-26",
-   "uhrzeit": "",
-   "lage": "nachboerslich",
+   "datum": "2027-02-08",
+   "uhrzeit": "15:00",
+   "lage": "im_handel",
    "quellen": [
-    "nasdaq"
+    "yahoo"
    ]
   },
   "FOUR": {
@@ -662,8 +668,10 @@
    "uhrzeit": "15:00",
    "lage": "im_handel",
    "quellen": [
-    "yahoo"
-   ]
+    "yahoo",
+    "nasdaq"
+   ],
+   "uneinig": "Quellen uneinig: 2026-11-04 (Yahoo, hier bevorzugt) gegen 2026-11-09 (Nasdaq)"
   },
   "FROG": {
    "datum": "2026-11-05",
@@ -894,7 +902,8 @@
    "uhrzeit": "08:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "KEYS": {
@@ -1002,7 +1011,8 @@
    "uhrzeit": "07:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "MRNA": {
@@ -1179,7 +1189,7 @@
    ]
   },
   "ONON": {
-   "datum": "2026-11-11",
+   "datum": "2026-11-10",
    "uhrzeit": "07:00",
    "lage": "vorboerslich",
    "quellen": [
@@ -1236,8 +1246,10 @@
    "uhrzeit": "15:00",
    "lage": "im_handel",
    "quellen": [
-    "yahoo"
-   ]
+    "yahoo",
+    "nasdaq"
+   ],
+   "uneinig": "Tageszeit uneinig: Nasdaq nachboerslich, Yahoo im_handel"
   },
   "PCOR": {
    "datum": "2026-11-03",
@@ -1392,8 +1404,10 @@
    "uhrzeit": "15:00",
    "lage": "im_handel",
    "quellen": [
-    "yahoo"
-   ]
+    "yahoo",
+    "nasdaq"
+   ],
+   "uneinig": "Tageszeit uneinig: Nasdaq nachboerslich, Yahoo im_handel"
   },
   "PURR": {
    "datum": "2026-11-05",
@@ -1413,7 +1427,7 @@
     "yahoo",
     "nasdaq"
    ],
-   "uneinig": "Quellen uneinig: 2026-11-09 (Yahoo, hier bevorzugt) gegen 2026-11-03 (Nasdaq)"
+   "uneinig": "Tageszeit uneinig: Nasdaq nachboerslich, Yahoo im_handel"
   },
   "QMCO": {
    "datum": "2026-11-09",
@@ -1518,8 +1532,10 @@
    "uhrzeit": "15:00",
    "lage": "im_handel",
    "quellen": [
-    "yahoo"
-   ]
+    "yahoo",
+    "nasdaq"
+   ],
+   "uneinig": "Tageszeit uneinig: Nasdaq nachboerslich, Yahoo im_handel"
   },
   "S": {
    "datum": "2026-12-03",
@@ -1686,6 +1702,14 @@
     "yahoo"
    ]
   },
+  "SSL": {
+   "datum": "2027-02-22",
+   "uhrzeit": "07:00",
+   "lage": "vorboerslich",
+   "quellen": [
+    "yahoo"
+   ]
+  },
   "TEAM": {
    "datum": "2026-11-05",
    "uhrzeit": "15:00",
@@ -1791,7 +1815,8 @@
    "uhrzeit": "07:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "VREX": {
