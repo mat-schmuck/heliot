@@ -1,7 +1,36 @@
 {
- "gebaut_am": "2026-10-29T22:12:50",
- "handelstag": "2026-10-29",
+ "gebaut_am": "2026-10-30T22:08:09",
+ "handelstag": "2026-10-30",
  "geladen": 36,
  "unfertig": [],
- "treffer": []
+ "treffer": [
+  {
+   "etf": "XLK",
+   "name": "Technology",
+   "richtung": "runter",
+   "volumen_pct": 152.3,
+   "kurs": 179.51
+  },
+  {
+   "etf": "SOXX",
+   "name": "Semiconductors alt",
+   "richtung": "runter",
+   "volumen_pct": 142.6,
+   "kurs": 471.51
+  },
+  {
+   "etf": "SMH",
+   "name": "Semiconductors",
+   "richtung": "runter",
+   "volumen_pct": 136.0,
+   "kurs": 522.49
+  },
+  {
+   "etf": "ARKK",
+   "name": "Innovation/Growth",
+   "richtung": "runter",
+   "volumen_pct": 58.0,
+   "kurs": 80.75
+  }
+ ]
 }

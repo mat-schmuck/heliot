@@ -6,7 +6,7 @@
   "zone_max": 16.7549991607666,
   "spring_low": 16.200000762939453,
   "spring_volumen": 2163092.0,
-  "tage_gewartet": 12
+  "tage_gewartet": 13
  },
  "MTW": {
   "spring_index": 500,
@@ -15,16 +15,7 @@
   "zone_max": 21.5,
   "spring_low": 21.049999237060547,
   "spring_volumen": 250103.0,
-  "tage_gewartet": 8
- },
- "NUTX": {
-  "spring_index": 500,
-  "spring_datum": "2026-10-22",
-  "zone_min": 198.25,
-  "zone_max": 200.0,
-  "spring_low": 194.22999572753906,
-  "spring_volumen": 129670.0,
-  "tage_gewartet": 6
+  "tage_gewartet": 9
  },
  "FEIM": {
   "spring_index": 500,
@@ -33,7 +24,7 @@
   "zone_max": 62.33000183105469,
   "spring_low": 60.68000030517578,
   "spring_volumen": 195395.0,
-  "tage_gewartet": 5
+  "tage_gewartet": 6
  },
  "FRD": {
   "spring_index": 500,
@@ -42,7 +33,7 @@
   "zone_max": 41.15999984741211,
   "spring_low": 40.040000915527344,
   "spring_volumen": 44010.0,
-  "tage_gewartet": 5
+  "tage_gewartet": 6
  },
  "LITE": {
   "spring_index": 499,
@@ -51,7 +42,7 @@
   "zone_max": 787.010009765625,
   "spring_low": 756.0,
   "spring_volumen": 6005727.0,
-  "tage_gewartet": 3
+  "tage_gewartet": 4
  },
  "SDGR": {
   "spring_index": 499,
@@ -60,7 +51,7 @@
   "zone_max": 23.899999618530273,
   "spring_low": 23.260000228881836,
   "spring_volumen": 1263204.0,
-  "tage_gewartet": 3
+  "tage_gewartet": 4
  },
  "MRVI": {
   "spring_index": 499,
@@ -69,7 +60,7 @@
   "zone_max": 7.440000057220459,
   "spring_low": 7.320000171661377,
   "spring_volumen": 1268559.0,
-  "tage_gewartet": 3
+  "tage_gewartet": 4
  },
  "CAI": {
   "spring_index": 341,
@@ -78,7 +69,7 @@
   "zone_max": 33.654998779296875,
   "spring_low": 32.0703010559082,
   "spring_volumen": 3380494.0,
-  "tage_gewartet": 2
+  "tage_gewartet": 3
  },
  "PI": {
   "spring_index": 500,
@@ -87,7 +78,7 @@
   "zone_max": 176.3000030517578,
   "spring_low": 170.0,
   "spring_volumen": 393980.0,
-  "tage_gewartet": 1
+  "tage_gewartet": 2
  },
  "RELL": {
   "spring_index": 500,
@@ -96,15 +87,6 @@
   "zone_max": 19.860000610351562,
   "spring_low": 19.68000030517578,
   "spring_volumen": 212270.0,
-  "tage_gewartet": 1
- },
- "BAND": {
-  "spring_index": 500,
-  "spring_datum": "2026-10-29",
-  "zone_min": 48.150001525878906,
-  "zone_max": 48.150001525878906,
-  "spring_low": 45.79999923706055,
-  "spring_volumen": 2231237.0,
-  "tage_gewartet": 0
+  "tage_gewartet": 2
  }
 }
