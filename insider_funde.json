@@ -1,13 +1,13 @@
 {
- "stand": "2026-10-29",
+ "stand": "2026-10-30",
  "funde": [
   {
    "ticker": "APLD",
    "status": "pfad_a",
-   "marktkap": 5816416768.0,
-   "stichtag": "2026-10-29",
+   "marktkap": 5869334016.0,
+   "stichtag": "2026-10-30",
    "zeilen": [
-    "APLD; Großkauf; Marktwert 5,8 Mrd $",
+    "APLD; Großkauf; Marktwert 5,9 Mrd $",
     "Größter Einzelkauf 5,7 Mio $ am 16.10.; Zhang Jason Gechen, President"
    ],
    "kennung": "APLD|pfad_a|2"
@@ -15,8 +15,8 @@
   {
    "ticker": "CRBG",
    "status": "pfad_a",
-   "marktkap": 15726715904.0,
-   "stichtag": "2026-10-29",
+   "marktkap": 15731312640.0,
+   "stichtag": "2026-10-30",
    "zeilen": [
     "CRBG; Großkauf; Marktwert 15,7 Mrd $",
     "Größter Einzelkauf 13,9 Mio $ am 23.10.; NIPPON LIFE INSURANCE CO, Insider"
@@ -26,8 +26,8 @@
   {
    "ticker": "DOLE",
    "status": "pfad_a",
-   "marktkap": 1240716416.0,
-   "stichtag": "2026-10-29",
+   "marktkap": 1242133248.0,
+   "stichtag": "2026-10-30",
    "zeilen": [
     "DOLE; Großkauf; Marktwert 1,2 Mrd $",
     "Größter Einzelkauf 5,8 Mio $ am 21.10.; Pale Fire Capital SE, Insider"
@@ -37,8 +37,8 @@
   {
    "ticker": "LRN",
    "status": "pfad_a",
-   "marktkap": 3379466240.0,
-   "stichtag": "2026-10-29",
+   "marktkap": 3393342208.0,
+   "stichtag": "2026-10-30",
    "zeilen": [
     "LRN; Großkauf; Marktwert 3,4 Mrd $",
     "Größter Einzelkauf 7,1 Mio $ am 26.10.; Haggart Dylan G., Direktor"
@@ -48,8 +48,8 @@
   {
    "ticker": "LYCA",
    "status": "pfad_a",
-   "marktkap": 1370086912.0,
-   "stichtag": "2026-10-29",
+   "marktkap": 1444582144.0,
+   "stichtag": "2026-10-30",
    "zeilen": [
     "LYCA; Großkauf; Marktwert 1,4 Mrd $",
     "Größter Einzelkauf 35,0 Mio $ am 26.10.; Venrock Healthcare Capital Partners III, L.P., Insider"
@@ -57,15 +57,15 @@
    "kennung": "LYCA|pfad_a|1"
   },
   {
-   "ticker": "PAM",
+   "ticker": "MSM",
    "status": "pfad_a",
-   "marktkap": 4007262464.0,
-   "stichtag": "2026-10-29",
+   "marktkap": 6864626688.0,
+   "stichtag": "2026-10-30",
    "zeilen": [
-    "PAM; Großkauf; Marktwert 4,0 Mrd $",
-    "Größter Einzelkauf 35,1 Mio $ am 15.10.; Mindlin Marcos Marcelo, Direktor"
+    "MSM; Großkauf; Marktwert 6,9 Mrd $",
+    "Größter Einzelkauf 15,6 Mio $ am 23.10.; JACOBSON MITCHELL, Direktor"
    ],
-   "kennung": "PAM|pfad_a|1"
+   "kennung": "MSM|pfad_a|1"
   }
  ]
 }
