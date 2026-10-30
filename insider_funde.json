@@ -4,10 +4,10 @@
   {
    "ticker": "APLD",
    "status": "pfad_a",
-   "marktkap": 5869334016.0,
+   "marktkap": 5250952704.0,
    "stichtag": "2026-10-30",
    "zeilen": [
-    "APLD; Großkauf; Marktwert 5,9 Mrd $",
+    "APLD; Großkauf; Marktwert 5,3 Mrd $",
     "Größter Einzelkauf 5,7 Mio $ am 16.10.; Zhang Jason Gechen, President"
    ],
    "kennung": "APLD|pfad_a|2"
@@ -15,10 +15,10 @@
   {
    "ticker": "CRBG",
    "status": "pfad_a",
-   "marktkap": 15731312640.0,
+   "marktkap": 15368006656.0,
    "stichtag": "2026-10-30",
    "zeilen": [
-    "CRBG; Großkauf; Marktwert 15,7 Mrd $",
+    "CRBG; Großkauf; Marktwert 15,4 Mrd $",
     "Größter Einzelkauf 13,9 Mio $ am 23.10.; NIPPON LIFE INSURANCE CO, Insider"
    ],
    "kennung": "CRBG|pfad_a|1"
@@ -26,7 +26,7 @@
   {
    "ticker": "DOLE",
    "status": "pfad_a",
-   "marktkap": 1242133248.0,
+   "marktkap": 1227964544.0,
    "stichtag": "2026-10-30",
    "zeilen": [
     "DOLE; Großkauf; Marktwert 1,2 Mrd $",
@@ -37,10 +37,10 @@
   {
    "ticker": "LRN",
    "status": "pfad_a",
-   "marktkap": 3393342208.0,
+   "marktkap": 3295158272.0,
    "stichtag": "2026-10-30",
    "zeilen": [
-    "LRN; Großkauf; Marktwert 3,4 Mrd $",
+    "LRN; Großkauf; Marktwert 3,3 Mrd $",
     "Größter Einzelkauf 7,1 Mio $ am 26.10.; Haggart Dylan G., Direktor"
    ],
    "kennung": "LRN|pfad_a|1"
@@ -48,7 +48,7 @@
   {
    "ticker": "LYCA",
    "status": "pfad_a",
-   "marktkap": 1444582144.0,
+   "marktkap": 1352114304.0,
    "stichtag": "2026-10-30",
    "zeilen": [
     "LYCA; Großkauf; Marktwert 1,4 Mrd $",
@@ -59,10 +59,10 @@
   {
    "ticker": "MSM",
    "status": "pfad_a",
-   "marktkap": 6864626688.0,
+   "marktkap": 6797611008.0,
    "stichtag": "2026-10-30",
    "zeilen": [
-    "MSM; Großkauf; Marktwert 6,9 Mrd $",
+    "MSM; Großkauf; Marktwert 6,8 Mrd $",
     "Größter Einzelkauf 15,6 Mio $ am 23.10.; JACOBSON MITCHELL, Direktor"
    ],
    "kennung": "MSM|pfad_a|1"
