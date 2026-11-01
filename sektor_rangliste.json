@@ -1,5 +1,5 @@
 {
- "gebaut_am": "2026-10-30T22:05:53",
+ "gebaut_am": "2026-11-01T23:10:44",
  "handelstag": "2026-10-30",
  "geladen": 36,
  "liste": [
@@ -652,106 +652,8 @@
    "linie_qqq_12w": -18.82
   }
  ],
- "aufsteiger": [
-  {
-   "etf": "IBB",
-   "name": "Biotech large",
-   "art": "eintritt",
-   "rang": 4,
-   "rang_vor_3w": 9,
-   "aenderung_3w": 5
-  },
-  {
-   "etf": "IBB",
-   "name": "Biotech large",
-   "art": "aufstieg",
-   "rang": 4,
-   "rang_vor_3w": 9,
-   "aenderung_3w": 5
-  },
-  {
-   "etf": "XLV",
-   "name": "Health Care",
-   "art": "eintritt",
-   "rang": 5,
-   "rang_vor_3w": 13,
-   "aenderung_3w": 8
-  },
-  {
-   "etf": "XLB",
-   "name": "Materials",
-   "art": "aufstieg",
-   "rang": 13,
-   "rang_vor_3w": 19,
-   "aenderung_3w": 6
-  },
-  {
-   "etf": "XLF",
-   "name": "Financials",
-   "art": "aufstieg",
-   "rang": 15,
-   "rang_vor_3w": 20,
-   "aenderung_3w": 5
-  },
-  {
-   "etf": "KRE",
-   "name": "Regional Banks",
-   "art": "aufstieg",
-   "rang": 16,
-   "rang_vor_3w": 22,
-   "aenderung_3w": 6
-  },
-  {
-   "etf": "KBE",
-   "name": "Banks",
-   "art": "aufstieg",
-   "rang": 17,
-   "rang_vor_3w": 23,
-   "aenderung_3w": 6
-  },
-  {
-   "etf": "XLRE",
-   "name": "Real Estate",
-   "art": "aufstieg",
-   "rang": 19,
-   "rang_vor_3w": 25,
-   "aenderung_3w": 6
-  },
-  {
-   "etf": "XLU",
-   "name": "Utilities",
-   "art": "aufstieg",
-   "rang": 22,
-   "rang_vor_3w": 30,
-   "aenderung_3w": 8
-  },
-  {
-   "etf": "XHB",
-   "name": "Homebuilders",
-   "art": "aufstieg",
-   "rang": 27,
-   "rang_vor_3w": 34,
-   "aenderung_3w": 7
-  }
- ],
- "frueh": [
-  {
-   "etf": "XOP",
-   "name": "Oil & Gas E&P",
-   "art": "frueh",
-   "rang_3m": 3,
-   "rang_3m_vor_1w": 4,
-   "rang": 2
-  },
-  {
-   "etf": "XLV",
-   "name": "Health Care",
-   "art": "frueh",
-   "rang_3m": 4,
-   "rang_3m_vor_1w": 8,
-   "rang": 5
-  }
- ],
+ "aufsteiger": [],
+ "frueh": [],
  "groesste_aufsteiger": [
   {
    "etf": "XLV",
@@ -813,7 +715,7 @@
    "top_gemeldet": false,
    "aufstieg_gemeldet": false,
    "top_bekannt": true,
-   "stand": "2026-10-30",
+   "stand": "2026-11-01",
    "frueh_gemeldet": false,
    "frueh_bekannt": true
   },
@@ -821,7 +723,7 @@
    "top_gemeldet": false,
    "aufstieg_gemeldet": false,
    "top_bekannt": true,
-   "stand": "2026-10-30",
+   "stand": "2026-11-01",
    "frueh_gemeldet": false,
    "frueh_bekannt": true
   },
@@ -829,7 +731,7 @@
    "top_gemeldet": true,
    "aufstieg_gemeldet": false,
    "top_bekannt": true,
-   "stand": "2026-10-30",
+   "stand": "2026-11-01",
    "frueh_gemeldet": true,
    "frueh_bekannt": true
   },
@@ -837,7 +739,7 @@
    "top_gemeldet": false,
    "aufstieg_gemeldet": false,
    "top_bekannt": true,
-   "stand": "2026-10-30",
+   "stand": "2026-11-01",
    "frueh_gemeldet": false,
    "frueh_bekannt": true
   },
@@ -845,7 +747,7 @@
    "top_gemeldet": true,
    "aufstieg_gemeldet": false,
    "top_bekannt": true,
-   "stand": "2026-10-30",
+   "stand": "2026-11-01",
    "frueh_gemeldet": true,
    "frueh_bekannt": true
   },
@@ -853,7 +755,7 @@
    "top_gemeldet": false,
    "aufstieg_gemeldet": false,
    "top_bekannt": true,
-   "stand": "2026-10-30",
+   "stand": "2026-11-01",
    "frueh_gemeldet": false,
    "frueh_bekannt": true
   },
@@ -861,7 +763,7 @@
    "top_gemeldet": true,
    "aufstieg_gemeldet": true,
    "top_bekannt": true,
-   "stand": "2026-10-30",
+   "stand": "2026-11-01",
    "frueh_gemeldet": true,
    "frueh_bekannt": true
   },
@@ -869,7 +771,7 @@
    "top_gemeldet": true,
    "aufstieg_gemeldet": false,
    "top_bekannt": true,
-   "stand": "2026-10-30",
+   "stand": "2026-11-01",
    "frueh_gemeldet": true,
    "frueh_bekannt": true
   },
@@ -877,7 +779,7 @@
    "top_gemeldet": false,
    "aufstieg_gemeldet": false,
    "top_bekannt": true,
-   "stand": "2026-10-30",
+   "stand": "2026-11-01",
    "frueh_gemeldet": false,
    "frueh_bekannt": true
   },
@@ -885,7 +787,7 @@
    "top_gemeldet": false,
    "aufstieg_gemeldet": false,
    "top_bekannt": true,
-   "stand": "2026-10-30",
+   "stand": "2026-11-01",
    "frueh_gemeldet": false,
    "frueh_bekannt": true
   },
@@ -893,7 +795,7 @@
    "top_gemeldet": false,
    "aufstieg_gemeldet": false,
    "top_bekannt": true,
-   "stand": "2026-10-30",
+   "stand": "2026-11-01",
    "frueh_gemeldet": false,
    "frueh_bekannt": true
   },
@@ -901,7 +803,7 @@
    "top_gemeldet": true,
    "aufstieg_gemeldet": true,
    "top_bekannt": true,
-   "stand": "2026-10-30",
+   "stand": "2026-11-01",
    "frueh_gemeldet": true,
    "frueh_bekannt": true
   },
@@ -909,7 +811,7 @@
    "top_gemeldet": false,
    "aufstieg_gemeldet": false,
    "top_bekannt": true,
-   "stand": "2026-10-30",
+   "stand": "2026-11-01",
    "frueh_gemeldet": false,
    "frueh_bekannt": true
   },
@@ -917,7 +819,7 @@
    "top_gemeldet": false,
    "aufstieg_gemeldet": false,
    "top_bekannt": true,
-   "stand": "2026-10-30",
+   "stand": "2026-11-01",
    "frueh_gemeldet": false,
    "frueh_bekannt": true
   },
@@ -925,7 +827,7 @@
    "top_gemeldet": false,
    "aufstieg_gemeldet": true,
    "top_bekannt": true,
-   "stand": "2026-10-30",
+   "stand": "2026-11-01",
    "frueh_gemeldet": false,
    "frueh_bekannt": true
   },
@@ -933,7 +835,7 @@
    "top_gemeldet": false,
    "aufstieg_gemeldet": false,
    "top_bekannt": true,
-   "stand": "2026-10-30",
+   "stand": "2026-11-01",
    "frueh_gemeldet": false,
    "frueh_bekannt": true
   },
@@ -941,7 +843,7 @@
    "top_gemeldet": false,
    "aufstieg_gemeldet": true,
    "top_bekannt": true,
-   "stand": "2026-10-30",
+   "stand": "2026-11-01",
    "frueh_gemeldet": false,
    "frueh_bekannt": true
   },
@@ -949,7 +851,7 @@
    "top_gemeldet": false,
    "aufstieg_gemeldet": true,
    "top_bekannt": true,
-   "stand": "2026-10-30",
+   "stand": "2026-11-01",
    "frueh_gemeldet": false,
    "frueh_bekannt": true
   },
@@ -957,7 +859,7 @@
    "top_gemeldet": false,
    "aufstieg_gemeldet": true,
    "top_bekannt": true,
-   "stand": "2026-10-30",
+   "stand": "2026-11-01",
    "frueh_gemeldet": false,
    "frueh_bekannt": true
   },
@@ -965,7 +867,7 @@
    "top_gemeldet": false,
    "aufstieg_gemeldet": false,
    "top_bekannt": true,
-   "stand": "2026-10-30",
+   "stand": "2026-11-01",
    "frueh_gemeldet": false,
    "frueh_bekannt": true
   },
@@ -973,7 +875,7 @@
    "top_gemeldet": false,
    "aufstieg_gemeldet": false,
    "top_bekannt": true,
-   "stand": "2026-10-30",
+   "stand": "2026-11-01",
    "frueh_gemeldet": false,
    "frueh_bekannt": true
   },
@@ -981,7 +883,7 @@
    "top_gemeldet": false,
    "aufstieg_gemeldet": false,
    "top_bekannt": true,
-   "stand": "2026-10-30",
+   "stand": "2026-11-01",
    "frueh_gemeldet": false,
    "frueh_bekannt": true
   },
@@ -989,7 +891,7 @@
    "top_gemeldet": false,
    "aufstieg_gemeldet": false,
    "top_bekannt": true,
-   "stand": "2026-10-30",
+   "stand": "2026-11-01",
    "frueh_gemeldet": false,
    "frueh_bekannt": true
   },
@@ -997,7 +899,7 @@
    "top_gemeldet": false,
    "aufstieg_gemeldet": true,
    "top_bekannt": true,
-   "stand": "2026-10-30",
+   "stand": "2026-11-01",
    "frueh_gemeldet": false,
    "frueh_bekannt": true
   },
@@ -1005,7 +907,7 @@
    "top_gemeldet": false,
    "aufstieg_gemeldet": false,
    "top_bekannt": true,
-   "stand": "2026-10-30",
+   "stand": "2026-11-01",
    "frueh_gemeldet": false,
    "frueh_bekannt": true
   },
@@ -1013,7 +915,7 @@
    "top_gemeldet": false,
    "aufstieg_gemeldet": false,
    "top_bekannt": true,
-   "stand": "2026-10-30",
+   "stand": "2026-11-01",
    "frueh_gemeldet": false,
    "frueh_bekannt": true
   },
@@ -1021,7 +923,7 @@
    "top_gemeldet": false,
    "aufstieg_gemeldet": true,
    "top_bekannt": true,
-   "stand": "2026-10-30",
+   "stand": "2026-11-01",
    "frueh_gemeldet": false,
    "frueh_bekannt": true
   },
@@ -1029,7 +931,7 @@
    "top_gemeldet": false,
    "aufstieg_gemeldet": false,
    "top_bekannt": true,
-   "stand": "2026-10-30",
+   "stand": "2026-11-01",
    "frueh_gemeldet": false,
    "frueh_bekannt": true
   },
@@ -1037,7 +939,7 @@
    "top_gemeldet": false,
    "aufstieg_gemeldet": false,
    "top_bekannt": true,
-   "stand": "2026-10-30",
+   "stand": "2026-11-01",
    "frueh_gemeldet": false,
    "frueh_bekannt": true
   },
@@ -1045,7 +947,7 @@
    "top_gemeldet": false,
    "aufstieg_gemeldet": false,
    "top_bekannt": true,
-   "stand": "2026-10-30",
+   "stand": "2026-11-01",
    "frueh_gemeldet": false,
    "frueh_bekannt": true
   },
@@ -1053,7 +955,7 @@
    "top_gemeldet": false,
    "aufstieg_gemeldet": true,
    "top_bekannt": true,
-   "stand": "2026-10-30",
+   "stand": "2026-11-01",
    "frueh_gemeldet": false,
    "frueh_bekannt": true
   },
@@ -1061,7 +963,7 @@
    "top_gemeldet": false,
    "aufstieg_gemeldet": false,
    "top_bekannt": true,
-   "stand": "2026-10-30",
+   "stand": "2026-11-01",
    "frueh_gemeldet": false,
    "frueh_bekannt": true
   },
@@ -1069,7 +971,7 @@
    "top_gemeldet": false,
    "aufstieg_gemeldet": false,
    "top_bekannt": true,
-   "stand": "2026-10-30",
+   "stand": "2026-11-01",
    "frueh_gemeldet": false,
    "frueh_bekannt": true
   },
@@ -1077,7 +979,7 @@
    "top_gemeldet": false,
    "aufstieg_gemeldet": true,
    "top_bekannt": true,
-   "stand": "2026-10-30",
+   "stand": "2026-11-01",
    "frueh_gemeldet": false,
    "frueh_bekannt": true
   },
@@ -1085,7 +987,7 @@
    "top_gemeldet": false,
    "aufstieg_gemeldet": true,
    "top_bekannt": true,
-   "stand": "2026-10-30",
+   "stand": "2026-11-01",
    "frueh_gemeldet": false,
    "frueh_bekannt": true
   },
@@ -1093,7 +995,7 @@
    "top_gemeldet": false,
    "aufstieg_gemeldet": true,
    "top_bekannt": true,
-   "stand": "2026-10-30",
+   "stand": "2026-11-01",
    "frueh_gemeldet": false,
    "frueh_bekannt": true
   }

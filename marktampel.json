@@ -1,7 +1,7 @@
 {
  "farbe": "rot",
  "handelstag": "2026-10-30",
- "gebaut_am": "2026-10-30T22:01:02",
+ "gebaut_am": "2026-11-01T23:01:04",
  "indizes": {
   "S&P 500": {
    "schluss": 7580.07,
@@ -51,6 +51,11 @@
     {
      "tag": "2026-10-29",
      "pct": -0.3,
+     "art": "distribution"
+    },
+    {
+     "tag": "2026-10-30",
+     "pct": -1.82,
      "art": "distribution"
     }
    ],
