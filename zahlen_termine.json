@@ -1,26 +1,35 @@
 {
- "gebaut_am": "2026-11-02 00:13 Wien",
+ "gebaut_am": "2026-11-03 00:13 Wien",
  "ohne_termin": [
+  "AEHR",
   "ANL",
   "BNR",
   "BUUU",
   "GIBO",
   "KRSA",
+  "LIFE",
   "MAAS",
+  "PLTR",
   "SAIH",
+  "SBAC",
   "SDEV",
   "SVRN",
   "TJGC"
  ],
  "nur_nasdaq": [
-  "KRSA"
+  "AEHR",
+  "KRSA",
+  "LIFE",
+  "PLTR",
+  "SBAC"
  ],
  "uneinig": [
   "AMPL",
+  "ARX",
   "ASST",
   "FRD",
+  "LITE",
   "MANE",
-  "NBIS",
   "PCRX",
   "RCMT",
   "TISI"
@@ -45,7 +54,7 @@
    ]
   },
   "ADSK": {
-   "datum": "2026-11-27",
+   "datum": "2026-11-24",
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
@@ -54,10 +63,9 @@
   },
   "AEHR": {
    "datum": "2026-11-02",
-   "uhrzeit": "16:00",
+   "uhrzeit": "",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo",
     "nasdaq"
    ]
   },
@@ -203,13 +211,14 @@
    ]
   },
   "ARX": {
-   "datum": "2026-11-11",
+   "datum": "2026-11-12",
    "uhrzeit": "08:00",
    "lage": "vorboerslich",
    "quellen": [
     "yahoo",
     "nasdaq"
-   ]
+   ],
+   "uneinig": "Quellen uneinig: 2026-11-12 (Yahoo, hier bevorzugt) gegen 2026-11-11 (Nasdaq)"
   },
   "ASST": {
    "datum": "2026-11-10",
@@ -725,7 +734,7 @@
    ]
   },
   "HPE": {
-   "datum": "2026-12-03",
+   "datum": "2026-11-23",
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
@@ -855,10 +864,9 @@
   },
   "LIFE": {
    "datum": "2026-11-02",
-   "uhrzeit": "16:00",
+   "uhrzeit": "",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo",
     "nasdaq"
    ]
   },
@@ -872,13 +880,14 @@
    ]
   },
   "LITE": {
-   "datum": "2026-11-05",
-   "uhrzeit": "16:00",
-   "lage": "nachboerslich",
+   "datum": "2026-11-02",
+   "uhrzeit": "07:00",
+   "lage": "vorboerslich",
    "quellen": [
     "yahoo",
     "nasdaq"
-   ]
+   ],
+   "uneinig": "Quellen uneinig: 2026-11-02 (Yahoo, hier bevorzugt) gegen 2026-11-05 (Nasdaq)"
   },
   "MANE": {
    "datum": "2026-11-12",
@@ -1001,8 +1010,7 @@
    "quellen": [
     "yahoo",
     "nasdaq"
-   ],
-   "uneinig": "Quellen uneinig: 2026-11-12 (Yahoo, hier bevorzugt) gegen 2026-11-10 (Nasdaq)"
+   ]
   },
   "NET": {
    "datum": "2026-11-05",
@@ -1249,10 +1257,9 @@
   },
   "PLTR": {
    "datum": "2026-11-02",
-   "uhrzeit": "16:00",
+   "uhrzeit": "",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo",
     "nasdaq"
    ]
   },
@@ -1457,10 +1464,9 @@
   },
   "SBAC": {
    "datum": "2026-11-02",
-   "uhrzeit": "16:00",
+   "uhrzeit": "",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo",
     "nasdaq"
    ]
   },

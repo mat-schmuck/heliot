@@ -1,36 +1,29 @@
 {
- "gebaut_am": "2026-11-01T23:13:44",
- "handelstag": "2026-10-30",
+ "gebaut_am": "2026-11-02T23:14:07",
+ "handelstag": "2026-11-02",
  "geladen": 36,
  "unfertig": [],
  "treffer": [
   {
-   "etf": "XLK",
-   "name": "Technology",
-   "richtung": "runter",
-   "volumen_pct": 153.9,
-   "kurs": 179.51
+   "etf": "TAN",
+   "name": "Solar",
+   "richtung": "hoch",
+   "volumen_pct": 218.6,
+   "kurs": 42.07
   },
   {
-   "etf": "SOXX",
-   "name": "Semiconductors alt",
+   "etf": "XOP",
+   "name": "Oil & Gas E&P",
    "richtung": "runter",
-   "volumen_pct": 143.1,
-   "kurs": 471.51
+   "volumen_pct": 89.6,
+   "kurs": 193.56
   },
   {
-   "etf": "SMH",
-   "name": "Semiconductors",
+   "etf": "XLE",
+   "name": "Energy",
    "richtung": "runter",
-   "volumen_pct": 139.7,
-   "kurs": 522.49
-  },
-  {
-   "etf": "ARKK",
-   "name": "Innovation/Growth",
-   "richtung": "runter",
-   "volumen_pct": 58.0,
-   "kurs": 80.75
+   "volumen_pct": 59.1,
+   "kurs": 67.25
   }
  ]
 }
