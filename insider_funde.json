@@ -1,13 +1,24 @@
 {
- "stand": "2026-10-31",
+ "stand": "2026-11-02",
  "funde": [
+  {
+   "ticker": "BBTX",
+   "status": "pfad_a",
+   "marktkap": 796190016.0,
+   "stichtag": "2026-11-02",
+   "zeilen": [
+    "BBTX; Großkauf; Marktwert 796,2 Mio $",
+    "Größter Einzelkauf 6,0 Mio $ am 02.11.; Salvia Investment GmbH, Insider"
+   ],
+   "kennung": "BBTX|pfad_a|2"
+  },
   {
    "ticker": "CRBG",
    "status": "pfad_a",
-   "marktkap": 15517205504.0,
-   "stichtag": "2026-10-31",
+   "marktkap": 15619869696.0,
+   "stichtag": "2026-11-02",
    "zeilen": [
-    "CRBG; Großkauf; Marktwert 15,5 Mrd $",
+    "CRBG; Großkauf; Marktwert 15,6 Mrd $",
     "Größter Einzelkauf 13,9 Mio $ am 23.10.; NIPPON LIFE INSURANCE CO, Insider"
    ],
    "kennung": "CRBG|pfad_a|1"
@@ -15,10 +26,10 @@
   {
    "ticker": "DOLE",
    "status": "pfad_a",
-   "marktkap": 1234576640.0,
-   "stichtag": "2026-10-31",
+   "marktkap": 1257246720.0,
+   "stichtag": "2026-11-02",
    "zeilen": [
-    "DOLE; Großkauf; Marktwert 1,2 Mrd $",
+    "DOLE; Großkauf; Marktwert 1,3 Mrd $",
     "Größter Einzelkauf 5,8 Mio $ am 21.10.; Pale Fire Capital SE, Insider"
    ],
    "kennung": "DOLE|pfad_a|1"
@@ -26,10 +37,10 @@
   {
    "ticker": "LRN",
    "status": "pfad_a",
-   "marktkap": 3294948096.0,
-   "stichtag": "2026-10-31",
+   "marktkap": 3183518464.0,
+   "stichtag": "2026-11-02",
    "zeilen": [
-    "LRN; Großkauf; Marktwert 3,3 Mrd $",
+    "LRN; Großkauf; Marktwert 3,2 Mrd $",
     "Größter Einzelkauf 7,1 Mio $ am 26.10.; Haggart Dylan G., Direktor"
    ],
    "kennung": "LRN|pfad_a|1"
@@ -37,8 +48,8 @@
   {
    "ticker": "LYCA",
    "status": "pfad_a",
-   "marktkap": 1375296384.0,
-   "stichtag": "2026-10-31",
+   "marktkap": 1415930112.0,
+   "stichtag": "2026-11-02",
    "zeilen": [
     "LYCA; Großkauf; Marktwert 1,4 Mrd $",
     "Größter Einzelkauf 35,0 Mio $ am 26.10.; Venrock Healthcare Capital Partners III, L.P., Insider"
@@ -46,12 +57,23 @@
    "kennung": "LYCA|pfad_a|1"
   },
   {
+   "ticker": "MSM",
+   "status": "pfad_a",
+   "marktkap": 6680334336.0,
+   "stichtag": "2026-11-02",
+   "zeilen": [
+    "MSM; Großkauf; Marktwert 6,7 Mrd $",
+    "Größter Einzelkauf 15,6 Mio $ am 23.10.; JACOBSON MITCHELL, Direktor"
+   ],
+   "kennung": "MSM|pfad_a|1"
+  },
+  {
    "ticker": "RAPP",
    "status": "pfad_a",
-   "marktkap": 1201856128.0,
-   "stichtag": "2026-10-31",
+   "marktkap": 1480927616.0,
+   "stichtag": "2026-11-02",
    "zeilen": [
-    "RAPP; Großkauf; Marktwert 1,2 Mrd $",
+    "RAPP; Großkauf; Marktwert 1,5 Mrd $",
     "Größter Einzelkauf 20,0 Mio $ am 28.10.; HEALY JAMES, Direktor"
    ],
    "kennung": "RAPP|pfad_a|2"
