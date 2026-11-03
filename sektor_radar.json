@@ -1,29 +1,7 @@
 {
- "gebaut_am": "2026-11-02T23:14:07",
- "handelstag": "2026-11-02",
+ "gebaut_am": "2026-11-03T23:09:36",
+ "handelstag": "2026-11-03",
  "geladen": 36,
  "unfertig": [],
- "treffer": [
-  {
-   "etf": "TAN",
-   "name": "Solar",
-   "richtung": "hoch",
-   "volumen_pct": 218.6,
-   "kurs": 42.07
-  },
-  {
-   "etf": "XOP",
-   "name": "Oil & Gas E&P",
-   "richtung": "runter",
-   "volumen_pct": 89.6,
-   "kurs": 193.56
-  },
-  {
-   "etf": "XLE",
-   "name": "Energy",
-   "richtung": "runter",
-   "volumen_pct": 59.1,
-   "kurs": 67.25
-  }
- ]
+ "treffer": []
 }
