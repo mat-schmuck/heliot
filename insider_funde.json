@@ -1,11 +1,11 @@
 {
- "stand": "2026-11-02",
+ "stand": "2026-11-03",
  "funde": [
   {
    "ticker": "BBTX",
    "status": "pfad_a",
    "marktkap": 796190016.0,
-   "stichtag": "2026-11-02",
+   "stichtag": "2026-11-03",
    "zeilen": [
     "BBTX; Großkauf; Marktwert 796,2 Mio $",
     "Größter Einzelkauf 6,0 Mio $ am 02.11.; Salvia Investment GmbH, Insider"
@@ -16,7 +16,7 @@
    "ticker": "CRBG",
    "status": "pfad_a",
    "marktkap": 15619869696.0,
-   "stichtag": "2026-11-02",
+   "stichtag": "2026-11-03",
    "zeilen": [
     "CRBG; Großkauf; Marktwert 15,6 Mrd $",
     "Größter Einzelkauf 13,9 Mio $ am 23.10.; NIPPON LIFE INSURANCE CO, Insider"
@@ -27,7 +27,7 @@
    "ticker": "DOLE",
    "status": "pfad_a",
    "marktkap": 1257246720.0,
-   "stichtag": "2026-11-02",
+   "stichtag": "2026-11-03",
    "zeilen": [
     "DOLE; Großkauf; Marktwert 1,3 Mrd $",
     "Größter Einzelkauf 5,8 Mio $ am 21.10.; Pale Fire Capital SE, Insider"
@@ -38,7 +38,7 @@
    "ticker": "LRN",
    "status": "pfad_a",
    "marktkap": 3183518464.0,
-   "stichtag": "2026-11-02",
+   "stichtag": "2026-11-03",
    "zeilen": [
     "LRN; Großkauf; Marktwert 3,2 Mrd $",
     "Größter Einzelkauf 7,1 Mio $ am 26.10.; Haggart Dylan G., Direktor"
@@ -49,7 +49,7 @@
    "ticker": "LYCA",
    "status": "pfad_a",
    "marktkap": 1415930112.0,
-   "stichtag": "2026-11-02",
+   "stichtag": "2026-11-03",
    "zeilen": [
     "LYCA; Großkauf; Marktwert 1,4 Mrd $",
     "Größter Einzelkauf 35,0 Mio $ am 26.10.; Venrock Healthcare Capital Partners III, L.P., Insider"
@@ -60,7 +60,7 @@
    "ticker": "MSM",
    "status": "pfad_a",
    "marktkap": 6680334336.0,
-   "stichtag": "2026-11-02",
+   "stichtag": "2026-11-03",
    "zeilen": [
     "MSM; Großkauf; Marktwert 6,7 Mrd $",
     "Größter Einzelkauf 15,6 Mio $ am 23.10.; JACOBSON MITCHELL, Direktor"
@@ -71,12 +71,23 @@
    "ticker": "RAPP",
    "status": "pfad_a",
    "marktkap": 1480927616.0,
-   "stichtag": "2026-11-02",
+   "stichtag": "2026-11-03",
    "zeilen": [
     "RAPP; Großkauf; Marktwert 1,5 Mrd $",
     "Größter Einzelkauf 20,0 Mio $ am 28.10.; HEALY JAMES, Direktor"
    ],
    "kennung": "RAPP|pfad_a|2"
+  },
+  {
+   "ticker": "ROL",
+   "status": "pfad_a",
+   "marktkap": 17335668736.0,
+   "stichtag": "2026-11-03",
+   "zeilen": [
+    "ROL; Großkauf; Marktwert 17,3 Mrd $",
+    "Größter Einzelkauf 50,0 Mio $ am 29.10.; R. Randall Rollins Voting Trust U/A dated August 25, 1994, Insider"
+   ],
+   "kennung": "ROL|pfad_a|2"
   }
  ]
 }
