@@ -4,10 +4,10 @@
   {
    "ticker": "BBTX",
    "status": "pfad_a",
-   "marktkap": 796190016.0,
+   "marktkap": 816094720.0,
    "stichtag": "2026-11-03",
    "zeilen": [
-    "BBTX; Großkauf; Marktwert 796,2 Mio $",
+    "BBTX; Großkauf; Marktwert 816,1 Mio $",
     "Größter Einzelkauf 6,0 Mio $ am 02.11.; Salvia Investment GmbH, Insider"
    ],
    "kennung": "BBTX|pfad_a|2"
@@ -15,10 +15,10 @@
   {
    "ticker": "CRBG",
    "status": "pfad_a",
-   "marktkap": 15619869696.0,
+   "marktkap": 16083517440.0,
    "stichtag": "2026-11-03",
    "zeilen": [
-    "CRBG; Großkauf; Marktwert 15,6 Mrd $",
+    "CRBG; Großkauf; Marktwert 16,1 Mrd $",
     "Größter Einzelkauf 13,9 Mio $ am 23.10.; NIPPON LIFE INSURANCE CO, Insider"
    ],
    "kennung": "CRBG|pfad_a|1"
@@ -26,10 +26,10 @@
   {
    "ticker": "DOLE",
    "status": "pfad_a",
-   "marktkap": 1257246720.0,
+   "marktkap": 1232215168.0,
    "stichtag": "2026-11-03",
    "zeilen": [
-    "DOLE; Großkauf; Marktwert 1,3 Mrd $",
+    "DOLE; Großkauf; Marktwert 1,2 Mrd $",
     "Größter Einzelkauf 5,8 Mio $ am 21.10.; Pale Fire Capital SE, Insider"
    ],
    "kennung": "DOLE|pfad_a|1"
@@ -37,10 +37,10 @@
   {
    "ticker": "LRN",
    "status": "pfad_a",
-   "marktkap": 3183518464.0,
+   "marktkap": 3121917184.0,
    "stichtag": "2026-11-03",
    "zeilen": [
-    "LRN; Großkauf; Marktwert 3,2 Mrd $",
+    "LRN; Großkauf; Marktwert 3,1 Mrd $",
     "Größter Einzelkauf 7,1 Mio $ am 26.10.; Haggart Dylan G., Direktor"
    ],
    "kennung": "LRN|pfad_a|1"
@@ -48,7 +48,7 @@
   {
    "ticker": "LYCA",
    "status": "pfad_a",
-   "marktkap": 1415930112.0,
+   "marktkap": 1415409152.0,
    "stichtag": "2026-11-03",
    "zeilen": [
     "LYCA; Großkauf; Marktwert 1,4 Mrd $",
@@ -59,7 +59,7 @@
   {
    "ticker": "MSM",
    "status": "pfad_a",
-   "marktkap": 6680334336.0,
+   "marktkap": 6730037248.0,
    "stichtag": "2026-11-03",
    "zeilen": [
     "MSM; Großkauf; Marktwert 6,7 Mrd $",
@@ -70,7 +70,7 @@
   {
    "ticker": "RAPP",
    "status": "pfad_a",
-   "marktkap": 1480927616.0,
+   "marktkap": 1470065280.0,
    "stichtag": "2026-11-03",
    "zeilen": [
     "RAPP; Großkauf; Marktwert 1,5 Mrd $",
@@ -81,10 +81,10 @@
   {
    "ticker": "ROL",
    "status": "pfad_a",
-   "marktkap": 17335668736.0,
+   "marktkap": 18134370304.0,
    "stichtag": "2026-11-03",
    "zeilen": [
-    "ROL; Großkauf; Marktwert 17,3 Mrd $",
+    "ROL; Großkauf; Marktwert 18,1 Mrd $",
     "Größter Einzelkauf 50,0 Mio $ am 29.10.; R. Randall Rollins Voting Trust U/A dated August 25, 1994, Insider"
    ],
    "kennung": "ROL|pfad_a|2"
