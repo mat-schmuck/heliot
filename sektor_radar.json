@@ -1,7 +1,29 @@
 {
- "gebaut_am": "2026-11-03T23:09:36",
- "handelstag": "2026-11-03",
+ "gebaut_am": "2026-11-04T23:09:00",
+ "handelstag": "2026-11-04",
  "geladen": 36,
  "unfertig": [],
- "treffer": []
+ "treffer": [
+  {
+   "etf": "GDX",
+   "name": "Gold Miners",
+   "richtung": "hoch",
+   "volumen_pct": 101.1,
+   "kurs": 84.59
+  },
+  {
+   "etf": "XLC",
+   "name": "Communication Services",
+   "richtung": "hoch",
+   "volumen_pct": 87.8,
+   "kurs": 104.96
+  },
+  {
+   "etf": "FINX",
+   "name": "Fintech",
+   "richtung": "hoch",
+   "volumen_pct": 58.9,
+   "kurs": 25.02
+  }
+ ]
 }

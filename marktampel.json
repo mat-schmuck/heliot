@@ -1,17 +1,17 @@
 {
  "farbe": "rot",
- "handelstag": "2026-11-03",
- "gebaut_am": "2026-11-03T23:01:29",
+ "handelstag": "2026-11-04",
+ "gebaut_am": "2026-11-04T23:01:11",
  "indizes": {
   "S&P 500": {
-   "schluss": 7568.92,
-   "ema21": 7676.87,
-   "sma50": 7692.74,
-   "ueber_ema21": false,
+   "schluss": 7688.62,
+   "ema21": 7677.94,
+   "sma50": 7692.97,
+   "ueber_ema21": true,
    "ueber_sma50": false,
    "ema21_ueber_sma50": false,
    "sma50_steigt": false,
-   "handelstag": "2026-11-03",
+   "handelstag": "2026-11-04",
    "distribution_days": [
     {
      "tag": "2026-10-01",
@@ -61,7 +61,7 @@
     "korrektur_tag": "2026-09-16",
     "versuch_grund": "tief",
     "tag1": "2026-09-17",
-    "versuch_tag": 34,
+    "versuch_tag": 35,
     "ftd_tag": "2026-08-04",
     "ftd_pct": 1.79,
     "ftd_gescheitert": true,
@@ -69,14 +69,14 @@
    }
   },
   "Nasdaq": {
-   "schluss": 25372.01,
-   "ema21": 26250.83,
-   "sma50": 26541.66,
+   "schluss": 25736.51,
+   "ema21": 26204.08,
+   "sma50": 26533.36,
    "ueber_ema21": false,
    "ueber_sma50": false,
    "ema21_ueber_sma50": false,
    "sma50_steigt": false,
-   "handelstag": "2026-11-03",
+   "handelstag": "2026-11-04",
    "distribution_days": [
     {
      "tag": "2026-10-08",
@@ -126,7 +126,7 @@
     "korrektur_tag": "2026-11-02",
     "versuch_grund": "tief",
     "tag1": "2026-11-03",
-    "versuch_tag": 1,
+    "versuch_tag": 2,
     "ftd_tag": "2026-08-27",
     "ftd_pct": 1.57,
     "ftd_gescheitert": true,
