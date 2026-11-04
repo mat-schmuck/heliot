@@ -1,24 +1,28 @@
 {
- "stand": "2026-11-03",
+ "stand": "2026-11-04",
  "funde": [
   {
    "ticker": "BBTX",
-   "status": "pfad_a",
-   "marktkap": 816094720.0,
-   "stichtag": "2026-11-03",
+   "status": "beide",
+   "marktkap": 796190016.0,
+   "stichtag": "2026-11-04",
    "zeilen": [
-    "BBTX; Großkauf; Marktwert 816,1 Mio $",
-    "Größter Einzelkauf 6,0 Mio $ am 02.11.; Salvia Investment GmbH, Insider"
+    "BBTX; Großkauf und Cluster; Marktwert 796,2 Mio $",
+    "Größter Einzelkauf 37,4 Mio $ am 02.11.; RA CAPITAL MANAGEMENT, L.P., Direktor",
+    "3 Insider über der Schwelle von 250 Tsd $:",
+    "  RA CAPITAL MANAGEMENT, L.P., Direktor; 46,6 Mio $",
+    "  Salvia Investment GmbH, Insider; 6,0 Mio $",
+    "  Jeggle Helmut Wolfgang, Direktor; 6,0 Mio $"
    ],
-   "kennung": "BBTX|pfad_a|2"
+   "kennung": "BBTX|beide|3"
   },
   {
    "ticker": "CRBG",
    "status": "pfad_a",
-   "marktkap": 16083517440.0,
-   "stichtag": "2026-11-03",
+   "marktkap": 15931770880.0,
+   "stichtag": "2026-11-04",
    "zeilen": [
-    "CRBG; Großkauf; Marktwert 16,1 Mrd $",
+    "CRBG; Großkauf; Marktwert 15,9 Mrd $",
     "Größter Einzelkauf 13,9 Mio $ am 23.10.; NIPPON LIFE INSURANCE CO, Insider"
    ],
    "kennung": "CRBG|pfad_a|1"
@@ -26,8 +30,8 @@
   {
    "ticker": "DOLE",
    "status": "pfad_a",
-   "marktkap": 1232215168.0,
-   "stichtag": "2026-11-03",
+   "marktkap": 1235521152.0,
+   "stichtag": "2026-11-04",
    "zeilen": [
     "DOLE; Großkauf; Marktwert 1,2 Mrd $",
     "Größter Einzelkauf 5,8 Mio $ am 21.10.; Pale Fire Capital SE, Insider"
@@ -37,10 +41,10 @@
   {
    "ticker": "LRN",
    "status": "pfad_a",
-   "marktkap": 3121917184.0,
-   "stichtag": "2026-11-03",
+   "marktkap": 3155766528.0,
+   "stichtag": "2026-11-04",
    "zeilen": [
-    "LRN; Großkauf; Marktwert 3,1 Mrd $",
+    "LRN; Großkauf; Marktwert 3,2 Mrd $",
     "Größter Einzelkauf 7,1 Mio $ am 26.10.; Haggart Dylan G., Direktor"
    ],
    "kennung": "LRN|pfad_a|1"
@@ -48,8 +52,8 @@
   {
    "ticker": "LYCA",
    "status": "pfad_a",
-   "marktkap": 1415409152.0,
-   "stichtag": "2026-11-03",
+   "marktkap": 1437809920.0,
+   "stichtag": "2026-11-04",
    "zeilen": [
     "LYCA; Großkauf; Marktwert 1,4 Mrd $",
     "Größter Einzelkauf 35,0 Mio $ am 26.10.; Venrock Healthcare Capital Partners III, L.P., Insider"
@@ -57,21 +61,10 @@
    "kennung": "LYCA|pfad_a|1"
   },
   {
-   "ticker": "MSM",
-   "status": "pfad_a",
-   "marktkap": 6730037248.0,
-   "stichtag": "2026-11-03",
-   "zeilen": [
-    "MSM; Großkauf; Marktwert 6,7 Mrd $",
-    "Größter Einzelkauf 15,6 Mio $ am 23.10.; JACOBSON MITCHELL, Direktor"
-   ],
-   "kennung": "MSM|pfad_a|1"
-  },
-  {
    "ticker": "RAPP",
    "status": "pfad_a",
-   "marktkap": 1470065280.0,
-   "stichtag": "2026-11-03",
+   "marktkap": 1468910464.0,
+   "stichtag": "2026-11-04",
    "zeilen": [
     "RAPP; Großkauf; Marktwert 1,5 Mrd $",
     "Größter Einzelkauf 20,0 Mio $ am 28.10.; HEALY JAMES, Direktor"
@@ -81,10 +74,10 @@
   {
    "ticker": "ROL",
    "status": "pfad_a",
-   "marktkap": 18134370304.0,
-   "stichtag": "2026-11-03",
+   "marktkap": 17970780160.0,
+   "stichtag": "2026-11-04",
    "zeilen": [
-    "ROL; Großkauf; Marktwert 18,1 Mrd $",
+    "ROL; Großkauf; Marktwert 18,0 Mrd $",
     "Größter Einzelkauf 50,0 Mio $ am 29.10.; R. Randall Rollins Voting Trust U/A dated August 25, 1994, Insider"
    ],
    "kennung": "ROL|pfad_a|2"
