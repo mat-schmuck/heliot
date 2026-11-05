@@ -1,29 +1,71 @@
 {
- "gebaut_am": "2026-11-04T23:09:00",
- "handelstag": "2026-11-04",
+ "gebaut_am": "2026-11-05T23:09:35",
+ "handelstag": "2026-11-05",
  "geladen": 36,
  "unfertig": [],
  "treffer": [
   {
-   "etf": "GDX",
-   "name": "Gold Miners",
-   "richtung": "hoch",
-   "volumen_pct": 101.1,
-   "kurs": 84.59
+   "etf": "ITA",
+   "name": "Aerospace & Defense",
+   "richtung": "runter",
+   "volumen_pct": 249.8,
+   "kurs": 68.11
   },
   {
-   "etf": "XLC",
-   "name": "Communication Services",
-   "richtung": "hoch",
-   "volumen_pct": 87.8,
-   "kurs": 104.96
+   "etf": "SOXX",
+   "name": "Semiconductors alt",
+   "richtung": "runter",
+   "volumen_pct": 179.7,
+   "kurs": 131.9
   },
   {
-   "etf": "FINX",
-   "name": "Fintech",
-   "richtung": "hoch",
-   "volumen_pct": 58.9,
-   "kurs": 25.02
+   "etf": "PAVE",
+   "name": "Infrastructure",
+   "richtung": "runter",
+   "volumen_pct": 179.5,
+   "kurs": 50.73
+  },
+  {
+   "etf": "XLI",
+   "name": "Industrials",
+   "richtung": "runter",
+   "volumen_pct": 146.1,
+   "kurs": 162.47
+  },
+  {
+   "etf": "IBB",
+   "name": "Biotech large",
+   "richtung": "runter",
+   "volumen_pct": 120.2,
+   "kurs": 209.99
+  },
+  {
+   "etf": "KBE",
+   "name": "Banks",
+   "richtung": "runter",
+   "volumen_pct": 112.5,
+   "kurs": 66.22
+  },
+  {
+   "etf": "XLB",
+   "name": "Materials",
+   "richtung": "runter",
+   "volumen_pct": 101.4,
+   "kurs": 52.33
+  },
+  {
+   "etf": "KRE",
+   "name": "Regional Banks",
+   "richtung": "runter",
+   "volumen_pct": 62.9,
+   "kurs": 72.31
+  },
+  {
+   "etf": "XBI",
+   "name": "Biotech",
+   "richtung": "runter",
+   "volumen_pct": 51.5,
+   "kurs": 148.4
   }
  ]
 }
