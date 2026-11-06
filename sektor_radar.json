@@ -1,71 +1,7 @@
 {
- "gebaut_am": "2026-11-05T23:09:35",
- "handelstag": "2026-11-05",
+ "gebaut_am": "2026-11-06T23:20:50",
+ "handelstag": "2026-11-06",
  "geladen": 36,
  "unfertig": [],
- "treffer": [
-  {
-   "etf": "ITA",
-   "name": "Aerospace & Defense",
-   "richtung": "runter",
-   "volumen_pct": 249.8,
-   "kurs": 68.11
-  },
-  {
-   "etf": "SOXX",
-   "name": "Semiconductors alt",
-   "richtung": "runter",
-   "volumen_pct": 179.7,
-   "kurs": 131.9
-  },
-  {
-   "etf": "PAVE",
-   "name": "Infrastructure",
-   "richtung": "runter",
-   "volumen_pct": 179.5,
-   "kurs": 50.73
-  },
-  {
-   "etf": "XLI",
-   "name": "Industrials",
-   "richtung": "runter",
-   "volumen_pct": 146.1,
-   "kurs": 162.47
-  },
-  {
-   "etf": "IBB",
-   "name": "Biotech large",
-   "richtung": "runter",
-   "volumen_pct": 120.2,
-   "kurs": 209.99
-  },
-  {
-   "etf": "KBE",
-   "name": "Banks",
-   "richtung": "runter",
-   "volumen_pct": 112.5,
-   "kurs": 66.22
-  },
-  {
-   "etf": "XLB",
-   "name": "Materials",
-   "richtung": "runter",
-   "volumen_pct": 101.4,
-   "kurs": 52.33
-  },
-  {
-   "etf": "KRE",
-   "name": "Regional Banks",
-   "richtung": "runter",
-   "volumen_pct": 62.9,
-   "kurs": 72.31
-  },
-  {
-   "etf": "XBI",
-   "name": "Biotech",
-   "richtung": "runter",
-   "volumen_pct": 51.5,
-   "kurs": 148.4
-  }
- ]
+ "treffer": []
 }
