@@ -4,10 +4,10 @@
   {
    "ticker": "BBTX",
    "status": "beide",
-   "marktkap": 807437568.0,
+   "marktkap": 804635712.0,
    "stichtag": "2026-11-06",
    "zeilen": [
-    "BBTX; Großkauf und Cluster; Marktwert 807,4 Mio $",
+    "BBTX; Großkauf und Cluster; Marktwert 804,6 Mio $",
     "Größter Einzelkauf 37,4 Mio $ am 02.11.; RA CAPITAL MANAGEMENT, L.P., Direktor",
     "3 Insider über der Schwelle von 250 Tsd $:",
     "  RA CAPITAL MANAGEMENT, L.P., Direktor; 46,6 Mio $",
@@ -19,10 +19,10 @@
   {
    "ticker": "COUR",
    "status": "pfad_a",
-   "marktkap": 991500032.0,
+   "marktkap": 987533952.0,
    "stichtag": "2026-11-06",
    "zeilen": [
-    "COUR; Großkauf; Marktwert 991,5 Mio $",
+    "COUR; Großkauf; Marktwert 987,5 Mio $",
     "Größter Einzelkauf 11,7 Mio $ am 05.11.; Pale Fire Capital SE, Insider"
    ],
    "kennung": "COUR|pfad_a|1"
@@ -30,7 +30,7 @@
   {
    "ticker": "CRBG",
    "status": "pfad_a",
-   "marktkap": 15013415936.0,
+   "marktkap": 15037530112.0,
    "stichtag": "2026-11-06",
    "zeilen": [
     "CRBG; Großkauf; Marktwert 15,0 Mrd $",
@@ -41,7 +41,7 @@
   {
    "ticker": "DOLE",
    "status": "pfad_a",
-   "marktkap": 1307309952.0,
+   "marktkap": 1320061824.0,
    "stichtag": "2026-11-06",
    "zeilen": [
     "DOLE; Großkauf; Marktwert 1,3 Mrd $",
@@ -52,10 +52,10 @@
   {
    "ticker": "GLXY",
    "status": "pfad_a",
-   "marktkap": 7649079296.0,
+   "marktkap": 8113730048.0,
    "stichtag": "2026-11-06",
    "zeilen": [
-    "GLXY; Großkauf; Marktwert 7,6 Mrd $",
+    "GLXY; Großkauf; Marktwert 8,1 Mrd $",
     "Größter Einzelkauf 6,7 Mio $ am 05.11.; Novogratz Michael, Chief Executive Officer"
    ],
    "kennung": "GLXY|pfad_a|1"
@@ -63,10 +63,10 @@
   {
    "ticker": "INTC",
    "status": "pfad_a",
-   "marktkap": 277708734464.0,
+   "marktkap": 300669009920.0,
    "stichtag": "2026-11-06",
    "zeilen": [
-    "INTC; Großkauf; Marktwert 277,7 Mrd $",
+    "INTC; Großkauf; Marktwert 300,7 Mrd $",
     "Größter Einzelkauf 9,7 Mio $ am 02.11.; TAN LIP BU, CEO"
    ],
    "kennung": "INTC|pfad_a|1"
@@ -74,10 +74,10 @@
   {
    "ticker": "LRN",
    "status": "pfad_a",
-   "marktkap": 3148197632.0,
+   "marktkap": 3192769280.0,
    "stichtag": "2026-11-06",
    "zeilen": [
-    "LRN; Großkauf; Marktwert 3,1 Mrd $",
+    "LRN; Großkauf; Marktwert 3,2 Mrd $",
     "Größter Einzelkauf 7,1 Mio $ am 26.10.; Haggart Dylan G., Direktor"
    ],
    "kennung": "LRN|pfad_a|2"
@@ -85,7 +85,7 @@
   {
    "ticker": "LYCA",
    "status": "pfad_a",
-   "marktkap": 1500323328.0,
+   "marktkap": 1548510848.0,
    "stichtag": "2026-11-06",
    "zeilen": [
     "LYCA; Großkauf; Marktwert 1,5 Mrd $",
@@ -96,7 +96,7 @@
   {
    "ticker": "MGM",
    "status": "pfad_a",
-   "marktkap": 8232963584.0,
+   "marktkap": 8152000000.0,
    "stichtag": "2026-11-06",
    "zeilen": [
     "MGM; Großkauf; Marktwert 8,2 Mrd $",
@@ -107,10 +107,10 @@
   {
    "ticker": "MSM",
    "status": "pfad_a",
-   "marktkap": 6196146176.0,
+   "marktkap": 6300579328.0,
    "stichtag": "2026-11-06",
    "zeilen": [
-    "MSM; Großkauf; Marktwert 6,2 Mrd $",
+    "MSM; Großkauf; Marktwert 6,3 Mrd $",
     "Größter Einzelkauf 15,6 Mio $ am 23.10.; JACOBSON MITCHELL, Direktor"
    ],
    "kennung": "MSM|pfad_a|1"
@@ -118,7 +118,7 @@
   {
    "ticker": "RAPP",
    "status": "pfad_a",
-   "marktkap": 1406112768.0,
+   "marktkap": 1435159808.0,
    "stichtag": "2026-11-06",
    "zeilen": [
     "RAPP; Großkauf; Marktwert 1,4 Mrd $",
@@ -129,10 +129,10 @@
   {
    "ticker": "ROL",
    "status": "pfad_a",
-   "marktkap": 18649194496.0,
+   "marktkap": 18225788928.0,
    "stichtag": "2026-11-06",
    "zeilen": [
-    "ROL; Großkauf; Marktwert 18,6 Mrd $",
+    "ROL; Großkauf; Marktwert 18,2 Mrd $",
     "Größter Einzelkauf 50,0 Mio $ am 29.10.; R. Randall Rollins Voting Trust U/A dated August 25, 1994, Insider"
    ],
    "kennung": "ROL|pfad_a|2"
@@ -140,10 +140,10 @@
   {
    "ticker": "SIRI",
    "status": "pfad_a",
-   "marktkap": 11178089472.0,
+   "marktkap": 10977879040.0,
    "stichtag": "2026-11-06",
    "zeilen": [
-    "SIRI; Großkauf; Marktwert 11,2 Mrd $",
+    "SIRI; Großkauf; Marktwert 11,0 Mrd $",
     "Größter Einzelkauf 21,5 Mio $ am 30.10.; BERKSHIRE HATHAWAY INC, Insider"
    ],
    "kennung": "SIRI|pfad_a|1"
@@ -151,10 +151,10 @@
   {
    "ticker": "UPBD",
    "status": "pfad_b",
-   "marktkap": 1450563200.0,
+   "marktkap": 1423744128.0,
    "stichtag": "2026-11-06",
    "zeilen": [
-    "UPBD; Insider-Cluster; Marktwert 1,5 Mrd $",
+    "UPBD; Insider-Cluster; Marktwert 1,4 Mrd $",
     "3 Insider über der Schwelle von 250 Tsd $:",
     "  BROWN JEFFREY J, Direktor; 447 Tsd $",
     "  MARINO GLENN P, Direktor; 393 Tsd $",
