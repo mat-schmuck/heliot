@@ -1,13 +1,13 @@
 {
- "stand": "2026-11-06",
+ "stand": "2026-11-07",
  "funde": [
   {
    "ticker": "BBTX",
    "status": "beide",
-   "marktkap": 804635712.0,
-   "stichtag": "2026-11-06",
+   "marktkap": 801324416.0,
+   "stichtag": "2026-11-07",
    "zeilen": [
-    "BBTX; Großkauf und Cluster; Marktwert 804,6 Mio $",
+    "BBTX; Großkauf und Cluster; Marktwert 801,3 Mio $",
     "Größter Einzelkauf 37,4 Mio $ am 02.11.; RA CAPITAL MANAGEMENT, L.P., Direktor",
     "3 Insider über der Schwelle von 250 Tsd $:",
     "  RA CAPITAL MANAGEMENT, L.P., Direktor; 46,6 Mio $",
@@ -19,10 +19,10 @@
   {
    "ticker": "COUR",
    "status": "pfad_a",
-   "marktkap": 987533952.0,
-   "stichtag": "2026-11-06",
+   "marktkap": 1070981248.0,
+   "stichtag": "2026-11-07",
    "zeilen": [
-    "COUR; Großkauf; Marktwert 987,5 Mio $",
+    "COUR; Großkauf; Marktwert 1,1 Mrd $",
     "Größter Einzelkauf 11,7 Mio $ am 05.11.; Pale Fire Capital SE, Insider"
    ],
    "kennung": "COUR|pfad_a|1"
@@ -30,19 +30,19 @@
   {
    "ticker": "CRBG",
    "status": "pfad_a",
-   "marktkap": 15037530112.0,
-   "stichtag": "2026-11-06",
+   "marktkap": 14947643392.0,
+   "stichtag": "2026-11-07",
    "zeilen": [
-    "CRBG; Großkauf; Marktwert 15,0 Mrd $",
-    "Größter Einzelkauf 13,9 Mio $ am 23.10.; NIPPON LIFE INSURANCE CO, Insider"
+    "CRBG; Großkauf; Marktwert 14,9 Mrd $",
+    "Größter Einzelkauf 12,6 Mio $ am 03.11.; NIPPON LIFE INSURANCE CO, Insider"
    ],
    "kennung": "CRBG|pfad_a|1"
   },
   {
    "ticker": "DOLE",
    "status": "pfad_a",
-   "marktkap": 1320061824.0,
-   "stichtag": "2026-11-06",
+   "marktkap": 1311088256.0,
+   "stichtag": "2026-11-07",
    "zeilen": [
     "DOLE; Großkauf; Marktwert 1,3 Mrd $",
     "Größter Einzelkauf 9,8 Mio $ am 03.11.; Pale Fire Capital SE, Insider"
@@ -52,10 +52,10 @@
   {
    "ticker": "GLXY",
    "status": "pfad_a",
-   "marktkap": 8113730048.0,
-   "stichtag": "2026-11-06",
+   "marktkap": 8016893440.0,
+   "stichtag": "2026-11-07",
    "zeilen": [
-    "GLXY; Großkauf; Marktwert 8,1 Mrd $",
+    "GLXY; Großkauf; Marktwert 8,0 Mrd $",
     "Größter Einzelkauf 6,7 Mio $ am 05.11.; Novogratz Michael, Chief Executive Officer"
    ],
    "kennung": "GLXY|pfad_a|1"
@@ -63,19 +63,41 @@
   {
    "ticker": "INTC",
    "status": "pfad_a",
-   "marktkap": 300669009920.0,
-   "stichtag": "2026-11-06",
+   "marktkap": 299128193024.0,
+   "stichtag": "2026-11-07",
    "zeilen": [
-    "INTC; Großkauf; Marktwert 300,7 Mrd $",
+    "INTC; Großkauf; Marktwert 299,1 Mrd $",
     "Größter Einzelkauf 9,7 Mio $ am 02.11.; TAN LIP BU, CEO"
    ],
    "kennung": "INTC|pfad_a|1"
   },
   {
+   "ticker": "KMI",
+   "status": "pfad_a",
+   "marktkap": 66742349824.0,
+   "stichtag": "2026-11-07",
+   "zeilen": [
+    "KMI; Großkauf; Marktwert 66,7 Mrd $",
+    "Größter Einzelkauf 15,0 Mio $ am 06.11.; KINDER RICHARD D, Executive Chairman"
+   ],
+   "kennung": "KMI|pfad_a|1"
+  },
+  {
+   "ticker": "KOD",
+   "status": "pfad_a",
+   "marktkap": 6240951296.0,
+   "stichtag": "2026-11-07",
+   "zeilen": [
+    "KOD; Großkauf; Marktwert 6,2 Mrd $",
+    "Größter Einzelkauf 15,0 Mio $ am 04.11.; BAKER BROS. ADVISORS LP, Direktor"
+   ],
+   "kennung": "KOD|pfad_a|1"
+  },
+  {
    "ticker": "LRN",
    "status": "pfad_a",
-   "marktkap": 3192769280.0,
-   "stichtag": "2026-11-06",
+   "marktkap": 3153664000.0,
+   "stichtag": "2026-11-07",
    "zeilen": [
     "LRN; Großkauf; Marktwert 3,2 Mrd $",
     "Größter Einzelkauf 7,1 Mio $ am 26.10.; Haggart Dylan G., Direktor"
@@ -85,19 +107,30 @@
   {
    "ticker": "LYCA",
    "status": "pfad_a",
-   "marktkap": 1548510848.0,
-   "stichtag": "2026-11-06",
+   "marktkap": 1588884096.0,
+   "stichtag": "2026-11-07",
    "zeilen": [
-    "LYCA; Großkauf; Marktwert 1,5 Mrd $",
+    "LYCA; Großkauf; Marktwert 1,6 Mrd $",
     "Größter Einzelkauf 35,0 Mio $ am 26.10.; Venrock Healthcare Capital Partners III, L.P., Insider"
    ],
    "kennung": "LYCA|pfad_a|1"
   },
   {
+   "ticker": "MDGL",
+   "status": "pfad_a",
+   "marktkap": 9283228672.0,
+   "stichtag": "2026-11-07",
+   "zeilen": [
+    "MDGL; Großkauf; Marktwert 9,3 Mrd $",
+    "Größter Einzelkauf 23,1 Mio $ am 06.11.; BAKER BROS. ADVISORS LP, Direktor"
+   ],
+   "kennung": "MDGL|pfad_a|1"
+  },
+  {
    "ticker": "MGM",
    "status": "pfad_a",
-   "marktkap": 8152000000.0,
-   "stichtag": "2026-11-06",
+   "marktkap": 8182361088.0,
+   "stichtag": "2026-11-07",
    "zeilen": [
     "MGM; Großkauf; Marktwert 8,2 Mrd $",
     "Größter Einzelkauf 44,7 Mio $ am 30.10.; Meister Keith A., Direktor"
@@ -105,21 +138,10 @@
    "kennung": "MGM|pfad_a|1"
   },
   {
-   "ticker": "MSM",
-   "status": "pfad_a",
-   "marktkap": 6300579328.0,
-   "stichtag": "2026-11-06",
-   "zeilen": [
-    "MSM; Großkauf; Marktwert 6,3 Mrd $",
-    "Größter Einzelkauf 15,6 Mio $ am 23.10.; JACOBSON MITCHELL, Direktor"
-   ],
-   "kennung": "MSM|pfad_a|1"
-  },
-  {
    "ticker": "RAPP",
    "status": "pfad_a",
-   "marktkap": 1435159808.0,
-   "stichtag": "2026-11-06",
+   "marktkap": 1448794240.0,
+   "stichtag": "2026-11-07",
    "zeilen": [
     "RAPP; Großkauf; Marktwert 1,4 Mrd $",
     "Größter Einzelkauf 20,0 Mio $ am 28.10.; HEALY JAMES, Direktor"
@@ -129,10 +151,10 @@
   {
    "ticker": "ROL",
    "status": "pfad_a",
-   "marktkap": 18225788928.0,
-   "stichtag": "2026-11-06",
+   "marktkap": 18259468288.0,
+   "stichtag": "2026-11-07",
    "zeilen": [
-    "ROL; Großkauf; Marktwert 18,2 Mrd $",
+    "ROL; Großkauf; Marktwert 18,3 Mrd $",
     "Größter Einzelkauf 50,0 Mio $ am 29.10.; R. Randall Rollins Voting Trust U/A dated August 25, 1994, Insider"
    ],
    "kennung": "ROL|pfad_a|2"
@@ -140,10 +162,10 @@
   {
    "ticker": "SIRI",
    "status": "pfad_a",
-   "marktkap": 10977879040.0,
-   "stichtag": "2026-11-06",
+   "marktkap": 10902170624.0,
+   "stichtag": "2026-11-07",
    "zeilen": [
-    "SIRI; Großkauf; Marktwert 11,0 Mrd $",
+    "SIRI; Großkauf; Marktwert 10,9 Mrd $",
     "Größter Einzelkauf 21,5 Mio $ am 30.10.; BERKSHIRE HATHAWAY INC, Insider"
    ],
    "kennung": "SIRI|pfad_a|1"
@@ -151,8 +173,8 @@
   {
    "ticker": "UPBD",
    "status": "pfad_b",
-   "marktkap": 1423744128.0,
-   "stichtag": "2026-11-06",
+   "marktkap": 1413249664.0,
+   "stichtag": "2026-11-07",
    "zeilen": [
     "UPBD; Insider-Cluster; Marktwert 1,4 Mrd $",
     "3 Insider über der Schwelle von 250 Tsd $:",
