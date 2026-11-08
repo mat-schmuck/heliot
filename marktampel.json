@@ -1,7 +1,7 @@
 {
  "farbe": "rot",
  "handelstag": "2026-11-06",
- "gebaut_am": "2026-11-06T23:14:19",
+ "gebaut_am": "2026-11-08T23:00:59",
  "indizes": {
   "S&P 500": {
    "schluss": 7376.86,
@@ -69,7 +69,7 @@
    }
   },
   "Nasdaq": {
-   "schluss": 24579.42,
+   "schluss": 24579.43,
    "ema21": 25900.26,
    "sma50": 26457.82,
    "ueber_ema21": false,

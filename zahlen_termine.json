@@ -1,5 +1,5 @@
 {
- "gebaut_am": "2026-11-07 00:20 Wien",
+ "gebaut_am": "2026-11-09 00:08 Wien",
  "ohne_termin": [
   "ANL",
   "BNR",
@@ -18,7 +18,6 @@
  "uneinig": [
   "ASST",
   "BWIN",
-  "FUTU",
   "MANE",
   "MMS",
   "SLAB",
@@ -198,14 +197,14 @@
    ]
   },
   "ASST": {
-   "datum": "2026-11-06",
-   "uhrzeit": "08:00",
+   "datum": "2027-03-18",
+   "uhrzeit": "09:00",
    "lage": "vorboerslich",
    "quellen": [
     "yahoo",
     "nasdaq"
    ],
-   "uneinig": "Quellen uneinig: 2026-11-06 (Yahoo, hier bevorzugt) gegen 2026-11-09 (Nasdaq)"
+   "uneinig": "Quellen uneinig: 2027-03-18 (Yahoo, hier bevorzugt) gegen 2026-11-09 (Nasdaq)"
   },
   "ASX": {
    "datum": "2027-02-04",
@@ -468,12 +467,11 @@
    ]
   },
   "DK": {
-   "datum": "2026-11-06",
-   "uhrzeit": "06:00",
+   "datum": "2027-02-26",
+   "uhrzeit": "08:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo",
-    "nasdaq"
+    "yahoo"
    ]
   },
   "DT": {
@@ -613,8 +611,7 @@
    "quellen": [
     "yahoo",
     "nasdaq"
-   ],
-   "uneinig": "Quellen uneinig: 2026-11-19 (Yahoo, hier bevorzugt) gegen 2026-11-17 (Nasdaq)"
+   ]
   },
   "GCT": {
    "datum": "2027-02-25",
@@ -724,12 +721,11 @@
    ]
   },
   "HUM": {
-   "datum": "2026-11-06",
-   "uhrzeit": "06:00",
+   "datum": "2027-02-10",
+   "uhrzeit": "08:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo",
-    "nasdaq"
+    "yahoo"
    ]
   },
   "HURN": {
@@ -893,12 +889,11 @@
    ]
   },
   "MRNA": {
-   "datum": "2026-11-06",
-   "uhrzeit": "06:00",
+   "datum": "2027-02-12",
+   "uhrzeit": "08:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo",
-    "nasdaq"
+    "yahoo"
    ]
   },
   "MRVI": {
@@ -1610,12 +1605,11 @@
    "uneinig": "Quellen uneinig: 2026-11-25 (Yahoo, hier bevorzugt) gegen 2026-11-19 (Nasdaq)"
   },
   "VEON": {
-   "datum": "2026-11-06",
-   "uhrzeit": "02:00",
+   "datum": "2027-03-12",
+   "uhrzeit": "08:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo",
-    "nasdaq"
+    "yahoo"
    ]
   },
   "VIA": {
