@@ -1,5 +1,5 @@
 {
- "gebaut_am": "2026-11-09 00:08 Wien",
+ "gebaut_am": "2026-11-10 00:10 Wien",
  "ohne_termin": [
   "ANL",
   "BNR",
@@ -16,10 +16,10 @@
   "BNR"
  ],
  "uneinig": [
-  "ASST",
   "BWIN",
   "MANE",
   "MMS",
+  "RCMT",
   "SLAB",
   "VEEV"
  ],
@@ -201,10 +201,8 @@
    "uhrzeit": "09:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo",
-    "nasdaq"
-   ],
-   "uneinig": "Quellen uneinig: 2027-03-18 (Yahoo, hier bevorzugt) gegen 2026-11-09 (Nasdaq)"
+    "yahoo"
+   ]
   },
   "ASX": {
    "datum": "2027-02-04",
@@ -881,7 +879,7 @@
   },
   "MNDY": {
    "datum": "2026-11-09",
-   "uhrzeit": "08:00",
+   "uhrzeit": "07:00",
    "lage": "vorboerslich",
    "quellen": [
     "yahoo",
@@ -1288,8 +1286,10 @@
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo"
-   ]
+    "yahoo",
+    "nasdaq"
+   ],
+   "uneinig": "Quellen uneinig: 2026-11-12 (Yahoo, hier bevorzugt) gegen 2026-11-11 (Nasdaq)"
   },
   "RDVT": {
    "datum": "2027-03-03",
@@ -1614,7 +1614,7 @@
   },
   "VIA": {
    "datum": "2026-11-09",
-   "uhrzeit": "08:00",
+   "uhrzeit": "06:00",
    "lage": "vorboerslich",
    "quellen": [
     "yahoo",
