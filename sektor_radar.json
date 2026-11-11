@@ -1,7 +1,36 @@
 {
- "gebaut_am": "2026-11-10T23:12:22",
- "handelstag": "2026-11-10",
+ "gebaut_am": "2026-11-11T23:10:20",
+ "handelstag": "2026-11-11",
  "geladen": 36,
  "unfertig": [],
- "treffer": []
+ "treffer": [
+  {
+   "etf": "SKYY",
+   "name": "Cloud",
+   "richtung": "hoch",
+   "volumen_pct": 287.6,
+   "kurs": 154.3
+  },
+  {
+   "etf": "SOXX",
+   "name": "Semiconductors alt",
+   "richtung": "hoch",
+   "volumen_pct": 77.4,
+   "kurs": 155.4
+  },
+  {
+   "etf": "SMH",
+   "name": "Semiconductors",
+   "richtung": "hoch",
+   "volumen_pct": 69.2,
+   "kurs": 506.96
+  },
+  {
+   "etf": "XLK",
+   "name": "Technology",
+   "richtung": "hoch",
+   "volumen_pct": 58.6,
+   "kurs": 174.36
+  }
+ ]
 }
