@@ -1,5 +1,5 @@
 {
- "stand": "2026-11-11",
+ "stand": "2026-11-12",
  "gelesen": [
   "0000001750-26-000100",
   "0000001750-26-000102",
@@ -30893,15 +30893,6 @@
     "rolle": "Chief Executive Officer"
    }
   ],
-  "GF": [
-   {
-    "insider": "Saba Capital Management, L.P.",
-    "wert_dollar": 25540.8,
-    "datum": "2026-10-28",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   }
-  ],
   "GRCE": [
    {
     "insider": "Opaleye Management Inc.",
@@ -30926,13 +30917,6 @@
    }
   ],
   "CRBG": [
-   {
-    "insider": "NIPPON LIFE INSURANCE CO",
-    "wert_dollar": 8671494.6108,
-    "datum": "2026-10-28",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
    {
     "insider": "NIPPON LIFE INSURANCE CO",
     "wert_dollar": 8750953.1538,
@@ -30979,13 +30963,6 @@
   "MXF": [
    {
     "insider": "Saba Capital Management, L.P.",
-    "wert_dollar": 22565.73,
-    "datum": "2026-10-28",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "Saba Capital Management, L.P.",
     "wert_dollar": 395467.5,
     "datum": "2026-10-29",
     "transaktionscode": "P",
@@ -31030,13 +31007,6 @@
     "insider": "Saba Capital Management, L.P.",
     "wert_dollar": 499662.8,
     "datum": "2026-11-05",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "Saba Capital Management, L.P.",
-    "wert_dollar": 22565.73,
-    "datum": "2026-10-28",
     "transaktionscode": "P",
     "rolle": "Insider"
    },
@@ -31105,13 +31075,6 @@
    }
   ],
   "UXIN": [
-   {
-    "insider": "Dai Kun",
-    "wert_dollar": 3399.9,
-    "datum": "2026-10-28",
-    "transaktionscode": "P",
-    "rolle": "Chief Executive Officer"
-   },
    {
     "insider": "Dai Kun",
     "wert_dollar": 7496.9472000000005,
@@ -31209,13 +31172,6 @@
   "ECF": [
    {
     "insider": "Saba Capital Management, L.P.",
-    "wert_dollar": 12337.5,
-    "datum": "2026-10-28",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "Saba Capital Management, L.P.",
     "wert_dollar": 70923.25,
     "datum": "2026-10-29",
     "transaktionscode": "P",
@@ -31236,23 +31192,7 @@
     "rolle": "Insider"
    }
   ],
-  "GOLD": [
-   {
-    "insider": "Tether Global Investments Fund, S.I.C.A.F., S.A.",
-    "wert_dollar": 1088579.9286,
-    "datum": "2026-10-28",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   }
-  ],
   "API": [
-   {
-    "insider": "Zhao Bin",
-    "wert_dollar": 42660.1575,
-    "datum": "2026-10-28",
-    "transaktionscode": "P",
-    "rolle": "Chief Executive Officer"
-   },
    {
     "insider": "Zhao Bin",
     "wert_dollar": 41931.7059,
@@ -31329,13 +31269,6 @@
   "NBIS": [
    {
     "insider": "Grimme Arne",
-    "wert_dollar": 25136.32,
-    "datum": "2026-10-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "Grimme Arne",
     "wert_dollar": 25074.16,
     "datum": "2026-10-29",
     "transaktionscode": "P",
@@ -31343,13 +31276,6 @@
    }
   ],
   "JOF": [
-   {
-    "insider": "Saba Capital Management, L.P.",
-    "wert_dollar": 181704.46000000002,
-    "datum": "2026-10-28",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
    {
     "insider": "Saba Capital Management, L.P.",
     "wert_dollar": 57488.73,
@@ -31382,13 +31308,6 @@
   "DSM": [
    {
     "insider": "Saba Capital Management, L.P.",
-    "wert_dollar": 10816.56,
-    "datum": "2026-10-28",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "Saba Capital Management, L.P.",
     "wert_dollar": 555.0,
     "datum": "2026-11-05",
     "transaktionscode": "P",
@@ -31396,13 +31315,6 @@
    }
   ],
   "SNES": [
-   {
-    "insider": "GLENBROOK CAPITAL MANAGEMENT",
-    "wert_dollar": 27022.8,
-    "datum": "2026-10-28",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
    {
     "insider": "GLENBROOK CAPITAL MANAGEMENT",
     "wert_dollar": 2033.3999999999999,
@@ -31462,45 +31374,6 @@
     "datum": "2026-11-05",
     "transaktionscode": "P",
     "rolle": "General Counsel"
-   }
-  ],
-  "RAPP": [
-   {
-    "insider": "HEALY JAMES",
-    "wert_dollar": 19999980.0,
-    "datum": "2026-10-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "HEALY JAMES",
-    "wert_dollar": 134295.0,
-    "datum": "2026-10-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "HEALY JAMES",
-    "wert_dollar": 79212.0,
-    "datum": "2026-10-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "HEALY JAMES",
-    "wert_dollar": 145593.0,
-    "datum": "2026-10-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   }
-  ],
-  "VRXA": [
-   {
-    "insider": "Gruninger Marc",
-    "wert_dollar": 9133.0,
-    "datum": "2026-10-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
    }
   ],
   "GROW": [
@@ -31567,30 +31440,7 @@
     "rolle": "Insider"
    }
   ],
-  "PEBK": [
-   {
-    "insider": "HOWARD DOUGLAS S",
-    "wert_dollar": 21877.5,
-    "datum": "2026-10-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   }
-  ],
   "BBT": [
-   {
-    "insider": "Rosengren Eric S",
-    "wert_dollar": 21168.0,
-    "datum": "2026-10-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "Callahan Mary Anne",
-    "wert_dollar": 96672.0,
-    "datum": "2026-10-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
    {
     "insider": "Charnley Nina A",
     "wert_dollar": 10699.5,
@@ -31748,20 +31598,6 @@
   "LYCA": [
    {
     "insider": "Venrock Healthcare Capital Partners III, L.P.",
-    "wert_dollar": 266681.1,
-    "datum": "2026-10-28",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "Venrock Healthcare Capital Partners III, L.P.",
-    "wert_dollar": 115047.09999999999,
-    "datum": "2026-10-28",
-    "transaktionscode": "P",
-    "rolle": "Insider"
-   },
-   {
-    "insider": "Venrock Healthcare Capital Partners III, L.P.",
     "wert_dollar": 26330.0,
     "datum": "2026-10-29",
     "transaktionscode": "P",
@@ -31798,24 +31634,6 @@
     "rolle": "Direktor"
    }
   ],
-  "NPB": [
-   {
-    "insider": "Chaudhary Rajeev Kumar",
-    "wert_dollar": 47397.600000000006,
-    "datum": "2026-10-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   }
-  ],
-  "CBKM": [
-   {
-    "insider": "WILLIAMS DEREK G",
-    "wert_dollar": 3171.0,
-    "datum": "2026-10-28",
-    "transaktionscode": "P",
-    "rolle": "SVP, Retail Operations & Sales"
-   }
-  ],
   "LBRT": [
    {
     "insider": "Gosney Ryan T",
@@ -31832,46 +31650,7 @@
     "rolle": "CEO and President"
    }
   ],
-  "HYMC": [
-   {
-    "insider": "Rhodes Blake",
-    "wert_dollar": 50075.100000000006,
-    "datum": "2026-10-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   }
-  ],
-  "RCT": [
-   {
-    "insider": "Senn Nikolaus Beat",
-    "wert_dollar": 425000.0,
-    "datum": "2026-10-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   }
-  ],
   "TTMI": [
-   {
-    "insider": "Ali Wajid",
-    "wert_dollar": 449285.5,
-    "datum": "2026-10-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "Ali Wajid",
-    "wert_dollar": 453175.0,
-    "datum": "2026-10-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "Roks Edwin",
-    "wert_dollar": 440349.99999999994,
-    "datum": "2026-10-28",
-    "transaktionscode": "P",
-    "rolle": "President and CEO"
-   },
    {
     "insider": "Ali Wajid",
     "wert_dollar": 631541.0,
@@ -31887,51 +31666,6 @@
     "rolle": "Direktor"
    }
   ],
-  "OVLY": [
-   {
-    "insider": "Leonard Daniel J",
-    "wert_dollar": 4296.25,
-    "datum": "2026-10-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   }
-  ],
-  "BFC": [
-   {
-    "insider": "Sprang Todd A.",
-    "wert_dollar": 59348.0,
-    "datum": "2026-10-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   }
-  ],
-  "TFC": [
-   {
-    "insider": "Lyons Michael P.",
-    "wert_dollar": 1209050.0,
-    "datum": "2026-10-28",
-    "transaktionscode": "P",
-    "rolle": "President & CEO"
-   }
-  ],
-  "ACTU": [
-   {
-    "insider": "SCHMITT DANIEL M",
-    "wert_dollar": 49999.619999999995,
-    "datum": "2026-10-28",
-    "transaktionscode": "P",
-    "rolle": "President, CEO and Director"
-   }
-  ],
-  "ARCC": [
-   {
-    "insider": "HENSON MARY BETH",
-    "wert_dollar": 46150.0,
-    "datum": "2026-10-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   }
-  ],
   "DINO": [
    {
     "insider": "MYERS FRANKLIN",
@@ -31939,22 +31673,6 @@
     "datum": "2026-10-29",
     "transaktionscode": "P",
     "rolle": "CEO"
-   }
-  ],
-  "SCQCU": [
-   {
-    "insider": "Das Soumen",
-    "wert_dollar": 2665900.0,
-    "datum": "2026-10-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "Das Soumen",
-    "wert_dollar": 2665900.0,
-    "datum": "2026-10-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
    }
   ],
   "UTMD": [
@@ -31985,15 +31703,6 @@
     "insider": "HAWKINS JAMES B",
     "wert_dollar": 38300.1,
     "datum": "2026-11-04",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   }
-  ],
-  "PNFP": [
-   {
-    "insider": "INGRAM DAVID B",
-    "wert_dollar": 991600.0,
-    "datum": "2026-10-28",
     "transaktionscode": "P",
     "rolle": "Direktor"
    }
@@ -32072,22 +31781,6 @@
     "rolle": "Direktor"
    }
   ],
-  "ELVR": [
-   {
-    "insider": "Cortes Vargas Christian Mauricio",
-    "wert_dollar": 21360.0,
-    "datum": "2026-10-28",
-    "transaktionscode": "P",
-    "rolle": "Chief Financial Officer"
-   },
-   {
-    "insider": "Cortes Vargas Christian Mauricio",
-    "wert_dollar": 21360.0,
-    "datum": "2026-10-28",
-    "transaktionscode": "P",
-    "rolle": "Chief Financial Officer"
-   }
-  ],
   "BMRC": [
    {
     "insider": "Anderson Nicolas C",
@@ -32098,20 +31791,6 @@
    }
   ],
   "MED": [
-   {
-    "insider": "Kiai Parsa",
-    "wert_dollar": 66092.9383,
-    "datum": "2026-10-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "Kiai Parsa",
-    "wert_dollar": 1934.1886,
-    "datum": "2026-10-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
    {
     "insider": "Kiai Parsa",
     "wert_dollar": 8609.8555,
@@ -32136,38 +31815,6 @@
     "datum": "2026-10-29",
     "transaktionscode": "P",
     "rolle": "CHAIRMAN AND CEO"
-   },
-   {
-    "insider": "Trieu Vuong",
-    "wert_dollar": 5772.0,
-    "datum": "2026-10-28",
-    "transaktionscode": "P",
-    "rolle": "CHAIRMAN AND CEO"
-   }
-  ],
-  "PEO": [
-   {
-    "insider": "Nelson Jane Musser",
-    "wert_dollar": 30229.3,
-    "datum": "2026-10-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   }
-  ],
-  "BFH": [
-   {
-    "insider": "Fawcett John J.",
-    "wert_dollar": 74070.0,
-    "datum": "2026-10-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
-   },
-   {
-    "insider": "Fawcett John J.",
-    "wert_dollar": 49420.0,
-    "datum": "2026-10-28",
-    "transaktionscode": "P",
-    "rolle": "Direktor"
    }
   ],
   "OCFC": [
@@ -35895,7 +35542,6 @@
   "NIPPON LIFE INSURANCE CO": "Insider",
   "Dai Kun": "Chief Executive Officer",
   "ADAR1 Capital Management, LLC": "Insider",
-  "Tether Global Investments Fund, S.I.C.A.F., S.A.": "Insider",
   "Zhao Bin": "Chief Executive Officer",
   "Pale Fire Capital SE": "Insider",
   "Grimme Arne": "Direktor",
@@ -35909,39 +35555,19 @@
   "Equinox Partners Investment Management LLC": "Insider",
   "Haggart Dylan G.": "Direktor",
   "Venrock Healthcare Capital Partners III, L.P.": "Insider",
-  "WILLIAMS DEREK G": "SVP, Retail Operations & Sales",
   "Polito Karyn": "Direktor",
-  "Rosengren Eric S": "Direktor",
-  "Rhodes Blake": "Direktor",
-  "Senn Nikolaus Beat": "Direktor",
   "Ali Wajid": "Direktor",
-  "Roks Edwin": "President and CEO",
-  "Leonard Daniel J": "Direktor",
-  "Sprang Todd A.": "Direktor",
-  "Lyons Michael P.": "President & CEO",
-  "SCHMITT DANIEL M": "President, CEO and Director",
-  "Callahan Mary Anne": "Direktor",
-  "HENSON MARY BETH": "Direktor",
   "MYERS FRANKLIN": "CEO",
-  "Das Soumen": "Direktor",
-  "Gruninger Marc": "Direktor",
   "CORNWELL KEVIN L": "Chairman, CEO",
   "HAWKINS JAMES B": "Direktor",
-  "INGRAM DAVID B": "Direktor",
   "BROWN JEFFREY J": "Direktor",
   "KOCH D CHRISTIAN": "Direktor",
-  "Chaudhary Rajeev Kumar": "Direktor",
-  "Cortes Vargas Christian Mauricio": "Chief Financial Officer",
   "Charnley Nina A": "Direktor",
   "Anderson Nicolas C": "Direktor",
   "Kiai Parsa": "Direktor",
   "McLaughlin Shawn Patrick": "Direktor",
   "Rodriguez Ramon M.": "Direktor",
   "Trieu Vuong": "CHAIRMAN AND CEO",
-  "HEALY JAMES": "Direktor",
-  "HOWARD DOUGLAS S": "Direktor",
-  "Nelson Jane Musser": "Direktor",
-  "Fawcett John J.": "Direktor",
   "Barrett Patrick Sean": "Senior EVP & CFO",
   "PANTILIONE VITO S": "President & CEO",
   "Denny Michael B.": "Direktor",
