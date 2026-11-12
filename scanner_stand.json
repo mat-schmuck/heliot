@@ -1,6 +1,6 @@
 {
- "gebaut_am": "2026-11-11T23:11:16+00:00",
- "handelstag": "2026-11-11",
+ "gebaut_am": "2026-11-12T23:10:03+00:00",
+ "handelstag": "2026-11-12",
  "status": "ok",
  "toleranz": 0.05,
  "quellen": {
@@ -8,12 +8,12 @@
    "status": "ok",
    "stand": "2026-09-21",
    "eintraege": 13436,
-   "geprueft": 5350,
+   "geprueft": 5347,
    "raus": 22,
-   "ohne_eintrag": 91
+   "ohne_eintrag": 92
   },
   "rs": {
-   "stand": "2026-11-11T23:07:34",
+   "stand": "2026-11-12T23:06:14",
    "status": "ok"
   },
   "markttiefs": {
@@ -31,57 +31,58 @@
    }
   },
   "termine_vergangen": {
-   "status": "nicht verfuegbar",
-   "tage": 0
+   "status": "ok",
+   "tage": 73,
+   "ticker": 4696
   },
   "crash_regime": {
    "status": "ok",
    "scharf": false,
-   "rueckgang_pct": -2.5
+   "rueckgang_pct": -2.8
   },
   "eroeffnung": {
-   "status": "keine Kandidaten",
-   "kandidaten": 0,
-   "mit_eroeffnung": 0
+   "status": "ok",
+   "kandidaten": 151,
+   "mit_eroeffnung": 151
   },
   "kurse": {
    "status": "ok",
-   "mit_kursen": 5328,
+   "mit_kursen": 5325,
    "ohne_kurse": 0,
-   "aktuell": 5259,
-   "abdeckung": 0.987,
-   "archiv_zeilen": 3704077
+   "aktuell": 5267,
+   "abdeckung": 0.9891,
+   "archiv_zeilen": 3701394
   },
   "markt": {
    "status": "ok",
-   "spy_veraenderung_pct": 1.32,
-   "qqq_veraenderung_pct": 2.31
+   "spy_veraenderung_pct": -0.35,
+   "qqq_veraenderung_pct": -0.32
   },
   "eroeffnungsvolumen": {
    "status": "ok",
-   "aktien": 4903,
+   "aktien": 4952,
    "bloecke": 53,
    "fehler": 0
   },
   "screener": {
-   "status": "nicht verfuegbar (403)",
-   "anzahl": 0
+   "status": "ok",
+   "anzahl": 7233
   },
   "kalender": {
-   "status": "nicht verfuegbar",
-   "tage": 0,
-   "eintraege": 0,
-   "mit_eps_konsens": 0
+   "status": "ok",
+   "tage": 7,
+   "eintraege": 865,
+   "mit_eps_konsens": 455
   },
   "zahlen_rueckblick": {
-   "status": "nicht verfuegbar",
+   "status": "ok",
    "tage": 100,
-   "mit_zahlen": 0
+   "mit_zahlen": 4607
   },
   "fundament": {
    "status": "ok",
-   "firmen": 4905,
-   "zuordnung": 5036
+   "firmen": 4899,
+   "zuordnung": 5030
   },
   "konsens": {
    "dateien": [
@@ -97,15 +98,15 @@
    "neuester": "2026-11-03T10:00:48Z",
    "aeltester": "2026-10-30T19:30:42Z",
    "status": "ok",
-   "mit_konsens": 4144
+   "mit_konsens": 4142
   },
   "analysten": {
-   "status": "abgebrochen",
-   "abgerufen": 40,
-   "fehler": 40,
-   "abgebrochen": true,
-   "mit_analysten": 3152,
-   "mit_stand": 4592
+   "status": "ok",
+   "abgerufen": 756,
+   "fehler": 0,
+   "abgebrochen": false,
+   "mit_analysten": 3149,
+   "mit_stand": 4591
   },
   "revisionen": {
    "status": "ok",
@@ -120,12 +121,12 @@
    "fenster": 20,
    "mindest_abdeckung": 0.95,
    "tage": 20,
-   "erster_tag": "2026-10-15",
-   "letzter_tag": "2026-11-11",
-   "abdeckung_letzter_tag": 0.9936,
+   "erster_tag": "2026-10-16",
+   "letzter_tag": "2026-11-12",
+   "abdeckung_letzter_tag": 0.9932,
    "hinweis": null,
-   "mit_anteil": 5294,
-   "median_pct": 49.5,
+   "mit_anteil": 5289,
+   "median_pct": 51.7,
    "fehlend": {}
   },
   "gruppen_rs": {
@@ -133,32 +134,32 @@
    "zuordnung_stand": "2026-09-21",
    "zuordnung_eintraege": 13436,
    "ebene": "gics_unterbranche",
-   "aktien": 5328,
-   "mit_gruppe": 5145,
-   "unbekannt": 183,
+   "aktien": 5325,
+   "mit_gruppe": 5141,
+   "unbekannt": 184,
    "gruppen_heute": 165,
    "stichtage": {
-    "heute": "2026-11-11",
-    "vor_3_wochen": "2026-10-21",
-    "vor_6_wochen": "2026-09-30"
+    "heute": "2026-11-12",
+    "vor_3_wochen": "2026-10-22",
+    "vor_6_wochen": "2026-10-01"
    },
    "abdeckung": {
     "0": {
-     "tag": "2026-11-11",
-     "basis": 5060,
-     "mit_rohwert": 5010,
-     "anteil": 0.9901
+     "tag": "2026-11-12",
+     "basis": 5054,
+     "mit_rohwert": 5012,
+     "anteil": 0.9917
     },
     "15": {
-     "tag": "2026-10-21",
-     "basis": 5042,
-     "mit_rohwert": 5042,
+     "tag": "2026-10-22",
+     "basis": 5038,
+     "mit_rohwert": 5038,
      "anteil": 1.0
     },
     "30": {
-     "tag": "2026-09-30",
-     "basis": 5018,
-     "mit_rohwert": 5018,
+     "tag": "2026-10-01",
+     "basis": 5013,
+     "mit_rohwert": 5013,
      "anteil": 1.0
     }
    },
@@ -166,100 +167,1129 @@
   },
   "kennzahlen": {
    "status": "ok",
-   "technik_handelstag": "2026-11-11",
-   "fundament_stand": "2026-11-11T23:07:38",
-   "mit_technik": 5280,
-   "mit_fundament": 4920
+   "technik_handelstag": "2026-11-12",
+   "fundament_stand": "2026-11-12T23:06:17",
+   "mit_technik": 5275,
+   "mit_fundament": 4914
   }
  },
  "hinweise": [],
- "universum": 5328,
- "branchen": [],
+ "universum": 5325,
+ "branchen": [
+  {
+   "gruppe": "Accident &Health Insurance",
+   "aktien": 4,
+   "teile": [
+    "Accident &Health Insurance"
+   ]
+  },
+  {
+   "gruppe": "Advertising",
+   "aktien": 23,
+   "teile": [
+    "Advertising"
+   ]
+  },
+  {
+   "gruppe": "Aerospace",
+   "aktien": 31,
+   "teile": [
+    "Aerospace"
+   ]
+  },
+  {
+   "gruppe": "Agricultural Chemicals",
+   "aktien": 12,
+   "teile": [
+    "Agricultural Chemicals"
+   ]
+  },
+  {
+   "gruppe": "Air Freight/Delivery Services",
+   "aktien": 20,
+   "teile": [
+    "Air Freight/Delivery Services"
+   ]
+  },
+  {
+   "gruppe": "Aluminum",
+   "aktien": 2,
+   "teile": [
+    "Aluminum"
+   ]
+  },
+  {
+   "gruppe": "Apparel",
+   "aktien": 27,
+   "teile": [
+    "Apparel"
+   ]
+  },
+  {
+   "gruppe": "Auto & Home Supply Stores",
+   "aktien": 6,
+   "teile": [
+    "Auto & Home Supply Stores"
+   ]
+  },
+  {
+   "gruppe": "Auto Manufacturing",
+   "aktien": 30,
+   "teile": [
+    "Auto Manufacturing"
+   ]
+  },
+  {
+   "gruppe": "Auto Parts:O.E.M.",
+   "aktien": 37,
+   "teile": [
+    "Auto Parts:O.E.M."
+   ]
+  },
+  {
+   "gruppe": "Automotive Aftermarket",
+   "aktien": 8,
+   "teile": [
+    "Automotive Aftermarket"
+   ]
+  },
+  {
+   "gruppe": "Banks",
+   "aktien": 25,
+   "teile": [
+    "Banks"
+   ]
+  },
+  {
+   "gruppe": "Beverages (Production/Distribution)",
+   "aktien": 35,
+   "teile": [
+    "Beverages (Production/Distribution)"
+   ]
+  },
+  {
+   "gruppe": "Biotechnology",
+   "aktien": 739,
+   "teile": [
+    "Biotechnology: Biological Products (No Diagnostic Substances)",
+    "Biotechnology: Commercial Physical & Biological Resarch",
+    "Biotechnology: Electromedical & Electrotherapeutic Apparatus",
+    "Biotechnology: In Vitro & In Vivo Diagnostic Substances",
+    "Biotechnology: Laboratory Analytical Instruments",
+    "Biotechnology: Pharmaceutical Preparations"
+   ]
+  },
+  {
+   "gruppe": "Blank Checks",
+   "aktien": 33,
+   "teile": [
+    "Blank Checks"
+   ]
+  },
+  {
+   "gruppe": "Books",
+   "aktien": 4,
+   "teile": [
+    "Books"
+   ]
+  },
+  {
+   "gruppe": "Broadcasting",
+   "aktien": 24,
+   "teile": [
+    "Broadcasting"
+   ]
+  },
+  {
+   "gruppe": "Building Materials",
+   "aktien": 11,
+   "teile": [
+    "Building Materials"
+   ]
+  },
+  {
+   "gruppe": "Building operators",
+   "aktien": 6,
+   "teile": [
+    "Building operators"
+   ]
+  },
+  {
+   "gruppe": "Building Products",
+   "aktien": 12,
+   "teile": [
+    "Building Products"
+   ]
+  },
+  {
+   "gruppe": "Business Services",
+   "aktien": 91,
+   "teile": [
+    "Business Services"
+   ]
+  },
+  {
+   "gruppe": "Cable & Other Pay Television Services",
+   "aktien": 16,
+   "teile": [
+    "Cable & Other Pay Television Services"
+   ]
+  },
+  {
+   "gruppe": "Catalog/Specialty Distribution",
+   "aktien": 30,
+   "teile": [
+    "Catalog/Specialty Distribution"
+   ]
+  },
+  {
+   "gruppe": "Clothing/Shoe/Accessory Stores",
+   "aktien": 25,
+   "teile": [
+    "Clothing/Shoe/Accessory Stores"
+   ]
+  },
+  {
+   "gruppe": "Coal Mining",
+   "aktien": 10,
+   "teile": [
+    "Coal Mining"
+   ]
+  },
+  {
+   "gruppe": "Commercial Banks",
+   "aktien": 32,
+   "teile": [
+    "Commercial Banks"
+   ]
+  },
+  {
+   "gruppe": "Computer Communications Equipment",
+   "aktien": 15,
+   "teile": [
+    "Computer Communications Equipment"
+   ]
+  },
+  {
+   "gruppe": "Computer Manufacturing",
+   "aktien": 10,
+   "teile": [
+    "Computer Manufacturing"
+   ]
+  },
+  {
+   "gruppe": "Computer peripheral equipment",
+   "aktien": 18,
+   "teile": [
+    "Computer peripheral equipment"
+   ]
+  },
+  {
+   "gruppe": "Computer Software",
+   "aktien": 309,
+   "teile": [
+    "Computer Software: Prepackaged Software",
+    "Computer Software: Programming Data Processing"
+   ]
+  },
+  {
+   "gruppe": "Construction/Ag Equipment/Trucks",
+   "aktien": 15,
+   "teile": [
+    "Construction/Ag Equipment/Trucks"
+   ]
+  },
+  {
+   "gruppe": "Consumer Electronics/Appliances",
+   "aktien": 23,
+   "teile": [
+    "Consumer Electronics/Appliances"
+   ]
+  },
+  {
+   "gruppe": "Consumer Electronics/Video Chains",
+   "aktien": 5,
+   "teile": [
+    "Consumer Electronics/Video Chains"
+   ]
+  },
+  {
+   "gruppe": "Consumer Specialties",
+   "aktien": 11,
+   "teile": [
+    "Consumer Specialties"
+   ]
+  },
+  {
+   "gruppe": "Containers/Packaging",
+   "aktien": 18,
+   "teile": [
+    "Containers/Packaging"
+   ]
+  },
+  {
+   "gruppe": "Department/Specialty Retail Stores",
+   "aktien": 13,
+   "teile": [
+    "Department/Specialty Retail Stores"
+   ]
+  },
+  {
+   "gruppe": "Diversified Commercial Services",
+   "aktien": 37,
+   "teile": [
+    "Diversified Commercial Services"
+   ]
+  },
+  {
+   "gruppe": "Diversified Financial Services",
+   "aktien": 4,
+   "teile": [
+    "Diversified Financial Services"
+   ]
+  },
+  {
+   "gruppe": "Durable Goods",
+   "aktien": 3,
+   "teile": [
+    "Durable Goods"
+   ]
+  },
+  {
+   "gruppe": "EDP Services",
+   "aktien": 163,
+   "teile": [
+    "EDP Services"
+   ]
+  },
+  {
+   "gruppe": "Electric Utilities: Central",
+   "aktien": 57,
+   "teile": [
+    "Electric Utilities: Central"
+   ]
+  },
+  {
+   "gruppe": "Electrical Products",
+   "aktien": 35,
+   "teile": [
+    "Electrical Products"
+   ]
+  },
+  {
+   "gruppe": "Electronic Components",
+   "aktien": 21,
+   "teile": [
+    "Electronic Components"
+   ]
+  },
+  {
+   "gruppe": "Electronics Distribution",
+   "aktien": 1,
+   "teile": [
+    "Electronics Distribution"
+   ]
+  },
+  {
+   "gruppe": "Engineering & Construction",
+   "aktien": 19,
+   "teile": [
+    "Engineering & Construction"
+   ]
+  },
+  {
+   "gruppe": "Environmental Services",
+   "aktien": 13,
+   "teile": [
+    "Environmental Services"
+   ]
+  },
+  {
+   "gruppe": "Farming/Seeds/Milling",
+   "aktien": 25,
+   "teile": [
+    "Farming/Seeds/Milling"
+   ]
+  },
+  {
+   "gruppe": "Finance Companies",
+   "aktien": 20,
+   "teile": [
+    "Finance Companies"
+   ]
+  },
+  {
+   "gruppe": "Finance/Investors Services",
+   "aktien": 17,
+   "teile": [
+    "Finance/Investors Services"
+   ]
+  },
+  {
+   "gruppe": "Finance: Consumer Services",
+   "aktien": 161,
+   "teile": [
+    "Finance: Consumer Services"
+   ]
+  },
+  {
+   "gruppe": "Fluid Controls",
+   "aktien": 7,
+   "teile": [
+    "Fluid Controls"
+   ]
+  },
+  {
+   "gruppe": "Food Chains",
+   "aktien": 14,
+   "teile": [
+    "Food Chains"
+   ]
+  },
+  {
+   "gruppe": "Food Distributors",
+   "aktien": 10,
+   "teile": [
+    "Food Distributors"
+   ]
+  },
+  {
+   "gruppe": "Forest Products",
+   "aktien": 8,
+   "teile": [
+    "Forest Products"
+   ]
+  },
+  {
+   "gruppe": "Garments and Clothing",
+   "aktien": 6,
+   "teile": [
+    "Garments and Clothing"
+   ]
+  },
+  {
+   "gruppe": "General Bldg Contractors - Nonresidential Bldgs",
+   "aktien": 2,
+   "teile": [
+    "General Bldg Contractors - Nonresidential Bldgs"
+   ]
+  },
+  {
+   "gruppe": "Home Furnishings",
+   "aktien": 20,
+   "teile": [
+    "Home Furnishings"
+   ]
+  },
+  {
+   "gruppe": "Homebuilding",
+   "aktien": 32,
+   "teile": [
+    "Homebuilding"
+   ]
+  },
+  {
+   "gruppe": "Hospital/Nursing Management",
+   "aktien": 14,
+   "teile": [
+    "Hospital/Nursing Management"
+   ]
+  },
+  {
+   "gruppe": "Hotels/Resorts",
+   "aktien": 35,
+   "teile": [
+    "Hotels/Resorts"
+   ]
+  },
+  {
+   "gruppe": "Industrial Machinery/Components",
+   "aktien": 211,
+   "teile": [
+    "Industrial Machinery/Components"
+   ]
+  },
+  {
+   "gruppe": "Industrial Specialties",
+   "aktien": 55,
+   "teile": [
+    "Industrial Specialties"
+   ]
+  },
+  {
+   "gruppe": "Integrated Freight & Logistics",
+   "aktien": 17,
+   "teile": [
+    "Integrated Freight & Logistics"
+   ]
+  },
+  {
+   "gruppe": "Integrated oil Companies",
+   "aktien": 15,
+   "teile": [
+    "Integrated oil Companies"
+   ]
+  },
+  {
+   "gruppe": "Investment Bankers/Brokers/Service",
+   "aktien": 56,
+   "teile": [
+    "Investment Bankers/Brokers/Service"
+   ]
+  },
+  {
+   "gruppe": "Investment Managers",
+   "aktien": 62,
+   "teile": [
+    "Investment Managers"
+   ]
+  },
+  {
+   "gruppe": "Life Insurance",
+   "aktien": 18,
+   "teile": [
+    "Life Insurance"
+   ]
+  },
+  {
+   "gruppe": "Major Banks",
+   "aktien": 247,
+   "teile": [
+    "Major Banks"
+   ]
+  },
+  {
+   "gruppe": "Major Chemicals",
+   "aktien": 68,
+   "teile": [
+    "Major Chemicals"
+   ]
+  },
+  {
+   "gruppe": "Managed Health Care",
+   "aktien": 1,
+   "teile": [
+    "Managed Health Care"
+   ]
+  },
+  {
+   "gruppe": "Marine Transportation",
+   "aktien": 69,
+   "teile": [
+    "Marine Transportation"
+   ]
+  },
+  {
+   "gruppe": "Meat/Poultry/Fish",
+   "aktien": 6,
+   "teile": [
+    "Meat/Poultry/Fish"
+   ]
+  },
+  {
+   "gruppe": "Medical Electronics",
+   "aktien": 4,
+   "teile": [
+    "Medical Electronics"
+   ]
+  },
+  {
+   "gruppe": "Medical Specialities",
+   "aktien": 44,
+   "teile": [
+    "Medical Specialities"
+   ]
+  },
+  {
+   "gruppe": "Medical/Dental Instruments",
+   "aktien": 122,
+   "teile": [
+    "Medical/Dental Instruments"
+   ]
+  },
+  {
+   "gruppe": "Medical/Nursing Services",
+   "aktien": 29,
+   "teile": [
+    "Medical/Nursing Services"
+   ]
+  },
+  {
+   "gruppe": "Medicinal Chemicals and Botanical Products",
+   "aktien": 25,
+   "teile": [
+    "Medicinal Chemicals and Botanical Products"
+   ]
+  },
+  {
+   "gruppe": "Metal Fabrications",
+   "aktien": 46,
+   "teile": [
+    "Metal Fabrications"
+   ]
+  },
+  {
+   "gruppe": "Metal Mining",
+   "aktien": 41,
+   "teile": [
+    "Metal Mining"
+   ]
+  },
+  {
+   "gruppe": "Military/Government/Technical",
+   "aktien": 43,
+   "teile": [
+    "Military/Government/Technical"
+   ]
+  },
+  {
+   "gruppe": "Mining & Quarrying of Nonmetallic Minerals (No Fuels)",
+   "aktien": 24,
+   "teile": [
+    "Mining & Quarrying of Nonmetallic Minerals (No Fuels)"
+   ]
+  },
+  {
+   "gruppe": "Misc Corporate Leasing Services",
+   "aktien": 4,
+   "teile": [
+    "Misc Corporate Leasing Services"
+   ]
+  },
+  {
+   "gruppe": "Misc Health and Biotechnology Services",
+   "aktien": 10,
+   "teile": [
+    "Misc Health and Biotechnology Services"
+   ]
+  },
+  {
+   "gruppe": "Miscellaneous",
+   "aktien": 4,
+   "teile": [
+    "Miscellaneous"
+   ]
+  },
+  {
+   "gruppe": "Miscellaneous manufacturing industries",
+   "aktien": 11,
+   "teile": [
+    "Miscellaneous manufacturing industries"
+   ]
+  },
+  {
+   "gruppe": "Motor Vehicles",
+   "aktien": 8,
+   "teile": [
+    "Motor Vehicles"
+   ]
+  },
+  {
+   "gruppe": "Movies/Entertainment",
+   "aktien": 14,
+   "teile": [
+    "Movies/Entertainment"
+   ]
+  },
+  {
+   "gruppe": "Multi-Sector Companies",
+   "aktien": 11,
+   "teile": [
+    "Multi-Sector Companies"
+   ]
+  },
+  {
+   "gruppe": "Natural Gas Distribution",
+   "aktien": 22,
+   "teile": [
+    "Natural Gas Distribution"
+   ]
+  },
+  {
+   "gruppe": "Newspapers/Magazines",
+   "aktien": 7,
+   "teile": [
+    "Newspapers/Magazines"
+   ]
+  },
+  {
+   "gruppe": "Office Equipment/Supplies/Services",
+   "aktien": 13,
+   "teile": [
+    "Office Equipment/Supplies/Services"
+   ]
+  },
+  {
+   "gruppe": "Oil & Gas Production",
+   "aktien": 107,
+   "teile": [
+    "Oil & Gas Production"
+   ]
+  },
+  {
+   "gruppe": "Oil and Gas Field Machinery",
+   "aktien": 17,
+   "teile": [
+    "Oil and Gas Field Machinery"
+   ]
+  },
+  {
+   "gruppe": "Oil Refining/Marketing",
+   "aktien": 7,
+   "teile": [
+    "Oil Refining/Marketing"
+   ]
+  },
+  {
+   "gruppe": "Oil/Gas Transmission",
+   "aktien": 13,
+   "teile": [
+    "Oil/Gas Transmission"
+   ]
+  },
+  {
+   "gruppe": "Oilfield Services/Equipment",
+   "aktien": 20,
+   "teile": [
+    "Oilfield Services/Equipment"
+   ]
+  },
+  {
+   "gruppe": "Ophthalmic Goods",
+   "aktien": 8,
+   "teile": [
+    "Ophthalmic Goods"
+   ]
+  },
+  {
+   "gruppe": "Ordnance And Accessories",
+   "aktien": 7,
+   "teile": [
+    "Ordnance And Accessories"
+   ]
+  },
+  {
+   "gruppe": "Other Consumer Services",
+   "aktien": 74,
+   "teile": [
+    "Other Consumer Services"
+   ]
+  },
+  {
+   "gruppe": "Other Metals and Minerals",
+   "aktien": 11,
+   "teile": [
+    "Other Metals and Minerals"
+   ]
+  },
+  {
+   "gruppe": "Other Pharmaceuticals",
+   "aktien": 10,
+   "teile": [
+    "Other Pharmaceuticals"
+   ]
+  },
+  {
+   "gruppe": "Other Specialty Stores",
+   "aktien": 42,
+   "teile": [
+    "Other Specialty Stores"
+   ]
+  },
+  {
+   "gruppe": "Other Transportation",
+   "aktien": 1,
+   "teile": [
+    "Other Transportation"
+   ]
+  },
+  {
+   "gruppe": "Package Goods/Cosmetics",
+   "aktien": 23,
+   "teile": [
+    "Package Goods/Cosmetics"
+   ]
+  },
+  {
+   "gruppe": "Packaged Foods",
+   "aktien": 45,
+   "teile": [
+    "Packaged Foods"
+   ]
+  },
+  {
+   "gruppe": "Paints/Coatings",
+   "aktien": 3,
+   "teile": [
+    "Paints/Coatings"
+   ]
+  },
+  {
+   "gruppe": "Paper",
+   "aktien": 8,
+   "teile": [
+    "Paper"
+   ]
+  },
+  {
+   "gruppe": "Pharmaceuticals and Biotechnology",
+   "aktien": 1,
+   "teile": [
+    "Pharmaceuticals and Biotechnology"
+   ]
+  },
+  {
+   "gruppe": "Plastic Products",
+   "aktien": 9,
+   "teile": [
+    "Plastic Products"
+   ]
+  },
+  {
+   "gruppe": "Pollution Control Equipment",
+   "aktien": 4,
+   "teile": [
+    "Pollution Control Equipment"
+   ]
+  },
+  {
+   "gruppe": "Power Generation",
+   "aktien": 19,
+   "teile": [
+    "Power Generation"
+   ]
+  },
+  {
+   "gruppe": "Precious Metals",
+   "aktien": 74,
+   "teile": [
+    "Precious Metals"
+   ]
+  },
+  {
+   "gruppe": "Precision Instruments",
+   "aktien": 3,
+   "teile": [
+    "Precision Instruments"
+   ]
+  },
+  {
+   "gruppe": "Professional and commerical equipment",
+   "aktien": 2,
+   "teile": [
+    "Professional and commerical equipment"
+   ]
+  },
+  {
+   "gruppe": "Professional Services",
+   "aktien": 49,
+   "teile": [
+    "Professional Services"
+   ]
+  },
+  {
+   "gruppe": "Property-Casualty Insurers",
+   "aktien": 68,
+   "teile": [
+    "Property-Casualty Insurers"
+   ]
+  },
+  {
+   "gruppe": "Publishing",
+   "aktien": 11,
+   "teile": [
+    "Publishing"
+   ]
+  },
+  {
+   "gruppe": "Radio And Television Broadcasting And Communications Equipment",
+   "aktien": 21,
+   "teile": [
+    "Radio And Television Broadcasting And Communications Equipment"
+   ]
+  },
+  {
+   "gruppe": "Railroads",
+   "aktien": 11,
+   "teile": [
+    "Railroads"
+   ]
+  },
+  {
+   "gruppe": "Real Estate",
+   "aktien": 56,
+   "teile": [
+    "Real Estate"
+   ]
+  },
+  {
+   "gruppe": "Real Estate Investment Trusts",
+   "aktien": 171,
+   "teile": [
+    "Real Estate Investment Trusts"
+   ]
+  },
+  {
+   "gruppe": "Recreational Games/Products/Toys",
+   "aktien": 20,
+   "teile": [
+    "Recreational Games/Products/Toys"
+   ]
+  },
+  {
+   "gruppe": "Rental/Leasing Companies",
+   "aktien": 7,
+   "teile": [
+    "Rental/Leasing Companies"
+   ]
+  },
+  {
+   "gruppe": "Restaurants",
+   "aktien": 50,
+   "teile": [
+    "Restaurants"
+   ]
+  },
+  {
+   "gruppe": "Retail-Auto Dealers and Gas Stations",
+   "aktien": 19,
+   "teile": [
+    "Retail-Auto Dealers and Gas Stations"
+   ]
+  },
+  {
+   "gruppe": "Retail-Drug Stores and Proprietary Stores",
+   "aktien": 5,
+   "teile": [
+    "Retail-Drug Stores and Proprietary Stores"
+   ]
+  },
+  {
+   "gruppe": "RETAIL: Building Materials",
+   "aktien": 17,
+   "teile": [
+    "RETAIL: Building Materials"
+   ]
+  },
+  {
+   "gruppe": "Retail: Computer Software & Peripheral Equipment",
+   "aktien": 8,
+   "teile": [
+    "Retail: Computer Software & Peripheral Equipment"
+   ]
+  },
+  {
+   "gruppe": "Savings Institutions",
+   "aktien": 33,
+   "teile": [
+    "Savings Institutions"
+   ]
+  },
+  {
+   "gruppe": "Semiconductors",
+   "aktien": 100,
+   "teile": [
+    "Semiconductors"
+   ]
+  },
+  {
+   "gruppe": "Services-Misc. Amusement & Recreation",
+   "aktien": 51,
+   "teile": [
+    "Services-Misc. Amusement & Recreation"
+   ]
+  },
+  {
+   "gruppe": "Shoe Manufacturing",
+   "aktien": 9,
+   "teile": [
+    "Shoe Manufacturing"
+   ]
+  },
+  {
+   "gruppe": "Specialty Chemicals",
+   "aktien": 7,
+   "teile": [
+    "Specialty Chemicals"
+   ]
+  },
+  {
+   "gruppe": "Specialty Foods",
+   "aktien": 9,
+   "teile": [
+    "Specialty Foods"
+   ]
+  },
+  {
+   "gruppe": "Specialty Insurers",
+   "aktien": 32,
+   "teile": [
+    "Specialty Insurers"
+   ]
+  },
+  {
+   "gruppe": "Steel/Iron Ore",
+   "aktien": 26,
+   "teile": [
+    "Steel/Iron Ore"
+   ]
+  },
+  {
+   "gruppe": "Telecommunications Equipment",
+   "aktien": 81,
+   "teile": [
+    "Telecommunications Equipment"
+   ]
+  },
+  {
+   "gruppe": "Textiles",
+   "aktien": 5,
+   "teile": [
+    "Textiles"
+   ]
+  },
+  {
+   "gruppe": "Tobacco",
+   "aktien": 2,
+   "teile": [
+    "Tobacco"
+   ]
+  },
+  {
+   "gruppe": "Tools/Hardware",
+   "aktien": 1,
+   "teile": [
+    "Tools/Hardware"
+   ]
+  },
+  {
+   "gruppe": "Transportation Services",
+   "aktien": 23,
+   "teile": [
+    "Transportation Services"
+   ]
+  },
+  {
+   "gruppe": "Trucking Freight/Courier Services",
+   "aktien": 21,
+   "teile": [
+    "Trucking Freight/Courier Services"
+   ]
+  },
+  {
+   "gruppe": "Trusts Except Educational Religious and Charitable",
+   "aktien": 21,
+   "teile": [
+    "Trusts Except Educational Religious and Charitable"
+   ]
+  },
+  {
+   "gruppe": "Water Sewer Pipeline Comm & Power Line Construction",
+   "aktien": 8,
+   "teile": [
+    "Water Sewer Pipeline Comm & Power Line Construction"
+   ]
+  },
+  {
+   "gruppe": "Water Supply",
+   "aktien": 13,
+   "teile": [
+    "Water Supply"
+   ]
+  },
+  {
+   "gruppe": "Wholesale Distributors",
+   "aktien": 3,
+   "teile": [
+    "Wholesale Distributors"
+   ]
+  }
+ ],
  "strategien": {
   "darvas": {
    "name": "Darvas Box",
    "toleranz_moeglich": true,
-   "streng": 184,
-   "nur_toleranz": 2,
-   "handelbar": 115,
-   "handelbar_langweilig": 80
+   "streng": 371,
+   "nur_toleranz": 1,
+   "handelbar": 248,
+   "handelbar_langweilig": 196
   },
   "trend_template": {
    "name": "Minervini Trend Template",
    "toleranz_moeglich": true,
-   "streng": 708,
-   "nur_toleranz": 44,
-   "handelbar": 492
+   "streng": 694,
+   "nur_toleranz": 30,
+   "handelbar": 469
   },
   "vcp": {
    "name": "VCP",
    "toleranz_moeglich": true,
-   "streng": 12,
+   "streng": 11,
    "nur_toleranz": 0,
-   "handelbar": 6
+   "handelbar": 5
   },
   "cup_handle": {
    "name": "Cup & Handle",
    "toleranz_moeglich": true,
-   "streng": 628,
-   "nur_toleranz": 133,
-   "handelbar": 577
+   "streng": 606,
+   "nur_toleranz": 126,
+   "handelbar": 557
   },
   "cup_woche": {
    "name": "Cup & Handle, Wochenbasis",
    "toleranz_moeglich": true,
-   "streng": 628,
-   "nur_toleranz": 132,
-   "handelbar": 576
+   "streng": 606,
+   "nur_toleranz": 125,
+   "handelbar": 556
   },
   "rectangle": {
    "name": "Rectangle Top",
    "toleranz_moeglich": true,
-   "streng": 1826,
-   "nur_toleranz": 53,
-   "handelbar": 923
+   "streng": 1873,
+   "nur_toleranz": 61,
+   "handelbar": 962
   },
   "htf": {
    "name": "High & Tight Flag",
    "toleranz_moeglich": true,
-   "streng": 3,
+   "streng": 4,
    "nur_toleranz": 4,
-   "handelbar": 3
+   "handelbar": 4
   },
   "htf_innen": {
    "name": "HTF Innen-Einstieg",
    "toleranz_moeglich": true,
-   "streng": 3,
-   "nur_toleranz": 3,
-   "handelbar": 3
+   "streng": 4,
+   "nur_toleranz": 4,
+   "handelbar": 4
   },
   "ema_crossback": {
    "name": "EMA Crossback",
    "toleranz_moeglich": false,
-   "streng": 281,
+   "streng": 184,
    "nur_toleranz": 0,
-   "handelbar": 135
+   "handelbar": 69
   },
   "earnings_pullback": {
    "name": "Earnings-Pullback",
    "toleranz_moeglich": false,
-   "streng": 0,
+   "streng": 1,
    "nur_toleranz": 0,
    "handelbar": 0
   },
   "power_gap": {
    "name": "Power-Gap",
    "toleranz_moeglich": false,
-   "streng": 4,
+   "streng": 1,
    "nur_toleranz": 0,
-   "handelbar": 1
+   "handelbar": 0
   },
   "shakeout_spring": {
    "name": "Shakeout-Spring",
    "toleranz_moeglich": false,
-   "streng": 3,
+   "streng": 6,
    "nur_toleranz": 0,
-   "handelbar": 0
+   "handelbar": 3
   },
   "crash_support": {
    "name": "Crash-Support",
@@ -271,18 +1301,18 @@
   "hoch_52w": {
    "name": "Neues 52-Wochen-Hoch",
    "toleranz_moeglich": false,
-   "streng": 107,
+   "streng": 77,
    "nur_toleranz": 0,
-   "handelbar": 69
+   "handelbar": 50
   },
   "hoch_allzeit": {
    "name": "Neues Allzeithoch",
    "toleranz_moeglich": false,
-   "streng": 40,
+   "streng": 32,
    "nur_toleranz": 0,
-   "handelbar": 34
+   "handelbar": 29
   }
  },
- "zeilen": 5328,
- "dauer_s": 869.3
+ "zeilen": 5325,
+ "dauer_s": 1663.4
 }
