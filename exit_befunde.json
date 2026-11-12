@@ -1,26 +1,15 @@
 {
  "format": 2,
- "handelstag": "2026-11-11",
- "gebaut_am": "2026-11-11T23:10:13",
+ "handelstag": "2026-11-12",
+ "gebaut_am": "2026-11-12T23:08:50",
  "befunde": [
   {
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: AAOI",
-   "text": "INFORMATION: AAOI; Fallback: MA50-Rückeroberung; Schluss 55.86 unter der 8-Tage-EMA 56.32; reiner Hinweis, kein Ausstiegssignal; seit Trigger -51,0 % gleich -7,9 R",
+   "text": "INFORMATION: AAOI; Fallback: MA50-Rückeroberung; Schluss 52.85 unter der 8-Tage-EMA 55.55; reiner Hinweis, kein Ausstiegssignal; seit Trigger -53,7 % gleich -8,3 R",
    "symbol": "AAOI",
    "key": "AAOI|Fallback: MA50-Rückeroberung",
-   "prioritaet": "default",
-   "buendeln": true,
-   "grund": "schlusskurs"
-  },
-  {
-   "typ": "ema8_hinweis",
-   "art": "zurueckgehalten",
-   "titel": "INFORMATION: 8-EMA-Hinweis: ADRX",
-   "text": "INFORMATION: ADRX; Insider-Kauf; Schluss 13.30 unter der 8-Tage-EMA 14.32; reiner Hinweis, kein Ausstiegssignal; seit Trigger -31,1 % gleich -3,1 R",
-   "symbol": "ADRX",
-   "key": "ADRX|INS-2026-10-02",
    "prioritaet": "default",
    "buendeln": true,
    "grund": "schlusskurs"
@@ -46,30 +35,10 @@
    "buendeln": true
   },
   {
-   "typ": "zonenwechsel",
-   "art": "live",
-   "titel": "",
-   "text": "",
-   "symbol": "AMC",
-   "key": "AMC|EMA Crossback",
-   "prioritaet": "default",
-   "buendeln": true
-  },
-  {
-   "typ": "zonenwechsel",
-   "art": "live",
-   "titel": "",
-   "text": "",
-   "symbol": "AMN",
-   "key": "AMN|EMA Crossback",
-   "prioritaet": "default",
-   "buendeln": true
-  },
-  {
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: AMN",
-   "text": "INFORMATION: AMN; EMA Crossback; Schluss 37.90 unter der 8-Tage-EMA 40.82; reiner Hinweis, kein Ausstiegssignal; seit Trigger +7,7 % gleich 2,2 R",
+   "text": "INFORMATION: AMN; EMA Crossback; Schluss 37.42 unter der 8-Tage-EMA 40.07; reiner Hinweis, kein Ausstiegssignal; seit Trigger +6,3 % gleich 1,8 R",
    "symbol": "AMN",
    "key": "AMN|EMA Crossback",
    "prioritaet": "default",
@@ -80,7 +49,7 @@
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: AMN",
-   "text": "INFORMATION: AMN; Rectangle Top; Schluss 37.90 unter der 8-Tage-EMA 40.82; reiner Hinweis, kein Ausstiegssignal; seit Trigger +6,6 % gleich 0,7 R",
+   "text": "INFORMATION: AMN; Rectangle Top; Schluss 37.42 unter der 8-Tage-EMA 40.07; reiner Hinweis, kein Ausstiegssignal; seit Trigger +5,2 % gleich 0,6 R",
    "symbol": "AMN",
    "key": "AMN|Rectangle Top",
    "prioritaet": "default",
@@ -174,7 +143,7 @@
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: ARCT",
-   "text": "INFORMATION: ARCT; HTF Innen-Einstieg; Schluss 9.31 unter der 8-Tage-EMA 9.84; reiner Hinweis, kein Ausstiegssignal; seit Trigger -41,5 % gleich -4,6 R",
+   "text": "INFORMATION: ARCT; HTF Innen-Einstieg; Schluss 8.44 unter der 8-Tage-EMA 9.53; reiner Hinweis, kein Ausstiegssignal; seit Trigger -47,0 % gleich -5,2 R",
    "symbol": "ARCT",
    "key": "ARCT|2",
    "prioritaet": "default",
@@ -184,8 +153,41 @@
   {
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
+   "titel": "INFORMATION: 8-EMA-Hinweis: ASH",
+   "text": "INFORMATION: ASH; Cup & Handle (Wochenbasis); Schluss 75.27 unter der 8-Tage-EMA 75.88; reiner Hinweis, kein Ausstiegssignal; seit Trigger +8,1 % gleich 0,8 R",
+   "symbol": "ASH",
+   "key": "ASH|1",
+   "prioritaet": "default",
+   "buendeln": true,
+   "grund": "schlusskurs"
+  },
+  {
+   "typ": "ema8_hinweis",
+   "art": "zurueckgehalten",
+   "titel": "INFORMATION: 8-EMA-Hinweis: AUGO",
+   "text": "INFORMATION: AUGO; Fallback: 20-Tage-Hoch (Pivot); Schluss 77.94 unter der 8-Tage-EMA 78.31; reiner Hinweis, kein Ausstiegssignal; seit Trigger -14,0 % gleich -1,4 R",
+   "symbol": "AUGO",
+   "key": "AUGO|Fallback: 20-Tage-Hoch (Pivot)",
+   "prioritaet": "default",
+   "buendeln": true,
+   "grund": "schlusskurs"
+  },
+  {
+   "typ": "ema8_hinweis",
+   "art": "zurueckgehalten",
+   "titel": "INFORMATION: 8-EMA-Hinweis: AVTR",
+   "text": "INFORMATION: AVTR; Shakeout-Spring; Schluss 15.62 unter der 8-Tage-EMA 15.73; reiner Hinweis, kein Ausstiegssignal; seit Trigger +1,6 % gleich 0,8 R",
+   "symbol": "AVTR",
+   "key": "AVTR|SPRING-2026-11-12",
+   "prioritaet": "default",
+   "buendeln": true,
+   "grund": "schlusskurs"
+  },
+  {
+   "typ": "ema8_hinweis",
+   "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: BBD",
-   "text": "INFORMATION: BBD; Insider-Kauf; Schluss 2.57 unter der 8-Tage-EMA 2.63; reiner Hinweis, kein Ausstiegssignal; seit Trigger -27,1 % gleich -2,8 R",
+   "text": "INFORMATION: BBD; Insider-Kauf; Schluss 2.51 unter der 8-Tage-EMA 2.61; reiner Hinweis, kein Ausstiegssignal; seit Trigger -28,8 % gleich -2,9 R",
    "symbol": "BBD",
    "key": "BBD|INS-2026-10-02",
    "prioritaet": "default",
@@ -196,7 +198,7 @@
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: BFH",
-   "text": "INFORMATION: BFH; Rectangle Top; Schluss 97.65 unter der 8-Tage-EMA 100.48; reiner Hinweis, kein Ausstiegssignal; seit Trigger -11,6 % gleich -1,3 R",
+   "text": "INFORMATION: BFH; Rectangle Top; Schluss 97.91 unter der 8-Tage-EMA 99.91; reiner Hinweis, kein Ausstiegssignal; seit Trigger -11,4 % gleich -1,3 R",
    "symbol": "BFH",
    "key": "BFH|Rectangle Top",
    "prioritaet": "default",
@@ -204,15 +206,15 @@
    "grund": "schlusskurs"
   },
   {
-   "typ": "klimax_zeichen",
-   "art": "live",
-   "titel": "",
-   "text": "",
+   "typ": "ema8_hinweis",
+   "art": "zurueckgehalten",
+   "titel": "INFORMATION: 8-EMA-Hinweis: BHVN",
+   "text": "INFORMATION: BHVN; EMA Crossback; Schluss 14.07 unter der 8-Tage-EMA 14.77; reiner Hinweis, kein Ausstiegssignal; seit Trigger -12,3 % gleich -1,7 R",
    "symbol": "BHVN",
    "key": "BHVN|1",
-   "prioritaet": "high",
-   "buendeln": false,
-   "zeichen": "1_klimaxlauf"
+   "prioritaet": "default",
+   "buendeln": true,
+   "grund": "schlusskurs"
   },
   {
    "typ": "zonenwechsel",
@@ -227,8 +229,19 @@
   {
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
+   "titel": "INFORMATION: 8-EMA-Hinweis: BIIB",
+   "text": "INFORMATION: BIIB; Rectangle Top; Schluss 250.48 unter der 8-Tage-EMA 251.07; reiner Hinweis, kein Ausstiegssignal; seit Trigger +15,3 % gleich 1,8 R",
+   "symbol": "BIIB",
+   "key": "BIIB|2",
+   "prioritaet": "default",
+   "buendeln": true,
+   "grund": "schlusskurs"
+  },
+  {
+   "typ": "ema8_hinweis",
+   "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: BLLN",
-   "text": "INFORMATION: BLLN; Fallback: 20-Tage-Hoch (Pivot); Schluss 110.23 unter der 8-Tage-EMA 112.06; reiner Hinweis, kein Ausstiegssignal; seit Trigger +3,9 % gleich 0,4 R",
+   "text": "INFORMATION: BLLN; Fallback: 20-Tage-Hoch (Pivot); Schluss 110.79 unter der 8-Tage-EMA 111.78; reiner Hinweis, kein Ausstiegssignal; seit Trigger +4,5 % gleich 0,4 R",
    "symbol": "BLLN",
    "key": "BLLN|Fallback: 20-Tage-Hoch (Pivot)",
    "prioritaet": "default",
@@ -239,7 +252,7 @@
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: BLLN",
-   "text": "INFORMATION: BLLN; Fallback: MA50-Rückeroberung; Schluss 110.23 unter der 8-Tage-EMA 112.06; reiner Hinweis, kein Ausstiegssignal; seit Trigger -0,2 % gleich -0,0 R",
+   "text": "INFORMATION: BLLN; Fallback: MA50-Rückeroberung; Schluss 110.79 unter der 8-Tage-EMA 111.78; reiner Hinweis, kein Ausstiegssignal; seit Trigger +0,3 % gleich 0,0 R",
    "symbol": "BLLN",
    "key": "BLLN|Fallback: MA50-Rückeroberung",
    "prioritaet": "default",
@@ -249,10 +262,10 @@
   {
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
-   "titel": "INFORMATION: 8-EMA-Hinweis: BORR",
-   "text": "INFORMATION: BORR; Insider-Kauf; Schluss 3.34 unter der 8-Tage-EMA 3.40; reiner Hinweis, kein Ausstiegssignal; seit Trigger -21,2 % gleich -2,1 R",
-   "symbol": "BORR",
-   "key": "BORR|INS-2026-10-06",
+   "titel": "INFORMATION: 8-EMA-Hinweis: BRKR",
+   "text": "INFORMATION: BRKR; EMA Crossback; Schluss 60.33 unter der 8-Tage-EMA 61.29; reiner Hinweis, kein Ausstiegssignal; seit Trigger -7,2 % gleich -0,8 R",
+   "symbol": "BRKR",
+   "key": "BRKR|EMA Crossback",
    "prioritaet": "default",
    "buendeln": true,
    "grund": "schlusskurs"
@@ -260,10 +273,21 @@
   {
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
-   "titel": "INFORMATION: 8-EMA-Hinweis: BORR",
-   "text": "INFORMATION: BORR; Insider-Kauf; Schluss 3.34 unter der 8-Tage-EMA 3.40; reiner Hinweis, kein Ausstiegssignal; seit Trigger -26,5 % gleich -2,7 R",
-   "symbol": "BORR",
-   "key": "BORR|INS-2026-10-16",
+   "titel": "INFORMATION: 8-EMA-Hinweis: BRKR",
+   "text": "INFORMATION: BRKR; Rectangle Top; Schluss 60.33 unter der 8-Tage-EMA 61.29; reiner Hinweis, kein Ausstiegssignal; seit Trigger -2,9 % gleich -0,3 R",
+   "symbol": "BRKR",
+   "key": "BRKR|Rectangle Top",
+   "prioritaet": "default",
+   "buendeln": true,
+   "grund": "schlusskurs"
+  },
+  {
+   "typ": "ema8_hinweis",
+   "art": "zurueckgehalten",
+   "titel": "INFORMATION: 8-EMA-Hinweis: BSTZ",
+   "text": "INFORMATION: BSTZ; Rectangle Top; Schluss 25.15 unter der 8-Tage-EMA 25.60; reiner Hinweis, kein Ausstiegssignal; seit Trigger -18,3 % gleich -2,0 R",
+   "symbol": "BSTZ",
+   "key": "BSTZ|2",
    "prioritaet": "default",
    "buendeln": true,
    "grund": "schlusskurs"
@@ -272,7 +296,7 @@
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: CAKE",
-   "text": "INFORMATION: CAKE; EMA Crossback; Schluss 109.67 unter der 8-Tage-EMA 110.18; reiner Hinweis, kein Ausstiegssignal; seit Trigger +2,3 % gleich 0,5 R",
+   "text": "INFORMATION: CAKE; EMA Crossback; Schluss 106.20 unter der 8-Tage-EMA 109.29; reiner Hinweis, kein Ausstiegssignal; seit Trigger -0,9 % gleich -0,2 R",
    "symbol": "CAKE",
    "key": "CAKE|EMA Crossback",
    "prioritaet": "default",
@@ -282,8 +306,19 @@
   {
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
+   "titel": "INFORMATION: 8-EMA-Hinweis: CBLL",
+   "text": "INFORMATION: CBLL; Cup & Handle (Wochenbasis), Darvas Box; Schluss 26.35 unter der 8-Tage-EMA 27.09; reiner Hinweis, kein Ausstiegssignal; seit Trigger +4,0 % gleich 0,4 R",
+   "symbol": "CBLL",
+   "key": "CBLL|Cup & Handle (Wochenbasis) + Darvas Box",
+   "prioritaet": "default",
+   "buendeln": true,
+   "grund": "schlusskurs"
+  },
+  {
+   "typ": "ema8_hinweis",
+   "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: CBRL",
-   "text": "INFORMATION: CBRL; Cup & Handle (Wochenbasis); Schluss 66.13 unter der 8-Tage-EMA 66.98; reiner Hinweis, kein Ausstiegssignal; seit Trigger +21,2 % gleich 3,9 R",
+   "text": "INFORMATION: CBRL; Cup & Handle (Wochenbasis); Schluss 64.86 unter der 8-Tage-EMA 66.51; reiner Hinweis, kein Ausstiegssignal; seit Trigger +18,9 % gleich 3,4 R",
    "symbol": "CBRL",
    "key": "CBRL|Cup & Handle (Wochenbasis)",
    "prioritaet": "default",
@@ -294,7 +329,7 @@
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: CBRL",
-   "text": "INFORMATION: CBRL; Fallback: MA50-Rückeroberung; Schluss 66.13 unter der 8-Tage-EMA 66.98; reiner Hinweis, kein Ausstiegssignal; seit Trigger +22,3 % gleich 3,4 R",
+   "text": "INFORMATION: CBRL; Fallback: MA50-Rückeroberung; Schluss 64.86 unter der 8-Tage-EMA 66.51; reiner Hinweis, kein Ausstiegssignal; seit Trigger +20,0 % gleich 3,1 R",
    "symbol": "CBRL",
    "key": "CBRL|Fallback: MA50-Rückeroberung",
    "prioritaet": "default",
@@ -304,8 +339,30 @@
   {
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
+   "titel": "INFORMATION: 8-EMA-Hinweis: CCL",
+   "text": "INFORMATION: CCL; Fallback: 20-Tage-Hoch (Pivot); Schluss 29.34 unter der 8-Tage-EMA 29.90; reiner Hinweis, kein Ausstiegssignal; seit Trigger +13,1 % gleich 1,3 R",
+   "symbol": "CCL",
+   "key": "CCL|Fallback: 20-Tage-Hoch (Pivot)",
+   "prioritaet": "default",
+   "buendeln": true,
+   "grund": "schlusskurs"
+  },
+  {
+   "typ": "ema8_hinweis",
+   "art": "zurueckgehalten",
+   "titel": "INFORMATION: 8-EMA-Hinweis: CDNA",
+   "text": "INFORMATION: CDNA; Cup & Handle (Wochenbasis); Schluss 79.81 unter der 8-Tage-EMA 80.52; reiner Hinweis, kein Ausstiegssignal; seit Trigger +46,4 % gleich 4,6 R",
+   "symbol": "CDNA",
+   "key": "CDNA|Cup & Handle (Wochenbasis)",
+   "prioritaet": "default",
+   "buendeln": true,
+   "grund": "schlusskurs"
+  },
+  {
+   "typ": "ema8_hinweis",
+   "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: CGAU",
-   "text": "INFORMATION: CGAU; EMA Crossback; Schluss 21.28 unter der 8-Tage-EMA 21.56; reiner Hinweis, kein Ausstiegssignal; seit Trigger -7,7 % gleich -3,2 R",
+   "text": "INFORMATION: CGAU; EMA Crossback; Schluss 20.29 unter der 8-Tage-EMA 21.27; reiner Hinweis, kein Ausstiegssignal; seit Trigger -12,0 % gleich -5,0 R",
    "symbol": "CGAU",
    "key": "CGAU|EMA Crossback",
    "prioritaet": "default",
@@ -316,7 +373,7 @@
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: COIN",
-   "text": "INFORMATION: COIN; Fallback: 20-Tage-Hoch (Pivot); Schluss 136.27 unter der 8-Tage-EMA 140.11; reiner Hinweis, kein Ausstiegssignal; seit Trigger -30,6 % gleich -3,1 R",
+   "text": "INFORMATION: COIN; Fallback: 20-Tage-Hoch (Pivot); Schluss 130.67 unter der 8-Tage-EMA 138.01; reiner Hinweis, kein Ausstiegssignal; seit Trigger -33,4 % gleich -3,3 R",
    "symbol": "COIN",
    "key": "COIN|Fallback: 20-Tage-Hoch (Pivot)",
    "prioritaet": "default",
@@ -327,7 +384,7 @@
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: COUR",
-   "text": "INFORMATION: COUR; Insider-Kauf; Schluss 3.67 unter der 8-Tage-EMA 3.85; reiner Hinweis, kein Ausstiegssignal; seit Trigger -28,5 % gleich -2,9 R",
+   "text": "INFORMATION: COUR; Insider-Kauf; Schluss 3.56 unter der 8-Tage-EMA 3.78; reiner Hinweis, kein Ausstiegssignal; seit Trigger -30,6 % gleich -3,1 R",
    "symbol": "COUR",
    "key": "COUR|INS-2026-10-02",
    "prioritaet": "default",
@@ -347,8 +404,19 @@
   {
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
+   "titel": "INFORMATION: 8-EMA-Hinweis: CRL",
+   "text": "INFORMATION: CRL; Rectangle Top; Schluss 340.81 unter der 8-Tage-EMA 342.13; reiner Hinweis, kein Ausstiegssignal; seit Trigger +14,7 % gleich 2,7 R",
+   "symbol": "CRL",
+   "key": "CRL|Rectangle Top",
+   "prioritaet": "default",
+   "buendeln": true,
+   "grund": "schlusskurs"
+  },
+  {
+   "typ": "ema8_hinweis",
+   "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: CRM",
-   "text": "INFORMATION: CRM; Cup & Handle (Wochenbasis); Schluss 218.01 unter der 8-Tage-EMA 220.49; reiner Hinweis, kein Ausstiegssignal; seit Trigger -17,6 % gleich -1,8 R",
+   "text": "INFORMATION: CRM; Cup & Handle (Wochenbasis); Schluss 217.57 unter der 8-Tage-EMA 219.84; reiner Hinweis, kein Ausstiegssignal; seit Trigger -17,7 % gleich -1,8 R",
    "symbol": "CRM",
    "key": "CRM|1",
    "prioritaet": "default",
@@ -358,19 +426,8 @@
   {
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
-   "titel": "INFORMATION: 8-EMA-Hinweis: CVE",
-   "text": "INFORMATION: CVE; Cup & Handle (Wochenbasis), Darvas Box; Schluss 28.41 unter der 8-Tage-EMA 28.75; reiner Hinweis, kein Ausstiegssignal; seit Trigger -15,0 % gleich -1,5 R",
-   "symbol": "CVE",
-   "key": "CVE|1",
-   "prioritaet": "default",
-   "buendeln": true,
-   "grund": "schlusskurs"
-  },
-  {
-   "typ": "ema8_hinweis",
-   "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: CVI",
-   "text": "INFORMATION: CVI; Cup & Handle (Wochenbasis); Schluss 40.61 unter der 8-Tage-EMA 43.28; reiner Hinweis, kein Ausstiegssignal; seit Trigger -22,7 % gleich -2,3 R",
+   "text": "INFORMATION: CVI; Cup & Handle (Wochenbasis); Schluss 41.06 unter der 8-Tage-EMA 42.79; reiner Hinweis, kein Ausstiegssignal; seit Trigger -21,9 % gleich -2,2 R",
    "symbol": "CVI",
    "key": "CVI|Cup & Handle (Wochenbasis)",
    "prioritaet": "default",
@@ -381,7 +438,7 @@
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: CX",
-   "text": "INFORMATION: CX; Insider-Kauf; Schluss 10.64 unter der 8-Tage-EMA 10.74; reiner Hinweis, kein Ausstiegssignal; seit Trigger +12,0 % gleich 1,2 R",
+   "text": "INFORMATION: CX; Insider-Kauf; Schluss 10.47 unter der 8-Tage-EMA 10.68; reiner Hinweis, kein Ausstiegssignal; seit Trigger +10,2 % gleich 1,0 R",
    "symbol": "CX",
    "key": "CX|INS-2026-10-02",
    "prioritaet": "default",
@@ -392,7 +449,7 @@
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: DAVE",
-   "text": "INFORMATION: DAVE; Cup & Handle (Wochenbasis); Schluss 281.96 unter der 8-Tage-EMA 293.60; reiner Hinweis, kein Ausstiegssignal; seit Trigger -11,5 % gleich -1,2 R",
+   "text": "INFORMATION: DAVE; Cup & Handle (Wochenbasis); Schluss 267.37 unter der 8-Tage-EMA 287.77; reiner Hinweis, kein Ausstiegssignal; seit Trigger -16,1 % gleich -1,6 R",
    "symbol": "DAVE",
    "key": "DAVE|Cup & Handle (Wochenbasis)",
    "prioritaet": "default",
@@ -400,37 +457,14 @@
    "grund": "schlusskurs"
   },
   {
-   "typ": "ema8_hinweis",
-   "art": "zurueckgehalten",
-   "titel": "INFORMATION: 8-EMA-Hinweis: ECO",
-   "text": "INFORMATION: ECO; Cup & Handle (Wochenbasis); Schluss 85.75 unter der 8-Tage-EMA 85.97; reiner Hinweis, kein Ausstiegssignal; seit Trigger +24,0 % gleich 2,4 R",
-   "symbol": "ECO",
-   "key": "ECO|1",
-   "prioritaet": "default",
-   "buendeln": true,
-   "grund": "schlusskurs"
-  },
-  {
-   "typ": "ema8_hinweis",
-   "art": "zurueckgehalten",
-   "titel": "INFORMATION: 8-EMA-Hinweis: ECO",
-   "text": "INFORMATION: ECO; Fallback: 20-Tage-Hoch (Pivot); Schluss 85.75 unter der 8-Tage-EMA 85.97; reiner Hinweis, kein Ausstiegssignal; seit Trigger +12,5 % gleich 1,3 R",
-   "symbol": "ECO",
-   "key": "ECO|Fallback: 20-Tage-Hoch (Pivot)",
-   "prioritaet": "default",
-   "buendeln": true,
-   "grund": "schlusskurs"
-  },
-  {
-   "typ": "ema8_hinweis",
-   "art": "zurueckgehalten",
-   "titel": "INFORMATION: 8-EMA-Hinweis: ECO",
-   "text": "INFORMATION: ECO; Fallback: 52W-Hoch-Breakout; Schluss 85.75 unter der 8-Tage-EMA 85.97; reiner Hinweis, kein Ausstiegssignal; seit Trigger +12,4 % gleich 1,7 R",
+   "typ": "zonenwechsel",
+   "art": "live",
+   "titel": "",
+   "text": "",
    "symbol": "ECO",
    "key": "ECO|Fallback: 52W-Hoch-Breakout",
    "prioritaet": "default",
-   "buendeln": true,
-   "grund": "schlusskurs"
+   "buendeln": true
   },
   {
    "typ": "zonenwechsel",
@@ -446,7 +480,7 @@
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: EC",
-   "text": "INFORMATION: EC; EMA Crossback; Schluss 15.30 unter der 8-Tage-EMA 15.79; reiner Hinweis, kein Ausstiegssignal; seit Trigger -14,3 % gleich -2,8 R",
+   "text": "INFORMATION: EC; EMA Crossback; Schluss 15.32 unter der 8-Tage-EMA 15.69; reiner Hinweis, kein Ausstiegssignal; seit Trigger -14,2 % gleich -2,8 R",
    "symbol": "EC",
    "key": "EC|2",
    "prioritaet": "default",
@@ -456,29 +490,19 @@
   {
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
-   "titel": "INFORMATION: 8-EMA-Hinweis: EQNR",
-   "text": "INFORMATION: EQNR; Cup & Handle (Wochenbasis); Schluss 41.33 unter der 8-Tage-EMA 42.64; reiner Hinweis, kein Ausstiegssignal; seit Trigger -6,8 % gleich -0,7 R",
-   "symbol": "EQNR",
-   "key": "EQNR|1",
+   "titel": "INFORMATION: 8-EMA-Hinweis: ELF",
+   "text": "INFORMATION: ELF; Cup & Handle (Wochenbasis); Schluss 113.53 unter der 8-Tage-EMA 115.43; reiner Hinweis, kein Ausstiegssignal; seit Trigger +3,6 % gleich 0,4 R",
+   "symbol": "ELF",
+   "key": "ELF|1",
    "prioritaet": "default",
    "buendeln": true,
    "grund": "schlusskurs"
   },
   {
-   "typ": "zonenwechsel",
-   "art": "live",
-   "titel": "",
-   "text": "",
-   "symbol": "EXPD",
-   "key": "EXPD|1",
-   "prioritaet": "default",
-   "buendeln": true
-  },
-  {
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: EZPW",
-   "text": "INFORMATION: EZPW; Rectangle Top; Schluss 28.30 unter der 8-Tage-EMA 28.90; reiner Hinweis, kein Ausstiegssignal; seit Trigger -14,4 % gleich -1,6 R",
+   "text": "INFORMATION: EZPW; Rectangle Top; Schluss 27.05 unter der 8-Tage-EMA 28.49; reiner Hinweis, kein Ausstiegssignal; seit Trigger -18,2 % gleich -2,0 R",
    "symbol": "EZPW",
    "key": "EZPW|1",
    "prioritaet": "default",
@@ -489,7 +513,7 @@
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: FCFS",
-   "text": "INFORMATION: FCFS; Rectangle Top; Schluss 184.00 unter der 8-Tage-EMA 187.03; reiner Hinweis, kein Ausstiegssignal; seit Trigger -18,9 % gleich -2,0 R",
+   "text": "INFORMATION: FCFS; Rectangle Top; Schluss 181.68 unter der 8-Tage-EMA 185.84; reiner Hinweis, kein Ausstiegssignal; seit Trigger -20,0 % gleich -2,1 R",
    "symbol": "FCFS",
    "key": "FCFS|2",
    "prioritaet": "default",
@@ -509,8 +533,19 @@
   {
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
+   "titel": "INFORMATION: 8-EMA-Hinweis: FPS",
+   "text": "INFORMATION: FPS; Fallback: 20-Tage-Hoch (Pivot); Schluss 22.15 unter der 8-Tage-EMA 22.93; reiner Hinweis, kein Ausstiegssignal; seit Trigger -44,6 % gleich -4,5 R",
+   "symbol": "FPS",
+   "key": "FPS|Fallback: 20-Tage-Hoch (Pivot)",
+   "prioritaet": "default",
+   "buendeln": true,
+   "grund": "schlusskurs"
+  },
+  {
+   "typ": "ema8_hinweis",
+   "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: FRPT",
-   "text": "INFORMATION: FRPT; Fallback: MA50-Rückeroberung; Schluss 64.52 unter der 8-Tage-EMA 65.96; reiner Hinweis, kein Ausstiegssignal; seit Trigger -0,8 % gleich -0,1 R",
+   "text": "INFORMATION: FRPT; Fallback: MA50-Rückeroberung; Schluss 64.63 unter der 8-Tage-EMA 65.67; reiner Hinweis, kein Ausstiegssignal; seit Trigger -0,6 % gleich -0,1 R",
    "symbol": "FRPT",
    "key": "FRPT|Fallback: MA50-Rückeroberung",
    "prioritaet": "default",
@@ -521,7 +556,7 @@
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: FRPT",
-   "text": "INFORMATION: FRPT; Rectangle Top; Schluss 64.52 unter der 8-Tage-EMA 65.96; reiner Hinweis, kein Ausstiegssignal; seit Trigger +4,5 % gleich 0,4 R",
+   "text": "INFORMATION: FRPT; Rectangle Top; Schluss 64.63 unter der 8-Tage-EMA 65.67; reiner Hinweis, kein Ausstiegssignal; seit Trigger +4,6 % gleich 0,5 R",
    "symbol": "FRPT",
    "key": "FRPT|Rectangle Top",
    "prioritaet": "default",
@@ -531,8 +566,19 @@
   {
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
+   "titel": "INFORMATION: 8-EMA-Hinweis: FTI",
+   "text": "INFORMATION: FTI; Rectangle Top; Schluss 64.92 unter der 8-Tage-EMA 65.09; reiner Hinweis, kein Ausstiegssignal; seit Trigger -14,8 % gleich -1,5 R",
+   "symbol": "FTI",
+   "key": "FTI|2",
+   "prioritaet": "default",
+   "buendeln": true,
+   "grund": "schlusskurs"
+  },
+  {
+   "typ": "ema8_hinweis",
+   "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: GAP",
-   "text": "INFORMATION: GAP; Rectangle Top; Schluss 21.53 unter der 8-Tage-EMA 22.08; reiner Hinweis, kein Ausstiegssignal; seit Trigger -0,6 % gleich -0,1 R",
+   "text": "INFORMATION: GAP; Rectangle Top; Schluss 21.25 unter der 8-Tage-EMA 21.90; reiner Hinweis, kein Ausstiegssignal; seit Trigger -1,8 % gleich -0,2 R",
    "symbol": "GAP",
    "key": "GAP|1",
    "prioritaet": "default",
@@ -543,7 +589,7 @@
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: GLNG",
-   "text": "INFORMATION: GLNG; Rectangle Top; Schluss 42.82 unter der 8-Tage-EMA 43.80; reiner Hinweis, kein Ausstiegssignal; seit Trigger -17,9 % gleich -2,8 R",
+   "text": "INFORMATION: GLNG; Rectangle Top; Schluss 42.97 unter der 8-Tage-EMA 43.62; reiner Hinweis, kein Ausstiegssignal; seit Trigger -17,6 % gleich -2,7 R",
    "symbol": "GLNG",
    "key": "GLNG|Rectangle Top",
    "prioritaet": "default",
@@ -553,8 +599,41 @@
   {
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
+   "titel": "INFORMATION: 8-EMA-Hinweis: GPI",
+   "text": "INFORMATION: GPI; Insider-Kauf; Schluss 257.29 unter der 8-Tage-EMA 263.30; reiner Hinweis, kein Ausstiegssignal; seit Trigger -1,7 % gleich -0,2 R",
+   "symbol": "GPI",
+   "key": "GPI|INS-2026-10-02",
+   "prioritaet": "default",
+   "buendeln": true,
+   "grund": "schlusskurs"
+  },
+  {
+   "typ": "ema8_hinweis",
+   "art": "zurueckgehalten",
+   "titel": "INFORMATION: 8-EMA-Hinweis: GRAB",
+   "text": "INFORMATION: GRAB; Insider-Kauf; Schluss 3.24 unter der 8-Tage-EMA 3.26; reiner Hinweis, kein Ausstiegssignal; seit Trigger +2,7 % gleich 0,3 R",
+   "symbol": "GRAB",
+   "key": "GRAB|INS-2026-09-22",
+   "prioritaet": "default",
+   "buendeln": true,
+   "grund": "schlusskurs"
+  },
+  {
+   "typ": "ema8_hinweis",
+   "art": "zurueckgehalten",
+   "titel": "INFORMATION: 8-EMA-Hinweis: GRAB",
+   "text": "INFORMATION: GRAB; Insider-Kauf; Schluss 3.24 unter der 8-Tage-EMA 3.26; reiner Hinweis, kein Ausstiegssignal; seit Trigger +2,4 % gleich 0,2 R",
+   "symbol": "GRAB",
+   "key": "GRAB|INS-2026-10-02",
+   "prioritaet": "default",
+   "buendeln": true,
+   "grund": "schlusskurs"
+  },
+  {
+   "typ": "ema8_hinweis",
+   "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: GRAL",
-   "text": "INFORMATION: GRAL; Cup & Handle (Wochenbasis); Schluss 125.64 unter der 8-Tage-EMA 129.53; reiner Hinweis, kein Ausstiegssignal; seit Trigger -6,5 % gleich -0,7 R",
+   "text": "INFORMATION: GRAL; Cup & Handle (Wochenbasis); Schluss 121.35 unter der 8-Tage-EMA 127.71; reiner Hinweis, kein Ausstiegssignal; seit Trigger -9,7 % gleich -1,0 R",
    "symbol": "GRAL",
    "key": "GRAL|Cup & Handle (Wochenbasis)",
    "prioritaet": "default",
@@ -575,7 +654,7 @@
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: GSHD",
-   "text": "INFORMATION: GSHD; Insider-Kauf; Schluss 46.15 unter der 8-Tage-EMA 50.43; reiner Hinweis, kein Ausstiegssignal; seit Trigger -1,7 % gleich -0,2 R",
+   "text": "INFORMATION: GSHD; Insider-Kauf; Schluss 45.66 unter der 8-Tage-EMA 49.37; reiner Hinweis, kein Ausstiegssignal; seit Trigger -2,8 % gleich -0,3 R",
    "symbol": "GSHD",
    "key": "GSHD|INS-2026-10-02",
    "prioritaet": "default",
@@ -585,54 +664,10 @@
   {
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
-   "titel": "INFORMATION: 8-EMA-Hinweis: HAE",
-   "text": "INFORMATION: HAE; Cup & Handle (Wochenbasis); Schluss 120.54 unter der 8-Tage-EMA 120.96; reiner Hinweis, kein Ausstiegssignal; seit Trigger +9,7 % gleich 1,0 R",
-   "symbol": "HAE",
-   "key": "HAE|Cup & Handle (Wochenbasis)",
-   "prioritaet": "default",
-   "buendeln": true,
-   "grund": "schlusskurs"
-  },
-  {
-   "typ": "ema8_hinweis",
-   "art": "zurueckgehalten",
-   "titel": "INFORMATION: 8-EMA-Hinweis: HAE",
-   "text": "INFORMATION: HAE; Fallback: 20-Tage-Hoch (Pivot); Schluss 120.54 unter der 8-Tage-EMA 120.96; reiner Hinweis, kein Ausstiegssignal; seit Trigger +10,0 % gleich 1,2 R",
-   "symbol": "HAE",
-   "key": "HAE|Fallback: 20-Tage-Hoch (Pivot)",
-   "prioritaet": "default",
-   "buendeln": true,
-   "grund": "schlusskurs"
-  },
-  {
-   "typ": "ema8_hinweis",
-   "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: HBM",
-   "text": "INFORMATION: HBM; Fallback: MA50-Rückeroberung; Schluss 21.94 unter der 8-Tage-EMA 21.96; reiner Hinweis, kein Ausstiegssignal; seit Trigger -14,1 % gleich -2,2 R",
+   "text": "INFORMATION: HBM; Fallback: MA50-Rückeroberung; Schluss 21.62 unter der 8-Tage-EMA 21.88; reiner Hinweis, kein Ausstiegssignal; seit Trigger -15,3 % gleich -2,4 R",
    "symbol": "HBM",
    "key": "HBM|Fallback: MA50-Rückeroberung",
-   "prioritaet": "default",
-   "buendeln": true,
-   "grund": "schlusskurs"
-  },
-  {
-   "typ": "ema8_hinweis",
-   "art": "zurueckgehalten",
-   "titel": "INFORMATION: 8-EMA-Hinweis: HCC",
-   "text": "INFORMATION: HCC; Fallback: MA50-Pullback; Schluss 83.50 unter der 8-Tage-EMA 83.95; reiner Hinweis, kein Ausstiegssignal; seit Trigger -10,1 % gleich -1,8 R",
-   "symbol": "HCC",
-   "key": "HCC|Fallback: MA50-Pullback",
-   "prioritaet": "default",
-   "buendeln": true,
-   "grund": "schlusskurs"
-  },
-  {
-   "typ": "ema8_hinweis",
-   "art": "zurueckgehalten",
-   "titel": "INFORMATION: 8-EMA-Hinweis: HCC",
-   "text": "INFORMATION: HCC; Fallback: MA50-Rückeroberung; Schluss 83.50 unter der 8-Tage-EMA 83.95; reiner Hinweis, kein Ausstiegssignal; seit Trigger -9,8 % gleich -1,5 R",
-   "symbol": "HCC",
-   "key": "HCC|Fallback: MA50-Rückeroberung",
    "prioritaet": "default",
    "buendeln": true,
    "grund": "schlusskurs"
@@ -693,12 +728,23 @@
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: HOPE",
-   "text": "INFORMATION: HOPE; Fallback: MA50-Pullback; Schluss 13.14 unter der 8-Tage-EMA 13.28; reiner Hinweis, kein Ausstiegssignal; seit Trigger -5,8 % gleich -1,1 R",
+   "text": "INFORMATION: HOPE; Fallback: MA50-Pullback; Schluss 13.06 unter der 8-Tage-EMA 13.23; reiner Hinweis, kein Ausstiegssignal; seit Trigger -6,4 % gleich -1,2 R",
    "symbol": "HOPE",
    "key": "HOPE|Fallback: MA50-Pullback",
    "prioritaet": "default",
    "buendeln": true,
    "grund": "schlusskurs"
+  },
+  {
+   "typ": "klimax_zeichen",
+   "art": "live",
+   "titel": "",
+   "text": "",
+   "symbol": "HTFL",
+   "key": "HTFL|Rectangle Top",
+   "prioritaet": "high",
+   "buendeln": false,
+   "zeichen": "4_ma200_abstand"
   },
   {
    "typ": "zonenwechsel",
@@ -721,17 +767,6 @@
    "buendeln": false
   },
   {
-   "typ": "klimax_zeichen",
-   "art": "live",
-   "titel": "",
-   "text": "",
-   "symbol": "IBTA",
-   "key": "IBTA|Cup & Handle (Wochenbasis)",
-   "prioritaet": "high",
-   "buendeln": false,
-   "zeichen": "4_ma200_abstand"
-  },
-  {
    "typ": "zonenwechsel",
    "art": "live",
    "titel": "",
@@ -744,8 +779,19 @@
   {
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
+   "titel": "INFORMATION: 8-EMA-Hinweis: IDYA",
+   "text": "INFORMATION: IDYA; Rectangle Top; Schluss 31.49 unter der 8-Tage-EMA 31.97; reiner Hinweis, kein Ausstiegssignal; seit Trigger -17,6 % gleich -2,0 R",
+   "symbol": "IDYA",
+   "key": "IDYA|Rectangle Top",
+   "prioritaet": "default",
+   "buendeln": true,
+   "grund": "schlusskurs"
+  },
+  {
+   "typ": "ema8_hinweis",
+   "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: IESC",
-   "text": "INFORMATION: IESC; Fallback: MA50-Rückeroberung; Schluss 177.32 unter der 8-Tage-EMA 179.36; reiner Hinweis, kein Ausstiegssignal; seit Trigger -46,9 % gleich -7,3 R",
+   "text": "INFORMATION: IESC; Fallback: MA50-Rückeroberung; Schluss 174.17 unter der 8-Tage-EMA 178.21; reiner Hinweis, kein Ausstiegssignal; seit Trigger -47,9 % gleich -7,4 R",
    "symbol": "IESC",
    "key": "IESC|Fallback: MA50-Rückeroberung",
    "prioritaet": "default",
@@ -756,7 +802,7 @@
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: INSP",
-   "text": "INFORMATION: INSP; Cup & Handle (Wochenbasis); Schluss 62.11 unter der 8-Tage-EMA 64.57; reiner Hinweis, kein Ausstiegssignal; seit Trigger -17,7 % gleich -1,8 R",
+   "text": "INFORMATION: INSP; Cup & Handle (Wochenbasis); Schluss 60.54 unter der 8-Tage-EMA 63.68; reiner Hinweis, kein Ausstiegssignal; seit Trigger -19,8 % gleich -2,0 R",
    "symbol": "INSP",
    "key": "INSP|Cup & Handle (Wochenbasis)",
    "prioritaet": "default",
@@ -767,7 +813,7 @@
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: INSP",
-   "text": "INFORMATION: INSP; Fallback: 20-Tage-Hoch (Pivot); Schluss 62.11 unter der 8-Tage-EMA 64.57; reiner Hinweis, kein Ausstiegssignal; seit Trigger -17,1 % gleich -1,7 R",
+   "text": "INFORMATION: INSP; Fallback: 20-Tage-Hoch (Pivot); Schluss 60.54 unter der 8-Tage-EMA 63.68; reiner Hinweis, kein Ausstiegssignal; seit Trigger -19,2 % gleich -1,9 R",
    "symbol": "INSP",
    "key": "INSP|Fallback: 20-Tage-Hoch (Pivot)",
    "prioritaet": "default",
@@ -795,20 +841,54 @@
    "buendeln": true
   },
   {
-   "typ": "zonenwechsel",
-   "art": "live",
-   "titel": "",
-   "text": "",
+   "typ": "ema8_hinweis",
+   "art": "zurueckgehalten",
+   "titel": "INFORMATION: 8-EMA-Hinweis: JOE",
+   "text": "INFORMATION: JOE; Rectangle Top; Schluss 71.06 unter der 8-Tage-EMA 71.25; reiner Hinweis, kein Ausstiegssignal; seit Trigger +7,4 % gleich 1,4 R",
+   "symbol": "JOE",
+   "key": "JOE|Rectangle Top",
+   "prioritaet": "default",
+   "buendeln": true,
+   "grund": "schlusskurs"
+  },
+  {
+   "typ": "ema8_hinweis",
+   "art": "zurueckgehalten",
+   "titel": "INFORMATION: 8-EMA-Hinweis: KRYS",
+   "text": "INFORMATION: KRYS; Rectangle Top; Schluss 305.68 unter der 8-Tage-EMA 307.12; reiner Hinweis, kein Ausstiegssignal; seit Trigger -15,7 % gleich -1,6 R",
+   "symbol": "KRYS",
+   "key": "KRYS|2",
+   "prioritaet": "default",
+   "buendeln": true,
+   "grund": "schlusskurs"
+  },
+  {
+   "typ": "ema8_hinweis",
+   "art": "zurueckgehalten",
+   "titel": "INFORMATION: 8-EMA-Hinweis: KRYS",
+   "text": "INFORMATION: KRYS; Rectangle Top; Schluss 305.68 unter der 8-Tage-EMA 307.12; reiner Hinweis, kein Ausstiegssignal; seit Trigger -15,7 % gleich -1,6 R",
+   "symbol": "KRYS",
+   "key": "KRYS|3",
+   "prioritaet": "default",
+   "buendeln": true,
+   "grund": "schlusskurs"
+  },
+  {
+   "typ": "ema8_hinweis",
+   "art": "zurueckgehalten",
+   "titel": "INFORMATION: 8-EMA-Hinweis: KYMR",
+   "text": "INFORMATION: KYMR; Fallback: MA50-Pullback; Schluss 127.17 unter der 8-Tage-EMA 131.01; reiner Hinweis, kein Ausstiegssignal; seit Trigger +10,6 % gleich 1,9 R",
    "symbol": "KYMR",
    "key": "KYMR|Fallback: MA50-Pullback",
    "prioritaet": "default",
-   "buendeln": true
+   "buendeln": true,
+   "grund": "schlusskurs"
   },
   {
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: LEN",
-   "text": "INFORMATION: LEN; Insider-Kauf; Schluss 86.33 unter der 8-Tage-EMA 87.97; reiner Hinweis, kein Ausstiegssignal; seit Trigger +5,2 % gleich 0,5 R",
+   "text": "INFORMATION: LEN; Insider-Kauf; Schluss 83.58 unter der 8-Tage-EMA 86.99; reiner Hinweis, kein Ausstiegssignal; seit Trigger +1,9 % gleich 0,2 R",
    "symbol": "LEN",
    "key": "LEN|INS-2026-09-29",
    "prioritaet": "default",
@@ -819,7 +899,7 @@
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: LEN",
-   "text": "INFORMATION: LEN; Insider-Kauf; Schluss 86.33 unter der 8-Tage-EMA 87.97; reiner Hinweis, kein Ausstiegssignal; seit Trigger +2,5 % gleich 0,2 R",
+   "text": "INFORMATION: LEN; Insider-Kauf; Schluss 83.58 unter der 8-Tage-EMA 86.99; reiner Hinweis, kein Ausstiegssignal; seit Trigger -0,8 % gleich -0,1 R",
    "symbol": "LEN",
    "key": "LEN|INS-2026-10-02",
    "prioritaet": "default",
@@ -840,7 +920,7 @@
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: LPG",
-   "text": "INFORMATION: LPG; Cup & Handle (Wochenbasis); Schluss 47.40 unter der 8-Tage-EMA 48.25; reiner Hinweis, kein Ausstiegssignal; seit Trigger -9,6 % gleich -1,0 R",
+   "text": "INFORMATION: LPG; Cup & Handle (Wochenbasis); Schluss 47.80 unter der 8-Tage-EMA 48.15; reiner Hinweis, kein Ausstiegssignal; seit Trigger -8,8 % gleich -0,9 R",
    "symbol": "LPG",
    "key": "LPG|1",
    "prioritaet": "default",
@@ -851,7 +931,7 @@
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: LPG",
-   "text": "INFORMATION: LPG; Fallback: 52W-Hoch-Breakout; Schluss 47.40 unter der 8-Tage-EMA 48.25; reiner Hinweis, kein Ausstiegssignal; seit Trigger -14,7 % gleich -2,1 R",
+   "text": "INFORMATION: LPG; Fallback: 52W-Hoch-Breakout; Schluss 47.80 unter der 8-Tage-EMA 48.15; reiner Hinweis, kein Ausstiegssignal; seit Trigger -14,0 % gleich -2,0 R",
    "symbol": "LPG",
    "key": "LPG|Fallback: 52W-Hoch-Breakout",
    "prioritaet": "default",
@@ -881,8 +961,19 @@
   {
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
+   "titel": "INFORMATION: 8-EMA-Hinweis: MEDP",
+   "text": "INFORMATION: MEDP; Fallback: 20-Tage-Hoch (Pivot); Schluss 656.84 unter der 8-Tage-EMA 659.90; reiner Hinweis, kein Ausstiegssignal; seit Trigger +4,8 % gleich 0,6 R",
+   "symbol": "MEDP",
+   "key": "MEDP|Fallback: 20-Tage-Hoch (Pivot)",
+   "prioritaet": "default",
+   "buendeln": true,
+   "grund": "schlusskurs"
+  },
+  {
+   "typ": "ema8_hinweis",
+   "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: MG",
-   "text": "INFORMATION: MG; Cup & Handle (Wochenbasis); Schluss 20.18 unter der 8-Tage-EMA 20.24; reiner Hinweis, kein Ausstiegssignal; seit Trigger -1,1 % gleich -0,1 R",
+   "text": "INFORMATION: MG; Cup & Handle (Wochenbasis); Schluss 20.19 unter der 8-Tage-EMA 20.23; reiner Hinweis, kein Ausstiegssignal; seit Trigger -1,0 % gleich -0,1 R",
    "symbol": "MG",
    "key": "MG|Cup & Handle (Wochenbasis)",
    "prioritaet": "default",
@@ -893,7 +984,7 @@
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: MG",
-   "text": "INFORMATION: MG; Rectangle Top; Schluss 20.18 unter der 8-Tage-EMA 20.24; reiner Hinweis, kein Ausstiegssignal; seit Trigger +3,0 % gleich 0,4 R",
+   "text": "INFORMATION: MG; Rectangle Top; Schluss 20.19 unter der 8-Tage-EMA 20.23; reiner Hinweis, kein Ausstiegssignal; seit Trigger +3,1 % gleich 0,4 R",
    "symbol": "MG",
    "key": "MG|Rectangle Top",
    "prioritaet": "default",
@@ -904,7 +995,7 @@
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: MLYS",
-   "text": "INFORMATION: MLYS; Rectangle Top; Schluss 16.16 unter der 8-Tage-EMA 16.45; reiner Hinweis, kein Ausstiegssignal; seit Trigger -42,5 % gleich -4,2 R",
+   "text": "INFORMATION: MLYS; Rectangle Top; Schluss 15.50 unter der 8-Tage-EMA 16.24; reiner Hinweis, kein Ausstiegssignal; seit Trigger -44,8 % gleich -4,5 R",
    "symbol": "MLYS",
    "key": "MLYS|1",
    "prioritaet": "default",
@@ -915,7 +1006,7 @@
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: MSTR",
-   "text": "INFORMATION: MSTR; Cup & Handle (Wochenbasis); Schluss 122.35 unter der 8-Tage-EMA 128.55; reiner Hinweis, kein Ausstiegssignal; seit Trigger -27,8 % gleich -2,8 R",
+   "text": "INFORMATION: MSTR; Cup & Handle (Wochenbasis); Schluss 114.41 unter der 8-Tage-EMA 125.41; reiner Hinweis, kein Ausstiegssignal; seit Trigger -32,5 % gleich -3,3 R",
    "symbol": "MSTR",
    "key": "MSTR|Cup & Handle (Wochenbasis)",
    "prioritaet": "default",
@@ -925,19 +1016,8 @@
   {
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
-   "titel": "INFORMATION: 8-EMA-Hinweis: MTDR",
-   "text": "INFORMATION: MTDR; Rectangle Top; Schluss 52.08 unter der 8-Tage-EMA 52.25; reiner Hinweis, kein Ausstiegssignal; seit Trigger -7,2 % gleich -0,7 R",
-   "symbol": "MTDR",
-   "key": "MTDR|1",
-   "prioritaet": "default",
-   "buendeln": true,
-   "grund": "schlusskurs"
-  },
-  {
-   "typ": "ema8_hinweis",
-   "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: MUR",
-   "text": "INFORMATION: MUR; Rectangle Top; Schluss 35.93 unter der 8-Tage-EMA 36.86; reiner Hinweis, kein Ausstiegssignal; seit Trigger -7,2 % gleich -0,7 R",
+   "text": "INFORMATION: MUR; Rectangle Top; Schluss 36.33 unter der 8-Tage-EMA 36.74; reiner Hinweis, kein Ausstiegssignal; seit Trigger -6,1 % gleich -0,6 R",
    "symbol": "MUR",
    "key": "MUR|1",
    "prioritaet": "default",
@@ -945,21 +1025,10 @@
    "grund": "schlusskurs"
   },
   {
-   "typ": "klimax_zeichen",
-   "art": "live",
-   "titel": "",
-   "text": "",
-   "symbol": "NBTX",
-   "key": "NBTX|SPRING-2026-08-29",
-   "prioritaet": "high",
-   "buendeln": false,
-   "zeichen": "1_klimaxlauf"
-  },
-  {
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: NEO",
-   "text": "INFORMATION: NEO; Cup & Handle (Wochenbasis); Schluss 16.83 unter der 8-Tage-EMA 17.00; reiner Hinweis, kein Ausstiegssignal; seit Trigger -15,4 % gleich -1,5 R",
+   "text": "INFORMATION: NEO; Cup & Handle (Wochenbasis); Schluss 16.54 unter der 8-Tage-EMA 16.90; reiner Hinweis, kein Ausstiegssignal; seit Trigger -16,9 % gleich -1,7 R",
    "symbol": "NEO",
    "key": "NEO|Cup & Handle (Wochenbasis)",
    "prioritaet": "default",
@@ -970,7 +1039,7 @@
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: NEO",
-   "text": "INFORMATION: NEO; Shakeout plus drei; Schluss 16.83 unter der 8-Tage-EMA 17.00; reiner Hinweis, kein Ausstiegssignal; seit Trigger -13,8 % gleich -1,5 R",
+   "text": "INFORMATION: NEO; Shakeout plus drei; Schluss 16.54 unter der 8-Tage-EMA 16.90; reiner Hinweis, kein Ausstiegssignal; seit Trigger -15,2 % gleich -1,7 R",
    "symbol": "NEO",
    "key": "NEO|Shakeout plus drei",
    "prioritaet": "default",
@@ -991,42 +1060,9 @@
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: OOMA",
-   "text": "INFORMATION: OOMA; Rectangle Top; Schluss 18.30 unter der 8-Tage-EMA 18.45; reiner Hinweis, kein Ausstiegssignal; seit Trigger -17,9 % gleich -1,8 R",
+   "text": "INFORMATION: OOMA; Rectangle Top; Schluss 18.39 unter der 8-Tage-EMA 18.44; reiner Hinweis, kein Ausstiegssignal; seit Trigger -17,5 % gleich -1,8 R",
    "symbol": "OOMA",
    "key": "OOMA|Rectangle Top",
-   "prioritaet": "default",
-   "buendeln": true,
-   "grund": "schlusskurs"
-  },
-  {
-   "typ": "ema8_hinweis",
-   "art": "zurueckgehalten",
-   "titel": "INFORMATION: 8-EMA-Hinweis: OXY",
-   "text": "INFORMATION: OXY; Rectangle Top; Schluss 57.24 unter der 8-Tage-EMA 57.90; reiner Hinweis, kein Ausstiegssignal; seit Trigger -3,4 % gleich -0,4 R",
-   "symbol": "OXY",
-   "key": "OXY|2",
-   "prioritaet": "default",
-   "buendeln": true,
-   "grund": "schlusskurs"
-  },
-  {
-   "typ": "ema8_hinweis",
-   "art": "zurueckgehalten",
-   "titel": "INFORMATION: 8-EMA-Hinweis: PBF",
-   "text": "INFORMATION: PBF; Rectangle Top; Schluss 69.73 unter der 8-Tage-EMA 70.52; reiner Hinweis, kein Ausstiegssignal; seit Trigger -6,7 % gleich -0,7 R",
-   "symbol": "PBF",
-   "key": "PBF|1",
-   "prioritaet": "default",
-   "buendeln": true,
-   "grund": "schlusskurs"
-  },
-  {
-   "typ": "ema8_hinweis",
-   "art": "zurueckgehalten",
-   "titel": "INFORMATION: 8-EMA-Hinweis: PBF",
-   "text": "INFORMATION: PBF; Rectangle Top; Schluss 69.73 unter der 8-Tage-EMA 70.52; reiner Hinweis, kein Ausstiegssignal; seit Trigger -7,3 % gleich -0,7 R",
-   "symbol": "PBF",
-   "key": "PBF|2",
    "prioritaet": "default",
    "buendeln": true,
    "grund": "schlusskurs"
@@ -1055,7 +1091,7 @@
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: PNTG",
-   "text": "INFORMATION: PNTG; Fallback: MA50-Pullback; Schluss 36.80 unter der 8-Tage-EMA 38.43; reiner Hinweis, kein Ausstiegssignal; seit Trigger -7,4 % gleich -1,3 R",
+   "text": "INFORMATION: PNTG; Fallback: MA50-Pullback; Schluss 35.91 unter der 8-Tage-EMA 37.87; reiner Hinweis, kein Ausstiegssignal; seit Trigger -9,6 % gleich -1,8 R",
    "symbol": "PNTG",
    "key": "PNTG|Fallback: MA50-Pullback",
    "prioritaet": "default",
@@ -1066,23 +1102,12 @@
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: PNTG",
-   "text": "INFORMATION: PNTG; Rectangle Top; Schluss 36.80 unter der 8-Tage-EMA 38.43; reiner Hinweis, kein Ausstiegssignal; seit Trigger -9,0 % gleich -1,2 R",
+   "text": "INFORMATION: PNTG; Rectangle Top; Schluss 35.91 unter der 8-Tage-EMA 37.87; reiner Hinweis, kein Ausstiegssignal; seit Trigger -11,2 % gleich -1,5 R",
    "symbol": "PNTG",
    "key": "PNTG|Rectangle Top",
    "prioritaet": "default",
    "buendeln": true,
    "grund": "schlusskurs"
-  },
-  {
-   "typ": "klimax_zeichen",
-   "art": "live",
-   "titel": "",
-   "text": "",
-   "symbol": "PRCH",
-   "key": "PRCH|Rectangle Top",
-   "prioritaet": "high",
-   "buendeln": false,
-   "zeichen": "4_ma200_abstand"
   },
   {
    "typ": "zonenwechsel",
@@ -1097,8 +1122,19 @@
   {
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
+   "titel": "INFORMATION: 8-EMA-Hinweis: PRE",
+   "text": "INFORMATION: PRE; Rectangle Top; Schluss 16.72 unter der 8-Tage-EMA 17.04; reiner Hinweis, kein Ausstiegssignal; seit Trigger -26,2 % gleich -2,6 R",
+   "symbol": "PRE",
+   "key": "PRE|Rectangle Top",
+   "prioritaet": "default",
+   "buendeln": true,
+   "grund": "schlusskurs"
+  },
+  {
+   "typ": "ema8_hinweis",
+   "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: PTGX",
-   "text": "INFORMATION: PTGX; Rectangle Top; Schluss 134.86 unter der 8-Tage-EMA 136.86; reiner Hinweis, kein Ausstiegssignal; seit Trigger -5,9 % gleich -0,7 R",
+   "text": "INFORMATION: PTGX; Rectangle Top; Schluss 134.38 unter der 8-Tage-EMA 136.31; reiner Hinweis, kein Ausstiegssignal; seit Trigger -6,2 % gleich -0,7 R",
    "symbol": "PTGX",
    "key": "PTGX|1",
    "prioritaet": "default",
@@ -1109,7 +1145,7 @@
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: PTGX",
-   "text": "INFORMATION: PTGX; Fallback: MA50-Rückeroberung; Schluss 134.86 unter der 8-Tage-EMA 136.86; reiner Hinweis, kein Ausstiegssignal; seit Trigger -6,4 % gleich -1,0 R",
+   "text": "INFORMATION: PTGX; Fallback: MA50-Rückeroberung; Schluss 134.38 unter der 8-Tage-EMA 136.31; reiner Hinweis, kein Ausstiegssignal; seit Trigger -6,8 % gleich -1,0 R",
    "symbol": "PTGX",
    "key": "PTGX|Fallback: MA50-Rückeroberung",
    "prioritaet": "default",
@@ -1117,20 +1153,32 @@
    "grund": "schlusskurs"
   },
   {
-   "typ": "zonenwechsel",
-   "art": "live",
-   "titel": "",
-   "text": "",
-   "symbol": "RBLX",
-   "key": "RBLX|1",
+   "typ": "ema8_hinweis",
+   "art": "zurueckgehalten",
+   "titel": "INFORMATION: 8-EMA-Hinweis: QVCG",
+   "text": "INFORMATION: QVCG; Insider-Kauf; Schluss 7.76 unter der 8-Tage-EMA 7.91; reiner Hinweis, kein Ausstiegssignal; seit Trigger -50,9 % gleich -5,1 R",
+   "symbol": "QVCG",
+   "key": "QVCG|INS-2026-09-22",
    "prioritaet": "default",
-   "buendeln": true
+   "buendeln": true,
+   "grund": "schlusskurs"
+  },
+  {
+   "typ": "ema8_hinweis",
+   "art": "zurueckgehalten",
+   "titel": "INFORMATION: 8-EMA-Hinweis: RVTY",
+   "text": "INFORMATION: RVTY; Cup & Handle (Wochenbasis); Schluss 157.02 unter der 8-Tage-EMA 157.87; reiner Hinweis, kein Ausstiegssignal; seit Trigger +3,1 % gleich 0,3 R",
+   "symbol": "RVTY",
+   "key": "RVTY|Cup & Handle (Wochenbasis)",
+   "prioritaet": "default",
+   "buendeln": true,
+   "grund": "schlusskurs"
   },
   {
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: SCCO",
-   "text": "INFORMATION: SCCO; Rectangle Top; Schluss 172.61 unter der 8-Tage-EMA 174.05; reiner Hinweis, kein Ausstiegssignal; seit Trigger -14,5 % gleich -1,4 R",
+   "text": "INFORMATION: SCCO; Rectangle Top; Schluss 168.21 unter der 8-Tage-EMA 172.75; reiner Hinweis, kein Ausstiegssignal; seit Trigger -16,7 % gleich -1,7 R",
    "symbol": "SCCO",
    "key": "SCCO|1",
    "prioritaet": "default",
@@ -1141,7 +1189,7 @@
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: SCCO",
-   "text": "INFORMATION: SCCO; Fallback: MA50-Rückeroberung; Schluss 172.61 unter der 8-Tage-EMA 174.05; reiner Hinweis, kein Ausstiegssignal; seit Trigger -9,9 % gleich -1,5 R",
+   "text": "INFORMATION: SCCO; Fallback: MA50-Rückeroberung; Schluss 168.21 unter der 8-Tage-EMA 172.75; reiner Hinweis, kein Ausstiegssignal; seit Trigger -12,2 % gleich -1,9 R",
    "symbol": "SCCO",
    "key": "SCCO|Fallback: MA50-Rückeroberung",
    "prioritaet": "default",
@@ -1161,10 +1209,10 @@
   {
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
-   "titel": "INFORMATION: 8-EMA-Hinweis: SLAB",
-   "text": "INFORMATION: SLAB; Fallback: MA50-Pullback; Schluss 221.61 unter der 8-Tage-EMA 221.71; reiner Hinweis, kein Ausstiegssignal; seit Trigger +0,2 % gleich 0,0 R",
-   "symbol": "SLAB",
-   "key": "SLAB|Fallback: MA50-Pullback",
+   "titel": "INFORMATION: 8-EMA-Hinweis: SLBT",
+   "text": "INFORMATION: SLBT; Insider-Kauf; Schluss 0.76 unter der 8-Tage-EMA 0.92; reiner Hinweis, kein Ausstiegssignal; seit Trigger -51,6 % gleich -5,4 R",
+   "symbol": "SLBT",
+   "key": "SLBT|INS-2026-10-02",
    "prioritaet": "default",
    "buendeln": true,
    "grund": "schlusskurs"
@@ -1172,10 +1220,10 @@
   {
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
-   "titel": "INFORMATION: 8-EMA-Hinweis: SLBT",
-   "text": "INFORMATION: SLBT; Insider-Kauf; Schluss 0.72 unter der 8-Tage-EMA 0.97; reiner Hinweis, kein Ausstiegssignal; seit Trigger -54,3 % gleich -5,7 R",
-   "symbol": "SLBT",
-   "key": "SLBT|INS-2026-10-02",
+   "titel": "INFORMATION: 8-EMA-Hinweis: SMMT",
+   "text": "INFORMATION: SMMT; Cup & Handle (Wochenbasis); Schluss 15.07 unter der 8-Tage-EMA 16.19; reiner Hinweis, kein Ausstiegssignal; seit Trigger -14,8 % gleich -1,5 R",
+   "symbol": "SMMT",
+   "key": "SMMT|1",
    "prioritaet": "default",
    "buendeln": true,
    "grund": "schlusskurs"
@@ -1195,16 +1243,6 @@
    "art": "live",
    "titel": "",
    "text": "",
-   "symbol": "SONO",
-   "key": "SONO|Cup & Handle (Wochenbasis)",
-   "prioritaet": "default",
-   "buendeln": true
-  },
-  {
-   "typ": "zonenwechsel",
-   "art": "live",
-   "titel": "",
-   "text": "",
    "symbol": "SPOT",
    "key": "SPOT|EMA Crossback",
    "prioritaet": "default",
@@ -1213,10 +1251,21 @@
   {
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
-   "titel": "INFORMATION: 8-EMA-Hinweis: STNG",
-   "text": "INFORMATION: STNG; Rectangle Top; Schluss 82.07 unter der 8-Tage-EMA 82.75; reiner Hinweis, kein Ausstiegssignal; seit Trigger +1,0 % gleich 0,1 R",
-   "symbol": "STNG",
-   "key": "STNG|Rectangle Top",
+   "titel": "INFORMATION: 8-EMA-Hinweis: SPOT",
+   "text": "INFORMATION: SPOT; EMA Crossback; Schluss 598.51 unter der 8-Tage-EMA 601.32; reiner Hinweis, kein Ausstiegssignal; seit Trigger +12,1 % gleich 3,1 R",
+   "symbol": "SPOT",
+   "key": "SPOT|EMA Crossback",
+   "prioritaet": "default",
+   "buendeln": true,
+   "grund": "schlusskurs"
+  },
+  {
+   "typ": "ema8_hinweis",
+   "art": "zurueckgehalten",
+   "titel": "INFORMATION: 8-EMA-Hinweis: SUN",
+   "text": "INFORMATION: SUN; EMA Crossback, Rectangle Top; Schluss 64.98 unter der 8-Tage-EMA 65.10; reiner Hinweis, kein Ausstiegssignal; seit Trigger -16,2 % gleich -6,1 R",
+   "symbol": "SUN",
+   "key": "SUN|1",
    "prioritaet": "default",
    "buendeln": true,
    "grund": "schlusskurs"
@@ -1225,7 +1274,7 @@
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: SU",
-   "text": "INFORMATION: SU; Rectangle Top; Schluss 68.97 unter der 8-Tage-EMA 70.50; reiner Hinweis, kein Ausstiegssignal; seit Trigger +2,7 % gleich 0,3 R",
+   "text": "INFORMATION: SU; Rectangle Top; Schluss 69.29 unter der 8-Tage-EMA 70.23; reiner Hinweis, kein Ausstiegssignal; seit Trigger +3,2 % gleich 0,4 R",
    "symbol": "SU",
    "key": "SU|2",
    "prioritaet": "default",
@@ -1233,15 +1282,14 @@
    "grund": "schlusskurs"
   },
   {
-   "typ": "ema8_hinweis",
-   "art": "zurueckgehalten",
-   "titel": "INFORMATION: 8-EMA-Hinweis: TALO",
-   "text": "INFORMATION: TALO; Fallback: MA50-Pullback; Schluss 15.41 unter der 8-Tage-EMA 15.53; reiner Hinweis, kein Ausstiegssignal; seit Trigger -5,2 % gleich -1,0 R",
-   "symbol": "TALO",
-   "key": "TALO|Fallback: MA50-Pullback",
+   "typ": "zonenwechsel",
+   "art": "live",
+   "titel": "",
+   "text": "",
+   "symbol": "SWKS",
+   "key": "SWKS|1",
    "prioritaet": "default",
-   "buendeln": true,
-   "grund": "schlusskurs"
+   "buendeln": true
   },
   {
    "typ": "zonenwechsel",
@@ -1256,8 +1304,51 @@
   {
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
+   "titel": "INFORMATION: 8-EMA-Hinweis: TEM",
+   "text": "INFORMATION: TEM; Cup & Handle (Wochenbasis); Schluss 75.89 unter der 8-Tage-EMA 77.41; reiner Hinweis, kein Ausstiegssignal; seit Trigger -8,0 % gleich -0,8 R",
+   "symbol": "TEM",
+   "key": "TEM|Cup & Handle (Wochenbasis)",
+   "prioritaet": "default",
+   "buendeln": true,
+   "grund": "schlusskurs"
+  },
+  {
+   "typ": "ema8_hinweis",
+   "art": "zurueckgehalten",
+   "titel": "INFORMATION: 8-EMA-Hinweis: TEM",
+   "text": "INFORMATION: TEM; HTF Innen-Einstieg; Schluss 75.89 unter der 8-Tage-EMA 77.41; reiner Hinweis, kein Ausstiegssignal; seit Trigger -3,9 % gleich -1,0 R",
+   "symbol": "TEM",
+   "key": "TEM|HTF Innen-Einstieg",
+   "prioritaet": "default",
+   "buendeln": true,
+   "grund": "schlusskurs"
+  },
+  {
+   "typ": "ema8_hinweis",
+   "art": "zurueckgehalten",
+   "titel": "INFORMATION: 8-EMA-Hinweis: TEM",
+   "text": "INFORMATION: TEM; High & Tight Flag; Schluss 75.89 unter der 8-Tage-EMA 77.41; reiner Hinweis, kein Ausstiegssignal; seit Trigger -7,3 % gleich -1,0 R",
+   "symbol": "TEM",
+   "key": "TEM|High & Tight Flag",
+   "prioritaet": "default",
+   "buendeln": true,
+   "grund": "schlusskurs"
+  },
+  {
+   "typ": "zonenwechsel",
+   "art": "live",
+   "titel": "",
+   "text": "",
+   "symbol": "TEVA",
+   "key": "TEVA|Cup & Handle (Wochenbasis) + EMA Crossback",
+   "prioritaet": "default",
+   "buendeln": true
+  },
+  {
+   "typ": "ema8_hinweis",
+   "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: TNK",
-   "text": "INFORMATION: TNK; Cup & Handle (Wochenbasis); Schluss 88.96 unter der 8-Tage-EMA 88.96; reiner Hinweis, kein Ausstiegssignal; seit Trigger -9,6 % gleich -1,0 R",
+   "text": "INFORMATION: TNK; Cup & Handle (Wochenbasis); Schluss 88.50 unter der 8-Tage-EMA 88.86; reiner Hinweis, kein Ausstiegssignal; seit Trigger -10,1 % gleich -1,0 R",
    "symbol": "TNK",
    "key": "TNK|Cup & Handle (Wochenbasis)",
    "prioritaet": "default",
@@ -1268,7 +1359,7 @@
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: TNK",
-   "text": "INFORMATION: TNK; Fallback: 20-Tage-Hoch (Pivot); Schluss 88.96 unter der 8-Tage-EMA 88.96; reiner Hinweis, kein Ausstiegssignal; seit Trigger -11,9 % gleich -1,2 R",
+   "text": "INFORMATION: TNK; Fallback: 20-Tage-Hoch (Pivot); Schluss 88.50 unter der 8-Tage-EMA 88.86; reiner Hinweis, kein Ausstiegssignal; seit Trigger -12,3 % gleich -1,2 R",
    "symbol": "TNK",
    "key": "TNK|Fallback: 20-Tage-Hoch (Pivot)",
    "prioritaet": "default",
@@ -1279,12 +1370,23 @@
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: TNK",
-   "text": "INFORMATION: TNK; Fallback: 52W-Hoch-Breakout; Schluss 88.96 unter der 8-Tage-EMA 88.96; reiner Hinweis, kein Ausstiegssignal; seit Trigger -11,9 % gleich -1,7 R",
+   "text": "INFORMATION: TNK; Fallback: 52W-Hoch-Breakout; Schluss 88.50 unter der 8-Tage-EMA 88.86; reiner Hinweis, kein Ausstiegssignal; seit Trigger -12,4 % gleich -1,7 R",
    "symbol": "TNK",
    "key": "TNK|Fallback: 52W-Hoch-Breakout",
    "prioritaet": "default",
    "buendeln": true,
    "grund": "schlusskurs"
+  },
+  {
+   "typ": "klimax_zeichen",
+   "art": "live",
+   "titel": "",
+   "text": "",
+   "symbol": "TPC",
+   "key": "TPC|Fallback: MA50-Rückeroberung",
+   "prioritaet": "high",
+   "buendeln": false,
+   "zeichen": "1_klimaxlauf"
   },
   {
    "typ": "zonenwechsel",
@@ -1300,7 +1402,7 @@
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: TRMD",
-   "text": "INFORMATION: TRMD; Cup & Handle (Wochenbasis); Schluss 35.36 unter der 8-Tage-EMA 36.22; reiner Hinweis, kein Ausstiegssignal; seit Trigger -1,6 % gleich -0,2 R",
+   "text": "INFORMATION: TRMD; Cup & Handle (Wochenbasis); Schluss 36.13 unter der 8-Tage-EMA 36.20; reiner Hinweis, kein Ausstiegssignal; seit Trigger +0,5 % gleich 0,1 R",
    "symbol": "TRMD",
    "key": "TRMD|Cup & Handle (Wochenbasis)",
    "prioritaet": "default",
@@ -1311,7 +1413,7 @@
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: TRMD",
-   "text": "INFORMATION: TRMD; Fallback: 20-Tage-Hoch (Pivot); Schluss 35.36 unter der 8-Tage-EMA 36.22; reiner Hinweis, kein Ausstiegssignal; seit Trigger -11,6 % gleich -1,2 R",
+   "text": "INFORMATION: TRMD; Fallback: 20-Tage-Hoch (Pivot); Schluss 36.13 unter der 8-Tage-EMA 36.20; reiner Hinweis, kein Ausstiegssignal; seit Trigger -9,7 % gleich -1,0 R",
    "symbol": "TRMD",
    "key": "TRMD|Fallback: 20-Tage-Hoch (Pivot)",
    "prioritaet": "default",
@@ -1322,7 +1424,7 @@
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: TRMD",
-   "text": "INFORMATION: TRMD; Fallback: 52W-Hoch-Breakout; Schluss 35.36 unter der 8-Tage-EMA 36.22; reiner Hinweis, kein Ausstiegssignal; seit Trigger -11,7 % gleich -1,6 R",
+   "text": "INFORMATION: TRMD; Fallback: 52W-Hoch-Breakout; Schluss 36.13 unter der 8-Tage-EMA 36.20; reiner Hinweis, kein Ausstiegssignal; seit Trigger -9,8 % gleich -1,4 R",
    "symbol": "TRMD",
    "key": "TRMD|Fallback: 52W-Hoch-Breakout",
    "prioritaet": "default",
@@ -1332,8 +1434,41 @@
   {
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
+   "titel": "INFORMATION: 8-EMA-Hinweis: TWLO",
+   "text": "INFORMATION: TWLO; Rectangle Top; Schluss 212.21 unter der 8-Tage-EMA 214.95; reiner Hinweis, kein Ausstiegssignal; seit Trigger -9,3 % gleich -0,9 R",
+   "symbol": "TWLO",
+   "key": "TWLO|1",
+   "prioritaet": "default",
+   "buendeln": true,
+   "grund": "schlusskurs"
+  },
+  {
+   "typ": "ema8_hinweis",
+   "art": "zurueckgehalten",
+   "titel": "INFORMATION: 8-EMA-Hinweis: TWLO",
+   "text": "INFORMATION: TWLO; Cup & Handle (Wochenbasis); Schluss 212.21 unter der 8-Tage-EMA 214.95; reiner Hinweis, kein Ausstiegssignal; seit Trigger -20,4 % gleich -2,0 R",
+   "symbol": "TWLO",
+   "key": "TWLO|Cup & Handle (Wochenbasis)",
+   "prioritaet": "default",
+   "buendeln": true,
+   "grund": "schlusskurs"
+  },
+  {
+   "typ": "ema8_hinweis",
+   "art": "zurueckgehalten",
+   "titel": "INFORMATION: 8-EMA-Hinweis: TWLO",
+   "text": "INFORMATION: TWLO; Fallback: 20-Tage-Hoch (Pivot); Schluss 212.21 unter der 8-Tage-EMA 214.95; reiner Hinweis, kein Ausstiegssignal; seit Trigger -14,9 % gleich -1,5 R",
+   "symbol": "TWLO",
+   "key": "TWLO|Fallback: 20-Tage-Hoch (Pivot)",
+   "prioritaet": "default",
+   "buendeln": true,
+   "grund": "schlusskurs"
+  },
+  {
+   "typ": "ema8_hinweis",
+   "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: VCYT",
-   "text": "INFORMATION: VCYT; Fallback: MA50-Rückeroberung; Schluss 25.11 unter der 8-Tage-EMA 31.94; reiner Hinweis, kein Ausstiegssignal; seit Trigger -46,0 % gleich -7,1 R",
+   "text": "INFORMATION: VCYT; Fallback: MA50-Rückeroberung; Schluss 24.63 unter der 8-Tage-EMA 30.31; reiner Hinweis, kein Ausstiegssignal; seit Trigger -47,0 % gleich -7,3 R",
    "symbol": "VCYT",
    "key": "VCYT|Fallback: MA50-Rückeroberung",
    "prioritaet": "default",
@@ -1344,7 +1479,7 @@
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: VEEV",
-   "text": "INFORMATION: VEEV; Cup & Handle (Wochenbasis); Schluss 304.77 unter der 8-Tage-EMA 307.09; reiner Hinweis, kein Ausstiegssignal; seit Trigger +2,5 % gleich 0,2 R",
+   "text": "INFORMATION: VEEV; Cup & Handle (Wochenbasis); Schluss 302.42 unter der 8-Tage-EMA 306.05; reiner Hinweis, kein Ausstiegssignal; seit Trigger +1,7 % gleich 0,2 R",
    "symbol": "VEEV",
    "key": "VEEV|Cup & Handle (Wochenbasis)",
    "prioritaet": "default",
@@ -1355,7 +1490,7 @@
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: VEEV",
-   "text": "INFORMATION: VEEV; Pocket Pivot; Schluss 304.77 unter der 8-Tage-EMA 307.09; reiner Hinweis, kein Ausstiegssignal; seit Trigger +2,5 % gleich 0,5 R",
+   "text": "INFORMATION: VEEV; Pocket Pivot; Schluss 302.42 unter der 8-Tage-EMA 306.05; reiner Hinweis, kein Ausstiegssignal; seit Trigger +1,7 % gleich 0,4 R",
    "symbol": "VEEV",
    "key": "VEEV|Pocket Pivot",
    "prioritaet": "default",
@@ -1366,7 +1501,7 @@
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: VEEV",
-   "text": "INFORMATION: VEEV; Wick Play; Schluss 304.77 unter der 8-Tage-EMA 307.09; reiner Hinweis, kein Ausstiegssignal; seit Trigger -1,5 % gleich -0,5 R",
+   "text": "INFORMATION: VEEV; Wick Play; Schluss 302.42 unter der 8-Tage-EMA 306.05; reiner Hinweis, kein Ausstiegssignal; seit Trigger -2,3 % gleich -0,7 R",
    "symbol": "VEEV",
    "key": "VEEV|Wick Play",
    "prioritaet": "default",
@@ -1397,8 +1532,19 @@
   {
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
+   "titel": "INFORMATION: 8-EMA-Hinweis: VICR",
+   "text": "INFORMATION: VICR; Fallback: MA50-Rückeroberung; Schluss 164.69 unter der 8-Tage-EMA 166.06; reiner Hinweis, kein Ausstiegssignal; seit Trigger -23,3 % gleich -3,6 R",
+   "symbol": "VICR",
+   "key": "VICR|Fallback: MA50-Rückeroberung",
+   "prioritaet": "default",
+   "buendeln": true,
+   "grund": "schlusskurs"
+  },
+  {
+   "typ": "ema8_hinweis",
+   "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: VIST",
-   "text": "INFORMATION: VIST; Rectangle Top; Schluss 55.97 unter der 8-Tage-EMA 59.87; reiner Hinweis, kein Ausstiegssignal; seit Trigger -22,6 % gleich -2,3 R",
+   "text": "INFORMATION: VIST; Rectangle Top; Schluss 55.49 unter der 8-Tage-EMA 58.90; reiner Hinweis, kein Ausstiegssignal; seit Trigger -23,3 % gleich -2,3 R",
    "symbol": "VIST",
    "key": "VIST|1",
    "prioritaet": "default",
@@ -1408,19 +1554,8 @@
   {
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
-   "titel": "INFORMATION: 8-EMA-Hinweis: VLO",
-   "text": "INFORMATION: VLO; VCP; Schluss 363.71 unter der 8-Tage-EMA 365.27; reiner Hinweis, kein Ausstiegssignal; seit Trigger +3,0 % gleich 0,4 R",
-   "symbol": "VLO",
-   "key": "VLO|1",
-   "prioritaet": "default",
-   "buendeln": true,
-   "grund": "schlusskurs"
-  },
-  {
-   "typ": "ema8_hinweis",
-   "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: VNOM",
-   "text": "INFORMATION: VNOM; Rectangle Top; Schluss 41.13 unter der 8-Tage-EMA 41.72; reiner Hinweis, kein Ausstiegssignal; seit Trigger -8,6 % gleich -1,3 R",
+   "text": "INFORMATION: VNOM; Rectangle Top; Schluss 40.88 unter der 8-Tage-EMA 41.53; reiner Hinweis, kein Ausstiegssignal; seit Trigger -9,2 % gleich -1,4 R",
    "symbol": "VNOM",
    "key": "VNOM|1",
    "prioritaet": "default",
@@ -1431,7 +1566,7 @@
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: WTTR",
-   "text": "INFORMATION: WTTR; Cup & Handle (Wochenbasis); Schluss 16.21 unter der 8-Tage-EMA 16.48; reiner Hinweis, kein Ausstiegssignal; seit Trigger -20,9 % gleich -2,1 R",
+   "text": "INFORMATION: WTTR; Cup & Handle (Wochenbasis); Schluss 16.33 unter der 8-Tage-EMA 16.45; reiner Hinweis, kein Ausstiegssignal; seit Trigger -20,3 % gleich -2,0 R",
    "symbol": "WTTR",
    "key": "WTTR|1",
    "prioritaet": "default",
@@ -1442,7 +1577,7 @@
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: WTTR",
-   "text": "INFORMATION: WTTR; EMA Crossback; Schluss 16.21 unter der 8-Tage-EMA 16.48; reiner Hinweis, kein Ausstiegssignal; seit Trigger -22,7 % gleich -4,2 R",
+   "text": "INFORMATION: WTTR; EMA Crossback; Schluss 16.33 unter der 8-Tage-EMA 16.45; reiner Hinweis, kein Ausstiegssignal; seit Trigger -22,1 % gleich -4,1 R",
    "symbol": "WTTR",
    "key": "WTTR|2",
    "prioritaet": "default",
@@ -1453,7 +1588,7 @@
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: W",
-   "text": "INFORMATION: W; Fallback: 20-Tage-Hoch (Pivot); Schluss 114.43 unter der 8-Tage-EMA 114.45; reiner Hinweis, kein Ausstiegssignal; seit Trigger +5,3 % gleich 0,5 R",
+   "text": "INFORMATION: W; Fallback: 20-Tage-Hoch (Pivot); Schluss 111.48 unter der 8-Tage-EMA 113.79; reiner Hinweis, kein Ausstiegssignal; seit Trigger +2,6 % gleich 0,3 R",
    "symbol": "W",
    "key": "W|Fallback: 20-Tage-Hoch (Pivot)",
    "prioritaet": "default",
@@ -1464,7 +1599,7 @@
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: W",
-   "text": "INFORMATION: W; Pocket Pivot; Schluss 114.43 unter der 8-Tage-EMA 114.45; reiner Hinweis, kein Ausstiegssignal; seit Trigger +1,3 % gleich 0,2 R",
+   "text": "INFORMATION: W; Pocket Pivot; Schluss 111.48 unter der 8-Tage-EMA 113.79; reiner Hinweis, kein Ausstiegssignal; seit Trigger -1,3 % gleich -0,2 R",
    "symbol": "W",
    "key": "W|Pocket Pivot",
    "prioritaet": "default",
@@ -1475,7 +1610,7 @@
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: W",
-   "text": "INFORMATION: W; Rectangle Top; Schluss 114.43 unter der 8-Tage-EMA 114.45; reiner Hinweis, kein Ausstiegssignal; seit Trigger +6,0 % gleich 0,6 R",
+   "text": "INFORMATION: W; Rectangle Top; Schluss 111.48 unter der 8-Tage-EMA 113.79; reiner Hinweis, kein Ausstiegssignal; seit Trigger +3,3 % gleich 0,3 R",
    "symbol": "W",
    "key": "W|Rectangle Top",
    "prioritaet": "default",
@@ -1486,7 +1621,7 @@
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: W",
-   "text": "INFORMATION: W; Wick Play; Schluss 114.43 unter der 8-Tage-EMA 114.45; reiner Hinweis, kein Ausstiegssignal; seit Trigger +6,0 % gleich 1,2 R",
+   "text": "INFORMATION: W; Wick Play; Schluss 111.48 unter der 8-Tage-EMA 113.79; reiner Hinweis, kein Ausstiegssignal; seit Trigger +3,2 % gleich 0,6 R",
    "symbol": "W",
    "key": "W|Wick Play",
    "prioritaet": "default",
@@ -1497,7 +1632,7 @@
    "typ": "ema8_hinweis",
    "art": "zurueckgehalten",
    "titel": "INFORMATION: 8-EMA-Hinweis: YPF",
-   "text": "INFORMATION: YPF; Rectangle Top; Schluss 37.36 unter der 8-Tage-EMA 40.10; reiner Hinweis, kein Ausstiegssignal; seit Trigger -30,2 % gleich -3,5 R",
+   "text": "INFORMATION: YPF; Rectangle Top; Schluss 37.20 unter der 8-Tage-EMA 39.46; reiner Hinweis, kein Ausstiegssignal; seit Trigger -30,5 % gleich -3,5 R",
    "symbol": "YPF",
    "key": "YPF|1",
    "prioritaet": "default",
@@ -1507,14 +1642,8 @@
  ],
  "verlaeufe": {
   "AAMI|EMA Crossback": {
-   "tage": 33,
+   "tage": 34,
    "daten": [
-    [
-     "2025-10-30",
-     49.7,
-     54.99,
-     49.665
-    ],
     [
      "2025-10-31",
      48.1,
@@ -3066,20 +3195,20 @@
     [
      "2026-11-11",
      97.22,
-     100.6469,
+     100.647,
      96.03
+    ],
+    [
+     "2026-11-12",
+     95.12,
+     96.97,
+     94.36
     ]
    ]
   },
   "AAMI|Fallback: MA50-Rückeroberung": {
-   "tage": 40,
+   "tage": 41,
    "daten": [
-    [
-     "2025-10-30",
-     49.7,
-     54.99,
-     49.665
-    ],
     [
      "2025-10-31",
      48.1,
@@ -4631,20 +4760,20 @@
     [
      "2026-11-11",
      97.22,
-     100.6469,
+     100.647,
      96.03
+    ],
+    [
+     "2026-11-12",
+     95.12,
+     96.97,
+     94.36
     ]
    ]
   },
   "AAMI|Rectangle Top": {
-   "tage": 33,
+   "tage": 34,
    "daten": [
-    [
-     "2025-10-30",
-     49.7,
-     54.99,
-     49.665
-    ],
     [
      "2025-10-31",
      48.1,
@@ -6196,20 +6325,20 @@
     [
      "2026-11-11",
      97.22,
-     100.6469,
+     100.647,
      96.03
+    ],
+    [
+     "2026-11-12",
+     95.12,
+     96.97,
+     94.36
     ]
    ]
   },
   "AAOI|Fallback: MA50-Rückeroberung": {
-   "tage": 23,
+   "tage": 24,
    "daten": [
-    [
-     "2025-10-30",
-     35.07,
-     36.3,
-     34.1
-    ],
     [
      "2025-10-31",
      35.56,
@@ -7761,20 +7890,20 @@
     [
      "2026-11-11",
      55.86,
-     57.925,
+     57.94,
      51.53
+    ],
+    [
+     "2026-11-12",
+     52.85,
+     55.65,
+     50.8
     ]
    ]
   },
   "AAON|EMA Crossback": {
-   "tage": 32,
+   "tage": 33,
    "daten": [
-    [
-     "2025-10-30",
-     100.66,
-     104.53,
-     99.45
-    ],
     [
      "2025-10-31",
      98.39,
@@ -9326,20 +9455,20 @@
     [
      "2026-11-11",
      76.33,
-     79.9299,
-     75.9
+     79.93,
+     75.87
+    ],
+    [
+     "2026-11-12",
+     78.8,
+     81.61,
+     73.5
     ]
    ]
   },
   "AAON|Fallback: MA50-Pullback": {
-   "tage": 31,
+   "tage": 32,
    "daten": [
-    [
-     "2025-10-30",
-     100.66,
-     104.53,
-     99.45
-    ],
     [
      "2025-10-31",
      98.39,
@@ -10891,20 +11020,20 @@
     [
      "2026-11-11",
      76.33,
-     79.9299,
-     75.9
+     79.93,
+     75.87
+    ],
+    [
+     "2026-11-12",
+     78.8,
+     81.61,
+     73.5
     ]
    ]
   },
   "ACLS|EMA Crossback": {
-   "tage": 32,
+   "tage": 33,
    "daten": [
-    [
-     "2025-10-30",
-     81.84,
-     84.7,
-     81.74
-    ],
     [
      "2025-10-31",
      79.56,
@@ -12456,13 +12585,19 @@
     [
      "2026-11-11",
      111.17,
-     116.8091,
+     116.81,
      109.45
+    ],
+    [
+     "2026-11-12",
+     108.06,
+     111.42,
+     106.4701
     ]
    ]
   },
   "ADRX|INS-2026-10-02": {
-   "tage": 28,
+   "tage": 29,
    "daten": [
     [
      "2026-09-25",
@@ -12667,18 +12802,18 @@
      13.3,
      14.07,
      13.17
+    ],
+    [
+     "2026-11-12",
+     14.91,
+     16.24,
+     12.87
     ]
    ]
   },
   "AEO|EMA Crossback": {
-   "tage": 32,
+   "tage": 33,
    "daten": [
-    [
-     "2025-10-30",
-     16.54,
-     17.1,
-     16.45
-    ],
     [
      "2025-10-31",
      16.71,
@@ -14230,20 +14365,20 @@
     [
      "2026-11-11",
      21.55,
-     21.945,
+     21.95,
      21.27
+    ],
+    [
+     "2026-11-12",
+     21.67,
+     22.16,
+     21.31
     ]
    ]
   },
   "AEO|Fallback: 20-Tage-Hoch (Pivot)": {
-   "tage": 30,
+   "tage": 31,
    "daten": [
-    [
-     "2025-10-30",
-     16.54,
-     17.1,
-     16.45
-    ],
     [
      "2025-10-31",
      16.71,
@@ -15795,20 +15930,20 @@
     [
      "2026-11-11",
      21.55,
-     21.945,
+     21.95,
      21.27
+    ],
+    [
+     "2026-11-12",
+     21.67,
+     22.16,
+     21.31
     ]
    ]
   },
   "AEO|Rectangle Top": {
-   "tage": 31,
+   "tage": 32,
    "daten": [
-    [
-     "2025-10-30",
-     16.54,
-     17.1,
-     16.45
-    ],
     [
      "2025-10-31",
      16.71,
@@ -17360,13 +17495,19 @@
     [
      "2026-11-11",
      21.55,
-     21.945,
+     21.95,
      21.27
+    ],
+    [
+     "2026-11-12",
+     21.67,
+     22.16,
+     21.31
     ]
    ]
   },
   "ALMR|EMA Crossback": {
-   "tage": 33,
+   "tage": 34,
    "daten": [
     [
      "2026-04-17",
@@ -18237,18 +18378,18 @@
      31.61,
      32.5,
      29.32
+    ],
+    [
+     "2026-11-12",
+     31.76,
+     31.93,
+     29.145
     ]
    ]
   },
   "ALSN|Rectangle Top": {
-   "tage": 43,
+   "tage": 44,
    "daten": [
-    [
-     "2025-10-30",
-     83.58,
-     84.86,
-     76.01
-    ],
     [
      "2025-10-31",
      82.55,
@@ -19800,20 +19941,20 @@
     [
      "2026-11-11",
      130.09,
-     131.535,
-     128.125
+     131.54,
+     128.12
+    ],
+    [
+     "2026-11-12",
+     125.65,
+     130.94,
+     125.58
     ]
    ]
   },
   "AMC|EMA Crossback": {
-   "tage": 21,
+   "tage": 22,
    "daten": [
-    [
-     "2025-10-30",
-     2.54,
-     2.66,
-     2.52
-    ],
     [
      "2025-10-31",
      2.59,
@@ -21367,18 +21508,18 @@
      3.42,
      3.47,
      3.36
+    ],
+    [
+     "2026-11-12",
+     3.34,
+     3.3908,
+     3.16
     ]
    ]
   },
   "AMN|EMA Crossback": {
-   "tage": 30,
+   "tage": 31,
    "daten": [
-    [
-     "2025-10-30",
-     19.41,
-     20.4,
-     19.38
-    ],
     [
      "2025-10-31",
      19.69,
@@ -22932,18 +23073,18 @@
      37.9,
      38.55,
      37.19
+    ],
+    [
+     "2026-11-12",
+     37.42,
+     38.5141,
+     37.37
     ]
    ]
   },
   "AMN|Rectangle Top": {
-   "tage": 30,
+   "tage": 31,
    "daten": [
-    [
-     "2025-10-30",
-     19.41,
-     20.4,
-     19.38
-    ],
     [
      "2025-10-31",
      19.69,
@@ -24497,18 +24638,18 @@
      37.9,
      38.55,
      37.19
+    ],
+    [
+     "2026-11-12",
+     37.42,
+     38.5141,
+     37.37
     ]
    ]
   },
   "AMPH|Cup & Handle (Wochenbasis)": {
-   "tage": 32,
+   "tage": 33,
    "daten": [
-    [
-     "2025-10-30",
-     24.66,
-     24.81,
-     24.02
-    ],
     [
      "2025-10-31",
      25.5,
@@ -26060,20 +26201,20 @@
     [
      "2026-11-11",
      28.6,
-     29.295,
-     28.51
+     29.3,
+     28.5
+    ],
+    [
+     "2026-11-12",
+     28.87,
+     29.015,
+     28.58
     ]
    ]
   },
   "AMRX|Rectangle Top": {
-   "tage": 37,
+   "tage": 38,
    "daten": [
-    [
-     "2025-10-30",
-     10.0,
-     10.7,
-     9.99
-    ],
     [
      "2025-10-31",
      10.82,
@@ -27627,18 +27768,18 @@
      21.71,
      22.005,
      21.44
+    ],
+    [
+     "2026-11-12",
+     21.7,
+     22.0652,
+     21.25
     ]
    ]
   },
   "AMT|Rectangle Top": {
-   "tage": 18,
+   "tage": 19,
    "daten": [
-    [
-     "2025-10-30",
-     179.45,
-     182.58,
-     178.47
-    ],
     [
      "2025-10-31",
      178.98,
@@ -29192,18 +29333,18 @@
      190.24,
      191.32,
      188.07
+    ],
+    [
+     "2026-11-12",
+     189.79,
+     191.42,
+     188.81
     ]
    ]
   },
   "AOSL|EMA Crossback": {
-   "tage": 28,
+   "tage": 29,
    "daten": [
-    [
-     "2025-10-30",
-     28.1,
-     28.85,
-     27.8
-    ],
     [
      "2025-10-31",
      28.06,
@@ -30757,18 +30898,18 @@
      30.86,
      32.07,
      29.4
+    ],
+    [
+     "2026-11-12",
+     30.53,
+     31.36,
+     29.04
     ]
    ]
   },
   "AOUT|Inside Day": {
-   "tage": 21,
+   "tage": 22,
    "daten": [
-    [
-     "2025-10-30",
-     6.78,
-     7.2,
-     6.7
-    ],
     [
      "2025-10-31",
      6.87,
@@ -32320,20 +32461,20 @@
     [
      "2026-11-11",
      19.05,
-     19.2466,
+     19.247,
      18.73
+    ],
+    [
+     "2026-11-12",
+     18.98,
+     19.01,
+     18.51
     ]
    ]
   },
   "APPN|Cup & Handle (Wochenbasis)": {
-   "tage": 18,
+   "tage": 19,
    "daten": [
-    [
-     "2025-10-30",
-     29.81,
-     29.98,
-     29.38
-    ],
     [
      "2025-10-31",
      29.93,
@@ -33887,18 +34028,18 @@
      53.6,
      54.7,
      52.5
+    ],
+    [
+     "2026-11-12",
+     55.15,
+     56.3499,
+     52.28
     ]
    ]
   },
   "APPN|EMA Crossback": {
-   "tage": 22,
+   "tage": 23,
    "daten": [
-    [
-     "2025-10-30",
-     29.81,
-     29.98,
-     29.38
-    ],
     [
      "2025-10-31",
      29.93,
@@ -35452,18 +35593,18 @@
      53.6,
      54.7,
      52.5
+    ],
+    [
+     "2026-11-12",
+     55.15,
+     56.3499,
+     52.28
     ]
    ]
   },
   "ARCT|2": {
-   "tage": 50,
+   "tage": 51,
    "daten": [
-    [
-     "2025-10-30",
-     9.63,
-     9.98,
-     9.41
-    ],
     [
      "2025-10-31",
      9.97,
@@ -37015,20 +37156,20 @@
     [
      "2026-11-11",
      9.31,
-     9.6695,
-     9.1412
+     9.67,
+     9.14
+    ],
+    [
+     "2026-11-12",
+     8.44,
+     9.06,
+     8.42
     ]
    ]
   },
   "ARGX|Fallback: MA50-Pullback": {
-   "tage": 34,
+   "tage": 35,
    "daten": [
-    [
-     "2025-10-30",
-     820.36,
-     831.99,
-     749.75
-    ],
     [
      "2025-10-31",
      818.5,
@@ -38581,19 +38722,19 @@
      "2026-11-11",
      977.58,
      980.55,
-     962.665
+     962.33
+    ],
+    [
+     "2026-11-12",
+     981.33,
+     988.89,
+     964.86
     ]
    ]
   },
   "ASH|1": {
-   "tage": 45,
+   "tage": 46,
    "daten": [
-    [
-     "2025-10-30",
-     48.67,
-     49.46,
-     48.38
-    ],
     [
      "2025-10-31",
      48.9,
@@ -40145,20 +40286,20 @@
     [
      "2026-11-11",
      76.72,
-     77.5899,
+     77.59,
      76.13
+    ],
+    [
+     "2026-11-12",
+     75.27,
+     77.4,
+     75.27
     ]
    ]
   },
   "ATAT|1": {
-   "tage": 51,
+   "tage": 52,
    "daten": [
-    [
-     "2025-10-30",
-     38.06,
-     38.23,
-     36.87
-    ],
     [
      "2025-10-31",
      38.96,
@@ -41712,6 +41853,12 @@
      37.63,
      37.69,
      35.475
+    ],
+    [
+     "2026-11-12",
+     36.87,
+     37.45,
+     36.32
     ]
    ]
   },
@@ -42111,14 +42258,8 @@
    ]
   },
   "AUGO|Fallback: 20-Tage-Hoch (Pivot)": {
-   "tage": 39,
+   "tage": 40,
    "daten": [
-    [
-     "2025-10-30",
-     32.19,
-     32.235,
-     30.0
-    ],
     [
      "2025-10-31",
      32.33,
@@ -43671,19 +43812,1584 @@
      "2026-11-11",
      81.4,
      83.65,
-     80.4948
+     80.495
+    ],
+    [
+     "2026-11-12",
+     77.94,
+     80.14,
+     76.14
+    ]
+   ]
+  },
+  "AVTR|SPRING-2026-11-12": {
+   "tage": 0,
+   "daten": [
+    [
+     "2025-10-31",
+     11.82,
+     11.905,
+     10.825
+    ],
+    [
+     "2025-11-03",
+     11.68,
+     11.765,
+     11.43
+    ],
+    [
+     "2025-11-04",
+     11.58,
+     11.765,
+     11.386
+    ],
+    [
+     "2025-11-05",
+     11.58,
+     11.705,
+     11.315
+    ],
+    [
+     "2025-11-06",
+     11.32,
+     11.82,
+     11.07
+    ],
+    [
+     "2025-11-07",
+     11.55,
+     11.56,
+     11.12
+    ],
+    [
+     "2025-11-10",
+     11.5,
+     11.66,
+     11.325
+    ],
+    [
+     "2025-11-11",
+     11.5,
+     11.74,
+     11.41
+    ],
+    [
+     "2025-11-12",
+     11.55,
+     11.73,
+     11.32
+    ],
+    [
+     "2025-11-13",
+     11.7,
+     11.76,
+     11.42
+    ],
+    [
+     "2025-11-14",
+     11.38,
+     11.74,
+     11.18
+    ],
+    [
+     "2025-11-17",
+     10.88,
+     11.37,
+     10.85
+    ],
+    [
+     "2025-11-18",
+     11.14,
+     11.35,
+     10.92
+    ],
+    [
+     "2025-11-19",
+     11.01,
+     11.12,
+     10.86
+    ],
+    [
+     "2025-11-20",
+     10.99,
+     11.14,
+     10.873
+    ],
+    [
+     "2025-11-21",
+     11.52,
+     11.565,
+     10.97
+    ],
+    [
+     "2025-11-24",
+     11.51,
+     11.57,
+     11.33
+    ],
+    [
+     "2025-11-25",
+     11.85,
+     11.885,
+     11.51
+    ],
+    [
+     "2025-11-26",
+     11.74,
+     11.85,
+     11.59
+    ],
+    [
+     "2025-11-28",
+     11.73,
+     11.89,
+     11.7
+    ],
+    [
+     "2025-12-01",
+     11.75,
+     11.865,
+     11.6
+    ],
+    [
+     "2025-12-02",
+     11.64,
+     11.81,
+     11.58
+    ],
+    [
+     "2025-12-03",
+     11.29,
+     11.785,
+     11.28
+    ],
+    [
+     "2025-12-04",
+     11.15,
+     11.33,
+     10.965
+    ],
+    [
+     "2025-12-05",
+     10.93,
+     11.21,
+     10.9
+    ],
+    [
+     "2025-12-08",
+     10.71,
+     10.945,
+     10.62
+    ],
+    [
+     "2025-12-09",
+     10.63,
+     10.955,
+     10.62
+    ],
+    [
+     "2025-12-10",
+     11.51,
+     11.565,
+     10.795
+    ],
+    [
+     "2025-12-11",
+     11.47,
+     11.47,
+     11.09
+    ],
+    [
+     "2025-12-12",
+     11.17,
+     11.52,
+     11.13
+    ],
+    [
+     "2025-12-15",
+     11.28,
+     11.29,
+     10.935
+    ],
+    [
+     "2025-12-16",
+     11.2,
+     11.34,
+     10.985
+    ],
+    [
+     "2025-12-17",
+     11.1,
+     11.53,
+     10.915
+    ],
+    [
+     "2025-12-18",
+     11.07,
+     11.395,
+     11.045
+    ],
+    [
+     "2025-12-19",
+     11.27,
+     11.36,
+     11.065
+    ],
+    [
+     "2025-12-22",
+     11.24,
+     11.53,
+     11.155
+    ],
+    [
+     "2025-12-23",
+     11.27,
+     11.28,
+     11.08
+    ],
+    [
+     "2025-12-24",
+     11.28,
+     11.31,
+     11.095
+    ],
+    [
+     "2025-12-26",
+     11.43,
+     11.45,
+     11.23
+    ],
+    [
+     "2025-12-29",
+     11.38,
+     11.49,
+     11.3
+    ],
+    [
+     "2025-12-30",
+     11.47,
+     11.575,
+     11.34
+    ],
+    [
+     "2025-12-31",
+     11.46,
+     11.6,
+     11.41
+    ],
+    [
+     "2026-01-02",
+     11.46,
+     11.62,
+     11.42
+    ],
+    [
+     "2026-01-05",
+     11.89,
+     11.95,
+     11.27
+    ],
+    [
+     "2026-01-06",
+     12.27,
+     12.375,
+     11.89
+    ],
+    [
+     "2026-01-07",
+     12.08,
+     12.316,
+     12.0
+    ],
+    [
+     "2026-01-08",
+     12.06,
+     12.225,
+     11.84
+    ],
+    [
+     "2026-01-09",
+     12.41,
+     12.42,
+     11.93
+    ],
+    [
+     "2026-01-12",
+     12.28,
+     12.55,
+     12.18
+    ],
+    [
+     "2026-01-13",
+     12.6,
+     12.84,
+     12.085
+    ],
+    [
+     "2026-01-14",
+     12.38,
+     12.9,
+     11.915
+    ],
+    [
+     "2026-01-15",
+     12.02,
+     12.39,
+     11.78
+    ],
+    [
+     "2026-01-16",
+     12.16,
+     12.21,
+     11.87
+    ],
+    [
+     "2026-01-20",
+     11.85,
+     12.125,
+     11.74
+    ],
+    [
+     "2026-01-21",
+     12.21,
+     12.225,
+     11.85
+    ],
+    [
+     "2026-01-22",
+     12.24,
+     12.51,
+     12.21
+    ],
+    [
+     "2026-01-23",
+     11.8,
+     12.22,
+     11.69
+    ],
+    [
+     "2026-01-26",
+     11.79,
+     11.91,
+     11.765
+    ],
+    [
+     "2026-01-27",
+     11.65,
+     11.89,
+     11.48
+    ],
+    [
+     "2026-01-28",
+     11.05,
+     11.64,
+     11.015
+    ],
+    [
+     "2026-01-29",
+     10.81,
+     11.01,
+     10.67
+    ],
+    [
+     "2026-01-30",
+     10.92,
+     10.98,
+     10.7
+    ],
+    [
+     "2026-02-02",
+     11.07,
+     11.095,
+     10.786
+    ],
+    [
+     "2026-02-03",
+     10.85,
+     11.335,
+     10.72
+    ],
+    [
+     "2026-02-04",
+     11.14,
+     11.255,
+     10.895
+    ],
+    [
+     "2026-02-05",
+     10.79,
+     11.2,
+     10.67
+    ],
+    [
+     "2026-02-06",
+     11.26,
+     11.26,
+     10.92
+    ],
+    [
+     "2026-02-09",
+     11.23,
+     11.345,
+     10.975
+    ],
+    [
+     "2026-02-10",
+     11.16,
+     11.34,
+     11.04
+    ],
+    [
+     "2026-02-11",
+     9.64,
+     9.86,
+     8.895
+    ],
+    [
+     "2026-02-12",
+     9.14,
+     9.58,
+     8.96
+    ],
+    [
+     "2026-02-13",
+     9.2,
+     9.77,
+     9.0
+    ],
+    [
+     "2026-02-17",
+     9.05,
+     9.22,
+     8.965
+    ],
+    [
+     "2026-02-18",
+     9.27,
+     9.32,
+     9.0
+    ],
+    [
+     "2026-02-19",
+     9.21,
+     9.26,
+     9.005
+    ],
+    [
+     "2026-02-20",
+     9.03,
+     9.28,
+     8.98
+    ],
+    [
+     "2026-02-23",
+     8.89,
+     9.028,
+     8.83
+    ],
+    [
+     "2026-02-24",
+     9.11,
+     9.155,
+     8.91
+    ],
+    [
+     "2026-02-25",
+     9.06,
+     9.16,
+     8.905
+    ],
+    [
+     "2026-02-26",
+     9.01,
+     9.15,
+     8.8
+    ],
+    [
+     "2026-02-27",
+     9.05,
+     9.06,
+     8.78
+    ],
+    [
+     "2026-03-02",
+     8.81,
+     8.9,
+     8.66
+    ],
+    [
+     "2026-03-03",
+     8.78,
+     8.83,
+     8.425
+    ],
+    [
+     "2026-03-04",
+     8.65,
+     8.89,
+     8.59
+    ],
+    [
+     "2026-03-05",
+     8.52,
+     8.85,
+     8.41
+    ],
+    [
+     "2026-03-06",
+     8.17,
+     8.41,
+     8.135
+    ],
+    [
+     "2026-03-09",
+     8.15,
+     8.24,
+     7.82
+    ],
+    [
+     "2026-03-10",
+     8.15,
+     8.22,
+     7.845
+    ],
+    [
+     "2026-03-11",
+     8.29,
+     8.42,
+     8.11
+    ],
+    [
+     "2026-03-12",
+     7.9,
+     8.54,
+     7.865
+    ],
+    [
+     "2026-03-13",
+     7.93,
+     8.055,
+     7.86
+    ],
+    [
+     "2026-03-16",
+     7.61,
+     8.02,
+     7.575
+    ],
+    [
+     "2026-03-17",
+     7.8,
+     7.955,
+     7.6
+    ],
+    [
+     "2026-03-18",
+     7.7,
+     7.8,
+     7.605
+    ],
+    [
+     "2026-03-19",
+     7.61,
+     7.815,
+     7.46
+    ],
+    [
+     "2026-03-20",
+     7.51,
+     7.705,
+     7.385
+    ],
+    [
+     "2026-03-23",
+     7.59,
+     7.815,
+     7.545
+    ],
+    [
+     "2026-03-24",
+     7.73,
+     7.85,
+     7.38
+    ],
+    [
+     "2026-03-25",
+     7.69,
+     7.93,
+     7.535
+    ],
+    [
+     "2026-03-26",
+     7.67,
+     7.84,
+     7.55
+    ],
+    [
+     "2026-03-27",
+     7.41,
+     7.65,
+     7.265
+    ],
+    [
+     "2026-03-30",
+     7.59,
+     7.7,
+     7.42
+    ],
+    [
+     "2026-03-31",
+     7.84,
+     7.94,
+     7.61
+    ],
+    [
+     "2026-04-01",
+     7.77,
+     7.94,
+     7.55
+    ],
+    [
+     "2026-04-02",
+     7.9,
+     8.065,
+     7.59
+    ],
+    [
+     "2026-04-06",
+     7.98,
+     7.995,
+     7.73
+    ],
+    [
+     "2026-04-07",
+     8.0,
+     8.099,
+     7.86
+    ],
+    [
+     "2026-04-08",
+     8.0,
+     8.49,
+     7.985
+    ],
+    [
+     "2026-04-09",
+     7.92,
+     8.04,
+     7.645
+    ],
+    [
+     "2026-04-10",
+     7.9,
+     8.03,
+     7.81
+    ],
+    [
+     "2026-04-13",
+     8.18,
+     8.21,
+     7.82
+    ],
+    [
+     "2026-04-14",
+     8.2,
+     8.37,
+     8.12
+    ],
+    [
+     "2026-04-15",
+     8.37,
+     8.485,
+     8.26
+    ],
+    [
+     "2026-04-16",
+     8.26,
+     8.42,
+     8.19
+    ],
+    [
+     "2026-04-17",
+     8.52,
+     8.57,
+     8.315
+    ],
+    [
+     "2026-04-20",
+     8.5,
+     8.54,
+     8.28
+    ],
+    [
+     "2026-04-21",
+     8.53,
+     8.85,
+     8.455
+    ],
+    [
+     "2026-04-22",
+     8.28,
+     8.62,
+     8.22
+    ],
+    [
+     "2026-04-23",
+     7.76,
+     8.295,
+     7.46
+    ],
+    [
+     "2026-04-24",
+     7.9,
+     7.915,
+     7.595
+    ],
+    [
+     "2026-04-27",
+     7.97,
+     8.06,
+     7.825
+    ],
+    [
+     "2026-04-28",
+     7.86,
+     8.1,
+     7.8
+    ],
+    [
+     "2026-04-29",
+     7.85,
+     8.555,
+     7.475
+    ],
+    [
+     "2026-04-30",
+     8.1,
+     8.285,
+     7.72
+    ],
+    [
+     "2026-05-01",
+     7.96,
+     8.22,
+     7.85
+    ],
+    [
+     "2026-05-04",
+     7.99,
+     8.015,
+     7.725
+    ],
+    [
+     "2026-05-05",
+     8.05,
+     8.26,
+     7.925
+    ],
+    [
+     "2026-05-06",
+     8.43,
+     8.575,
+     8.27
+    ],
+    [
+     "2026-05-07",
+     8.31,
+     8.58,
+     8.225
+    ],
+    [
+     "2026-05-08",
+     8.31,
+     8.395,
+     8.1
+    ],
+    [
+     "2026-05-11",
+     7.97,
+     8.3,
+     7.95
+    ],
+    [
+     "2026-05-12",
+     8.17,
+     8.21,
+     8.01
+    ],
+    [
+     "2026-05-13",
+     7.87,
+     8.15,
+     7.835
+    ],
+    [
+     "2026-05-14",
+     7.94,
+     8.05,
+     7.71
+    ],
+    [
+     "2026-05-15",
+     7.62,
+     8.015,
+     7.61
+    ],
+    [
+     "2026-05-18",
+     7.6,
+     7.76,
+     7.575
+    ],
+    [
+     "2026-05-19",
+     7.64,
+     7.8,
+     7.495
+    ],
+    [
+     "2026-05-20",
+     7.88,
+     7.895,
+     7.424
+    ],
+    [
+     "2026-05-21",
+     7.87,
+     7.93,
+     7.69
+    ],
+    [
+     "2026-05-22",
+     8.12,
+     8.13,
+     7.81
+    ],
+    [
+     "2026-05-26",
+     8.14,
+     8.155,
+     7.94
+    ],
+    [
+     "2026-05-27",
+     8.4,
+     8.455,
+     8.21
+    ],
+    [
+     "2026-05-28",
+     9.15,
+     9.3,
+     8.42
+    ],
+    [
+     "2026-05-29",
+     9.12,
+     9.38,
+     8.924
+    ],
+    [
+     "2026-06-01",
+     9.19,
+     9.33,
+     8.86
+    ],
+    [
+     "2026-06-02",
+     8.99,
+     9.04,
+     8.71
+    ],
+    [
+     "2026-06-03",
+     9.07,
+     9.135,
+     8.825
+    ],
+    [
+     "2026-06-04",
+     9.52,
+     9.62,
+     9.11
+    ],
+    [
+     "2026-06-05",
+     9.16,
+     9.53,
+     9.04
+    ],
+    [
+     "2026-06-08",
+     9.69,
+     10.005,
+     9.2
+    ],
+    [
+     "2026-06-09",
+     9.91,
+     10.05,
+     9.52
+    ],
+    [
+     "2026-06-10",
+     9.65,
+     10.06,
+     9.61
+    ],
+    [
+     "2026-06-11",
+     9.66,
+     9.7,
+     9.4
+    ],
+    [
+     "2026-06-12",
+     9.39,
+     9.79,
+     9.35
+    ],
+    [
+     "2026-06-15",
+     9.71,
+     9.89,
+     9.53
+    ],
+    [
+     "2026-06-16",
+     9.57,
+     9.82,
+     9.545
+    ],
+    [
+     "2026-06-17",
+     9.46,
+     9.78,
+     9.36
+    ],
+    [
+     "2026-06-18",
+     9.58,
+     9.67,
+     9.35
+    ],
+    [
+     "2026-06-22",
+     9.35,
+     9.62,
+     9.35
+    ],
+    [
+     "2026-06-23",
+     9.43,
+     9.52,
+     9.15
+    ],
+    [
+     "2026-06-24",
+     9.69,
+     9.87,
+     9.44
+    ],
+    [
+     "2026-06-25",
+     10.08,
+     10.25,
+     9.84
+    ],
+    [
+     "2026-06-26",
+     10.28,
+     10.4,
+     10.03
+    ],
+    [
+     "2026-06-29",
+     10.03,
+     10.3,
+     9.82
+    ],
+    [
+     "2026-06-30",
+     9.9,
+     10.15,
+     9.87
+    ],
+    [
+     "2026-07-01",
+     10.01,
+     10.3,
+     9.78
+    ],
+    [
+     "2026-07-02",
+     10.32,
+     10.32,
+     10.05
+    ],
+    [
+     "2026-07-06",
+     10.37,
+     10.54,
+     10.13
+    ],
+    [
+     "2026-07-07",
+     10.2,
+     10.57,
+     10.045
+    ],
+    [
+     "2026-07-08",
+     9.76,
+     10.15,
+     9.745
+    ],
+    [
+     "2026-07-09",
+     10.51,
+     10.665,
+     9.725
+    ],
+    [
+     "2026-07-10",
+     10.39,
+     10.64,
+     10.365
+    ],
+    [
+     "2026-07-13",
+     10.56,
+     10.615,
+     10.31
+    ],
+    [
+     "2026-07-14",
+     11.29,
+     11.32,
+     10.42
+    ],
+    [
+     "2026-07-15",
+     11.2,
+     11.47,
+     11.115
+    ],
+    [
+     "2026-07-16",
+     11.26,
+     11.43,
+     11.13
+    ],
+    [
+     "2026-07-17",
+     11.07,
+     11.306,
+     10.885
+    ],
+    [
+     "2026-07-20",
+     10.66,
+     11.12,
+     10.59
+    ],
+    [
+     "2026-07-21",
+     10.99,
+     11.03,
+     10.19
+    ],
+    [
+     "2026-07-22",
+     10.95,
+     11.085,
+     10.745
+    ],
+    [
+     "2026-07-23",
+     11.35,
+     11.75,
+     11.095
+    ],
+    [
+     "2026-07-24",
+     11.44,
+     11.61,
+     11.325
+    ],
+    [
+     "2026-07-27",
+     11.76,
+     11.92,
+     11.36
+    ],
+    [
+     "2026-07-28",
+     12.42,
+     12.465,
+     11.87
+    ],
+    [
+     "2026-07-29",
+     14.38,
+     14.62,
+     13.63
+    ],
+    [
+     "2026-07-30",
+     13.86,
+     14.59,
+     13.595
+    ],
+    [
+     "2026-07-31",
+     13.78,
+     13.925,
+     13.42
+    ],
+    [
+     "2026-08-03",
+     13.67,
+     14.0,
+     13.565
+    ],
+    [
+     "2026-08-04",
+     13.68,
+     13.76,
+     13.23
+    ],
+    [
+     "2026-08-05",
+     13.36,
+     13.82,
+     13.265
+    ],
+    [
+     "2026-08-06",
+     13.18,
+     13.5,
+     13.08
+    ],
+    [
+     "2026-08-07",
+     13.59,
+     13.59,
+     13.235
+    ],
+    [
+     "2026-08-10",
+     13.73,
+     13.79,
+     13.4
+    ],
+    [
+     "2026-08-11",
+     13.77,
+     13.81,
+     13.54
+    ],
+    [
+     "2026-08-12",
+     13.93,
+     13.94,
+     13.42
+    ],
+    [
+     "2026-08-13",
+     13.85,
+     14.02,
+     13.66
+    ],
+    [
+     "2026-08-14",
+     13.66,
+     13.825,
+     13.63
+    ],
+    [
+     "2026-08-17",
+     13.5,
+     13.72,
+     13.45
+    ],
+    [
+     "2026-08-18",
+     13.33,
+     13.724,
+     13.325
+    ],
+    [
+     "2026-08-19",
+     13.96,
+     14.11,
+     13.505
+    ],
+    [
+     "2026-08-20",
+     14.25,
+     14.48,
+     13.755
+    ],
+    [
+     "2026-08-21",
+     14.46,
+     14.485,
+     14.16
+    ],
+    [
+     "2026-08-24",
+     14.26,
+     14.36,
+     14.05
+    ],
+    [
+     "2026-08-25",
+     14.42,
+     14.5,
+     14.05
+    ],
+    [
+     "2026-08-26",
+     14.5,
+     14.625,
+     14.2
+    ],
+    [
+     "2026-08-27",
+     14.61,
+     14.7,
+     14.43
+    ],
+    [
+     "2026-08-28",
+     14.58,
+     14.65,
+     14.45
+    ],
+    [
+     "2026-08-31",
+     14.54,
+     14.59,
+     14.34
+    ],
+    [
+     "2026-09-01",
+     14.2,
+     14.63,
+     14.19
+    ],
+    [
+     "2026-09-02",
+     14.65,
+     14.835,
+     14.22
+    ],
+    [
+     "2026-09-03",
+     15.19,
+     15.2,
+     14.59
+    ],
+    [
+     "2026-09-04",
+     14.97,
+     15.18,
+     14.85
+    ],
+    [
+     "2026-09-08",
+     15.25,
+     15.46,
+     14.667
+    ],
+    [
+     "2026-09-09",
+     14.88,
+     15.155,
+     14.72
+    ],
+    [
+     "2026-09-10",
+     14.88,
+     14.94,
+     14.595
+    ],
+    [
+     "2026-09-11",
+     14.81,
+     15.045,
+     14.7
+    ],
+    [
+     "2026-09-14",
+     15.16,
+     15.17,
+     14.7
+    ],
+    [
+     "2026-09-15",
+     15.44,
+     15.645,
+     15.19
+    ],
+    [
+     "2026-09-16",
+     15.61,
+     15.82,
+     15.415
+    ],
+    [
+     "2026-09-17",
+     15.86,
+     16.05,
+     15.635
+    ],
+    [
+     "2026-09-18",
+     15.52,
+     15.9,
+     15.44
+    ],
+    [
+     "2026-09-21",
+     15.1,
+     15.59,
+     15.04
+    ],
+    [
+     "2026-09-22",
+     14.94,
+     15.32,
+     14.91
+    ],
+    [
+     "2026-09-23",
+     14.76,
+     15.14,
+     14.72
+    ],
+    [
+     "2026-09-24",
+     15.38,
+     15.43,
+     14.67
+    ],
+    [
+     "2026-09-25",
+     15.25,
+     15.36,
+     15.075
+    ],
+    [
+     "2026-09-28",
+     15.29,
+     15.41,
+     15.07
+    ],
+    [
+     "2026-09-29",
+     15.24,
+     15.42,
+     15.06
+    ],
+    [
+     "2026-09-30",
+     15.05,
+     15.36,
+     15.05
+    ],
+    [
+     "2026-10-01",
+     15.03,
+     15.195,
+     14.57
+    ],
+    [
+     "2026-10-02",
+     15.34,
+     15.375,
+     14.965
+    ],
+    [
+     "2026-10-05",
+     15.81,
+     15.87,
+     15.24
+    ],
+    [
+     "2026-10-06",
+     15.43,
+     16.375,
+     15.42
+    ],
+    [
+     "2026-10-07",
+     15.35,
+     15.515,
+     15.04
+    ],
+    [
+     "2026-10-08",
+     15.39,
+     15.42,
+     14.96
+    ],
+    [
+     "2026-10-09",
+     15.67,
+     15.755,
+     15.415
+    ],
+    [
+     "2026-10-12",
+     15.49,
+     15.755,
+     15.39
+    ],
+    [
+     "2026-10-13",
+     15.55,
+     15.66,
+     15.435
+    ],
+    [
+     "2026-10-14",
+     15.7,
+     16.0,
+     15.61
+    ],
+    [
+     "2026-10-15",
+     16.09,
+     16.26,
+     15.7
+    ],
+    [
+     "2026-10-16",
+     16.42,
+     16.45,
+     15.95
+    ],
+    [
+     "2026-10-19",
+     16.29,
+     16.55,
+     16.19
+    ],
+    [
+     "2026-10-20",
+     16.62,
+     16.83,
+     16.24
+    ],
+    [
+     "2026-10-21",
+     17.26,
+     17.33,
+     16.45
+    ],
+    [
+     "2026-10-22",
+     17.15,
+     17.45,
+     16.965
+    ],
+    [
+     "2026-10-23",
+     17.29,
+     17.32,
+     16.9
+    ],
+    [
+     "2026-10-26",
+     17.29,
+     17.4,
+     17.03
+    ],
+    [
+     "2026-10-27",
+     17.13,
+     17.385,
+     17.065
+    ],
+    [
+     "2026-10-28",
+     16.69,
+     17.22,
+     16.17
+    ],
+    [
+     "2026-10-29",
+     16.68,
+     16.728,
+     16.32
+    ],
+    [
+     "2026-10-30",
+     16.05,
+     16.8,
+     15.85
+    ],
+    [
+     "2026-11-02",
+     15.61,
+     16.09,
+     15.56
+    ],
+    [
+     "2026-11-03",
+     15.59,
+     16.01,
+     15.55
+    ],
+    [
+     "2026-11-04",
+     15.65,
+     16.19,
+     15.451
+    ],
+    [
+     "2026-11-05",
+     15.14,
+     15.67,
+     15.085
+    ],
+    [
+     "2026-11-06",
+     15.47,
+     15.6,
+     15.07
+    ],
+    [
+     "2026-11-09",
+     15.91,
+     15.95,
+     15.35
+    ],
+    [
+     "2026-11-10",
+     15.57,
+     15.88,
+     15.485
+    ],
+    [
+     "2026-11-11",
+     15.73,
+     15.9,
+     15.59
+    ],
+    [
+     "2026-11-12",
+     15.62,
+     15.9895,
+     15.25
     ]
    ]
   },
   "BBD|INS-2026-10-02": {
-   "tage": 28,
+   "tage": 29,
    "daten": [
-    [
-     "2025-10-30",
-     3.39,
-     3.43,
-     3.34
-    ],
     [
      "2025-10-31",
      3.38,
@@ -45237,18 +46943,18 @@
      2.57,
      2.62,
      2.57
+    ],
+    [
+     "2026-11-12",
+     2.51,
+     2.54,
+     2.48
     ]
    ]
   },
   "BFH|Rectangle Top": {
-   "tage": 43,
+   "tage": 44,
    "daten": [
-    [
-     "2025-10-30",
-     61.91,
-     63.12,
-     61.73
-    ],
     [
      "2025-10-31",
      62.65,
@@ -46800,20 +48506,20 @@
     [
      "2026-11-11",
      97.65,
-     97.7,
+     97.71,
      93.89
+    ],
+    [
+     "2026-11-12",
+     97.91,
+     99.39,
+     96.557
     ]
    ]
   },
   "BHE|EMA Crossback": {
-   "tage": 36,
+   "tage": 37,
    "daten": [
-    [
-     "2025-10-30",
-     43.55,
-     44.49,
-     43.23
-    ],
     [
      "2025-10-31",
      43.82,
@@ -48365,20 +50071,20 @@
     [
      "2026-11-11",
      64.98,
-     66.9977,
+     67.0,
      64.7
+    ],
+    [
+     "2026-11-12",
+     64.81,
+     66.315,
+     62.88
     ]
    ]
   },
   "BHE|Fallback: 20-Tage-Hoch (Pivot)": {
-   "tage": 33,
+   "tage": 34,
    "daten": [
-    [
-     "2025-10-30",
-     43.55,
-     44.49,
-     43.23
-    ],
     [
      "2025-10-31",
      43.82,
@@ -49930,20 +51636,20 @@
     [
      "2026-11-11",
      64.98,
-     66.9977,
+     67.0,
      64.7
+    ],
+    [
+     "2026-11-12",
+     64.81,
+     66.315,
+     62.88
     ]
    ]
   },
   "BHVN|1": {
-   "tage": 49,
+   "tage": 50,
    "daten": [
-    [
-     "2025-10-30",
-     17.39,
-     18.566,
-     17.35
-    ],
     [
      "2025-10-31",
      17.2,
@@ -51497,18 +53203,18 @@
      15.19,
      15.41,
      14.98
+    ],
+    [
+     "2026-11-12",
+     14.07,
+     15.1777,
+     14.04
     ]
    ]
   },
   "BIIB|2": {
-   "tage": 46,
+   "tage": 47,
    "daten": [
-    [
-     "2025-10-30",
-     149.61,
-     154.44,
-     138.0
-    ],
     [
      "2025-10-31",
      154.27,
@@ -53062,6 +54768,12 @@
      253.4,
      255.19,
      249.44
+    ],
+    [
+     "2026-11-12",
+     250.48,
+     255.05,
+     250.43
     ]
    ]
   },
@@ -53077,7 +54789,7 @@
    ]
   },
   "BLLN|Fallback: 20-Tage-Hoch (Pivot)": {
-   "tage": 40,
+   "tage": 41,
    "daten": [
     [
      "2025-11-06",
@@ -54608,11 +56320,17 @@
      110.23,
      115.44,
      108.9
+    ],
+    [
+     "2026-11-12",
+     110.79,
+     111.07,
+     106.4636
     ]
    ]
   },
   "BLLN|Fallback: MA50-Rückeroberung": {
-   "tage": 36,
+   "tage": 37,
    "daten": [
     [
      "2025-11-06",
@@ -56143,18 +57861,18 @@
      110.23,
      115.44,
      108.9
+    ],
+    [
+     "2026-11-12",
+     110.79,
+     111.07,
+     106.4636
     ]
    ]
   },
   "BORR|INS-2026-10-06": {
-   "tage": 26,
+   "tage": 27,
    "daten": [
-    [
-     "2025-10-30",
-     3.09,
-     3.315,
-     2.96
-    ],
     [
      "2025-10-31",
      3.1,
@@ -57707,19 +59425,19 @@
      "2026-11-11",
      3.34,
      3.46,
-     3.24
+     3.23
+    ],
+    [
+     "2026-11-12",
+     3.4,
+     3.45,
+     3.29
     ]
    ]
   },
   "BORR|INS-2026-10-16": {
-   "tage": 18,
+   "tage": 19,
    "daten": [
-    [
-     "2025-10-30",
-     3.09,
-     3.315,
-     2.96
-    ],
     [
      "2025-10-31",
      3.1,
@@ -59272,19 +60990,19 @@
      "2026-11-11",
      3.34,
      3.46,
-     3.24
+     3.23
+    ],
+    [
+     "2026-11-12",
+     3.4,
+     3.45,
+     3.29
     ]
    ]
   },
   "BRC|2": {
-   "tage": 48,
+   "tage": 49,
    "daten": [
-    [
-     "2025-10-30",
-     76.16,
-     77.57,
-     75.84
-    ],
     [
      "2025-10-31",
      75.91,
@@ -60836,20 +62554,20 @@
     [
      "2026-11-11",
      82.4,
-     83.275,
+     83.28,
      78.48
+    ],
+    [
+     "2026-11-12",
+     82.62,
+     83.155,
+     81.06
     ]
    ]
   },
   "BRKR|EMA Crossback": {
-   "tage": 33,
+   "tage": 34,
    "daten": [
-    [
-     "2025-10-30",
-     36.4,
-     37.72,
-     36.17
-    ],
     [
      "2025-10-31",
      38.94,
@@ -62403,18 +64121,18 @@
      62.41,
      64.28,
      61.96
+    ],
+    [
+     "2026-11-12",
+     60.33,
+     61.4,
+     58.675
     ]
    ]
   },
   "BRKR|Rectangle Top": {
-   "tage": 36,
+   "tage": 37,
    "daten": [
-    [
-     "2025-10-30",
-     36.4,
-     37.72,
-     36.17
-    ],
     [
      "2025-10-31",
      38.94,
@@ -63968,18 +65686,18 @@
      62.41,
      64.28,
      61.96
+    ],
+    [
+     "2026-11-12",
+     60.33,
+     61.4,
+     58.675
     ]
    ]
   },
   "BSTZ|2": {
-   "tage": 46,
+   "tage": 47,
    "daten": [
-    [
-     "2025-10-30",
-     22.81,
-     22.82,
-     22.5
-    ],
     [
      "2025-10-31",
      22.92,
@@ -65531,20 +67249,20 @@
     [
      "2026-11-11",
      26.18,
-     26.3962,
+     26.396,
      25.75
+    ],
+    [
+     "2026-11-12",
+     25.15,
+     25.7116,
+     24.88
     ]
    ]
   },
   "CAKE|EMA Crossback": {
-   "tage": 31,
+   "tage": 32,
    "daten": [
-    [
-     "2025-10-30",
-     49.11,
-     50.68,
-     48.76
-    ],
     [
      "2025-10-31",
      49.8,
@@ -67098,18 +68816,18 @@
      109.67,
      111.5,
      107.11
+    ],
+    [
+     "2026-11-12",
+     106.2,
+     111.19,
+     105.36
     ]
    ]
   },
   "CBLL|Cup & Handle (Wochenbasis) + Darvas Box": {
-   "tage": 40,
+   "tage": 41,
    "daten": [
-    [
-     "2025-10-30",
-     11.32,
-     12.1,
-     11.27
-    ],
     [
      "2025-10-31",
      11.4,
@@ -68663,18 +70381,18 @@
      27.8,
      28.27,
      27.58
+    ],
+    [
+     "2026-11-12",
+     26.35,
+     27.708,
+     26.29
     ]
    ]
   },
   "CBRL|Cup & Handle (Wochenbasis)": {
-   "tage": 31,
+   "tage": 32,
    "daten": [
-    [
-     "2025-10-30",
-     33.51,
-     34.49,
-     33.15
-    ],
     [
      "2025-10-31",
      33.7,
@@ -70228,18 +71946,18 @@
      66.13,
      66.51,
      63.48
+    ],
+    [
+     "2026-11-12",
+     64.86,
+     67.75,
+     64.25
     ]
    ]
   },
   "CBRL|Fallback: MA50-Rückeroberung": {
-   "tage": 32,
+   "tage": 33,
    "daten": [
-    [
-     "2025-10-30",
-     33.51,
-     34.49,
-     33.15
-    ],
     [
      "2025-10-31",
      33.7,
@@ -71793,18 +73511,18 @@
      66.13,
      66.51,
      63.48
+    ],
+    [
+     "2026-11-12",
+     64.86,
+     67.75,
+     64.25
     ]
    ]
   },
   "CCI|Cup & Handle (Wochenbasis)": {
-   "tage": 21,
+   "tage": 22,
    "daten": [
-    [
-     "2025-10-30",
-     91.32,
-     94.02,
-     90.9
-    ],
     [
      "2025-10-31",
      90.22,
@@ -73357,19 +75075,19 @@
      "2026-11-11",
      89.06,
      89.46,
-     88.43
+     88.16
+    ],
+    [
+     "2026-11-12",
+     89.69,
+     89.96,
+     88.57
     ]
    ]
   },
   "CCI|Fallback: 20-Tage-Hoch (Pivot)": {
-   "tage": 22,
+   "tage": 23,
    "daten": [
-    [
-     "2025-10-30",
-     91.32,
-     94.02,
-     90.9
-    ],
     [
      "2025-10-31",
      90.22,
@@ -74922,19 +76640,19 @@
      "2026-11-11",
      89.06,
      89.46,
-     88.43
+     88.16
+    ],
+    [
+     "2026-11-12",
+     89.69,
+     89.96,
+     88.57
     ]
    ]
   },
   "CCI|Pocket Pivot": {
-   "tage": 22,
+   "tage": 23,
    "daten": [
-    [
-     "2025-10-30",
-     91.32,
-     94.02,
-     90.9
-    ],
     [
      "2025-10-31",
      90.22,
@@ -76487,19 +78205,19 @@
      "2026-11-11",
      89.06,
      89.46,
-     88.43
+     88.16
+    ],
+    [
+     "2026-11-12",
+     89.69,
+     89.96,
+     88.57
     ]
    ]
   },
   "CCL|Fallback: 20-Tage-Hoch (Pivot)": {
-   "tage": 26,
+   "tage": 27,
    "daten": [
-    [
-     "2025-10-30",
-     28.33,
-     28.93,
-     27.55
-    ],
     [
      "2025-10-31",
      28.83,
@@ -78051,20 +79769,20 @@
     [
      "2026-11-11",
      30.68,
-     31.095,
+     31.1,
      30.59
+    ],
+    [
+     "2026-11-12",
+     29.34,
+     30.34,
+     29.29
     ]
    ]
   },
   "CDNA|Cup & Handle (Wochenbasis)": {
-   "tage": 39,
+   "tage": 40,
    "daten": [
-    [
-     "2025-10-30",
-     14.47,
-     14.825,
-     14.225
-    ],
     [
      "2025-10-31",
      15.0,
@@ -79618,18 +81336,18 @@
      81.17,
      84.1,
      80.18
+    ],
+    [
+     "2026-11-12",
+     79.81,
+     80.07,
+     76.5526
     ]
    ]
   },
   "CGAU|EMA Crossback": {
-   "tage": 37,
+   "tage": 38,
    "daten": [
-    [
-     "2025-10-30",
-     11.8,
-     11.91,
-     11.23
-    ],
     [
      "2025-10-31",
      11.73,
@@ -81183,18 +82901,18 @@
      21.28,
      22.18,
      21.26
+    ],
+    [
+     "2026-11-12",
+     20.29,
+     20.94,
+     20.275
     ]
    ]
   },
   "CLS|Cup & Handle (Wochenbasis)": {
-   "tage": 35,
+   "tage": 36,
    "daten": [
-    [
-     "2025-10-30",
-     340.13,
-     348.92,
-     329.24
-    ],
     [
      "2025-10-31",
      344.48,
@@ -82746,20 +84464,20 @@
     [
      "2026-11-11",
      242.92,
-     247.115,
+     247.12,
      232.69
+    ],
+    [
+     "2026-11-12",
+     254.03,
+     267.16,
+     233.11
     ]
    ]
   },
   "CLS|Fallback: 20-Tage-Hoch (Pivot)": {
-   "tage": 39,
+   "tage": 40,
    "daten": [
-    [
-     "2025-10-30",
-     340.13,
-     348.92,
-     329.24
-    ],
     [
      "2025-10-31",
      344.48,
@@ -84311,20 +86029,20 @@
     [
      "2026-11-11",
      242.92,
-     247.115,
+     247.12,
      232.69
+    ],
+    [
+     "2026-11-12",
+     254.03,
+     267.16,
+     233.11
     ]
    ]
   },
   "CLS|Rectangle Top": {
-   "tage": 33,
+   "tage": 34,
    "daten": [
-    [
-     "2025-10-30",
-     340.13,
-     348.92,
-     329.24
-    ],
     [
      "2025-10-31",
      344.48,
@@ -85876,20 +87594,20 @@
     [
      "2026-11-11",
      242.92,
-     247.115,
+     247.12,
      232.69
+    ],
+    [
+     "2026-11-12",
+     254.03,
+     267.16,
+     233.11
     ]
    ]
   },
   "CNO|Rectangle Top": {
-   "tage": 43,
+   "tage": 44,
    "daten": [
-    [
-     "2025-10-30",
-     39.91,
-     40.62,
-     39.88
-    ],
     [
      "2025-10-31",
      40.02,
@@ -87442,19 +89160,19 @@
      "2026-11-11",
      57.93,
      58.13,
-     57.39
+     57.34
+    ],
+    [
+     "2026-11-12",
+     57.44,
+     58.5,
+     57.355
     ]
    ]
   },
   "CNXC|1": {
-   "tage": 50,
+   "tage": 51,
    "daten": [
-    [
-     "2025-10-30",
-     40.96,
-     42.89,
-     40.805
-    ],
     [
      "2025-10-31",
      40.31,
@@ -89006,20 +90724,20 @@
     [
      "2026-11-11",
      32.755,
-     33.34,
+     33.39,
      31.25
+    ],
+    [
+     "2026-11-12",
+     31.97,
+     33.39,
+     31.82
     ]
    ]
   },
   "COHR|Fallback: MA50-Rückeroberung": {
-   "tage": 39,
+   "tage": 40,
    "daten": [
-    [
-     "2025-10-30",
-     132.71,
-     137.17,
-     132.43
-    ],
     [
      "2025-10-31",
      131.96,
@@ -90572,19 +92290,19 @@
      "2026-11-11",
      234.51,
      245.73,
-     223.67
+     223.52
+    ],
+    [
+     "2026-11-12",
+     232.08,
+     240.9899,
+     210.0801
     ]
    ]
   },
   "COIN|Fallback: 20-Tage-Hoch (Pivot)": {
-   "tage": 37,
+   "tage": 38,
    "daten": [
-    [
-     "2025-10-30",
-     328.51,
-     344.22,
-     328.21
-    ],
     [
      "2025-10-31",
      343.78,
@@ -92136,20 +93854,20 @@
     [
      "2026-11-11",
      136.27,
-     138.85,
+     138.86,
      132.87
+    ],
+    [
+     "2026-11-12",
+     130.67,
+     135.065,
+     129.625
     ]
    ]
   },
   "CON|Fallback: 20-Tage-Hoch (Pivot)": {
-   "tage": 19,
+   "tage": 20,
    "daten": [
-    [
-     "2025-10-30",
-     20.08,
-     20.31,
-     19.8
-    ],
     [
      "2025-10-31",
      19.92,
@@ -93701,20 +95419,20 @@
     [
      "2026-11-11",
      43.45,
-     43.5,
+     43.51,
      42.51
+    ],
+    [
+     "2026-11-12",
+     42.99,
+     43.645,
+     42.755
     ]
    ]
   },
   "CON|Fallback: 52W-Hoch-Breakout": {
-   "tage": 18,
+   "tage": 19,
    "daten": [
-    [
-     "2025-10-30",
-     20.08,
-     20.31,
-     19.8
-    ],
     [
      "2025-10-31",
      19.92,
@@ -95266,20 +96984,20 @@
     [
      "2026-11-11",
      43.45,
-     43.5,
+     43.51,
      42.51
+    ],
+    [
+     "2026-11-12",
+     42.99,
+     43.645,
+     42.755
     ]
    ]
   },
   "COUR|INS-2026-10-02": {
-   "tage": 28,
+   "tage": 29,
    "daten": [
-    [
-     "2025-10-30",
-     8.28,
-     8.47,
-     8.26
-    ],
     [
      "2025-10-31",
      8.42,
@@ -96833,18 +98551,18 @@
      3.67,
      3.79,
      3.67
+    ],
+    [
+     "2026-11-12",
+     3.56,
+     3.68,
+     3.5426
     ]
    ]
   },
   "CRBG|INS-2026-10-01": {
-   "tage": 29,
+   "tage": 30,
    "daten": [
-    [
-     "2025-10-30",
-     31.75,
-     32.215,
-     31.73
-    ],
     [
      "2025-10-31",
      32.56,
@@ -98398,18 +100116,18 @@
      36.12,
      36.275,
      35.57
+    ],
+    [
+     "2026-11-12",
+     35.97,
+     36.315,
+     35.9
     ]
    ]
   },
   "CRBG|INS-2026-10-02": {
-   "tage": 28,
+   "tage": 29,
    "daten": [
-    [
-     "2025-10-30",
-     31.75,
-     32.215,
-     31.73
-    ],
     [
      "2025-10-31",
      32.56,
@@ -99963,18 +101681,18 @@
      36.12,
      36.275,
      35.57
+    ],
+    [
+     "2026-11-12",
+     35.97,
+     36.315,
+     35.9
     ]
    ]
   },
   "CRL|Rectangle Top": {
-   "tage": 20,
+   "tage": 21,
    "daten": [
-    [
-     "2025-10-30",
-     179.11,
-     182.06,
-     177.12
-    ],
     [
      "2025-10-31",
      180.07,
@@ -101528,18 +103246,18 @@
      342.69,
      356.0,
      342.25
+    ],
+    [
+     "2026-11-12",
+     340.81,
+     342.83,
+     326.29
     ]
    ]
   },
   "CRM|1": {
-   "tage": 48,
+   "tage": 49,
    "daten": [
-    [
-     "2025-10-30",
-     256.65,
-     259.28,
-     250.0
-    ],
     [
      "2025-10-31",
      260.41,
@@ -103092,7 +104810,13 @@
      "2026-11-11",
      218.01,
      218.23,
-     213.63
+     213.5
+    ],
+    [
+     "2026-11-12",
+     217.57,
+     219.35,
+     213.81
     ]
    ]
   },
@@ -103108,14 +104832,8 @@
    ]
   },
   "CVE|1": {
-   "tage": 46,
+   "tage": 47,
    "daten": [
-    [
-     "2025-10-30",
-     16.75,
-     17.05,
-     16.75
-    ],
     [
      "2025-10-31",
      16.92,
@@ -104667,20 +106385,20 @@
     [
      "2026-11-11",
      28.41,
-     28.495,
+     28.5,
      27.83
+    ],
+    [
+     "2026-11-12",
+     28.89,
+     28.975,
+     28.31
     ]
    ]
   },
   "CVI|Cup & Handle (Wochenbasis)": {
-   "tage": 40,
+   "tage": 41,
    "daten": [
-    [
-     "2025-10-30",
-     37.1,
-     41.67,
-     37.04
-    ],
     [
      "2025-10-31",
      35.59,
@@ -106232,20 +107950,20 @@
     [
      "2026-11-11",
      40.61,
-     40.63,
+     40.64,
      38.94
+    ],
+    [
+     "2026-11-12",
+     41.06,
+     41.705,
+     40.325
     ]
    ]
   },
   "CVLT|Cup & Handle (Wochenbasis)": {
-   "tage": 34,
+   "tage": 35,
    "daten": [
-    [
-     "2025-10-30",
-     137.62,
-     143.51,
-     136.01
-    ],
     [
      "2025-10-31",
      139.22,
@@ -107799,18 +109517,18 @@
      166.74,
      171.98,
      166.46
+    ],
+    [
+     "2026-11-12",
+     166.16,
+     168.87,
+     163.965
     ]
    ]
   },
   "CXW|2": {
-   "tage": 45,
+   "tage": 46,
    "daten": [
-    [
-     "2025-10-30",
-     18.32,
-     18.7,
-     18.2
-    ],
     [
      "2025-10-31",
      18.53,
@@ -109364,18 +111082,18 @@
      32.55,
      33.2,
      31.5
+    ],
+    [
+     "2026-11-12",
+     31.48,
+     32.8354,
+     31.43
     ]
    ]
   },
   "CXW|3": {
-   "tage": 46,
+   "tage": 47,
    "daten": [
-    [
-     "2025-10-30",
-     18.32,
-     18.7,
-     18.2
-    ],
     [
      "2025-10-31",
      18.53,
@@ -110929,18 +112647,18 @@
      32.55,
      33.2,
      31.5
+    ],
+    [
+     "2026-11-12",
+     31.48,
+     32.8354,
+     31.43
     ]
    ]
   },
   "CXW|Cup & Handle (Wochenbasis)": {
-   "tage": 32,
+   "tage": 33,
    "daten": [
-    [
-     "2025-10-30",
-     18.32,
-     18.7,
-     18.2
-    ],
     [
      "2025-10-31",
      18.53,
@@ -112494,18 +114212,18 @@
      32.55,
      33.2,
      31.5
+    ],
+    [
+     "2026-11-12",
+     31.48,
+     32.8354,
+     31.43
     ]
    ]
   },
   "CX|INS-2026-10-02": {
-   "tage": 28,
+   "tage": 29,
    "daten": [
-    [
-     "2025-10-30",
-     10.13,
-     10.32,
-     10.1
-    ],
     [
      "2025-10-31",
      10.15,
@@ -114057,20 +115775,20 @@
     [
      "2026-11-11",
      10.64,
-     10.84,
-     10.635
+     10.85,
+     10.64
+    ],
+    [
+     "2026-11-12",
+     10.47,
+     10.6788,
+     10.37
     ]
    ]
   },
   "DAVE|Cup & Handle (Wochenbasis)": {
-   "tage": 35,
+   "tage": 36,
    "daten": [
-    [
-     "2025-10-30",
-     224.18,
-     247.0,
-     223.0
-    ],
     [
      "2025-10-31",
      239.32,
@@ -115623,19 +117341,19 @@
      "2026-11-11",
      281.96,
      286.605,
-     275.6701
+     275.67
+    ],
+    [
+     "2026-11-12",
+     267.37,
+     281.54,
+     266.68
     ]
    ]
   },
   "DIOD|Fallback: MA50-Rückeroberung": {
-   "tage": 39,
+   "tage": 40,
    "daten": [
-    [
-     "2025-10-30",
-     52.9,
-     55.11,
-     52.74
-    ],
     [
      "2025-10-31",
      53.36,
@@ -117187,20 +118905,20 @@
     [
      "2026-11-11",
      91.27,
-     94.6399,
-     89.23
+     94.64,
+     89.22
+    ],
+    [
+     "2026-11-12",
+     91.6,
+     93.18,
+     86.81
     ]
    ]
   },
   "DUOL|Rectangle Top": {
-   "tage": 39,
+   "tage": 40,
    "daten": [
-    [
-     "2025-10-30",
-     262.82,
-     277.49,
-     262.3
-    ],
     [
      "2025-10-31",
      270.64,
@@ -118752,20 +120470,20 @@
     [
      "2026-11-11",
      164.12,
-     165.86,
-     152.18
+     165.88,
+     152.15
+    ],
+    [
+     "2026-11-12",
+     157.42,
+     162.73,
+     156.571
     ]
    ]
   },
   "ECO|1": {
-   "tage": 48,
+   "tage": 49,
    "daten": [
-    [
-     "2025-10-30",
-     34.2,
-     34.44,
-     33.88
-    ],
     [
      "2025-10-31",
      35.56,
@@ -120319,18 +122037,18 @@
      85.75,
      86.24,
      83.79
+    ],
+    [
+     "2026-11-12",
+     87.67,
+     87.9993,
+     82.345
     ]
    ]
   },
   "ECO|Fallback: 20-Tage-Hoch (Pivot)": {
-   "tage": 42,
+   "tage": 43,
    "daten": [
-    [
-     "2025-10-30",
-     34.2,
-     34.44,
-     33.88
-    ],
     [
      "2025-10-31",
      35.56,
@@ -121884,18 +123602,18 @@
      85.75,
      86.24,
      83.79
+    ],
+    [
+     "2026-11-12",
+     87.67,
+     87.9993,
+     82.345
     ]
    ]
   },
   "ECO|Fallback: 52W-Hoch-Breakout": {
-   "tage": 42,
+   "tage": 43,
    "daten": [
-    [
-     "2025-10-30",
-     34.2,
-     34.44,
-     33.88
-    ],
     [
      "2025-10-31",
      35.56,
@@ -123449,18 +125167,18 @@
      85.75,
      86.24,
      83.79
+    ],
+    [
+     "2026-11-12",
+     87.67,
+     87.9993,
+     82.345
     ]
    ]
   },
   "ECPG|1": {
-   "tage": 49,
+   "tage": 50,
    "daten": [
-    [
-     "2025-10-30",
-     40.9,
-     42.18,
-     40.6
-    ],
     [
      "2025-10-31",
      41.58,
@@ -125014,18 +126732,18 @@
      112.35,
      112.65,
      106.86
+    ],
+    [
+     "2026-11-12",
+     109.86,
+     112.51,
+     109.5
     ]
    ]
   },
   "EC|2": {
-   "tage": 45,
+   "tage": 46,
    "daten": [
-    [
-     "2025-10-30",
-     9.25,
-     9.34,
-     9.15
-    ],
     [
      "2025-10-31",
      9.32,
@@ -126577,20 +128295,20 @@
     [
      "2026-11-11",
      15.3,
-     15.43,
+     15.45,
      15.2
+    ],
+    [
+     "2026-11-12",
+     15.32,
+     15.52,
+     15.13
     ]
    ]
   },
   "ELF|1": {
-   "tage": 50,
+   "tage": 51,
    "daten": [
-    [
-     "2025-10-30",
-     123.11,
-     126.253,
-     123.03
-    ],
     [
      "2025-10-31",
      122.14,
@@ -128144,18 +129862,18 @@
      118.46,
      119.74,
      115.3
+    ],
+    [
+     "2026-11-12",
+     113.53,
+     117.26,
+     112.71
     ]
    ]
   },
   "EOG|1": {
-   "tage": 51,
+   "tage": 52,
    "daten": [
-    [
-     "2025-10-30",
-     105.46,
-     106.41,
-     104.94
-    ],
     [
      "2025-10-31",
      105.84,
@@ -129708,19 +131426,19 @@
      "2026-11-11",
      153.77,
      153.89,
-     151.71
+     151.69
+    ],
+    [
+     "2026-11-12",
+     155.62,
+     157.12,
+     153.855
     ]
    ]
   },
   "EOG|2": {
-   "tage": 48,
+   "tage": 49,
    "daten": [
-    [
-     "2025-10-30",
-     105.46,
-     106.41,
-     104.94
-    ],
     [
      "2025-10-31",
      105.84,
@@ -131273,19 +132991,19 @@
      "2026-11-11",
      153.77,
      153.89,
-     151.71
+     151.69
+    ],
+    [
+     "2026-11-12",
+     155.62,
+     157.12,
+     153.855
     ]
    ]
   },
   "EQNR|1": {
-   "tage": 45,
+   "tage": 46,
    "daten": [
-    [
-     "2025-10-30",
-     23.97,
-     24.22,
-     23.86
-    ],
     [
      "2025-10-31",
      23.96,
@@ -132838,19 +134556,19 @@
      "2026-11-11",
      41.33,
      41.55,
-     40.9175
+     40.92
+    ],
+    [
+     "2026-11-12",
+     42.76,
+     43.1152,
+     41.695
     ]
    ]
   },
   "EXPD|1": {
-   "tage": 46,
+   "tage": 47,
    "daten": [
-    [
-     "2025-10-30",
-     120.19,
-     121.7,
-     118.58
-    ],
     [
      "2025-10-31",
      121.9,
@@ -134403,19 +136121,19 @@
      "2026-11-11",
      194.59,
      194.68,
-     190.055
+     190.06
+    ],
+    [
+     "2026-11-12",
+     195.67,
+     196.54,
+     194.005
     ]
    ]
   },
   "EZPW|1": {
-   "tage": 46,
+   "tage": 47,
    "daten": [
-    [
-     "2025-10-30",
-     18.11,
-     18.33,
-     17.66
-    ],
     [
      "2025-10-31",
      18.25,
@@ -135969,18 +137687,18 @@
      28.3,
      29.18,
      28.15
+    ],
+    [
+     "2026-11-12",
+     27.05,
+     29.1813,
+     26.275
     ]
    ]
   },
   "FCFS|2": {
-   "tage": 44,
+   "tage": 45,
    "daten": [
-    [
-     "2025-10-30",
-     158.45,
-     163.16,
-     149.17
-    ],
     [
      "2025-10-31",
      158.5,
@@ -137534,18 +139252,18 @@
      184.0,
      184.79,
      181.8
+    ],
+    [
+     "2026-11-12",
+     181.68,
+     184.435,
+     179.0001
     ]
    ]
   },
   "FET|Fallback: 20-Tage-Hoch (Pivot)": {
-   "tage": 33,
+   "tage": 34,
    "daten": [
-    [
-     "2025-10-30",
-     32.22,
-     32.44,
-     31.83
-    ],
     [
      "2025-10-31",
      26.78,
@@ -139098,19 +140816,19 @@
      "2026-11-11",
      75.77,
      76.78,
-     73.935
+     71.37
+    ],
+    [
+     "2026-11-12",
+     76.82,
+     77.33,
+     74.8396
     ]
    ]
   },
   "FIVE|2": {
-   "tage": 44,
+   "tage": 45,
    "daten": [
-    [
-     "2025-10-30",
-     156.81,
-     162.01,
-     155.7
-    ],
     [
      "2025-10-31",
      157.27,
@@ -140664,18 +142382,18 @@
      250.74,
      254.23,
      245.79
+    ],
+    [
+     "2026-11-12",
+     247.16,
+     257.8003,
+     245.785
     ]
    ]
   },
   "FLYW|Fallback: MA50-Rückeroberung": {
-   "tage": 42,
+   "tage": 43,
    "daten": [
-    [
-     "2025-10-30",
-     12.95,
-     13.535,
-     12.9
-    ],
     [
      "2025-10-31",
      13.32,
@@ -142229,18 +143947,18 @@
      22.25,
      22.585,
      21.6
+    ],
+    [
+     "2026-11-12",
+     21.47,
+     22.257,
+     21.415
     ]
    ]
   },
   "FN|Fallback: 20-Tage-Hoch (Pivot)": {
-   "tage": 26,
+   "tage": 27,
    "daten": [
-    [
-     "2025-10-30",
-     438.0,
-     444.41,
-     433.58
-    ],
     [
      "2025-10-31",
      440.57,
@@ -143793,19 +145511,19 @@
      "2026-11-11",
      369.01,
      379.43,
-     359.595
+     359.6
+    ],
+    [
+     "2026-11-12",
+     353.83,
+     364.55,
+     345.0
     ]
    ]
   },
   "FORM|Cup & Handle (Wochenbasis)": {
-   "tage": 31,
+   "tage": 32,
    "daten": [
-    [
-     "2025-10-30",
-     59.25,
-     61.1,
-     53.0
-    ],
     [
      "2025-10-31",
      54.95,
@@ -145358,19 +147076,19 @@
      "2026-11-11",
      95.78,
      98.57,
-     90.355
+     90.36
+    ],
+    [
+     "2026-11-12",
+     92.32,
+     95.1965,
+     89.14
     ]
    ]
   },
   "FORM|Fallback: 20-Tage-Hoch (Pivot)": {
-   "tage": 37,
+   "tage": 38,
    "daten": [
-    [
-     "2025-10-30",
-     59.25,
-     61.1,
-     53.0
-    ],
     [
      "2025-10-31",
      54.95,
@@ -146923,19 +148641,19 @@
      "2026-11-11",
      95.78,
      98.57,
-     90.355
+     90.36
+    ],
+    [
+     "2026-11-12",
+     92.32,
+     95.1965,
+     89.14
     ]
    ]
   },
   "FORM|Rectangle Top": {
-   "tage": 37,
+   "tage": 38,
    "daten": [
-    [
-     "2025-10-30",
-     59.25,
-     61.1,
-     53.0
-    ],
     [
      "2025-10-31",
      54.95,
@@ -148488,12 +150206,18 @@
      "2026-11-11",
      95.78,
      98.57,
-     90.355
+     90.36
+    ],
+    [
+     "2026-11-12",
+     92.32,
+     95.1965,
+     89.14
     ]
    ]
   },
   "FPS|Fallback: 20-Tage-Hoch (Pivot)": {
-   "tage": 37,
+   "tage": 38,
    "daten": [
     [
      "2026-02-05",
@@ -149656,20 +151380,20 @@
     [
      "2026-11-11",
      24.57,
-     24.745,
+     24.75,
      22.71
+    ],
+    [
+     "2026-11-12",
+     22.15,
+     23.73,
+     20.4
     ]
    ]
   },
   "FRPT|Fallback: MA50-Rückeroberung": {
-   "tage": 42,
+   "tage": 43,
    "daten": [
-    [
-     "2025-10-30",
-     50.6,
-     52.68,
-     50.55
-    ],
     [
      "2025-10-31",
      49.21,
@@ -151223,18 +152947,18 @@
      64.52,
      64.855,
      61.91
+    ],
+    [
+     "2026-11-12",
+     64.63,
+     66.14,
+     63.4601
     ]
    ]
   },
   "FRPT|Rectangle Top": {
-   "tage": 40,
+   "tage": 41,
    "daten": [
-    [
-     "2025-10-30",
-     50.6,
-     52.68,
-     50.55
-    ],
     [
      "2025-10-31",
      49.21,
@@ -152788,18 +154512,18 @@
      64.52,
      64.855,
      61.91
+    ],
+    [
+     "2026-11-12",
+     64.63,
+     66.14,
+     63.4601
     ]
    ]
   },
   "FTI|2": {
-   "tage": 51,
+   "tage": 52,
    "daten": [
-    [
-     "2025-10-30",
-     41.79,
-     42.65,
-     40.79
-    ],
     [
      "2025-10-31",
      41.35,
@@ -154353,18 +156077,18 @@
      65.39,
      66.18,
      64.22
+    ],
+    [
+     "2026-11-12",
+     64.92,
+     66.2,
+     64.74
     ]
    ]
   },
   "FTK|Fallback: 20-Tage-Hoch (Pivot)": {
-   "tage": 39,
+   "tage": 40,
    "daten": [
-    [
-     "2025-10-30",
-     18.75,
-     18.96,
-     16.96
-    ],
     [
      "2025-10-31",
      17.31,
@@ -155916,20 +157640,20 @@
     [
      "2026-11-11",
      26.43,
-     27.435,
+     27.44,
      25.99
+    ],
+    [
+     "2026-11-12",
+     25.83,
+     26.81,
+     25.12
     ]
    ]
   },
   "FTK|Fallback: MA50-Rückeroberung": {
-   "tage": 40,
+   "tage": 41,
    "daten": [
-    [
-     "2025-10-30",
-     18.75,
-     18.96,
-     16.96
-    ],
     [
      "2025-10-31",
      17.31,
@@ -157481,20 +159205,20 @@
     [
      "2026-11-11",
      26.43,
-     27.435,
+     27.44,
      25.99
+    ],
+    [
+     "2026-11-12",
+     25.83,
+     26.81,
+     25.12
     ]
    ]
   },
   "FTK|INS-2026-09-16": {
-   "tage": 40,
+   "tage": 41,
    "daten": [
-    [
-     "2025-10-30",
-     18.75,
-     18.96,
-     16.96
-    ],
     [
      "2025-10-31",
      17.31,
@@ -159046,20 +160770,20 @@
     [
      "2026-11-11",
      26.43,
-     27.435,
+     27.44,
      25.99
+    ],
+    [
+     "2026-11-12",
+     25.83,
+     26.81,
+     25.12
     ]
    ]
   },
   "GAP|1": {
-   "tage": 49,
+   "tage": 50,
    "daten": [
-    [
-     "2025-10-30",
-     23.25,
-     23.76,
-     23.01
-    ],
     [
      "2025-10-31",
      22.85,
@@ -160611,20 +162335,20 @@
     [
      "2026-11-11",
      21.53,
-     21.785,
+     21.79,
      21.42
+    ],
+    [
+     "2026-11-12",
+     21.25,
+     21.79,
+     21.135
     ]
    ]
   },
   "GLNG|Rectangle Top": {
-   "tage": 42,
+   "tage": 43,
    "daten": [
-    [
-     "2025-10-30",
-     40.49,
-     41.03,
-     40.16
-    ],
     [
      "2025-10-31",
      41.05,
@@ -162178,18 +163902,18 @@
      42.82,
      44.12,
      42.63
+    ],
+    [
+     "2026-11-12",
+     42.97,
+     43.41,
+     42.4
     ]
    ]
   },
   "GME|INS-2026-09-22": {
-   "tage": 36,
+   "tage": 37,
    "daten": [
-    [
-     "2025-10-30",
-     22.58,
-     23.27,
-     22.56
-    ],
     [
      "2025-10-31",
      22.29,
@@ -163741,20 +165465,20 @@
     [
      "2026-11-11",
      25.55,
-     25.645,
+     25.65,
      25.15
+    ],
+    [
+     "2026-11-12",
+     25.62,
+     25.68,
+     24.85
     ]
    ]
   },
   "GME|INS-2026-10-02": {
-   "tage": 28,
+   "tage": 29,
    "daten": [
-    [
-     "2025-10-30",
-     22.58,
-     23.27,
-     22.56
-    ],
     [
      "2025-10-31",
      22.29,
@@ -165306,20 +167030,20 @@
     [
      "2026-11-11",
      25.55,
-     25.645,
+     25.65,
      25.15
+    ],
+    [
+     "2026-11-12",
+     25.62,
+     25.68,
+     24.85
     ]
    ]
   },
   "GME|INS-2026-10-16": {
-   "tage": 18,
+   "tage": 19,
    "daten": [
-    [
-     "2025-10-30",
-     22.58,
-     23.27,
-     22.56
-    ],
     [
      "2025-10-31",
      22.29,
@@ -166871,20 +168595,20 @@
     [
      "2026-11-11",
      25.55,
-     25.645,
+     25.65,
      25.15
+    ],
+    [
+     "2026-11-12",
+     25.62,
+     25.68,
+     24.85
     ]
    ]
   },
   "GNK|EMA Crossback": {
-   "tage": 42,
+   "tage": 43,
    "daten": [
-    [
-     "2025-10-30",
-     16.72,
-     16.85,
-     16.35
-    ],
     [
      "2025-10-31",
      17.04,
@@ -168438,18 +170162,18 @@
      26.15,
      26.79,
      26.08
+    ],
+    [
+     "2026-11-12",
+     26.41,
+     26.55,
+     26.01
     ]
    ]
   },
   "GNK|Fallback: 20-Tage-Hoch (Pivot)": {
-   "tage": 39,
+   "tage": 40,
    "daten": [
-    [
-     "2025-10-30",
-     16.72,
-     16.85,
-     16.35
-    ],
     [
      "2025-10-31",
      17.04,
@@ -170003,18 +171727,18 @@
      26.15,
      26.79,
      26.08
+    ],
+    [
+     "2026-11-12",
+     26.41,
+     26.55,
+     26.01
     ]
    ]
   },
   "GNK|Fallback: 52W-Hoch-Breakout": {
-   "tage": 41,
+   "tage": 42,
    "daten": [
-    [
-     "2025-10-30",
-     16.72,
-     16.85,
-     16.35
-    ],
     [
      "2025-10-31",
      17.04,
@@ -171568,18 +173292,18 @@
      26.15,
      26.79,
      26.08
+    ],
+    [
+     "2026-11-12",
+     26.41,
+     26.55,
+     26.01
     ]
    ]
   },
   "GNK|Rectangle Top": {
-   "tage": 42,
+   "tage": 43,
    "daten": [
-    [
-     "2025-10-30",
-     16.72,
-     16.85,
-     16.35
-    ],
     [
      "2025-10-31",
      17.04,
@@ -173133,18 +174857,18 @@
      26.15,
      26.79,
      26.08
+    ],
+    [
+     "2026-11-12",
+     26.41,
+     26.55,
+     26.01
     ]
    ]
   },
   "GNRC|EMA Crossback": {
-   "tage": 33,
+   "tage": 34,
    "daten": [
-    [
-     "2025-10-30",
-     165.78,
-     181.02,
-     164.02
-    ],
     [
      "2025-10-31",
      168.02,
@@ -174698,18 +176422,18 @@
      194.0,
      194.62,
      185.86
+    ],
+    [
+     "2026-11-12",
+     192.88,
+     198.34,
+     188.88
     ]
    ]
   },
   "GPI|INS-2026-10-02": {
-   "tage": 28,
+   "tage": 29,
    "daten": [
-    [
-     "2025-10-30",
-     395.78,
-     410.19,
-     393.6
-    ],
     [
      "2025-10-31",
      397.54,
@@ -176262,19 +177986,19 @@
      "2026-11-11",
      270.27,
      270.33,
-     259.46
+     259.01
+    ],
+    [
+     "2026-11-12",
+     257.29,
+     274.7793,
+     257.11
     ]
    ]
   },
   "GRAB|INS-2026-09-22": {
-   "tage": 36,
+   "tage": 37,
    "daten": [
-    [
-     "2025-10-30",
-     5.98,
-     6.08,
-     5.92
-    ],
     [
      "2025-10-31",
      6.01,
@@ -177828,18 +179552,18 @@
      3.33,
      3.38,
      3.27
+    ],
+    [
+     "2026-11-12",
+     3.24,
+     3.34,
+     3.21
     ]
    ]
   },
   "GRAB|INS-2026-10-02": {
-   "tage": 28,
+   "tage": 29,
    "daten": [
-    [
-     "2025-10-30",
-     5.98,
-     6.08,
-     5.92
-    ],
     [
      "2025-10-31",
      6.01,
@@ -179393,18 +181117,18 @@
      3.33,
      3.38,
      3.27
+    ],
+    [
+     "2026-11-12",
+     3.24,
+     3.34,
+     3.21
     ]
    ]
   },
   "GRAL|Cup & Handle (Wochenbasis)": {
-   "tage": 31,
+   "tage": 32,
    "daten": [
-    [
-     "2025-10-30",
-     91.15,
-     95.2,
-     85.25
-    ],
     [
      "2025-10-31",
      91.93,
@@ -180958,18 +182682,18 @@
      125.64,
      133.0,
      124.83
+    ],
+    [
+     "2026-11-12",
+     121.35,
+     122.545,
+     115.28
     ]
    ]
   },
   "GSAT|Fallback: MA50-Pullback": {
-   "tage": 39,
+   "tage": 40,
    "daten": [
-    [
-     "2025-10-30",
-     50.78,
-     54.57,
-     41.26
-    ],
     [
      "2025-10-31",
      54.41,
@@ -182522,19 +184246,19 @@
      "2026-11-11",
      86.04,
      86.91,
-     85.98
+     85.96
+    ],
+    [
+     "2026-11-12",
+     86.235,
+     86.965,
+     85.83
     ]
    ]
   },
   "GSAT|INS-2026-09-22": {
-   "tage": 36,
+   "tage": 37,
    "daten": [
-    [
-     "2025-10-30",
-     50.78,
-     54.57,
-     41.26
-    ],
     [
      "2025-10-31",
      54.41,
@@ -184087,19 +185811,19 @@
      "2026-11-11",
      86.04,
      86.91,
-     85.98
+     85.96
+    ],
+    [
+     "2026-11-12",
+     86.235,
+     86.965,
+     85.83
     ]
    ]
   },
   "GSAT|INS-2026-10-02": {
-   "tage": 28,
+   "tage": 29,
    "daten": [
-    [
-     "2025-10-30",
-     50.78,
-     54.57,
-     41.26
-    ],
     [
      "2025-10-31",
      54.41,
@@ -185652,19 +187376,19 @@
      "2026-11-11",
      86.04,
      86.91,
-     85.98
+     85.96
+    ],
+    [
+     "2026-11-12",
+     86.235,
+     86.965,
+     85.83
     ]
    ]
   },
   "GSAT|Rectangle Top": {
-   "tage": 43,
+   "tage": 44,
    "daten": [
-    [
-     "2025-10-30",
-     50.78,
-     54.57,
-     41.26
-    ],
     [
      "2025-10-31",
      54.41,
@@ -187217,19 +188941,19 @@
      "2026-11-11",
      86.04,
      86.91,
-     85.98
+     85.96
+    ],
+    [
+     "2026-11-12",
+     86.235,
+     86.965,
+     85.83
     ]
    ]
   },
   "GSHD|INS-2026-10-02": {
-   "tage": 28,
+   "tage": 29,
    "daten": [
-    [
-     "2025-10-30",
-     67.96,
-     75.0,
-     67.465
-    ],
     [
      "2025-10-31",
      68.67,
@@ -188783,18 +190507,18 @@
      46.15,
      46.78,
      44.33
+    ],
+    [
+     "2026-11-12",
+     45.66,
+     47.98,
+     44.87
     ]
    ]
   },
   "HAE|Cup & Handle (Wochenbasis)": {
-   "tage": 38,
+   "tage": 39,
    "daten": [
-    [
-     "2025-10-30",
-     49.99,
-     50.27,
-     49.12
-    ],
     [
      "2025-10-31",
      50.01,
@@ -190346,20 +192070,20 @@
     [
      "2026-11-11",
      120.54,
-     123.06,
+     123.18,
      120.02
+    ],
+    [
+     "2026-11-12",
+     122.71,
+     124.0,
+     119.4501
     ]
    ]
   },
   "HAE|Fallback: 20-Tage-Hoch (Pivot)": {
-   "tage": 39,
+   "tage": 40,
    "daten": [
-    [
-     "2025-10-30",
-     49.99,
-     50.27,
-     49.12
-    ],
     [
      "2025-10-31",
      50.01,
@@ -191911,20 +193635,20 @@
     [
      "2026-11-11",
      120.54,
-     123.06,
+     123.18,
      120.02
+    ],
+    [
+     "2026-11-12",
+     122.71,
+     124.0,
+     119.4501
     ]
    ]
   },
   "HBM|Fallback: MA50-Rückeroberung": {
-   "tage": 40,
+   "tage": 41,
    "daten": [
-    [
-     "2025-10-30",
-     15.89,
-     16.09,
-     15.7
-    ],
     [
      "2025-10-31",
      16.0,
@@ -193478,18 +195202,18 @@
      21.94,
      22.61,
      21.85
+    ],
+    [
+     "2026-11-12",
+     21.62,
+     22.145,
+     20.94
     ]
    ]
   },
   "HCC|Fallback: MA50-Pullback": {
-   "tage": 39,
+   "tage": 40,
    "daten": [
-    [
-     "2025-10-30",
-     64.44,
-     64.88,
-     62.24
-    ],
     [
      "2025-10-31",
      67.84,
@@ -195041,20 +196765,20 @@
     [
      "2026-11-11",
      83.5,
-     85.995,
+     86.56,
      83.3
+    ],
+    [
+     "2026-11-12",
+     84.25,
+     85.36,
+     82.74
     ]
    ]
   },
   "HCC|Fallback: MA50-Rückeroberung": {
-   "tage": 40,
+   "tage": 41,
    "daten": [
-    [
-     "2025-10-30",
-     64.44,
-     64.88,
-     62.24
-    ],
     [
      "2025-10-31",
      67.84,
@@ -196606,20 +198330,20 @@
     [
      "2026-11-11",
      83.5,
-     85.995,
+     86.56,
      83.3
+    ],
+    [
+     "2026-11-12",
+     84.25,
+     85.36,
+     82.74
     ]
    ]
   },
   "HHH|Cup & Handle (Wochenbasis)": {
-   "tage": 31,
+   "tage": 32,
    "daten": [
-    [
-     "2025-10-30",
-     78.68,
-     79.76,
-     78.5
-    ],
     [
      "2025-10-31",
      79.28,
@@ -198171,20 +199895,20 @@
     [
      "2026-11-11",
      83.85,
-     84.225,
+     84.29,
      83.04
+    ],
+    [
+     "2026-11-12",
+     82.76,
+     84.978,
+     81.93
     ]
    ]
   },
   "HHH|Rectangle Top": {
-   "tage": 32,
+   "tage": 33,
    "daten": [
-    [
-     "2025-10-30",
-     78.68,
-     79.76,
-     78.5
-    ],
     [
      "2025-10-31",
      79.28,
@@ -199736,20 +201460,20 @@
     [
      "2026-11-11",
      83.85,
-     84.225,
+     84.29,
      83.04
+    ],
+    [
+     "2026-11-12",
+     82.76,
+     84.978,
+     81.93
     ]
    ]
   },
   "HNGE|1": {
-   "tage": 45,
+   "tage": 46,
    "daten": [
-    [
-     "2025-10-30",
-     48.66,
-     49.57,
-     47.0
-    ],
     [
      "2025-10-31",
      49.76,
@@ -201303,18 +203027,18 @@
      121.72,
      126.4,
      121.07
+    ],
+    [
+     "2026-11-12",
+     120.99,
+     122.29,
+     119.1
     ]
    ]
   },
   "HNGE|Rectangle Top": {
-   "tage": 39,
+   "tage": 40,
    "daten": [
-    [
-     "2025-10-30",
-     48.66,
-     49.57,
-     47.0
-    ],
     [
      "2025-10-31",
      49.76,
@@ -202868,18 +204592,18 @@
      121.72,
      126.4,
      121.07
+    ],
+    [
+     "2026-11-12",
+     120.99,
+     122.29,
+     119.1
     ]
    ]
   },
   "HOPE|Fallback: MA50-Pullback": {
-   "tage": 42,
+   "tage": 43,
    "daten": [
-    [
-     "2025-10-30",
-     10.52,
-     10.79,
-     10.51
-    ],
     [
      "2025-10-31",
      10.49,
@@ -204431,20 +206155,20 @@
     [
      "2026-11-11",
      13.14,
-     13.385,
-     13.085
+     13.4,
+     13.08
+    ],
+    [
+     "2026-11-12",
+     13.06,
+     13.155,
+     13.015
     ]
    ]
   },
   "HQI|Rectangle Top": {
-   "tage": 21,
+   "tage": 22,
    "daten": [
-    [
-     "2025-10-30",
-     8.56,
-     8.81,
-     8.31
-    ],
     [
      "2025-10-31",
      8.53,
@@ -205998,18 +207722,18 @@
      18.25,
      18.52,
      17.77
+    ],
+    [
+     "2026-11-12",
+     18.53,
+     19.1,
+     18.0
     ]
    ]
   },
   "HSHP|1": {
-   "tage": 49,
+   "tage": 50,
    "daten": [
-    [
-     "2025-10-30",
-     7.7,
-     7.77,
-     7.67
-    ],
     [
      "2025-10-31",
      7.84,
@@ -207563,18 +209287,18 @@
      16.45,
      16.59,
      16.065
+    ],
+    [
+     "2026-11-12",
+     16.13,
+     16.19,
+     15.76
     ]
    ]
   },
   "HTFL|Rectangle Top": {
-   "tage": 26,
+   "tage": 27,
    "daten": [
-    [
-     "2025-10-30",
-     36.57,
-     38.486,
-     36.57
-    ],
     [
      "2025-10-31",
      37.16,
@@ -209128,18 +210852,18 @@
      59.1,
      60.655,
      56.61
+    ],
+    [
+     "2026-11-12",
+     59.92,
+     60.36,
+     57.0
     ]
    ]
   },
   "IBTA|Cup & Handle (Wochenbasis)": {
-   "tage": 42,
+   "tage": 43,
    "daten": [
-    [
-     "2025-10-30",
-     32.19,
-     34.735,
-     32.0
-    ],
     [
      "2025-10-31",
      32.26,
@@ -210693,18 +212417,18 @@
      59.94,
      60.68,
      58.52
+    ],
+    [
+     "2026-11-12",
+     58.12,
+     60.88,
+     58.07
     ]
    ]
   },
   "IDYA|Rectangle Top": {
-   "tage": 43,
+   "tage": 44,
    "daten": [
-    [
-     "2025-10-30",
-     31.6,
-     32.79,
-     31.59
-    ],
     [
      "2025-10-31",
      31.86,
@@ -212258,18 +213982,18 @@
      32.715,
      32.91,
      31.35
+    ],
+    [
+     "2026-11-12",
+     31.49,
+     32.51,
+     31.43
     ]
    ]
   },
   "IESC|Fallback: MA50-Rückeroberung": {
-   "tage": 39,
+   "tage": 40,
    "daten": [
-    [
-     "2025-10-30",
-     194.575,
-     210.035,
-     192.005
-    ],
     [
      "2025-10-31",
      195.94,
@@ -213822,19 +215546,19 @@
      "2026-11-11",
      177.32,
      186.93,
-     172.225
+     172.23
+    ],
+    [
+     "2026-11-12",
+     174.17,
+     180.78,
+     169.43
     ]
    ]
   },
   "INCY|1": {
-   "tage": 51,
+   "tage": 52,
    "daten": [
-    [
-     "2025-10-30",
-     92.59,
-     94.62,
-     91.19
-    ],
     [
      "2025-10-31",
      93.48,
@@ -215388,18 +217112,18 @@
      122.27,
      122.73,
      117.84
+    ],
+    [
+     "2026-11-12",
+     121.7,
+     123.9,
+     121.29
     ]
    ]
   },
   "INSP|Cup & Handle (Wochenbasis)": {
-   "tage": 38,
+   "tage": 39,
    "daten": [
-    [
-     "2025-10-30",
-     73.07,
-     75.915,
-     72.52
-    ],
     [
      "2025-10-31",
      72.08,
@@ -216953,18 +218677,18 @@
      62.11,
      63.03,
      61.08
+    ],
+    [
+     "2026-11-12",
+     60.54,
+     62.535,
+     60.4
     ]
    ]
   },
   "INSP|Fallback: 20-Tage-Hoch (Pivot)": {
-   "tage": 42,
+   "tage": 43,
    "daten": [
-    [
-     "2025-10-30",
-     73.07,
-     75.915,
-     72.52
-    ],
     [
      "2025-10-31",
      72.08,
@@ -218518,18 +220242,18 @@
      62.11,
      63.03,
      61.08
+    ],
+    [
+     "2026-11-12",
+     60.54,
+     62.535,
+     60.4
     ]
    ]
   },
   "INSW|Cup & Handle (Wochenbasis)": {
-   "tage": 41,
+   "tage": 42,
    "daten": [
-    [
-     "2025-10-30",
-     50.25,
-     51.29,
-     49.67
-    ],
     [
      "2025-10-31",
      51.23,
@@ -220081,20 +221805,20 @@
     [
      "2026-11-11",
      101.27,
-     102.15,
-     99.24
+     102.17,
+     99.2
+    ],
+    [
+     "2026-11-12",
+     104.65,
+     104.655,
+     100.09
     ]
    ]
   },
   "INSW|Fallback: 20-Tage-Hoch (Pivot)": {
-   "tage": 38,
+   "tage": 39,
    "daten": [
-    [
-     "2025-10-30",
-     50.25,
-     51.29,
-     49.67
-    ],
     [
      "2025-10-31",
      51.23,
@@ -221646,20 +223370,20 @@
     [
      "2026-11-11",
      101.27,
-     102.15,
-     99.24
+     102.17,
+     99.2
+    ],
+    [
+     "2026-11-12",
+     104.65,
+     104.655,
+     100.09
     ]
    ]
   },
   "INSW|Fallback: 52W-Hoch-Breakout": {
-   "tage": 30,
+   "tage": 31,
    "daten": [
-    [
-     "2025-10-30",
-     50.25,
-     51.29,
-     49.67
-    ],
     [
      "2025-10-31",
      51.23,
@@ -223211,20 +224935,20 @@
     [
      "2026-11-11",
      101.27,
-     102.15,
-     99.24
+     102.17,
+     99.2
+    ],
+    [
+     "2026-11-12",
+     104.65,
+     104.655,
+     100.09
     ]
    ]
   },
   "IRDM|Rectangle Top": {
-   "tage": 36,
+   "tage": 37,
    "daten": [
-    [
-     "2025-10-30",
-     17.64,
-     17.74,
-     16.75
-    ],
     [
      "2025-10-31",
      19.15,
@@ -224777,19 +226501,19 @@
      "2026-11-11",
      47.29,
      47.59,
-     46.6216
+     46.58
+    ],
+    [
+     "2026-11-12",
+     46.12,
+     47.315,
+     46.125
     ]
    ]
   },
   "ITT|1": {
-   "tage": 51,
+   "tage": 52,
    "daten": [
-    [
-     "2025-10-30",
-     187.06,
-     197.07,
-     185.6
-    ],
     [
      "2025-10-31",
      185.07,
@@ -226341,20 +228065,20 @@
     [
      "2026-11-11",
      215.01,
-     217.455,
+     218.49,
      213.04
+    ],
+    [
+     "2026-11-12",
+     214.59,
+     217.15,
+     211.29
     ]
    ]
   },
   "JOE|Rectangle Top": {
-   "tage": 42,
+   "tage": 43,
    "daten": [
-    [
-     "2025-10-30",
-     54.85,
-     56.69,
-     51.34
-    ],
     [
      "2025-10-31",
      56.78,
@@ -227907,19 +229631,19 @@
      "2026-11-11",
      71.82,
      72.92,
-     71.425
+     71.43
+    ],
+    [
+     "2026-11-12",
+     71.06,
+     72.24,
+     70.75
     ]
    ]
   },
   "KLIC|Fallback: 20-Tage-Hoch (Pivot)": {
-   "tage": 36,
+   "tage": 37,
    "daten": [
-    [
-     "2025-10-30",
-     39.57,
-     40.16,
-     39.32
-    ],
     [
      "2025-10-31",
      39.93,
@@ -229473,18 +231197,18 @@
      73.2,
      75.17,
      70.94
+    ],
+    [
+     "2026-11-12",
+     72.42,
+     73.3836,
+     70.0
     ]
    ]
   },
   "KLIC|Fallback: MA50-Rückeroberung": {
-   "tage": 33,
+   "tage": 34,
    "daten": [
-    [
-     "2025-10-30",
-     39.57,
-     40.16,
-     39.32
-    ],
     [
      "2025-10-31",
      39.93,
@@ -231038,18 +232762,18 @@
      73.2,
      75.17,
      70.94
+    ],
+    [
+     "2026-11-12",
+     72.42,
+     73.3836,
+     70.0
     ]
    ]
   },
   "KLIC|SPRING-2026-09-21": {
-   "tage": 37,
+   "tage": 38,
    "daten": [
-    [
-     "2025-10-30",
-     39.57,
-     40.16,
-     39.32
-    ],
     [
      "2025-10-31",
      39.93,
@@ -232603,18 +234327,18 @@
      73.2,
      75.17,
      70.94
+    ],
+    [
+     "2026-11-12",
+     72.42,
+     73.3836,
+     70.0
     ]
    ]
   },
   "KRYS|2": {
-   "tage": 50,
+   "tage": 51,
    "daten": [
-    [
-     "2025-10-30",
-     189.08,
-     191.435,
-     184.7
-    ],
     [
      "2025-10-31",
      197.51,
@@ -234166,20 +235890,20 @@
     [
      "2026-11-11",
      308.81,
-     310.93,
+     311.05,
      303.59
+    ],
+    [
+     "2026-11-12",
+     305.68,
+     309.68,
+     304.06
     ]
    ]
   },
   "KRYS|3": {
-   "tage": 49,
+   "tage": 50,
    "daten": [
-    [
-     "2025-10-30",
-     189.08,
-     191.435,
-     184.7
-    ],
     [
      "2025-10-31",
      197.51,
@@ -235731,20 +237455,20 @@
     [
      "2026-11-11",
      308.81,
-     310.93,
+     311.05,
      303.59
+    ],
+    [
+     "2026-11-12",
+     305.68,
+     309.68,
+     304.06
     ]
    ]
   },
   "KYMR|Fallback: MA50-Pullback": {
-   "tage": 42,
+   "tage": 43,
    "daten": [
-    [
-     "2025-10-30",
-     61.44,
-     61.786,
-     59.24
-    ],
     [
      "2025-10-31",
      61.84,
@@ -237298,18 +239022,18 @@
      134.84,
      138.01,
      134.57
+    ],
+    [
+     "2026-11-12",
+     127.17,
+     134.67,
+     126.94
     ]
    ]
   },
   "LB|Cup & Handle (Wochenbasis)": {
-   "tage": 34,
+   "tage": 35,
    "daten": [
-    [
-     "2025-10-30",
-     59.26,
-     60.17,
-     58.6
-    ],
     [
      "2025-10-31",
      59.17,
@@ -238863,18 +240587,18 @@
      72.9,
      73.06,
      67.0
+    ],
+    [
+     "2026-11-12",
+     70.68,
+     73.45,
+     70.405
     ]
    ]
   },
   "LB|Rectangle Top": {
-   "tage": 34,
+   "tage": 35,
    "daten": [
-    [
-     "2025-10-30",
-     59.26,
-     60.17,
-     58.6
-    ],
     [
      "2025-10-31",
      59.17,
@@ -240428,18 +242152,18 @@
      72.9,
      73.06,
      67.0
+    ],
+    [
+     "2026-11-12",
+     70.68,
+     73.45,
+     70.405
     ]
    ]
   },
   "LEN|INS-2026-09-29": {
-   "tage": 31,
+   "tage": 32,
    "daten": [
-    [
-     "2025-10-30",
-     124.13,
-     125.51,
-     122.54
-    ],
     [
      "2025-10-31",
      123.77,
@@ -241991,20 +243715,20 @@
     [
      "2026-11-11",
      86.33,
-     86.39,
+     86.41,
      84.0
+    ],
+    [
+     "2026-11-12",
+     83.58,
+     87.47,
+     83.54
     ]
    ]
   },
   "LEN|INS-2026-10-02": {
-   "tage": 28,
+   "tage": 29,
    "daten": [
-    [
-     "2025-10-30",
-     124.13,
-     125.51,
-     122.54
-    ],
     [
      "2025-10-31",
      123.77,
@@ -243556,20 +245280,20 @@
     [
      "2026-11-11",
      86.33,
-     86.39,
+     86.41,
      84.0
+    ],
+    [
+     "2026-11-12",
+     83.58,
+     87.47,
+     83.54
     ]
    ]
   },
   "LGND|EMA Crossback": {
-   "tage": 43,
+   "tage": 44,
    "daten": [
-    [
-     "2025-10-30",
-     187.06,
-     188.77,
-     184.44
-    ],
     [
      "2025-10-31",
      191.31,
@@ -245123,18 +246847,18 @@
      316.83,
      322.41,
      314.17
+    ],
+    [
+     "2026-11-12",
+     316.27,
+     325.8571,
+     310.0827
     ]
    ]
   },
   "LNG|1": {
-   "tage": 51,
+   "tage": 52,
    "daten": [
-    [
-     "2025-10-30",
-     211.52,
-     216.1,
-     207.91
-    ],
     [
      "2025-10-31",
      212.0,
@@ -246686,20 +248410,20 @@
     [
      "2026-11-11",
      304.51,
-     304.58,
-     292.305
+     304.65,
+     292.31
+    ],
+    [
+     "2026-11-12",
+     309.48,
+     312.45,
+     303.01
     ]
    ]
   },
   "LPG|1": {
-   "tage": 48,
+   "tage": 49,
    "daten": [
-    [
-     "2025-10-30",
-     28.31,
-     28.79,
-     28.25
-    ],
     [
      "2025-10-31",
      28.85,
@@ -248253,18 +249977,18 @@
      47.4,
      48.8,
      47.0
+    ],
+    [
+     "2026-11-12",
+     47.8,
+     48.1,
+     46.73
     ]
    ]
   },
   "LPG|Fallback: 52W-Hoch-Breakout": {
-   "tage": 42,
+   "tage": 43,
    "daten": [
-    [
-     "2025-10-30",
-     28.31,
-     28.79,
-     28.25
-    ],
     [
      "2025-10-31",
      28.85,
@@ -249818,18 +251542,18 @@
      47.4,
      48.8,
      47.0
+    ],
+    [
+     "2026-11-12",
+     47.8,
+     48.1,
+     46.73
     ]
    ]
   },
   "LSCC|Fallback: 20-Tage-Hoch (Pivot)": {
-   "tage": 28,
+   "tage": 29,
    "daten": [
-    [
-     "2025-10-30",
-     73.64,
-     75.3,
-     73.07
-    ],
     [
      "2025-10-31",
      72.96,
@@ -251383,18 +253107,18 @@
      122.77,
      123.18,
      114.38
+    ],
+    [
+     "2026-11-12",
+     118.85,
+     120.88,
+     115.58
     ]
    ]
   },
   "MAZE|Fallback: MA50-Rückeroberung": {
-   "tage": 32,
+   "tage": 33,
    "daten": [
-    [
-     "2025-10-30",
-     33.22,
-     34.29,
-     31.17
-    ],
     [
      "2025-10-31",
      32.91,
@@ -252948,18 +254672,18 @@
      36.73,
      37.41,
      35.38
+    ],
+    [
+     "2026-11-12",
+     36.09,
+     36.9,
+     35.31
     ]
    ]
   },
   "MDB|Inside Day": {
-   "tage": 28,
+   "tage": 29,
    "daten": [
-    [
-     "2025-10-30",
-     347.54,
-     355.49,
-     336.95
-    ],
     [
      "2025-10-31",
      359.82,
@@ -254511,20 +256235,20 @@
     [
      "2026-11-11",
      338.12,
-     346.0,
+     346.44,
      335.5
+    ],
+    [
+     "2026-11-12",
+     339.78,
+     341.655,
+     322.21
     ]
    ]
   },
   "MD|1": {
-   "tage": 44,
+   "tage": 45,
    "daten": [
-    [
-     "2025-10-30",
-     17.39,
-     17.88,
-     17.19
-    ],
     [
      "2025-10-31",
      16.97,
@@ -256078,18 +257802,18 @@
      31.45,
      31.48,
      30.24
+    ],
+    [
+     "2026-11-12",
+     31.4,
+     31.96,
+     31.09
     ]
    ]
   },
   "MEDP|Fallback: 20-Tage-Hoch (Pivot)": {
-   "tage": 36,
+   "tage": 37,
    "daten": [
-    [
-     "2025-10-30",
-     580.37,
-     595.0,
-     578.9
-    ],
     [
      "2025-10-31",
      584.91,
@@ -257641,20 +259365,20 @@
     [
      "2026-11-11",
      664.77,
-     670.45,
-     660.7177
+     670.905,
+     660.718
+    ],
+    [
+     "2026-11-12",
+     656.84,
+     661.02,
+     648.351
     ]
    ]
   },
   "MG|Cup & Handle (Wochenbasis)": {
-   "tage": 38,
+   "tage": 39,
    "daten": [
-    [
-     "2025-10-30",
-     9.72,
-     9.8,
-     9.54
-    ],
     [
      "2025-10-31",
      9.54,
@@ -259206,20 +260930,20 @@
     [
      "2026-11-11",
      20.18,
-     20.21,
+     20.22,
      20.18
+    ],
+    [
+     "2026-11-12",
+     20.19,
+     20.23,
+     20.19
     ]
    ]
   },
   "MG|Rectangle Top": {
-   "tage": 42,
+   "tage": 43,
    "daten": [
-    [
-     "2025-10-30",
-     9.72,
-     9.8,
-     9.54
-    ],
     [
      "2025-10-31",
      9.54,
@@ -260771,20 +262495,20 @@
     [
      "2026-11-11",
      20.18,
-     20.21,
+     20.22,
      20.18
+    ],
+    [
+     "2026-11-12",
+     20.19,
+     20.23,
+     20.19
     ]
    ]
   },
   "MLYS|1": {
-   "tage": 46,
+   "tage": 47,
    "daten": [
-    [
-     "2025-10-30",
-     41.12,
-     43.434,
-     40.51
-    ],
     [
      "2025-10-31",
      40.86,
@@ -262336,20 +264060,20 @@
     [
      "2026-11-11",
      16.16,
-     16.45,
+     16.475,
      15.25
+    ],
+    [
+     "2026-11-12",
+     15.5,
+     16.86,
+     15.18
     ]
    ]
   },
   "MPC|Fallback: 20-Tage-Hoch (Pivot)": {
-   "tage": 42,
+   "tage": 43,
    "daten": [
-    [
-     "2025-10-30",
-     195.63,
-     200.65,
-     195.49
-    ],
     [
      "2025-10-31",
      194.91,
@@ -263901,20 +265625,20 @@
     [
      "2026-11-11",
      402.84,
-     402.97,
+     402.99,
      391.21
+    ],
+    [
+     "2026-11-12",
+     412.85,
+     417.791,
+     402.815
     ]
    ]
   },
   "MPC|Fallback: 52W-Hoch-Breakout": {
-   "tage": 41,
+   "tage": 42,
    "daten": [
-    [
-     "2025-10-30",
-     195.63,
-     200.65,
-     195.49
-    ],
     [
      "2025-10-31",
      194.91,
@@ -265466,20 +267190,20 @@
     [
      "2026-11-11",
      402.84,
-     402.97,
+     402.99,
      391.21
+    ],
+    [
+     "2026-11-12",
+     412.85,
+     417.791,
+     402.815
     ]
    ]
   },
   "MSTR|Cup & Handle (Wochenbasis)": {
-   "tage": 36,
+   "tage": 37,
    "daten": [
-    [
-     "2025-10-30",
-     254.57,
-     271.37,
-     254.0
-    ],
     [
      "2025-10-31",
      269.51,
@@ -267031,20 +268755,20 @@
     [
      "2026-11-11",
      122.35,
-     124.1399,
+     124.14,
      120.21
+    ],
+    [
+     "2026-11-12",
+     114.41,
+     119.65,
+     112.32
     ]
    ]
   },
   "MTDR|1": {
-   "tage": 51,
+   "tage": 52,
    "daten": [
-    [
-     "2025-10-30",
-     39.32,
-     40.54,
-     39.26
-    ],
     [
      "2025-10-31",
      39.46,
@@ -268598,18 +270322,18 @@
      52.08,
      52.12,
      50.13
+    ],
+    [
+     "2026-11-12",
+     52.81,
+     53.3,
+     51.39
     ]
    ]
   },
   "MTSI|EMA Crossback": {
-   "tage": 33,
+   "tage": 34,
    "daten": [
-    [
-     "2025-10-30",
-     150.61,
-     154.86,
-     149.66
-    ],
     [
      "2025-10-31",
      148.13,
@@ -270162,19 +271886,19 @@
      "2026-11-11",
      249.86,
      258.83,
-     235.005
+     235.01
+    ],
+    [
+     "2026-11-12",
+     245.76,
+     250.64,
+     235.2
     ]
    ]
   },
   "MTSI|Fallback: MA50-Pullback": {
-   "tage": 37,
+   "tage": 38,
    "daten": [
-    [
-     "2025-10-30",
-     150.61,
-     154.86,
-     149.66
-    ],
     [
      "2025-10-31",
      148.13,
@@ -271727,19 +273451,19 @@
      "2026-11-11",
      249.86,
      258.83,
-     235.005
+     235.01
+    ],
+    [
+     "2026-11-12",
+     245.76,
+     250.64,
+     235.2
     ]
    ]
   },
   "MTSI|Fallback: MA50-Rückeroberung": {
-   "tage": 38,
+   "tage": 39,
    "daten": [
-    [
-     "2025-10-30",
-     150.61,
-     154.86,
-     149.66
-    ],
     [
      "2025-10-31",
      148.13,
@@ -273292,19 +275016,19 @@
      "2026-11-11",
      249.86,
      258.83,
-     235.005
+     235.01
+    ],
+    [
+     "2026-11-12",
+     245.76,
+     250.64,
+     235.2
     ]
    ]
   },
   "MT|Rectangle Top": {
-   "tage": 39,
+   "tage": 40,
    "daten": [
-    [
-     "2025-10-30",
-     38.28,
-     39.0,
-     38.27
-    ],
     [
      "2025-10-31",
      38.09,
@@ -274856,20 +276580,20 @@
     [
      "2026-11-11",
      66.17,
-     66.295,
-     65.51
+     66.3,
+     65.5
+    ],
+    [
+     "2026-11-12",
+     64.29,
+     66.04,
+     64.27
     ]
    ]
   },
   "MUR|1": {
-   "tage": 44,
+   "tage": 45,
    "daten": [
-    [
-     "2025-10-30",
-     28.11,
-     28.76,
-     27.54
-    ],
     [
      "2025-10-31",
      28.3,
@@ -276421,20 +278145,20 @@
     [
      "2026-11-11",
      35.93,
-     35.93,
-     34.455
+     35.94,
+     34.46
+    ],
+    [
+     "2026-11-12",
+     36.33,
+     36.78,
+     35.57
     ]
    ]
   },
   "NBR|Rectangle Top": {
-   "tage": 40,
+   "tage": 41,
    "daten": [
-    [
-     "2025-10-30",
-     49.34,
-     53.82,
-     49.22
-    ],
     [
      "2025-10-31",
      48.52,
@@ -277988,18 +279712,18 @@
      80.49,
      81.56,
      78.02
+    ],
+    [
+     "2026-11-12",
+     83.28,
+     83.55,
+     79.57
     ]
    ]
   },
   "NBTX|SPRING-2026-08-29": {
-   "tage": 52,
+   "tage": 53,
    "daten": [
-    [
-     "2025-10-30",
-     18.44,
-     19.128,
-     17.37
-    ],
     [
      "2025-10-31",
      20.87,
@@ -279552,19 +281276,19 @@
      "2026-11-11",
      32.95,
      33.1,
-     31.3023
+     31.302
+    ],
+    [
+     "2026-11-12",
+     32.25,
+     33.3525,
+     31.28
     ]
    ]
   },
   "NDSN|Rectangle Top": {
-   "tage": 43,
+   "tage": 44,
    "daten": [
-    [
-     "2025-10-30",
-     231.79,
-     236.79,
-     231.36
-    ],
     [
      "2025-10-31",
      231.95,
@@ -281117,19 +282841,19 @@
      "2026-11-11",
      329.23,
      329.9,
-     325.915
+     325.92
+    ],
+    [
+     "2026-11-12",
+     326.6,
+     329.815,
+     325.64
     ]
    ]
   },
   "NEO|Cup & Handle (Wochenbasis)": {
-   "tage": 38,
+   "tage": 39,
    "daten": [
-    [
-     "2025-10-30",
-     9.69,
-     10.58,
-     9.6
-    ],
     [
      "2025-10-31",
      9.77,
@@ -282683,18 +284407,18 @@
      16.83,
      17.67,
      16.75
+    ],
+    [
+     "2026-11-12",
+     16.54,
+     16.69,
+     16.1101
     ]
    ]
   },
   "NEO|Shakeout plus drei": {
-   "tage": 26,
+   "tage": 27,
    "daten": [
-    [
-     "2025-10-30",
-     9.69,
-     10.58,
-     9.6
-    ],
     [
      "2025-10-31",
      9.77,
@@ -284248,18 +285972,18 @@
      16.83,
      17.67,
      16.75
+    ],
+    [
+     "2026-11-12",
+     16.54,
+     16.69,
+     16.1101
     ]
    ]
   },
   "NMM|Cup & Handle (Wochenbasis)": {
-   "tage": 41,
+   "tage": 42,
    "daten": [
-    [
-     "2025-10-30",
-     47.74,
-     47.81,
-     47.13
-    ],
     [
      "2025-10-31",
      49.14,
@@ -285812,19 +287536,19 @@
      "2026-11-11",
      88.0,
      89.12,
-     87.255
+     87.26
+    ],
+    [
+     "2026-11-12",
+     89.16,
+     89.415,
+     87.33
     ]
    ]
   },
   "NVGS|Cup & Handle (Wochenbasis)": {
-   "tage": 41,
+   "tage": 42,
    "daten": [
-    [
-     "2025-10-30",
-     16.14,
-     16.4,
-     16.12
-    ],
     [
      "2025-10-31",
      16.44,
@@ -287378,18 +289102,18 @@
      21.06,
      21.31,
      20.85
+    ],
+    [
+     "2026-11-12",
+     21.41,
+     21.44,
+     20.915
     ]
    ]
   },
   "NVGS|Fallback: 52W-Hoch-Breakout": {
-   "tage": 41,
+   "tage": 42,
    "daten": [
-    [
-     "2025-10-30",
-     16.14,
-     16.4,
-     16.12
-    ],
     [
      "2025-10-31",
      16.44,
@@ -288943,18 +290667,18 @@
      21.06,
      21.31,
      20.85
+    ],
+    [
+     "2026-11-12",
+     21.41,
+     21.44,
+     20.915
     ]
    ]
   },
   "ONC|EMA Crossback": {
-   "tage": 33,
+   "tage": 34,
    "daten": [
-    [
-     "2025-10-30",
-     308.22,
-     313.8,
-     307.505
-    ],
     [
      "2025-10-31",
      310.48,
@@ -290508,18 +292232,18 @@
      419.98,
      421.57,
      415.93
+    ],
+    [
+     "2026-11-12",
+     415.96,
+     424.0,
+     415.74
     ]
    ]
   },
   "OOMA|Rectangle Top": {
-   "tage": 43,
+   "tage": 44,
    "daten": [
-    [
-     "2025-10-30",
-     11.04,
-     11.355,
-     11.04
-    ],
     [
      "2025-10-31",
      11.23,
@@ -292071,20 +293795,20 @@
     [
      "2026-11-11",
      18.3,
-     18.37,
+     18.38,
      17.605
+    ],
+    [
+     "2026-11-12",
+     18.39,
+     18.61,
+     18.19
     ]
    ]
   },
   "OUST|SPRING-2026-11-06": {
-   "tage": 3,
+   "tage": 4,
    "daten": [
-    [
-     "2025-10-30",
-     32.33,
-     34.18,
-     32.21
-    ],
     [
      "2025-10-31",
      33.36,
@@ -293637,19 +295361,19 @@
      "2026-11-11",
      38.22,
      40.17,
-     38.03
+     38.025
+    ],
+    [
+     "2026-11-12",
+     36.6,
+     38.427,
+     36.15
     ]
    ]
   },
   "OXY|2": {
-   "tage": 51,
+   "tage": 52,
    "daten": [
-    [
-     "2025-10-30",
-     40.7,
-     41.33,
-     40.09
-    ],
     [
      "2025-10-31",
      41.2,
@@ -295203,18 +296927,18 @@
      57.24,
      57.53,
      56.67
+    ],
+    [
+     "2026-11-12",
+     58.4,
+     58.9775,
+     57.4
     ]
    ]
   },
   "PARR|Fallback: MA50-Rückeroberung": {
-   "tage": 30,
+   "tage": 31,
    "daten": [
-    [
-     "2025-10-30",
-     40.43,
-     41.63,
-     39.82
-    ],
     [
      "2025-10-31",
      39.98,
@@ -296766,20 +298490,20 @@
     [
      "2026-11-11",
      71.18,
-     71.19,
+     71.24,
      67.54
+    ],
+    [
+     "2026-11-12",
+     72.03,
+     73.35,
+     69.9001
     ]
    ]
   },
   "PBF|1": {
-   "tage": 46,
+   "tage": 47,
    "daten": [
-    [
-     "2025-10-30",
-     34.57,
-     36.68,
-     32.97
-    ],
     [
      "2025-10-31",
      34.17,
@@ -298333,18 +300057,18 @@
      69.73,
      69.81,
      67.15
+    ],
+    [
+     "2026-11-12",
+     70.96,
+     72.42,
+     68.94
     ]
    ]
   },
   "PBF|2": {
-   "tage": 44,
+   "tage": 45,
    "daten": [
-    [
-     "2025-10-30",
-     34.57,
-     36.68,
-     32.97
-    ],
     [
      "2025-10-31",
      34.17,
@@ -299898,18 +301622,18 @@
      69.73,
      69.81,
      67.15
+    ],
+    [
+     "2026-11-12",
+     70.96,
+     72.42,
+     68.94
     ]
    ]
   },
   "PBT|Cup & Handle (Wochenbasis)": {
-   "tage": 41,
+   "tage": 42,
    "daten": [
-    [
-     "2025-10-30",
-     18.43,
-     18.5,
-     17.89
-    ],
     [
      "2025-10-31",
      18.46,
@@ -301461,20 +303185,20 @@
     [
      "2026-11-11",
      30.87,
-     31.0198,
-     30.1716
+     31.09,
+     30.17
+    ],
+    [
+     "2026-11-12",
+     30.32,
+     30.95,
+     29.67
     ]
    ]
   },
   "PBT|Fallback: 52W-Hoch-Breakout": {
-   "tage": 41,
+   "tage": 42,
    "daten": [
-    [
-     "2025-10-30",
-     18.43,
-     18.5,
-     17.89
-    ],
     [
      "2025-10-31",
      18.46,
@@ -303026,20 +304750,20 @@
     [
      "2026-11-11",
      30.87,
-     31.0198,
-     30.1716
+     31.09,
+     30.17
+    ],
+    [
+     "2026-11-12",
+     30.32,
+     30.95,
+     29.67
     ]
    ]
   },
   "PCOR|Fallback: MA50-Rückeroberung": {
-   "tage": 19,
+   "tage": 20,
    "daten": [
-    [
-     "2025-10-30",
-     72.0,
-     73.646,
-     71.11
-    ],
     [
      "2025-10-31",
      73.82,
@@ -304593,18 +306317,18 @@
      77.52,
      77.62,
      75.97
+    ],
+    [
+     "2026-11-12",
+     77.23,
+     78.62,
+     76.22
     ]
    ]
   },
   "PCRX|Cup & Handle (Wochenbasis)": {
-   "tage": 19,
+   "tage": 20,
    "daten": [
-    [
-     "2025-10-30",
-     21.27,
-     21.72,
-     20.7
-    ],
     [
      "2025-10-31",
      21.38,
@@ -306158,18 +307882,18 @@
      36.46,
      36.5,
      36.45
+    ],
+    [
+     "2026-11-12",
+     36.46,
+     36.49,
+     36.46
     ]
    ]
   },
   "PCRX|Fallback: 52W-Hoch-Breakout": {
-   "tage": 19,
+   "tage": 20,
    "daten": [
-    [
-     "2025-10-30",
-     21.27,
-     21.72,
-     20.7
-    ],
     [
      "2025-10-31",
      21.38,
@@ -307723,18 +309447,18 @@
      36.46,
      36.5,
      36.45
+    ],
+    [
+     "2026-11-12",
+     36.46,
+     36.49,
+     36.46
     ]
    ]
   },
   "PENG|SPRING-2026-11-10": {
-   "tage": 1,
+   "tage": 2,
    "daten": [
-    [
-     "2025-10-30",
-     22.44,
-     22.6,
-     22.23
-    ],
     [
      "2025-10-31",
      22.27,
@@ -309286,20 +311010,20 @@
     [
      "2026-11-11",
      49.25,
-     50.8499,
+     50.85,
      46.485
+    ],
+    [
+     "2026-11-12",
+     50.1,
+     51.22,
+     46.06
     ]
    ]
   },
   "PLXS|Fallback: 20-Tage-Hoch (Pivot)": {
-   "tage": 36,
+   "tage": 37,
    "daten": [
-    [
-     "2025-10-30",
-     141.08,
-     144.31,
-     139.18
-    ],
     [
      "2025-10-31",
      139.9,
@@ -310853,18 +312577,18 @@
      211.92,
      216.54,
      209.41
+    ],
+    [
+     "2026-11-12",
+     210.75,
+     215.8,
+     206.18
     ]
    ]
   },
   "PLXS|Fallback: MA50-Pullback": {
-   "tage": 35,
+   "tage": 36,
    "daten": [
-    [
-     "2025-10-30",
-     141.08,
-     144.31,
-     139.18
-    ],
     [
      "2025-10-31",
      139.9,
@@ -312418,18 +314142,18 @@
      211.92,
      216.54,
      209.41
+    ],
+    [
+     "2026-11-12",
+     210.75,
+     215.8,
+     206.18
     ]
    ]
   },
   "PLXS|Fallback: MA50-Rückeroberung": {
-   "tage": 36,
+   "tage": 37,
    "daten": [
-    [
-     "2025-10-30",
-     141.08,
-     144.31,
-     139.18
-    ],
     [
      "2025-10-31",
      139.9,
@@ -313983,18 +315707,18 @@
      211.92,
      216.54,
      209.41
+    ],
+    [
+     "2026-11-12",
+     210.75,
+     215.8,
+     206.18
     ]
    ]
   },
   "PNTG|Fallback: MA50-Pullback": {
-   "tage": 34,
+   "tage": 35,
    "daten": [
-    [
-     "2025-10-30",
-     24.61,
-     25.26,
-     24.56
-    ],
     [
      "2025-10-31",
      24.73,
@@ -315548,18 +317272,18 @@
      36.8,
      36.93,
      36.285
+    ],
+    [
+     "2026-11-12",
+     35.91,
+     37.42,
+     35.79
     ]
    ]
   },
   "PNTG|Rectangle Top": {
-   "tage": 40,
+   "tage": 41,
    "daten": [
-    [
-     "2025-10-30",
-     24.61,
-     25.26,
-     24.56
-    ],
     [
      "2025-10-31",
      24.73,
@@ -317113,18 +318837,18 @@
      36.8,
      36.93,
      36.285
+    ],
+    [
+     "2026-11-12",
+     35.91,
+     37.42,
+     35.79
     ]
    ]
   },
   "PRCH|Rectangle Top": {
-   "tage": 26,
+   "tage": 27,
    "daten": [
-    [
-     "2025-10-30",
-     15.45,
-     15.66,
-     15.07
-    ],
     [
      "2025-10-31",
      15.05,
@@ -318676,20 +320400,20 @@
     [
      "2026-11-11",
      22.14,
-     22.24,
+     22.25,
      21.56
+    ],
+    [
+     "2026-11-12",
+     21.31,
+     22.24,
+     21.2612
     ]
    ]
   },
   "PRE|Rectangle Top": {
-   "tage": 35,
+   "tage": 36,
    "daten": [
-    [
-     "2025-10-30",
-     14.15,
-     14.99,
-     13.51
-    ],
     [
      "2025-10-31",
      14.82,
@@ -320243,18 +321967,18 @@
      17.64,
      18.395,
      17.58
+    ],
+    [
+     "2026-11-12",
+     16.72,
+     17.825,
+     16.3
     ]
    ]
   },
   "PSNL|Fallback: MA50-Rückeroberung": {
-   "tage": 19,
+   "tage": 20,
    "daten": [
-    [
-     "2025-10-30",
-     9.51,
-     10.01,
-     9.36
-    ],
     [
      "2025-10-31",
      9.64,
@@ -321808,18 +323532,18 @@
      15.96,
      16.04,
      15.9
+    ],
+    [
+     "2026-11-12",
+     15.86,
+     15.945,
+     15.81
     ]
    ]
   },
   "PTGX|1": {
-   "tage": 44,
+   "tage": 45,
    "daten": [
-    [
-     "2025-10-30",
-     77.85,
-     78.74,
-     76.75
-    ],
     [
      "2025-10-31",
      78.62,
@@ -323373,18 +325097,18 @@
      134.86,
      136.98,
      132.03
+    ],
+    [
+     "2026-11-12",
+     134.38,
+     138.82,
+     131.265
     ]
    ]
   },
   "PTGX|Fallback: MA50-Rückeroberung": {
-   "tage": 40,
+   "tage": 41,
    "daten": [
-    [
-     "2025-10-30",
-     77.85,
-     78.74,
-     76.75
-    ],
     [
      "2025-10-31",
      78.62,
@@ -324938,11 +326662,17 @@
      134.86,
      136.98,
      132.03
+    ],
+    [
+     "2026-11-12",
+     134.38,
+     138.82,
+     131.265
     ]
    ]
   },
   "QVCG|INS-2026-09-22": {
-   "tage": 36,
+   "tage": 37,
    "daten": [
     [
      "2026-08-10",
@@ -325343,20 +327073,20 @@
     [
      "2026-11-11",
      8.06,
-     8.415,
-     7.905
+     8.42,
+     7.9
+    ],
+    [
+     "2026-11-12",
+     7.76,
+     8.13,
+     7.695
     ]
    ]
   },
   "RAPP|Rectangle Top": {
-   "tage": 42,
+   "tage": 43,
    "daten": [
-    [
-     "2025-10-30",
-     26.88,
-     28.51,
-     25.954
-    ],
     [
      "2025-10-31",
      28.93,
@@ -326909,19 +328639,19 @@
      "2026-11-11",
      27.02,
      27.1,
-     25.7698
+     25.77
+    ],
+    [
+     "2026-11-12",
+     25.85,
+     26.9,
+     25.445
     ]
    ]
   },
   "RBLX|1": {
-   "tage": 46,
+   "tage": 47,
    "daten": [
-    [
-     "2025-10-30",
-     113.0,
-     126.28,
-     111.87
-    ],
     [
      "2025-10-31",
      113.72,
@@ -328473,20 +330203,20 @@
     [
      "2026-11-11",
      52.61,
-     54.2,
+     54.21,
      51.05
+    ],
+    [
+     "2026-11-12",
+     51.42,
+     52.86,
+     51.24
     ]
    ]
   },
   "RDVT|Cup & Handle (Wochenbasis)": {
-   "tage": 39,
+   "tage": 40,
    "daten": [
-    [
-     "2025-10-30",
-     51.26,
-     52.6,
-     51.12
-    ],
     [
      "2025-10-31",
      53.63,
@@ -330040,18 +331770,18 @@
      75.14,
      75.66,
      73.5
+    ],
+    [
+     "2026-11-12",
+     76.005,
+     76.03,
+     73.5401
     ]
    ]
   },
   "REGN|1": {
-   "tage": 48,
+   "tage": 49,
    "daten": [
-    [
-     "2025-10-30",
-     654.04,
-     664.0,
-     643.92
-    ],
     [
      "2025-10-31",
      651.8,
@@ -331604,19 +333334,19 @@
      "2026-11-11",
      959.41,
      961.98,
-     899.0
+     898.29
+    ],
+    [
+     "2026-11-12",
+     951.19,
+     981.55,
+     944.71
     ]
    ]
   },
   "RIOT|Fallback: 20-Tage-Hoch (Pivot)": {
-   "tage": 37,
+   "tage": 38,
    "daten": [
-    [
-     "2025-10-30",
-     21.09,
-     21.83,
-     20.74
-    ],
     [
      "2025-10-31",
      19.78,
@@ -333168,20 +334898,20 @@
     [
      "2026-11-11",
      18.28,
-     19.12,
+     19.13,
      17.98
+    ],
+    [
+     "2026-11-12",
+     17.83,
+     18.815,
+     17.25
     ]
    ]
   },
   "RIOT|Rectangle Top": {
-   "tage": 37,
+   "tage": 38,
    "daten": [
-    [
-     "2025-10-30",
-     21.09,
-     21.83,
-     20.74
-    ],
     [
      "2025-10-31",
      19.78,
@@ -334733,20 +336463,20 @@
     [
      "2026-11-11",
      18.28,
-     19.12,
+     19.13,
      17.98
+    ],
+    [
+     "2026-11-12",
+     17.83,
+     18.815,
+     17.25
     ]
    ]
   },
   "RSG|INS-2026-09-16": {
-   "tage": 40,
+   "tage": 41,
    "daten": [
-    [
-     "2025-10-30",
-     209.92,
-     212.71,
-     209.75
-    ],
     [
      "2025-10-31",
      208.24,
@@ -336300,18 +338030,18 @@
      249.34,
      249.87,
      246.77
+    ],
+    [
+     "2026-11-12",
+     253.0,
+     253.825,
+     249.71
     ]
    ]
   },
   "RVTY|Cup & Handle (Wochenbasis)": {
-   "tage": 19,
+   "tage": 20,
    "daten": [
-    [
-     "2025-10-30",
-     91.02,
-     95.89,
-     90.9
-    ],
     [
      "2025-10-31",
      93.59,
@@ -337865,18 +339595,18 @@
      158.25,
      163.29,
      158.21
+    ],
+    [
+     "2026-11-12",
+     157.02,
+     159.36,
+     153.04
     ]
    ]
   },
   "SANM|EMA Crossback": {
-   "tage": 35,
+   "tage": 36,
    "daten": [
-    [
-     "2025-10-30",
-     135.48,
-     139.98,
-     134.82
-    ],
     [
      "2025-10-31",
      137.05,
@@ -339429,19 +341159,19 @@
      "2026-11-11",
      159.25,
      165.79,
-     157.2501
+     157.25
+    ],
+    [
+     "2026-11-12",
+     164.48,
+     173.2569,
+     152.07
     ]
    ]
   },
   "SANM|Rectangle Top": {
-   "tage": 35,
+   "tage": 36,
    "daten": [
-    [
-     "2025-10-30",
-     135.48,
-     139.98,
-     134.82
-    ],
     [
      "2025-10-31",
      137.05,
@@ -340994,19 +342724,19 @@
      "2026-11-11",
      159.25,
      165.79,
-     157.2501
+     157.25
+    ],
+    [
+     "2026-11-12",
+     164.48,
+     173.2569,
+     152.07
     ]
    ]
   },
   "SANM|SPRING-2026-09-24": {
-   "tage": 34,
+   "tage": 35,
    "daten": [
-    [
-     "2025-10-30",
-     135.48,
-     139.98,
-     134.82
-    ],
     [
      "2025-10-31",
      137.05,
@@ -342559,19 +344289,19 @@
      "2026-11-11",
      159.25,
      165.79,
-     157.2501
+     157.25
+    ],
+    [
+     "2026-11-12",
+     164.48,
+     173.2569,
+     152.07
     ]
    ]
   },
   "SCCO|1": {
-   "tage": 49,
+   "tage": 50,
    "daten": [
-    [
-     "2025-10-30",
-     133.5749,
-     134.7475,
-     131.468
-    ],
     [
      "2025-10-31",
      132.326,
@@ -344125,18 +345855,18 @@
      172.61,
      174.45,
      170.48
+    ],
+    [
+     "2026-11-12",
+     168.21,
+     170.39,
+     165.6
     ]
    ]
   },
   "SCCO|Fallback: MA50-Rückeroberung": {
-   "tage": 40,
+   "tage": 41,
    "daten": [
-    [
-     "2025-10-30",
-     133.5749,
-     134.7475,
-     131.468
-    ],
     [
      "2025-10-31",
      132.326,
@@ -345690,18 +347420,18 @@
      172.61,
      174.45,
      170.48
+    ],
+    [
+     "2026-11-12",
+     168.21,
+     170.39,
+     165.6
     ]
    ]
   },
   "SEB|1": {
-   "tage": 44,
+   "tage": 45,
    "daten": [
-    [
-     "2025-10-30",
-     3310.48,
-     3312.0,
-     3140.01
-    ],
     [
      "2025-10-31",
      3369.98,
@@ -347253,20 +348983,20 @@
     [
      "2026-11-11",
      3749.49,
-     3805.8701,
-     3707.25
+     3807.71,
+     3700.1799
+    ],
+    [
+     "2026-11-12",
+     3702.8601,
+     3743.1699,
+     3697.52
     ]
    ]
   },
   "SEI|Fallback: 20-Tage-Hoch (Pivot)": {
-   "tage": 37,
+   "tage": 38,
    "daten": [
-    [
-     "2025-10-30",
-     53.11,
-     54.68,
-     50.12
-    ],
     [
      "2025-10-31",
      53.23,
@@ -348820,18 +350550,18 @@
      64.8,
      68.0,
      64.25
+    ],
+    [
+     "2026-11-12",
+     64.5,
+     68.3,
+     61.05
     ]
    ]
   },
   "SEI|SPRING-2026-09-14": {
-   "tage": 42,
+   "tage": 43,
    "daten": [
-    [
-     "2025-10-30",
-     53.11,
-     54.68,
-     50.12
-    ],
     [
      "2025-10-31",
      53.23,
@@ -350385,18 +352115,18 @@
      64.8,
      68.0,
      64.25
+    ],
+    [
+     "2026-11-12",
+     64.5,
+     68.3,
+     61.05
     ]
    ]
   },
   "SENEA|Fallback: MA50-Rückeroberung": {
-   "tage": 32,
+   "tage": 33,
    "daten": [
-    [
-     "2025-10-30",
-     108.92,
-     110.14,
-     108.11
-    ],
     [
      "2025-10-31",
      107.84,
@@ -351948,20 +353678,20 @@
     [
      "2026-11-11",
      175.6,
-     176.295,
+     176.3,
      168.76
+    ],
+    [
+     "2026-11-12",
+     169.04,
+     177.6601,
+     166.93
     ]
    ]
   },
   "SITM|EMA Crossback": {
-   "tage": 33,
+   "tage": 34,
    "daten": [
-    [
-     "2025-10-30",
-     277.14,
-     285.011,
-     275.22
-    ],
     [
      "2025-10-31",
      289.64,
@@ -353514,19 +355244,19 @@
      "2026-11-11",
      472.56,
      494.93,
-     462.75
+     462.0
+    ],
+    [
+     "2026-11-12",
+     470.55,
+     486.0625,
+     447.55
     ]
    ]
   },
   "SITM|Fallback: MA50-Pullback": {
-   "tage": 38,
+   "tage": 39,
    "daten": [
-    [
-     "2025-10-30",
-     277.14,
-     285.011,
-     275.22
-    ],
     [
      "2025-10-31",
      289.64,
@@ -355079,19 +356809,19 @@
      "2026-11-11",
      472.56,
      494.93,
-     462.75
+     462.0
+    ],
+    [
+     "2026-11-12",
+     470.55,
+     486.0625,
+     447.55
     ]
    ]
   },
   "SITM|Fallback: MA50-Rückeroberung": {
-   "tage": 39,
+   "tage": 40,
    "daten": [
-    [
-     "2025-10-30",
-     277.14,
-     285.011,
-     275.22
-    ],
     [
      "2025-10-31",
      289.64,
@@ -356644,19 +358374,19 @@
      "2026-11-11",
      472.56,
      494.93,
-     462.75
+     462.0
+    ],
+    [
+     "2026-11-12",
+     470.55,
+     486.0625,
+     447.55
     ]
    ]
   },
   "SLAB|Fallback: MA50-Pullback": {
-   "tage": 19,
+   "tage": 20,
    "daten": [
-    [
-     "2025-10-30",
-     131.74,
-     134.48,
-     130.82
-    ],
     [
      "2025-10-31",
      131.08,
@@ -358210,18 +359940,18 @@
      221.61,
      222.69,
      221.3
+    ],
+    [
+     "2026-11-12",
+     222.12,
+     222.19,
+     221.0
     ]
    ]
   },
   "SLBT|INS-2026-10-02": {
-   "tage": 28,
+   "tage": 29,
    "daten": [
-    [
-     "2025-10-30",
-     10.39,
-     10.39,
-     10.39
-    ],
     [
      "2025-10-31",
      10.39,
@@ -359772,21 +361502,21 @@
     ],
     [
      "2026-11-11",
-     0.7224,
+     0.722,
      0.918,
      0.62
+    ],
+    [
+     "2026-11-12",
+     0.7643,
+     0.835,
+     0.7
     ]
    ]
   },
   "SMMT|1": {
-   "tage": 45,
+   "tage": 46,
    "daten": [
-    [
-     "2025-10-30",
-     18.64,
-     19.06,
-     18.43
-    ],
     [
      "2025-10-31",
      18.91,
@@ -361338,20 +363068,20 @@
     [
      "2026-11-11",
      16.64,
-     17.91,
+     17.935,
      16.585
+    ],
+    [
+     "2026-11-12",
+     15.075,
+     16.44,
+     14.985
     ]
    ]
   },
   "SNPS|EMA Crossback": {
-   "tage": 30,
+   "tage": 31,
    "daten": [
-    [
-     "2025-10-30",
-     442.93,
-     452.77,
-     438.55
-    ],
     [
      "2025-10-31",
      453.82,
@@ -362903,20 +364633,20 @@
     [
      "2026-11-11",
      462.12,
-     470.2113,
-     460.0232
+     470.21,
+     460.0
+    ],
+    [
+     "2026-11-12",
+     462.69,
+     469.07,
+     452.63
     ]
    ]
   },
   "SNPS|Fallback: 20-Tage-Hoch (Pivot)": {
-   "tage": 27,
+   "tage": 28,
    "daten": [
-    [
-     "2025-10-30",
-     442.93,
-     452.77,
-     438.55
-    ],
     [
      "2025-10-31",
      453.82,
@@ -364468,20 +366198,20 @@
     [
      "2026-11-11",
      462.12,
-     470.2113,
-     460.0232
+     470.21,
+     460.0
+    ],
+    [
+     "2026-11-12",
+     462.69,
+     469.07,
+     452.63
     ]
    ]
   },
   "SONO|Cup & Handle (Wochenbasis)": {
-   "tage": 28,
+   "tage": 29,
    "daten": [
-    [
-     "2025-10-30",
-     16.86,
-     16.98,
-     16.43
-    ],
     [
      "2025-10-31",
      17.17,
@@ -366033,20 +367763,20 @@
     [
      "2026-11-11",
      19.06,
-     19.175,
+     19.18,
      17.27
+    ],
+    [
+     "2026-11-12",
+     18.11,
+     19.53,
+     18.025
     ]
    ]
   },
   "SPOT|EMA Crossback": {
-   "tage": 18,
+   "tage": 19,
    "daten": [
-    [
-     "2025-10-30",
-     656.68,
-     670.42,
-     651.56
-    ],
     [
      "2025-10-31",
      655.32,
@@ -367600,18 +369330,18 @@
      609.12,
      609.16,
      596.02
+    ],
+    [
+     "2026-11-12",
+     598.51,
+     612.65,
+     597.73
     ]
    ]
   },
   "STNG|Rectangle Top": {
-   "tage": 35,
+   "tage": 36,
    "daten": [
-    [
-     "2025-10-30",
-     61.14,
-     62.7,
-     58.59
-    ],
     [
      "2025-10-31",
      61.7,
@@ -369163,20 +370893,20 @@
     [
      "2026-11-11",
      82.07,
-     82.84,
-     80.895
+     82.85,
+     80.9
+    ],
+    [
+     "2026-11-12",
+     83.44,
+     83.47,
+     81.01
     ]
    ]
   },
   "SUN|1": {
-   "tage": 45,
+   "tage": 46,
    "daten": [
-    [
-     "2025-10-30",
-     53.18,
-     53.3,
-     50.62
-    ],
     [
      "2025-10-31",
      52.22,
@@ -370728,20 +372458,20 @@
     [
      "2026-11-11",
      65.34,
-     65.43,
+     65.47,
      63.21
+    ],
+    [
+     "2026-11-12",
+     64.98,
+     66.285,
+     64.8
     ]
    ]
   },
   "SU|2": {
-   "tage": 51,
+   "tage": 52,
    "daten": [
-    [
-     "2025-10-30",
-     39.72,
-     40.11,
-     39.6
-    ],
     [
      "2025-10-31",
      39.81,
@@ -372293,20 +374023,20 @@
     [
      "2026-11-11",
      68.97,
-     69.035,
+     69.04,
      68.02
+    ],
+    [
+     "2026-11-12",
+     69.29,
+     69.815,
+     68.54
     ]
    ]
   },
   "SWKS|1": {
-   "tage": 46,
+   "tage": 47,
    "daten": [
-    [
-     "2025-10-30",
-     79.16,
-     81.12,
-     78.49
-    ],
     [
      "2025-10-31",
      77.72,
@@ -373858,20 +375588,20 @@
     [
      "2026-11-11",
      87.64,
-     88.045,
-     83.155
+     88.05,
+     83.16
+    ],
+    [
+     "2026-11-12",
+     90.03,
+     93.24,
+     86.2545
     ]
    ]
   },
   "SWKS|Cup & Handle (Wochenbasis)": {
-   "tage": 43,
+   "tage": 44,
    "daten": [
-    [
-     "2025-10-30",
-     79.16,
-     81.12,
-     78.49
-    ],
     [
      "2025-10-31",
      77.72,
@@ -375423,20 +377153,20 @@
     [
      "2026-11-11",
      87.64,
-     88.045,
-     83.155
+     88.05,
+     83.16
+    ],
+    [
+     "2026-11-12",
+     90.03,
+     93.24,
+     86.2545
     ]
    ]
   },
   "TALO|Fallback: MA50-Pullback": {
-   "tage": 30,
+   "tage": 31,
    "daten": [
-    [
-     "2025-10-30",
-     9.68,
-     9.839,
-     9.465
-    ],
     [
      "2025-10-31",
      9.81,
@@ -376990,18 +378720,18 @@
      15.41,
      15.45,
      14.979
+    ],
+    [
+     "2026-11-12",
+     15.98,
+     16.14,
+     15.329
     ]
    ]
   },
   "TBBB|1": {
-   "tage": 44,
+   "tage": 45,
    "daten": [
-    [
-     "2025-10-30",
-     28.68,
-     30.49,
-     28.66
-    ],
     [
      "2025-10-31",
      27.32,
@@ -378555,18 +380285,18 @@
      67.49,
      68.28,
      67.23
+    ],
+    [
+     "2026-11-12",
+     68.0,
+     68.38,
+     66.9701
     ]
    ]
   },
   "TEM|Cup & Handle (Wochenbasis)": {
-   "tage": 33,
+   "tage": 34,
    "daten": [
-    [
-     "2025-10-30",
-     86.27,
-     91.83,
-     85.8
-    ],
     [
      "2025-10-31",
      89.85,
@@ -380119,19 +381849,19 @@
      "2026-11-11",
      79.43,
      85.1,
-     79.2501
+     79.25
+    ],
+    [
+     "2026-11-12",
+     75.89,
+     77.7,
+     71.6068
     ]
    ]
   },
   "TEM|HTF Innen-Einstieg": {
-   "tage": 34,
+   "tage": 35,
    "daten": [
-    [
-     "2025-10-30",
-     86.27,
-     91.83,
-     85.8
-    ],
     [
      "2025-10-31",
      89.85,
@@ -381684,19 +383414,19 @@
      "2026-11-11",
      79.43,
      85.1,
-     79.2501
+     79.25
+    ],
+    [
+     "2026-11-12",
+     75.89,
+     77.7,
+     71.6068
     ]
    ]
   },
   "TEM|High & Tight Flag": {
-   "tage": 34,
+   "tage": 35,
    "daten": [
-    [
-     "2025-10-30",
-     86.27,
-     91.83,
-     85.8
-    ],
     [
      "2025-10-31",
      89.85,
@@ -383249,19 +384979,19 @@
      "2026-11-11",
      79.43,
      85.1,
-     79.2501
+     79.25
+    ],
+    [
+     "2026-11-12",
+     75.89,
+     77.7,
+     71.6068
     ]
    ]
   },
   "TEVA|Cup & Handle (Wochenbasis) + EMA Crossback": {
-   "tage": 41,
+   "tage": 42,
    "daten": [
-    [
-     "2025-10-30",
-     20.03,
-     20.38,
-     20.01
-    ],
     [
      "2025-10-31",
      20.48,
@@ -384815,18 +386545,18 @@
      43.24,
      43.24,
      42.39
+    ],
+    [
+     "2026-11-12",
+     43.65,
+     44.31,
+     43.185
     ]
    ]
   },
   "TEVA|Fallback: 52W-Hoch-Breakout": {
-   "tage": 39,
+   "tage": 40,
    "daten": [
-    [
-     "2025-10-30",
-     20.03,
-     20.38,
-     20.01
-    ],
     [
      "2025-10-31",
      20.48,
@@ -386380,18 +388110,18 @@
      43.24,
      43.24,
      42.39
+    ],
+    [
+     "2026-11-12",
+     43.65,
+     44.31,
+     43.185
     ]
    ]
   },
   "TNK|Cup & Handle (Wochenbasis)": {
-   "tage": 43,
+   "tage": 44,
    "daten": [
-    [
-     "2025-10-30",
-     58.84,
-     60.55,
-     57.68
-    ],
     [
      "2025-10-31",
      61.0,
@@ -387945,18 +389675,18 @@
      88.96,
      89.2,
      86.1
+    ],
+    [
+     "2026-11-12",
+     88.5,
+     89.89,
+     85.5
     ]
    ]
   },
   "TNK|Fallback: 20-Tage-Hoch (Pivot)": {
-   "tage": 42,
+   "tage": 43,
    "daten": [
-    [
-     "2025-10-30",
-     58.84,
-     60.55,
-     57.68
-    ],
     [
      "2025-10-31",
      61.0,
@@ -389510,18 +391240,18 @@
      88.96,
      89.2,
      86.1
+    ],
+    [
+     "2026-11-12",
+     88.5,
+     89.89,
+     85.5
     ]
    ]
   },
   "TNK|Fallback: 52W-Hoch-Breakout": {
-   "tage": 42,
+   "tage": 43,
    "daten": [
-    [
-     "2025-10-30",
-     58.84,
-     60.55,
-     57.68
-    ],
     [
      "2025-10-31",
      61.0,
@@ -391075,18 +392805,18 @@
      88.96,
      89.2,
      86.1
+    ],
+    [
+     "2026-11-12",
+     88.5,
+     89.89,
+     85.5
     ]
    ]
   },
   "TPC|Fallback: MA50-Rückeroberung": {
-   "tage": 39,
+   "tage": 40,
    "daten": [
-    [
-     "2025-10-30",
-     67.69,
-     70.06,
-     67.12
-    ],
     [
      "2025-10-31",
      67.36,
@@ -392638,20 +394368,20 @@
     [
      "2026-11-11",
      101.34,
-     101.983,
+     101.98,
      97.11
+    ],
+    [
+     "2026-11-12",
+     100.33,
+     101.58,
+     98.1334
     ]
    ]
   },
   "TRMD|Cup & Handle (Wochenbasis)": {
-   "tage": 40,
+   "tage": 41,
    "daten": [
-    [
-     "2025-10-30",
-     21.64,
-     21.925,
-     21.61
-    ],
     [
      "2025-10-31",
      21.95,
@@ -394203,20 +395933,20 @@
     [
      "2026-11-11",
      35.36,
-     35.63,
+     35.68,
      34.75
+    ],
+    [
+     "2026-11-12",
+     36.13,
+     36.33,
+     35.03
     ]
    ]
   },
   "TRMD|Fallback: 20-Tage-Hoch (Pivot)": {
-   "tage": 27,
+   "tage": 28,
    "daten": [
-    [
-     "2025-10-30",
-     21.64,
-     21.925,
-     21.61
-    ],
     [
      "2025-10-31",
      21.95,
@@ -395768,20 +397498,20 @@
     [
      "2026-11-11",
      35.36,
-     35.63,
+     35.68,
      34.75
+    ],
+    [
+     "2026-11-12",
+     36.13,
+     36.33,
+     35.03
     ]
    ]
   },
   "TRMD|Fallback: 52W-Hoch-Breakout": {
-   "tage": 27,
+   "tage": 28,
    "daten": [
-    [
-     "2025-10-30",
-     21.64,
-     21.925,
-     21.61
-    ],
     [
      "2025-10-31",
      21.95,
@@ -397333,20 +399063,20 @@
     [
      "2026-11-11",
      35.36,
-     35.63,
+     35.68,
      34.75
+    ],
+    [
+     "2026-11-12",
+     36.13,
+     36.33,
+     35.03
     ]
    ]
   },
   "TSAT|Fallback: 20-Tage-Hoch (Pivot)": {
-   "tage": 39,
+   "tage": 40,
    "daten": [
-    [
-     "2025-10-30",
-     29.89,
-     30.64,
-     29.45
-    ],
     [
      "2025-10-31",
      30.29,
@@ -398899,19 +400629,19 @@
      "2026-11-11",
      48.4,
      49.68,
-     46.655
+     46.66
+    ],
+    [
+     "2026-11-12",
+     45.39,
+     47.83,
+     45.08
     ]
    ]
   },
   "TSEM|Fallback: MA50-Rückeroberung": {
-   "tage": 33,
+   "tage": 34,
    "daten": [
-    [
-     "2025-10-30",
-     83.8,
-     85.28,
-     81.65
-    ],
     [
      "2025-10-31",
      85.17,
@@ -400463,20 +402193,20 @@
     [
      "2026-11-11",
      158.87,
-     163.9798,
+     163.98,
      151.71
+    ],
+    [
+     "2026-11-12",
+     157.86,
+     161.605,
+     147.715
     ]
    ]
   },
   "TWLO|1": {
-   "tage": 51,
+   "tage": 52,
    "daten": [
-    [
-     "2025-10-30",
-     112.86,
-     114.73,
-     109.51
-    ],
     [
      "2025-10-31",
      134.88,
@@ -402030,18 +403760,18 @@
      219.48,
      225.84,
      218.18
+    ],
+    [
+     "2026-11-12",
+     212.21,
+     217.0,
+     210.95
     ]
    ]
   },
   "TWLO|Cup & Handle (Wochenbasis)": {
-   "tage": 36,
+   "tage": 37,
    "daten": [
-    [
-     "2025-10-30",
-     112.86,
-     114.73,
-     109.51
-    ],
     [
      "2025-10-31",
      134.88,
@@ -403595,18 +405325,18 @@
      219.48,
      225.84,
      218.18
+    ],
+    [
+     "2026-11-12",
+     212.21,
+     217.0,
+     210.95
     ]
    ]
   },
   "TWLO|Fallback: 20-Tage-Hoch (Pivot)": {
-   "tage": 37,
+   "tage": 38,
    "daten": [
-    [
-     "2025-10-30",
-     112.86,
-     114.73,
-     109.51
-    ],
     [
      "2025-10-31",
      134.88,
@@ -405160,18 +406890,18 @@
      219.48,
      225.84,
      218.18
+    ],
+    [
+     "2026-11-12",
+     212.21,
+     217.0,
+     210.95
     ]
    ]
   },
   "VCYT|Fallback: MA50-Rückeroberung": {
-   "tage": 32,
+   "tage": 33,
    "daten": [
-    [
-     "2025-10-30",
-     35.33,
-     36.14,
-     35.18
-    ],
     [
      "2025-10-31",
      36.08,
@@ -406723,20 +408453,20 @@
     [
      "2026-11-11",
      25.11,
-     25.84,
+     25.85,
      24.8
+    ],
+    [
+     "2026-11-12",
+     24.63,
+     25.29,
+     24.07
     ]
    ]
   },
   "VECO|EMA Crossback": {
-   "tage": 31,
+   "tage": 32,
    "daten": [
-    [
-     "2025-10-30",
-     29.16,
-     29.88,
-     28.89
-    ],
     [
      "2025-10-31",
      28.75,
@@ -408290,18 +410020,18 @@
      40.93,
      43.0,
      40.49
+    ],
+    [
+     "2026-11-12",
+     40.33,
+     41.86,
+     39.01
     ]
    ]
   },
   "VEEV|Cup & Handle (Wochenbasis)": {
-   "tage": 22,
+   "tage": 23,
    "daten": [
-    [
-     "2025-10-30",
-     285.03,
-     289.84,
-     285.0
-    ],
     [
      "2025-10-31",
      291.2,
@@ -409853,20 +411583,20 @@
     [
      "2026-11-11",
      304.77,
-     311.3799,
-     304.75
+     311.38,
+     304.74
+    ],
+    [
+     "2026-11-12",
+     302.42,
+     306.5,
+     296.8
     ]
    ]
   },
   "VEEV|Pocket Pivot": {
-   "tage": 22,
+   "tage": 23,
    "daten": [
-    [
-     "2025-10-30",
-     285.03,
-     289.84,
-     285.0
-    ],
     [
      "2025-10-31",
      291.2,
@@ -411418,20 +413148,20 @@
     [
      "2026-11-11",
      304.77,
-     311.3799,
-     304.75
+     311.38,
+     304.74
+    ],
+    [
+     "2026-11-12",
+     302.42,
+     306.5,
+     296.8
     ]
    ]
   },
   "VEEV|Wick Play": {
-   "tage": 19,
+   "tage": 20,
    "daten": [
-    [
-     "2025-10-30",
-     285.03,
-     289.84,
-     285.0
-    ],
     [
      "2025-10-31",
      291.2,
@@ -412983,20 +414713,20 @@
     [
      "2026-11-11",
      304.77,
-     311.3799,
-     304.75
+     311.38,
+     304.74
+    ],
+    [
+     "2026-11-12",
+     302.42,
+     306.5,
+     296.8
     ]
    ]
   },
   "VIAV|Fallback: 20-Tage-Hoch (Pivot)": {
-   "tage": 32,
+   "tage": 33,
    "daten": [
-    [
-     "2025-10-30",
-     17.1,
-     17.43,
-     15.8
-    ],
     [
      "2025-10-31",
      17.7,
@@ -414549,19 +416279,19 @@
      "2026-11-11",
      33.0,
      34.14,
-     32.535
+     32.54
+    ],
+    [
+     "2026-11-12",
+     32.54,
+     33.2799,
+     30.98
     ]
    ]
   },
   "VIA|Fallback: 20-Tage-Hoch (Pivot)": {
-   "tage": 22,
+   "tage": 23,
    "daten": [
-    [
-     "2025-10-30",
-     53.27,
-     55.2,
-     52.63
-    ],
     [
      "2025-10-31",
      53.43,
@@ -416114,19 +417844,19 @@
      "2026-11-11",
      42.81,
      44.04,
-     41.38
+     41.18
+    ],
+    [
+     "2026-11-12",
+     42.11,
+     42.35,
+     40.57
     ]
    ]
   },
   "VICR|Fallback: MA50-Rückeroberung": {
-   "tage": 39,
+   "tage": 40,
    "daten": [
-    [
-     "2025-10-30",
-     91.42,
-     91.88,
-     89.56
-    ],
     [
      "2025-10-31",
      90.73,
@@ -417679,19 +419409,19 @@
      "2026-11-11",
      168.1,
      177.91,
-     167.885
+     167.89
+    ],
+    [
+     "2026-11-12",
+     164.69,
+     169.9396,
+     155.5
     ]
    ]
   },
   "VIST|1": {
-   "tage": 46,
+   "tage": 47,
    "daten": [
-    [
-     "2025-10-30",
-     47.19,
-     48.4,
-     47.02
-    ],
     [
      "2025-10-31",
      48.45,
@@ -419245,18 +420975,18 @@
      55.97,
      57.0,
      55.81
+    ],
+    [
+     "2026-11-12",
+     55.49,
+     56.64,
+     53.89
     ]
    ]
   },
   "VLO|1": {
-   "tage": 51,
+   "tage": 52,
    "daten": [
-    [
-     "2025-10-30",
-     170.1,
-     173.8,
-     169.02
-    ],
     [
      "2025-10-31",
      169.56,
@@ -420810,18 +422540,18 @@
      363.71,
      364.92,
      352.54
+    ],
+    [
+     "2026-11-12",
+     374.95,
+     379.56,
+     361.91
     ]
    ]
   },
   "VNOM|1": {
-   "tage": 51,
+   "tage": 52,
    "daten": [
-    [
-     "2025-10-30",
-     37.25,
-     37.52,
-     36.73
-    ],
     [
      "2025-10-31",
      37.56,
@@ -422375,18 +424105,18 @@
      41.13,
      41.25,
      40.25
+    ],
+    [
+     "2026-11-12",
+     40.88,
+     41.3,
+     40.35
     ]
    ]
   },
   "VOYA|2": {
-   "tage": 46,
+   "tage": 47,
    "daten": [
-    [
-     "2025-10-30",
-     73.26,
-     74.2,
-     72.79
-    ],
     [
      "2025-10-31",
      74.46,
@@ -423938,20 +425668,20 @@
     [
      "2026-11-11",
      103.69,
-     104.95,
+     105.3,
      102.99
+    ],
+    [
+     "2026-11-12",
+     102.22,
+     104.71,
+     102.01
     ]
    ]
   },
   "VRNS|Pocket Pivot": {
-   "tage": 18,
+   "tage": 19,
    "daten": [
-    [
-     "2025-10-30",
-     35.0,
-     35.81,
-     32.271
-    ],
     [
      "2025-10-31",
      35.23,
@@ -425505,18 +427235,18 @@
      49.03,
      49.245,
      48.98
+    ],
+    [
+     "2026-11-12",
+     49.07,
+     49.19,
+     49.0
     ]
    ]
   },
   "VRNS|Rectangle Top": {
-   "tage": 18,
+   "tage": 19,
    "daten": [
-    [
-     "2025-10-30",
-     35.0,
-     35.81,
-     32.271
-    ],
     [
      "2025-10-31",
      35.23,
@@ -427070,18 +428800,18 @@
      49.03,
      49.245,
      48.98
+    ],
+    [
+     "2026-11-12",
+     49.07,
+     49.19,
+     49.0
     ]
    ]
   },
   "VSH|SPRING-2026-10-08": {
-   "tage": 24,
+   "tage": 25,
    "daten": [
-    [
-     "2025-10-30",
-     16.88,
-     17.3,
-     16.83
-    ],
     [
      "2025-10-31",
      16.98,
@@ -428635,18 +430365,18 @@
      29.14,
      29.99,
      27.63
+    ],
+    [
+     "2026-11-12",
+     27.79,
+     29.38,
+     27.56
     ]
    ]
   },
   "WSFS|1": {
-   "tage": 46,
+   "tage": 47,
    "daten": [
-    [
-     "2025-10-30",
-     52.83,
-     53.94,
-     52.18
-    ],
     [
      "2025-10-31",
      52.09,
@@ -430200,18 +431930,18 @@
      80.07,
      80.15,
      79.36
+    ],
+    [
+     "2026-11-12",
+     79.94,
+     80.47,
+     79.7017
     ]
    ]
   },
   "WSFS|Rectangle Top": {
-   "tage": 43,
+   "tage": 44,
    "daten": [
-    [
-     "2025-10-30",
-     52.83,
-     53.94,
-     52.18
-    ],
     [
      "2025-10-31",
      52.09,
@@ -431765,18 +433495,18 @@
      80.07,
      80.15,
      79.36
+    ],
+    [
+     "2026-11-12",
+     79.94,
+     80.47,
+     79.7017
     ]
    ]
   },
   "WTTR|1": {
-   "tage": 46,
+   "tage": 47,
    "daten": [
-    [
-     "2025-10-30",
-     11.61,
-     11.95,
-     11.59
-    ],
     [
      "2025-10-31",
      11.56,
@@ -433330,18 +435060,18 @@
      16.21,
      16.3,
      15.32
+    ],
+    [
+     "2026-11-12",
+     16.33,
+     16.58,
+     15.96
     ]
    ]
   },
   "WTTR|2": {
-   "tage": 45,
+   "tage": 46,
    "daten": [
-    [
-     "2025-10-30",
-     11.61,
-     11.95,
-     11.59
-    ],
     [
      "2025-10-31",
      11.56,
@@ -434895,18 +436625,18 @@
      16.21,
      16.3,
      15.32
+    ],
+    [
+     "2026-11-12",
+     16.33,
+     16.58,
+     15.96
     ]
    ]
   },
   "W|Fallback: 20-Tage-Hoch (Pivot)": {
-   "tage": 19,
+   "tage": 20,
    "daten": [
-    [
-     "2025-10-30",
-     102.4,
-     106.28,
-     102.32
-    ],
     [
      "2025-10-31",
      103.51,
@@ -436458,20 +438188,20 @@
     [
      "2026-11-11",
      114.43,
-     115.56,
+     115.6,
      111.65
+    ],
+    [
+     "2026-11-12",
+     111.48,
+     114.99,
+     110.501
     ]
    ]
   },
   "W|Pocket Pivot": {
-   "tage": 18,
+   "tage": 19,
    "daten": [
-    [
-     "2025-10-30",
-     102.4,
-     106.28,
-     102.32
-    ],
     [
      "2025-10-31",
      103.51,
@@ -438023,20 +439753,20 @@
     [
      "2026-11-11",
      114.43,
-     115.56,
+     115.6,
      111.65
+    ],
+    [
+     "2026-11-12",
+     111.48,
+     114.99,
+     110.501
     ]
    ]
   },
   "W|Rectangle Top": {
-   "tage": 19,
+   "tage": 20,
    "daten": [
-    [
-     "2025-10-30",
-     102.4,
-     106.28,
-     102.32
-    ],
     [
      "2025-10-31",
      103.51,
@@ -439588,20 +441318,20 @@
     [
      "2026-11-11",
      114.43,
-     115.56,
+     115.6,
      111.65
+    ],
+    [
+     "2026-11-12",
+     111.48,
+     114.99,
+     110.501
     ]
    ]
   },
   "W|Wick Play": {
-   "tage": 19,
+   "tage": 20,
    "daten": [
-    [
-     "2025-10-30",
-     102.4,
-     106.28,
-     102.32
-    ],
     [
      "2025-10-31",
      103.51,
@@ -441153,20 +442883,20 @@
     [
      "2026-11-11",
      114.43,
-     115.56,
+     115.6,
      111.65
+    ],
+    [
+     "2026-11-12",
+     111.48,
+     114.99,
+     110.501
     ]
    ]
   },
   "YPF|1": {
-   "tage": 48,
+   "tage": 49,
    "daten": [
-    [
-     "2025-10-30",
-     34.59,
-     35.15,
-     33.93
-    ],
     [
      "2025-10-31",
      36.43,
@@ -442720,18 +444450,18 @@
      37.36,
      37.99,
      36.99
+    ],
+    [
+     "2026-11-12",
+     37.2,
+     38.03,
+     35.61
     ]
    ]
   },
   "ZIM|Cup & Handle (Wochenbasis)": {
-   "tage": 36,
+   "tage": 37,
    "daten": [
-    [
-     "2025-10-30",
-     14.73,
-     14.905,
-     14.557
-    ],
     [
      "2025-10-31",
      15.38,
@@ -444285,18 +446015,18 @@
      29.01,
      29.15,
      28.4
+    ],
+    [
+     "2026-11-12",
+     29.24,
+     29.56,
+     28.8706
     ]
    ]
   },
   "ZIM|Fallback: 52W-Hoch-Breakout": {
-   "tage": 36,
+   "tage": 37,
    "daten": [
-    [
-     "2025-10-30",
-     14.73,
-     14.905,
-     14.557
-    ],
     [
      "2025-10-31",
      15.38,
@@ -445850,6 +447580,12 @@
      29.01,
      29.15,
      28.4
+    ],
+    [
+     "2026-11-12",
+     29.24,
+     29.56,
+     28.8706
     ]
    ]
   }

@@ -1,27 +1,44 @@
 {
- "gebaut_am": "2026-11-12 00:10 Wien",
+ "gebaut_am": "2026-11-13 00:08 Wien",
  "ohne_termin": [
+  "ANDG",
   "ANL",
+  "ARX",
   "BNR",
   "BUUU",
-  "EDRY",
   "GIBO",
+  "HTFL",
   "KRSA",
   "MAAS",
+  "NIQ",
+  "RCMT",
   "SAIH",
   "SDEV",
+  "SLS",
+  "SMTI",
   "SVRN",
   "TJGC"
  ],
- "nur_nasdaq": [],
- "uneinig": [],
+ "nur_nasdaq": [
+  "ANDG",
+  "ARX",
+  "BNR",
+  "HTFL",
+  "NIQ",
+  "RCMT"
+ ],
+ "uneinig": [
+  "MMS",
+  "VEEV"
+ ],
  "aktien": {
   "ABSI": {
    "datum": "2026-11-12",
-   "uhrzeit": "08:00",
+   "uhrzeit": "07:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "ADPT": {
@@ -37,7 +54,8 @@
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "AEHR": {
@@ -122,10 +140,10 @@
   },
   "ANDG": {
    "datum": "2026-11-12",
-   "uhrzeit": "16:00",
+   "uhrzeit": "",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo"
+    "nasdaq"
    ]
   },
   "ANET": {
@@ -141,7 +159,8 @@
    "uhrzeit": "08:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "AOUT": {
@@ -178,10 +197,10 @@
   },
   "ARX": {
    "datum": "2026-11-12",
-   "uhrzeit": "08:00",
+   "uhrzeit": "",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo"
+    "nasdaq"
    ]
   },
   "ASST": {
@@ -278,6 +297,14 @@
    "lage": "nachboerslich",
    "quellen": [
     "yahoo"
+   ]
+  },
+  "BNR": {
+   "datum": "2026-11-19",
+   "uhrzeit": "",
+   "lage": "unbekannt",
+   "quellen": [
+    "nasdaq"
    ]
   },
   "BRZE": {
@@ -405,7 +432,8 @@
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "DDOG": {
@@ -421,7 +449,8 @@
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "DINO": {
@@ -456,12 +485,21 @@
     "yahoo"
    ]
   },
+  "EDRY": {
+   "datum": "2027-02-18",
+   "uhrzeit": "08:00",
+   "lage": "vorboerslich",
+   "quellen": [
+    "yahoo"
+   ]
+  },
   "ESTC": {
    "datum": "2026-11-19",
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "ETON": {
@@ -573,7 +611,8 @@
    "uhrzeit": "08:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "GCT": {
@@ -589,7 +628,8 @@
    "uhrzeit": "08:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "GEO": {
@@ -661,7 +701,8 @@
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "HQI": {
@@ -669,15 +710,16 @@
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "HTFL": {
    "datum": "2026-11-12",
-   "uhrzeit": "16:00",
+   "uhrzeit": "",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo"
+    "nasdaq"
    ]
   },
   "HUM": {
@@ -749,7 +791,8 @@
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "KOD": {
@@ -757,7 +800,8 @@
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "KRT": {
@@ -829,8 +873,10 @@
    "uhrzeit": "08:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo"
-   ]
+    "yahoo",
+    "nasdaq"
+   ],
+   "uneinig": "Quellen uneinig: 2026-11-20 (Yahoo, hier bevorzugt) gegen 2026-11-19 (Nasdaq)"
   },
   "MNDY": {
    "datum": "2027-02-08",
@@ -898,10 +944,11 @@
   },
   "NBIS": {
    "datum": "2026-11-12",
-   "uhrzeit": "08:00",
+   "uhrzeit": "07:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "NET": {
@@ -914,10 +961,10 @@
   },
   "NIQ": {
    "datum": "2026-11-12",
-   "uhrzeit": "08:00",
+   "uhrzeit": "",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo"
+    "nasdaq"
    ]
   },
   "NSIT": {
@@ -941,7 +988,8 @@
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "NTRA": {
@@ -969,8 +1017,8 @@
    ]
   },
   "ODD": {
-   "datum": "2026-11-11",
-   "uhrzeit": "07:00",
+   "datum": "2027-02-24",
+   "uhrzeit": "08:00",
    "lage": "vorboerslich",
    "quellen": [
     "yahoo"
@@ -997,7 +1045,8 @@
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "ONON": {
@@ -1029,7 +1078,8 @@
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "PANW": {
@@ -1037,7 +1087,8 @@
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "PAYC": {
@@ -1225,11 +1276,11 @@
    ]
   },
   "RCMT": {
-   "datum": "2026-11-12",
-   "uhrzeit": "16:00",
-   "lage": "nachboerslich",
+   "datum": "2026-11-18",
+   "uhrzeit": "",
+   "lage": "unbekannt",
    "quellen": [
-    "yahoo"
+    "nasdaq"
    ]
   },
   "RDVT": {
@@ -1313,7 +1364,7 @@
    ]
   },
   "SAIL": {
-   "datum": "2026-12-15",
+   "datum": "2026-12-08",
    "uhrzeit": "08:00",
    "lage": "vorboerslich",
    "quellen": [
@@ -1384,28 +1435,13 @@
     "yahoo"
    ]
   },
-  "SLS": {
-   "datum": "2026-11-11",
-   "uhrzeit": "16:00",
-   "lage": "nachboerslich",
-   "quellen": [
-    "yahoo"
-   ]
-  },
   "SMTC": {
    "datum": "2026-11-23",
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo"
-   ]
-  },
-  "SMTI": {
-   "datum": "2026-11-11",
-   "uhrzeit": "16:00",
-   "lage": "nachboerslich",
-   "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "SN": {
@@ -1465,7 +1501,7 @@
    ]
   },
   "TISI": {
-   "datum": "2026-11-11",
+   "datum": "2027-03-11",
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
@@ -1498,10 +1534,11 @@
   },
   "TWST": {
    "datum": "2026-11-12",
-   "uhrzeit": "08:00",
+   "uhrzeit": "07:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "TXG": {
@@ -1529,12 +1566,14 @@
    ]
   },
   "VEEV": {
-   "datum": "2026-11-25",
+   "datum": "2026-12-03",
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo"
-   ]
+    "yahoo",
+    "nasdaq"
+   ],
+   "uneinig": "Quellen uneinig: 2026-12-03 (Yahoo, hier bevorzugt) gegen 2026-11-19 (Nasdaq)"
   },
   "VEON": {
    "datum": "2027-03-12",
@@ -1557,7 +1596,8 @@
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "VRNS": {
