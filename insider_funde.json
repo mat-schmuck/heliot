@@ -1,16 +1,16 @@
 {
- "stand": "2026-11-13",
+ "stand": "2026-11-14",
  "funde": [
   {
    "ticker": "BBTX",
    "status": "beide",
-   "marktkap": 827814528.0,
-   "stichtag": "2026-11-13",
+   "marktkap": 819663744.0,
+   "stichtag": "2026-11-14",
    "zeilen": [
-    "BBTX; Großkauf und Cluster; Marktwert 827,8 Mio $",
+    "BBTX; Großkauf und Cluster; Marktwert 819,7 Mio $",
     "Größter Einzelkauf 37,4 Mio $ am 02.11.; RA CAPITAL MANAGEMENT, L.P., Direktor",
     "3 Insider über der Schwelle von 250 Tsd $:",
-    "  RA CAPITAL MANAGEMENT, L.P., Direktor; 46,6 Mio $",
+    "  RA CAPITAL MANAGEMENT, L.P., Direktor; 40,0 Mio $",
     "  Salvia Investment GmbH, Insider; 6,0 Mio $",
     "  Jeggle Helmut Wolfgang, Direktor; 6,0 Mio $"
    ],
@@ -19,10 +19,10 @@
   {
    "ticker": "COUR",
    "status": "pfad_a",
-   "marktkap": 895415552.0,
-   "stichtag": "2026-11-13",
+   "marktkap": 889083008.0,
+   "stichtag": "2026-11-14",
    "zeilen": [
-    "COUR; Großkauf; Marktwert 895,4 Mio $",
+    "COUR; Großkauf; Marktwert 889,1 Mio $",
     "Größter Einzelkauf 11,7 Mio $ am 05.11.; Pale Fire Capital SE, Insider"
    ],
    "kennung": "COUR|pfad_a|1"
@@ -30,8 +30,8 @@
   {
    "ticker": "CRBG",
    "status": "pfad_a",
-   "marktkap": 15877212160.0,
-   "stichtag": "2026-11-13",
+   "marktkap": 15938598912.0,
+   "stichtag": "2026-11-14",
    "zeilen": [
     "CRBG; Großkauf; Marktwert 15,9 Mrd $",
     "Größter Einzelkauf 12,6 Mio $ am 03.11.; NIPPON LIFE INSURANCE CO, Insider"
@@ -41,8 +41,8 @@
   {
    "ticker": "DOLE",
    "status": "pfad_a",
-   "marktkap": 1334237952.0,
-   "stichtag": "2026-11-13",
+   "marktkap": 1341733632.0,
+   "stichtag": "2026-11-14",
    "zeilen": [
     "DOLE; Großkauf; Marktwert 1,3 Mrd $",
     "Größter Einzelkauf 9,8 Mio $ am 03.11.; Pale Fire Capital SE, Insider"
@@ -52,8 +52,8 @@
   {
    "ticker": "FUN",
    "status": "pfad_a",
-   "marktkap": 1175028352.0,
-   "stichtag": "2026-11-13",
+   "marktkap": 1181678464.0,
+   "stichtag": "2026-11-14",
    "zeilen": [
     "FUN; Großkauf; Marktwert 1,2 Mrd $",
     "Größter Einzelkauf 7,0 Mio $ am 06.11.; JAFFER REHAN, Direktor"
@@ -63,10 +63,10 @@
   {
    "ticker": "GLXY",
    "status": "pfad_a",
-   "marktkap": 8457000960.0,
-   "stichtag": "2026-11-13",
+   "marktkap": 8439453184.0,
+   "stichtag": "2026-11-14",
    "zeilen": [
-    "GLXY; Großkauf; Marktwert 8,5 Mrd $",
+    "GLXY; Großkauf; Marktwert 8,4 Mrd $",
     "Größter Einzelkauf 6,7 Mio $ am 05.11.; Novogratz Michael, Chief Executive Officer"
    ],
    "kennung": "GLXY|pfad_a|1"
@@ -74,10 +74,10 @@
   {
    "ticker": "INTC",
    "status": "pfad_a",
-   "marktkap": 315710996480.0,
-   "stichtag": "2026-11-13",
+   "marktkap": 317092888576.0,
+   "stichtag": "2026-11-14",
    "zeilen": [
-    "INTC; Großkauf; Marktwert 315,7 Mrd $",
+    "INTC; Großkauf; Marktwert 317,1 Mrd $",
     "Größter Einzelkauf 9,7 Mio $ am 02.11.; TAN LIP BU, CEO"
    ],
    "kennung": "INTC|pfad_a|1"
@@ -85,10 +85,10 @@
   {
    "ticker": "KMI",
    "status": "pfad_a",
-   "marktkap": 71030702080.0,
-   "stichtag": "2026-11-13",
+   "marktkap": 71108673536.0,
+   "stichtag": "2026-11-14",
    "zeilen": [
-    "KMI; Großkauf; Marktwert 71,0 Mrd $",
+    "KMI; Großkauf; Marktwert 71,1 Mrd $",
     "Größter Einzelkauf 15,0 Mio $ am 06.11.; KINDER RICHARD D, Executive Chairman"
    ],
    "kennung": "KMI|pfad_a|1"
@@ -96,8 +96,8 @@
   {
    "ticker": "KOD",
    "status": "pfad_a",
-   "marktkap": 7014627840.0,
-   "stichtag": "2026-11-13",
+   "marktkap": 6988231168.0,
+   "stichtag": "2026-11-14",
    "zeilen": [
     "KOD; Großkauf; Marktwert 7,0 Mrd $",
     "Größter Einzelkauf 15,0 Mio $ am 04.11.; BAKER BROS. ADVISORS LP, Direktor"
@@ -107,8 +107,8 @@
   {
    "ticker": "LRN",
    "status": "pfad_a",
-   "marktkap": 3190877184.0,
-   "stichtag": "2026-11-13",
+   "marktkap": 3188143872.0,
+   "stichtag": "2026-11-14",
    "zeilen": [
     "LRN; Großkauf; Marktwert 3,2 Mrd $",
     "Größter Einzelkauf 7,5 Mio $ am 05.11.; Haggart Dylan G., Direktor"
@@ -118,8 +118,8 @@
   {
    "ticker": "MDGL",
    "status": "pfad_a",
-   "marktkap": 9851656192.0,
-   "stichtag": "2026-11-13",
+   "marktkap": 9928082432.0,
+   "stichtag": "2026-11-14",
    "zeilen": [
     "MDGL; Großkauf; Marktwert 9,9 Mrd $",
     "Größter Einzelkauf 23,1 Mio $ am 06.11.; BAKER BROS. ADVISORS LP, Direktor"
@@ -127,34 +127,12 @@
    "kennung": "MDGL|pfad_a|1"
   },
   {
-   "ticker": "MGM",
-   "status": "pfad_a",
-   "marktkap": 8465732608.0,
-   "stichtag": "2026-11-13",
-   "zeilen": [
-    "MGM; Großkauf; Marktwert 8,5 Mrd $",
-    "Größter Einzelkauf 44,7 Mio $ am 30.10.; Meister Keith A., Direktor"
-   ],
-   "kennung": "MGM|pfad_a|1"
-  },
-  {
-   "ticker": "SIRI",
-   "status": "pfad_a",
-   "marktkap": 10772622336.0,
-   "stichtag": "2026-11-13",
-   "zeilen": [
-    "SIRI; Großkauf; Marktwert 10,8 Mrd $",
-    "Größter Einzelkauf 21,5 Mio $ am 30.10.; BERKSHIRE HATHAWAY INC, Insider"
-   ],
-   "kennung": "SIRI|pfad_a|1"
-  },
-  {
    "ticker": "UPBD",
    "status": "pfad_b",
-   "marktkap": 1447356672.0,
-   "stichtag": "2026-11-13",
+   "marktkap": 1462806784.0,
+   "stichtag": "2026-11-14",
    "zeilen": [
-    "UPBD; Insider-Cluster; Marktwert 1,4 Mrd $",
+    "UPBD; Insider-Cluster; Marktwert 1,5 Mrd $",
     "4 Insider über der Schwelle von 250 Tsd $:",
     "  Karam Fahmi, Chief Executive Officer; 400 Tsd $",
     "  BROWN JEFFREY J, Direktor; 400 Tsd $",
