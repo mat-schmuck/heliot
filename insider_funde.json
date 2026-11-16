@@ -1,13 +1,13 @@
 {
- "stand": "2026-11-14",
+ "stand": "2026-11-16",
  "funde": [
   {
    "ticker": "BBTX",
    "status": "beide",
-   "marktkap": 819663744.0,
-   "stichtag": "2026-11-14",
+   "marktkap": 814060032.0,
+   "stichtag": "2026-11-16",
    "zeilen": [
-    "BBTX; Großkauf und Cluster; Marktwert 819,7 Mio $",
+    "BBTX; Großkauf und Cluster; Marktwert 814,1 Mio $",
     "Größter Einzelkauf 37,4 Mio $ am 02.11.; RA CAPITAL MANAGEMENT, L.P., Direktor",
     "3 Insider über der Schwelle von 250 Tsd $:",
     "  RA CAPITAL MANAGEMENT, L.P., Direktor; 40,0 Mio $",
@@ -19,10 +19,10 @@
   {
    "ticker": "COUR",
    "status": "pfad_a",
-   "marktkap": 889083008.0,
-   "stichtag": "2026-11-14",
+   "marktkap": 909347008.0,
+   "stichtag": "2026-11-16",
    "zeilen": [
-    "COUR; Großkauf; Marktwert 889,1 Mio $",
+    "COUR; Großkauf; Marktwert 909,3 Mio $",
     "Größter Einzelkauf 11,7 Mio $ am 05.11.; Pale Fire Capital SE, Insider"
    ],
    "kennung": "COUR|pfad_a|1"
@@ -30,10 +30,10 @@
   {
    "ticker": "CRBG",
    "status": "pfad_a",
-   "marktkap": 15938598912.0,
-   "stichtag": "2026-11-14",
+   "marktkap": 15657973760.0,
+   "stichtag": "2026-11-16",
    "zeilen": [
-    "CRBG; Großkauf; Marktwert 15,9 Mrd $",
+    "CRBG; Großkauf; Marktwert 15,7 Mrd $",
     "Größter Einzelkauf 12,6 Mio $ am 03.11.; NIPPON LIFE INSURANCE CO, Insider"
    ],
    "kennung": "CRBG|pfad_a|1"
@@ -41,8 +41,8 @@
   {
    "ticker": "DOLE",
    "status": "pfad_a",
-   "marktkap": 1341733632.0,
-   "stichtag": "2026-11-14",
+   "marktkap": 1322994432.0,
+   "stichtag": "2026-11-16",
    "zeilen": [
     "DOLE; Großkauf; Marktwert 1,3 Mrd $",
     "Größter Einzelkauf 9,8 Mio $ am 03.11.; Pale Fire Capital SE, Insider"
@@ -52,8 +52,8 @@
   {
    "ticker": "FUN",
    "status": "pfad_a",
-   "marktkap": 1181678464.0,
-   "stichtag": "2026-11-14",
+   "marktkap": 1187816960.0,
+   "stichtag": "2026-11-16",
    "zeilen": [
     "FUN; Großkauf; Marktwert 1,2 Mrd $",
     "Größter Einzelkauf 7,0 Mio $ am 06.11.; JAFFER REHAN, Direktor"
@@ -63,10 +63,10 @@
   {
    "ticker": "GLXY",
    "status": "pfad_a",
-   "marktkap": 8439453184.0,
-   "stichtag": "2026-11-14",
+   "marktkap": 7675668480.0,
+   "stichtag": "2026-11-16",
    "zeilen": [
-    "GLXY; Großkauf; Marktwert 8,4 Mrd $",
+    "GLXY; Großkauf; Marktwert 7,7 Mrd $",
     "Größter Einzelkauf 6,7 Mio $ am 05.11.; Novogratz Michael, Chief Executive Officer"
    ],
    "kennung": "GLXY|pfad_a|1"
@@ -74,10 +74,10 @@
   {
    "ticker": "INTC",
    "status": "pfad_a",
-   "marktkap": 317092888576.0,
-   "stichtag": "2026-11-14",
+   "marktkap": 294823034880.0,
+   "stichtag": "2026-11-16",
    "zeilen": [
-    "INTC; Großkauf; Marktwert 317,1 Mrd $",
+    "INTC; Großkauf; Marktwert 294,8 Mrd $",
     "Größter Einzelkauf 9,7 Mio $ am 02.11.; TAN LIP BU, CEO"
    ],
    "kennung": "INTC|pfad_a|1"
@@ -85,10 +85,10 @@
   {
    "ticker": "KMI",
    "status": "pfad_a",
-   "marktkap": 71108673536.0,
-   "stichtag": "2026-11-14",
+   "marktkap": 69994815488.0,
+   "stichtag": "2026-11-16",
    "zeilen": [
-    "KMI; Großkauf; Marktwert 71,1 Mrd $",
+    "KMI; Großkauf; Marktwert 70,0 Mrd $",
     "Größter Einzelkauf 15,0 Mio $ am 06.11.; KINDER RICHARD D, Executive Chairman"
    ],
    "kennung": "KMI|pfad_a|1"
@@ -96,10 +96,10 @@
   {
    "ticker": "KOD",
    "status": "pfad_a",
-   "marktkap": 6988231168.0,
-   "stichtag": "2026-11-14",
+   "marktkap": 6587294208.0,
+   "stichtag": "2026-11-16",
    "zeilen": [
-    "KOD; Großkauf; Marktwert 7,0 Mrd $",
+    "KOD; Großkauf; Marktwert 6,6 Mrd $",
     "Größter Einzelkauf 15,0 Mio $ am 04.11.; BAKER BROS. ADVISORS LP, Direktor"
    ],
    "kennung": "KOD|pfad_a|1"
@@ -107,8 +107,8 @@
   {
    "ticker": "LRN",
    "status": "pfad_a",
-   "marktkap": 3188143872.0,
-   "stichtag": "2026-11-14",
+   "marktkap": 3218839808.0,
+   "stichtag": "2026-11-16",
    "zeilen": [
     "LRN; Großkauf; Marktwert 3,2 Mrd $",
     "Größter Einzelkauf 7,5 Mio $ am 05.11.; Haggart Dylan G., Direktor"
@@ -118,19 +118,30 @@
   {
    "ticker": "MDGL",
    "status": "pfad_a",
-   "marktkap": 9928082432.0,
-   "stichtag": "2026-11-14",
+   "marktkap": 9848403968.0,
+   "stichtag": "2026-11-16",
    "zeilen": [
-    "MDGL; Großkauf; Marktwert 9,9 Mrd $",
+    "MDGL; Großkauf; Marktwert 9,8 Mrd $",
     "Größter Einzelkauf 23,1 Mio $ am 06.11.; BAKER BROS. ADVISORS LP, Direktor"
    ],
    "kennung": "MDGL|pfad_a|1"
   },
   {
+   "ticker": "STWD",
+   "status": "pfad_a",
+   "marktkap": 4389858816.0,
+   "stichtag": "2026-11-16",
+   "zeilen": [
+    "STWD; Großkauf; Marktwert 4,4 Mrd $",
+    "Größter Einzelkauf 9,9 Mio $ am 11.11.; STERNLICHT BARRY S, CEO, Chairman of the Board"
+   ],
+   "kennung": "STWD|pfad_a|2"
+  },
+  {
    "ticker": "UPBD",
    "status": "pfad_b",
-   "marktkap": 1462806784.0,
-   "stichtag": "2026-11-14",
+   "marktkap": 1452895360.0,
+   "stichtag": "2026-11-16",
    "zeilen": [
     "UPBD; Insider-Cluster; Marktwert 1,5 Mrd $",
     "4 Insider über der Schwelle von 250 Tsd $:",
