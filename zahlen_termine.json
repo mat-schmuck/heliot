@@ -1,5 +1,5 @@
 {
- "gebaut_am": "2026-11-16 00:09 Wien",
+ "gebaut_am": "2026-11-17 00:14 Wien",
  "ohne_termin": [
   "ANL",
   "BNR",
@@ -7,18 +7,19 @@
   "GIBO",
   "KRSA",
   "MAAS",
+  "OMER",
   "SAIH",
   "SDEV",
   "SVRN",
   "TJGC"
  ],
  "nur_nasdaq": [
-  "BNR"
+  "BNR",
+  "OMER"
  ],
  "uneinig": [
   "DAC",
-  "MMS",
-  "VEEV"
+  "MMS"
  ],
  "aktien": {
   "ABSI": {
@@ -1028,10 +1029,9 @@
   },
   "OMER": {
    "datum": "2026-11-16",
-   "uhrzeit": "16:00",
+   "uhrzeit": "",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo",
     "nasdaq"
    ]
   },
@@ -1571,10 +1571,8 @@
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo",
-    "nasdaq"
-   ],
-   "uneinig": "Quellen uneinig: 2026-12-03 (Yahoo, hier bevorzugt) gegen 2026-11-19 (Nasdaq)"
+    "yahoo"
+   ]
   },
   "VEON": {
    "datum": "2027-03-12",
