@@ -1,5 +1,5 @@
 {
- "gebaut_am": "2026-11-17 00:14 Wien",
+ "gebaut_am": "2026-11-18 00:10 Wien",
  "ohne_termin": [
   "ANL",
   "BNR",
@@ -7,19 +7,17 @@
   "GIBO",
   "KRSA",
   "MAAS",
-  "OMER",
   "SAIH",
   "SDEV",
   "SVRN",
   "TJGC"
  ],
  "nur_nasdaq": [
-  "BNR",
-  "OMER"
+  "BNR"
  ],
  "uneinig": [
-  "DAC",
-  "MMS"
+  "MMS",
+  "VREX"
  ],
  "aktien": {
   "ABSI": {
@@ -423,8 +421,7 @@
    "quellen": [
     "yahoo",
     "nasdaq"
-   ],
-   "uneinig": "Quellen uneinig: 2026-11-23 (Yahoo, hier bevorzugt) gegen 2026-11-16 (Nasdaq)"
+   ]
   },
   "DDOG": {
    "datum": "2027-02-11",
@@ -1028,11 +1025,11 @@
    ]
   },
   "OMER": {
-   "datum": "2026-11-16",
-   "uhrzeit": "",
+   "datum": "2027-03-31",
+   "uhrzeit": "17:00",
    "lage": "nachboerslich",
    "quellen": [
-    "nasdaq"
+    "yahoo"
    ]
   },
   "ONON": {
@@ -1258,7 +1255,8 @@
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "RCMT": {
@@ -1591,13 +1589,14 @@
    ]
   },
   "VREX": {
-   "datum": "2026-11-17",
+   "datum": "2026-12-01",
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
     "yahoo",
     "nasdaq"
-   ]
+   ],
+   "uneinig": "Quellen uneinig: 2026-12-01 (Yahoo, hier bevorzugt) gegen 2026-11-17 (Nasdaq)"
   },
   "VRNS": {
    "datum": "2027-02-09",
