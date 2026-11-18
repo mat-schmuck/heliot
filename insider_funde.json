@@ -4,32 +4,21 @@
   {
    "ticker": "COUR",
    "status": "pfad_a",
-   "marktkap": 899214976.0,
+   "marktkap": 903014528.0,
    "stichtag": "2026-11-18",
    "zeilen": [
-    "COUR; Großkauf; Marktwert 899,2 Mio $",
+    "COUR; Großkauf; Marktwert 903,0 Mio $",
     "Größter Einzelkauf 11,7 Mio $ am 05.11.; Pale Fire Capital SE, Insider"
    ],
    "kennung": "COUR|pfad_a|1"
   },
   {
-   "ticker": "EMO",
-   "status": "pfad_a",
-   "marktkap": 980316480.0,
-   "stichtag": "2026-11-18",
-   "zeilen": [
-    "EMO; Großkauf; Marktwert 980,3 Mio $",
-    "Größter Einzelkauf 20,0 Mio $ am 12.11.; PRUDENTIAL FINANCIAL INC, Insider"
-   ],
-   "kennung": "EMO|pfad_a|1"
-  },
-  {
    "ticker": "FUN",
    "status": "pfad_a",
-   "marktkap": 1121315712.0,
+   "marktkap": 1217998464.0,
    "stichtag": "2026-11-18",
    "zeilen": [
-    "FUN; Großkauf; Marktwert 1,1 Mrd $",
+    "FUN; Großkauf; Marktwert 1,2 Mrd $",
     "Größter Einzelkauf 7,0 Mio $ am 06.11.; JAFFER REHAN, Direktor"
    ],
    "kennung": "FUN|pfad_a|1"
@@ -37,10 +26,10 @@
   {
    "ticker": "GLXY",
    "status": "pfad_a",
-   "marktkap": 7611411968.0,
+   "marktkap": 7766210560.0,
    "stichtag": "2026-11-18",
    "zeilen": [
-    "GLXY; Großkauf; Marktwert 7,6 Mrd $",
+    "GLXY; Großkauf; Marktwert 7,8 Mrd $",
     "Größter Einzelkauf 6,7 Mio $ am 05.11.; Novogratz Michael, Chief Executive Officer"
    ],
    "kennung": "GLXY|pfad_a|2"
@@ -48,10 +37,10 @@
   {
    "ticker": "KMI",
    "status": "pfad_a",
-   "marktkap": 70618578944.0,
+   "marktkap": 69916844032.0,
    "stichtag": "2026-11-18",
    "zeilen": [
-    "KMI; Großkauf; Marktwert 70,6 Mrd $",
+    "KMI; Großkauf; Marktwert 69,9 Mrd $",
     "Größter Einzelkauf 15,0 Mio $ am 06.11.; KINDER RICHARD D, Executive Chairman"
    ],
    "kennung": "KMI|pfad_a|1"
@@ -59,10 +48,10 @@
   {
    "ticker": "KOD",
    "status": "pfad_a",
-   "marktkap": 6330289664.0,
+   "marktkap": 6422497280.0,
    "stichtag": "2026-11-18",
    "zeilen": [
-    "KOD; Großkauf; Marktwert 6,3 Mrd $",
+    "KOD; Großkauf; Marktwert 6,4 Mrd $",
     "Größter Einzelkauf 15,0 Mio $ am 04.11.; BAKER BROS. ADVISORS LP, Direktor"
    ],
    "kennung": "KOD|pfad_a|1"
@@ -70,10 +59,10 @@
   {
    "ticker": "LRN",
    "status": "pfad_a",
-   "marktkap": 3225988096.0,
+   "marktkap": 3268457472.0,
    "stichtag": "2026-11-18",
    "zeilen": [
-    "LRN; Großkauf; Marktwert 3,2 Mrd $",
+    "LRN; Großkauf; Marktwert 3,3 Mrd $",
     "Größter Einzelkauf 7,5 Mio $ am 05.11.; Haggart Dylan G., Direktor"
    ],
    "kennung": "LRN|pfad_a|1"
@@ -81,10 +70,10 @@
   {
    "ticker": "MDGL",
    "status": "pfad_a",
-   "marktkap": 9802641408.0,
+   "marktkap": 9260464128.0,
    "stichtag": "2026-11-18",
    "zeilen": [
-    "MDGL; Großkauf; Marktwert 9,8 Mrd $",
+    "MDGL; Großkauf; Marktwert 9,3 Mrd $",
     "Größter Einzelkauf 23,1 Mio $ am 06.11.; BAKER BROS. ADVISORS LP, Direktor"
    ],
    "kennung": "MDGL|pfad_a|1"
@@ -92,10 +81,10 @@
   {
    "ticker": "MP",
    "status": "pfad_b",
-   "marktkap": 6214421504.0,
+   "marktkap": 6415864320.0,
    "stichtag": "2026-11-18",
    "zeilen": [
-    "MP; Insider-Cluster; Marktwert 6,2 Mrd $",
+    "MP; Insider-Cluster; Marktwert 6,4 Mrd $",
     "3 Insider über der Schwelle von 250 Tsd $:",
     "  WEISENBURGER RANDALL J, Direktor; 2,0 Mio $",
     "  Rosenthal Michael Stuart, Chief Operating Officer; 1,2 Mio $",
@@ -104,9 +93,23 @@
    "kennung": "MP|pfad_b|3"
   },
   {
+   "ticker": "PAM",
+   "status": "pfad_b",
+   "marktkap": 3344875520.0,
+   "stichtag": "2026-11-18",
+   "zeilen": [
+    "PAM; Insider-Cluster; Marktwert 3,3 Mrd $",
+    "3 Insider über der Schwelle von 250 Tsd $:",
+    "  Mindlin Damian Miguel, Vicepresident; 6,8 Mio $",
+    "  Mindlin Marcos Marcelo, Direktor; 4,6 Mio $",
+    "  Mariani Gustavo, Vice President; 1,6 Mio $"
+   ],
+   "kennung": "PAM|pfad_b|3"
+  },
+  {
    "ticker": "STWD",
    "status": "pfad_a",
-   "marktkap": 4229208320.0,
+   "marktkap": 4216132352.0,
    "stichtag": "2026-11-18",
    "zeilen": [
     "STWD; Großkauf; Marktwert 4,2 Mrd $",
