@@ -1,5 +1,5 @@
 {
- "gebaut_am": "2026-11-18 00:10 Wien",
+ "gebaut_am": "2026-11-19 00:09 Wien",
  "ohne_termin": [
   "ANL",
   "BNR",
@@ -7,18 +7,19 @@
   "GIBO",
   "KRSA",
   "MAAS",
+  "P",
+  "PANW",
   "SAIH",
   "SDEV",
   "SVRN",
   "TJGC"
  ],
  "nur_nasdaq": [
-  "BNR"
+  "BNR",
+  "P",
+  "PANW"
  ],
- "uneinig": [
-  "MMS",
-  "VREX"
- ],
+ "uneinig": [],
  "aktien": {
   "ABSI": {
    "datum": "2027-03-23",
@@ -151,7 +152,7 @@
    ]
   },
   "AOUT": {
-   "datum": "2026-12-10",
+   "datum": "2026-12-02",
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
@@ -387,7 +388,8 @@
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "CRL": {
@@ -403,7 +405,8 @@
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "CSTL": {
@@ -640,7 +643,8 @@
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "GWRE": {
@@ -854,14 +858,13 @@
    ]
   },
   "MMS": {
-   "datum": "2026-11-20",
+   "datum": "2026-11-19",
    "uhrzeit": "08:00",
    "lage": "vorboerslich",
    "quellen": [
     "yahoo",
     "nasdaq"
-   ],
-   "uneinig": "Quellen uneinig: 2026-11-20 (Yahoo, hier bevorzugt) gegen 2026-11-19 (Nasdaq)"
+   ]
   },
   "MNDY": {
    "datum": "2027-02-08",
@@ -892,7 +895,8 @@
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "MTRN": {
@@ -964,7 +968,8 @@
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "NTNX": {
@@ -1021,7 +1026,8 @@
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "OMER": {
@@ -1058,19 +1064,17 @@
   },
   "P": {
    "datum": "2026-11-18",
-   "uhrzeit": "16:00",
+   "uhrzeit": "",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo",
     "nasdaq"
    ]
   },
   "PANW": {
    "datum": "2026-11-18",
-   "uhrzeit": "16:00",
+   "uhrzeit": "",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo",
     "nasdaq"
    ]
   },
@@ -1593,10 +1597,8 @@
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo",
-    "nasdaq"
-   ],
-   "uneinig": "Quellen uneinig: 2026-12-01 (Yahoo, hier bevorzugt) gegen 2026-11-17 (Nasdaq)"
+    "yahoo"
+   ]
   },
   "VRNS": {
    "datum": "2027-02-09",

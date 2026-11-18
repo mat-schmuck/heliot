@@ -1,7 +1,29 @@
 {
- "gebaut_am": "2026-11-17T23:10:32",
- "handelstag": "2026-11-17",
+ "gebaut_am": "2026-11-18T23:10:00",
+ "handelstag": "2026-11-18",
  "geladen": 36,
  "unfertig": [],
- "treffer": []
+ "treffer": [
+  {
+   "etf": "HACK",
+   "name": "Cybersecurity",
+   "richtung": "hoch",
+   "volumen_pct": 175.9,
+   "kurs": 119.6
+  },
+  {
+   "etf": "XLP",
+   "name": "Consumer Staples",
+   "richtung": "runter",
+   "volumen_pct": 74.9,
+   "kurs": 91.18
+  },
+  {
+   "etf": "XLE",
+   "name": "Energy",
+   "richtung": "runter",
+   "volumen_pct": 56.2,
+   "kurs": 61.29
+  }
+ ]
 }
