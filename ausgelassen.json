@@ -1,16 +1,21 @@
 {
- "stand": "2026-11-18",
+ "stand": "2026-11-19",
  "liste": 213,
  "aktien": [
   {
    "ticker": "CBZ",
    "firma": "CBIZ, Inc.",
-   "grund": "juengste Kurszeile vom 30.10.2026, also 19 Tage alt"
+   "grund": "juengste Kurszeile vom 30.10.2026, also 20 Tage alt"
   },
   {
    "ticker": "TJGC",
    "firma": "TJGC Group Limited",
    "grund": "5 der letzten 5 Handelstage ohne Umsatz oder ohne Kursspanne"
+  },
+  {
+   "ticker": "PCRX",
+   "firma": "Pacira BioSciences, Inc.",
+   "grund": "2 der letzten 5 Handelstage ohne Umsatz oder ohne Kursspanne"
   }
  ]
 }

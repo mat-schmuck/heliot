@@ -1,17 +1,17 @@
 {
  "farbe": "rot",
- "handelstag": "2026-11-18",
- "gebaut_am": "2026-11-18T23:01:01",
+ "handelstag": "2026-11-19",
+ "gebaut_am": "2026-11-19T23:01:18",
  "indizes": {
   "S&P 500": {
-   "schluss": 7323.63,
-   "ema21": 7542.35,
-   "sma50": 7648.51,
+   "schluss": 7175.83,
+   "ema21": 7509.03,
+   "sma50": 7640.19,
    "ueber_ema21": false,
    "ueber_sma50": false,
    "ema21_ueber_sma50": false,
    "sma50_steigt": false,
-   "handelstag": "2026-11-18",
+   "handelstag": "2026-11-19",
    "distribution_days": [
     {
      "tag": "2026-10-22",
@@ -47,13 +47,18 @@
      "tag": "2026-11-17",
      "pct": -1.03,
      "art": "distribution"
+    },
+    {
+     "tag": "2026-11-18",
+     "pct": -0.23,
+     "art": "distribution"
     }
    ],
    "dd_fenster": 25,
    "volumen_letzter_tag": true,
    "phase": {
     "zustand": "korrektur",
-    "korrektur_tag": "2026-11-18",
+    "korrektur_tag": "2026-11-19",
     "versuch_grund": "tief",
     "tag1": null,
     "versuch_tag": null,
@@ -64,20 +69,15 @@
    }
   },
   "Nasdaq": {
-   "schluss": 24429.88,
-   "ema21": 25349.35,
-   "sma50": 26231.8,
+   "schluss": 23879.2,
+   "ema21": 25215.7,
+   "sma50": 26187.75,
    "ueber_ema21": false,
    "ueber_sma50": false,
    "ema21_ueber_sma50": false,
    "sma50_steigt": false,
-   "handelstag": "2026-11-18",
+   "handelstag": "2026-11-19",
    "distribution_days": [
-    {
-     "tag": "2026-10-15",
-     "pct": 0.08,
-     "art": "stalling"
-    },
     {
      "tag": "2026-10-20",
      "pct": -0.02,
@@ -107,16 +107,21 @@
      "tag": "2026-11-17",
      "pct": -0.74,
      "art": "distribution"
+    },
+    {
+     "tag": "2026-11-19",
+     "pct": -2.25,
+     "art": "distribution"
     }
    ],
    "dd_fenster": 25,
    "volumen_letzter_tag": true,
    "phase": {
-    "zustand": "erholungsversuch",
-    "korrektur_tag": "2026-11-17",
-    "versuch_grund": "ftd_gescheitert",
-    "tag1": "2026-11-18",
-    "versuch_tag": 1,
+    "zustand": "korrektur",
+    "korrektur_tag": "2026-11-19",
+    "versuch_grund": "tief",
+    "tag1": null,
+    "versuch_tag": null,
     "ftd_tag": "2026-11-11",
     "ftd_pct": 1.6,
     "ftd_gescheitert": true,

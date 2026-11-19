@@ -1,14 +1,14 @@
 {
- "gebaut_am": "2026-11-19 00:09 Wien",
+ "gebaut_am": "2026-11-20 00:09 Wien",
  "ohne_termin": [
   "ANL",
   "BNR",
   "BUUU",
+  "ESTC",
   "GIBO",
+  "KEYS",
   "KRSA",
   "MAAS",
-  "P",
-  "PANW",
   "SAIH",
   "SDEV",
   "SVRN",
@@ -16,10 +16,12 @@
  ],
  "nur_nasdaq": [
   "BNR",
-  "P",
-  "PANW"
+  "ESTC",
+  "KEYS"
  ],
- "uneinig": [],
+ "uneinig": [
+  "GWRE"
+ ],
  "aktien": {
   "ABSI": {
    "datum": "2027-03-23",
@@ -485,10 +487,9 @@
   },
   "ESTC": {
    "datum": "2026-11-19",
-   "uhrzeit": "16:00",
+   "uhrzeit": "",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo",
     "nasdaq"
    ]
   },
@@ -598,7 +599,7 @@
   },
   "FUTU": {
    "datum": "2026-11-19",
-   "uhrzeit": "08:00",
+   "uhrzeit": "06:00",
    "lage": "vorboerslich",
    "quellen": [
     "yahoo",
@@ -652,8 +653,10 @@
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo"
-   ]
+    "yahoo",
+    "nasdaq"
+   ],
+   "uneinig": "Quellen uneinig: 2026-12-03 (Yahoo, hier bevorzugt) gegen 2026-12-02 (Nasdaq)"
   },
   "HAE": {
    "datum": "2027-02-04",
@@ -778,10 +781,9 @@
   },
   "KEYS": {
    "datum": "2026-11-19",
-   "uhrzeit": "16:00",
+   "uhrzeit": "",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo",
     "nasdaq"
    ]
   },
@@ -859,7 +861,7 @@
   },
   "MMS": {
    "datum": "2026-11-19",
-   "uhrzeit": "08:00",
+   "uhrzeit": "06:00",
    "lage": "vorboerslich",
    "quellen": [
     "yahoo",
@@ -916,7 +918,7 @@
    ]
   },
   "MU": {
-   "datum": "2026-12-23",
+   "datum": "2026-12-17",
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
@@ -994,7 +996,8 @@
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "NUTX": {
@@ -1063,19 +1066,19 @@
    ]
   },
   "P": {
-   "datum": "2026-11-18",
-   "uhrzeit": "",
+   "datum": "2027-02-24",
+   "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "nasdaq"
+    "yahoo"
    ]
   },
   "PANW": {
-   "datum": "2026-11-18",
-   "uhrzeit": "",
+   "datum": "2027-02-16",
+   "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "nasdaq"
+    "yahoo"
    ]
   },
   "PAYC": {
@@ -1469,7 +1472,8 @@
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "SNX": {
@@ -1669,7 +1673,8 @@
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   }
  }
