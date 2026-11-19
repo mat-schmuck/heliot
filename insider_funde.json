@@ -1,13 +1,24 @@
 {
- "stand": "2026-11-18",
+ "stand": "2026-11-19",
  "funde": [
+  {
+   "ticker": "ANAB",
+   "status": "pfad_a",
+   "marktkap": 1399086720.0,
+   "stichtag": "2026-11-19",
+   "zeilen": [
+    "ANAB; Großkauf; Marktwert 1,4 Mrd $",
+    "Größter Einzelkauf 7,0 Mio $ am 17.11.; EcoR1 Capital, LLC, Direktor"
+   ],
+   "kennung": "ANAB|pfad_a|1"
+  },
   {
    "ticker": "COUR",
    "status": "pfad_a",
-   "marktkap": 903014528.0,
-   "stichtag": "2026-11-18",
+   "marktkap": 906813952.0,
+   "stichtag": "2026-11-19",
    "zeilen": [
-    "COUR; Großkauf; Marktwert 903,0 Mio $",
+    "COUR; Großkauf; Marktwert 906,8 Mio $",
     "Größter Einzelkauf 11,7 Mio $ am 05.11.; Pale Fire Capital SE, Insider"
    ],
    "kennung": "COUR|pfad_a|1"
@@ -15,8 +26,8 @@
   {
    "ticker": "FUN",
    "status": "pfad_a",
-   "marktkap": 1217998464.0,
-   "stichtag": "2026-11-18",
+   "marktkap": 1208279040.0,
+   "stichtag": "2026-11-19",
    "zeilen": [
     "FUN; Großkauf; Marktwert 1,2 Mrd $",
     "Größter Einzelkauf 7,0 Mio $ am 06.11.; JAFFER REHAN, Direktor"
@@ -26,8 +37,8 @@
   {
    "ticker": "GLXY",
    "status": "pfad_a",
-   "marktkap": 7766210560.0,
-   "stichtag": "2026-11-18",
+   "marktkap": 7780814336.0,
+   "stichtag": "2026-11-19",
    "zeilen": [
     "GLXY; Großkauf; Marktwert 7,8 Mrd $",
     "Größter Einzelkauf 6,7 Mio $ am 05.11.; Novogratz Michael, Chief Executive Officer"
@@ -37,8 +48,8 @@
   {
    "ticker": "KMI",
    "status": "pfad_a",
-   "marktkap": 69916844032.0,
-   "stichtag": "2026-11-18",
+   "marktkap": 69861154816.0,
+   "stichtag": "2026-11-19",
    "zeilen": [
     "KMI; Großkauf; Marktwert 69,9 Mrd $",
     "Größter Einzelkauf 15,0 Mio $ am 06.11.; KINDER RICHARD D, Executive Chairman"
@@ -48,19 +59,19 @@
   {
    "ticker": "KOD",
    "status": "pfad_a",
-   "marktkap": 6422497280.0,
-   "stichtag": "2026-11-18",
+   "marktkap": 6396338688.0,
+   "stichtag": "2026-11-19",
    "zeilen": [
     "KOD; Großkauf; Marktwert 6,4 Mrd $",
-    "Größter Einzelkauf 15,0 Mio $ am 04.11.; BAKER BROS. ADVISORS LP, Direktor"
+    "Größter Einzelkauf 8,1 Mio $ am 05.11.; BAKER BROS. ADVISORS LP, Direktor"
    ],
    "kennung": "KOD|pfad_a|1"
   },
   {
    "ticker": "LRN",
    "status": "pfad_a",
-   "marktkap": 3268457472.0,
-   "stichtag": "2026-11-18",
+   "marktkap": 3270559744.0,
+   "stichtag": "2026-11-19",
    "zeilen": [
     "LRN; Großkauf; Marktwert 3,3 Mrd $",
     "Größter Einzelkauf 7,5 Mio $ am 05.11.; Haggart Dylan G., Direktor"
@@ -70,10 +81,10 @@
   {
    "ticker": "MDGL",
    "status": "pfad_a",
-   "marktkap": 9260464128.0,
-   "stichtag": "2026-11-18",
+   "marktkap": 9247222784.0,
+   "stichtag": "2026-11-19",
    "zeilen": [
-    "MDGL; Großkauf; Marktwert 9,3 Mrd $",
+    "MDGL; Großkauf; Marktwert 9,2 Mrd $",
     "Größter Einzelkauf 23,1 Mio $ am 06.11.; BAKER BROS. ADVISORS LP, Direktor"
    ],
    "kennung": "MDGL|pfad_a|1"
@@ -81,8 +92,8 @@
   {
    "ticker": "MP",
    "status": "pfad_b",
-   "marktkap": 6415864320.0,
-   "stichtag": "2026-11-18",
+   "marktkap": 6408733696.0,
+   "stichtag": "2026-11-19",
    "zeilen": [
     "MP; Insider-Cluster; Marktwert 6,4 Mrd $",
     "3 Insider über der Schwelle von 250 Tsd $:",
@@ -95,12 +106,12 @@
   {
    "ticker": "PAM",
    "status": "pfad_b",
-   "marktkap": 3344875520.0,
-   "stichtag": "2026-11-18",
+   "marktkap": 3345947392.0,
+   "stichtag": "2026-11-19",
    "zeilen": [
     "PAM; Insider-Cluster; Marktwert 3,3 Mrd $",
     "3 Insider über der Schwelle von 250 Tsd $:",
-    "  Mindlin Damian Miguel, Vicepresident; 6,8 Mio $",
+    "  Mindlin Damian Miguel, Vicepresident; 5,5 Mio $",
     "  Mindlin Marcos Marcelo, Direktor; 4,6 Mio $",
     "  Mariani Gustavo, Vice President; 1,6 Mio $"
    ],
@@ -109,8 +120,8 @@
   {
    "ticker": "STWD",
    "status": "pfad_a",
-   "marktkap": 4216132352.0,
-   "stichtag": "2026-11-18",
+   "marktkap": 4214264320.0,
+   "stichtag": "2026-11-19",
    "zeilen": [
     "STWD; Großkauf; Marktwert 4,2 Mrd $",
     "Größter Einzelkauf 9,9 Mio $ am 11.11.; STERNLICHT BARRY S, CEO, Chairman of the Board"
