@@ -1,12 +1,10 @@
 {
- "gebaut_am": "2026-11-20 00:09 Wien",
+ "gebaut_am": "2026-11-21 00:07 Wien",
  "ohne_termin": [
   "ANL",
   "BNR",
   "BUUU",
-  "ESTC",
   "GIBO",
-  "KEYS",
   "KRSA",
   "MAAS",
   "SAIH",
@@ -14,13 +12,10 @@
   "SVRN",
   "TJGC"
  ],
- "nur_nasdaq": [
-  "BNR",
-  "ESTC",
-  "KEYS"
- ],
+ "nur_nasdaq": [],
  "uneinig": [
-  "GWRE"
+  "GWRE",
+  "VREX"
  ],
  "aktien": {
   "ABSI": {
@@ -158,7 +153,8 @@
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "APOG": {
@@ -287,14 +283,6 @@
    "lage": "nachboerslich",
    "quellen": [
     "yahoo"
-   ]
-  },
-  "BNR": {
-   "datum": "2026-11-19",
-   "uhrzeit": "",
-   "lage": "unbekannt",
-   "quellen": [
-    "nasdaq"
    ]
   },
   "BRZE": {
@@ -486,11 +474,11 @@
    ]
   },
   "ESTC": {
-   "datum": "2026-11-19",
-   "uhrzeit": "",
+   "datum": "2027-02-25",
+   "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "nasdaq"
+    "yahoo"
    ]
   },
   "ETON": {
@@ -598,12 +586,11 @@
    ]
   },
   "FUTU": {
-   "datum": "2026-11-19",
-   "uhrzeit": "06:00",
+   "datum": "2027-03-11",
+   "uhrzeit": "08:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo",
-    "nasdaq"
+    "yahoo"
    ]
   },
   "GCT": {
@@ -780,11 +767,11 @@
    ]
   },
   "KEYS": {
-   "datum": "2026-11-19",
-   "uhrzeit": "",
+   "datum": "2027-02-23",
+   "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "nasdaq"
+    "yahoo"
    ]
   },
   "KOD": {
@@ -860,12 +847,11 @@
    ]
   },
   "MMS": {
-   "datum": "2026-11-19",
-   "uhrzeit": "06:00",
+   "datum": "2027-02-04",
+   "uhrzeit": "08:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo",
-    "nasdaq"
+    "yahoo"
    ]
   },
   "MNDY": {
@@ -1351,7 +1337,8 @@
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "SAIL": {
@@ -1577,7 +1564,8 @@
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "VEON": {
@@ -1601,8 +1589,10 @@
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo"
-   ]
+    "yahoo",
+    "nasdaq"
+   ],
+   "uneinig": "Quellen uneinig: 2026-12-01 (Yahoo, hier bevorzugt) gegen 2026-11-24 (Nasdaq)"
   },
   "VRNS": {
    "datum": "2027-02-09",

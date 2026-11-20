@@ -1,13 +1,4 @@
 {
- "GEO": {
-  "spring_index": 499,
-  "spring_datum": "2026-11-09",
-  "zone_min": 29.56999969482422,
-  "zone_max": 30.040000915527344,
-  "spring_low": 28.360000610351562,
-  "spring_volumen": 2946001.0,
-  "tage_gewartet": 9
- },
  "PUBM": {
   "spring_index": 500,
   "spring_datum": "2026-11-11",
@@ -15,6 +6,6 @@
   "zone_max": 17.31999969482422,
   "spring_low": 17.010000228881836,
   "spring_volumen": 882189.0,
-  "tage_gewartet": 7
+  "tage_gewartet": 8
  }
 }
