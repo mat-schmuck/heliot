@@ -1,11 +1,11 @@
 {
- "stand": "2026-11-19",
+ "stand": "2026-11-20",
  "funde": [
   {
    "ticker": "ANAB",
    "status": "pfad_a",
-   "marktkap": 1410384000.0,
-   "stichtag": "2026-11-19",
+   "marktkap": 1409194880.0,
+   "stichtag": "2026-11-20",
    "zeilen": [
     "ANAB; Großkauf; Marktwert 1,4 Mrd $",
     "Größter Einzelkauf 7,0 Mio $ am 17.11.; EcoR1 Capital, LLC, Direktor"
@@ -13,32 +13,10 @@
    "kennung": "ANAB|pfad_a|1"
   },
   {
-   "ticker": "COUR",
-   "status": "pfad_a",
-   "marktkap": 872618496.0,
-   "stichtag": "2026-11-19",
-   "zeilen": [
-    "COUR; Großkauf; Marktwert 872,6 Mio $",
-    "Größter Einzelkauf 11,7 Mio $ am 05.11.; Pale Fire Capital SE, Insider"
-   ],
-   "kennung": "COUR|pfad_a|1"
-  },
-  {
-   "ticker": "EMO",
-   "status": "pfad_a",
-   "marktkap": 948393088.0,
-   "stichtag": "2026-11-19",
-   "zeilen": [
-    "EMO; Großkauf; Marktwert 948,4 Mio $",
-    "Größter Einzelkauf 20,0 Mio $ am 12.11.; PRUDENTIAL FINANCIAL INC, Insider"
-   ],
-   "kennung": "EMO|pfad_a|1"
-  },
-  {
    "ticker": "FUN",
    "status": "pfad_a",
-   "marktkap": 1214929152.0,
-   "stichtag": "2026-11-19",
+   "marktkap": 1215440768.0,
+   "stichtag": "2026-11-20",
    "zeilen": [
     "FUN; Großkauf; Marktwert 1,2 Mrd $",
     "Größter Einzelkauf 7,0 Mio $ am 06.11.; JAFFER REHAN, Direktor"
@@ -46,21 +24,10 @@
    "kennung": "FUN|pfad_a|1"
   },
   {
-   "ticker": "GLXY",
-   "status": "pfad_a",
-   "marktkap": 7184986112.0,
-   "stichtag": "2026-11-19",
-   "zeilen": [
-    "GLXY; Großkauf; Marktwert 7,2 Mrd $",
-    "Größter Einzelkauf 6,7 Mio $ am 05.11.; Novogratz Michael, Chief Executive Officer"
-   ],
-   "kennung": "GLXY|pfad_a|2"
-  },
-  {
    "ticker": "KMI",
    "status": "pfad_a",
-   "marktkap": 69293080576.0,
-   "stichtag": "2026-11-19",
+   "marktkap": 69259673600.0,
+   "stichtag": "2026-11-20",
    "zeilen": [
     "KMI; Großkauf; Marktwert 69,3 Mrd $",
     "Größter Einzelkauf 15,0 Mio $ am 06.11.; KINDER RICHARD D, Executive Chairman"
@@ -68,32 +35,10 @@
    "kennung": "KMI|pfad_a|1"
   },
   {
-   "ticker": "KOD",
-   "status": "pfad_a",
-   "marktkap": 6405494272.0,
-   "stichtag": "2026-11-19",
-   "zeilen": [
-    "KOD; Großkauf; Marktwert 6,4 Mrd $",
-    "Größter Einzelkauf 8,1 Mio $ am 05.11.; BAKER BROS. ADVISORS LP, Direktor"
-   ],
-   "kennung": "KOD|pfad_a|1"
-  },
-  {
-   "ticker": "LRN",
-   "status": "pfad_a",
-   "marktkap": 3209168384.0,
-   "stichtag": "2026-11-19",
-   "zeilen": [
-    "LRN; Großkauf; Marktwert 3,2 Mrd $",
-    "Größter Einzelkauf 7,5 Mio $ am 05.11.; Haggart Dylan G., Direktor"
-   ],
-   "kennung": "LRN|pfad_a|1"
-  },
-  {
    "ticker": "MDGL",
    "status": "pfad_a",
-   "marktkap": 9209614336.0,
-   "stichtag": "2026-11-19",
+   "marktkap": 9216095232.0,
+   "stichtag": "2026-11-20",
    "zeilen": [
     "MDGL; Großkauf; Marktwert 9,2 Mrd $",
     "Größter Einzelkauf 23,1 Mio $ am 06.11.; BAKER BROS. ADVISORS LP, Direktor"
@@ -103,8 +48,8 @@
   {
    "ticker": "MP",
    "status": "pfad_b",
-   "marktkap": 6530846720.0,
-   "stichtag": "2026-11-19",
+   "marktkap": 6535303680.0,
+   "stichtag": "2026-11-20",
    "zeilen": [
     "MP; Insider-Cluster; Marktwert 6,5 Mrd $",
     "3 Insider über der Schwelle von 250 Tsd $:",
@@ -117,13 +62,13 @@
   {
    "ticker": "PAM",
    "status": "pfad_b",
-   "marktkap": 3324237824.0,
-   "stichtag": "2026-11-19",
+   "marktkap": 3325577984.0,
+   "stichtag": "2026-11-20",
    "zeilen": [
     "PAM; Insider-Cluster; Marktwert 3,3 Mrd $",
     "3 Insider über der Schwelle von 250 Tsd $:",
-    "  Mindlin Damian Miguel, Vicepresident; 5,5 Mio $",
     "  Mindlin Marcos Marcelo, Direktor; 4,6 Mio $",
+    "  Mindlin Damian Miguel, Vicepresident; 4,2 Mio $",
     "  Mariani Gustavo, Vice President; 1,6 Mio $"
    ],
    "kennung": "PAM|pfad_b|3"
@@ -131,8 +76,8 @@
   {
    "ticker": "STWD",
    "status": "beide",
-   "marktkap": 4195584000.0,
-   "stichtag": "2026-11-19",
+   "marktkap": 4203056128.0,
+   "stichtag": "2026-11-20",
    "zeilen": [
     "STWD; Großkauf und Cluster; Marktwert 4,2 Mrd $",
     "Größter Einzelkauf 9,9 Mio $ am 11.11.; STERNLICHT BARRY S, CEO, Chairman of the Board",
@@ -146,8 +91,8 @@
   {
    "ticker": "WWB",
    "status": "beide",
-   "marktkap": 1392929920.0,
-   "stichtag": "2026-11-19",
+   "marktkap": 1393510400.0,
+   "stichtag": "2026-11-20",
    "zeilen": [
     "WWB; Großkauf und Cluster; Marktwert 1,4 Mrd $",
     "Größter Einzelkauf 20,0 Mio $ am 16.11.; Bonita David P, Direktor",
