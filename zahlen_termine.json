@@ -1,21 +1,30 @@
 {
- "gebaut_am": "2026-11-23 00:08 Wien",
+ "gebaut_am": "2026-11-24 00:11 Wien",
  "ohne_termin": [
   "ANL",
   "BNR",
   "BUUU",
+  "DAC",
   "GIBO",
+  "HPE",
   "KRSA",
   "MAAS",
   "SAIH",
   "SDEV",
+  "SMTC",
   "SVRN",
-  "TJGC"
- ],
- "nur_nasdaq": [],
- "uneinig": [
-  "GWRE",
+  "TJGC",
   "VREX"
+ ],
+ "nur_nasdaq": [
+  "DAC",
+  "HPE",
+  "SMTC",
+  "VREX"
+ ],
+ "uneinig": [
+  "CRWD",
+  "ZS"
  ],
  "aktien": {
   "ABSI": {
@@ -391,13 +400,14 @@
    ]
   },
   "CRWD": {
-   "datum": "2026-12-01",
-   "uhrzeit": "16:00",
-   "lage": "nachboerslich",
+   "datum": "2026-11-23",
+   "uhrzeit": "05:00",
+   "lage": "vorboerslich",
    "quellen": [
     "yahoo",
     "nasdaq"
-   ]
+   ],
+   "uneinig": "Quellen uneinig: 2026-11-23 (Yahoo, hier bevorzugt) gegen 2026-12-01 (Nasdaq)"
   },
   "CSTL": {
    "datum": "2027-02-25",
@@ -409,10 +419,9 @@
   },
   "DAC": {
    "datum": "2026-11-23",
-   "uhrzeit": "16:00",
+   "uhrzeit": "",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo",
     "nasdaq"
    ]
   },
@@ -642,8 +651,7 @@
    "quellen": [
     "yahoo",
     "nasdaq"
-   ],
-   "uneinig": "Quellen uneinig: 2026-12-03 (Yahoo, hier bevorzugt) gegen 2026-12-02 (Nasdaq)"
+   ]
   },
   "HAE": {
    "datum": "2027-02-04",
@@ -679,10 +687,9 @@
   },
   "HPE": {
    "datum": "2026-11-23",
-   "uhrzeit": "16:00",
+   "uhrzeit": "",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo",
     "nasdaq"
    ]
   },
@@ -1423,10 +1430,9 @@
   },
   "SMTC": {
    "datum": "2026-11-23",
-   "uhrzeit": "16:00",
+   "uhrzeit": "",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo",
     "nasdaq"
    ]
   },
@@ -1585,14 +1591,12 @@
    ]
   },
   "VREX": {
-   "datum": "2026-12-01",
-   "uhrzeit": "16:00",
-   "lage": "nachboerslich",
+   "datum": "2026-11-24",
+   "uhrzeit": "",
+   "lage": "unbekannt",
    "quellen": [
-    "yahoo",
     "nasdaq"
-   ],
-   "uneinig": "Quellen uneinig: 2026-12-01 (Yahoo, hier bevorzugt) gegen 2026-11-24 (Nasdaq)"
+   ]
   },
   "VRNS": {
    "datum": "2027-02-09",
@@ -1659,13 +1663,14 @@
    ]
   },
   "ZS": {
-   "datum": "2026-12-02",
-   "uhrzeit": "16:00",
-   "lage": "nachboerslich",
+   "datum": "2026-11-23",
+   "uhrzeit": "05:00",
+   "lage": "vorboerslich",
    "quellen": [
     "yahoo",
     "nasdaq"
-   ]
+   ],
+   "uneinig": "Quellen uneinig: 2026-11-23 (Yahoo, hier bevorzugt) gegen 2026-12-02 (Nasdaq)"
   }
  }
 }

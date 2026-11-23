@@ -6,6 +6,33 @@
   "zone_max": 17.31999969482422,
   "spring_low": 17.010000228881836,
   "spring_volumen": 882189.0,
-  "tage_gewartet": 9
+  "tage_gewartet": 10
+ },
+ "ANDG": {
+  "spring_index": 234,
+  "spring_datum": "2026-11-23",
+  "zone_min": 57.619998931884766,
+  "zone_max": 58.18000030517578,
+  "spring_low": 56.86750030517578,
+  "spring_volumen": 414783.0,
+  "tage_gewartet": 0
+ },
+ "MTW": {
+  "spring_index": 499,
+  "spring_datum": "2026-11-23",
+  "zone_min": 21.049999237060547,
+  "zone_max": 21.5,
+  "spring_low": 20.975000381469727,
+  "spring_volumen": 274954.0,
+  "tage_gewartet": 0
+ },
+ "AMC": {
+  "spring_index": 499,
+  "spring_datum": "2026-11-23",
+  "zone_min": 2.7799999713897705,
+  "zone_max": 2.8499999046325684,
+  "spring_low": 2.6500000953674316,
+  "spring_volumen": 23196665.0,
+  "tage_gewartet": 0
  }
 }
