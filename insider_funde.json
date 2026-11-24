@@ -4,10 +4,10 @@
   {
    "ticker": "ANAB",
    "status": "pfad_a",
-   "marktkap": 1382140672.0,
+   "marktkap": 1490654592.0,
    "stichtag": "2026-11-24",
    "zeilen": [
-    "ANAB; Großkauf; Marktwert 1,4 Mrd $",
+    "ANAB; Großkauf; Marktwert 1,5 Mrd $",
     "Größter Einzelkauf 7,0 Mio $ am 17.11.; EcoR1 Capital, LLC, Direktor"
    ],
    "kennung": "ANAB|pfad_a|1"
@@ -15,7 +15,7 @@
   {
    "ticker": "BORR",
    "status": "pfad_a",
-   "marktkap": 1180574464.0,
+   "marktkap": 1227053824.0,
    "stichtag": "2026-11-24",
    "zeilen": [
     "BORR; Großkauf; Marktwert 1,2 Mrd $",
@@ -24,12 +24,23 @@
    "kennung": "BORR|pfad_a|1"
   },
   {
-   "ticker": "FPS",
-   "status": "pfad_b",
-   "marktkap": 6179906560.0,
+   "ticker": "COHR",
+   "status": "pfad_a",
+   "marktkap": 38651170816.0,
    "stichtag": "2026-11-24",
    "zeilen": [
-    "FPS; Insider-Cluster; Marktwert 6,2 Mrd $",
+    "COHR; Großkauf; Marktwert 38,7 Mrd $",
+    "Größter Einzelkauf 5,3 Mio $ am 20.11.; PAGLIUCA STEPHEN G, Direktor"
+   ],
+   "kennung": "COHR|pfad_a|1"
+  },
+  {
+   "ticker": "FPS",
+   "status": "pfad_b",
+   "marktkap": 5671510016.0,
+   "stichtag": "2026-11-24",
+   "zeilen": [
+    "FPS; Insider-Cluster; Marktwert 5,7 Mrd $",
     "3 Insider über der Schwelle von 250 Tsd $:",
     "  SPIERKEL GREGORY M, Direktor; 462 Tsd $",
     "  Niederpruem Gary John, Chief Executive Officer; 334 Tsd $",
@@ -40,10 +51,10 @@
   {
    "ticker": "MP",
    "status": "pfad_b",
-   "marktkap": 6335643648.0,
+   "marktkap": 6401602560.0,
    "stichtag": "2026-11-24",
    "zeilen": [
-    "MP; Insider-Cluster; Marktwert 6,3 Mrd $",
+    "MP; Insider-Cluster; Marktwert 6,4 Mrd $",
     "3 Insider über der Schwelle von 250 Tsd $:",
     "  WEISENBURGER RANDALL J, Direktor; 2,0 Mio $",
     "  Rosenthal Michael Stuart, Chief Operating Officer; 1,2 Mio $",
@@ -54,7 +65,7 @@
   {
    "ticker": "PAM",
    "status": "pfad_b",
-   "marktkap": 3332010496.0,
+   "marktkap": 3278406656.0,
    "stichtag": "2026-11-24",
    "zeilen": [
     "PAM; Insider-Cluster; Marktwert 3,3 Mrd $",
@@ -68,10 +79,10 @@
   {
    "ticker": "STWD",
    "status": "beide",
-   "marktkap": 4109655040.0,
+   "marktkap": 4251624960.0,
    "stichtag": "2026-11-24",
    "zeilen": [
-    "STWD; Großkauf und Cluster; Marktwert 4,1 Mrd $",
+    "STWD; Großkauf und Cluster; Marktwert 4,3 Mrd $",
     "Größter Einzelkauf 9,9 Mio $ am 11.11.; STERNLICHT BARRY S, CEO, Chairman of the Board",
     "3 Insider über der Schwelle von 250 Tsd $:",
     "  STERNLICHT BARRY S, CEO, Chairman of the Board; 14,7 Mio $",
@@ -83,7 +94,7 @@
   {
    "ticker": "WWB",
    "status": "beide",
-   "marktkap": 1609928960.0,
+   "marktkap": 1609333120.0,
    "stichtag": "2026-11-24",
    "zeilen": [
     "WWB; Großkauf und Cluster; Marktwert 1,6 Mrd $",
