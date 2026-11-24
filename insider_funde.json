@@ -1,11 +1,11 @@
 {
- "stand": "2026-11-21",
+ "stand": "2026-11-24",
  "funde": [
   {
    "ticker": "ANAB",
    "status": "pfad_a",
-   "marktkap": 1386302848.0,
-   "stichtag": "2026-11-21",
+   "marktkap": 1382140672.0,
+   "stichtag": "2026-11-24",
    "zeilen": [
     "ANAB; Großkauf; Marktwert 1,4 Mrd $",
     "Größter Einzelkauf 7,0 Mio $ am 17.11.; EcoR1 Capital, LLC, Direktor"
@@ -15,10 +15,10 @@
   {
    "ticker": "EMO",
    "status": "pfad_a",
-   "marktkap": 905261632.0,
-   "stichtag": "2026-11-21",
+   "marktkap": 913867904.0,
+   "stichtag": "2026-11-24",
    "zeilen": [
-    "EMO; Großkauf; Marktwert 905,3 Mio $",
+    "EMO; Großkauf; Marktwert 913,9 Mio $",
     "Größter Einzelkauf 20,0 Mio $ am 12.11.; PRUDENTIAL FINANCIAL INC, Insider"
    ],
    "kennung": "EMO|pfad_a|1"
@@ -26,10 +26,10 @@
   {
    "ticker": "MP",
    "status": "pfad_b",
-   "marktkap": 6052197888.0,
-   "stichtag": "2026-11-21",
+   "marktkap": 6335643648.0,
+   "stichtag": "2026-11-24",
    "zeilen": [
-    "MP; Insider-Cluster; Marktwert 6,1 Mrd $",
+    "MP; Insider-Cluster; Marktwert 6,3 Mrd $",
     "3 Insider über der Schwelle von 250 Tsd $:",
     "  WEISENBURGER RANDALL J, Direktor; 2,0 Mio $",
     "  Rosenthal Michael Stuart, Chief Operating Officer; 1,2 Mio $",
@@ -40,13 +40,13 @@
   {
    "ticker": "PAM",
    "status": "pfad_b",
-   "marktkap": 3249996800.0,
-   "stichtag": "2026-11-21",
+   "marktkap": 3332010496.0,
+   "stichtag": "2026-11-24",
    "zeilen": [
-    "PAM; Insider-Cluster; Marktwert 3,2 Mrd $",
+    "PAM; Insider-Cluster; Marktwert 3,3 Mrd $",
     "3 Insider über der Schwelle von 250 Tsd $:",
     "  Mindlin Marcos Marcelo, Direktor; 4,6 Mio $",
-    "  Mindlin Damian Miguel, Vicepresident; 4,2 Mio $",
+    "  Mindlin Damian Miguel, Vicepresident; 3,4 Mio $",
     "  Mariani Gustavo, Vice President; 1,6 Mio $"
    ],
    "kennung": "PAM|pfad_b|3"
@@ -54,10 +54,10 @@
   {
    "ticker": "STWD",
    "status": "beide",
-   "marktkap": 4046141952.0,
-   "stichtag": "2026-11-21",
+   "marktkap": 4109655040.0,
+   "stichtag": "2026-11-24",
    "zeilen": [
-    "STWD; Großkauf und Cluster; Marktwert 4,0 Mrd $",
+    "STWD; Großkauf und Cluster; Marktwert 4,1 Mrd $",
     "Größter Einzelkauf 9,9 Mio $ am 11.11.; STERNLICHT BARRY S, CEO, Chairman of the Board",
     "3 Insider über der Schwelle von 250 Tsd $:",
     "  STERNLICHT BARRY S, CEO, Chairman of the Board; 14,7 Mio $",
@@ -69,10 +69,10 @@
   {
    "ticker": "WWB",
    "status": "beide",
-   "marktkap": 1409470976.0,
-   "stichtag": "2026-11-21",
+   "marktkap": 1609928960.0,
+   "stichtag": "2026-11-24",
    "zeilen": [
-    "WWB; Großkauf und Cluster; Marktwert 1,4 Mrd $",
+    "WWB; Großkauf und Cluster; Marktwert 1,6 Mrd $",
     "Größter Einzelkauf 20,0 Mio $ am 16.11.; Bonita David P, Direktor",
     "3 Insider über der Schwelle von 250 Tsd $:",
     "  Stampacchia Otello, Direktor; 29,8 Mio $",
