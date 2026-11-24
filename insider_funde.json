@@ -13,15 +13,29 @@
    "kennung": "ANAB|pfad_a|1"
   },
   {
-   "ticker": "EMO",
+   "ticker": "BORR",
    "status": "pfad_a",
-   "marktkap": 913867904.0,
+   "marktkap": 1180574464.0,
    "stichtag": "2026-11-24",
    "zeilen": [
-    "EMO; Großkauf; Marktwert 913,9 Mio $",
-    "Größter Einzelkauf 20,0 Mio $ am 12.11.; PRUDENTIAL FINANCIAL INC, Insider"
+    "BORR; Großkauf; Marktwert 1,2 Mrd $",
+    "Größter Einzelkauf 30,5 Mio $ am 20.11.; Troim Tor Olav, Direktor"
    ],
-   "kennung": "EMO|pfad_a|1"
+   "kennung": "BORR|pfad_a|1"
+  },
+  {
+   "ticker": "FPS",
+   "status": "pfad_b",
+   "marktkap": 6179906560.0,
+   "stichtag": "2026-11-24",
+   "zeilen": [
+    "FPS; Insider-Cluster; Marktwert 6,2 Mrd $",
+    "3 Insider über der Schwelle von 250 Tsd $:",
+    "  SPIERKEL GREGORY M, Direktor; 462 Tsd $",
+    "  Niederpruem Gary John, Chief Executive Officer; 334 Tsd $",
+    "  Ard Amy E, Chief Financial Officer; 300 Tsd $"
+   ],
+   "kennung": "FPS|pfad_b|3"
   },
   {
    "ticker": "MP",
@@ -45,9 +59,9 @@
    "zeilen": [
     "PAM; Insider-Cluster; Marktwert 3,3 Mrd $",
     "3 Insider über der Schwelle von 250 Tsd $:",
-    "  Mindlin Marcos Marcelo, Direktor; 4,6 Mio $",
-    "  Mindlin Damian Miguel, Vicepresident; 3,4 Mio $",
-    "  Mariani Gustavo, Vice President; 1,6 Mio $"
+    "  Mindlin Marcos Marcelo, Direktor; 11,9 Mio $",
+    "  Mindlin Damian Miguel, Vicepresident; 5,4 Mio $",
+    "  Mariani Gustavo, Vicepresident; 3,7 Mio $"
    ],
    "kennung": "PAM|pfad_b|3"
   },
