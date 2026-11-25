@@ -1,23 +1,19 @@
 {
- "gebaut_am": "2026-11-25 00:06 Wien",
+ "gebaut_am": "2026-11-26 00:09 Wien",
  "ohne_termin": [
-  "ADSK",
   "ANL",
   "BNR",
   "BUUU",
   "GIBO",
   "KRSA",
   "MAAS",
-  "NTNX",
   "SAIH",
   "SDEV",
   "SVRN",
   "TJGC"
  ],
  "nur_nasdaq": [
-  "ADSK",
-  "BNR",
-  "NTNX"
+  "BNR"
  ],
  "uneinig": [],
  "aktien": {
@@ -38,11 +34,11 @@
    ]
   },
   "ADSK": {
-   "datum": "2026-11-24",
-   "uhrzeit": "",
+   "datum": "2027-02-25",
+   "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "nasdaq"
+    "yahoo"
    ]
   },
   "AEHR": {
@@ -142,12 +138,11 @@
    ]
   },
   "ANF": {
-   "datum": "2026-11-24",
-   "uhrzeit": "07:00",
+   "datum": "2027-03-03",
+   "uhrzeit": "08:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo",
-    "nasdaq"
+    "yahoo"
    ]
   },
   "AOUT": {
@@ -300,7 +295,8 @@
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "BWIN": {
@@ -433,12 +429,11 @@
    ]
   },
   "DELL": {
-   "datum": "2026-11-24",
+   "datum": "2027-02-25",
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo",
-    "nasdaq"
+    "yahoo"
    ]
   },
   "DINO": {
@@ -611,7 +606,7 @@
   },
   "GDS": {
    "datum": "2026-11-25",
-   "uhrzeit": "08:00",
+   "uhrzeit": "06:00",
    "lage": "vorboerslich",
    "quellen": [
     "yahoo",
@@ -967,11 +962,11 @@
    ]
   },
   "NTNX": {
-   "datum": "2026-11-24",
-   "uhrzeit": "",
+   "datum": "2027-02-24",
+   "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "nasdaq"
+    "yahoo"
    ]
   },
   "NTRA": {
@@ -1351,7 +1346,8 @@
    "uhrzeit": "08:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "SBAC": {

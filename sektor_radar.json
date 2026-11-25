@@ -1,22 +1,7 @@
 {
- "gebaut_am": "2026-11-24T23:07:08",
- "handelstag": "2026-11-24",
+ "gebaut_am": "2026-11-25T23:10:10",
+ "handelstag": "2026-11-25",
  "geladen": 36,
  "unfertig": [],
- "treffer": [
-  {
-   "etf": "IBB",
-   "name": "Biotech large",
-   "richtung": "hoch",
-   "volumen_pct": 92.9,
-   "kurs": 219.49
-  },
-  {
-   "etf": "XBI",
-   "name": "Biotech",
-   "richtung": "hoch",
-   "volumen_pct": 81.7,
-   "kurs": 156.82
-  }
- ]
+ "treffer": []
 }
