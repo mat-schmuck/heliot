@@ -1,11 +1,11 @@
 {
- "stand": "2026-11-24",
+ "stand": "2026-11-25",
  "funde": [
   {
    "ticker": "ANAB",
    "status": "pfad_a",
    "marktkap": 1490654592.0,
-   "stichtag": "2026-11-24",
+   "stichtag": "2026-11-25",
    "zeilen": [
     "ANAB; Großkauf; Marktwert 1,5 Mrd $",
     "Größter Einzelkauf 7,0 Mio $ am 17.11.; EcoR1 Capital, LLC, Direktor"
@@ -16,7 +16,7 @@
    "ticker": "BORR",
    "status": "pfad_a",
    "marktkap": 1227053824.0,
-   "stichtag": "2026-11-24",
+   "stichtag": "2026-11-25",
    "zeilen": [
     "BORR; Großkauf; Marktwert 1,2 Mrd $",
     "Größter Einzelkauf 30,5 Mio $ am 20.11.; Troim Tor Olav, Direktor"
@@ -27,7 +27,7 @@
    "ticker": "COHR",
    "status": "pfad_a",
    "marktkap": 38651170816.0,
-   "stichtag": "2026-11-24",
+   "stichtag": "2026-11-25",
    "zeilen": [
     "COHR; Großkauf; Marktwert 38,7 Mrd $",
     "Größter Einzelkauf 5,3 Mio $ am 20.11.; PAGLIUCA STEPHEN G, Direktor"
@@ -38,7 +38,7 @@
    "ticker": "FPS",
    "status": "pfad_b",
    "marktkap": 5671510016.0,
-   "stichtag": "2026-11-24",
+   "stichtag": "2026-11-25",
    "zeilen": [
     "FPS; Insider-Cluster; Marktwert 5,7 Mrd $",
     "3 Insider über der Schwelle von 250 Tsd $:",
@@ -49,24 +49,10 @@
    "kennung": "FPS|pfad_b|3"
   },
   {
-   "ticker": "MP",
-   "status": "pfad_b",
-   "marktkap": 6401602560.0,
-   "stichtag": "2026-11-24",
-   "zeilen": [
-    "MP; Insider-Cluster; Marktwert 6,4 Mrd $",
-    "3 Insider über der Schwelle von 250 Tsd $:",
-    "  WEISENBURGER RANDALL J, Direktor; 2,0 Mio $",
-    "  Rosenthal Michael Stuart, Chief Operating Officer; 1,2 Mio $",
-    "  Corbett Ryan, Chief Financial Officer; 419 Tsd $"
-   ],
-   "kennung": "MP|pfad_b|3"
-  },
-  {
    "ticker": "PAM",
    "status": "pfad_b",
    "marktkap": 3278406656.0,
-   "stichtag": "2026-11-24",
+   "stichtag": "2026-11-25",
    "zeilen": [
     "PAM; Insider-Cluster; Marktwert 3,3 Mrd $",
     "3 Insider über der Schwelle von 250 Tsd $:",
@@ -77,10 +63,21 @@
    "kennung": "PAM|pfad_b|3"
   },
   {
+   "ticker": "PLTR",
+   "status": "pfad_a",
+   "marktkap": 388362797056.0,
+   "stichtag": "2026-11-25",
+   "zeilen": [
+    "PLTR; Großkauf; Marktwert 388,4 Mrd $",
+    "Größter Einzelkauf 49,1 Mio $ am 20.11.; THIEL PETER, Direktor"
+   ],
+   "kennung": "PLTR|pfad_a|1"
+  },
+  {
    "ticker": "STWD",
    "status": "beide",
    "marktkap": 4251624960.0,
-   "stichtag": "2026-11-24",
+   "stichtag": "2026-11-25",
    "zeilen": [
     "STWD; Großkauf und Cluster; Marktwert 4,3 Mrd $",
     "Größter Einzelkauf 9,9 Mio $ am 11.11.; STERNLICHT BARRY S, CEO, Chairman of the Board",
@@ -95,7 +92,7 @@
    "ticker": "WWB",
    "status": "beide",
    "marktkap": 1609333120.0,
-   "stichtag": "2026-11-24",
+   "stichtag": "2026-11-25",
    "zeilen": [
     "WWB; Großkauf und Cluster; Marktwert 1,6 Mrd $",
     "Größter Einzelkauf 20,0 Mio $ am 16.11.; Bonita David P, Direktor",
