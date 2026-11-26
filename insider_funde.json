@@ -15,7 +15,7 @@
   {
    "ticker": "BORR",
    "status": "pfad_a",
-   "marktkap": 1264237312.0,
+   "marktkap": 1268317312.0,
    "stichtag": "2026-11-26",
    "zeilen": [
     "BORR; Großkauf; Marktwert 1,3 Mrd $",
@@ -62,16 +62,27 @@
   {
    "ticker": "GLXY",
    "status": "pfad_b",
-   "marktkap": 6752718848.0,
+   "marktkap": 4459119616.0,
    "stichtag": "2026-11-26",
    "zeilen": [
-    "GLXY; Insider-Cluster; Marktwert 6,8 Mrd $",
+    "GLXY; Insider-Cluster; Marktwert 4,5 Mrd $",
     "3 Insider über der Schwelle von 250 Tsd $:",
     "  Novogratz Michael, Chief Executive Officer; 5,8 Mio $",
     "  DEASON DOUGLAS R, Direktor; 300 Tsd $",
     "  Paquette Anthony, Chief Financial Officer; 268 Tsd $"
    ],
    "kennung": "GLXY|pfad_b|3"
+  },
+  {
+   "ticker": "GOLD",
+   "status": "pfad_a",
+   "marktkap": 1132762880.0,
+   "stichtag": "2026-11-26",
+   "zeilen": [
+    "GOLD; Großkauf; Marktwert 1,1 Mrd $",
+    "Größter Einzelkauf 5,7 Mio $ am 23.11.; Tether Global Investments Fund, S.I.C.A.F., S.A., Insider"
+   ],
+   "kennung": "GOLD|pfad_a|1"
   },
   {
    "ticker": "PAM",
