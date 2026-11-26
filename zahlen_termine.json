@@ -1,5 +1,5 @@
 {
- "gebaut_am": "2026-11-26 00:09 Wien",
+ "gebaut_am": "2026-11-27 00:06 Wien",
  "ohne_termin": [
   "ANL",
   "BNR",
@@ -605,12 +605,11 @@
    ]
   },
   "GDS": {
-   "datum": "2026-11-25",
-   "uhrzeit": "06:00",
+   "datum": "2027-03-23",
+   "uhrzeit": "09:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo",
-    "nasdaq"
+    "yahoo"
    ]
   },
   "GEO": {
