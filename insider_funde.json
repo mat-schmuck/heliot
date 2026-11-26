@@ -1,11 +1,11 @@
 {
- "stand": "2026-11-25",
+ "stand": "2026-11-26",
  "funde": [
   {
    "ticker": "ANAB",
    "status": "pfad_a",
    "marktkap": 1519789824.0,
-   "stichtag": "2026-11-25",
+   "stichtag": "2026-11-26",
    "zeilen": [
     "ANAB; Großkauf; Marktwert 1,5 Mrd $",
     "Größter Einzelkauf 7,0 Mio $ am 17.11.; EcoR1 Capital, LLC, Direktor"
@@ -16,7 +16,7 @@
    "ticker": "BORR",
    "status": "pfad_a",
    "marktkap": 1264237312.0,
-   "stichtag": "2026-11-25",
+   "stichtag": "2026-11-26",
    "zeilen": [
     "BORR; Großkauf; Marktwert 1,3 Mrd $",
     "Größter Einzelkauf 30,5 Mio $ am 20.11.; Troim Tor Olav, Direktor"
@@ -27,7 +27,7 @@
    "ticker": "COHR",
    "status": "pfad_a",
    "marktkap": 38641324032.0,
-   "stichtag": "2026-11-25",
+   "stichtag": "2026-11-26",
    "zeilen": [
     "COHR; Großkauf; Marktwert 38,6 Mrd $",
     "Größter Einzelkauf 5,3 Mio $ am 20.11.; PAGLIUCA STEPHEN G, Direktor"
@@ -35,10 +35,21 @@
    "kennung": "COHR|pfad_a|1"
   },
   {
+   "ticker": "DXYZ",
+   "status": "pfad_a",
+   "marktkap": 1129478912.0,
+   "stichtag": "2026-11-26",
+   "zeilen": [
+    "DXYZ; Großkauf; Marktwert 1,1 Mrd $",
+    "Größter Einzelkauf 5,1 Mio $ am 24.11.; Saba Capital Management, L.P., Insider"
+   ],
+   "kennung": "DXYZ|pfad_a|1"
+  },
+  {
    "ticker": "FPS",
    "status": "pfad_b",
    "marktkap": 5729351680.0,
-   "stichtag": "2026-11-25",
+   "stichtag": "2026-11-26",
    "zeilen": [
     "FPS; Insider-Cluster; Marktwert 5,7 Mrd $",
     "3 Insider über der Schwelle von 250 Tsd $:",
@@ -49,15 +60,29 @@
    "kennung": "FPS|pfad_b|3"
   },
   {
+   "ticker": "GLXY",
+   "status": "pfad_b",
+   "marktkap": 6752718848.0,
+   "stichtag": "2026-11-26",
+   "zeilen": [
+    "GLXY; Insider-Cluster; Marktwert 6,8 Mrd $",
+    "3 Insider über der Schwelle von 250 Tsd $:",
+    "  Novogratz Michael, Chief Executive Officer; 5,8 Mio $",
+    "  DEASON DOUGLAS R, Direktor; 300 Tsd $",
+    "  Paquette Anthony, Chief Financial Officer; 268 Tsd $"
+   ],
+   "kennung": "GLXY|pfad_b|3"
+  },
+  {
    "ticker": "PAM",
    "status": "pfad_b",
    "marktkap": 3340587008.0,
-   "stichtag": "2026-11-25",
+   "stichtag": "2026-11-26",
    "zeilen": [
     "PAM; Insider-Cluster; Marktwert 3,3 Mrd $",
     "3 Insider über der Schwelle von 250 Tsd $:",
     "  Mindlin Marcos Marcelo, Direktor; 11,9 Mio $",
-    "  Mindlin Damian Miguel, Vicepresident; 5,4 Mio $",
+    "  Mindlin Damian Miguel, Vicepresident; 4,9 Mio $",
     "  Mariani Gustavo, Vicepresident; 3,7 Mio $"
    ],
    "kennung": "PAM|pfad_b|3"
@@ -66,7 +91,7 @@
    "ticker": "PLTR",
    "status": "pfad_a",
    "marktkap": 394169712640.0,
-   "stichtag": "2026-11-25",
+   "stichtag": "2026-11-26",
    "zeilen": [
     "PLTR; Großkauf; Marktwert 394,2 Mrd $",
     "Größter Einzelkauf 49,1 Mio $ am 20.11.; THIEL PETER, Direktor"
@@ -74,25 +99,10 @@
    "kennung": "PLTR|pfad_a|1"
   },
   {
-   "ticker": "STWD",
-   "status": "beide",
-   "marktkap": 4281513216.0,
-   "stichtag": "2026-11-25",
-   "zeilen": [
-    "STWD; Großkauf und Cluster; Marktwert 4,3 Mrd $",
-    "Größter Einzelkauf 9,9 Mio $ am 11.11.; STERNLICHT BARRY S, CEO, Chairman of the Board",
-    "3 Insider über der Schwelle von 250 Tsd $:",
-    "  STERNLICHT BARRY S, CEO, Chairman of the Board; 14,7 Mio $",
-    "  ZELNICK STRAUSS, Direktor; 2,0 Mio $",
-    "  Pollack Jonathan Lee, Direktor; 2,0 Mio $"
-   ],
-   "kennung": "STWD|beide|3"
-  },
-  {
    "ticker": "WWB",
    "status": "beide",
    "marktkap": 1525023360.0,
-   "stichtag": "2026-11-25",
+   "stichtag": "2026-11-26",
    "zeilen": [
     "WWB; Großkauf und Cluster; Marktwert 1,5 Mrd $",
     "Größter Einzelkauf 20,0 Mio $ am 16.11.; Bonita David P, Direktor",
