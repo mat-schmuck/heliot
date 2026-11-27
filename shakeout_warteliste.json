@@ -6,7 +6,7 @@
   "zone_max": 17.31999969482422,
   "spring_low": 17.010000228881836,
   "spring_volumen": 882189.0,
-  "tage_gewartet": 13
+  "tage_gewartet": 14
  },
  "CHYM": {
   "spring_index": 366,
@@ -15,7 +15,7 @@
   "zone_max": 31.520000457763672,
   "spring_low": 30.9950008392334,
   "spring_volumen": 6404700.0,
-  "tage_gewartet": 1
+  "tage_gewartet": 2
  },
  "TVTX": {
   "spring_index": 500,
@@ -24,7 +24,7 @@
   "zone_max": 53.41999816894531,
   "spring_low": 50.86000061035156,
   "spring_volumen": 1279814.0,
-  "tage_gewartet": 1
+  "tage_gewartet": 2
  },
  "KRSA": {
   "spring_index": 500,
@@ -33,7 +33,7 @@
   "zone_max": 37.26499938964844,
   "spring_low": 36.15999984741211,
   "spring_volumen": 186488.0,
-  "tage_gewartet": 1
+  "tage_gewartet": 2
  },
  "NSIT": {
   "spring_index": 500,
@@ -42,7 +42,7 @@
   "zone_max": 149.75999450683594,
   "spring_low": 144.93099975585938,
   "spring_volumen": 407758.0,
-  "tage_gewartet": 1
+  "tage_gewartet": 2
  },
  "SAIL": {
   "spring_index": 448,
@@ -51,7 +51,7 @@
   "zone_max": 22.28499984741211,
   "spring_low": 20.8700008392334,
   "spring_volumen": 4947308.0,
-  "tage_gewartet": 1
+  "tage_gewartet": 2
  },
  "ZS": {
   "spring_index": 500,
@@ -60,16 +60,7 @@
   "zone_max": 217.10000610351562,
   "spring_low": 214.5399932861328,
   "spring_volumen": 4631039.0,
-  "tage_gewartet": 1
- },
- "SLS": {
-  "spring_index": 500,
-  "spring_datum": "2026-11-25",
-  "zone_min": 12.4399995803833,
-  "zone_max": 12.699999809265137,
-  "spring_low": 11.912400245666504,
-  "spring_volumen": 8770818.0,
-  "tage_gewartet": 1
+  "tage_gewartet": 2
  },
  "GEO": {
   "spring_index": 500,
@@ -78,7 +69,7 @@
   "zone_max": 29.190000534057617,
   "spring_low": 28.65999984741211,
   "spring_volumen": 1977800.0,
-  "tage_gewartet": 0
+  "tage_gewartet": 1
  },
  "AMC": {
   "spring_index": 500,
@@ -87,6 +78,24 @@
   "zone_max": 3.0,
   "spring_low": 2.8499999046325684,
   "spring_volumen": 20954100.0,
+  "tage_gewartet": 1
+ },
+ "ZETA": {
+  "spring_index": 499,
+  "spring_datum": "2026-11-27",
+  "zone_min": 32.810001373291016,
+  "zone_max": 32.810001373291016,
+  "spring_low": 32.20000076293945,
+  "spring_volumen": 2014086.0,
+  "tage_gewartet": 0
+ },
+ "BB": {
+  "spring_index": 499,
+  "spring_datum": "2026-11-27",
+  "zone_min": 8.829999923706055,
+  "zone_max": 8.829999923706055,
+  "spring_low": 8.52400016784668,
+  "spring_volumen": 6408341.0,
   "tage_gewartet": 0
  }
 }

@@ -1,5 +1,5 @@
 {
- "gebaut_am": "2026-11-27 00:06 Wien",
+ "gebaut_am": "2026-11-28 00:11 Wien",
  "ohne_termin": [
   "ANL",
   "BNR",
@@ -283,7 +283,7 @@
    ]
   },
   "BNR": {
-   "datum": "2026-11-26",
+   "datum": "2026-12-03",
    "uhrzeit": "",
    "lage": "unbekannt",
    "quellen": [
@@ -352,7 +352,8 @@
    "uhrzeit": "08:00",
    "lage": "vorboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "CLOV": {
@@ -505,7 +506,8 @@
    "uhrzeit": "16:00",
    "lage": "nachboerslich",
    "quellen": [
-    "yahoo"
+    "yahoo",
+    "nasdaq"
    ]
   },
   "FFIV": {
